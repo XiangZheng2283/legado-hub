@@ -1,0 +1,52 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0-2图片",
+    "bookSourceName": "漫畫狗",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://dogemanga.com",
+    "bookUrlPattern": "",
+    "customOrder": 200,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "热门排行::https://dogemanga.com/?s=0\n最新连载::https://dogemanga.com/?s=1",
+    "header": "{\n    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36 Edg/104.0.1293.70'\n}",
+    "lastUpdateTime": 1677269912343,
+    "loginUrl": "https://dogemanga.com",
+    "respondTime": 4615,
+    "ruleBookInfo": {
+      "author": "tag.h4@text",
+      "init": "",
+      "intro": ".site-card__brief@text",
+      "kind": "class.text-muted@text@js:String(result).match(/連載完結|連載中/)",
+      "lastChapter": "class.vstack.0@text",
+      "name": ".site-navbar__title@text"
+    },
+    "ruleContent": {
+      "content": "class.site-reader__image@data-page-image-url@js:\nlist=result.split(\"\\n\");\nhtml='';\nfor(i in list){\nhtml+='<img src=\"'+list[i]+'\">\\n'\n}\nhtml",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "tag.h6@text",
+      "bookList": ".site-scroll__list@.col-12 ",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img@src",
+      "intro": "tag.p@text",
+      "kind": "class.text-muted@text@js:String(result).match(/連載完結|連載中/)",
+      "lastChapter": "class.list-group-item.0@text",
+      "name": "tag.h5@text",
+      "wordCount": "class.mb-2@tag.li.1@text##.*連載狀態：|最快更新："
+    },
+    "ruleToc": {
+      "chapterList": "-class.site-selector@option!0",
+      "chapterName": "text",
+      "chapterUrl": "value"
+    },
+    "searchUrl": "https://dogemanga.com/?q={{key}}&o={{(page-1)*12}}",
+    "weight": 73
+  }
+]

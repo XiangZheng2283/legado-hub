@@ -1,0 +1,121 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "啦啦书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.lalashuwu.com/",
+    "bookUrlPattern": "https://www.lalashuwu.com/shu/\\d+/",
+    "customOrder": 1047,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n\"Cookie\": \"lalashuwu_sex=; UM_distinctid=;\"\n}",
+    "lastUpdateTime": 1646764244391,
+    "loginUrl": "",
+    "respondTime": 2313,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "init": "",
+      "intro": "id.intro@tag.p.0@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.info@tag.p.3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节"
+    },
+    "ruleContent": {
+      "content": "id.content@html##因某些原.*突然出现大量.*到回家的路！|喜欢.*更新速度最快。|您可以在百度.*查找最新章节！|.*最新章节地址.*|.*全文阅读地址.*|.*txt下载地址.*|.*手机阅读.*|为了方便下次阅.*下次打开书架即可看到！|喜欢.*请向你的朋友.*|本章未完.*后面更精彩！",
+      "imageStyle": "full",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.book_other.0@tag.span.0@text",
+      "bookList": "id.sitembox@tag.dl",
+      "bookUrl": "tag.dd@tag.h3@tag.a@href",
+      "coverUrl": "tag.dt@tag.a@img@src",
+      "intro": "class.book_des@text",
+      "kind": "class.book_other.0@tag.span.2@text",
+      "lastChapter": "class.book_other.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.dd@tag.h3@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": "class.book_other.0@tag.span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.box_con@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.lalashuwu.com/search.html,{\r\n  \"method\": \"POST\",\r\n  \"body\": \"searchtype=all&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "Error: failed to connect to www.lalashuwu.com/75.2.115.196 (port 443) from /192.168.1.109 (port 48950) after 15000ms",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "啦啦书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.lalashuwu.com/",
+    "bookUrlPattern": "https://www.lalashuwu.com/shu/\\d+/",
+    "customOrder": 1324,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n\"Cookie\": \"lalashuwu_sex=; UM_distinctid=;\"\n}",
+    "lastUpdateTime": 1689857767147,
+    "loginUrl": "",
+    "respondTime": 2245,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "init": "",
+      "intro": "id.intro@tag.p.0@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.info@tag.p.3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节"
+    },
+    "ruleContent": {
+      "content": "id.content@html##因某些原.*突然出现大量.*到回家的路！|喜欢.*更新速度最快。|您可以在百度.*查找最新章节！|.*最新章节地址.*|.*全文阅读地址.*|.*txt下载地址.*|.*手机阅读.*|为了方便下次阅.*下次打开书架即可看到！|喜欢.*请向你的朋友.*|本章未完.*后面更精彩！",
+      "imageStyle": "full",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.book_other.0@tag.span.0@text",
+      "bookList": "id.sitembox@tag.dl",
+      "bookUrl": "tag.dd@tag.h3@tag.a@href",
+      "coverUrl": "tag.dt@tag.a@img@src",
+      "intro": "class.book_des@text",
+      "kind": "class.book_other.0@tag.span.2@text",
+      "lastChapter": "class.book_other.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.dd@tag.h3@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": "class.book_other.0@tag.span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.box_con@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.lalashuwu.com/search.html,{\r\n  \"method\": \"POST\",\r\n  \"body\": \"searchtype=all&searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

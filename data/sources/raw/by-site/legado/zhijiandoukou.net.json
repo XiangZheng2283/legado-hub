@@ -1,0 +1,190 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♜指尖豆蔻 #破冰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhijiandoukou.net/#♤pb",
+    "bookUrlPattern": "https://www.zhijiandoukou.net/book\\d+/",
+    "customOrder": 1515,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/modules/article/articlelist.php?class=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"武侠\",\"url\":\"/modules/article/articlelist.php?class=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"都市\",\"url\":\"/modules/article/articlelist.php?class=3&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"历史\",\"url\":\"/modules/article/articlelist.php?class=4&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"游戏\",\"url\":\"/modules/article/articlelist.php?class=5&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=6&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"恐怖\",\"url\":\"/modules/article/articlelist.php?class=7&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"二次\",\"url\":\"/modules/article/articlelist.php?class=8&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"经典\",\"url\":\"/modules/article/articlelist.php?class=9&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"古代\",\"url\":\"/modules/article/articlelist.php?class=10&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"现代\",\"url\":\"/modules/article/articlelist.php?class=11&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"幻想\",\"url\":\"/modules/article/articlelist.php?class=12&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"青春\",\"url\":\"/modules/article/articlelist.php?class=13&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"网络\",\"url\":\"/modules/article/articlelist.php?class=14&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=15&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"鬼怪\",\"url\":\"/modules/article/articlelist.php?class=16&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"N次\",\"url\":\"/modules/article/articlelist.php?class=17&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"言情\",\"url\":\"/modules/article/articlelist.php?class=18&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}}]\n",
+    "lastUpdateTime": 1630291706112,
+    "loginUrl": "",
+    "respondTime": 6862,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.list@tag.dd.0@a@text",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##点此章节报错|喜欢.*更新速度最快.*|因某些原因.*现大量用户无法打开.*找到回家的路！",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\(记住本站.*com\\)"
+    },
+    "ruleExplore": {
+      "author": "class.s5@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://img.zhijiandoukou.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||id.info@tag.p.0@text",
+      "bookList": "class.grid@tr!0||id.wrapper",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://img.zhijiandoukou.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text||id.list@tag.dd.0@a@text",
+      "name": "tag.td.0@a@text||id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.zhijiandoukou.net/modules/article/search.php?searchkey={{key}}&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖指尖豆蔻",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhijiandoukou.net",
+    "customOrder": 771,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 820
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♜指尖豆蔻 #破冰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhijiandoukou.net/#♤pb",
+    "bookUrlPattern": "https://www.zhijiandoukou.net/book\\d+/",
+    "customOrder": 1599,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/modules/article/articlelist.php?class=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"武侠\",\"url\":\"/modules/article/articlelist.php?class=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"都市\",\"url\":\"/modules/article/articlelist.php?class=3&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"历史\",\"url\":\"/modules/article/articlelist.php?class=4&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"游戏\",\"url\":\"/modules/article/articlelist.php?class=5&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=6&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"恐怖\",\"url\":\"/modules/article/articlelist.php?class=7&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"二次\",\"url\":\"/modules/article/articlelist.php?class=8&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"经典\",\"url\":\"/modules/article/articlelist.php?class=9&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"古代\",\"url\":\"/modules/article/articlelist.php?class=10&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"现代\",\"url\":\"/modules/article/articlelist.php?class=11&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"幻想\",\"url\":\"/modules/article/articlelist.php?class=12&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"青春\",\"url\":\"/modules/article/articlelist.php?class=13&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"网络\",\"url\":\"/modules/article/articlelist.php?class=14&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=15&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"鬼怪\",\"url\":\"/modules/article/articlelist.php?class=16&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"N次\",\"url\":\"/modules/article/articlelist.php?class=17&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"言情\",\"url\":\"/modules/article/articlelist.php?class=18&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}}]\n",
+    "lastUpdateTime": 1630291706112,
+    "loginUrl": "",
+    "respondTime": 2275,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.list@tag.dd.0@a@text",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##点此章节报错|喜欢.*更新速度最快.*|因某些原因.*现大量用户无法打开.*找到回家的路！",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\(记住本站.*com\\)"
+    },
+    "ruleExplore": {
+      "author": "class.s5@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://img.zhijiandoukou.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||id.info@tag.p.0@text",
+      "bookList": "class.grid@tr!0||id.wrapper",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://img.zhijiandoukou.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text||id.list@tag.dd.0@a@text",
+      "name": "tag.td.0@a@text||id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.zhijiandoukou.net/modules/article/search.php?searchkey={{key}}&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♜指尖豆蔻 #破冰1101",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhijiandoukou.net/#pb1101",
+    "bookUrlPattern": "https://www.zhijiandoukou.net/book\\d+/",
+    "customOrder": 1622,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/modules/article/articlelist.php?class=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"武侠\",\"url\":\"/modules/article/articlelist.php?class=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"都市\",\"url\":\"/modules/article/articlelist.php?class=3&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"历史\",\"url\":\"/modules/article/articlelist.php?class=4&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"游戏\",\"url\":\"/modules/article/articlelist.php?class=5&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=6&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"恐怖\",\"url\":\"/modules/article/articlelist.php?class=7&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"二次\",\"url\":\"/modules/article/articlelist.php?class=8&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"经典\",\"url\":\"/modules/article/articlelist.php?class=9&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"古代\",\"url\":\"/modules/article/articlelist.php?class=10&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"现代\",\"url\":\"/modules/article/articlelist.php?class=11&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"幻想\",\"url\":\"/modules/article/articlelist.php?class=12&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"青春\",\"url\":\"/modules/article/articlelist.php?class=13&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"网络\",\"url\":\"/modules/article/articlelist.php?class=14&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=15&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"鬼怪\",\"url\":\"/modules/article/articlelist.php?class=16&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"N次\",\"url\":\"/modules/article/articlelist.php?class=17&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"言情\",\"url\":\"/modules/article/articlelist.php?class=18&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}}]\n",
+    "lastUpdateTime": 1630291706112,
+    "loginUrl": "",
+    "respondTime": 5314,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.list@tag.dd.0@a@text",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##点此章节报错|喜欢.*更新速度最快.*|因某些原因.*现大量用户无法打开.*找到回家的路！",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\(记住本站.*com\\)"
+    },
+    "ruleExplore": {
+      "author": "class.s5@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://img.zhijiandoukou.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||id.info@tag.p.0@text",
+      "bookList": "class.grid@tr!0||id.wrapper",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://img.zhijiandoukou.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text||id.list@tag.dd.0@a@text",
+      "name": "tag.td.0@a@text||id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.zhijiandoukou.net/modules/article/search.php?searchkey={{key}}&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

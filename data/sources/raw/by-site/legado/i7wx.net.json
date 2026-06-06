@@ -1,0 +1,144 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 爱奇文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.i7wx.net",
+    "customOrder": 51,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::/paihang/allvisit_{{page}}.html\n总推荐榜::/paihang/allvote_{{page}}.html\n总收藏榜::/paihang/goodnum_{{page}}.html\n总字数榜::/paihang/size_{{page}}.html\n最新入库::/paihang/postdate_{{page}}.html\n最近更新::/paihang/lastupdate_{{page}}.html\n古典文学::/list1/{{page}}.html\n外国文学::/list2/{{page}}.html\n传记纪实::/list3/{{page}}.html\n当代文学::/list4/{{page}}.html\n教材教辅::/list5/{{page}}.html\n成功励志::/list6/{{page}}.html\n网络小说::/list7/{{page}}.html\n其他小说::/list8/{{page}}.html",
+    "lastUpdateTime": 1685721773749,
+    "loginUrl": "",
+    "respondTime": 11332,
+    "ruleBookInfo": {
+      "author": "class.introduce@tag.a.0@text",
+      "coverUrl": "class.pic@src",
+      "intro": "class.jj@text##.*简介.",
+      "kind": "class.introduce@tag.span.2@text&&class.introduce@tag.span.0@text##状态.|更新.|\\s.*",
+      "lastChapter": "class.lastchapter@tag.a@text",
+      "name": "class.introduce@tag.h1@text",
+      "tocUrl": "class.cataloglink@tag.a.0@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.articlecontent@html",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "author": "tag.a.2@text||tag.td.2@text##作者.",
+      "bookList": "class.tt||tbody@tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img@src||tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.i7wx.net/files/article/image/$2/$1/$1s.jpg###",
+      "intro": "class.p2@text",
+      "kind": "tag.td.4@text&&tag.td.5@text",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.a.0@text||tag.td.0@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "tbody@tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.i7wx.net/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "tag.td.4@text&&tag.td.5@text",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.td.0@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.ml_list@ul@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.i7wx.net/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 爱奇",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.i7wx.net#grid tr!0",
+    "customOrder": 394,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 139
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "爱奇文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.i7wx.net/",
+    "customOrder": 1233,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"总点击榜\",\"url\":\"/paihang/allvisit_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐榜\",\"url\":\"/paihang/allvote_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总收藏榜\",\"url\":\"/paihang/goodnum_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总字数榜\",\"url\":\"/paihang/size_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"/paihang/postdate_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最近更新\",\"url\":\"/paihang/lastupdate_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古典文学\",\"url\":\"/list1/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list2/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"传记纪实\",\"url\":\"/list3/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"当代文学\",\"url\":\"/list4/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"教材教辅\",\"url\":\"/list5/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成功励志\",\"url\":\"/list6/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网络小说\",\"url\":\"/list7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.295}},{\"title\":\"其他小说\",\"url\":\"/list8/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.295}}]",
+    "lastUpdateTime": 1686053987300,
+    "loginUrl": "",
+    "respondTime": 4836,
+    "ruleBookInfo": {
+      "author": "class.introduce@tag.a.0@text",
+      "coverUrl": "class.catalog1@class.pic@img@src",
+      "intro": "class.jj@text##.*简介.",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "class.lastchapter@tag.a@text",
+      "name": "class.introduce@tag.h1@text",
+      "tocUrl": "class.cataloglink@tag.a.0@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.articlecontent@html",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "author": "tag.a.2@text||tag.td.2@text##作者.",
+      "bookList": "class.tt||tbody@tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img@src||tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.i7wx.net/files/article/image/$2/$1/$1s.jpg###",
+      "intro": "class.p2@text",
+      "kind": "tag.td.4@text&&tag.td.5@text",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.a.0@text||tag.td.0@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "tbody@tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.i7wx.net/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "tag.td.5:4@text",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.td.0@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.ml_list@ul@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.i7wx.net/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "👍 爱奇",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.i7wx.net#grid tr!0",
+    "customOrder": 487,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 139
+  }
+]

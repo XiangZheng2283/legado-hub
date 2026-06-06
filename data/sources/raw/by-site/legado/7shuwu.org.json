@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "繁体",
+    "bookSourceGroup": "",
+    "bookSourceName": "琦书网啦（魔法）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.7shuwu.org",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 533,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"总点击榜\",\"url\":\"https://www.7shuwu.org/top/allvisit_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"月点击榜\",\"url\":\"https://www.7shuwu.org/top/monthvisit_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"周点击榜\",\"url\":\"https://www.7shuwu.org/top/weekvisit_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"日点击榜\",\"url\":\"https://www.7shuwu.org/top/dayvisit_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"总推荐榜\",\"url\":\"https://www.7shuwu.org/top/allvote_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"最新入库\",\"url\":\"https://www.7shuwu.org/top/postdate_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"最近更新\",\"url\":\"https://www.7shuwu.org/top/lastupdate_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}},\n{\"title\":\"字数排行\",\"url\":\"https://www.7shuwu.org/top/size_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.3}}]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1733234047095,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 631,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.infotype@p.0@tag.a@text",
+      "coverUrl": "",
+      "intro": "class.intro@text",
+      "kind": "class.infotype@p.1@text&&class.infotype@p.2@text##类型：|更新时间：",
+      "lastChapter": "class.infotype@p.3@tag.a@text",
+      "name": "class.cataloginfo@h3@text",
+      "canReName": "",
+      "tocUrl": "class.infolink@tag.li.1@tag.a@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.content@html",
+      "nextContentUrl": "class.chapterPages@tag.a@href",
+      "imageStyle": "TEXT",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "tag.p.2@tag.a@text",
+      "bookList": "class.articlegeneral",
+      "bookUrl": "tag.p.1@tag.a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "tag.p.0@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.p.1@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.sone",
+      "bookUrl": "class.sone@tag.a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.chapters@tag.li",
+      "chapterName": "li.0@tag.a.0@text",
+      "chapterUrl": "li.0@tag.a.0@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/s.html,{\n  \"body\": \"s={{key}}&type=articlename\",\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\",\n  \"webView\": true\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

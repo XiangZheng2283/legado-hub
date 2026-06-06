@@ -1,0 +1,189 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🎃肉肉屋🎃#3",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.rourouwu1.com#🎃",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 1103,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "   全 部   ::/sort/0/{{page}}.html\n玄幻奇幻::/sort/1/{{page}}.html\n仙侠修真::/sort/2/{{page}}.html\n都市言情::/sort/3/{{page}}.html\n历史军事::/sort/4/{{page}}.html\n网游竞技::/sort/5/{{page}}.html\n科幻灵异::/sort/6/{{page}}.html\n恐怖惊悚::/sort/7/{{page}}.html\n其他类型::/sort/8/{{page}}.html",
+    "lastUpdateTime": 0,
+    "respondTime": 33434,
+    "ruleBookInfo": {
+      "author": "tag.span.1@a@text",
+      "coverUrl": "tag.img.1@src",
+      "intro": ".tabcontent@tag.div.2@text",
+      "kind": ".hide@text",
+      "lastChapter": "h3@text",
+      "name": "tag.span.0@text",
+      "tocUrl": ".b_hot@href"
+    },
+    "ruleContent": {
+      "content": ".acontent@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.c_value.0@text",
+      "bookList": ".c_row",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".c_description@text",
+      "kind": "class.c_value.2@text",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.2@text"
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=all&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "同站：\n肉文屋 https://www.rouwenwu12.com\n笔文斋 https://www.biwenzhai.com\n色书院 https://www.seshuyuan.com\nS3文学 https://www.s3wx.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🚬 肉肉屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.rourouwu1.com",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2286,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "   全 部   ::/sort/0/{{page}}.html\n玄幻奇幻::/sort/1/{{page}}.html\n仙侠修真::/sort/2/{{page}}.html\n都市言情::/sort/3/{{page}}.html\n历史军事::/sort/4/{{page}}.html\n网游竞技::/sort/5/{{page}}.html\n科幻灵异::/sort/6/{{page}}.html\n恐怖惊悚::/sort/7/{{page}}.html\n其他类型::/sort/8/{{page}}.html",
+    "lastUpdateTime": 1724318313160,
+    "respondTime": 2039,
+    "ruleBookInfo": {
+      "author": "span.1@a@text",
+      "coverUrl": "img.1@src",
+      "intro": ".tabcontent@div.2@text",
+      "kind": ".hide@text##作品分类：|连载状态：|最后更新：|作品性质：|授权级别：|首发网站：",
+      "lastChapter": "h3@text",
+      "name": "span.0@text",
+      "tocUrl": ".b_hot@href"
+    },
+    "ruleContent": {
+      "content": ".acontent@textNodes"
+    },
+    "ruleExplore": {
+      "author": ".c_value.0@text",
+      "bookList": ".c_row",
+      "bookUrl": "a.2@href",
+      "coverUrl": "img@src",
+      "intro": ".c_description@text",
+      "kind": ".c_value.2@text",
+      "lastChapter": "a.3@text",
+      "name": "a.2@text",
+      "wordCount": ".c_value.1@text@js:result+'字'"
+    },
+    "ruleSearch": {
+      "author": ".c_value.0@text",
+      "bookList": ".c_row",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".c_description@text",
+      "kind": ".c_value.1@text",
+      "lastChapter": "a.3@text",
+      "name": "a.1@text",
+      "wordCount": ".c_value.2@text@js:result+'字'"
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=all&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "同站：\n肉文屋 https://www.rouwenwu12.com\n笔文斋 https://www.biwenzhai.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "肉肉屋①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.rourouwu1.com/#🚀",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customButton": false,
+    "customOrder": 2334,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreScreen": "",
+    "exploreUrl": "   全 部   ::/sort/0/{{page}}.html\n玄幻奇幻::/sort/1/{{page}}.html\n仙侠修真::/sort/2/{{page}}.html\n都市言情::/sort/3/{{page}}.html\n历史军事::/sort/4/{{page}}.html\n网游竞技::/sort/5/{{page}}.html\n科幻灵异::/sort/6/{{page}}.html\n恐怖惊悚::/sort/7/{{page}}.html\n其他类型::/sort/8/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1721299148681,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1841,
+    "ruleBookInfo": {
+      "author": "tag.span.1@a@text",
+      "canReName": "",
+      "coverUrl": "tag.img.1@src",
+      "init": "",
+      "intro": ".tabcontent@tag.div.2@text",
+      "kind": ".hide@text",
+      "lastChapter": "h3@text",
+      "name": "tag.span.0@text",
+      "tocUrl": ".b_hot@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": ".acontent@textNodes",
+      "imageStyle": "",
+      "nextContentUrl": "",
+      "replaceRegex": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "class.c_value.0@text",
+      "bookList": ".c_row",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".c_description@text",
+      "kind": "class.c_value.2@text",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.2@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=all&searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 0
+  }
+]

@@ -1,0 +1,139 @@
+[
+  {
+    "bookSourceComment": "//加载略慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌐 爱小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.18ys.net",
+    "customOrder": 674,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhen_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqing_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"同人\",\"url\":\"/tongren_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxia_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingji_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchang_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichang_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qita_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1693536718950,
+    "respondTime": 28218,
+    "ruleBookInfo": {
+      "author": ".info@p.0@text",
+      "coverUrl": ".img@img@src",
+      "intro": "#all@html##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/简介.|\\[收起\\]/g,\"\")",
+      "kind": ".info@p.1:2:3@text##.*：|\\s..:.*",
+      "lastChapter": ".book_textList@a.0@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".info@span.0@text",
+      "tocUrl": "text.查看全部章节@href"
+    },
+    "ruleContent": {
+      "content": ".text@p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "textNodes##\\s|\\/",
+      "bookList": ".book_textList2@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "kind": "i,span@text##\\s.*",
+      "lastChapter": "a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterlist@li@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search.htm?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//加载略慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌐 爱小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.18ys.net",
+    "customOrder": 1228,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhen_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqing_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"同人\",\"url\":\"/tongren_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxia_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingji_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyi_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuan_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchang_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichang_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qita_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1693536718950,
+    "respondTime": 33608,
+    "ruleBookInfo": {
+      "author": ".info@p.0@text",
+      "coverUrl": ".img@img@src",
+      "intro": "#all@html##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/简介.|\\[收起\\]/g,\"\")",
+      "kind": ".info@p.1:2:3@text##.*：|\\s..:.*",
+      "lastChapter": ".book_textList@a.0@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".info@span.0@text",
+      "tocUrl": "text.查看全部章节@href"
+    },
+    "ruleContent": {
+      "content": ".text@p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "textNodes##\\s|\\/",
+      "bookList": ".book_textList2@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "kind": "i,span@text##\\s.*",
+      "lastChapter": "a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterlist@li@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search.htm?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 爱小说18ys",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.18ys.net",
+    "bookUrlPattern": "http://m.18ys.net/\\d+/index.html",
+    "customOrder": 232,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/xuanhuan<,_{{page}}>.html\n奇幻::/qihuan<,_{{page}}>.html\n修真::/xiuzhen<,_{{page}}>.html\n都市::/dushi<,_{{page}}>.html\n言情::/yanqing<,_{{page}}>.html\n历史::/lishi<,_{{page}}>.html\n同人::/tongren<,_{{page}}>.html\n武侠::/wuxia<,_{{page}}>.html\n科幻::/kehuan<,_{{page}}>.html\n游戏::/youxi<,_{{page}}>.html\n军事::/junshi<,_{{page}}>.html\n竞技::/jingji<,_{{page}}>.html\n灵异::/lingyi<,_{{page}}>.html\n商战::/shangzhan<,_{{page}}>.html\n校园::/xiaoyuan<,_{{page}}>.html\n官场::/guanchang<,_{{page}}>.html\n职场::/zhichang<,_{{page}}>.html\n其他::/qita<,_{{page}}>.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1735407167772,
+    "respondTime": 4612,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "{{@@text.分类：@text}}\n{{@@text.状态：@text}}\n{{@@text.更新时间：@text}}\n##分类：|状态：|更新时间：",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "{{@@text.全部章节@href}}"
+    },
+    "ruleContent": {
+      "content": ".text@p@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "ownText##\\/|\\s+",
+      "bookList": ".book_textList2@li",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "a.0@href\n<js>\nvar id = result.match(/(\\d+)\\/index.html/)[1];\nvar iid = parseInt(id/1000);\n'http://r.m.18ys.net/jieqi/cover/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "i@text&&span@text",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterlist@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "class.btn_op@text\n<js>var go=result.toString()\npage=go.match(/第1\\/(\\d+)页/)[1];\nlist=[];for(i=2;i<=page;i++){list.push(baseUrl.replace(/list1/,'list'+i))}\nlist</js>"
+    },
+    "searchUrl": "http://m.18ys.net/search.htm?keyword={{key}}<,&pn={{page}}>",
+    "weight": 0
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "bookSourceComment": "error:搜索内容为空并且没有发现\nerror:搜索内容为空并且没有发现\n",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "玫瑰言情网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mgyqw.com",
+    "bookUrlPattern": "",
+    "customOrder": 44,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 8785,
+    "ruleBookInfo": {
+      "coverUrl": "class.zp@img@src",
+      "intro": "id.sub2@text",
+      "lastChapter": "class.red1@a@text",
+      "name": "h1@text",
+      "tocUrl": "text.点击阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.bookContent@p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "id.tbody_list@tr",
+      "bookUrl": "tag.a.0@href##/gbk/mgyqw/(\\d+).html##http://m.mgyqw.com/gbk/mgyqw/$1.html",
+      "coverUrl": "tag.a.0@href##.*(\\d+)(\\d{3}).html##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "kind": "class.roomnsort@text",
+      "lastChapter": "tag.a.1@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_li@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mgyqw.com/modules/article/search.php?searchtype=0&searchkey={{key}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

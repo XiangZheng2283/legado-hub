@@ -1,0 +1,115 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🌃有声",
+    "bookSourceName": "🎧 有声听书吧(修复)",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://m.ysts8.net/",
+    "bookUrlPattern": "http://www.ysxs8.com/downlist/\\d+.html",
+    "customOrder": 952,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/m_l/46_{{page}}.html\n恐怖惊悚::/m_l/14_{{page}}.html\n言情通俗::/m_l/19_{{page}}.html\n武侠小说::/m_l/11_{{page}}.html\n历史军事::/m_l/15_{{page}}.html\n刑侦反腐::/m_l/16_{{page}}.html\n官场商战::/m_l/17_{{page}}.html\n人物纪实::/m_l/18_{{page}}.html\n有声文学::/m_l/10_{{page}}.html\n童话寓言::/m_l/20_{{page}}.html\n英文读物::/m_l/22_{{page}}.html\n百家讲坛::/m_l/9_{{page}}.html\n广播剧::/m_l/36_{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1672819619790,
+    "respondTime": 1094,
+    "ruleBookInfo": {
+      "author": ".info div.0@text##播音：",
+      "coverUrl": ".bookimg@img@src",
+      "init": "",
+      "intro": ".book_intro@text",
+      "kind": ".info div.2@text##类别：",
+      "lastChapter": "",
+      "name": ".bookname@text"
+    },
+    "ruleContent": {
+      "content": "iframe@src@js:\neval(String(java.ajax(result+\",{'headers':{'Referer':'{{baseUrl}}'}}\").match(/(var u =[\\S\\s]+?)\\$/)[1]));\nx+result.match(/url=(.*?)&/)[1]+\",{'headers':{'Referer':'{{result}}'}}\"",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "span@text##\\s*／.*",
+      "bookList": ".top_list@a",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "textNodes"
+    },
+    "ruleSearch": {
+      "author": ".peo@text##／.*",
+      "bookList": ".top_list@a",
+      "bookUrl": "@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "@text"
+    },
+    "ruleToc": {
+      "chapterList": "#playlist li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://m.ysts8.net/so.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "听书",
+    "bookSourceName": "🎉 有声听书吧(修复)",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://m.ysts8.net",
+    "bookUrlPattern": "http://www.ysxs8.com/downlist/\\d+.html",
+    "customOrder": 1461,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/m_l/46_{{page}}.html\n恐怖惊悚::/m_l/14_{{page}}.html\n言情通俗::/m_l/19_{{page}}.html\n武侠小说::/m_l/11_{{page}}.html\n历史军事::/m_l/15_{{page}}.html\n刑侦反腐::/m_l/16_{{page}}.html\n官场商战::/m_l/17_{{page}}.html\n人物纪实::/m_l/18_{{page}}.html\n有声文学::/m_l/10_{{page}}.html\n童话寓言::/m_l/20_{{page}}.html\n英文读物::/m_l/22_{{page}}.html\n百家讲坛::/m_l/9_{{page}}.html\n广播剧::/m_l/36_{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1668475427324,
+    "respondTime": 637,
+    "ruleBookInfo": {
+      "author": ".info div.0@text##播音：",
+      "coverUrl": ".bookimg@img@src",
+      "init": "",
+      "intro": ".book_intro@text",
+      "kind": ".info div.2@text##类别：",
+      "lastChapter": "",
+      "name": ".bookname@text"
+    },
+    "ruleContent": {
+      "content": "iframe@src@js:\neval(String(java.ajax(result+\",{'headers':{'Referer':'{{baseUrl}}'}}\").match(/(var u =[\\S\\s]+?)\\$/)[1]));\nx+result.match(/url=(.*?)&/)[1]+\",{'headers':{'Referer':'{{result}}'}}\"",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "span@text##\\s*／.*",
+      "bookList": ".top_list@a",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "textNodes"
+    },
+    "ruleSearch": {
+      "author": ".peo@text##／.*",
+      "bookList": ".top_list@a",
+      "bookUrl": "@href",
+      "checkKeyWord": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "@text"
+    },
+    "ruleToc": {
+      "chapterList": "#playlist li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://m.ysts8.net/so.php?keyword={{key}}",
+    "weight": 0
+  }
+]

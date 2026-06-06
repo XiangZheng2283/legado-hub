@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🔖九五小说①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.95dushu.com",
+    "bookUrlPattern": "",
+    "customOrder": 295,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/mulu/1-{{page}}.html\n武侠修真::/mulu/2-{{page}}.html\n都市言情::/mulu/3-{{page}}.html\n历史军事::/mulu/4-{{page}}.html\n侦探推理::/mulu/5-{{page}}.html\n网游动漫::/mulu/6-{{page}}.html\n科幻小说::/mulu/7-{{page}}.html\n恐怖灵异::/mulu/8-{{page}}.html\n穿越小说::/mulu/9-{{page}}.html\n其他类型::/mulu/10-{{page}}.html",
+    "lastUpdateTime": 1678687912599,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 2603,
+    "ruleBookInfo": {
+      "intro": ".intro_info@text",
+      "tocUrl": "##href=\"(\\/\\d+\\/\\d+\\/).*?开始阅读##http://www.95dushu.com$1###"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##最新网址.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".line",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.a.1@href##\\/(\\d+)\\/(\\d+)\\/.*##http://www.95dushu.com/files/article/image/$1/$2/$2s.jpg",
+      "kind": "tag.a.0@text##\\[|\\]",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ":<dd>.*?\"(.*?)\".*?>(.*?)<",
+      "chapterName": "$2",
+      "chapterUrl": "$1"
+    },
+    "searchUrl": "/s.php?type=articlename&s={{key}}&submit=",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 九五小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.95dushu.com",
+    "bookUrlPattern": "",
+    "customOrder": 540,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/mulu/1-{{page}}.html\n武侠修真::/mulu/2-{{page}}.html\n都市言情::/mulu/3-{{page}}.html\n历史军事::/mulu/4-{{page}}.html\n侦探推理::/mulu/5-{{page}}.html\n网游动漫::/mulu/6-{{page}}.html\n科幻小说::/mulu/7-{{page}}.html\n恐怖灵异::/mulu/8-{{page}}.html\n穿越小说::/mulu/9-{{page}}.html\n其他类型::/mulu/10-{{page}}.html",
+    "lastUpdateTime": 1630987089019,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 5686,
+    "ruleBookInfo": {
+      "intro": ".intro_info@text",
+      "tocUrl": "##href=\"(\\/\\d+\\/\\d+\\/).*?开始阅读##http://www.95dushu.com$1###"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##最新网址.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".line",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.a.1@href##\\/(\\d+)\\/(\\d+)\\/.*##http://www.95dushu.com/files/article/image/$1/$2/$2s.jpg",
+      "kind": "tag.a.0@text##\\[|\\]",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ":<dd>.*?\"(.*?)\".*?>(.*?)<",
+      "chapterName": "$2",
+      "chapterUrl": "$1"
+    },
+    "searchUrl": "/s.php?type=articlename&s={{key}}&submit=",
+    "weight": 0
+  }
+]

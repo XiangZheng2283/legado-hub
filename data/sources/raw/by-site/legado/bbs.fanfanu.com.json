@@ -1,0 +1,56 @@
+[
+  {
+    "bookSourceComment": "需登录（财富10点）",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸饭饭论坛",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://bbs.fanfanu.com/",
+    "bookUrlPattern": "",
+    "customOrder": -2085959015,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "exploreUrl": "[\n  {\n    \"title\": \"签到\",\n    \"url\": 'https://bbs.fanfanu.com/hack.php?H_name=xqqiandao,{\"method\":\"POST\",\"body\":\"action=qiandao&qdxq=1&setqdbkid=117\"}',\n    \"style\": {\n      \"layout_flexGrow\": 1\n    }\n  }\n]",
+    "header": "",
+    "lastUpdateTime": 1682084900767,
+    "loginUi": "",
+    "loginUrl": "https://bbs.fanfanu.com",
+    "respondTime": 180294,
+    "ruleBookInfo": {
+      "coverUrl": "id.imgList_0_all@tag.img@data-original||id.read_tpc@tag.img.0@data-original||id.read_tpc@tag.img.0@src",
+      "init": "",
+      "intro": "text.在线阅读已开放@href\n<js>\nurl=book.origin+result;\nhtml=java.ajax(url);\njava.setContent(html);\nintro=String(java.getString(\"@@class.intro@html\")).replace(/ 　　/g,\"\\n\")\nlist=java.getElements(\"@@class.nav-wrap.0@li\").toArray();\nif(list.length>1){\n\tyuan=\"\";\n\tfor(i in list){\n\ttext=list[i].text();\n\tyuan+=\"【\"+i+\"】\"+text+\"\\n\"\n\t}\nxu=(book.getVariable(\"custom\")==null||book.getVariable(\"custom\")==\"\")?\"0\":book.getVariable(\"custom\");\nco=String(url).match(/ydn(\\d+)/)[1];\nheader={\n\t\"headers\":{\n\t\t\"Cookie\":\"pathid_\"+co+\"=\"+xu\n\t\t}\n\t}\njava.put('coo',JSON.stringify(header))\nlaiyuan='当前来源【'+xu+'】';\nu=url+'?pathid_'+xu+\",\"+JSON.stringify(header)\njava.put('url',u);\nresult='换源列表（点击设置书籍变量，输入序号，确认后刷新，可更改对应的源，默认为0）\\n'+yuan+\"\\n\"+laiyuan+'\\n--------------\\n'+intro;\n\t}else{\n\t\tjava.put('url',url)\n\t\tresult=intro;\n\t\t\n\t\t}\n</js>",
+      "kind": "",
+      "lastChapter": "",
+      "tocUrl": "@get:{url}"
+    },
+    "ruleContent": {
+      "content": "class.read-main-wrap@tag.p@html||class.tpc_content@html##作者更多新书.*|版权归作者.*|饭饭会员.*|感谢.*支持!|金丝|",
+      "imageStyle": "0",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "bookList": "class.regForm",
+      "name": "text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.th@tag.a@text##.*作者[：:]|【.*",
+      "bookList": "class.tr3 tac\n@js:\nlist=result.toArray();\nlist1=[];\nfor(i in list){\nif(list[i].text().indexOf(java.get('key'))>-1){\nif(!(list[i].text().match(/书友寻书|教程|求助|建议|申请|公告活动|新手报道|交流区|心情日记|书评讨论|版权|资源下载区|动画站|动漫画廊|杂志社|动漫休闲|影视综艺|PS专区|生活时尚|水缸无水|饭饭荣誉发书团区|精彩贴图|游戏专区|我型我show|辞赋原创|美文收集|影音|权限板块/))){\nlist1.push(list[i])}\n}\n}\nlist1.map(x=>x)",
+      "bookUrl": "tag.th@tag.a@href",
+      "checkKeyWord": "",
+      "coverUrl": "",
+      "kind": "class.y-style.2@a@text##口-",
+      "lastChapter": "",
+      "name": "tag.th@tag.a@text##《|》|(txt|TXT).*|\\+番外"
+    },
+    "ruleToc": {
+      "chapterList": "//ul[@class=\"cf\"]/li/a",
+      "chapterName": "text##.*☆、",
+      "chapterUrl": "href\n<js>\n'/'+result+','+java.get('coo')\n</js>\n##,$"
+    },
+    "searchUrl": "/searcher.php?,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"verify=989566d6&step=2&type=thread&keyword={{key}}\"\n}\n@js:java.put('key',key);result",
+    "weight": 0
+  }
+]

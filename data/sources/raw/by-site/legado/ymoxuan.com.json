@@ -1,0 +1,41 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 衍墨轩③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ymoxuan.com",
+    "customOrder": 898,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1605150578996,
+    "respondTime": 521,
+    "ruleBookInfo": {
+      "author": "class.detail pt20@tag.a.0@text",
+      "coverUrl": "class.cover@tag.img.0@src",
+      "intro": "class.desc@text##.*内容简介：",
+      "name": "class.line@tag.h1.0@text",
+      "tocUrl": "tag.footer.0@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "class.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.a2.0@tag.a.0@text",
+      "bookList": "class.lastest@tag.li",
+      "bookUrl": "class.n2.0@tag.a.0@href",
+      "kind": "class.nt.0@text",
+      "lastChapter": "class.c2.0@tag.a.0@text",
+      "name": "class.n2.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.mulu@tag.li!0:1:2:3:4:5:6:7:8",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.ymoxuan.com/search.htm?keyword={{key}}",
+    "weight": 0
+  }
+]

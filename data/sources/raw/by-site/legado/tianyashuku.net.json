@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "BY:溪",
+    "bookSourceGroup": "",
+    "bookSourceName": "①天涯书库#书源.com",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://tianyashuku.net",
+    "bookUrlPattern": "https://tianyashuku.net/\\w+/\\d+/",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3385,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n  {\n    \"title\": \"♨️分类小说♨️\",\n    \"url\": \"\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 1\n    }\n  },\n  {\n    \"title\": \"首页\",\n    \"url\": \"http://tianyashuku.net/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"武侠\",\n    \"url\": \"http://tianyashuku.net/wuxia/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"http://tianyashuku.net/yanqing/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"推理\",\n    \"url\": \"http://tianyashuku.net/tuili/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"恐怖\",\n    \"url\": \"http://tianyashuku.net/kongbu/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"网络\",\n    \"url\": \"http://tianyashuku.net/wangluo/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"科幻\",\n    \"url\": \"http://tianyashuku.net/kehuan/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"校园\",\n    \"url\": \"http://tianyashuku.net/xiaoyuan/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"中国文学\",\n    \"url\": \"http://tianyashuku.net/cn/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  },\n  {\n    \"title\": \"外国文学\",\n    \"url\": \"http://tianyashuku.net/world/<,index_{{page}}.html>\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.25\n    }\n  }\n]",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10;  Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1736250238913,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 798,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".item.0@text",
+      "coverUrl": "",
+      "intro": "{{@@.product-excerpt@text##\\[展开\\]}}\n##(^|[。！？……]+[”」）……】]?)##$1<br>",
+      "kind": ".item.1@text##.*：",
+      "lastChapter": "",
+      "name": "h1.1@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".m-article-text@html",
+      "nextContentUrl": ".m-page@a.2@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": ".themebetter-ent-lists-content@li||article",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h2@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "article",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h2@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#list@dl@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\nvar su=source.key,\nso=su+\"/e/search/index.php\",\nbody=`show=title,writer&keyboard=${key}&tbname=bookname&tempid=1`;\nhead=JSON.parse(source.header);\nres=java.post(so,body,head)\n.header(\"location\");\nString(res).replace(/result.*searchid/,\n\"/e/search/result/index.php?page={{page-1}}&searchid\")",
+    "variableComment": "",
+    "weight": 1
+  }
+]

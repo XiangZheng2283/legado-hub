@@ -1,0 +1,24 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,天龙",
+    "bookSourceName": "19楼书包网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.aishula.com",
+    "customOrder": 222,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1608880489089,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

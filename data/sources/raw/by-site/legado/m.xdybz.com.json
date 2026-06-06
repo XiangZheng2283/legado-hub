@@ -1,0 +1,110 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "⚠️第一版主～",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xdybz.com/",
+    "customOrder": 1061,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::https://m.xdybz.com/sort/1_{{page}}/\n武侠::https://m.xdybz.com/sort/2_{{page}}/\n言情::https://m.xdybz.com/sort/3_{{page}}/\n穿越::https://m.xdybz.com/sort/4_{{page}}/\n都市::https://m.xdybz.com/sort/5_{{page}}/\n科幻::https://m.xdybz.com/sort/6_{{page}}/\n网游::https://m.xdybz.com/sort/7_{{page}}/\n恐怖::https://m.xdybz.com/sort/8_{{page}}/\n耽美::https://m.xdybz.com/sort/9_{{page}}/\n校园::https://m.xdybz.com/sort/10_{{page}}/\n高辣::https://m.xdybz.com/sort/11_{{page}}/\n腹黑::https://m.xdybz.com/sort/12_{{page}}/\n种田::https://m.xdybz.com/sort/13_{{page}}/\n高干::https://m.xdybz.com/sort/14_{{page}}/\n百合::https://m.xdybz.com/sort/15_{{page}}/\n其他::https://m.xdybz.com/sort/16_{{page}}/",
+    "lastUpdateTime": 1674201659534,
+    "respondTime": 8121,
+    "ruleBookInfo": {
+      "author": ".xx@ul@li.2@a@text",
+      "coverUrl": ".xsfm@img@src||.xsfm@img@onerror##this.src='|'",
+      "init": "",
+      "intro": ".jianjie@html",
+      "kind": ".xx@ul@li.1@a@text",
+      "lastChapter": ".xx@ul@li.-1@a@text",
+      "name": ".xx@ul@li.0@text",
+      "tocUrl": ".gengduo@a@href"
+    },
+    "ruleContent": {
+      "content": "id.nr@html"
+    },
+    "ruleExplore": {
+      "author": ".tjxs@span.1@a@text",
+      "bookList": ".xbk!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a@img@src",
+      "intro": ".tjxs@span.2@text",
+      "kind": ".tjrs@text",
+      "name": ".xsm@a@text"
+    },
+    "ruleSearch": {
+      "author": "a.-1@text",
+      "bookList": ".fk@li",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "斗罗大陆",
+      "coverUrl": "@js:'http://gchat.doumsg.top/gchatpic_new/0/0-0-7B917BA4A034E18732CC7633778A901E/0'",
+      "kind": "a.0@text##\\[|\\]",
+      "name": ".blue@text"
+    },
+    "ruleToc": {
+      "chapterList": ".lb@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": ".showpage@a@href"
+    },
+    "searchUrl": "/s.php,{\n'charset': 'gbk',\n'method': 'POST',\n'body': 'type=articlename&s={{key}}'\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "第一版主",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xdybz.com",
+    "bookUrlPattern": "",
+    "customOrder": 1499,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/sort/1_{{page}}/\n武侠::/sort/2_{{page}}/\n言情::/sort/3_{{page}}/\n穿越::/sort/4_{{page}}/\n都市::/sort/5_{{page}}/\n科幻::/sort/6_{{page}}/\n网游::/sort/7_{{page}}/\n恐怖::/sort/8_{{page}}/\n耽美::/sort/9_{{page}}/\n校园::/sort/10_{{page}}/\n高辣::/sort/11_{{page}}/\n腹黑::/sort/12_{{page}}/\n种田::/sort/13_{{page}}/\n高干::/sort/14_{{page}}/\n百合::/sort/15_{{page}}/\n其他::/sort/16_{{page}}/",
+    "lastUpdateTime": 1662807235538,
+    "loginUrl": "",
+    "respondTime": 7064,
+    "ruleBookInfo": {
+      "author": ".xx@ul@li.2@a@text",
+      "coverUrl": ".xsfm@img@src||.xsfm@img@onerror##this.src='|'",
+      "init": "",
+      "intro": ".jianjie@html",
+      "kind": ".xx@ul@li.1@a@text",
+      "lastChapter": ".xx@ul@li.-1@a@text",
+      "name": ".xx@ul@li.0@text",
+      "tocUrl": ".gengduo@a@href"
+    },
+    "ruleContent": {
+      "content": "id.nr@html"
+    },
+    "ruleExplore": {
+      "author": ".tjxs@span.1@a@text",
+      "bookList": ".xbk!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a@img@src",
+      "intro": ".tjxs@span.2@text",
+      "kind": ".tjrs@text",
+      "name": ".xsm@a@text"
+    },
+    "ruleSearch": {
+      "author": "a.-1@text",
+      "bookList": ".fk@li",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "斗罗大陆",
+      "coverUrl": "@js:'http://gchat.doumsg.top/gchatpic_new/0/0-0-7B917BA4A034E18732CC7633778A901E/0'",
+      "kind": "a.0@text##\\[|\\]",
+      "name": ".blue@text"
+    },
+    "ruleToc": {
+      "chapterList": ".lb@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": ".showpage@a@href"
+    },
+    "searchUrl": "/s.php,{\n'charset': 'gbk',\n'method': 'POST',\n'body': 'type=articlename&s={{key}}'\n}",
+    "weight": 0
+  }
+]

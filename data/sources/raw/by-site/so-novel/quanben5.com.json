@@ -1,0 +1,35 @@
+[
+  {
+    "url": "https://quanben5.com/",
+    "name": "全本小说网",
+    "comment": "完本很全，搜索限流，搜索需逆向加密参数b",
+    "needProxy": true,
+    "search": {
+      "url": "https://quanben5.com/?c=book&a=search.json&callback=search&keywords=%s&b=%s",
+      "method": "get",
+      "result": ".pic_txt_list",
+      "bookName": "h3 > a",
+      "author": "p.info > span"
+    },
+    "book": {
+      "url": "https://quanben5.com/n/(.*?)/",
+      "bookName": "h3 > span",
+      "author": "body > div.row > div > div:nth-child(1) > div.pic_txt_list > p:nth-child(3) > span",
+      "intro": "body > div.row > div > div:nth-child(1) > div.description",
+      "category": "body > div.row > div > div:nth-child(1) > div.pic_txt_list > p:nth-child(4) > span",
+      "coverUrl": "body > div.row > div > div:nth-child(1) > div.pic_txt_list > div > img",
+      "status": "body > div.row > div > div:nth-child(1) > div.pic_txt_list > p:nth-child(5) > span"
+    },
+    "toc": {
+      "url": "https://quanben5.com/n/%s/xiaoshuo.html",
+      "item": "ul > li > a"
+    },
+    "chapter": {
+      "title": ".content > h1",
+      "content": "#content",
+      "paragraphTagClosed": true,
+      "filterTxt": "\\(本章完\\)",
+      "filterTag": ""
+    }
+  }
+]

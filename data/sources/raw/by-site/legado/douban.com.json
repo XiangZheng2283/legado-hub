@@ -1,0 +1,435 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "㊝豆瓣读书▪︎书评 #关耳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com#guaner",
+    "customOrder": 841,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1639039859805,
+    "respondTime": 3092,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "﹅ ♚书评 换源看书",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "豆瓣读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com#♤guaner",
+    "customOrder": 851,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681943584865,
+    "respondTime": 3276,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📄 豆瓣书评",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com",
+    "customOrder": 873,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1668701755238,
+    "respondTime": 2994,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "豆瓣读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com#关耳",
+    "customOrder": 1443,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681011689245,
+    "respondTime": 3388,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "﹅ ♚书评 换源看书",
+    "bookSourceGroup": "5.6",
+    "bookSourceName": "豆瓣读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com#♤guaner",
+    "customOrder": 44,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681943584865,
+    "respondTime": 4700,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "小刀阅读#🌾豆瓣·日记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com/note/662056085/?type=rec",
+    "customOrder": 714,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "https://accounts.douban.com/passport/login",
+    "respondTime": 1,
+    "weight": 552
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "豆瓣读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com",
+    "customOrder": 1108,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1689840813599,
+    "respondTime": 14837,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "㊝豆瓣读书▪︎书评 #关耳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com#guaner",
+    "customOrder": 1329,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 1639039859805,
+    "respondTime": 4079,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "豆瓣读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com#关耳",
+    "customOrder": 1457,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 1681011689245,
+    "respondTime": 3662,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⑨📜  书评",
+    "bookSourceName": "📜豆瓣读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.douban.com",
+    "customOrder": -2085958942,
+    "enabled": false,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1627224652658,
+    "respondTime": 14436,
+    "ruleBookInfo": {
+      "author": "id.info@tag.a.0@text",
+      "coverUrl": "id.mainpic@img@src",
+      "intro": "{{@@id.info@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}",
+      "kind": "class.rating_num@text&&class.rating_people@text",
+      "lastChapter": "",
+      "name": "id.mainpic@a@title",
+      "tocUrl": "@js:\nif(baseUrl.match(/author/)){result=baseUrl+'books?sortby=collect&format=pic'}else{if(baseUrl.match(/series|ebook/)){result=baseUrl}else{\nb=baseUrl+'reviews';\na=java.ajax(b);\nif(a.match(/书评\\s*\\(0\\)/)){\nresult=baseUrl+\"comments/\"\n}else{result=b}\n}}"
+    },
+    "ruleContent": {
+      "content": "{{html='';\nif(result.match(/ratingValue\": \"(\\d+)\"/)){a=result.match(/ratingValue\": \"(\\d+)\"/)[1];b='';for(i=1;i<=a;i++){b+='★'}html='评分：'+b}html}}{{@@id.mainpic@html}}{{@@id.info@html||class.comment@html}}{{@@class.indent@class.all@html||class.intro@html}}{{@@id.intro@class.all@html}}{{@@class.review-content@html}}",
+      "nextContentUrl": "text.后一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.meta abstract_2.0@text&&class.meta abstract.0@text##.*?人收藏|作者 / |\\s*/.*",
+      "bookList": "class.item-root",
+      "bookUrl": "class.title@tag.a.0@href##.*ebook.*",
+      "coverUrl": "img@src",
+      "intro": "class.meta abstract.0@text##.*? /",
+      "kind": "class.rating_nums@text&&class.pl@text##\\(|\\)",
+      "lastChapter": "class.rating_nums@text&&class.pl@text##\\(|\\)|\\n##★",
+      "name": "class.title@text##.*?豆瓣阅读作品.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.review-list@children||class.grid_view@ul@li||class.subject-item||tag.html",
+      "chapterName": "id.content@tag.h1@text||tag.h2@text||tag.h6@text||class.comment-info@a@text||text",
+      "chapterUrl": "tag.h2@a@href||tag.h6@a@href||href",
+      "nextTocUrl": "@js:\nlist=[];\nif(!(baseUrl.match(/series/)||baseUrl.match(/ebook/)||baseUrl.match(/comments/))){\nif(baseUrl.match(/author/)){\nif(result.match(/class=\"count\">\\(共(\\d+)条\\)/)){\ncount=result.match(/class=\"count\">\\(共(\\d+)条\\)/)[1];\npage=parseInt(count/10);\nfor(i=0;i<page;i++){\nlist.push(baseUrl+'&start='+(i*10))\n}}}else{\nif(result.match(/data-total-page=\"([^\"]+)\">/)){\np=result.match(/data-total-page=\"([^\"]+)\">/)[1];\npage=20;\nif(p<page){\npage=p\n}\nfor(i=1;i<=page;i++){\nlist.push(baseUrl+'?start='+((i-1)*20))\n}}}}\nlist",
+      "updateTime": "{{@@class.main-meta@text||class.star@tag.span.1@text}}-----{{@@class.name@text||class.star@tag.span.2@text}}"
+    },
+    "searchUrl": "https://search.douban.com/book/subject_search?search_text={{key}}&cat=1001&start={{(page-1)*15}},{\"webView\":true}",
+    "weight": 0
+  }
+]

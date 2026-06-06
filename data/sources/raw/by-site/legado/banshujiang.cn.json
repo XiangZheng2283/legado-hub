@@ -1,0 +1,85 @@
+[
+  {
+    "bookSourceGroup": "📚 出版,搜索链接规则为空",
+    "bookSourceName": "📚编程搬书匠",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.banshujiang.cn",
+    "customOrder": 898,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⑥📥  下载",
+    "bookSourceName": "📥搬书匠",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.banshujiang.cn",
+    "bookUrlPattern": "",
+    "customOrder": -2085958939,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "exploreUrl": "[{'title':'分类','url':'','style':{layout_flexGrow: 1,layout_flexBasisPercent:1}},\n{'title':'ActionScript','url':'/category/programming_language/ActionScript/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'ASP.net','url':'/category/programming_language/ASP.net/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'C','url':'/category/programming_language/C/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'C#','url':'/category/programming_language/C%23/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'C++','url':'/category/programming_language/C++/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'CoffeeScript','url':'/category/programming_language/CoffeeScript/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'CSS','url':'/category/programming_language/CSS/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Elixir','url':'/category/programming_language/Elixir/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Erlang','url':'/category/programming_language/Erlang/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Go','url':'/category/programming_language/Go/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Groovy','url':'/category/programming_language/Groovy/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'HTML5','url':'/category/programming_language/HTML5/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Java','url':'/category/programming_language/Java/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'JavaScript','url':'/category/programming_language/JavaScript/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Kotlin','url':'/category/programming_language/Kotlin/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Lua','url':'/category/programming_language/Lua/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Objective-C','url':'/category/programming_language/Objective-C/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Perl','url':'/category/programming_language/Perl/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'PHP','url':'/category/programming_language/PHP/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Python','url':'/category/programming_language/Python/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'R','url':'/category/programming_language/R/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Ruby','url':'/category/programming_language/Ruby/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Rust','url':'/category/programming_language/Rust/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Scala','url':'/category/programming_language/Scala/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Shell Script','url':'/category/programming_language/Shell%20Script/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'SQL','url':'/category/programming_language/SQL/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Swift','url':'/category/programming_language/Swift/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'TypeScript','url':'/category/programming_language/TypeScript/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Android','url':'/category/mobile_development/Android/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'iOS','url':'/category/mobile_development/iOS/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Linux','url':'/category/operation_system/Linux/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Mac OS X','url':'/category/operation_system/Mac%20OS%20X/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Unix','url':'/category/operation_system/Unix/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Windows','url':'/category/operation_system/Windows/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':' DB2','url':'/category/database/DB2/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'MongoDB','url':'/category/database/MongoDB/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'MySQL','url':'/category/database/MySQL/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Oracle','url':'/category/database/Oracle/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'PostgreSQL','url':'/category/database/PostgreSQL/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'SQL Server','url':'/category/database/SQL%20Server/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'SQLite','url':'/category/database/SQLite/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Apache项目','url':'/category/open_source/Apache%E9%A1%B9%E7%9B%AE/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'Web开发','url':'/category/open_source/Web%E5%BC%80%E5%8F%91/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'程序开发','url':'/category/open_source/%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%8F%91/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':' 中文','url':'/category/language/%E4%B8%AD%E6%96%87/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'英文','url':'/category/language/%E8%8B%B1%E6%96%87/page/{{page}}','style':{layout_flexGrow: 0,layout_flexBasisPercent:0.29}},\n{'title':'年份','url':'','style':{layout_flexGrow: 1,layout_flexBasisPercent:1}},\n{'title':'2019','url':'/category/publish_year/2019/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2018','url':'/category/publish_year/2018/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2017','url':'/category/publish_year/2017/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2016','url':'/category/publish_year/2016/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2015','url':'/category/publish_year/2015/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2014','url':'/category/publish_year/2014/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2013','url':'/category/publish_year/2013/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2012','url':'/category/publish_year/2012/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2011','url':'/category/publish_year/2011/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2010','url':'/category/publish_year/2010/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2009','url':'/category/publish_year/2009/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2008','url':'/category/publish_year/2008/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2007','url':'/category/publish_year/2007/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2006','url':'/category/publish_year/2006/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2005','url':'/category/publish_year/2005/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2004','url':'/category/publish_year/2004/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2003','url':'/category/publish_year/2003/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2002','url':'/category/publish_year/2002/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2001','url':'/category/publish_year/2001/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'2000','url':'/category/publish_year/2000/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1999','url':'/category/publish_year/1999/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1998','url':'/category/publish_year/1998/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1997','url':'/category/publish_year/1997/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1996','url':'/category/publish_year/1996/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1995','url':'/category/publish_year/1995/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1994','url':'/category/publish_year/1994/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1993','url':'/category/publish_year/1993/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1992','url':'/category/publish_year/1992/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1988','url':'/category/publish_year/1988/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}},\n{'title':'1987','url':'/category/publish_year/1987/page/{{page}}','style':{layout_flexGrow: 1,layout_flexBasisPercent:0.25}}]",
+    "header": "",
+    "lastUpdateTime": 1682080279888,
+    "loginUrl": "",
+    "respondTime": 180640,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "@js:\"点击章节链接跳转浏览器下载\"+baseUrl",
+      "imageStyle": "0",
+      "nextContentUrl": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.li.2@tag.span.1@text",
+      "bookList": "class.small-list@class.row shadow-panel",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "tag.li.-1@text&&tag.li.-2@text",
+      "lastChapter": "",
+      "name": "tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.inline@li",
+      "chapterName": "text",
+      "chapterUrl": "",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.banshujiang.cn/e_books/search/page/1?searchWords={{key}}",
+    "weight": 0
+  }
+]

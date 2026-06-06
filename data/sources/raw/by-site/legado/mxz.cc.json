@@ -1,0 +1,472 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦想者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc",
+    "customOrder": 213,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1631258623476,
+    "respondTime": 3792,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": "##[『].*[』]|.*最新章节！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦想者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/",
+    "customOrder": 1262,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686056712410,
+    "respondTime": 2224,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": "##[『].*[』]|.*最新章节！|如果.*朋友吧！"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "轮回",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.3:1@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦想者1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/qb",
+    "customOrder": 1542,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680891868387,
+    "respondTime": 8628,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！|为您提供精彩小说。",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦想者2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/qb/",
+    "customOrder": 1544,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680891884160,
+    "respondTime": 1557,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦想者3",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/qb#未月十八净化",
+    "customOrder": 1549,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680891824716,
+    "respondTime": 7520,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！|为您提供精彩小说。",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⛱️免费",
+    "bookSourceName": "梦想者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc",
+    "customOrder": 287,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1631258623476,
+    "respondTime": 1508,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": "##[『].*[』]|.*最新章节！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "梦想者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/",
+    "customOrder": 1663,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686056712410,
+    "respondTime": 3642,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": "##[『].*[』]|.*最新章节！|如果.*朋友吧！"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "轮回",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.3:1@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "💥优质",
+    "bookSourceName": "梦想者1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/qb",
+    "customOrder": 1700,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680891868387,
+    "respondTime": 2326,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！|为您提供精彩小说。",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💥优质",
+    "bookSourceName": "梦想者2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/qb/",
+    "customOrder": 1702,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680891884160,
+    "respondTime": 2192,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "普通",
+    "bookSourceName": "梦想者3",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mxz.cc/qb#未月十八净化",
+    "customOrder": 1713,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680891824716,
+    "respondTime": 1617,
+    "ruleBookInfo": {
+      "author": ".p_author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": "#count@span.0:2:3@text",
+      "lastChapter": ".chaw@li.0@a@text",
+      "name": ".d_title@h1@text",
+      "wordCount": "#count@span.1@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent p@html##如果.*朋友吧！|为您提供精彩小说。",
+      "nextContentUrl": "#next_url@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "#nr",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd.2@text",
+      "kind": "span.1:3@text",
+      "lastChapter": "dd.3@a@text",
+      "name": "h3@a@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chaw_c li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mxz.cc/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

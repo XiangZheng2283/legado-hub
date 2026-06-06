@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🪔️ 笔趣阁66",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge66.net/##@遇知",
+    "customOrder": 583,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 650
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🪔️ 笔趣阁66",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge66.net/##@遇知",
+    "customOrder": 735,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 650
+  }
+]

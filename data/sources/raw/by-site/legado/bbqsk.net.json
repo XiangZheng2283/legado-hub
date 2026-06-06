@@ -1,0 +1,88 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "大帝书阁[bbsk]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.bbqsk.net/",
+    "bookUrlPattern": "",
+    "customOrder": 786,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685866318859,
+    "loginUrl": "",
+    "respondTime": 1535,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "tag.img.0@src",
+      "intro": "tag.tbody.3@tag.tr.1@text##【作品简介】：",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "replaceRegex": "##天才一秒记住本站地址.*无广告!"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "class.grid@tr",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##/book/(\\d+)(\\d{3}).html##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "lastChapter": "class.odd@a@text",
+      "name": "class.even@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.bgdiv@tag.td",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://www.bbqsk.net/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "大帝书阁[bbsk]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.bbqsk.net/",
+    "bookUrlPattern": "",
+    "customOrder": 786,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685866318859,
+    "loginUrl": "",
+    "respondTime": 1831,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "tag.img.0@src",
+      "intro": "tag.tbody.3@tag.tr.1@text##【作品简介】：",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "replaceRegex": "##天才一秒记住本站地址.*无广告!"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "class.grid@tr",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##/book/(\\d+)(\\d{3}).html##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "lastChapter": "class.odd@a@text",
+      "name": "class.even@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.bgdiv@tag.td",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://www.bbqsk.net/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

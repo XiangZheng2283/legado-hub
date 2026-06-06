@@ -1,0 +1,94 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "⭐卧龙小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.paper027.com/",
+    "customOrder": 592,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部小说\",\"url\":\"/all.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"全部完本\",\"url\":\"/all/serialize/1.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"男生全部\",\"url\":\"/all/id/4.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"男生完本\",\"url\":\"/all/serialize/1/id/4.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"奇幻玄幻\",\"url\":\"/all/id/18.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠仙侠\",\"url\":\"/all/id/19.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/all/id/20.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市娱乐\",\"url\":\"/all/id/21.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻末日\",\"url\":\"/all/id/22.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑灵异\",\"url\":\"/all/id/23.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"/all/id/34.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其他\",\"url\":\"/all/id/35.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生全部\",\"url\":\"/all/id/8.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"女生完本\",\"url\":\"/all/serialize/1/id/8.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古装言情\",\"url\":\"/all/id/25.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"/all/id/26.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"浪漫青春\",\"url\":\"/all/id/27.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想言情\",\"url\":\"/all/id/28.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻空间\",\"url\":\"/all/id/37.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异悬疑\",\"url\":\"/all/id/38.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人衍生\",\"url\":\"/all/id/39.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美百合\",\"url\":\"/all/id/40.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1681483833555,
+    "respondTime": 2350,
+    "ruleBookInfo": {
+      "tocUrl": "",
+      "wordCount": ".HuabenListUL.hidden-xs.hidden-sm@li.1@text"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html"
+    },
+    "ruleExplore": {
+      "author": "class.text-lightgrey.0@text",
+      "bookList": "class.list-inline booklist@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "kind": "class.hidden-md@text##分类：|标签：",
+      "name": "h3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2@a@href",
+      "coverUrl": "img@src",
+      "intro": ".searchresult-info@p@text",
+      "kind": ".text-muted@a@text",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapters@p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "卧龍小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.paper027.com/",
+    "customOrder": 940,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部小说\",\"url\":\"/all.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"男生全部\",\"url\":\"/all/id/4.html?page={{page}}\",\"style\":{\"layout_flexGrow\":0.5,\"layout_flexBasisPercent\":0.45}},{\"title\":\"男生完本\",\"url\":\"/all/serialize/1/id/4.html?page={{page}}\",\"style\":{\"layout_flexGrow\":0.5,\"layout_flexBasisPercent\":0.45}},{\"title\":\"奇幻玄幻\",\"url\":\"/all/id/18.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠仙侠\",\"url\":\"/all/id/19.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/all/id/20.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市娱乐\",\"url\":\"/all/id/21.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻末日\",\"url\":\"/all/id/22.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑灵异\",\"url\":\"/all/id/23.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"/all/id/34.html?page={{page}}\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},{\"title\":\"其他\",\"url\":\"/all/id/35.html?page={{page}}\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},{\"title\":\"女生全部\",\"url\":\"/all/id/8.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.45}},{\"title\":\"女生完本\",\"url\":\"/all/serialize/1/id/8.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.45}},{\"title\":\"古装言情\",\"url\":\"/all/id/25.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"/all/id/26.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"浪漫青春\",\"url\":\"/all/id/27.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想言情\",\"url\":\"/all/id/28.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻空间\",\"url\":\"/all/id/37.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异悬疑\",\"url\":\"/all/id/38.html?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人衍生\",\"url\":\"/all/id/39.html?page={{page}}\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},{\"title\":\"耽美百合\",\"url\":\"/all/id/40.html?page={{page}}\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}}]",
+    "lastUpdateTime": 1692440782257,
+    "respondTime": 3341,
+    "ruleBookInfo": {
+      "tocUrl": "",
+      "wordCount": ".HuabenListUL.hidden-xs.hidden-sm@li.1@text"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html"
+    },
+    "ruleExplore": {
+      "author": "class.text-lightgrey.0@text",
+      "bookList": "class.list-inline booklist@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "kind": "class.hidden-md@text##分类：|标签：",
+      "name": "h3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2@a@href",
+      "coverUrl": "img@src",
+      "intro": ".searchresult-info@p@text",
+      "kind": ".text-muted@a@text",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapters@p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/search?keyword={{key}}",
+    "weight": 0
+  }
+]

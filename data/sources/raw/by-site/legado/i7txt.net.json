@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceComment": "网站有问题，不能看正文",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "艾墨中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://i7txt.net",
+    "customOrder": 66,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678674009724,
+    "respondTime": 5553,
+    "ruleBookInfo": {
+      "author": "class.mr30@a@title",
+      "init": "",
+      "kind": "class.pt-bookdetail-label mt10@text",
+      "name": "tag.h1@a@text"
+    },
+    "ruleContent": {
+      "content": "class.size16 color5 pt-read-text@html"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.mr30.0@a@text",
+      "bookList": "class.pt-rank-detail",
+      "bookUrl": "class.pt-rank-detail@tag.a.0@href",
+      "coverUrl": "class.pt-rank-detail@a@img@src",
+      "intro": "class.compulsory-row fl w100 color5 desc@html",
+      "kind": "tag.span.4@text##分类：",
+      "lastChapter": "class.fl lh100@a@title",
+      "name": "class.pt-rank-detail.0@tag.a.0@title"
+    },
+    "ruleToc": {
+      "chapterList": "class.pt-chapter-cont-detail full@a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href##$##,{'webView': true}"
+    },
+    "searchUrl": "https://i7txt.net/search/result.html?searchkey={{key}}&page={{page}}",
+    "weight": 0
+  }
+]

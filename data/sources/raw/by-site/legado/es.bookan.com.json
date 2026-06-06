@@ -1,0 +1,44 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⑦📚  出版",
+    "bookSourceName": "📚无锡图书馆",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://es.bookan.com.cn1",
+    "customOrder": -2085958945,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1646662541065,
+    "respondTime": 181128,
+    "ruleBookInfo": {
+      "coverUrl": "",
+      "init": "",
+      "lastChapter": "",
+      "tocUrl": "http://epub.bookan.com.cn/epub1/@get:{rid}/@get:{rid}-@get:{iid}/@get:{iid}_{{$.data[*].hash}}/OEBPS/toc.ncx"
+    },
+    "ruleContent": {
+      "content": "body@html"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "$.issueInfo.owner",
+      "bookList": "@JSon:$.*[?(@.format==3)]",
+      "bookUrl": "http://user.bookan.com.cn/index.php?op=Resource.getHash&resourceType=3&resourceId={{$.resourceId}}&issueId={{$.issueId}}&start=0&end=0",
+      "coverUrl": "http://img1-qn.bookan.com.cn/epub1/{{$.resourceId}}/{{$.resourceId}}-{{$.issueId}}/cover_small.jpg",
+      "intro": "$.issueInfo.text@put:{rid:$.resourceId,iid:$.issueId}",
+      "kind": "$.issueInfo.press&&$.issueInfo.issueName",
+      "name": "$.resourceName"
+    },
+    "ruleToc": {
+      "chapterList": "tag.navMap@children",
+      "chapterName": "tag.text.0@text",
+      "chapterUrl": "tag.content@src"
+    },
+    "searchUrl": "http://es.bookan.com.cn/api/searchByType?keyword={{key}}&instanceId=23678&pageNum=1&limit=20&searchType=1&resourceType=3",
+    "weight": 0
+  }
+]

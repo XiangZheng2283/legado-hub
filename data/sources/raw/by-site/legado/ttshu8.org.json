@@ -1,0 +1,314 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "天天书吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttshu8.org#wy18-1001",
+    "customOrder": 182,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1681176051961,
+    "loginUrl": "",
+    "respondTime": 2812,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "class.con_top@tag.a.1@text",
+      "lastChapter": "id.info@tag.p.-1@tag.a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "class.title@tag.h2@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.a@text",
+      "name": "class.title@tag.h2@text##《(.*)》##$1###",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.ttshu8.org/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "天天书吧[tt8]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttshu8.org",
+    "customOrder": 1042,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1682672173345,
+    "respondTime": 2134,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "class.con_top@tag.a.1@text",
+      "lastChapter": "id.info@tag.p.-1@tag.a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "class.title@tag.h2@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.a@text",
+      "name": "class.title@tag.h2@text##《(.*)》##$1###",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.ttshu8.org/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "天天书吧[tt8]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttshu8.org/",
+    "customOrder": 1123,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1686049574433,
+    "respondTime": 2766,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "#fmimg@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "class.con_top@tag.a.1@text&&#info@p.3@text##.*：",
+      "lastChapter": "id.info@tag.p.-1@tag.a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@html",
+      "replaceRegex": "##wap.*|\\/.*"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "class.title@tag.h2@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.a@text",
+      "name": "class.title@tag.h2@text##《(.*)》##$1###",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "5.6",
+    "bookSourceName": "天天书吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttshu8.org#wy18-1001",
+    "customOrder": 49,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1681176051961,
+    "loginUrl": "",
+    "respondTime": 1303,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "class.con_top@tag.a.1@text",
+      "lastChapter": "id.info@tag.p.-1@tag.a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "class.title@tag.h2@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.a@text",
+      "name": "class.title@tag.h2@text##《(.*)》##$1###",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.ttshu8.org/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索较慢",
+    "bookSourceGroup": "🏖️免费",
+    "bookSourceName": "天天书吧[tt8]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttshu8.org",
+    "customOrder": 1059,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1682672173345,
+    "respondTime": 2119,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "class.con_top@tag.a.1@text",
+      "lastChapter": "id.info@tag.p.-1@tag.a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "class.title@tag.h2@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.a@text",
+      "name": "class.title@tag.h2@text##《(.*)》##$1###",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.ttshu8.org/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "天天书吧[tt8]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttshu8.org/",
+    "customOrder": 1123,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1686049574433,
+    "respondTime": 28839,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "#fmimg@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "class.con_top@tag.a.1@text&&#info@p.3@text##.*：",
+      "lastChapter": "id.info@tag.p.-1@tag.a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@html",
+      "replaceRegex": "##wap.*|\\/.*"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "class.title@tag.h2@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.a@text",
+      "name": "class.title@tag.h2@text##《(.*)》##$1###",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

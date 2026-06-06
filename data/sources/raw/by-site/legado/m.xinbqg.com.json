@@ -1,0 +1,113 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⭐️小说",
+    "bookSourceName": "🍺 新笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.xinbqg.com",
+    "bookUrlPattern": "",
+    "customOrder": 1697,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "首页::/\n玄幻::/xclass/1/1.html\n修真::/xclass/2/1.html\n都市::/xclass/3/1.html\n穿越::/xclass/4/1.html\n网游::/xclass/5/1.html\n科幻::/xclass/6/1.html\n其它::/xclass/7/1.html\n全本::/quanben.html",
+    "lastUpdateTime": 1632901299747,
+    "loginUrl": "{\n\"url\":\"\"\n}",
+    "respondTime": 4714,
+    "ruleBookInfo": {
+      "author": "class.dd_box@span.0@text##作者：",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.book_about@dd@text",
+      "kind": "class.dd_box.0@span.1@text##分类：",
+      "lastChapter": "class.book_box@dl@dd.-1@span@a@text",
+      "name": "class.name@text",
+      "tocUrl": "class.book_more@a@href",
+      "wordCount": "class.dd_box.1@span.1@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下ー页@href",
+      "replaceRegex": "##记住手机版网.*[ctnm]|『加入书签，方便阅读』|.* [(]第./.页[)]|[（]本章未完.*阅读[）]"
+    },
+    "ruleExplore": {
+      "author": "span@text",
+      "bookList": "class.item",
+      "bookUrl": "class.image@a@href",
+      "coverUrl": "img@src",
+      "intro": "dd@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "img@alt"
+    },
+    "ruleSearch": {
+      "author": "class.author@text##作者：",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookname@a@href",
+      "coverUrl": "class.bookimg@a@img@src",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@a@text",
+      "name": "class.bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_last@dl@dd[2:-2]",
+      "chapterName": "text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/s.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "_1yunnain精选",
+    "bookSourceName": "笔趣阁²",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.xinbqg.com",
+    "customOrder": 20,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreScreen": "",
+    "exploreUrl": "玄幻::/xclass/1/{{page}}.html\n修真::/xclass/2/{{page}}.html\n都市::/xclass/3/{{page}}.html\n穿越::/xclass/4/{{page}}.html\n网游::/xclass/5/{{page}}.html\n科幻::/xclass/6/{{page}}.html\n其他::/xclass/7/{{page}}.html\n全本::/quanben.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1769000179066,
+    "respondTime": 16637,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "{{$.}}all.html",
+      "wordCount": "{{@@text.字数@text##字数：}}"
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "#pb_next@href",
+      "replaceRegex": "##（本章未完.*继续阅读）|记住.*网址.*com|『加入书签，方便阅读』|{{chapter.title}}|\\(第.*页\\)"
+    },
+    "ruleExplore": {
+      "author": ".s3@text",
+      "bookList": ".lis@li",
+      "bookUrl": "a@href",
+      "kind": ".s1@text##\\[|\\]",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd@text",
+      "kind": ".cat@text##分类：",
+      "lastChapter": "a.-1@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd!0",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/s.php?q={{key}},{\n  \"webView\": true\n}",
+    "weight": 1
+  }
+]

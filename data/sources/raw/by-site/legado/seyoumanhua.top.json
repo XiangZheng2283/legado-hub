@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "友漫画",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://www.seyoumanhua.top",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 166,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nvar result = [];\njava.toast(\"🔥正在刷新列表,请稍等！\");\nvar push = (title, url, size) => result.push({\n    \"title\": title,\n    \"url\": url,\n    \"style\": {\n        \"layout_flexGrow\": 1,\n        \"layout_flexBasisPercent\": size\n    }\n});\nvar baseUrl = \"https://seyoumanhua.com/index.php/category/\";\nvar tag = java.ajax(baseUrl);\nif (tag) {\n    var a = org.jsoup.Jsoup.parse(tag).select(\".highList a\");\n    push(\"排行榜\", null, 1);\n    for (var i in a) {\n        var title = a[i].text();\n        var url = a[i].attr(\"href\");\n        var size = 0.33;\n        title = String(title).replace(/\\s/g, \"\");\n        url = String(url)+ \"/page/{{page}}\";      \n        push(title, url, size);\n  }\n\n} else {\n  java.toast(\"🤔列表刷新失败！！！\");     \n} \nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; U; Android 13; zh-Hans-CN; PFJM10 Build/TP1A.220905.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/135.0.4896.58 Quark/6.13.6.581 Mobile Safari/537.36\",\"Accept-Language\":\"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"}",
+    "lastUpdateTime": 1748243483177,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1243,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".author_name@text",
+      "coverUrl": ".comic_cover@data-original",
+      "intro": "<br>🏷 标签：\n{{@.tags@text##\\s##,}}\n📖 简介：\n{{@.details@textNodes}}",
+      "kind": ".menu_order@text&&.looking_chapter@text##更新时间：",
+      "lastChapter": "",
+      "name": ".comic_name@h1@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".comic_chapter_content@img@html",
+      "nextContentUrl": "",
+      "imageStyle": "FULL",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": ".comic_cover_container",
+      "bookUrl": "a.0@href",
+      "coverUrl": ".comic_cover@data-original",
+      "intro": "",
+      "kind": "",
+      "lastChapter": ".comic_cover_desc@text",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".row_catalog_list@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/index.php/search/{{key}}/{{page}}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

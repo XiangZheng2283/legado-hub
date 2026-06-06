@@ -1,0 +1,42 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔆笔趣阁❿❸⭐",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xbiquke.com/",
+    "customOrder": 578,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 595
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉 笔趣阁⑪⑦",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xbiquke.com",
+    "customOrder": 503,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 2,
+    "weight": 160
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔆笔趣阁❿❸⭐",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xbiquke.com/",
+    "customOrder": 728,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 595
+  }
+]

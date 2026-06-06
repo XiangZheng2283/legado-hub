@@ -1,0 +1,84 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.ibiqu.org/",
+    "customOrder": 520,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1674054990581,
+    "respondTime": 3733,
+    "ruleBookInfo": {
+      "author": "p.2@a@text",
+      "coverUrl": ".block_img2@img@src",
+      "intro": ".intro_info@text",
+      "kind": "p.3@a@text",
+      "lastChapter": "class.block_txt2@p.6@a@text",
+      "name": ".block_txt2@h2@text",
+      "tocUrl": "text.查看目录@href",
+      "wordCount": "p.4@text"
+    },
+    "ruleContent": {
+      "content": ".text.-1@html"
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".line",
+      "bookUrl": "a.1@href",
+      "kind": "a.0@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "-.chapter@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.ibiqu.org/modules/article/waps.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.ibiqu.org/",
+    "customOrder": 405,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1674054990581,
+    "respondTime": 2208,
+    "ruleBookInfo": {
+      "author": "p.2@a@text",
+      "coverUrl": ".block_img2@img@src",
+      "intro": ".intro_info@text",
+      "kind": "p.3@a@text",
+      "lastChapter": "class.block_txt2@p.6@a@text",
+      "name": ".block_txt2@h2@text",
+      "tocUrl": "text.查看目录@href",
+      "wordCount": "p.4@text"
+    },
+    "ruleContent": {
+      "content": ".text.-1@html"
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".line",
+      "bookUrl": "a.1@href",
+      "kind": "a.0@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "-.chapter@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.ibiqu.org/modules/article/waps.php?keyword={{key}}",
+    "weight": 0
+  }
+]

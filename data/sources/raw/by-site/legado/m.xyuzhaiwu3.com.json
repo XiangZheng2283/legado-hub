@@ -1,0 +1,136 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "👔 新御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xyuzhaiwu3.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2122,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"玄幻\",\"url\":\"/wapsort/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠\",\"url\":\"/wapsort/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"言情\",\"url\":\"/wapsort/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越\",\"url\":\"/wapsort/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美\",\"url\":\"/wapsort/9_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"高辣\",\"url\":\"/wapsort/11_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"百合\",\"url\":\"/wapsort/15_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其他\",\"url\":\"/wapsort/16_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"……\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Android 12; Mobile; rv:108.0) Gecko/108.0 Firefox/108.0\"}",
+    "lastUpdateTime": 1681056575124,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 3785,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "h2.-1@text",
+      "coverUrl": "",
+      "intro": "pre@html",
+      "kind": ".article_info_td@div.1@a@text",
+      "lastChapter": ".article_info_td@div.2@a@text",
+      "name": ".h_nav_items@li.1@text",
+      "canReName": "",
+      "tocUrl": "#ls0@a@href||[style=\"color:red;\"]@href",
+      "wordCount": "span#size@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div#nr1@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "p.0@strong@text",
+      "bookList": ".common-bookele",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": ".abstract@html",
+      "kind": "p!0@text##栏目：|更新时间：|标签：",
+      "lastChapter": "",
+      "name": ".articlename@text||h3@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "s.php,{\n  \"method\": \"POST\",\n  \"body\": \"type=articlename&s={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "同站：https://m.xyuzhaiwu5.com\n           https://m.xyuzhaiwu7.com\n PO脸红  https://m.po18bb.com\n新御书屋 https://m.u9mm.com\n耽美小说 https://m.danmei.info\n  肉书阁   https://m.roushuge.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "新御宅屋③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xyuzhaiwu3.com/#🚀",
+    "customButton": false,
+    "customOrder": 2024,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "   全 部   ::/wapsort/0_{{page}}.html\n玄幻奇幻::/wapsort/1_{{page}}.html\n武侠仙侠::/wapsort/2_{{page}}.html\n都市言情::/wapsort/3_{{page}}.html\n科幻网游::/wapsort/4_{{page}}.html\n惊悚悬疑::/wapsort/5_{{page}}.html\n耽美同人::/wapsort/6_{{page}}.html\n穿越架空::/wapsort/7_{{page}}.html\n高辣浓情::/wapsort/8_{{page}}.html\n禁忌百合::/wapsort/9_{{page}}.html\n精品文学::/wapsort/10_{{page}}.html",
+    "lastUpdateTime": 1721299489137,
+    "respondTime": 12236,
+    "ruleBookInfo": {
+      "author": ".article_info_td.0@div.0@text",
+      "init": "",
+      "intro": "[style=\"padding:5px;font-size:12px;color:#666; line-height:auto\"]@text",
+      "kind": ".article_info_td.0@div.3:1@text&&.article_info_td.1@div.0@text##.*：",
+      "lastChapter": ".article_info_td.0@div.2@a@text&&class.article_info_td@tag.time@text\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>",
+      "name": "[style=\"background:none;\"]@text",
+      "tocUrl": "[style=\"color:red;\"]@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#nr1@html"
+    },
+    "ruleExplore": {
+      "author": ".author@text||strong@text||span@text",
+      "bookList": ".s_m@.last_li||id.list_ul@li||.common-bookele",
+      "bookUrl": ".name@href||a.1@href||a.0@href",
+      "coverUrl": "@js:'https://img.gb84.com/image/1/1024/1024s.jpg'",
+      "intro": ".abstract@text",
+      "kind": ".words@text||time@text||a.0@text##.*：",
+      "name": ".name@text||h3@text||a.1@text"
+    },
+    "ruleSearch": {
+      "author": "strong@text",
+      "bookList": ".common-bookele",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "@js:'https://img.gb84.com/image/1/1024/1024s.jpg'",
+      "kind": ".lastupdate@text",
+      "name": ".articlename@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul@li!-1@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/s.php,{\n'charset': '',\n'method': 'POST',\n'body': 'type=articlename&s={{key}}'\n}",
+    "weight": 0
+  }
+]

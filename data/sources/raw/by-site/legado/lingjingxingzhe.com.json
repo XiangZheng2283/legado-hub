@@ -1,0 +1,220 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "灵境行者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lingjingxingzhe.com",
+    "bookUrlPattern": "",
+    "customOrder": 212,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1668476455497,
+    "loginCheckJs": "",
+    "respondTime": 4399,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:category],[property=og:novel:status],[property=og:novel:update_time]@content##小说|\\s.*",
+      "lastChapter": "[property=og:novel:lastest_chapter_name],[property=og:novel:update_time]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p!-1@html",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": ".s1@text",
+      "bookList": ".txt-list>li~li",
+      "bookUrl": "a@href",
+      "coverUrl": "##",
+      "kind": ".s4@text",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".section-box~.section-box a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "<js>\nvar list=[]\nfor (var i=2;i<=Number(src.slice(src.indexOf(\"let i =1 ; i <= \")+16,src.indexOf(\"; i++){\")));i++)\n{\tlist.push(book.tocUrl+\"index_\"+i.toString()+\".html\");\n}\nnextChapterUrl=list\n</js>"
+    },
+    "searchUrl": "/search/,{\"body\":\"searchkey={{key}}&Submit=\",\"method\": \"POST\",\"headers\":{\"Referer\":\"https://lingjingxingzhe.com/\"}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "灵境行者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lingjingxingzhe.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1255,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1686056396047,
+    "loginCheckJs": "",
+    "respondTime": 2897,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:category],[property=og:novel:status],[property=og:novel:update_time]@content##小说|\\s.*",
+      "lastChapter": "[property=og:novel:lastest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p!-1@html",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".s1@text",
+      "bookList": ".txt-list>li~li",
+      "bookUrl": "a@href",
+      "coverUrl": "##",
+      "kind": ".s4@text",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".section-box~.section-box a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "<js>\nvar list=[]\nfor (var i=2;i<=Number(src.slice(src.indexOf(\"let i =1 ; i <= \")+16,src.indexOf(\"; i++){\")));i++)\n{\tlist.push(book.tocUrl+\"index_\"+i.toString()+\".html\");\n}\nnextChapterUrl=list\n</js>"
+    },
+    "searchUrl": "/search/,{\"body\":\"searchkey={{key}}&Submit=\",\"method\": \"POST\",\"headers\":{\"Referer\":\"https://lingjingxingzhe.com/\"}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⛱️免费",
+    "bookSourceName": "灵境行者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lingjingxingzhe.com",
+    "bookUrlPattern": "",
+    "customOrder": 285,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1668476455497,
+    "loginCheckJs": "",
+    "respondTime": 4648,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:category],[property=og:novel:status],[property=og:novel:update_time]@content##小说|\\s.*",
+      "lastChapter": "[property=og:novel:lastest_chapter_name],[property=og:novel:update_time]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p!-1@html",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": ".s1@text",
+      "bookList": ".txt-list>li~li",
+      "bookUrl": "a@href",
+      "coverUrl": "##",
+      "kind": ".s4@text",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".section-box~.section-box a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "<js>\nvar list=[]\nfor (var i=2;i<=Number(src.slice(src.indexOf(\"let i =1 ; i <= \")+16,src.indexOf(\"; i++){\")));i++)\n{\tlist.push(book.tocUrl+\"index_\"+i.toString()+\".html\");\n}\nnextChapterUrl=list\n</js>"
+    },
+    "searchUrl": "/search/,{\"body\":\"searchkey={{key}}&Submit=\",\"method\": \"POST\",\"headers\":{\"Referer\":\"https://lingjingxingzhe.com/\"}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "灵境行者",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lingjingxingzhe.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1604,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1686056396047,
+    "loginCheckJs": "",
+    "respondTime": 5660,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:category],[property=og:novel:status],[property=og:novel:update_time]@content##小说|\\s.*",
+      "lastChapter": "[property=og:novel:lastest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p!-1@html",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".s1@text",
+      "bookList": ".txt-list>li~li",
+      "bookUrl": "a@href",
+      "coverUrl": "##",
+      "kind": ".s4@text",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".section-box~.section-box a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "<js>\nvar list=[]\nfor (var i=2;i<=Number(src.slice(src.indexOf(\"let i =1 ; i <= \")+16,src.indexOf(\"; i++){\")));i++)\n{\tlist.push(book.tocUrl+\"index_\"+i.toString()+\".html\");\n}\nnextChapterUrl=list\n</js>"
+    },
+    "searchUrl": "/search/,{\"body\":\"searchkey={{key}}&Submit=\",\"method\": \"POST\",\"headers\":{\"Referer\":\"https://lingjingxingzhe.com/\"}}",
+    "weight": 0
+  }
+]

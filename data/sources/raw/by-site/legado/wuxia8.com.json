@@ -1,0 +1,126 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔰 武侠小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wuxia8.com",
+    "customOrder": 244,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1602898822805,
+    "respondTime": 2563,
+    "ruleBookInfo": {
+      "author": "class.butt@tag.p@text##更新.*",
+      "coverUrl": "class.intro@tag.img@src",
+      "intro": "class.intro@text",
+      "kind": "class.crumbs@tag.a.1@text",
+      "lastChapter": "##更新：([^<]+)##$1###",
+      "name": "class.btitle@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.BookText@html",
+      "replaceRegex": "##上一章←《.*》→下一章"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.details",
+      "bookUrl": "class.item-img@tag.a.0@href",
+      "coverUrl": "class.item-img@tag.img@src",
+      "intro": "class.item-img@tag.p@text",
+      "name": "class.item-img@tag.h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.wuxia8.com/s.php?t=1&keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "🔖武侠小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wuxia8.com",
+    "customOrder": 971,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678684728500,
+    "respondTime": 7988,
+    "ruleBookInfo": {
+      "author": "class.butt@tag.p@text##更新.*",
+      "coverUrl": "class.intro@tag.img@src",
+      "init": "",
+      "intro": "class.intro@text",
+      "kind": "class.crumbs@tag.a.1@text",
+      "lastChapter": "##更新：([^<]+)##$1###",
+      "name": "class.btitle@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.BookText@html",
+      "replaceRegex": "##上一章←《.*》→下一章"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "bookList": "class.details",
+      "bookUrl": "class.item-img@tag.a.0@href",
+      "coverUrl": "class.item-img@tag.img@src",
+      "intro": "class.item-img@tag.p@text",
+      "name": "class.item-img@tag.h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.wuxia8.com/s.php?t=1&keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 武侠小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wuxia8.com",
+    "customOrder": 222,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1713364983674,
+    "respondTime": 3736,
+    "ruleBookInfo": {
+      "author": "class.butt@tag.p@text##更新.*",
+      "coverUrl": "class.intro@tag.img@src",
+      "intro": "class.intro@text",
+      "kind": "class.crumbs@tag.a.1@text",
+      "lastChapter": "##更新：([^<]+)##$1###",
+      "name": "class.btitle@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.BookText@html",
+      "replaceRegex": "##上一章←《.*》→下一章"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.item-img@tag.a.0@href\n<js>\nlet url = result.includes(\"http\") ? result : source.key+result;\njava.log(url);\nlet html = java.ajax(url);\njava.put(\"html\", html);\n</js>\nclass.butt@tag.p@text##更新.*",
+      "bookList": "class.details[0:4]",
+      "bookUrl": "class.item-img@tag.a.0@href",
+      "coverUrl": "class.item-img@tag.img@src",
+      "intro": "class.item-img@tag.p@text",
+      "name": "class.item-img@tag.h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}\nhttps://www.wuxia8.com/s.php?t=1&keyword={{key}}",
+    "weight": 0
+  }
+]

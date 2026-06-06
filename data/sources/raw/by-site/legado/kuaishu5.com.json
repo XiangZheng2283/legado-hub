@@ -1,0 +1,59 @@
+[
+  {
+    "bookSourceComment": "该网站的搜索功能似乎失灵时不灵。。。建议通过【发现】或【浏览器中手动搜索后复制书籍详情页地址在 阅读 书架中 添加网址】。",
+    "bookSourceName": "快书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kuaishu5.com",
+    "concurrentRate": "1000",
+    "customOrder": 10,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/xuanhuan/p{{page}}.html\n武侠::/wuxia/p{{page}}.html\n都市::/dushi/p{{page}}.html\n历史::/lishi/p{{page}}.html\n科幻::/kehuan/p{{page}}.html\n网游::/wangyou/p{{page}}.html\n女频::/nvpin/p{{page}}.html\n其他::/qita/p{{page}}.html",
+    "lastUpdateTime": 1727576680671,
+    "respondTime": 180000,
+    "ruleBookInfo": {
+      "author": "//meta[@property='og:novel:author']/@content",
+      "coverUrl": "//meta[@property='og:image']/@content",
+      "downloadUrls": "class.addbookcase.0@href",
+      "intro": "//meta[@property='og:description']/@content",
+      "kind": "//meta[@property='og:novel:category']/@content&&//meta[@property='og:novel:status']/@content",
+      "lastChapter": "//meta[@property='og:novel:latest_chapter_name']/@content",
+      "name": "//meta[@property='og:novel:book_name']/@content",
+      "wordCount": "id.info.0@tag.p.4@text##连载 \\| "
+    },
+    "ruleContent": {
+      "content": "id.booktxt.0@tag.p@text",
+      "nextContentUrl": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "tag.span.3@text",
+      "bookList": "id.newscontent.0@class.l.0@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "kind": "tag.span.0@text",
+      "lastChapter": "tag.a.1@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleSearch": {
+      "author": "tag.p.1@tag.a.0@text##作者：",
+      "bookList": "class.item",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "书生",
+      "coverUrl": "tag.img.0@src",
+      "intro": "",
+      "kind": "tag.p.0@tag.span[0:1]@text",
+      "lastChapter": "tag.li.0@tag.a.0@text",
+      "name": "tag.h3.0@tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.content_1.0@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "class.index-container-btn.1@href"
+    },
+    "searchUrl": "/search/?searchkey={{key}}",
+    "weight": 25
+  }
+]

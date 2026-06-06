@@ -1,0 +1,46 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 小说书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.xduqu.com",
+    "customOrder": 510,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1721588339806,
+    "respondTime": 11361,
+    "ruleBookInfo": {
+      "author": "##作者：([^\"<]+)##$1###",
+      "coverUrl": "",
+      "intro": "#introl@textNodes",
+      "kind": ".fss > a@text",
+      "lastChapter": "",
+      "name": ".mbs > a@text",
+      "tocUrl": "text.查看目录@href",
+      "wordCount": "#content > div.blockc.mt > div.c_row.cf > div.row_textl > p > span:nth-child(1)@text\n##字数：|字"
+    },
+    "ruleContent": {
+      "content": "id.acontent@html",
+      "nextContentUrl": "tag.ul@tag.li.-1@tag.a@href",
+      "replaceRegex": "##.*{{java.toURL(source.key).host}}|{{book.name}}|{{book.author}}|{{chapter.title}}|[(（]?本章未?完[）)]?.*|\\(第.+页\\)"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.gray@text## .*|",
+      "bookList": "class.c_row cf",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.img@src",
+      "name": "class.row_text@text## .* "
+    },
+    "ruleToc": {
+      "chapterList": "class.index@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "{{source.key}}/modules/article/search.php,{\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&searchtype=all&t_btnsearch=\"\n}",
+    "weight": 0
+  }
+]

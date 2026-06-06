@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "https://www.ybsws.com",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎒 夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ybswa.com",
+    "bookUrlPattern": "https?://www.ybswa.com/book/\\w+/",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3691,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "奇幻·玄幻::/list/qihuan<,{{page}}>.html\n科幻·游戏::/list/kehuan<,{{page}}>.html\n武侠·仙侠::/list/wuxia<,{{page}}>.html\n女生·言情::/list/yanqing<,{{page}}>.html\n都市·娱乐::/list/dushi<,{{page}}>.html\n历史·军事::/list/lishi<,{{page}}>.html\n悬疑·灵异::/list/xuanyi<,{{page}}>.html\n耽美·纯爱::/list/chunai<,{{page}}>.html\n外国文学::/list/foreign<,{{page}}>.html\n成长·励志::/list/lizhi<,{{page}}>.html\n散文·随笔::/list/sanwen<,{{page}}>.html\n现当代文学::/list/china<,{{page}}>.html\n轻小说::/list/lightnovel<,{{page}}>.html\n健康·生活::/list/health<,{{page}}>.html\n文学名著::/list/mingzhu<,{{page}}>.html\n我的书架::/readbook<,{{page}}>.html",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1753625352520,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 797,
+    "ruleBookInfo": {
+      "init": "@put:{n:\"[property$=book_name]@content\",\na:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nl:\"[property$=latest_chapter_name]@content\",\ni:\"[property$=description]@content\",\nc:\"[property$=image]@content\",\nd:\".reader-bar a.-1@href\"}",
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#cont-body p@textNodes",
+      "nextContentUrl": ".page a@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "kind": "0",
+      "lastChapter": "",
+      "name": "h4@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "0",
+      "lastChapter": "",
+      "name": "a.0@text##《|》",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#all-chapter a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

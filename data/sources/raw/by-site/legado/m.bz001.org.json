@@ -1,0 +1,24 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,天龙",
+    "bookSourceName": "第一版主18",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bz001.org",
+    "customOrder": 203,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

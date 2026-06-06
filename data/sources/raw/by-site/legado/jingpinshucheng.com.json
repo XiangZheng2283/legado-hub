@@ -1,0 +1,296 @@
+[
+  {
+    "bookSourceComment": "function base32(_str) {\n\tvar staticchars = \"PXhw7UT1B0a9kQDKZsjIASmOezxYG4CHo5Jyfg2b8FLpEvRr3WtVnlqMidu6cN\";\n\tvar encodechars = \"\";\n\tfor (var i = 0; i < _str.length; i++) {\n\t\tvar num0 = staticchars.indexOf(_str[i]);\n\t\tif (num0 == -1) {\n\t\t\tvar code = _str[i]\n\t\t} else {\n\t\t\tvar code = staticchars[(num0 + 3) % 62]\n\t\t}\n\t\tvar num1 = parseInt(Math.random() * 62, 10);\n\t\tvar num2 = parseInt(Math.random() * 62, 10);\n\t\tencodechars += staticchars[num1] + code + staticchars[num2]\n\t}\n\treturn encodechars\n}\ntry{\n\tcallback = src.match(/callback='([^']+)';/)[1];\n\teval('d'+callback+'=(data)=>data.content;');\n\tbook_id = baseUrl.match(/book\\/(\\d+)/)[1];\n}catch(error){}",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 精品书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://jingpinshucheng.com",
+    "customOrder": 240,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "奇幻玄幻::/category/1_{{page}}.html\n都市传奇::/category/2_{{page}}.html\n武侠仙侠::/category/3_{{page}}.html\n历史军事::/category/4_{{page}}.html\n现代言情::/category/5_{{page}}.html\n古代奇缘::/category/6_{{page}}.html\n青春浪漫::/category/7_{{page}}.html\n悬疑灵异::/category/8_{{page}}.html\n游戏竞技::/category/9_{{page}}.html\n科幻世界::/category/10_{{page}}.html\n耽美同人::/category/11_{{page}}.html\n其它分类::/category/12_{{page}}.html",
+    "header": "{\n\t\"Host\": \"jingpinshucheng.com\",\n\t\"Content-Type\": \"application/x-www-form-urlencoded\",\n\t\"Keep-Alive\": \"0\"\n}",
+    "lastUpdateTime": 1685722232979,
+    "loginUrl": "",
+    "respondTime": 6085,
+    "ruleBookInfo": {
+      "author": ".info.0@span@text",
+      "coverUrl": ".pic.0@img@src",
+      "intro": ".description@html",
+      "kind": ".info!0@span@text",
+      "lastChapter": "li.c3.0@text",
+      "name": "h3@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#content@p@html\n@js:\neval(String(source.bookSourceComment));\n\n\n//ajax\nchepter_id = baseUrl.match(/.*\\/(\\d+)/)[1];\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=content.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&id=\"+chepter_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n\n//正文拼接\nresult2 = eval(String(index_html.body()));\nresult + result2;",
+      "nextContentUrl": "",
+      "replaceRegex": "##如果您觉得非常好看.*围观吧"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".info@span@text",
+      "bookList": ".pic_txt_list||.list2",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "",
+      "coverUrl": ".pic@img@src",
+      "intro": ".description@textNodes",
+      "kind": ".info@textNodes##作者:|.*\\(|\\).*",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "<js>\neval(String(source.bookSourceComment));\n\n//ajax\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=show.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n//列表拼接\nlist2_html = eval(String(index_html.body()));\njava.getString('.list.1@html')+list2_html\n</js>\nli@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "preUpdateJs": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\neval(String(source.bookSourceComment));\n\n\nvar key = \"　\" + key;\nvar b64 = java.base64Encode(key);\nvar b32 = base32(String(b64));\n\n\nvar option = {\n    \"method\": \"POST\",\n    \"body\": \"keywords=\" + encodeURIComponent(key) + \"&base64=\"+ b64 + \"&base32=\" + b32 + \"&rndval=\"+new Date().getTime()\n}\n\n\"https://jingpinshucheng.com/index.php?c=book&a=sojsonp,\" + JSON.stringify(option);",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "精品书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.jingpinshucheng.com",
+    "customOrder": 746,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "function base32(_str) {\n\tvar staticchars = \"PXhw7UT1B0a9kQDKZsjIASmOezxYG4CHo5Jyfg2b8FLpEvRr3WtVnlqMidu6cN\";\n\tvar encodechars = \"\";\n\tfor (var i = 0; i < _str.length; i++) {\n\t\tvar num0 = staticchars.indexOf(_str[i]);\n\t\tif (num0 == -1) {\n\t\t\tvar code = _str[i]\n\t\t} else {\n\t\t\tvar code = staticchars[(num0 + 3) % 62]\n\t\t}\n\t\tvar num1 = parseInt(Math.random() * 62, 10);\n\t\tvar num2 = parseInt(Math.random() * 62, 10);\n\t\tencodechars += staticchars[num1] + code + staticchars[num2]\n\t}\n\treturn encodechars\n}\ntry{\n\tcallback = src.match(/callback='([^']+)';/)[1];\n\teval('d'+callback+'=(data)=>data.content;');\n\tbook_id = baseUrl.match(/book\\/(\\d+)/)[1];\n}catch(error){}",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "精品书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://jingpinshucheng.com/",
+    "customOrder": 795,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"category/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市传奇\",\"url\":\"category/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠仙侠\",\"url\":\"category/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"category/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代言情\",\"url\":\"category/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古代奇缘\",\"url\":\"category/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春浪漫\",\"url\":\"category/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑灵异\",\"url\":\"category/8_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"category/9_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻世界\",\"url\":\"category/10_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美同人\",\"url\":\"category/11_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其它分类\",\"url\":\"category/12_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n\t\"Host\": \"jingpinshucheng.com\",\n\t\"Content-Type\": \"application/x-www-form-urlencoded\",\n\t\"Keep-Alive\": \"0\"\n}",
+    "lastUpdateTime": 1685873738577,
+    "loginUrl": "",
+    "respondTime": 4050,
+    "ruleBookInfo": {
+      "author": ".info.0@span@text",
+      "coverUrl": ".pic.0@img@src",
+      "intro": ".description@html",
+      "kind": ".info!0@span@text",
+      "lastChapter": "li.c3.0@text",
+      "name": "h3@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#content@p@html\n@js:\neval(String(source.bookSourceComment));\n\n\n//ajax\nchepter_id = baseUrl.match(/.*\\/(\\d+)/)[1];\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=content.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&id=\"+chepter_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n\n//正文拼接\nresult2 = eval(String(index_html.body()));\nresult + result2;",
+      "nextContentUrl": "",
+      "replaceRegex": "##如果您觉得非常好看.*围观吧|《.*》最新章节由.*首发.*|.*第.*章.*\\s"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".info@span@text",
+      "bookList": ".pic_txt_list||.list2",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "",
+      "coverUrl": ".pic@img@src",
+      "intro": ".description@textNodes",
+      "kind": ".info@textNodes##作者:|.*\\(|\\).*",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "<js>\neval(String(source.bookSourceComment));\n\n//ajax\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=show.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n//列表拼接\nlist2_html = eval(String(index_html.body()));\njava.getString('.list.1@html')+list2_html\n</js>\nli@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "preUpdateJs": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\neval(String(source.bookSourceComment));\n\n\nvar key = \"　\" + key;\nvar b64 = java.base64Encode(key);\nvar b32 = base32(String(b64));\n\n\nvar option = {\n    \"method\": \"POST\",\n    \"body\": \"keywords=\" + encodeURIComponent(key) + \"&base64=\"+ b64 + \"&base32=\" + b32 + \"&rndval=\"+new Date().getTime()\n}\n\n\"https://jingpinshucheng.com/index.php?c=book&a=sojsonp,\" + JSON.stringify(option);",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "function base32(_str) {\n\tvar staticchars = \"PXhw7UT1B0a9kQDKZsjIASmOezxYG4CHo5Jyfg2b8FLpEvRr3WtVnlqMidu6cN\";\n\tvar encodechars = \"\";\n\tfor (var i = 0; i < _str.length; i++) {\n\t\tvar num0 = staticchars.indexOf(_str[i]);\n\t\tif (num0 == -1) {\n\t\t\tvar code = _str[i]\n\t\t} else {\n\t\t\tvar code = staticchars[(num0 + 3) % 62]\n\t\t}\n\t\tvar num1 = parseInt(Math.random() * 62, 10);\n\t\tvar num2 = parseInt(Math.random() * 62, 10);\n\t\tencodechars += staticchars[num1] + code + staticchars[num2]\n\t}\n\treturn encodechars\n}\ntry{\n\tcallback = src.match(/callback='([^']+)';/)[1];\n\teval('d'+callback+'=(data)=>data.content;');\n\tbook_id = baseUrl.match(/book\\/(\\d+)/)[1];\n}catch(error){}",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "精品书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://jingpinshucheng.com/",
+    "customOrder": 795,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"category/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市传奇\",\"url\":\"category/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠仙侠\",\"url\":\"category/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"category/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代言情\",\"url\":\"category/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古代奇缘\",\"url\":\"category/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春浪漫\",\"url\":\"category/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑灵异\",\"url\":\"category/8_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"category/9_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻世界\",\"url\":\"category/10_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美同人\",\"url\":\"category/11_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其它分类\",\"url\":\"category/12_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n\t\"Host\": \"jingpinshucheng.com\",\n\t\"Content-Type\": \"application/x-www-form-urlencoded\",\n\t\"Keep-Alive\": \"0\"\n}",
+    "lastUpdateTime": 1685873738577,
+    "loginUrl": "",
+    "respondTime": 4816,
+    "ruleBookInfo": {
+      "author": ".info.0@span@text",
+      "coverUrl": ".pic.0@img@src",
+      "intro": ".description@html",
+      "kind": ".info!0@span@text",
+      "lastChapter": "li.c3.0@text",
+      "name": "h3@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#content@p@html\n@js:\neval(String(source.bookSourceComment));\n\n\n//ajax\nchepter_id = baseUrl.match(/.*\\/(\\d+)/)[1];\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=content.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&id=\"+chepter_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n\n//正文拼接\nresult2 = eval(String(index_html.body()));\nresult + result2;",
+      "nextContentUrl": "",
+      "replaceRegex": "##如果您觉得非常好看.*围观吧|《.*》最新章节由.*首发.*|.*第.*章.*\\s"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".info@span@text",
+      "bookList": ".pic_txt_list||.list2",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "",
+      "coverUrl": ".pic@img@src",
+      "intro": ".description@textNodes",
+      "kind": ".info@textNodes##作者:|.*\\(|\\).*",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "<js>\neval(String(source.bookSourceComment));\n\n//ajax\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=show.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n//列表拼接\nlist2_html = eval(String(index_html.body()));\njava.getString('.list.1@html')+list2_html\n</js>\nli@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "preUpdateJs": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\neval(String(source.bookSourceComment));\n\n\nvar key = \"　\" + key;\nvar b64 = java.base64Encode(key);\nvar b32 = base32(String(b64));\n\n\nvar option = {\n    \"method\": \"POST\",\n    \"body\": \"keywords=\" + encodeURIComponent(key) + \"&base64=\"+ b64 + \"&base32=\" + b32 + \"&rndval=\"+new Date().getTime()\n}\n\n\"https://jingpinshucheng.com/index.php?c=book&a=sojsonp,\" + JSON.stringify(option);",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,22小说",
+    "bookSourceName": "精品书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.jingpinshucheng.com",
+    "customOrder": 843,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "function base32(_str) {\n\tvar staticchars = \"PXhw7UT1B0a9kQDKZsjIASmOezxYG4CHo5Jyfg2b8FLpEvRr3WtVnlqMidu6cN\";\n\tvar encodechars = \"\";\n\tfor (var i = 0; i < _str.length; i++) {\n\t\tvar num0 = staticchars.indexOf(_str[i]);\n\t\tif (num0 == -1) {\n\t\t\tvar code = _str[i]\n\t\t} else {\n\t\t\tvar code = staticchars[(num0 + 3) % 62]\n\t\t}\n\t\tvar num1 = parseInt(Math.random() * 62, 10);\n\t\tvar num2 = parseInt(Math.random() * 62, 10);\n\t\tencodechars += staticchars[num1] + code + staticchars[num2]\n\t}\n\treturn encodechars\n}\ntry{\n\tcallback = src.match(/callback='([^']+)';/)[1];\n\teval('d'+callback+'=(data)=>data.content;');\n\tbook_id = baseUrl.match(/book\\/(\\d+)/)[1];\n}catch(error){}",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 精品书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://jingpinshucheng.com",
+    "customOrder": 961,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "奇幻玄幻::/category/1_{{page}}.html\n都市传奇::/category/2_{{page}}.html\n武侠仙侠::/category/3_{{page}}.html\n历史军事::/category/4_{{page}}.html\n现代言情::/category/5_{{page}}.html\n古代奇缘::/category/6_{{page}}.html\n青春浪漫::/category/7_{{page}}.html\n悬疑灵异::/category/8_{{page}}.html\n游戏竞技::/category/9_{{page}}.html\n科幻世界::/category/10_{{page}}.html\n耽美同人::/category/11_{{page}}.html\n其它分类::/category/12_{{page}}.html",
+    "header": "{\n\t\"Host\": \"jingpinshucheng.com\",\n\t\"Content-Type\": \"application/x-www-form-urlencoded\",\n\t\"Keep-Alive\": \"0\"\n}",
+    "lastUpdateTime": 1685722232979,
+    "loginUrl": "",
+    "respondTime": 4196,
+    "ruleBookInfo": {
+      "author": ".info.0@span@text",
+      "coverUrl": ".pic.0@img@src",
+      "intro": ".description@html",
+      "kind": ".info!0@span@text",
+      "lastChapter": "li.c3.0@text",
+      "name": "h3@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#content@p@html\n@js:\neval(String(source.bookSourceComment));\n\n\n//ajax\nchepter_id = baseUrl.match(/.*\\/(\\d+)/)[1];\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=content.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&id=\"+chepter_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n\n//正文拼接\nresult2 = eval(String(index_html.body()));\nresult + result2;",
+      "nextContentUrl": "",
+      "replaceRegex": "##如果您觉得非常好看.*围观吧"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".info@span@text",
+      "bookList": ".pic_txt_list||.list2",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "",
+      "coverUrl": ".pic@img@src",
+      "intro": ".description@textNodes",
+      "kind": ".info@textNodes##作者:|.*\\(|\\).*",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "<js>\neval(String(source.bookSourceComment));\n\n//ajax\nindex_url = \"https://jingpinshucheng.com/index.php?c=book&a=show.jsonp&callback=\" + callback +\"&book_id=\"+book_id+\"&b=\"+base32(callback);\nindex_html = java.get(index_url,{Referer:baseUrl});\n\n//列表拼接\nlist2_html = eval(String(index_html.body()));\njava.getString('.list.1@html')+list2_html\n</js>\nli@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "preUpdateJs": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\neval(String(source.bookSourceComment));\n\n\nvar key = \"　\" + key;\nvar b64 = java.base64Encode(key);\nvar b32 = base32(String(b64));\n\n\nvar option = {\n    \"method\": \"POST\",\n    \"body\": \"keywords=\" + encodeURIComponent(key) + \"&base64=\"+ b64 + \"&base32=\" + b32 + \"&rndval=\"+new Date().getTime()\n}\n\n\"https://jingpinshucheng.com/index.php?c=book&a=sojsonp,\" + JSON.stringify(option);",
+    "weight": 0
+  }
+]

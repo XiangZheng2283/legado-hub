@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🚬 海棠书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haitangshuwu.vip",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2348,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "lastUpdateTime": 1746069221803,
+    "loginUrl": "",
+    "respondTime": 31514,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.bookinfo_intro@text##您要是.*.\\/|\\《.*简介：",
+      "kind": "class.title@tag.a.1@text",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "id.info@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "p.s3@text",
+      "bookList": "class.toplist@tag.li",
+      "bookUrl": "p.s1@tag.a@href",
+      "coverUrl": "p.s1@tag.a@href#https://www.haitangshuwu.vip/book/(\\d+)(\\d{3})/#/image/$1/$1$2/$1$2s.jpg#@js:\"http://img.haitangshuwu.vip\"+result",
+      "kind": "class.s5@text",
+      "lastChapter": "p.s2@text",
+      "name": "p.s1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.haitangshuwu.vip/modules/article/search.php?action=login&searchkey={{key}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

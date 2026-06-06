@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🙈 色书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://seshuwu.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1244,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": " 全部  ::/sort/{{page}}.html\n 高辣  ::/sort/1/{{page}}.html\n 百合  ::/sort/2/{{page}}.html\n 言情  ::/sort/3/{{page}}.html\n 情欲  ::/sort/4/{{page}}.html\n 耽美  ::/sort/5/{{page}}.html\n 海棠  ::/sort/6/{{page}}.html\n 其他  ::/sort/8/{{page}}.html",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1725811593914,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1616,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.author@text",
+      "coverUrl": "class.BGsectionOne-top-left@img@src",
+      "intro": "class.BGsectionTwo-bottom@text",
+      "kind": "class.category@text##类别：",
+      "lastChapter": "class.newestChapter@text##最新章节：",
+      "name": "class.title@text",
+      "canReName": "",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "class.time@text##更新时间：",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "p.1@text",
+      "bookList": ".CGsectionTwo-right-content-unit",
+      "bookUrl": "a.0@href",
+      "coverUrl": "@js:'https://img.bookscdn.com/nocover.jpg'",
+      "intro": "p.2@text",
+      "kind": "p.3@text",
+      "lastChapter": "",
+      "name": "a.0@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".SHsectionThree-middle@p",
+      "bookUrl": "a.1@href",
+      "coverUrl": "@js:'https://img.bookscdn.com/nocover.jpg'",
+      "intro": "",
+      "kind": "a.0@text##《|》",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".BCsectionTwo-top@li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/search,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

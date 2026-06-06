@@ -1,0 +1,88 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "九一中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.91zww.com/",
+    "customOrder": 80,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690274703470,
+    "respondTime": 4014,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##91中文网.*最快更新.*",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@li!0",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://img.tuka.cc//'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-list.1@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "https://www.91zww.com/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "九一中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.91zww.com/",
+    "customOrder": -182,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690274703470,
+    "respondTime": 8257,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##91中文网.*最快更新.*",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@li!0",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://img.tuka.cc//'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-list.1@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "https://www.91zww.com/search/?searchkey={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,114 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "思路客②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.isiluke.net/",
+    "bookUrlPattern": "http://www.siluke.cc/html/\\d+/",
+    "customOrder": 343,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/xuanhuanxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"修真小说\",\"url\":\"/xiuzhenxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/dushixiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"穿越小说\",\"url\":\"/chuanyuexiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/wangyouxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/kehuanxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其它小说\",\"url\":\"/qitaxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\n\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1687545066550,
+    "loginUrl": "",
+    "respondTime": 9719,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@tag.a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content ",
+      "lastChapter": "id.info@tag.p.3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "id.info@tag.h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##天才一秒记住本站.*无广告！|章节错误.*请耐心等待。"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@tag.a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.isiluke.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "lastChapter": "class.s3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "class.s2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslist2@tag.li",
+      "bookUrl": "class.s2@tag.a@href",
+      "checkKeyWord": "万族之劫",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.isiluke.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "",
+      "lastChapter": "class.s3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "class.s2@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "/search.html?name={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "思路客②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.isiluke.net/",
+    "bookUrlPattern": "http://www.siluke.cc/html/\\d+/",
+    "customOrder": -271,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/xuanhuanxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"修真小说\",\"url\":\"/xiuzhenxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/dushixiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"穿越小说\",\"url\":\"/chuanyuexiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/wangyouxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/kehuanxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其它小说\",\"url\":\"/qitaxiaoshuo/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\n\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1687545066550,
+    "loginUrl": "",
+    "respondTime": 25604,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@tag.a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content ",
+      "lastChapter": "id.info@tag.p.3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "id.info@tag.h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##天才一秒记住本站.*无广告！|章节错误.*请耐心等待。"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@tag.a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.isiluke.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "lastChapter": "class.s3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "class.s2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslist2@tag.li",
+      "bookUrl": "class.s2@tag.a@href",
+      "checkKeyWord": "万族之劫",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.isiluke.net/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "",
+      "lastChapter": "class.s3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "class.s2@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "/search.html?name={{key}}",
+    "weight": 0
+  }
+]

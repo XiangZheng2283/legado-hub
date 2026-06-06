@@ -1,0 +1,492 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "新笔趣阁2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org/",
+    "customOrder": 285,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1686040828639,
+    "respondTime": 2158,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "class.name@text",
+      "wordCount": "class.dd_box.1@span.1@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下一@href",
+      "replaceRegex": "##.*\\(.*\\).*\\s|\\s.*新笔趣阁.*|.*本章未完.*\\s|.*继续阅读.*\\s|.*阅读完毕，更多请搜索.*\\s"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@span@text",
+      "bookList": "class.hot_sale hot_saleEm",
+      "bookUrl": "a@href",
+      "checkKeyWord": "剑来",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_last.2@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁(xinbiquge)",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org##旅途",
+    "customOrder": 666,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1684064199940,
+    "respondTime": 2248,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property~=(category|status|update_time)]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一章@href",
+      "replaceRegex": "##.*\\(\\d+ / \\d+\\).*\\n|新笔趣阁.*\\s*|\\s*.*下一页继续阅读.*|.本章阅读完毕.*\\s*"
+    },
+    "ruleSearch": {
+      "author": ".author@span@text",
+      "bookList": ".hot_sale",
+      "bookUrl": "a@href",
+      "checkKeyWord": "我的青春",
+      "name": ".title@text"
+    },
+    "ruleToc": {
+      "chapterList": ".book_last.-1@dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑥-🔖",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org",
+    "customOrder": 1455,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1688195972202,
+    "respondTime": 2122,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property~=(category|status|update_time)]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一章@href",
+      "replaceRegex": "##.*\\(\\d+ / \\d+\\).*\\n|新笔趣阁.*\\s*|\\s*.*下一页继续阅读.*|.本章阅读完毕.*\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@span@text",
+      "bookList": ".hot_sale",
+      "bookUrl": "a@href",
+      "checkKeyWord": "我的青春",
+      "name": ".title@text"
+    },
+    "ruleToc": {
+      "chapterList": ".book_last.-1@dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃笔趣阁🎃#38",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1471,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1733109143764,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 845,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "class.name@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.dd_box.1@span.1@text##字数：",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下一@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##.*\\(.*\\).*\\s|\\s.*新笔趣阁.*|.*本章未完.*\\s|.*继续阅读.*\\s|.*阅读完毕，更多请搜索.*\\s"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@span@text",
+      "bookList": "class.hot_sale hot_saleEm",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.title@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.book_last.2@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org##旅途",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 698,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1721063860043,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 953,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property$=author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property~=(category|status|update_time)]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##.*\\(\\d+ / \\d+\\).*\\n|新笔趣阁.*\\s*|\\s*.*下一页继续阅读.*|.本章阅读完毕.*\\s*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author@span@text",
+      "bookList": ".hot_sale",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".title@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book_last.-1@dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3431,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1721192597930,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1445,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property$=author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property~=(category|status|update_time)]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##.*\\(\\d+ / \\d+\\).*\\n|新笔趣阁.*\\s*|\\s*.*下一页继续阅读.*|.本章阅读完毕.*\\s*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author@span@text",
+      "bookList": ".hot_sale",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".title@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book_last.-1@dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁#32",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3502,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1717303807542,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1861,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "class.name@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.dd_box.1@span.1@text##字数：",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下一@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##.*\\(.*\\).*\\s|\\s.*新笔趣阁.*|.*本章未完.*\\s|.*继续阅读.*\\s|.*阅读完毕，更多请搜索.*\\s"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@span@text",
+      "bookList": "class.hot_sale hot_saleEm",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.title@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.book_last.2@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap2.xinbiquge.org",
+    "customOrder": 531,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1719013389973,
+    "respondTime": 2329,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "class.name@text",
+      "wordCount": "class.dd_box.1@span.1@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下一@href",
+      "replaceRegex": "##.*\\(.*\\)|新笔趣阁.*|本章未完.*|.*继续阅读|.*阅读完毕，更多请搜索.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@span@text",
+      "bookList": "class.hot_sale hot_saleEm",
+      "bookUrl": "a@href",
+      "checkKeyWord": "剑来",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_last.2@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://wap2.xinbiquge.org/book/search.aspx?ie=utf-8&siteid=xinbiquge.org&s=000&key={{key}}",
+    "weight": 0
+  }
+]

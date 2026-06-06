@@ -1,0 +1,196 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "望书阁ge",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.wangshuge.com/",
+    "bookUrlPattern": "",
+    "customOrder": 94,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 16107,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text",
+      "coverUrl": "class.block_img2@tag.img@src",
+      "intro": "class.intro_info@text",
+      "kind": "class.block_txt2@tag.p.3@tag.a@text",
+      "lastChapter": "class.block_txt2@tag.p.6@tag.a@text",
+      "name": "class.block_txt2@tag.h2@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.block_txt@tag.p.3@text",
+      "bookList": "class.block",
+      "bookUrl": "class.block_txt@tag.h2@tag.a@href",
+      "coverUrl": "class.block_img@tag.a@tag.img@src",
+      "kind": "class.block_txt@tag.p.2@text",
+      "lastChapter": "class.block_txt@tag.p.4@tag.a@text",
+      "name": "class.block_txt@tag.h2@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.wangshuge.com/search.php?searchkey={{key}}&submit",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 望书阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.wangshuge.com",
+    "customOrder": 1150,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"日点击榜\",\"url\":\"/top/dayvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"周点击榜\",\"url\":\"/top/weekvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"月点击榜\",\"url\":\"/top/monthvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总点击榜\",\"url\":\"/top/allvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总收藏榜\",\"url\":\"/top/goodnum-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"字数排行\",\"url\":\"/top/size-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"日推荐榜\",\"url\":\"/top/dayvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"周推荐榜\",\"url\":\"/top/weekvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"月推荐榜\",\"url\":\"/top/monthvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总推荐榜\",\"url\":\"/top/allvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"最新入库\",\"url\":\"/top/postdate-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"最近更新\",\"url\":\"/top/lastupdate-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻魔法\",\"url\":\"/sort/1-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠修真\",\"url\":\"/sort/2-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/sort/3-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/sort/4-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游动漫\",\"url\":\"/sort/5-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻小说\",\"url\":\"/sort/6-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"侦探推理\",\"url\":\"/sort/7-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖灵异\",\"url\":\"/sort/8-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人小说\",\"url\":\"/sort/9-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他类型\",\"url\":\"/sort/10-1.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"全本小说\",\"url\":\"/top/full-1.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1656864213745,
+    "respondTime": 9735,
+    "ruleBookInfo": {
+      "author": ".block_txt2 p.2@text",
+      "coverUrl": ".block_img2 img@src",
+      "init": "",
+      "intro": ".intro_info@html##各位书友.*|最新章节.*",
+      "kind": ".block_txt2 p.3:4:5@text##.*：|小说|T.*",
+      "lastChapter": ".block_txt2 a.3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": ".block_txt2 a.1@text"
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*.*点击下一页继续.*\\s*"
+    },
+    "ruleExplore": {
+      "author": "ownText##.*\\/",
+      "bookList": ".cover p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##.+\\D((\\d+)\\d{3})\\D##https://www.wangshuge.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "ownText##\\[|\\].*|小说",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": "p.3@text",
+      "bookList": ".block",
+      "bookUrl": "a.2@href",
+      "coverUrl": "img@src",
+      "kind": "p.2@text##.*：|小说",
+      "lastChapter": "a.3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "a.2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter li a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}&submit",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "望书阁ge",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.wangshuge.com/",
+    "bookUrlPattern": "",
+    "customOrder": 94,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 20628,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text",
+      "coverUrl": "class.block_img2@tag.img@src",
+      "intro": "class.intro_info@text",
+      "kind": "class.block_txt2@tag.p.3@tag.a@text",
+      "lastChapter": "class.block_txt2@tag.p.6@tag.a@text",
+      "name": "class.block_txt2@tag.h2@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.block_txt@tag.p.3@text",
+      "bookList": "class.block",
+      "bookUrl": "class.block_txt@tag.h2@tag.a@href",
+      "coverUrl": "class.block_img@tag.a@tag.img@src",
+      "kind": "class.block_txt@tag.p.2@text",
+      "lastChapter": "class.block_txt@tag.p.4@tag.a@text",
+      "name": "class.block_txt@tag.h2@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.wangshuge.com/search.php?searchkey={{key}}&submit",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 望书阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.wangshuge.com",
+    "customOrder": 1150,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"日点击榜\",\"url\":\"/top/dayvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"周点击榜\",\"url\":\"/top/weekvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"月点击榜\",\"url\":\"/top/monthvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总点击榜\",\"url\":\"/top/allvisit-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总收藏榜\",\"url\":\"/top/goodnum-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"字数排行\",\"url\":\"/top/size-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"日推荐榜\",\"url\":\"/top/dayvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"周推荐榜\",\"url\":\"/top/weekvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"月推荐榜\",\"url\":\"/top/monthvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总推荐榜\",\"url\":\"/top/allvote-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"最新入库\",\"url\":\"/top/postdate-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"最近更新\",\"url\":\"/top/lastupdate-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻魔法\",\"url\":\"/sort/1-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠修真\",\"url\":\"/sort/2-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/sort/3-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/sort/4-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游动漫\",\"url\":\"/sort/5-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻小说\",\"url\":\"/sort/6-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"侦探推理\",\"url\":\"/sort/7-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖灵异\",\"url\":\"/sort/8-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人小说\",\"url\":\"/sort/9-1.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他类型\",\"url\":\"/sort/10-1.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"全本小说\",\"url\":\"/top/full-1.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1656864213745,
+    "respondTime": 9289,
+    "ruleBookInfo": {
+      "author": ".block_txt2 p.2@text",
+      "coverUrl": ".block_img2 img@src",
+      "init": "",
+      "intro": ".intro_info@html##各位书友.*|最新章节.*",
+      "kind": ".block_txt2 p.3:4:5@text##.*：|小说|T.*",
+      "lastChapter": ".block_txt2 a.3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": ".block_txt2 a.1@text"
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*.*点击下一页继续.*\\s*"
+    },
+    "ruleExplore": {
+      "author": "ownText##.*\\/",
+      "bookList": ".cover p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##.+\\D((\\d+)\\d{3})\\D##https://www.wangshuge.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "ownText##\\[|\\].*|小说",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": "p.3@text",
+      "bookList": ".block",
+      "bookUrl": "a.2@href",
+      "coverUrl": "img@src",
+      "kind": "p.2@text##.*：|小说",
+      "lastChapter": "a.3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "a.2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter li a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}&submit",
+    "weight": 0
+  }
+]

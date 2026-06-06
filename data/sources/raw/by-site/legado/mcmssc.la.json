@@ -1,0 +1,52 @@
+[
+  {
+    "bookSourceComment": "24.12.28 by 明月",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 梦书中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.mcmssc.la",
+    "concurrentRate": "1500",
+    "customOrder": 72,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/xuanhuanxiaoshuo/<,1-{{page}}.html>\n修真仙侠::/xiuzhenxiaoshuo/<,1-{{page}}.html>\n都市青春::/dushixiaoshuo/<,1-{{page}}.html>\n历史穿越::/chuanyuexiaoshuo/<,1-{{page}}.html>\n网游竞技::/wangyouxiaoshuo/<,1-{{page}}.html>\n科幻灵异::/kehuanxiaoshuo/<,1-{{page}}.html>\n其它小说::/qitaxiaoshuo/<,1-{{page}}.html>\n完本小说::/wanben/1_{{page}}\n最近更新::http://www.mcmssc.la",
+    "lastUpdateTime": 1735361132002,
+    "respondTime": 3359,
+    "ruleBookInfo": {
+      "author": "p:nth-child(2) > a@text",
+      "coverUrl": "img@src",
+      "intro": "#intro@html",
+      "lastChapter": "p:nth-child(5) > a@text",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": "#content@textNodes",
+      "replaceRegex": "##[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A0-9\\uFF10-\\uFF19-]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]{2,}.*|{{chapter.title}}|第[0-9一二两三四五六七八九十百千万]{1,9}章.*|[(（]?本章未?完[）)]?.*|\\(第.+页\\)|.?加入书签.*|.*下一页(翻页)?继续阅读.*|.*退出阅读模式.*|.*点击下载{{book.name}}.*|.*最新永久域名.*|.*一秒记住本站地址.*"
+    },
+    "ruleExplore": {
+      "author": ".s4 > a@text",
+      "bookList": ".l li",
+      "bookUrl": ".s2 > a@href",
+      "coverUrl": ".s2 > a@href\n<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": ".s1@text##\\[|\\]",
+      "lastChapter": ".s3 > a@text",
+      "name": ".s2 > a@text"
+    },
+    "ruleSearch": {
+      "author": ".s4 > a@text",
+      "bookList": "#main > div.novelslist2 > ul > li",
+      "bookUrl": ".s2 > a@href",
+      "coverUrl": ".s2 > a@href\n<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "{{@@.s6@text}} {{@@.s3 > a@text}}",
+      "name": ".s2 > a@text"
+    },
+    "ruleToc": {
+      "chapterList": "dd >a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.mcmssc.la/search.html?name={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,469 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🍉漫画",
+    "bookSourceName": "🎨 漫漫漫画 #Haxc",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.manmanapp.com#♤Haxc",
+    "bookUrlPattern": "https://www.manmanapp.com/comic-\\d+.html",
+    "customOrder": 97,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "全部::/comic/category_{{page}}.html\n兄弟情::/comic/category-5_{{page}}.html\n恋爱::/comic/category-4_{{page}}.html\n都市::/comic/category-18_{{page}}.html\n霸总::/comic/category-9_{{page}}.html\n校园::/comic/category-8_{{page}}.html\n古风::/comic/category-7_{{page}}.html\n搞笑::/comic/category-6_{{page}}.html\n暖萌::/comic/category-10_{{page}}.html\n日常::/comic/category-12_{{page}}.html\n奇幻::/comic/category-13_{{page}}.html\n悬疑::/comic/category-15_{{page}}.html\n仙侠::/comic/category-16_{{page}}.html\n热血::/comic/category-17_{{page}}.html\n恐怖::/comic/category-19_{{page}}.html\n",
+    "lastUpdateTime": 1674806569978,
+    "respondTime": 4038,
+    "ruleBookInfo": {
+      "author": "class.describe_title@a@text",
+      "canReName": "",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.supplement@text",
+      "kind": "{{book.kind}},{{@@class.type@text}}##类型：",
+      "lastChapter": "class.comic_list@tag.li.0@h4@img@src&&class.comic_list@tag.li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "name": "class.title.0@ownText",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": "class.man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": "class.subtitle@text",
+      "bookList": "class.classification",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.text@text",
+      "kind": "❤️{{@@class.supplement@ownText}}",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "https://www.manmanapp.com/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🍉漫画",
+    "bookSourceName": "🎨漫漫漫画 #Haxc1107",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.manmanapp.com#Haxc1107",
+    "bookUrlPattern": "https://www.manmanapp.com/comic-\\d+.html",
+    "customOrder": 111,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "全部::/comic/category_{{page}}.html\n兄弟情::/comic/category-5_{{page}}.html\n恋爱::/comic/category-4_{{page}}.html\n都市::/comic/category-18_{{page}}.html\n霸总::/comic/category-9_{{page}}.html\n校园::/comic/category-8_{{page}}.html\n古风::/comic/category-7_{{page}}.html\n搞笑::/comic/category-6_{{page}}.html\n暖萌::/comic/category-10_{{page}}.html\n日常::/comic/category-12_{{page}}.html\n奇幻::/comic/category-13_{{page}}.html\n悬疑::/comic/category-15_{{page}}.html\n仙侠::/comic/category-16_{{page}}.html\n热血::/comic/category-17_{{page}}.html\n恐怖::/comic/category-19_{{page}}.html\n",
+    "lastUpdateTime": 1674806656348,
+    "respondTime": 3466,
+    "ruleBookInfo": {
+      "author": "class.describe_title@a@text",
+      "canReName": "",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.supplement@text",
+      "kind": "{{book.kind}},{{@@class.type@text}}##类型：",
+      "lastChapter": "class.comic_list@tag.li.0@h4@img@src&&class.comic_list@tag.li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "name": "class.title.0@ownText",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": "class.man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": "class.subtitle@text",
+      "bookList": "class.classification",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.text@text",
+      "kind": "❤️{{@@class.supplement@ownText}}",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "https://www.manmanapp.com/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🍉漫画",
+    "bookSourceName": "🎨漫漫漫画",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://www.manmanapp.com",
+    "bookUrlPattern": "https://www.manmanapp.com/comic-\\d+.html",
+    "customOrder": 196,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "全部::/comic/category_{{page}}.html\n兄弟情::/comic/category-5_{{page}}.html\n恋爱::/comic/category-4_{{page}}.html\n都市::/comic/category-18_{{page}}.html\n霸总::/comic/category-9_{{page}}.html\n校园::/comic/category-8_{{page}}.html\n古风::/comic/category-7_{{page}}.html\n搞笑::/comic/category-6_{{page}}.html\n暖萌::/comic/category-10_{{page}}.html\n日常::/comic/category-12_{{page}}.html\n奇幻::/comic/category-13_{{page}}.html\n悬疑::/comic/category-15_{{page}}.html\n仙侠::/comic/category-16_{{page}}.html\n热血::/comic/category-17_{{page}}.html\n恐怖::/comic/category-19_{{page}}.html\n",
+    "lastUpdateTime": 1674199322123,
+    "respondTime": 2670,
+    "ruleBookInfo": {
+      "author": "class.describe_title@a@text",
+      "canReName": "",
+      "coverUrl": "class.pic@img@src",
+      "init": "",
+      "intro": "class.supplement@text",
+      "kind": "{{book.kind}},{{@@class.type@text}}##类型：",
+      "lastChapter": "class.comic_list@tag.li.0@h4@img@src&&class.comic_list@tag.li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "name": "class.title.0@ownText",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": "class.man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": "class.subtitle@text",
+      "bookList": "class.classification",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.text@text",
+      "kind": "❤️{{@@class.supplement@ownText}}",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "https://www.manmanapp.com/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "21.0301一程,🎨 漫画",
+    "bookSourceName": "🎨 漫漫漫画 💰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.manmanapp.com#一程",
+    "customOrder": 353,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部::/comic/category_{{page}}.html\n兄弟情::/comic/category-5_{{page}}.html\n恋爱::/comic/category-4_{{page}}.html\n都市::/comic/category-18_{{page}}.html\n霸总::/comic/category-9_{{page}}.html\n校园::/comic/category-8_{{page}}.html\n古风::/comic/category-7_{{page}}.html\n搞笑::/comic/category-6_{{page}}.html\n暖萌::/comic/category-10_{{page}}.html\n日常::/comic/category-12_{{page}}.html\n奇幻::/comic/category-13_{{page}}.html\n悬疑::/comic/category-15_{{page}}.html\n仙侠::/comic/category-16_{{page}}.html\n热血::/comic/category-17_{{page}}.html\n恐怖::/comic/category-19_{{page}}.html",
+    "lastUpdateTime": 1616339821232,
+    "respondTime": 2163,
+    "ruleBookInfo": {
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.supplement@text",
+      "kind": "{{book.kind}},{{@@class.type@text}}##类型：",
+      "lastChapter": "class.comic_list@tag.li.0@h4@img@src&&class.comic_list@tag.li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": "class.man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": "class.subtitle@text",
+      "bookList": "class.classification",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.text@text",
+      "kind": "❤️{{@@class.supplement@ownText}}",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🎨漫画,☣️漫画lateral",
+    "bookSourceName": "㊣✐ 漫漫漫画 #一程1101",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://www.manmanapp.com#yc1101",
+    "customOrder": 1160,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部\",\"url\":\"/comic/category_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"兄弟\",\"url\":\"/comic/category-5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恋爱\",\"url\":\"/comic/category-4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/comic/category-18_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"霸总\",\"url\":\"/comic/category-9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"/comic/category-8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古风\",\"url\":\"/comic/category-7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"搞笑\",\"url\":\"/comic/category-6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"暖萌\",\"url\":\"/comic/category-10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"日常\",\"url\":\"/comic/category-12_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻\",\"url\":\"/comic/category-13_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑\",\"url\":\"/comic/category-15_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠\",\"url\":\"/comic/category-16_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热血\",\"url\":\"/comic/category-17_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖\",\"url\":\"/comic/category-19_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1638109732346,
+    "loginUrl": "",
+    "respondTime": 2534,
+    "ruleBookInfo": {
+      "coverUrl": ".pic img@src",
+      "intro": ".supplement@html",
+      "kind": "{{book.kind}},{{@@.type@text}}##类型：",
+      "lastChapter": ".comic_list li.0@h4@img@src&&.comic_list li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": ".man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": ".subtitle@text",
+      "bookList": ".classification",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".text@text",
+      "kind": "❤️{{@@.supplement@ownText}}",
+      "name": ".title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "/search/word-{{key}}.html",
+    "weight": 100
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🍉漫画",
+    "bookSourceName": "🎨 漫漫漫画 ",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.manmanapp.com#♤yc",
+    "customOrder": 1578,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部\",\"url\":\"/comic/category_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"兄弟\",\"url\":\"/comic/category-5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恋爱\",\"url\":\"/comic/category-4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/comic/category-18_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"霸总\",\"url\":\"/comic/category-9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"/comic/category-8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古风\",\"url\":\"/comic/category-7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"搞笑\",\"url\":\"/comic/category-6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"暖萌\",\"url\":\"/comic/category-10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"日常\",\"url\":\"/comic/category-12_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻\",\"url\":\"/comic/category-13_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑\",\"url\":\"/comic/category-15_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠\",\"url\":\"/comic/category-16_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热血\",\"url\":\"/comic/category-17_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖\",\"url\":\"/comic/category-19_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1679764733475,
+    "loginUrl": "",
+    "respondTime": 3586,
+    "ruleBookInfo": {
+      "canReName": "",
+      "coverUrl": ".pic img@src",
+      "intro": ".supplement@html",
+      "kind": "{{book.kind}},{{@@.type@text}}##类型：",
+      "lastChapter": ".comic_list li.0@h4@img@src&&.comic_list li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": ".man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": ".subtitle@text",
+      "bookList": ".classification",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".text@text",
+      "kind": "❤️{{@@.supplement@ownText}}",
+      "name": ".title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "正版漫画 书源",
+    "bookSourceName": "漫漫漫画",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://www.manmanapp.com",
+    "bookUrlPattern": "https://www.manmanapp.com/comic-\\d+.html",
+    "customButton": false,
+    "customOrder": 459,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "全部::/comic/category_{{page}}.html\n兄弟情::/comic/category-5_{{page}}.html\n恋爱::/comic/category-4_{{page}}.html\n都市::/comic/category-18_{{page}}.html\n霸总::/comic/category-9_{{page}}.html\n校园::/comic/category-8_{{page}}.html\n古风::/comic/category-7_{{page}}.html\n搞笑::/comic/category-6_{{page}}.html\n暖萌::/comic/category-10_{{page}}.html\n日常::/comic/category-12_{{page}}.html\n奇幻::/comic/category-13_{{page}}.html\n悬疑::/comic/category-15_{{page}}.html\n仙侠::/comic/category-16_{{page}}.html\n热血::/comic/category-17_{{page}}.html\n恐怖::/comic/category-19_{{page}}.html\n",
+    "lastUpdateTime": 1759505101697,
+    "respondTime": 3111,
+    "ruleBookInfo": {
+      "author": "class.describe_title@a@text",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.supplement@text",
+      "kind": "{{book.kind}},{{@@class.type@text}}##类型：",
+      "lastChapter": "class.comic_list@tag.li.0@h4@img@src&&class.comic_list@tag.li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "name": "class.title.0@ownText",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": "class.man_img@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.subtitle@text",
+      "bookList": "class.classification",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.text@text",
+      "kind": "❤️{{@@class.supplement@ownText}}",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "https://www.manmanapp.com/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "😈 漫画",
+    "bookSourceName": "😈 漫漫漫画",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.manmanapp.com#♤yc",
+    "customOrder": 581,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部\",\"url\":\"/comic/category_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"兄弟\",\"url\":\"/comic/category-5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恋爱\",\"url\":\"/comic/category-4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/comic/category-18_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"霸总\",\"url\":\"/comic/category-9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"/comic/category-8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古风\",\"url\":\"/comic/category-7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"搞笑\",\"url\":\"/comic/category-6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"暖萌\",\"url\":\"/comic/category-10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"日常\",\"url\":\"/comic/category-12_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻\",\"url\":\"/comic/category-13_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑\",\"url\":\"/comic/category-15_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠\",\"url\":\"/comic/category-16_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热血\",\"url\":\"/comic/category-17_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖\",\"url\":\"/comic/category-19_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1685708530414,
+    "loginUrl": "",
+    "respondTime": 1268,
+    "ruleBookInfo": {
+      "canReName": "",
+      "coverUrl": ".pic img@src",
+      "intro": ".supplement@html",
+      "kind": "{{book.kind}},{{@@.type@text}}##类型：",
+      "lastChapter": ".comic_list li.0@h4@img@src&&.comic_list li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": ".man_img@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "intro": "",
+      "kind": "",
+      "lastChapter": ""
+    },
+    "ruleSearch": {
+      "author": ".subtitle@text",
+      "bookList": ".classification",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".text@text",
+      "kind": "❤️{{@@.supplement@ownText}}",
+      "name": ".title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "/search/word-{{key}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "正版漫画 书源",
+    "bookSourceName": "漫漫漫画",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://www.manmanapp.com",
+    "bookUrlPattern": "https://www.manmanapp.com/comic-\\d+.html",
+    "customButton": false,
+    "customOrder": 425,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "全部::/comic/category_{{page}}.html\n兄弟情::/comic/category-5_{{page}}.html\n恋爱::/comic/category-4_{{page}}.html\n都市::/comic/category-18_{{page}}.html\n霸总::/comic/category-9_{{page}}.html\n校园::/comic/category-8_{{page}}.html\n古风::/comic/category-7_{{page}}.html\n搞笑::/comic/category-6_{{page}}.html\n暖萌::/comic/category-10_{{page}}.html\n日常::/comic/category-12_{{page}}.html\n奇幻::/comic/category-13_{{page}}.html\n悬疑::/comic/category-15_{{page}}.html\n仙侠::/comic/category-16_{{page}}.html\n热血::/comic/category-17_{{page}}.html\n恐怖::/comic/category-19_{{page}}.html\n",
+    "lastUpdateTime": 1759505101697,
+    "respondTime": 3111,
+    "ruleBookInfo": {
+      "author": "class.describe_title@a@text",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.supplement@text",
+      "kind": "{{book.kind}},{{@@class.type@text}}##类型：",
+      "lastChapter": "class.comic_list@tag.li.0@h4@img@src&&class.comic_list@tag.li.0@h3@text##.*book_ic.*?\\n##🔒",
+      "name": "class.title.0@ownText",
+      "tocUrl": "https://www.manmanapp.com/works/comic-list-ajax.html,{\n\"method\": \"POST\",\n\"body\": \"id={{java.put('page',1);result=baseUrl.match(/(\\d+)\\.html/)[1];java.put('id',result)}}&sort=1&page=1\"}"
+    },
+    "ruleContent": {
+      "content": "class.man_img@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.subtitle@text",
+      "bookList": "class.classification",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.text@text",
+      "kind": "❤️{{@@class.supplement@ownText}}",
+      "name": "class.title@text"
+    },
+    "ruleToc": {
+      "chapterList": "$.data",
+      "chapterName": "$.title",
+      "chapterUrl": "https://www.manmanapp.com/comic/detail-{{$.id}}.html",
+      "isVip": "@js:'{{$.is_read}}'=='0'?'1':''",
+      "nextTocUrl": "@js:\ncode='{{$.code}}';\nif(code=='1'){\npage=java.get('page');\npage=parseInt(page)+1;\njava.put('page',page);\nid=java.get('id');\nurl='https://www.manmanapp.com/works/comic-list-ajax.html,';\nbody='id='+id+'&sort=1&page='+page;\npost={\n\"method\": \"POST\",\n\"body\":String(body)\n}\nresult=url+JSON.stringify(post);\n}",
+      "updateTime": "$.publish_time"
+    },
+    "searchUrl": "https://www.manmanapp.com/search/word-{{key}}.html",
+    "weight": 0
+  }
+]

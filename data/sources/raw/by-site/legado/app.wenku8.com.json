@@ -1,0 +1,50 @@
+[
+  {
+    "bookSourceGroup": "🌙 ΑΡI",
+    "bookSourceName": "🌙 轻小说文库[api]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://app.wenku8.com",
+    "concurrentRate": "",
+    "customOrder": 51,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::https://wenku8-relay.mewx.org/action=novellist&sort=lastupdate&page={{page}}&t=0\n总点击榜::https://wenku8-relay.mewx.org/action=novellist&sort=allvisit&page={{page}}&t=0\n总推荐榜::https://wenku8-relay.mewx.org/action=novellist&sort=goodnum&page={{page}}&t=0",
+    "header": "{\n\t\"User-Agent\": \"Dalvik/2.1.0 (Linux; U; Android 14; 23049RAD8C Build/UKQ1.230804.001)\"\n}",
+    "jsLib": "t=Date.now().toString()",
+    "lastUpdateTime": 1719471825297,
+    "respondTime": 1162,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "<js>\nif (src.includes(\"-image-\")) {\n\tsrc=src.replace(/<!--image-->([^<]+)<!--image-->/g, `<img src=\"$1\" >`);\n\t}else{\n\t\tsrc;\n\t\t}\n</js>",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "author": "data[name='Author']@value",
+      "bookList": "<js>\nb=baseUrl.match(/\\/([^/]+)$/)[1];\nbd=java.base64Encode(b);\nx=java.ajax(`https://wenku8-relay.mewx.org,{\"method\":\"POST\",\"headers\":{\"User-Agent\":\"Dalvik/2.1.0(Linux;U;Android14;23049RAD8CBuild/UKQ1.230804.001)\",\"Connection\":\"Keep-Alive\",\"Content-Type\":\"application/x-www-form-urlencoded\"},\"body\":\"appver=1.19&timetoken=${t}&request=${bd}\"}`)\n</js>\nitem",
+      "bookUrl": "@js:\naid=java.get(\"aid\");\nbd=java.base64Encode(`action=book&do=list&aid=${aid}&t=0`);\n`http://app.wenku8.com/android.php,{\n  \"body\": \"appver=1.19&timetoken=${t}&request=${bd}\",\n  \"method\": \"POST\"\n}`",
+      "coverUrl": "aid\n@js:\n\tif (result.length < 4)\n{\n\ta = 0\n} else\n{\n\ta = result.substr(0, 1)\n}\nimg = \"http://img.wenku8.com/image/\" + a + \"/\" + result + \"/\" + result + \"s.jpg\"",
+      "intro": "item@aid\n@js:\naid=result;\njava.put(\"aid\", aid);\nbd=java.base64Encode(`action=book&do=intro&aid=${aid}&t=0`);\nu=`http://app.wenku8.com/android.php`\no=`appver=1.19&timetoken=${t}&request=${bd}\"`;\nintro=java.post(u,o,{}).body();",
+      "kind": "data[name='Tags']@value",
+      "name": "data[name='Title']@text"
+    },
+    "ruleSearch": {
+      "author": "data[name='Author']@value",
+      "bookList": "item",
+      "bookUrl": "@js:\naid=java.get(\"aid\");\nbd=java.base64Encode(`action=book&do=list&aid=${aid}&t=0`);\n`http://app.wenku8.com/android.php,{\n  \"body\": \"appver=1.19&timetoken=${t}&request=${bd}\",\n  \"method\": \"POST\"\n}`",
+      "checkKeyWord": "系统工程师",
+      "coverUrl": "aid\n@js:\nconst a = result.length < 4 ? '0' : result.substr(0, 1);\nconst img = `http://img.wenku8.com/image/${a}/${result}/${result}s.jpg`;",
+      "intro": "item@aid\n@js:\naid=result;\njava.put(\"aid\", aid);\nbd=java.base64Encode(`action=book&do=intro&aid=${aid}&t=0`);\nu=`http://app.wenku8.com/android.php`\no=`appver=1.19&timetoken=${t}&request=${bd}\"`;\nintro=java.post(u,o,{}).body();",
+      "kind": "data[name='Tags']@value",
+      "name": "data[name='Title']@text"
+    },
+    "ruleToc": {
+      "chapterList": "volume,chapter",
+      "chapterName": "textNodes",
+      "chapterUrl": "cid\n@js:\ncid=result;\naid=java.get(\"aid\");\nbd=java.base64Encode(`action=book&do=text&aid=${aid}&cid=${cid}&t=0`);\n`http://app.wenku8.com/android.php,{\n  \"body\": \"appver=1.19&timetoken=${t}&request=${bd}\",\n  \"method\": \"POST\"\n}`",
+      "isVolume": "volume@textNodes"
+    },
+    "searchUrl": "@js:\nbd=java.base64Encode(`action=search&searchtype=article&searchkey=${key}&t=0`);\n`http://app.wenku8.com/android.php,{\n\t\"body\": \"appver=1.19&timetoken=${t}&request=${bd}\",\n\t\"method\":  \"POST\"\n\t}`",
+    "weight": 0
+  }
+]

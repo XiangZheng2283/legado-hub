@@ -1,0 +1,706 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖得间·男生",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/nansheng",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 719,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "今日必读::https://m.idejian.com/nansheng\n每日推荐::https://m.idejian.com/bangdan/35909?page={{page}}\n男频完本::https://m.idejian.com/bangdan/35876?page={{page}}\n火爆精品::https://m.idejian.com/bangdan/35882\n口碑佳作::https://m.idejian.com/bangdan/35673\n潜力新书::https://m.idejian.com/bangdan/35671\n完本精选::https://m.idejian.com/bangdan/35672\n总热度榜::https://m.idejian.com/top/nansheng?sectionId=35549&page={{page}}\n总人气榜::https://m.idejian.com/top/nansheng?sectionId=35554&page={{page}}\n总潜力榜::https://m.idejian.com/top/nansheng?sectionId=35555\n都市爽文::https://m.idejian.com/bangdan/35903?page={{page}}\n玄幻升级::https://m.idejian.com/bangdan/35904?page={{page}}\n灵异推理::https://m.idejian.com/bangdan/35905?page={{page}}\n科幻校园::https://m.idejian.com/bangdan/35906?page={{page}}\n历史军事::https://m.idejian.com/bangdan/35907?page={{page}}\n游戏竞技::https://m.idejian.com/bangdan/35908?page={{page}}\n都市小说::https://m.idejian.com/category?categoryId=865&resourcesId=8&page={{page}}\n玄幻小说::https://m.idejian.com/category?categoryId=877&resourcesId=8&page={{page}}\n校园小说::https://m.idejian.com/category?categoryId=878&resourcesId=8&page={{page}}\n仙侠小说::https://m.idejian.com/category?categoryId=879&resourcesId=8&page={{page}}\n奇幻小说::https://m.idejian.com/category?categoryId=880&resourcesId=8&page={{page}}\n历史小说::https://m.idejian.com/category?categoryId=881&resourcesId=8&page={{page}}\n军事小说::https://m.idejian.com/category?categoryId=882&resourcesId=8&page={{page}}\n科幻小说::https://m.idejian.com/category?categoryId=883&resourcesId=8&page={{page}}\n武侠小说::https://m.idejian.com/category?categoryId=884&resourcesId=8&page={{page}}\n游戏小说::https://m.idejian.com/category?categoryId=885&resourcesId=8&page={{page}}\n竞技小说::https://m.idejian.com/category?categoryId=886&resourcesId=8&page={{page}}\n灵异小说::https://m.idejian.com/category?categoryId=887&resourcesId=8&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1678674766232,
+    "loginUrl": "",
+    "respondTime": 11344,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.z_ellipsis2@text",
+      "tocUrl": "class.title_wrap@a@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": "full"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.book_author.0@text",
+      "bookList": "class.rank_ullist@li||class.v_list@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes||class.book_info@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.book_author!0@text",
+      "lastChapter": "class.rank_newpage@text##更新章节：",
+      "name": "class.rank_bkname@a@text||class.book_name@textNodes",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog_list@a",
+      "chapterName": "class.text@text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "class.next_btn@data-topage<js>\nid = baseUrl.match(/(\\d+)\\/?$/)[1]\n'https://m.idejian.com/catalog?page='+result+'&bookId='+id+''\n</js>\n@js:result##\\[|\\]",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "得间小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 1271,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"——————出版——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"小说出版\",\"url\":\"https://m.idejian.com/category?categoryId=869&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春出版\",\"url\":\"https://m.idejian.com/category?categoryId=895&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"传记出版\",\"url\":\"https://m.idejian.com/category?categoryId=896&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"艺术出版\",\"url\":\"https://m.idejian.com/category?categoryId=897&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学出版\",\"url\":\"https://m.idejian.com/category?categoryId=898&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"人文社科\",\"url\":\"https://m.idejian.com/category?categoryId=899&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"经管励志\",\"url\":\"https://m.idejian.com/category?categoryId=900&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"生活出版\",\"url\":\"https://m.idejian.com/category?categoryId=901&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"教育出版\",\"url\":\"https://m.idejian.com/category?categoryId=902&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"——————男生——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"都市小说\",\"url\":\"https://m.idejian.com/category?categoryId=865&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=877&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"校园小说\",\"url\":\"https://m.idejian.com/category?categoryId=878&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"https://m.idejian.com/category?categoryId=879&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"奇幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=880&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史小说\",\"url\":\"https://m.idejian.com/category?categoryId=881&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"军事小说\",\"url\":\"https://m.idejian.com/category?categoryId=882&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=883&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠小说\",\"url\":\"https://m.idejian.com/category?categoryId=884&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏小说\",\"url\":\"https://m.idejian.com/category?categoryId=885&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"竞技小说\",\"url\":\"https://m.idejian.com/category?categoryId=886&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异小说\",\"url\":\"https://m.idejian.com/category?categoryId=887&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"——————女生——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"现代言情\",\"url\":\"https://m.idejian.com/category?categoryId=870&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古代言情\",\"url\":\"https://m.idejian.com/category?categoryId=888&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春校园\",\"url\":\"https://m.idejian.com/category?categoryId=890&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人作品\",\"url\":\"https://m.idejian.com/category?categoryId=891&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"惊悚恐怖\",\"url\":\"https://m.idejian.com/category?categoryId=893&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"次元专区\",\"url\":\"https://m.idejian.com/category?categoryId=894&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想言情\",\"url\":\"https://m.idejian.com/category?categoryId=889&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1667971453397,
+    "respondTime": 2875,
+    "ruleBookInfo": {
+      "author": "class.bk_author@tag.span.0@text##著",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.title_more.1@text&&\nclass.author.1@text&&class.detail_bkgrade.0@tag.span@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.main@class.z_ellipsis2@text##（+.*|.*最新章节|\\(+.*",
+      "tocUrl": "@js:\"https://dj.palmestore.com/zybook/u/p/api.php?Act=getChapterListVersion&bid=\" +java.put('bid',baseUrl.match(/(\\d+)/)[1])+\"&p4=501656\"",
+      "wordCount": "class.font_num@text"
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": ""
+    },
+    "ruleExplore": {
+      "author": "class.book_author.0@text",
+      "bookList": "class.v_list@li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.book_info@text",
+      "name": "class.book_name@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||class.bkitem_author@text",
+      "bookList": "class.rank_ullist@li||class.v_books@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.bkitem_types@text",
+      "lastChapter": "{{@@class.rank_newpage@text##更新章节：}} • {{@@class.rank_bktime@text}}\n<js>result.replace(/\\s\\d+:\\d+/,'')</js>",
+      "name": "class.rank_bkname@a@text||class.bkitem_name@a@text##（+.*|.*最新章节|\\(+.*",
+      "wordCount": "class.bk_fontnum@text&&class.rank_bktime@text"
+    },
+    "ruleToc": {
+      "chapterList": "cls@cp",
+      "chapterName": "cn@text##[\\(（].*[求更谢乐发推].*[）\\)]",
+      "chapterUrl": "@CSS:id@text\n@js:\nbid=java.get('bid');\n'https://m.idejian.com/book/'+bid+'/'+result+'.html'",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "得间 #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 1312,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1627583489175,
+    "loginUrl": "",
+    "respondTime": 1034,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": ".bookcover@src",
+      "intro": "[property=og:description]@content",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@textNodes",
+      "name": ".main dt@text",
+      "tocUrl": "@js:\"https://dj.palmestore.com/zybook/u/p/api.php?Act=getChapterListVersion&bid=\"+java.put('bid',baseUrl.match(/(\\d+)/)[1])+\"&p4=501656\"",
+      "wordCount": ".font_num@text"
+    },
+    "ruleContent": {
+      "content": ".h5_mainbody@p@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.book_author.0@text",
+      "bookList": ".v_list li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".book_info@text",
+      "kind": "class.book_author.2@text",
+      "name": ".book_name@text"
+    },
+    "ruleToc": {
+      "chapterList": "cp",
+      "chapterName": "cn@text",
+      "chapterUrl": "https://m.idejian.com/book/@get:{bid}/{{@css:id@text}}.html"
+    },
+    "searchUrl": "/search/do?keyword={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "得间·女生",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/nvsheng",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 1313,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"今日必读\",\"url\":\"https://m.idejian.com/nvsheng\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"每日推荐\",\"url\":\"https://m.idejian.com/bangdan/35915?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"重磅推荐\",\"url\":\"https://m.idejian.com/bangdan/35887\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"女频完本\",\"url\":\"https://m.idejian.com/bangdan/35875?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"完本佳作\",\"url\":\"https://m.idejian.com/bangdan/35678?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"新书优选\",\"url\":\"https://m.idejian.com/bangdan/35888\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"潜力新书\",\"url\":\"https://m.idejian.com/bangdan/35910?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总热度榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35558&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总人气榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35556&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总潜力榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35557&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"现言推荐\",\"url\":\"https://m.idejian.com/bangdan/35911?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"惊悚灵异\",\"url\":\"https://m.idejian.com/bangdan/35912?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"精彩古言\",\"url\":\"https://m.idejian.com/bangdan/35913?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"青春百合\",\"url\":\"https://m.idejian.com/bangdan/35914?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"现代言情\",\"url\":\"https://m.idejian.com/category?categoryId=870&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"古代言情\",\"url\":\"https://m.idejian.com/category?categoryId=888&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"青春校园\",\"url\":\"https://m.idejian.com/category?categoryId=890&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"同人作品\",\"url\":\"https://m.idejian.com/category?categoryId=891&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"惊悚恐怖\",\"url\":\"https://m.idejian.com/category?categoryId=893&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"次元专区\",\"url\":\"https://m.idejian.com/category?categoryId=894&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"幻想言情\",\"url\":\"https://m.idejian.com/category?categoryId=889&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1638850585334,
+    "loginUrl": "",
+    "respondTime": 9330,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.z_ellipsis2@text",
+      "tocUrl": "class.title_wrap@a@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": "full"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.book_author.0@text",
+      "bookList": "class.rank_ullist@li||class.v_list@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes||class.book_info@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.book_author!0@text",
+      "lastChapter": "class.rank_newpage@text##更新章节：",
+      "name": "class.rank_bkname@a@text||class.book_name@textNodes",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog_list@a",
+      "chapterName": "class.text@text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "class.next_btn@data-topage<js>\nid = baseUrl.match(/(\\d+)\\/?$/)[1]\n'https://m.idejian.com/catalog?page='+result+'&bookId='+id+''\n</js>\n@js:result##\\[|\\]",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⚡️ 1.1次,0-1文本",
+    "bookSourceName": "🔖得间·男生",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/nansheng",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 292,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "今日必读::https://m.idejian.com/nansheng\n每日推荐::https://m.idejian.com/bangdan/35909?page={{page}}\n男频完本::https://m.idejian.com/bangdan/35876?page={{page}}\n火爆精品::https://m.idejian.com/bangdan/35882\n口碑佳作::https://m.idejian.com/bangdan/35673\n潜力新书::https://m.idejian.com/bangdan/35671\n完本精选::https://m.idejian.com/bangdan/35672\n总热度榜::https://m.idejian.com/top/nansheng?sectionId=35549&page={{page}}\n总人气榜::https://m.idejian.com/top/nansheng?sectionId=35554&page={{page}}\n总潜力榜::https://m.idejian.com/top/nansheng?sectionId=35555\n都市爽文::https://m.idejian.com/bangdan/35903?page={{page}}\n玄幻升级::https://m.idejian.com/bangdan/35904?page={{page}}\n灵异推理::https://m.idejian.com/bangdan/35905?page={{page}}\n科幻校园::https://m.idejian.com/bangdan/35906?page={{page}}\n历史军事::https://m.idejian.com/bangdan/35907?page={{page}}\n游戏竞技::https://m.idejian.com/bangdan/35908?page={{page}}\n都市小说::https://m.idejian.com/category?categoryId=865&resourcesId=8&page={{page}}\n玄幻小说::https://m.idejian.com/category?categoryId=877&resourcesId=8&page={{page}}\n校园小说::https://m.idejian.com/category?categoryId=878&resourcesId=8&page={{page}}\n仙侠小说::https://m.idejian.com/category?categoryId=879&resourcesId=8&page={{page}}\n奇幻小说::https://m.idejian.com/category?categoryId=880&resourcesId=8&page={{page}}\n历史小说::https://m.idejian.com/category?categoryId=881&resourcesId=8&page={{page}}\n军事小说::https://m.idejian.com/category?categoryId=882&resourcesId=8&page={{page}}\n科幻小说::https://m.idejian.com/category?categoryId=883&resourcesId=8&page={{page}}\n武侠小说::https://m.idejian.com/category?categoryId=884&resourcesId=8&page={{page}}\n游戏小说::https://m.idejian.com/category?categoryId=885&resourcesId=8&page={{page}}\n竞技小说::https://m.idejian.com/category?categoryId=886&resourcesId=8&page={{page}}\n灵异小说::https://m.idejian.com/category?categoryId=887&resourcesId=8&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1678674766232,
+    "loginUrl": "",
+    "respondTime": 19959,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.z_ellipsis2@text",
+      "tocUrl": "class.title_wrap@a@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": "full"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.book_author.0@text",
+      "bookList": "class.rank_ullist@li||class.v_list@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes||class.book_info@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.book_author!0@text",
+      "lastChapter": "class.rank_newpage@text##更新章节：",
+      "name": "class.rank_bkname@a@text||class.book_name@textNodes",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog_list@a",
+      "chapterName": "class.text@text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "class.next_btn@data-topage<js>\nid = baseUrl.match(/(\\d+)\\/?$/)[1]\n'https://m.idejian.com/catalog?page='+result+'&bookId='+id+''\n</js>\n@js:result##\\[|\\]",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⚡️ 1.1次,0-1文本",
+    "bookSourceName": "🔖得间·出版",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/chuban",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 293,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "今日必读::https://m.idejian.com/chuban\n全新上架::https://m.idejian.com/bangdan/35916?page={{page}}\n总热度榜::https://m.idejian.com/top/chuban?sectionId=35899&page={{page}}\n总人气榜::https://m.idejian.com/top/chuban?sectionId=35561&page={{page}}\n总潜力榜::https://m.idejian.com/top/chuban?sectionId=35562&page={{page}}\n小说出版::https://m.idejian.com/category?categoryId=869&resourcesId=8&page={{page}}\n青春出版::https://m.idejian.com/category?categoryId=895&resourcesId=8&page={{page}}\n传记出版::https://m.idejian.com/category?categoryId=896&resourcesId=8&page={{page}}\n艺术出版::https://m.idejian.com/category?categoryId=897&resourcesId=8&page={{page}}\n文学出版::https://m.idejian.com/category?categoryId=898&resourcesId=8&page={{page}}\n人文社科::https://m.idejian.com/category?categoryId=899&resourcesId=8&page={{page}}\n经管励志::https://m.idejian.com/category?categoryId=900&resourcesId=8&page={{page}}\n生活出版::https://m.idejian.com/category?categoryId=901&resourcesId=8&page={{page}}\n教育出版::https://m.idejian.com/category?categoryId=902&resourcesId=8&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1678674757904,
+    "loginUrl": "",
+    "respondTime": 3699,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.z_ellipsis2@text",
+      "tocUrl": "class.title_wrap@a@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": "full"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.book_author.0@text",
+      "bookList": "class.rank_ullist@li||class.v_list@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes||class.book_info@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.book_author!0@text",
+      "lastChapter": "class.rank_newpage@text##更新章节：",
+      "name": "class.rank_bkname@a@text||class.book_name@textNodes",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog_list@a",
+      "chapterName": "class.text@text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "class.next_btn@data-topage<js>\nid = baseUrl.match(/(\\d+)\\/?$/)[1]\n'https://m.idejian.com/catalog?page='+result+'&bookId='+id+''\n</js>\n@js:result##\\[|\\]",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "得间小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 1364,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "[{\"title\":\"——————出版——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"小说出版\",\"url\":\"https://m.idejian.com/category?categoryId=869&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春出版\",\"url\":\"https://m.idejian.com/category?categoryId=895&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"传记出版\",\"url\":\"https://m.idejian.com/category?categoryId=896&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"艺术出版\",\"url\":\"https://m.idejian.com/category?categoryId=897&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学出版\",\"url\":\"https://m.idejian.com/category?categoryId=898&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"人文社科\",\"url\":\"https://m.idejian.com/category?categoryId=899&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"经管励志\",\"url\":\"https://m.idejian.com/category?categoryId=900&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"生活出版\",\"url\":\"https://m.idejian.com/category?categoryId=901&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"教育出版\",\"url\":\"https://m.idejian.com/category?categoryId=902&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"——————男生——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"都市小说\",\"url\":\"https://m.idejian.com/category?categoryId=865&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=877&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"校园小说\",\"url\":\"https://m.idejian.com/category?categoryId=878&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"https://m.idejian.com/category?categoryId=879&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"奇幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=880&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史小说\",\"url\":\"https://m.idejian.com/category?categoryId=881&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"军事小说\",\"url\":\"https://m.idejian.com/category?categoryId=882&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=883&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠小说\",\"url\":\"https://m.idejian.com/category?categoryId=884&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏小说\",\"url\":\"https://m.idejian.com/category?categoryId=885&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"竞技小说\",\"url\":\"https://m.idejian.com/category?categoryId=886&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异小说\",\"url\":\"https://m.idejian.com/category?categoryId=887&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"——————女生——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"现代言情\",\"url\":\"https://m.idejian.com/category?categoryId=870&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古代言情\",\"url\":\"https://m.idejian.com/category?categoryId=888&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春校园\",\"url\":\"https://m.idejian.com/category?categoryId=890&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人作品\",\"url\":\"https://m.idejian.com/category?categoryId=891&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"惊悚恐怖\",\"url\":\"https://m.idejian.com/category?categoryId=893&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"次元专区\",\"url\":\"https://m.idejian.com/category?categoryId=894&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想言情\",\"url\":\"https://m.idejian.com/category?categoryId=889&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1667971453397,
+    "respondTime": 3137,
+    "ruleBookInfo": {
+      "author": "class.bk_author@tag.span.0@text##著",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.title_more.1@text&&\nclass.author.1@text&&class.detail_bkgrade.0@tag.span@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.main@class.z_ellipsis2@text##（+.*|.*最新章节|\\(+.*",
+      "tocUrl": "@js:\"https://dj.palmestore.com/zybook/u/p/api.php?Act=getChapterListVersion&bid=\" +java.put('bid',baseUrl.match(/(\\d+)/)[1])+\"&p4=501656\"",
+      "wordCount": "class.font_num@text"
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": ""
+    },
+    "ruleExplore": {
+      "author": "class.book_author.0@text",
+      "bookList": "class.v_list@li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.book_info@text",
+      "name": "class.book_name@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||class.bkitem_author@text",
+      "bookList": "class.rank_ullist@li||class.v_books@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.bkitem_types@text",
+      "lastChapter": "{{@@class.rank_newpage@text##更新章节：}} • {{@@class.rank_bktime@text}}\n<js>result.replace(/\\s\\d+:\\d+/,'')</js>",
+      "name": "class.rank_bkname@a@text||class.bkitem_name@a@text##（+.*|.*最新章节|\\(+.*",
+      "wordCount": "class.bk_fontnum@text&&class.rank_bktime@text"
+    },
+    "ruleToc": {
+      "chapterList": "cls@cp",
+      "chapterName": "cn@text##[\\(（].*[求更谢乐发推].*[）\\)]",
+      "chapterUrl": "@CSS:id@text\n@js:\nbid=java.get('bid');\n'https://m.idejian.com/book/'+bid+'/'+result+'.html'",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "得间 #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 1400,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1627583489175,
+    "loginUrl": "",
+    "respondTime": 767,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": ".bookcover@src",
+      "intro": "[property=og:description]@content",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@textNodes",
+      "name": ".main dt@text",
+      "tocUrl": "@js:\"https://dj.palmestore.com/zybook/u/p/api.php?Act=getChapterListVersion&bid=\"+java.put('bid',baseUrl.match(/(\\d+)/)[1])+\"&p4=501656\"",
+      "wordCount": ".font_num@text"
+    },
+    "ruleContent": {
+      "content": ".h5_mainbody@p@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.book_author.0@text",
+      "bookList": ".v_list li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".book_info@text",
+      "kind": "class.book_author.2@text",
+      "name": ".book_name@text"
+    },
+    "ruleToc": {
+      "chapterList": "cp",
+      "chapterName": "cn@text",
+      "chapterUrl": "https://m.idejian.com/book/@get:{bid}/{{@css:id@text}}.html"
+    },
+    "searchUrl": "/search/do?keyword={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "得间·女生",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/nvsheng",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 1406,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "[{\"title\":\"今日必读\",\"url\":\"https://m.idejian.com/nvsheng\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"每日推荐\",\"url\":\"https://m.idejian.com/bangdan/35915?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"重磅推荐\",\"url\":\"https://m.idejian.com/bangdan/35887\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"女频完本\",\"url\":\"https://m.idejian.com/bangdan/35875?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"完本佳作\",\"url\":\"https://m.idejian.com/bangdan/35678?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"新书优选\",\"url\":\"https://m.idejian.com/bangdan/35888\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"潜力新书\",\"url\":\"https://m.idejian.com/bangdan/35910?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总热度榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35558&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总人气榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35556&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总潜力榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35557&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"现言推荐\",\"url\":\"https://m.idejian.com/bangdan/35911?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"惊悚灵异\",\"url\":\"https://m.idejian.com/bangdan/35912?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"精彩古言\",\"url\":\"https://m.idejian.com/bangdan/35913?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"青春百合\",\"url\":\"https://m.idejian.com/bangdan/35914?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"现代言情\",\"url\":\"https://m.idejian.com/category?categoryId=870&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"古代言情\",\"url\":\"https://m.idejian.com/category?categoryId=888&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"青春校园\",\"url\":\"https://m.idejian.com/category?categoryId=890&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"同人作品\",\"url\":\"https://m.idejian.com/category?categoryId=891&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"惊悚恐怖\",\"url\":\"https://m.idejian.com/category?categoryId=893&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"次元专区\",\"url\":\"https://m.idejian.com/category?categoryId=894&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"幻想言情\",\"url\":\"https://m.idejian.com/category?categoryId=889&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1638850585334,
+    "loginUrl": "",
+    "respondTime": 13696,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.z_ellipsis2@text",
+      "tocUrl": "class.title_wrap@a@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "imageStyle": "full"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.book_author.0@text",
+      "bookList": "class.rank_ullist@li||class.v_list@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes||class.book_info@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.book_author!0@text",
+      "lastChapter": "class.rank_newpage@text##更新章节：",
+      "name": "class.rank_bkname@a@text||class.book_name@textNodes",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog_list@a",
+      "chapterName": "class.text@text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "class.next_btn@data-topage<js>\nid = baseUrl.match(/(\\d+)\\/?$/)[1]\n'https://m.idejian.com/catalog?page='+result+'&bookId='+id+''\n</js>\n@js:result##\\[|\\]",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "5.6",
+    "bookSourceName": "💵 得间小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "customOrder": 1525,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"出版\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"小说出版\",\"url\":\"https://m.idejian.com/category?categoryId=869&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春出版\",\"url\":\"https://m.idejian.com/category?categoryId=895&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"传记出版\",\"url\":\"https://m.idejian.com/category?categoryId=896&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"艺术出版\",\"url\":\"https://m.idejian.com/category?categoryId=897&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学出版\",\"url\":\"https://m.idejian.com/category?categoryId=898&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"人文社科\",\"url\":\"https://m.idejian.com/category?categoryId=899&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"经管励志\",\"url\":\"https://m.idejian.com/category?categoryId=900&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"生活出版\",\"url\":\"https://m.idejian.com/category?categoryId=901&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"教育出版\",\"url\":\"https://m.idejian.com/category?categoryId=902&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"男生\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"都市小说\",\"url\":\"https://m.idejian.com/category?categoryId=865&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=877&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"校园小说\",\"url\":\"https://m.idejian.com/category?categoryId=878&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"https://m.idejian.com/category?categoryId=879&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"奇幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=880&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史小说\",\"url\":\"https://m.idejian.com/category?categoryId=881&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"军事小说\",\"url\":\"https://m.idejian.com/category?categoryId=882&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"https://m.idejian.com/category?categoryId=883&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠小说\",\"url\":\"https://m.idejian.com/category?categoryId=884&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏小说\",\"url\":\"https://m.idejian.com/category?categoryId=885&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"竞技小说\",\"url\":\"https://m.idejian.com/category?categoryId=886&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异小说\",\"url\":\"https://m.idejian.com/category?categoryId=887&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"现代言情\",\"url\":\"https://m.idejian.com/category?categoryId=870&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古代言情\",\"url\":\"https://m.idejian.com/category?categoryId=888&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春校园\",\"url\":\"https://m.idejian.com/category?categoryId=890&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人作品\",\"url\":\"https://m.idejian.com/category?categoryId=891&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"惊悚恐怖\",\"url\":\"https://m.idejian.com/category?categoryId=893&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"次元专区\",\"url\":\"https://m.idejian.com/category?categoryId=894&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想言情\",\"url\":\"https://m.idejian.com/category?categoryId=889&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1680469062710,
+    "respondTime": 3580,
+    "ruleBookInfo": {
+      "author": "class.bk_author@tag.span.0@text##著",
+      "coverUrl": "class.bookview@img@src",
+      "init": "",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.title_more.1@text&&\nclass.author.1@text&&class.detail_bkgrade.0@tag.span@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.main@class.z_ellipsis2@text##（+.*|.*最新章节|\\(+.*",
+      "tocUrl": "@js:\"https://dj.palmestore.com/zybook/u/p/api.php?Act=getChapterListVersion&bid=\" +java.put('bid',baseUrl.match(/(\\d+)/)[1])+\"&p4=501656\"",
+      "wordCount": "class.font_num@text"
+    },
+    "ruleContent": {
+      "content": "$.body.content",
+      "imageStyle": "full",
+      "replaceRegex": "##<img\\ssrc=\"https://qq.idejian.com/api/qq/.+none\">"
+    },
+    "ruleExplore": {
+      "author": "class.book_author.0@text",
+      "bookList": "class.v_list@li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.book_info@text",
+      "name": "class.book_name@text"
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.bkitem_author@text",
+      "bookList": "class.rank_ullist@li||class.v_books@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.bkitem_types@text",
+      "lastChapter": "{{@@class.rank_newpage@text##更新章节：}} • {{@@class.rank_bktime@text}}\n<js>result.replace(/\\s\\d+:\\d+/,'')</js>",
+      "name": "class.rank_bkname@a@text||class.bkitem_name@a@text##（+.*|.*最新章节|\\(+.*",
+      "wordCount": "class.bk_fontnum@text&&class.rank_bktime@text"
+    },
+    "ruleToc": {
+      "chapterList": "cls@cp",
+      "chapterName": "cn@text##[\\(（].*[求更谢乐发推].*[）\\)]",
+      "chapterUrl": "@CSS:id@text\n@js:\nbid=java.get('bid');\n'https://qq.idejian.com/api/qq/book/'+bid+'/'+result",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⭐️小说",
+    "bookSourceName": "🛸得间小说⭐",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com#渊呀",
+    "bookUrlPattern": "",
+    "customOrder": 1667,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1674488137895,
+    "loginUrl": "https://m.idejian.com/user/login?goBackUrl=https%3A%2F%2Fm.idejian.com%2F",
+    "respondTime": 1620,
+    "ruleBookInfo": {
+      "author": "class.author.0@text",
+      "coverUrl": ".bookcover@src",
+      "intro": "[property=og:description]@content",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@textNodes",
+      "name": ".main dt@text",
+      "tocUrl": "@js:\"https://dj.palmestore.com/zybook/u/p/api.php?Act=getChapterListVersion&bid=\"+java.put('bid',baseUrl.match(/(\\d+)/)[1])+\"&p4=501656\"",
+      "wordCount": ".font_num@text"
+    },
+    "ruleContent": {
+      "content": ".h5_mainbody@p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.book_author.0@text",
+      "bookList": ".v_list li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".book_info@text",
+      "kind": "class.book_author.2@text",
+      "name": ".book_name@text"
+    },
+    "ruleToc": {
+      "chapterList": "cp",
+      "chapterName": "cn@text",
+      "chapterUrl": "https://m.idejian.com/book/@get:{bid}/{{@css:id@text}}.html"
+    },
+    "searchUrl": "/search/do?keyword={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "得间·女生",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.idejian.com/nvsheng",
+    "bookUrlPattern": "https://m.idejian.com/book/\\d+/",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2272,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"今日必读\",\"url\":\"https://m.idejian.com/nvsheng\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"每日推荐\",\"url\":\"https://m.idejian.com/bangdan/35915?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"重磅推荐\",\"url\":\"https://m.idejian.com/bangdan/35887\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"女频完本\",\"url\":\"https://m.idejian.com/bangdan/35875?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"完本佳作\",\"url\":\"https://m.idejian.com/bangdan/35678?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"新书优选\",\"url\":\"https://m.idejian.com/bangdan/35888\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"潜力新书\",\"url\":\"https://m.idejian.com/bangdan/35910?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总热度榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35558&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总人气榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35556&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"总潜力榜\",\"url\":\"https://m.idejian.com/top/nvsheng?sectionId=35557&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"现言推荐\",\"url\":\"https://m.idejian.com/bangdan/35911?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"惊悚灵异\",\"url\":\"https://m.idejian.com/bangdan/35912?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"精彩古言\",\"url\":\"https://m.idejian.com/bangdan/35913?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"青春百合\",\"url\":\"https://m.idejian.com/bangdan/35914?page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"现代言情\",\"url\":\"https://m.idejian.com/category?categoryId=870&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"古代言情\",\"url\":\"https://m.idejian.com/category?categoryId=888&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"青春校园\",\"url\":\"https://m.idejian.com/category?categoryId=890&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"同人作品\",\"url\":\"https://m.idejian.com/category?categoryId=891&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"惊悚恐怖\",\"url\":\"https://m.idejian.com/category?categoryId=893&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"次元专区\",\"url\":\"https://m.idejian.com/category?categoryId=894&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\"幻想言情\",\"url\":\"https://m.idejian.com/category?categoryId=889&resourcesId=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1}}]",
+    "exploreScreen": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 10; zh-Hans-CN; PCT-AL10 Build/HUAWEIPCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Quark/4.8.6.175 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1638850585334,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 432,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.author.0@text",
+      "coverUrl": "class.bookview@img@src",
+      "intro": "class.brief_intro_txt@text",
+      "kind": "class.author.1@text",
+      "lastChapter": "class.title.1@text##最新",
+      "name": "class.z_ellipsis2@text",
+      "canReName": "",
+      "tocUrl": "class.title_wrap@a@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.read_c@html||class.h5_mainbody@p@html##（全书完）",
+      "nextContentUrl": "",
+      "imageStyle": "full",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.book_author.0@text",
+      "bookList": "class.rank_ullist@li||class.v_list@li",
+      "bookUrl": "tag.a.0@href@js:'https://m.idejian.com'+result",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.rank_bkbrief@textNodes||class.book_info@textNodes",
+      "kind": "class.rank_bkinfo@span!0@text||class.book_author!0@text",
+      "lastChapter": "class.rank_newpage@text##更新章节：",
+      "name": "class.rank_bkname@a@text||class.book_name@textNodes",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog_list@a",
+      "chapterName": "class.text@text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "class.next_btn@data-topage<js>\nid = baseUrl.match(/(\\d+)\\/?$/)[1]\n'https://m.idejian.com/catalog?page='+result+'&bookId='+id+''\n</js>\n@js:result##\\[|\\]",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.idejian.com/search?keyword={{key}}&page={{page}},{\n  \"headers\": \"{\\\"User-Agent\\\": \\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\\\"}\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

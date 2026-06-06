@@ -1,0 +1,106 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 SoBook",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://sobooks.net/",
+    "customOrder": 1375,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1676028095243,
+    "respondTime": 5298,
+    "ruleBookInfo": {
+      "author": "class.meta@span.1@text||class.bookinfo@tag.li.1@textNodes",
+      "coverUrl": "class.bookpic@tag.img@src",
+      "init": "",
+      "intro": "class.article-content@html\n<js>result.replace(/内容简介/,'\\n&lrm;\\n※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ \\n&lrm;\\n内容简介\\n&lrm;\\n').replace(/作者简介/,'\\n&lrm;\\n※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ \\n&lrm;\\n作者简介\\n&lrm;\\n').replace(/输入“暗号”查看更多信息！.*/,'')</js>",
+      "kind": "class.meta@span.0@text&&class.bookinfo@tag.li.4@textNodes",
+      "lastChapter": "class.bookinfo@tag.li.4@textNodes",
+      "name": "class.article-title@text||class.bookinfo@tag.li.0@textNodes",
+      "wordCount": "class.bookinfo@tag.li.3@text"
+    },
+    "ruleContent": {
+      "content": "@js:\"密码暂时为\\n318462\\n若密码错误前往公众号so read获取最新暗号\\n请跳转浏览器下载：\\n\"+baseUrl"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "p@text",
+      "bookList": ".card",
+      "bookUrl": "class.thumb-img focus@tag.a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "class.thumb-img focus@img@data-original@src",
+      "kind": ".metacat@text",
+      "lastChapter": "{{'跳转浏览器下载'}}",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "@js:a=[{a:'跳转浏览器下载',b:baseUrl}]",
+      "chapterName": "a",
+      "chapterUrl": "b"
+    },
+    "searchUrl": "/search/{{key}},{\n\"body\":\"result=40\",\n\"method\": \"POST\",\n\"headers\":{\"cookie\":\"esc_search_captcha=1\"}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2",
+    "bookSourceName": "📚 SoBook",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://sobooks.net/",
+    "customOrder": 1638,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1676028095243,
+    "respondTime": 4074,
+    "ruleBookInfo": {
+      "author": "class.meta@span.1@text||class.bookinfo@tag.li.1@textNodes",
+      "coverUrl": "class.bookpic@tag.img@src",
+      "init": "",
+      "intro": "class.article-content@html\n<js>result.replace(/内容简介/,'\\n&lrm;\\n※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ \\n&lrm;\\n内容简介\\n&lrm;\\n').replace(/作者简介/,'\\n&lrm;\\n※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ ※ \\n&lrm;\\n作者简介\\n&lrm;\\n').replace(/输入“暗号”查看更多信息！.*/,'')</js>",
+      "kind": "class.meta@span.0@text&&class.bookinfo@tag.li.4@textNodes",
+      "lastChapter": "class.bookinfo@tag.li.4@textNodes",
+      "name": "class.article-title@text||class.bookinfo@tag.li.0@textNodes",
+      "wordCount": "class.bookinfo@tag.li.3@text"
+    },
+    "ruleContent": {
+      "content": "@js:\"密码暂时为\\n318462\\n若密码错误前往公众号so read获取最新暗号\\n请跳转浏览器下载：\\n\"+baseUrl"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "p@text",
+      "bookList": ".card",
+      "bookUrl": "class.thumb-img focus@tag.a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "class.thumb-img focus@img@data-original@src",
+      "kind": ".metacat@text",
+      "lastChapter": "{{'跳转浏览器下载'}}",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "@js:a=[{a:'跳转浏览器下载',b:baseUrl}]",
+      "chapterName": "a",
+      "chapterUrl": "b"
+    },
+    "searchUrl": "/search/{{key}},{\n\"body\":\"result=40\",\n\"method\": \"POST\",\n\"headers\":{\"cookie\":\"esc_search_captcha=1\"}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "bookSourceComment": "同站：\n海棠书屋 https://m.9n9h.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "👔 肉文屋⑦",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.nprouwen.org",
+    "customButton": false,
+    "customOrder": 994,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "                               榜  单                              \n最近更新::/top/lastupdate_{{page}}/\n最新入库::/top/postdate_{{page}}/\n总点击榜::/top/allvisit_{{page}}/\n月点击榜::/top/monthvisit_{{page}}/\n周点击榜::/top/weekvisit_{{page}}/\n日点击榜::/top/dayvisit_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n月推荐榜::/top/monthvote_{{page}}/\n周推荐榜::/top/weekvote_{{page}}/\n日推荐榜::/top/dayvote_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n字数排行::/top/size_{{page}}/\n                               分  类                               \n 玄幻 ::/sort/1_{{page}}/\n 仙侠 ::/sort/2_{{page}}/\n 都市 ::/sort/3_{{page}}/\n 穿越 ::/sort/4_{{page}}/\n 科幻 ::/sort/5_{{page}}/\n 网游 ::/sort/6_{{page}}/\n 精品 ::/sort/7_{{page}}/\n 完本 ::/full/{{page}}/",
+    "lastUpdateTime": 1724318302767,
+    "respondTime": 12007,
+    "ruleBookInfo": {
+      "author": ".tab@tag.p.0@text##.*：",
+      "coverUrl": ".tu@img@src",
+      "intro": ".jj@p@html",
+      "kind": ".tab1@tag.p.0@text&&.tab1@tag.p.1@text##小说",
+      "lastChapter": ".tab@a@text",
+      "name": "tag.h1.0@text##\\_.*",
+      "wordCount": ".tab1@tag.p.2@text"
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes",
+      "nextContentUrl": "text.下一章@href",
+      "replaceRegex": "##分卷阅读.*|.*作者.*"
+    },
+    "ruleExplore": {
+      "author": ".p4@text||.p3 a@text",
+      "bookList": ".tt||.content_link",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.org/image/$1/$2/$2s.jpg",
+      "intro": ".p5@text##.*简介.|\\s",
+      "kind": "p@.p2@text&&.p1 a@text##\\[|\\]",
+      "name": "tag.a.1@text##\\_.*",
+      "wordCount": "p@.p3@text"
+    },
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.org/image/$1/$2/$2s.jpg",
+      "kind": "tag.a.1@text",
+      "name": "tag.a.0@text##\\_.*"
+    },
+    "ruleToc": {
+      "chapterList": "tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "weight": 0
+  }
+]

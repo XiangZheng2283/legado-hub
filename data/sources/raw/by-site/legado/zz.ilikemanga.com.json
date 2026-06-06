@@ -1,0 +1,56 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0-2图片,🎨 漫画",
+    "bookSourceName": "追追漫画M",
+    "bookSourceType": 2,
+    "bookSourceUrl": "http://zz.ilikemanga.com",
+    "customOrder": 1382,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&page={{page}}\n恐怖::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=06830a2fd42140748d53e85cbdc84c42&page={{page}}\n暖萌::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=2a0be35a524a482285f483808a3117e4&page={{page}}\n校园::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=42b75ec66f96446bb325f6535435d542&page={{page}}\n独家::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=6df761579d6e49d08e56b31a545ba01d&page={{page}}\n纯爱::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=7f817095ec544ec2b20649f688f1a412&page={{page}}\n恋爱::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=9bb8263aa4a14f23bde4afd32e8580e5&page={{page}}\n搞笑::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=9db2d6ea3a5946558049bd2c2781c2c2&page={{page}}\n仙侠::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=9de36092d13f4706a315114a631a3402&page={{page}}\n奇幻::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=becc0ecdcbc940658b225e8a9d639fa1&page={{page}}\n剧情::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=c0102a3be51d4488ac865cd35d701db1&page={{page}}\n热血::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=c76bc9127a9545f380ddaf09b66efddf&page={{page}}\n免费::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=cbc1d676961a4025ba10524029fcbe24&page={{page}}\n日常::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=cc27cff60f6b4641bfee42e4ff2a77e4&page={{page}}\n都市::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=e4319f48597d472f94f371dd0eb85ee5&page={{page}}\n古风::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=e956565345794af88d1b037130497364&page={{page}}\n悬疑::http://zz.ilikemanga.com/m/manman/cartoonlist?accountappid=878ad455f01441a3b82f22a6ab933b70&platform_code=honghua&promoterid=d10fa62c349840f1bc25387e81066bcc&isback=1&categoryid=fd10c24d3db147639a0e55443e4fca31&page={{page}}",
+    "lastUpdateTime": 1656421986250,
+    "loginUrl": "http://zz.ilikemanga.com",
+    "respondTime": 1234,
+    "ruleBookInfo": {
+      "author": ".top_box@p.0@text",
+      "init": "",
+      "name": "h3@text",
+      "tocUrl": "@js:baseUrl.replace(\"index\",\"allchapter\")"
+    },
+    "ruleContent": {
+      "content": ".con@img@data-original\n@js:result.split(\"\\n\").map(x=>'<img src=\\\"'+x+'\\\">').join(\"\\n\")",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": ".authorid@text",
+      "bookList": ".list@.cartoon-item||.ranking_list",
+      "bookUrl": "section@beanid@js:\n\"http://zz.ilikemanga.com/m/manman/index?cartoonid=\"+result+\"&promoterid=d10fa62c349840f1bc25387e81066bcc&accountappid=878ad455f01441a3b82f22a6ab933b70#forward\"",
+      "coverUrl": "img.0@src",
+      "intro": "p@text",
+      "kind": ".itemr_b@span@text",
+      "lastChapter": ".case_modalp@text",
+      "name": "h1@text||.ranking_author@span.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".list@.item",
+      "chapterName": "text",
+      "chapterUrl": "div@id@js:baseUrl.replace(\"manman/allchapter\",\"chapterinfo\")+\"&chapterid=\"+result",
+      "isVip": ".lock@text"
+    },
+    "searchUrl": "http://zz.ilikemanga.com/m/manman/searchcartoon?keyword={{key}}&promoterid=d10fa62c349840f1bc25387e81066bcc&platform_code=honghua#forward",
+    "weight": 100
+  }
+]

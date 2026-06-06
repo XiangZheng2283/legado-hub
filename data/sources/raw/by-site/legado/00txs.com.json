@@ -1,0 +1,218 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 九桃小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://00txs.com",
+    "customOrder": 1172,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"总点击榜\",\"url\":\"/novel/top/allvisit/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"最新入库\",\"url\":\"/novel/top/postdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"最近更新\",\"url\":\"/novel/top/lastupdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"都市生活\",\"url\":\"/novel/sort/dushi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情美文\",\"url\":\"/novel/sort/yanqing/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠修真\",\"url\":\"/novel/sort/wuxia/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏竞技\",\"url\":\"/novel/sort/youxi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他类型\",\"url\":\"/novel/sort/qita/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"浪漫青春\",\"url\":\"/novel/sort/qingchun/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻未来\",\"url\":\"/novel/sort/kehuan/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史军事\",\"url\":\"/novel/sort/lishi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"经典短篇\",\"url\":\"/novel/sort/jingdian/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻玄幻\",\"url\":\"/novel/sort/xuanhuan/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"二の次元\",\"url\":\"/novel/sort/erciyuan/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"幻想奇缘\",\"url\":\"/novel/sort/huanxiang/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"古代言情\",\"url\":\"/novel/sort/gudai/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"现代言情\",\"url\":\"/novel/sort/xiandai/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"恐怖灵异\",\"url\":\"/novel/sort/lingyi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻空间\",\"url\":\"/novel/sort/kongjian/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"悬疑灵异\",\"url\":\"/novel/sort/xuanyi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"完本小说\",\"url\":\"/novel/full/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1691175098931,
+    "respondTime": 12073,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": ".detail@img@src",
+      "init": "",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".action@a.0@href",
+      "wordCount": "##字数.([^<]+)##$1###"
+    },
+    "ruleContent": {
+      "content": "div#content@html",
+      "replaceRegex": "##.*本站最新域名.*|您可以在百度.*最新章节！|九桃小说.*|.*【快捷键.*|.*精华书阁.*|为您提供.*好书签.|.*免费阅读."
+    },
+    "ruleExplore": {
+      "author": "td.2@text||a.3@text",
+      "bookList": "tbody tr||.rank li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text",
+      "kind": "td.3@text&&a.4@text&&span@text&&p.3@text##.*\\||\\s.*",
+      "lastChapter": "td.1@text||a.5@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "td.0@text||img@alt"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".library li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "kind": "a.3@text&&span@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".read dl.1@dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/novel/search?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "九桃小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://00txs.com/",
+    "customOrder": 1469,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1659980627254,
+    "respondTime": 1143,
+    "ruleBookInfo": {
+      "author": "class.detail@tag.a.1@text",
+      "coverUrl": "class.detail@tag.img@src",
+      "init": "",
+      "intro": "class.box.2@text##内容简介 ",
+      "kind": "class.detail@tag.a.2@text",
+      "lastChapter": "class.detail@tag.p.1@text##最新：",
+      "name": "class.detail@text",
+      "tocUrl": "class.action@tag.a@href",
+      "wordCount": "class.detail@tag.p.0@text##.*字数："
+    },
+    "ruleContent": {
+      "content": "class.main@tag.p!0:-2:-1@textNodes",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.main@tag.li",
+      "bookUrl": "tag.li@tag.a@href",
+      "checkKeyWord": "我的细胞监狱",
+      "intro": "class.intro@text",
+      "kind": "class.data@text",
+      "name": "class.bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.read@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://00txs.com/novel/search?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: Timed out waiting for 60000 ms",
+    "bookSourceGroup": "校验可用,校验超时",
+    "bookSourceName": "🎉 九桃小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://00txs.com",
+    "customOrder": 1172,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"总点击榜\",\"url\":\"/novel/top/allvisit/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"最新入库\",\"url\":\"/novel/top/postdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"最近更新\",\"url\":\"/novel/top/lastupdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"都市生活\",\"url\":\"/novel/sort/dushi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情美文\",\"url\":\"/novel/sort/yanqing/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠修真\",\"url\":\"/novel/sort/wuxia/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏竞技\",\"url\":\"/novel/sort/youxi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他类型\",\"url\":\"/novel/sort/qita/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"浪漫青春\",\"url\":\"/novel/sort/qingchun/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻未来\",\"url\":\"/novel/sort/kehuan/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史军事\",\"url\":\"/novel/sort/lishi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"经典短篇\",\"url\":\"/novel/sort/jingdian/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻玄幻\",\"url\":\"/novel/sort/xuanhuan/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"二の次元\",\"url\":\"/novel/sort/erciyuan/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"幻想奇缘\",\"url\":\"/novel/sort/huanxiang/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"古代言情\",\"url\":\"/novel/sort/gudai/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"现代言情\",\"url\":\"/novel/sort/xiandai/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"恐怖灵异\",\"url\":\"/novel/sort/lingyi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻空间\",\"url\":\"/novel/sort/kongjian/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"悬疑灵异\",\"url\":\"/novel/sort/xuanyi/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"完本小说\",\"url\":\"/novel/full/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1691175098931,
+    "respondTime": 120001,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": ".detail@img@src",
+      "init": "",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".action@a.0@href",
+      "wordCount": "##字数.([^<]+)##$1###"
+    },
+    "ruleContent": {
+      "content": "div#content@html",
+      "replaceRegex": "##.*本站最新域名.*|您可以在百度.*最新章节！|九桃小说.*|.*【快捷键.*|.*精华书阁.*|为您提供.*好书签.|.*免费阅读."
+    },
+    "ruleExplore": {
+      "author": "td.2@text||a.3@text",
+      "bookList": "tbody tr||.rank li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text",
+      "kind": "td.3@text&&a.4@text&&span@text&&p.3@text##.*\\||\\s.*",
+      "lastChapter": "td.1@text||a.5@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "td.0@text||img@alt"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".library li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "kind": "a.3@text&&span@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".read dl.1@dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/novel/search?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "九桃小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://00txs.com/",
+    "customOrder": 1319,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1659980627254,
+    "respondTime": 1292,
+    "ruleBookInfo": {
+      "author": "class.detail@tag.a.1@text",
+      "coverUrl": "class.detail@tag.img@src",
+      "init": "",
+      "intro": "class.box.2@text##内容简介 ",
+      "kind": "class.detail@tag.a.2@text",
+      "lastChapter": "class.detail@tag.p.1@text##最新：",
+      "name": "class.detail@text",
+      "tocUrl": "class.action@tag.a@href",
+      "wordCount": "class.detail@tag.p.0@text##.*字数："
+    },
+    "ruleContent": {
+      "content": "class.main@tag.p!0:-2:-1@textNodes",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.main@tag.li",
+      "bookUrl": "tag.li@tag.a@href",
+      "checkKeyWord": "我的细胞监狱",
+      "intro": "class.intro@text",
+      "kind": "class.data@text",
+      "name": "class.bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.read@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://00txs.com/novel/search?searchkey={{key}}",
+    "weight": 0
+  }
+]

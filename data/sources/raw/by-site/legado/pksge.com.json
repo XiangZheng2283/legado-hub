@@ -1,0 +1,59 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "平凡文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pksge.com/",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 634,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1693406192874,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 890,
+    "ruleBookInfo": {
+      "author": "class.jieshaokaishi@tag.h2.0@text##作 者：",
+      "coverUrl": "class.jieshaoTu@tag.img@src",
+      "intro": "class.jieshaokaishi@tag.h3@text##——.*",
+      "kind": "td.weizhi@textNodes&&class.jieshaokaishi@tag.h2.1@text##更新时间：|..\\:.*|您的位置：|\\>|\\s",
+      "lastChapter": "class.zuixin@tag.a@text##..\\:.*",
+      "name": "class.jieshaokaishi@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.booktext@html##如果觉得.*|百度搜索.*首发看最新章节|新阅读网址.*",
+      "imageStyle": "",
+      "replaceRegex": "##平凡文学"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.h3.0@text##作者：",
+      "bookList": "class.tutui",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.a.-1@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zhangjiekaishi@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.pksge.net/modules/article/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&searchtype=articlename\"\n}",
+    "weight": 0
+  }
+]

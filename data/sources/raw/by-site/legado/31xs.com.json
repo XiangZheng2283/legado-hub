@@ -1,0 +1,208 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖三一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.31xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1514,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1675707189789,
+    "loginUrl": "",
+    "respondTime": 3926,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作    者：",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "class.con_top@tag.a.2@text",
+      "lastChapter": "id.info@tag.a.-1@text",
+      "name": "id.info@tag.h1@text",
+      "wordCount": "id.info@tag.p.2@text##更 新："
+    },
+    "ruleContent": {
+      "content": "id.content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "tag.a.0@href",
+      "kind": "tag.td.0@text",
+      "lastChapter": "tag.a.1@text",
+      "name": "tag.a.0@text",
+      "wordCount": "tag.td.4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.31xs.com/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "三一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.31xs.com/",
+    "bookUrlPattern": "https?://www\\.31xs\\.com(/html)?/\\d+/\\d+/?",
+    "customOrder": 390,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "奇魔玄幻::https://m.31xs.com/list/1/\n仙侠修真::https://m.31xs.com/list/2/\n都市现代::https://m.31xs.com/list/3/\n军史穿越::https://m.31xs.com/list/4/\n竞技网游::https://m.31xs.com/list/5/\n恐怖科幻::https://m.31xs.com/list/6/\n同人次元::https://m.31xs.com/list/7/\n综合言情::https://m.31xs.com/list/8/\n浪漫青春::https://m.31xs.com/list/9/\n现代言情::https://m.31xs.com/list/10/\n古代言情::https://m.31xs.com/list/11/\n幻想言情::https://m.31xs.com/list/12/\n完本小说::https://m.31xs.om/qb/",
+    "lastUpdateTime": 1687350433452,
+    "loginUrl": "",
+    "respondTime": 4769,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作 者：",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最 新：|更 新：",
+      "lastChapter": "id.info@tag.p.3@tag.a@text",
+      "name": "id.info@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##加入书签|.*咪.*咪.*阅.*读.*|www.*com|【目前用下来.*换源App】|【稳定运行多年的小说.*org】",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.author@text",
+      "bookList": "class.hot_sale",
+      "bookUrl": "tag.a.0@href@js:'https://www.31xs.com'+result",
+      "coverUrl": "img@src",
+      "intro": "class.review@text",
+      "lastChapter": "",
+      "name": "class.title@text",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "tag.td.1@tag.a@href",
+      "coverUrl": "tag.td.1@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.31xs.com/img/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.0@text",
+      "lastChapter": "tag.td.2@tag.a@text%%tag.td.4@text",
+      "name": "tag.td.1@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.31xs.com/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💦精品",
+    "bookSourceName": "🔖三一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.31xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1598,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1675707189789,
+    "loginUrl": "",
+    "respondTime": 2588,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作    者：",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "class.con_top@tag.a.2@text",
+      "lastChapter": "id.info@tag.a.-1@text",
+      "name": "id.info@tag.h1@text",
+      "wordCount": "id.info@tag.p.2@text##更 新："
+    },
+    "ruleContent": {
+      "content": "id.content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "tag.a.0@href",
+      "kind": "tag.td.0@text",
+      "lastChapter": "tag.a.1@text",
+      "name": "tag.a.0@text",
+      "wordCount": "tag.td.4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.31xs.com/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "三一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.31xs.com/",
+    "bookUrlPattern": "https?://www\\.31xs\\.com(/html)?/\\d+/\\d+/?",
+    "customOrder": -207,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "奇魔玄幻::https://m.31xs.com/list/1/\n仙侠修真::https://m.31xs.com/list/2/\n都市现代::https://m.31xs.com/list/3/\n军史穿越::https://m.31xs.com/list/4/\n竞技网游::https://m.31xs.com/list/5/\n恐怖科幻::https://m.31xs.com/list/6/\n同人次元::https://m.31xs.com/list/7/\n综合言情::https://m.31xs.com/list/8/\n浪漫青春::https://m.31xs.com/list/9/\n现代言情::https://m.31xs.com/list/10/\n古代言情::https://m.31xs.com/list/11/\n幻想言情::https://m.31xs.com/list/12/\n完本小说::https://m.31xs.om/qb/",
+    "lastUpdateTime": 1687593862709,
+    "loginUrl": "",
+    "respondTime": 11605,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作 者：",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最 新：|更 新：",
+      "lastChapter": "id.info@tag.p.3@tag.a@text",
+      "name": "id.info@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##加入书签|.*咪.*咪.*阅.*读.*|www.*com|【目前用下来.*换源App】|【稳定运行多年的小说.*org】",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.author@text",
+      "bookList": "class.hot_sale",
+      "bookUrl": "tag.a.0@href@js:'https://www.31xs.com'+result",
+      "coverUrl": "img@src",
+      "intro": "class.review@text",
+      "lastChapter": "",
+      "name": "class.title@text",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "tag.td.1@tag.a@href",
+      "coverUrl": "tag.td.1@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.31xs.com/img/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.0@text",
+      "lastChapter": "tag.td.2@tag.a@text%%tag.td.4@text",
+      "name": "tag.td.1@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.31xs.com/search.php?keyword={{key}}",
+    "weight": 0
+  }
+]

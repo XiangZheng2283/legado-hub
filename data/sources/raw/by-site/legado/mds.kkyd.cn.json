@@ -1,0 +1,49 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "小说阅读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://mds.kkyd.cn/",
+    "customOrder": 847,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681665455265,
+    "respondTime": 6924,
+    "ruleBookInfo": {
+      "canReName": "",
+      "coverUrl": "",
+      "intro": ".book_abstract_p.1@p@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".conter_li_other.0@text",
+      "lastChapter": ".newest_chapter_but@text##最新章节：",
+      "name": "h3.0@text",
+      "tocUrl": ".book_chapter_box@a.5@href",
+      "wordCount": ".conter_li_other.2@text##字数："
+    },
+    "ruleContent": {
+      "content": "class.text_content_box 18@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "$..searchList[*]",
+      "bookUrl": "http://mds.kkyd.cn/book_content.html?bookId={{$.bookId}}&t=643c0c895b53c",
+      "coverUrl": "coverWap",
+      "intro": "introduction",
+      "lastChapter": "",
+      "name": "bookName"
+    },
+    "ruleToc": {
+      "chapterList": "id.directory_list_ul@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href@js:url=\"http://mds.kkyd.cn/\"+result",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "http://mds.kkyd.cn/asg/portal/h5/searchResult.html?totalNum=10&keyword={{key}}&index=1&_=1681654338541",
+    "weight": 0
+  }
+]

@@ -1,0 +1,73 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "炫书网①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ixuanquge.com",
+    "customOrder": 466,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 279
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "炫书网①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ixuanquge.com",
+    "customOrder": 581,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2,
+    "weight": 279
+  },
+  {
+    "bookSourceComment": "未月十八修复",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "炫书网站",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ixuanquge.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1120,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687760963472,
+    "loginUrl": "",
+    "respondTime": 32182,
+    "ruleBookInfo": {
+      "author": "class.downInfoRowL@tag.a.0@text",
+      "coverUrl": "class.downInfoRowL@tag.img@src",
+      "intro": "id.mainSoftIntro@tag.p@text",
+      "lastChapter": "class.downInfoRowL@a.4@text",
+      "name": "id.downInfoTitle@text##TXT.*|《|》",
+      "tocUrl": "class.downlistbox@tag.li.1@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.view_content_txt@textNodes##声明：本书为炫书网.*|找好书，看好书.*|书友.*|-|用户上传之内容开始|本书由【炫书网】|.*提供下载.*|炫书网.*|=|.*严正声明.*|本书籍是网络收集.*|请不要使用在商业.*|我们会尽快去掉您认为侵.*|"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.searchTopic@tag.a@text##.*作者：",
+      "bookList": "class.searchTopic",
+      "bookUrl": "class.searchTopic.0@tag.a@href",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.searchTopic@tag.a.0@title"
+    },
+    "ruleToc": {
+      "chapterList": "class.read_list@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "search.html?searchtype=novelname&searchkey={{key}}",
+    "weight": 0
+  }
+]

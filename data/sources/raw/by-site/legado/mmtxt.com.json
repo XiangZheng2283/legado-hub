@@ -1,0 +1,92 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "㊣🎉  备用",
+    "bookSourceName": "🎉MM小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mmtxt.com/",
+    "customOrder": -2085958930,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "header": "{\n  \"User-Agent\": \"Mobile\"\n}",
+    "lastUpdateTime": 1682079767757,
+    "respondTime": 15288,
+    "ruleBookInfo": {
+      "author": "class.title@a@text",
+      "intro": "##<b>小说简介：</b([^<]+)<##$1###",
+      "lastChapter": "##最新章节\\s([^<]+)##$1###",
+      "tocUrl": "<js>\nbid = baseUrl.match(/\\d+_(\\d+)_\\d+/)[1];\nmd5 = java.HMacHex(bid, \"HMacMD5\", bid)\nresult = \"https://e.mmtxt.com/read/Chapter/\"+bid+\".js?token=\"+md5\n</js>"
+    },
+    "ruleContent": {
+      "content": "<js>\ntoken = baseUrl.match(/token=(.*)/)[1]\nd = java.createSymmetricCrypto(\"AES/CBC/PKCS5Padding\", token.substr(0, 16), token.substr(16)).decryptStr(result);\nvar url = \"https://ebooktxt.oss-cn-shenzhen.aliyuncs.com\";\nurl +=d\nurl += \"&t=\" + new Date().valueOf();\njava.ajax(url)\n</js>\n##\\s{2,}##<br>",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.imglist@li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@data-src",
+      "intro": "class.desc@html",
+      "kind": "class.tags@span@text",
+      "lastChapter": "",
+      "name": "img@alt"
+    },
+    "ruleToc": {
+      "chapterList": "-a",
+      "chapterName": "text",
+      "chapterUrl": "onclick\n<js>\ncid = result.match(/(\\d+)/)[1];\ntoken = java.HMacHex(cid, \"HMacMD5\", \"Mobile\");\nresult = `https://www.mmtxt.com/read/Content/${cid}.js?token=${token}`\n</js>",
+      "isVolume": ""
+    },
+    "searchUrl": "https://www.mmtxt.com/search.shtml?key={{key}}&ticks=638177048219674880",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 mm小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mmtxt.com/",
+    "customOrder": 505,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n  \"User-Agent\": \"Mobile\"\n}",
+    "lastUpdateTime": 1699601731165,
+    "respondTime": 5475,
+    "ruleBookInfo": {
+      "author": "class.title@a@text",
+      "intro": "##<b>小说简介：</b([^<]+)<##$1###",
+      "lastChapter": "##最新章节\\s([^<]+)##$1###",
+      "name": "dt@span@title##《|》",
+      "tocUrl": "<js>\nbid = baseUrl.match(/\\d+_(\\d+)_\\d+/)[1];\nmd5 = java.HMacHex(bid, \"HMacMD5\", bid)\nresult = \"https://e.mmtxt.com/read/Chapter/\"+bid+\".js?token=\"+md5\n</js>"
+    },
+    "ruleContent": {
+      "content": "<js>\ntoken = baseUrl.match(/token=(.*)/)[1]\nd = java.createSymmetricCrypto(\"AES/CBC/PKCS5Padding\", token.substr(0, 16), token.substr(16)).decryptStr(result);\nvar url = \"https://ebooktxt.oss-cn-shenzhen.aliyuncs.com\";\nurl +=d\nurl += \"&t=\" + new Date().valueOf();\njava.ajax(url)\n</js>\n##\\s{2,}##<br>",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.a.0@href\n<js>  \nvar result = (typeof result === \"object\") ? result[0] : result;  \nvar match = baseUrl.match(/^(https?:\\/\\/[^/]+)/);  \nvar turl = match ? match[0] : null;  \nvar url = result;  \njava.log(url);  \nvar html = java.ajax(url);  \njava.put('html', html);  \n</js>  \nclass.title@a@text",
+      "bookList": "class.imglist@li[0:4]",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@data-src",
+      "intro": "class.desc@html",
+      "kind": "class.tags@span@text",
+      "lastChapter": "<js>java.get('html')</js>\n##最新章节\\s([^<]+)##$1###",
+      "name": "img@alt"
+    },
+    "ruleToc": {
+      "chapterList": "-a",
+      "chapterName": "text",
+      "chapterUrl": "onclick\n<js>\ncid = result.match(/(\\d+)/)[1];\ntoken = java.HMacHex(cid, \"HMacMD5\", \"Mobile\");\nresult = `https://www.mmtxt.com/read/Content/${cid}.js?token=${token}`\n</js>",
+      "isVolume": ""
+    },
+    "searchUrl": "https://www.mmtxt.com/search.shtml?key={{key}}&ticks=638177048219674880",
+    "weight": 0
+  }
+]

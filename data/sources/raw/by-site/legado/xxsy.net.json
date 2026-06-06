@@ -1,0 +1,207 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "潇湘书院net",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xxsy.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3123,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1769587739932,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "https://www.xxsypro.com/?from=oldxxsy",
+    "respondTime": 427,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".title span@text##文\\/",
+      "coverUrl": ".bookprofile img.0@src",
+      "intro": "#book_intro@text",
+      "kind": ".sub-cols span@text&&.sub-tags@a@text\n##类别：|发布：",
+      "lastChapter": ".sub-newest p@text",
+      "name": ".title h1@text",
+      "canReName": "",
+      "tocUrl": "text.目录@href",
+      "wordCount": ".sub-data span@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "h4 a.1@textNodes",
+      "bookList": ".result-list li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a img@src",
+      "intro": ".detail@text",
+      "kind": ".subtitle span.0:1@text&&h4 a!0:1@text",
+      "lastChapter": "",
+      "name": "h4 a.0@text",
+      "wordCount": "{{@@.number span@text##字数：}}字"
+    },
+    "ruleToc": {
+      "chapterList": ".profile-main li",
+      "chapterName": "a@text||li[style~=width:100%;]@text",
+      "chapterUrl": "a@href",
+      "isVip": "i svg@class",
+      "isVolume": "li[style~=width:100%;]@text",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.xxsy.net/search/{{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "潇湘书院",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xxsy.net#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2243,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1732966334873,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "https://www.xxsypro.com/?from=oldxxsy",
+    "respondTime": 469,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".title span@text##文\\/",
+      "coverUrl": ".bookprofile img.0@src",
+      "intro": "#book_intro@text",
+      "kind": ".sub-cols span@text&&.sub-tags@a@text\n##类别：|发布：",
+      "lastChapter": ".sub-newest p@text",
+      "name": ".title h1@text",
+      "canReName": "",
+      "tocUrl": "text.目录@href",
+      "wordCount": ".sub-data span@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "h4 a.1@textNodes",
+      "bookList": ".result-list li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a img@src",
+      "intro": ".detail@text",
+      "kind": ".subtitle span.0:1@text&&h4 a!0:1@text",
+      "lastChapter": "",
+      "name": "h4 a.0@text",
+      "wordCount": "{{@@.number span@text##字数：}}字"
+    },
+    "ruleToc": {
+      "chapterList": ".profile-main li",
+      "chapterName": "a@text||li[style~=width:100%;]@text",
+      "chapterUrl": "a@href",
+      "isVip": "i svg@class",
+      "isVolume": "li[style~=width:100%;]@text",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.xxsy.net/search/{{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceGroup": "💰 正版",
+    "bookSourceName": "💰 潇湘书院",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xxsy.net",
+    "customOrder": 314,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1697001863227,
+    "respondTime": 2085,
+    "ruleBookInfo": {
+      "author": "class.title@span@text##.*作者",
+      "coverUrl": "class.bookprofile@dt@div@img@src",
+      "intro": "id.book_intro@text",
+      "kind": "class.sub-cols@span.2@text",
+      "lastChapter": "class.sub-newest@p.1@a@text",
+      "name": "class.title@h1@text",
+      "tocUrl": "text.作品目录@href",
+      "wordCount": "em@text"
+    },
+    "ruleContent": {
+      "content": "html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.info@h4@a.1@textNodes",
+      "bookList": "class.result-list@ul@li",
+      "bookUrl": "class.info@h4@a.0@href",
+      "checkKeyWord": "重生",
+      "coverUrl": "class.book-cover@img@src",
+      "intro": "class.info@p.0@text",
+      "kind": "class.info@h4@span.1@text",
+      "name": "class.info@h4@a.0@text",
+      "wordCount": "class.number@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.profile-main@ul@li!0",
+      "chapterName": "a@text##(第(.*)章)，##$1",
+      "chapterUrl": "a@href",
+      "isVip": "tag.em"
+    },
+    "searchUrl": "/search/{{key}}",
+    "weight": 0
+  }
+]

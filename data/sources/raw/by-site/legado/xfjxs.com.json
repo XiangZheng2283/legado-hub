@@ -1,0 +1,58 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 九五小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xfjxs.com",
+    "customOrder": 459,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"/mulu/1-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠修真\",\"url\":\"/mulu/2-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/mulu/3-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/mulu/4-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"侦探推理\",\"url\":\"/mulu/5-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游动漫\",\"url\":\"/mulu/6-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻小说\",\"url\":\"/mulu/7-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖灵异\",\"url\":\"/mulu/8-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"穿越小说\",\"url\":\"/mulu/9-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他类型\",\"url\":\"/mulu/10-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"完本小说\",\"url\":\"/modules/article/articlelist.php?fullflag=1&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1643142190416,
+    "loginUrl": "",
+    "respondTime": 2076,
+    "ruleBookInfo": {
+      "author": ".author a@text",
+      "coverUrl": ".con_limg img@src",
+      "intro": ".r_cons@html",
+      "kind": ".txt_nav a.1@text&&.lastrecord@ownText##小说|.*\\(|\\).*",
+      "lastChapter": ".lastrecord a@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "h1@text",
+      "tocUrl": ".r_tools a.1@href"
+    },
+    "ruleContent": {
+      "content": "#content@textNodes",
+      "replaceRegex": "##\\.pbtxt."
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": "#alistbox",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".intro@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.1@text##《|》",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.xfjxs.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5:4@text",
+      "lastChapter": "td.1@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".novel_list dd a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php?ie=gbk&searchkey={{key}}&ct=2097152",
+    "weight": 0
+  }
+]

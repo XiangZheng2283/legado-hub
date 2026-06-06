@@ -1,0 +1,58 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔰 玫瑰小说+",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.meiguixs.net",
+    "customOrder": 430,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 213
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "玫瑰小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.meiguixs.net",
+    "customOrder": 530,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 423
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔰 玫瑰小说+",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.meiguixs.net",
+    "customOrder": 542,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 213
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "玫瑰小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.meiguixs.net",
+    "customOrder": 661,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 423
+  }
+]

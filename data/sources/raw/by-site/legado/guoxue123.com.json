@@ -1,0 +1,15 @@
+[
+  {
+    "bookSourceGroup": "📚 出版,发现,搜索链接规则为空",
+    "bookSourceName": "📚国学导航",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.guoxue123.com",
+    "customOrder": 891,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 3,
+    "weight": 0
+  }
+]

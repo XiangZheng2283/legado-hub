@@ -1,0 +1,62 @@
+[
+  {
+    "bookSourceComment": "https://www.wwwrar.com\nhttps://www.shuhui9.com\nhttps://m.quge7.com\nhttps://m.ad2la.com\nhttps://m.ecc6.com",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "海阅小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haiyue8.com",
+    "bookUrlPattern": "",
+    "customOrder": 936,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/json?sortid=1&page={{page}}\n武侠::/json?sortid=2&page={{page}}\n都市::/json?sortid=3&page={{page}}\n历史::/json?sortid=4&page={{page}}\n网游::/json?sortid=5&page={{page}}\n科幻::/json?sortid=6&page={{page}}\n女生::/json?sortid=7&page={{page}}\n完本::/json?sortid=0&page={{page}}",
+    "header": "",
+    "lastUpdateTime": 1691968997284,
+    "loginUrl": "",
+    "respondTime": 3392,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "init": "",
+      "intro": "[property$=description]@content##^##<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "{{@@[property$=latest_chapter_name]@content}} • {{@@[property$=update_time]@content##\\s.*}}",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html\n##请收藏本站.*手机版.*?com.?\\s*",
+      "nextContentUrl": "",
+      "replaceRegex": "##\\s*『点此报错』『加入书签』"
+    },
+    "ruleExplore": {
+      "author": "author",
+      "bookList": "$",
+      "bookUrl": "url_list",
+      "coverUrl": "url_img",
+      "intro": "intro",
+      "name": "articlename"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "<js>\nh = \"https://www.haiyue8.com/\"\nq = \"?q=\" + encodeURIComponent(java.get('key'));\n\n\nc = \"Hm_lvt_=\"+~~(new Date().getTime()/1e3);\n\nhead = {\n\taccept: \"application/json\",\n\t\"accept-language\": \"zh-CN,en-US;q=0.9\",\n\treferer: String(h+\"s\"+q),\n\tcookie: String(c)\n}\n\nhm = \";hm=\"+java.head(h+\"user/hm.html\"+q, head).cookies().hm;\nhead.cookie = String(head.cookie+hm);\n\nGet = java.get(h+\"user/search.html\"+q, head);\nJSON.parse(Get.body())\n.map(_=>JSON.stringify(_));\n</js>",
+      "bookUrl": "$.url_list",
+      "checkKeyWord": "赛博游戏",
+      "coverUrl": "$.url_img",
+      "intro": "$.intro",
+      "kind": "",
+      "lastChapter": "",
+      "name": "$.articlename"
+    },
+    "ruleToc": {
+      "chapterList": "class.listmain@tag.dd@tag.a",
+      "chapterName": "text##.*展开全部章节.*",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "/s?q={{java.put('key',key)}}",
+    "weight": 0
+  }
+]

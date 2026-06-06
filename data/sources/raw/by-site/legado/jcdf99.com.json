@@ -1,0 +1,163 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "精彩东方文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jcdf99.com",
+    "bookUrlPattern": "",
+    "customOrder": 1486,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1673449408380,
+    "loginUrl": "",
+    "respondTime": 6455,
+    "ruleBookInfo": {
+      "coverUrl": "class.info_img@tag.img@src",
+      "intro": "id.intro@text||class.info_contentl@text",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "tocUrl": "class.readnow@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text##\\/免费阅读",
+      "bookList": "id.content@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.td.1@tag.a@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.jcdf_box@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.jcdf99.com"
+    },
+    "searchUrl": "https://www.jcdf99.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "精彩东方",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jcdf99.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1097,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1689857648513,
+    "loginUrl": "",
+    "respondTime": 6668,
+    "ruleBookInfo": {
+      "coverUrl": "class.info_img@tag.img@src",
+      "intro": "id.intro@text||class.info_contentl@text",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "tocUrl": "class.readnow@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text##\\/免费阅读",
+      "bookList": "id.content@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.td.1@tag.a@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.jcdf_box@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.jcdf99.com"
+    },
+    "searchUrl": "modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👀小说",
+    "bookSourceName": "精彩东方文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jcdf99.com",
+    "bookUrlPattern": "",
+    "customOrder": 1523,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1673449408380,
+    "loginUrl": "",
+    "respondTime": 6642,
+    "ruleBookInfo": {
+      "coverUrl": "class.info_img@tag.img@src",
+      "intro": "id.intro@text||class.info_contentl@text",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "tocUrl": "class.readnow@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text##\\/免费阅读",
+      "bookList": "id.content@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.td.1@tag.a@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.jcdf_box@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.jcdf99.com"
+    },
+    "searchUrl": "https://www.jcdf99.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 精彩东方",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jcdf99.com",
+    "bookUrlPattern": "",
+    "customOrder": 513,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1699788822112,
+    "loginUrl": "",
+    "respondTime": 2344,
+    "ruleBookInfo": {
+      "coverUrl": "class.info_img@tag.img@src",
+      "intro": "id.intro@text||class.info_contentl@text",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "tocUrl": "class.readnow@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text##\\/免费阅读",
+      "bookList": "id.content@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.td.1@tag.a@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.jcdf_box@tag.dd@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.jcdf99.com"
+    },
+    "searchUrl": "modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

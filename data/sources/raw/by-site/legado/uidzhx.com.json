@@ -1,0 +1,100 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 奇书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.uidzhx.com",
+    "customOrder": 368,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/soft/sort01/index_{{page}}.html\n武侠仙侠::/soft/sort02/index_{{page}}.html\n女频言情::/soft/sort03/index_{{page}}.html\n现代都市::/soft/sort04/index_{{page}}.html\n历史军事::/soft/sort05/index_{{page}}.html\n游戏竞技::/soft/sort06/index_{{page}}.html\n科幻灵异::/soft/sort07/index_{{page}}.html\n美文同人::/soft/sort08/index_{{page}}.html\n剧本教程::/soft/sort09/index_{{page}}.html\n名著杂志::/soft/sort010/index_{{page}}.html\n技术其它::/soft/sort011/index_{{page}}.html\n热门小说::/s/hot/index_{{page}}.html",
+    "lastUpdateTime": 1621877213271,
+    "respondTime": 2756,
+    "ruleBookInfo": {
+      "tocUrl": "text.在线阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.content1@html",
+      "replaceRegex": "##最新网址.*"
+    },
+    "ruleExplore": {
+      "author": "##作者.([^<]+)<##$1###",
+      "bookList": ".listBox@ul@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img@src",
+      "intro": "tag.div.-2@text",
+      "kind": "##更新.([^<]+)<##$1###",
+      "lastChapter": "tag.a.-1@text##.*：",
+      "name": "tag.a.0@text##《|》.*",
+      "wordCount": "##大小.([^<]+)<##$1###"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "tbody@tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.uidzhx.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.info@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 奇书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.uidzhx.com",
+    "customOrder": 455,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/soft/sort01/index_{{page}}.html\n武侠仙侠::/soft/sort02/index_{{page}}.html\n女频言情::/soft/sort03/index_{{page}}.html\n现代都市::/soft/sort04/index_{{page}}.html\n历史军事::/soft/sort05/index_{{page}}.html\n游戏竞技::/soft/sort06/index_{{page}}.html\n科幻灵异::/soft/sort07/index_{{page}}.html\n美文同人::/soft/sort08/index_{{page}}.html\n剧本教程::/soft/sort09/index_{{page}}.html\n名著杂志::/soft/sort010/index_{{page}}.html\n技术其它::/soft/sort011/index_{{page}}.html\n热门小说::/s/hot/index_{{page}}.html",
+    "lastUpdateTime": 1621877213271,
+    "respondTime": 28769,
+    "ruleBookInfo": {
+      "tocUrl": "text.在线阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.content1@html",
+      "replaceRegex": "##最新网址.*"
+    },
+    "ruleExplore": {
+      "author": "##作者.([^<]+)<##$1###",
+      "bookList": ".listBox@ul@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img@src",
+      "intro": "tag.div.-2@text",
+      "kind": "##更新.([^<]+)<##$1###",
+      "lastChapter": "tag.a.-1@text##.*：",
+      "name": "tag.a.0@text##《|》.*",
+      "wordCount": "##大小.([^<]+)<##$1###"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "tbody@tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.uidzhx.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.info@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html?searchkey={{key}}",
+    "weight": 0
+  }
+]

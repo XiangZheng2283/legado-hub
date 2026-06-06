@@ -1,0 +1,192 @@
+[
+  {
+    "bookSourceComment": "正文需要启用重新分段",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "蚂蚁小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.tqcyjy.com/",
+    "customOrder": 1046,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"日榜\",\"url\":\"/rank/dayvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"周榜\",\"url\":\"/rank/weekvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"月榜\",\"url\":\"/rank/monthvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"总榜\",\"url\":\"/rank/allvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1686041045455,
+    "respondTime": 3158,
+    "ruleBookInfo": {
+      "author": ".booktitle a.1@text",
+      "coverUrl": ".cover img@src",
+      "intro": "##小说简介.([^<]+)##$1###",
+      "kind": ".breadcrumb a.1@text&&.bookdes p.0:3@text##.*：|\\s.*",
+      "lastChapter": ".bookdes a@text",
+      "name": ".booktitle a.0@text",
+      "tocUrl": "",
+      "wordCount": ".bookdes p.0@text##.*\\s"
+    },
+    "ruleContent": {
+      "content": "#booktxt@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".content dl",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd.0@text",
+      "kind": "span.0@text",
+      "name": "a.1@text",
+      "wordCount": "span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".all li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}\n/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 蚂蚁小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.tqcyjy.com",
+    "customOrder": 1168,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"日榜\",\"url\":\"/rank/dayvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"周榜\",\"url\":\"/rank/weekvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"月榜\",\"url\":\"/rank/monthvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"总榜\",\"url\":\"/rank/allvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1691235501755,
+    "respondTime": 3381,
+    "ruleBookInfo": {
+      "author": ".booktitle a.1@text",
+      "coverUrl": ".cover img@src",
+      "intro": "##小说简介.([^<]+)##$1###",
+      "kind": ".breadcrumb a.1@text&&.bookdes p.0:3@text##.*：|\\s.*",
+      "lastChapter": ".bookdes a@text",
+      "name": ".booktitle a.0@text",
+      "tocUrl": "",
+      "wordCount": ".bookdes p.0@text##.*\\s"
+    },
+    "ruleContent": {
+      "content": "#booktxt@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".content dl",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd.0@text",
+      "kind": "span.0@text",
+      "name": "a.1@text",
+      "wordCount": "span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".all li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}\n/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 蚂蚁小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.tqcyjy.com",
+    "customOrder": 1147,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"日榜\",\"url\":\"/rank/dayvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"周榜\",\"url\":\"/rank/weekvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"月榜\",\"url\":\"/rank/monthvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"总榜\",\"url\":\"/rank/allvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1691235501755,
+    "respondTime": 3278,
+    "ruleBookInfo": {
+      "author": ".booktitle a.1@text",
+      "coverUrl": ".cover img@src",
+      "intro": "##小说简介.([^<]+)##$1###",
+      "kind": ".breadcrumb a.1@text&&.bookdes p.0:3@text##.*：|\\s.*",
+      "lastChapter": ".bookdes a@text",
+      "name": ".booktitle a.0@text",
+      "tocUrl": "",
+      "wordCount": ".bookdes p.0@text##.*\\s"
+    },
+    "ruleContent": {
+      "content": "#booktxt@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".content dl",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd.0@text",
+      "kind": "span.0@text",
+      "name": "a.1@text",
+      "wordCount": "span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".all li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}\n/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "正文需要启用重新分段",
+    "bookSourceGroup": "",
+    "bookSourceName": "蚂蚁小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.tqcyjy.com/",
+    "customOrder": 1149,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"日榜\",\"url\":\"/rank/dayvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"周榜\",\"url\":\"/rank/weekvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"月榜\",\"url\":\"/rank/monthvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"总榜\",\"url\":\"/rank/allvisit/\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1686041045455,
+    "respondTime": 5215,
+    "ruleBookInfo": {
+      "author": ".booktitle a.1@text",
+      "coverUrl": ".cover img@src",
+      "intro": "##小说简介.([^<]+)##$1###",
+      "kind": ".breadcrumb a.1@text&&.bookdes p.0:3@text##.*：|\\s.*",
+      "lastChapter": ".bookdes a@text",
+      "name": ".booktitle a.0@text",
+      "tocUrl": "",
+      "wordCount": ".bookdes p.0@text##.*\\s"
+    },
+    "ruleContent": {
+      "content": "#booktxt@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".content dl",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd.0@text",
+      "kind": "span.0@text",
+      "name": "a.1@text",
+      "wordCount": "span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".all li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}\n/search/?searchkey={{key}}",
+    "weight": 0
+  }
+]

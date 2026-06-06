@@ -1,0 +1,84 @@
+[
+  {
+    "bookSourceComment": "某大佬2.0书源",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑤",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.pigqq.com",
+    "bookUrlPattern": "",
+    "customOrder": 21,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1618457293874,
+    "loginUrl": "",
+    "respondTime": 1144,
+    "ruleBookInfo": {
+      "tocUrl": "$.data.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pigqq.com/BookFiles/Html/'+result+'/index.html';"
+    },
+    "ruleContent": {
+      "content": "$.data.content"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$.data",
+      "bookUrl": "$.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pigqq.com/BookFiles/Html/'+result+'/info.html';",
+      "coverUrl": "$.Img",
+      "intro": "$.Desc",
+      "kind": "$.CName",
+      "lastChapter": "$.LastChapter&&$.UpdateTime##\\n##•",
+      "name": "$.Name",
+      "wordCount": "$.BookStatus"
+    },
+    "ruleToc": {
+      "chapterList": "$..[?(@.hasContent)]",
+      "chapterName": "$.name",
+      "chapterUrl": "$.id@js:\nbaseUrl.replace(/index.html/,result).replace(/infos/,'content')+'.html'"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&page={{page}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "某大佬2.0书源",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑤",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.pigqq.com",
+    "bookUrlPattern": "",
+    "customOrder": 21,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1618457293874,
+    "loginUrl": "",
+    "respondTime": 1017,
+    "ruleBookInfo": {
+      "tocUrl": "$.data.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pigqq.com/BookFiles/Html/'+result+'/index.html';"
+    },
+    "ruleContent": {
+      "content": "$.data.content"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$.data",
+      "bookUrl": "$.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pigqq.com/BookFiles/Html/'+result+'/info.html';",
+      "coverUrl": "$.Img",
+      "intro": "$.Desc",
+      "kind": "$.CName",
+      "lastChapter": "$.LastChapter&&$.UpdateTime##\\n##•",
+      "name": "$.Name",
+      "wordCount": "$.BookStatus"
+    },
+    "ruleToc": {
+      "chapterList": "$..[?(@.hasContent)]",
+      "chapterName": "$.name",
+      "chapterUrl": "$.id@js:\nbaseUrl.replace(/index.html/,result).replace(/infos/,'content')+'.html'"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&page={{page}}&siteid=app2",
+    "weight": 0
+  }
+]

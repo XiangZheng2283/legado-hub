@@ -1,0 +1,90 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍊 17K小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://top.17k.com",
+    "bookUrlPattern": "",
+    "customOrder": 1396,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1676812037240,
+    "loginUrl": "",
+    "respondTime": 860,
+    "ruleBookInfo": {
+      "author": "class.name@text",
+      "coverUrl": "id.bookCover||class.cover@tag.img.0@src",
+      "intro": "class.Tab@tag.a.0@text##　　查看全部评论>>.*",
+      "name": "class.Info Sign@tag.a.0@text",
+      "tocUrl": "class.Bar@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "class.p@html",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.ls@tag.a.0@text",
+      "bookList": "class.textlist",
+      "bookUrl": "class.textmiddle@tag.a.0@href||tag.a.1@href",
+      "coverUrl": "class.textleft@tag.img.0@src",
+      "kind": "class.bq@tag.a.1@text",
+      "lastChapter": "class.textmiddle@tag.li.3@text",
+      "name": "class.textmiddle@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.Volume@tag.a",
+      "chapterName": "tag.a@tag.span@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://search.17k.com/search.xhtml?c.q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "17K小说⑤",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://top.17k.com",
+    "bookUrlPattern": "",
+    "customOrder": 1687,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1692194844920,
+    "loginUrl": "",
+    "respondTime": 3348,
+    "ruleBookInfo": {
+      "author": "class.name@text",
+      "coverUrl": "id.bookCover||class.cover@tag.img.0@src",
+      "intro": "class.Tab@tag.a.0@text##　　查看全部评论>>.*",
+      "name": "class.Info Sign@tag.a.0@text",
+      "tocUrl": "class.Bar@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "class.p@html",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.ls@tag.a.0@text",
+      "bookList": "class.textlist",
+      "bookUrl": "class.textmiddle@tag.a.0@href||tag.a.1@href",
+      "coverUrl": "class.textleft@tag.img.0@src",
+      "kind": "class.bq@tag.a.1@text",
+      "lastChapter": "class.textmiddle@tag.li.3@text",
+      "name": "class.textmiddle@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.Volume@tag.a",
+      "chapterName": "tag.a@tag.span@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://search.17k.com/search.xhtml?c.q={{key}}",
+    "weight": 0
+  }
+]

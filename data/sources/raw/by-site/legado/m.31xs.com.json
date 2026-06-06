@@ -1,0 +1,53 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "三一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.31xs.com ",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 16,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1689719184721,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1731,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "meta[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content&&[property=\"og:novel:update_time\"]@content\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>",
+      "name": "[property=\"og:title\"]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#content p:not(:matches(^[a-z\\s_-]+\\.[a-z\\s]+\\.[a-z\\s_-]+$))@text",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "@get:{h}",
+      "coverUrl": "@get:{h}##(/\\d+)(/\\d+)##/img$1$2$2s.jpg###",
+      "kind": "td:eq(0),td:eq(5)@text",
+      "lastChapter": "{{@@tag.a.1@text}} {{@@tag.td.4@text}}\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>",
+      "name": "tag.a.0@text@put:{h:\"tag.a.0@href\"}"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.a",
+      "chapterName": "text##上架感言",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.31xs.com/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"keyword={{key}}\"\n}",
+    "weight": 0
+  }
+]

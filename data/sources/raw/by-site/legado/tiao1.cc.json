@@ -1,0 +1,58 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "挑一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.tiao1.cc/",
+    "customOrder": 863,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "游戏::https://www.tiao1.cc/fl/16/{{page}}\n仙侠::https://www.tiao1.cc/fl/12/{{page}}\n科幻::https://www.tiao1.cc/fl/11/{{page}}\n玄幻::https://www.tiao1.cc/fl/9/{{page}}\n穿越::https://www.tiao1.cc/fl/4/{{page}}\n都市::https://www.tiao1.cc/fl/1/{{page}}\n热门::https://www.tiao1.cc/fl/0/{{page}}",
+    "lastUpdateTime": 1687759163458,
+    "respondTime": 4967,
+    "ruleBookInfo": {
+      "author": "id.info@p.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "lastChapter": "id.info@p.5@a@text",
+      "name": "id.info@h1@text",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "id.info@p.2@text"
+    },
+    "ruleContent": {
+      "content": "id.booktxt@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##.本章未完.*"
+    },
+    "ruleExplore": {
+      "author": "class.btm@a.0@text",
+      "bookList": "class.item",
+      "bookUrl": "dt@a@href",
+      "coverUrl": "class.image@a@img@src",
+      "intro": "dd@text",
+      "kind": "",
+      "name": "dt@a@text",
+      "wordCount": "class.btm@em.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.btm@a.0@text",
+      "bookList": "class.item",
+      "bookUrl": "dt@a@href",
+      "checkKeyWord": "斗破苍穹",
+      "coverUrl": "class.image@a@img@src",
+      "intro": "dd@text",
+      "name": "dt@a@text",
+      "wordCount": "class.btm@em.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@a!0:-1:-2",
+      "chapterName": "dd@text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.tiao1.cc/search?keywords={{key}}",
+    "weight": 0
+  }
+]

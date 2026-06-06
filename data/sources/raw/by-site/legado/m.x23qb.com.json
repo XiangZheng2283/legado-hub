@@ -1,0 +1,65 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "铅笔小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.x23qb.com",
+    "bookUrlPattern": "https?://m\\.x23qb\\.com(/html)?/book/\\d+/?",
+    "customOrder": -217,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"言情女生\",\"url\":\"/yanqing/{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻奇幻\",\"url\":\"/xuanhuan/{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市青春\",\"url\":\"/dushi/{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠仙侠\",\"url\":\"/wuxia/{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"唯美纯爱\",\"url\":\"/danmei/{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻灵异\",\"url\":\"/kehuan/{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史军事\",\"url\":\"/lishi/{{page}}/\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"轻小い说\",\"url\":\"/lightnovel/{{page}}/\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 13; V2199A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36 EdgA/113.0.1774.63\"\n}",
+    "lastUpdateTime": 1690274906610,
+    "loginUrl": "https://m.x23qb.com/login.php?jumpurl=https%3A%2F%2Fm.x23qb.com%2F",
+    "respondTime": 12401,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content",
+      "tocUrl": "",
+      "wordCount": "@css:li:contains(字数：)@text##字数："
+    },
+    "ruleContent": {
+      "content": "@js:\nif(result.match(/dom_nr/)){var data=result.match(/dom_nr = '([^']+)/)[1];\njava.getString(\"id.TextContent@p@html\",false)+data}else{result=java.getString(\"id.TextContent@p@html\")}",
+      "imageStyle": "0",
+      "nextContentUrl": "##var nextpage=\"([^\"]*)\"##$1###",
+      "replaceRegex": "##铅笔小说|23qb.net|\\s*（继续下一页）\\s*|.*第.*章.*\\s|23qb.com"
+    },
+    "ruleExplore": {
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "@css:img@_src",
+      "intro": "@css:.book_des@textNodes",
+      "kind": "@css:.book_other:eq(2)>span:eq(0)@text&&.uptime@text",
+      "lastChapter": "@css:.book_other:eq(4)>a:eq(0)@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "h3@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.book_other.0@tag.span.0@text",
+      "bookList": "@css:#sitebox>dl",
+      "bookUrl": "@css:dt>a@href",
+      "coverUrl": "@css:img@_src",
+      "intro": "@css:.book_des@textNodes",
+      "kind": "",
+      "lastChapter": "@css:.book_other:eq(4)>a:eq(0)@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "@css:h3>a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterList@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://m.x23qb.com/saerch.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&page={{page}}\",\n  \"headers\": {\"Cookie\": \"\"}\n}",
+    "weight": 0
+  }
+]

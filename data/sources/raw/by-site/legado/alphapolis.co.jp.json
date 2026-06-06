@@ -1,0 +1,42 @@
+[
+  {
+    "bookSourceComment": "\"error:正文内容为空\n\"",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "alpha",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.alphapolis.co.jp",
+    "bookUrlPattern": "",
+    "customOrder": 1408,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1625962118687,
+    "loginUrl": "",
+    "respondTime": 6304,
+    "ruleBookInfo": {
+      "author": "class.author.0@tag.a@text",
+      "coverUrl": "class.expansion-possible@tag.img@src",
+      "intro": "class.summary@text",
+      "name": "class.title.0@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "id.novelBoby@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.content-main@tag.div",
+      "bookUrl": "class.content-title.0@tag.a@href",
+      "coverUrl": "class.cover@tag.img@src",
+      "intro": "class.details ReadMore@text",
+      "name": "class.content-title.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.episodes@tag.a",
+      "chapterName": "class.title@text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.alphapolis.co.jp/novel/index?query={{key}}",
+    "weight": 0
+  }
+]

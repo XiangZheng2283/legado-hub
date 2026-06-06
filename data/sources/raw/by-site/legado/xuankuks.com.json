@@ -1,0 +1,123 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 玄幻阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xuankuks.com",
+    "customOrder": 445,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 244
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "👍 玄幻阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xuankuks.com",
+    "customOrder": 560,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 244
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 玄幻阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xuankuks.com/",
+    "bookUrlPattern": "http://www.xuankuks.com/files/article/html/\\d+/\\d+/",
+    "customOrder": 473,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/sort1/{{page}}/\n武侠小说::/sort2/{{page}}/\n都市小说::/sort3/{{page}}/\n历史小说::/sort4/{{page}}/\n言情小说::/sort5/{{page}}/\n穿越小说::/sort6/{{page}}/\n科幻小说::/sort7/{{page}}/\n恐怖小说::/sort8/{{page}}/\n校园小说::/sort9/{{page}}/\n异界小说::/sort10/{{page}}/",
+    "lastUpdateTime": 1621493858921,
+    "respondTime": 5405,
+    "ruleBookInfo": {
+      "author": "id.count@tag.span.0@text",
+      "coverUrl": "id.bookimg@img@src",
+      "intro": "id.bookintro@text",
+      "kind": "id.count@tag.span.3@text&&\nid.count@tag.span.2@text&&\nid.count@tag.span.1@text",
+      "lastChapter": "class.new@tag.a.0@text",
+      "name": "class.booktitle@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes##随机推荐："
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.3@text",
+      "kind": "class.uptime@text",
+      "lastChapter": "tag.dd.2@tag.a@text",
+      "name": "h3@a@text",
+      "wordCount": "tag.dd.1@tag.span.2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.xuankuks.com/modules/article/search.php?s=7673184438602983814&s={{key}}&searchtype=articlename",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 玄幻阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xuankuks.com",
+    "bookUrlPattern": "",
+    "customOrder": 479,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/sort1/{{page}}/\n武侠::/sort2/{{page}}/\n都市::/sort3/{{page}}/\n历史::/sort4/{{page}}/\n言情::/sort5/{{page}}/\n穿越::/sort6/{{page}}/\n科幻::/sort7/{{page}}/\n恐怖::/sort8/{{page}}/\n校园::/sort9/{{page}}/\n异界::/sort10/{{page}}/\n全本::/quanben/{{page}}/",
+    "lastUpdateTime": 1609989113943,
+    "loginUrl": "",
+    "respondTime": 4301,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##正文卷\\s",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##随机推荐.*",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.span.1@text",
+      "bookList": "id.sitebox@tag.dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "intro": "tag.dd.3@text",
+      "kind": "tag.span.2@text&&tag.span.0@text",
+      "lastChapter": "tag.a.2@text",
+      "name": "tag.a.1@text",
+      "wordCount": "tag.span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?s=7673184438602983814&s={{key}}&searchtype=articlename",
+    "weight": 0
+  }
+]

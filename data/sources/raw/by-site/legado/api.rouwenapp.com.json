@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "自制书源[禁][永久有效]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.rouwenapp.com",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 70,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "都市言情::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=14\n校园言情::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=11\n穿越重生::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=12\n综合其他::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=7\n奇幻玄幻::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=10\n百合::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=8\n武侠仙侠::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=5\n科幻异能::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=13\n古代言情::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=6\n同人::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=3\n罗曼史::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=4\n恐怖灵异::https://api.rouwenapp.com/reader/book/category/book?app_key=4037465544&page=<{{page}}>&cateId=1\n",
+    "header": "{\n  \"User-Agent\" : \"okhttp\\/3.11.0\"\n}",
+    "lastUpdateTime": 1743753108662,
+    "loginUrl": "",
+    "respondTime": 37459,
+    "ruleBookInfo": {
+      "intro": "@JSon:$.data.intro",
+      "tocUrl": "@JSon:https://api.rouwenapp.com/reader/book/chapter?bookId={$.data.id}&number=0"
+    },
+    "ruleContent": {
+      "content": "class.novelcontent@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "@JSon:$.author",
+      "bookList": "@JSon:$.data.*",
+      "bookUrl": "@JSon:$.id@js:\"https://api.rouwenapp.com/reader/book/detail?bookId=\"+result",
+      "coverUrl": "@JSon:$.cover",
+      "lastChapter": "@JSon:$.last_update_chapter_name||$..intro",
+      "name": "@JSon:$.title"
+    },
+    "ruleToc": {
+      "chapterList": "@JSon:$.data.chapterList.*",
+      "chapterName": "@JSon:$.title",
+      "chapterUrl": "@JSon:$.contentUrl",
+      "nextTocUrl": "https://api.rouwenapp.com/reader/book/chapter/next?chapterId={$.data.chapterId}"
+    },
+    "searchUrl": "https://api.rouwenapp.com/reader/book/search?app_key=4037465544&page=<{{page}}>&keyword={{key}}&bookSource=read52v2",
+    "weight": 0
+  }
+]

@@ -1,0 +1,87 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💠 笔趣阁网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.bqg.fun",
+    "customOrder": 311,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1675431905098,
+    "respondTime": 9817,
+    "ruleBookInfo": {
+      "author": ".book_box span.0@text",
+      "coverUrl": ".cover img@src",
+      "intro": ".book_about dd@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".book_box span.1:2:4@text##.*：|小说",
+      "lastChapter": ".book_box a@text",
+      "name": ".book_box .name@text",
+      "wordCount": ".book_box span.3@text##.*："
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".item",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".book_last dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/s.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.bqg.fun",
+    "customOrder": 1234,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1688437143050,
+    "respondTime": 3701,
+    "ruleBookInfo": {
+      "author": ".book_box span.0@text",
+      "coverUrl": ".cover img@src",
+      "intro": ".book_about dd@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".book_box span.1:2:4@text##.*：|小说",
+      "lastChapter": ".book_box a@text",
+      "name": ".book_box .name@text",
+      "wordCount": ".book_box span.3@text##.*："
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".item",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "dd@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".book_last dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/s.php?q={{key}}",
+    "weight": 0
+  }
+]

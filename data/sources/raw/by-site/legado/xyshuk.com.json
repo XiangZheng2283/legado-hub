@@ -1,0 +1,64 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "三九小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xyshuk.com",
+    "customOrder": 587,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 287
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 三九小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xyshuk.com",
+    "bookUrlPattern": "",
+    "customOrder": 122,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "其他小说::http://www.xyshuk.com/qita/",
+    "header": "",
+    "lastUpdateTime": 1617895295555,
+    "loginUrl": "",
+    "respondTime": 1479,
+    "ruleBookInfo": {
+      "author": "//*[@id=\"content\"]/div/div[2]/div[2]/div[1]/h2[1]/text()##作者：",
+      "coverUrl": "//*[@id=\"content\"]/div/div[2]/div[1]/img/@src",
+      "intro": "//*[@id=\"content\"]/div/div[2]/div[2]/div[3]/p/text()",
+      "kind": "//*[@id=\"content\"]/div/div[2]/div[2]/div[1]/h2[3]/text()##所属：",
+      "name": "//*[@id=\"content\"]/div/div[2]/div[2]/div[1]/h1/text()"
+    },
+    "ruleContent": {
+      "content": "class.novel_content@html##最新网址：www.xyshuk.com"
+    },
+    "ruleExplore": {
+      "author": "class.book_news_style_text@tag.h2@text##作者：",
+      "bookList": "class.book_news_style_form",
+      "bookUrl": "class.book_news_style_text@tag.h1@tag.a@href",
+      "coverUrl": "class.book_news_style_img@a@img@src",
+      "name": "class.book_news_style_text@tag.h1@tag.a@text"
+    },
+    "ruleSearch": {
+      "author": "@tag.td.2@text",
+      "bookList": "class.grid@tbody@tr!0",
+      "bookUrl": "@tag.td.0@a@href",
+      "lastChapter": "@tag.td.1@a@text",
+      "name": "@tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zhangjie",
+      "chapterName": "@tag.a@text",
+      "chapterUrl": "@tag.a@href"
+    },
+    "searchUrl": "http://www.xyshuk.com/modules/article/search.php?searchkey={{key}}&searchtype=articlename",
+    "weight": 0
+  }
+]

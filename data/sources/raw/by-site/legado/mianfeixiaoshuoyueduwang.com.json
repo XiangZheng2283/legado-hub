@@ -1,0 +1,204 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "免费小说阅读网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mianfeixiaoshuoyueduwang.com/",
+    "customOrder": 806,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"竞技同人\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"/category/9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/category/10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想时空\",\"url\":\"/category/11_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1685882178771,
+    "respondTime": 4371,
+    "ruleBookInfo": {
+      "author": ".pic_txt_list span.1@text",
+      "coverUrl": ".pic_txt_list img@src",
+      "init": "",
+      "intro": ".description@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".pic_txt_list span.2:3@text",
+      "lastChapter": "class.list.-1@a.-1@text",
+      "name": ".pic_txt_list span.0@text"
+    },
+    "ruleContent": {
+      "content": "#content@html"
+    },
+    "ruleExplore": {
+      "author": "span.1@text",
+      "bookList": ".box",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "kind": "p.0@text##.*\\(|\\)",
+      "name": "span.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".hot dd",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list!0@li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "index.php?c=book&a=search&keywords={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "免费小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mianfeixiaoshuoyueduwang.com",
+    "customOrder": 817,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"竞技同人\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"/category/9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/category/10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想时空\",\"url\":\"/category/11_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1649595555489,
+    "respondTime": 9225,
+    "ruleBookInfo": {
+      "author": ".pic_txt_list span.1@text",
+      "coverUrl": ".pic_txt_list img@src",
+      "init": "",
+      "intro": ".description@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".pic_txt_list span.2:3@text",
+      "lastChapter": "class.list.-1@a.-1@text",
+      "name": ".pic_txt_list span.0@text"
+    },
+    "ruleContent": {
+      "content": "#content@html"
+    },
+    "ruleExplore": {
+      "author": "span.1@text",
+      "bookList": ".box",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "kind": "p.0@text##.*\\(|\\)",
+      "name": "span.0@text"
+    },
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".hot dd",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list!0@li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/index.php?c=book&a=search&keywords={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "免费小说阅读网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mianfeixiaoshuoyueduwang.com/",
+    "customOrder": 806,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"竞技同人\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"/category/9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/category/10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想时空\",\"url\":\"/category/11_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1685882178771,
+    "respondTime": 4227,
+    "ruleBookInfo": {
+      "author": ".pic_txt_list span.1@text",
+      "coverUrl": ".pic_txt_list img@src",
+      "init": "",
+      "intro": ".description@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".pic_txt_list span.2:3@text",
+      "lastChapter": "class.list.-1@a.-1@text",
+      "name": ".pic_txt_list span.0@text"
+    },
+    "ruleContent": {
+      "content": "#content@html"
+    },
+    "ruleExplore": {
+      "author": "span.1@text",
+      "bookList": ".box",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "kind": "p.0@text##.*\\(|\\)",
+      "name": "span.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".hot dd",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list!0@li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "index.php?c=book&a=search&keywords={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "全部",
+    "bookSourceName": "免费小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mianfeixiaoshuoyueduwang.com",
+    "customOrder": 1340,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"竞技同人\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"/category/9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/category/10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想时空\",\"url\":\"/category/11_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1649595555489,
+    "respondTime": 3324,
+    "ruleBookInfo": {
+      "author": ".pic_txt_list span.1@text",
+      "coverUrl": ".pic_txt_list img@src",
+      "init": "",
+      "intro": ".description@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".pic_txt_list span.2:3@text",
+      "lastChapter": "class.list.-1@a.-1@text",
+      "name": ".pic_txt_list span.0@text"
+    },
+    "ruleContent": {
+      "content": "#content@html"
+    },
+    "ruleExplore": {
+      "author": "span.1@text",
+      "bookList": ".box",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "kind": "p.0@text##.*\\(|\\)",
+      "name": "span.0@text"
+    },
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".hot dd",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.1@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list!0@li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/index.php?c=book&a=search&keywords={{key}}",
+    "weight": 0
+  }
+]

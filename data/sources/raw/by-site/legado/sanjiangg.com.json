@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "//by:cwjdb\n//以下来自◎GEd520◎\nvar i = [\"%uE800\",\"%uE801\",\"%uE802\",\"%uE803\",\"%uE804\",\"%uE805\",\"%uE806\",\"%uE807\",\"%uE808\",\"%uE809\",\"%uE80A\",\"%uE80B\",\"%uE80C\",\"%uE80D\",\"%uE80E\",\"%uE80F\",\"%uE810\",\"%uE811\",\"%uE812\",\"%uE813\",\"%uE814\",\"%uE815\",\"%uE816\",\"%uE817\",\"%uE818\",\"%uE819\",\"%uE81A\",\"%uE81B\",\"%uE81C\",\"%uE81D\",\"%uE81E\",\"%uE81F\",\"%uE820\",\"%uE821\",\"%uE822\",\"%uE823\",\"%uE824\",\"%uE825\",\"%uE826\",\"%uE827\",\"%uE828\",\"%uE829\",\"%uE82A\",\"%uE82B\",\"%uE82C\",\"%uE82D\",\"%uE82E\",\"%uE82F\",\"%uE830\",\"%uE831\",\"%uE832\",\"%uE833\",\"%uE834\",\"%uE835\",\"%uE836\",\"%uE837\",\"%uE838\",\"%uE839\",\"%uE83A\",\"%uE83B\",\"%uE83C\",\"%uE83D\",\"%uE83E\",\"%uE83F\",\"%uE840\",\"%uE841\",\"%uE842\",\"%uE843\",\"%uE844\",\"%uE845\",\"%uE846\",\"%uE847\",\"%uE848\",\"%uE849\",\"%uE84A\",\"%uE84B\",\"%uE84C\",\"%uE84D\",\"%uE84E\",\"%uE84F\",\"%uE850\",\"%uE851\",\"%uE852\",\"%uE853\",\"%uE854\",\"%uE855\",\"%uE856\",\"%uE857\",\"%uE858\",\"%uE859\",\"%uE85A\",\"%uE85B\",\"%uE85C\",\"%uE85D\",\"%uE85E\",\"%uE85F\",\"%uE860\",\"%uE861\",\"%uE862\",\"%uE863\"];\nvar z = \"的一是了我不人在他有这个上们来到时大地为子中你说生国年着就那和要她出也得里后自以会家可下而过天去能对小多然于心学么之都好看起发当没成只如事把还用第样道想作种开美总从无情己面最女但现前些所同日手又行意动\"\nvar html = escape(result);\nfunction ti(html,i,z){\n\tvar reg = new RegExp(i,'g');\n\treturn html.replace(reg,z);\n\t}\nfor(var x in i){\n\tvar html = ti(html,i[x],z[x])\n\t}\nunescape(html)",
+    "bookSourceGroup": "",
+    "bookSourceName": "三江阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.sanjiangg.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1692,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\n    java.toast(\"正在努力加载中，请稍后\");\nvar sort = [];\nvar push = (title, url, type1, type2) => {\n    sort.push({\n        title: title,\n        url: url,\n        style: {\n            layout_flexGrow: type1,\n            layout_flexBasisPercent: type2\n        }\n    });\n};\nvar sites = [{\n        u: \"http://www.sanjiangg.com/sort/\",\n        ti: \"༺ˇ»`全部分类´«ˇ༻\"\n    },\n    {\n        u: \"http://www.sanjiangg.com/quanben/sort/\",\n        ti: \"༺ˇ»`全本小说´«ˇ༻\"\n    }];\nfor (var site of sites) {\n    var o = org.jsoup.Jsoup.parse(java.ajax(site.u));\n    var s = o.select('ul.container a');\n    var u1 = site.u + \"/{{page}}/\";\n    push(site.ti, u1, \"1\", \"1\");\n    for (var i = 0; i < s.size(); i++) {\n        var urls = String(s[i].attr(\"href\")).replace(/(.*)\\/(\\d+)\\/(\\d+)\\//,\"$1/$2/{{page}}/\");\n        if (i + 1 <= s.length - s.length % 3) {\n            push(s[i].text(), urls, \"1\", \"0.25\")\n        } else {\n        push(s[i].text(), urls, \"-1\", \"0.29\")\n        }\n    }\n}\nJSON.stringify(sort);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1746848622025,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 431,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP章节.|免费章节.|VIP卷.|默认卷.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加].*?[】）\\)]",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "{{book.bookUrl}}index.html",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##^.*更方便。|{{book.name}}"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".row .book-coverlist",
+      "bookUrl": "h4 a@href",
+      "coverUrl": "img@data-src||img@src",
+      "intro": ".intro@text",
+      "kind": ".label.0:1@text",
+      "lastChapter": "",
+      "name": "h4 a@text",
+      "wordCount": ".label.2@text"
+    },
+    "ruleToc": {
+      "chapterList": "div>div>dl>dd>a",
+      "chapterName": "text\n<js>\neval(String(source.bookSourceComment))\n</js>",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "{{url=source.getKey();\ncookie.removeCookie(url)\njava.ajax(url).match(/action=\"(.+?)\"/)[1]}},{\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

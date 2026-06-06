@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "潇湘书院🎃#2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xxsy.net#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 548,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "                                 排行                                \n潇湘票榜::/rank/xxyuepiao\n新书榜::/rank/new\n畅销榜::/rank/bestsales\n完结榜::/rank/finish\n阅读榜::/rank/reading\n收藏榜::/rank/collections",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 790,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.book-author@text",
+      "coverUrl": "img@src",
+      "intro": "class.book-summary@text",
+      "kind": "class.book-tatus@text##/",
+      "lastChapter": "class.chapterlist-item.0@text##[App限免]*",
+      "name": "class.book-title.0@text",
+      "canReName": "",
+      "tocUrl": "class.chapterlist-box@class.chapter-icon@href",
+      "wordCount": "class.book-metas@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@text",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "class.book-module@ownText",
+      "bookList": "a",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "class.book-profile@text",
+      "kind": "class.book-module@span.0@text",
+      "lastChapter": "",
+      "name": "class.book-title@text",
+      "wordCount": "class.book-module@span.1@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.book-module@text##[·].*",
+      "bookList": "class.common-list common-list-one@a",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "class.book-profile@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.book-title@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul@li",
+      "chapterName": "li@a@text",
+      "chapterUrl": "li@a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://m.xxsy.net/search/{{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

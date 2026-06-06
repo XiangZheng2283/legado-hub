@@ -1,0 +1,53 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txtshuku.org",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 1126,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1648602059716,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2252,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "id.bookintro@html",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##小说|\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "wordCount": ".count@tag.span.-1@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "imageStyle": "0",
+      "replaceRegex": "##感谢.*打赏.*|\\【看书福利.*|\\（未完待续\\）|无弹窗.*|\\【加入书签.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.book_other.0@tag.span.0@text",
+      "bookList": "id.sitembox@tag.dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "class.book_other.1@text##最新章节.| 更新时间.|..\\:.*",
+      "name": "tag.a.1@text",
+      "wordCount": "class.book_other.0@tag.span.-1@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

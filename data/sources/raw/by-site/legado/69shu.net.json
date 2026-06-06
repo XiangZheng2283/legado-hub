@@ -1,0 +1,57 @@
+[
+  {
+    "bookSourceComment": "//访问过于频繁，会被网站暂时限制，10秒后可恢复访问。",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💗 六九书吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://69shu.net",
+    "customOrder": 1079,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"首页推荐\",\"url\":\"https://69shu.net/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"周点击榜\",\"url\":\"/top/weekvisit/{{page}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"月点击榜\",\"url\":\"/top/monthvisit/{{page}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"总点击榜\",\"url\":\"/top/allvisit/{{page}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"总推荐榜\",\"url\":\"/top/allvote/{{page}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"完本小说\",\"url\":\"/quanben/{{page}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1693542893132,
+    "respondTime": 76909,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "init": "",
+      "intro": ".text@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##T.*|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "wordCount": ".tab@p.1@text"
+    },
+    "ruleContent": {
+      "content": "#novelcontent@html",
+      "replaceRegex": "##又换域名了.*"
+    },
+    "ruleExplore": {
+      "author": "em@text",
+      "bookList": ".xbk",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@data-src",
+      "intro": "p@text",
+      "kind": "span.1@text##\\s##,",
+      "name": "a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "ownText##-",
+      "bookList": ".search_list",
+      "bookUrl": "a@href",
+      "checkKeyWord": "",
+      "coverUrl": "a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar idi=(id)\nvar iid = parseInt(idi/1000);\n'https://img.69shu.net/'+iid+'/'+idi+'/'+idi+'s.jpg';\n</js>",
+      "kind": "",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".p2@li@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"post\",\n  \"body\": \"type=articlename&s={{key}}\"\n}",
+    "weight": 0
+  }
+]

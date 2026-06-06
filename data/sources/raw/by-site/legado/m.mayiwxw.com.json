@@ -1,0 +1,166 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.mayiwxw.com/",
+    "customOrder": 555,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1648186348310,
+    "respondTime": 18194,
+    "ruleBookInfo": {
+      "author": "class.info_t4@text##类别\\：",
+      "coverUrl": "class.info_novel_img@img@src",
+      "intro": "id.inf@text",
+      "kind": "class.info_t2@text",
+      "lastChapter": "class.info_t6@text",
+      "name": "class.info_t1@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "nextContentUrl": "li.2@a@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.sone",
+      "bookUrl": "class.sone@a@href",
+      "checkKeyWord": "",
+      "name": "class.sone@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.info_newest.1@ul@li",
+      "chapterName": "li@a@text",
+      "chapterUrl": "li@a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.mayiwxw.com/s.php,{\n'charset': 'utf-8',\n'method': 'POST',\n'body': 'search_key={{key}}'}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✎ 笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.mayiwxw.com",
+    "customOrder": 596,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 713
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "✎ 笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.mayiwxw.com",
+    "customOrder": 751,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 713
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.mayiwxw.com/",
+    "customOrder": 967,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1648186348310,
+    "respondTime": 16647,
+    "ruleBookInfo": {
+      "author": "class.info_t4@text##类别\\：",
+      "coverUrl": "class.info_novel_img@img@src",
+      "intro": "id.inf@text",
+      "kind": "class.info_t2@text",
+      "lastChapter": "class.info_t6@text",
+      "name": "class.info_t1@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "nextContentUrl": "li.2@a@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.sone",
+      "bookUrl": "class.sone@a@href",
+      "checkKeyWord": "",
+      "name": "class.sone@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.info_newest.1@ul@li",
+      "chapterName": "li@a@text",
+      "chapterUrl": "li@a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.mayiwxw.com/s.php,{\n'charset': 'utf-8',\n'method': 'POST',\n'body': 'search_key={{key}}'}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "/*访问过快偶尔宕机，出错了会加载重试。\n以下代码勿动！❗️⚠️\n可在js中通过eval(String(source.bookSourceComment))\n调用*/\nvar err=/503 Service Temporarily Unavailable/;\nwhile(err.test(result)){\n\tjava.log(\"网站出错，重新加载\")\n\tresult=java.ajax(baseUrl)\n\t}\nresult;",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 蚂蚁文学网·叁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.mayiwxw.com",
+    "bookUrlPattern": "https?://m.mayiwxw.com/\\w+/",
+    "customOrder": 274,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/sort/1_{{page}}/\n修真小说::/sort/2_{{page}}/\n都市小说::/sort/3_{{page}}/\n穿越小说::/sort/4_{{page}}/\n网游小说::/sort/5_{{page}}/\n科幻小说::/sort/6_{{page}}/\n其他小说::/sort/7_{{page}}/\n女生频道::/sort/8_{{page}}/",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1711475345285,
+    "loginUrl": "",
+    "respondTime": 8030,
+    "ruleBookInfo": {
+      "author": "text.作者@text##作者：",
+      "coverUrl": "img@src",
+      "init": "<js>\neval(String(source.bookSourceComment))\n</js>",
+      "intro": "#inf@text##简介：|【展开】|【收起】",
+      "kind": "{{@@text.类别@text}}\n{{@@text.状态@text}}\n{{@@text.更新@text}}\n##类别：|状态：|更新：",
+      "lastChapter": "text.最新@a@text",
+      "name": "text.书名@text##书名：",
+      "tocUrl": "{{baseUrl.replace('/m',\"/www\")}},{\n  \"headers\": {\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.41 Safari/537.36\"}\n}"
+    },
+    "ruleContent": {
+      "content": "<js>\neval(String(source.bookSourceComment))\n</js>\n#content@textNodes",
+      "nextContentUrl": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": "<js>\neval(String(source.bookSourceComment))\n</js>\n.newbook_list",
+      "bookUrl": "a.1@href##index.html",
+      "coverUrl": "img@src",
+      "intro": ".newbook_intor@text##【展开】|【收起】",
+      "kind": "span.s1@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "a.1@text",
+      "bookList": "<js>\neval(String(source.bookSourceComment))\n</js>\np.sone",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "剑来",
+      "kind": "0",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "<js>\neval(String(source.bookSourceComment))\n</js>\n#list dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}s.php,{\n  \"method\": \"POST\",\n  \"body\": \"search_key={{key}}\"\n}",
+    "weight": 0
+  }
+]

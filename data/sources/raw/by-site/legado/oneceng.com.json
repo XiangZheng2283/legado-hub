@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "万层中文🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.oneceng.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 996,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"作品分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"全部\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"都市异能\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_1_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_2_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_3_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠修真\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_4_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"军事历史\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_5_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏竞技\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_6_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻未来\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_7_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_8_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代言情\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_9_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异惊悚\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_10_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠情缘\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_11_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"浪漫青春\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_12_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想言情\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_13_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美同人\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_14_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"书名首字母\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"不限\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"[A]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_A_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[B]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_B_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[C]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_C_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[D]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_D_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[E]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_E_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[F]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_F_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[G]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_G_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[H]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_H_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[I]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_I_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[J]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_J_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[K]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_K_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[L]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_L_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[M]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_M_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[N]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_N_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[O]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_O_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[P]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_P_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[Q]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_Q_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[R]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_R_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[S]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_S_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[T]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_T_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[U]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_U_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[V]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_V_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[W]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_W_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[X]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_X_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[Y]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_Y_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[Z]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_Z_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 122,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "span a@text",
+      "coverUrl": "a img@src",
+      "intro": ".tabvalue td@text&&.tabvalue div@text",
+      "kind": "td[width]:nth-of-type(1)@text",
+      "lastChapter": "div.title@text",
+      "name": ".divbox > div > div > span:nth-of-type(1)@text",
+      "canReName": "",
+      "tocUrl": "a.catalogbtn@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div.acontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "td:nth-of-type(3)@text",
+      "bookList": "#jieqi_page_contents tr",
+      "bookUrl": "a.pop@href",
+      "coverUrl": "a.pop@href<js>java.ajax(result)</js>a img@src",
+      "intro": "",
+      "kind": "td:nth-of-type(6)@text",
+      "lastChapter": "#jieqi_page_contents td:nth-of-type(2) a@text",
+      "name": "a.pop@text",
+      "wordCount": "td:nth-of-type(4)@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "div.c_tag:nth-of-type(2) a@text",
+      "bookList": "div.c_row",
+      "bookUrl": ".c_subject a@href",
+      "coverUrl": "a img@src",
+      "intro": "div.c_description@text",
+      "kind": "div.c_tag:nth-of-type(2) span:nth-of-type(4)@text&&span:nth-of-type(n+7)@text",
+      "lastChapter": "div:nth-of-type(4) .c_value a@text",
+      "name": ".c_subject a@text",
+      "wordCount": "span:nth-of-type(6)@text"
+    },
+    "ruleToc": {
+      "chapterList": "dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.oneceng.com/modules/article/search.php,{\n\"method\":\"POST\",\n\"charset\":\"GBK\",\n\"body\":\"searchtype=articlename&searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "万层中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.oneceng.com#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3521,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"作品分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"全部\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"都市异能\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_1_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_2_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_3_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠修真\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_4_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"军事历史\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_5_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏竞技\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_6_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻未来\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_7_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_8_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代言情\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_9_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异惊悚\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_10_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠情缘\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_11_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"浪漫青春\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_12_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想言情\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_13_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美同人\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_14_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"书名首字母\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"不限\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_0_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"[A]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_A_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[B]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_B_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[C]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_C_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[D]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_D_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[E]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_E_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[F]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_F_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[G]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_G_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[H]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_H_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[I]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_I_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[J]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_J_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[K]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_K_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[L]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_L_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[M]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_M_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[N]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_N_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[O]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_O_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[P]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_P_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[Q]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_Q_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[R]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_R_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[S]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_S_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[T]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_T_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[U]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_U_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[V]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_V_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[W]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_W_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[X]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_X_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[Y]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_Y_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"[Z]\",\"url\":\"http://www.oneceng.com/shuku/lastupdate_0_0_0_0_Z_0_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1731489321465,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 420,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "span a@text",
+      "coverUrl": "a img@src",
+      "intro": ".tabvalue td@text&&.tabvalue div@text",
+      "kind": "td[width]:nth-of-type(1)@text",
+      "lastChapter": "div.title@text",
+      "name": ".divbox > div > div > span:nth-of-type(1)@text",
+      "canReName": "",
+      "tocUrl": "a.catalogbtn@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div.acontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "td:nth-of-type(3)@text",
+      "bookList": "#jieqi_page_contents tr",
+      "bookUrl": "a.pop@href",
+      "coverUrl": "a.pop@href<js>java.ajax(result)</js>a img@src",
+      "intro": "",
+      "kind": "td:nth-of-type(6)@text",
+      "lastChapter": "#jieqi_page_contents td:nth-of-type(2) a@text",
+      "name": "a.pop@text",
+      "wordCount": "td:nth-of-type(4)@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "div.c_tag:nth-of-type(2) a@text",
+      "bookList": "div.c_row",
+      "bookUrl": ".c_subject a@href",
+      "coverUrl": "a img@src",
+      "intro": "div.c_description@text",
+      "kind": "div.c_tag:nth-of-type(2) span:nth-of-type(4)@text&&span:nth-of-type(n+7)@text",
+      "lastChapter": "div:nth-of-type(4) .c_value a@text",
+      "name": ".c_subject a@text",
+      "wordCount": "span:nth-of-type(6)@text"
+    },
+    "ruleToc": {
+      "chapterList": "dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.oneceng.com/modules/article/search.php,{\n\"method\":\"POST\",\n\"charset\":\"GBK\",\n\"body\":\"searchtype=articlename&searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

@@ -1,0 +1,297 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "太子爷小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tzy2.com",
+    "bookUrlPattern": "",
+    "customOrder": 248,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 5373,
+    "ruleBookInfo": {
+      "coverUrl": "class.fm@img@src",
+      "intro": "id.jj@p@text||class.item@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content"
+    },
+    "ruleContent": {
+      "content": "class.chapter@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.size@text||class.ranktitle@tag.a.1@text||class.tj@tag.label.0@tag.font@text##.*上传:|赞.*",
+      "bookList": "class.list@table||class.rankcontent||class.sort_list",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "kind": "class.tj@tag.label.3@font@text||class.size@a@title",
+      "name": "class.name@a@text||class.ranktitle@tag.strong.0@a@text||class.title@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.tzy2.com/search.php?keyword={{key}}&submit=搜索,{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精选",
+    "bookSourceName": "太子爷小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tzy2.com",
+    "bookUrlPattern": "",
+    "customOrder": 981,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 8593,
+    "ruleBookInfo": {
+      "coverUrl": "class.fm@img@src",
+      "intro": "id.jj@p@text||class.item@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content"
+    },
+    "ruleContent": {
+      "content": "class.chapter@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.size@text||class.ranktitle@tag.a.1@text||class.tj@tag.label.0@tag.font@text##.*上传:|赞.*",
+      "bookList": "class.list@table||class.rankcontent||class.sort_list",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "kind": "class.tj@tag.label.3@font@text||class.size@a@title",
+      "name": "class.name@a@text||class.ranktitle@tag.strong.0@a@text||class.title@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.tzy2.com/search.php?keyword={{key}}&submit=搜索,{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🔰 太子爷",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tzy2.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1531,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "言情::/yanqing/{{page}}.html\n都市::/dushi/{{page}}.html\n古代::/gudai/{{page}}.html\n玄幻::/xuanhuan/{{page}}.html\n武侠::/wuxia/{{page}}.html\n仙侠::/xianxia/{{page}}.html\n穿越::/wuxia/{{page}}.html\n历史::/lishi/{{page}}.html\n科幻::/kehuan/{{page}}.html\n恐怖::/kongbu/{{page}}.html\n悬疑::/xuanyi/{{page}}.html\n同人::/danmei/{{page}}.html\n游戏::/youxi/{{page}}.html\n动漫::/dongman/{{page}}.html\n文学::/wenxue/{{page}}.html\n传记::/zhuanji/{{page}}.html\n社科::/sheke/{{page}}.html\n英语::/yingyu/{{page}}.html\n辣文::/lawen/{{page}}.html\n激情::/jiqing/{{page}}.html\n杂集::/zaji/{{page}}.html",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1753776831645,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "http://www.taiziye2.com",
+    "respondTime": 1896,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.a_green.0@tag.a@text",
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'",
+      "intro": "id.jj@tag.p@text",
+      "kind": "class.clearfix.0@tag.li.4@text##上传日期.",
+      "lastChapter": "class.list-item@tag.ol@tag.a.-1@text",
+      "name": "class.xiazai@tag.h1@text##上传者.*|\\s|作者.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.clearfix.0@tag.li.0@text##大小.",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.chapter@textNodes",
+      "nextContentUrl": "##<a href=\"([^\"]*)\">下一页##$1###",
+      "imageStyle": "0",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "tag.font.0@text",
+      "bookList": "class.sort_list",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'",
+      "intro": "class.intro@text##简介：",
+      "kind": "tag.font.3@text&&tag.font.4@text##全集",
+      "lastChapter": "##更新时间：([^<]+)<##$1###",
+      "name": "tag.a.1@text##\\《|\\》|作者.*|\\s",
+      "wordCount": "tag.font.2@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "@js:'网友上传'",
+      "bookList": "class.book",
+      "bookUrl": "class.name@tag.a@href",
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'",
+      "intro": "class.intro@text##.*简介.",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.name@tag.a@text##作者.*|\\s",
+      "wordCount": "class.size@text##大小:|人气.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@tag.li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.tzy2.com/search.php?keyword={{key}}&submit=搜索,{\n  \"charset\": \"gbk\"\n}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "太子爷小说网🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tzy2.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2678,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 3111,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "class.fm@img@src",
+      "intro": "id.jj@p@text||class.item@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.chapter@textNodes",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.size@text||class.ranktitle@tag.a.1@text||class.tj@tag.label.0@tag.font@text##.*上传:|赞.*",
+      "bookList": "class.list@table||class.rankcontent||class.sort_list",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "class.tj@tag.label.3@font@text||class.size@a@title",
+      "lastChapter": "",
+      "name": "class.name@a@text||class.ranktitle@tag.strong.0@a@text||class.title@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.tzy2.com/search.php?keyword={{key}}&submit=搜索,{\n  \"charset\": \"gbk\"\n}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 太子爷",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tzy2.com",
+    "bookUrlPattern": "",
+    "customOrder": 560,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "言情::/yanqing/{{page}}.html\n都市::/dushi/{{page}}.html\n古代::/gudai/{{page}}.html\n玄幻::/xuanhuan/{{page}}.html\n武侠::/wuxia/{{page}}.html\n仙侠::/xianxia/{{page}}.html\n穿越::/wuxia/{{page}}.html\n历史::/lishi/{{page}}.html\n科幻::/kehuan/{{page}}.html\n恐怖::/kongbu/{{page}}.html\n悬疑::/xuanyi/{{page}}.html\n同人::/danmei/{{page}}.html\n游戏::/youxi/{{page}}.html\n动漫::/dongman/{{page}}.html\n文学::/wenxue/{{page}}.html\n传记::/zhuanji/{{page}}.html\n社科::/sheke/{{page}}.html\n英语::/yingyu/{{page}}.html\n辣文::/lawen/{{page}}.html\n激情::/jiqing/{{page}}.html\n杂集::/zaji/{{page}}.html",
+    "lastUpdateTime": 1699610190916,
+    "loginUrl": "http://www.taiziye2.com",
+    "respondTime": 2828,
+    "ruleBookInfo": {
+      "author": "class.a_green.0@tag.a@text",
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'",
+      "intro": "id.jj@tag.p@text",
+      "kind": "class.clearfix.0@tag.li.4@text##上传日期.",
+      "lastChapter": "class.list-item@tag.ol@tag.a.-1@text",
+      "name": "class.xiazai@tag.h1@text##上传者.*|\\s|作者.*",
+      "wordCount": "class.clearfix.0@tag.li.0@text##大小."
+    },
+    "ruleContent": {
+      "content": "class.chapter@textNodes",
+      "imageStyle": "0",
+      "nextContentUrl": "##<a href=\"([^\"]*)\">下一页##$1###"
+    },
+    "ruleExplore": {
+      "author": "tag.font.0@text",
+      "bookList": "class.sort_list",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'",
+      "intro": "class.intro@text##简介：",
+      "kind": "tag.font.3@text&&tag.font.4@text##全集",
+      "lastChapter": "##更新时间：([^<]+)<##$1###",
+      "name": "tag.a.1@text##\\《|\\》|作者.*|\\s",
+      "wordCount": "tag.font.2@text"
+    },
+    "ruleSearch": {
+      "author": "@js:'网友上传'",
+      "bookList": "class.book",
+      "bookUrl": "class.name@tag.a@href",
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'",
+      "intro": "class.intro@text##.*简介.",
+      "name": "class.name@tag.a@text##作者.*|\\s",
+      "wordCount": "class.size@text##大小:|人气.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@tag.li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.tzy2.com/search.php?keyword={{key}}&submit=搜索,{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

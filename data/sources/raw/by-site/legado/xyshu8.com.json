@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "星月书吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xyshu8.com/",
+    "bookUrlPattern": "https://www.xyshu8.com/\\d+_\\d+/",
+    "customOrder": 56,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1621495362659,
+    "respondTime": 7130,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@tag.a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "",
+      "lastChapter": "id.info@tag.p.3@tag.a@text##章节目录|免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@tag.h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁",
+      "wordCount": "id.info@tag.p.2@text##更新时间："
+    },
+    "ruleContent": {
+      "content": "id.content@html##一秒记住.*无弹窗免费阅读！|星月书吧.*最新章节！"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslistss@tag.li",
+      "bookUrl": "class.s2@tag.a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.xyshu8.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s1@text&&\nclass.s7@text",
+      "lastChapter": "class.s3@tag.a@text##章节目录|免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xyshu8.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

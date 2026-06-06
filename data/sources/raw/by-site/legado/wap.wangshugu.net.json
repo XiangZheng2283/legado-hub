@@ -1,0 +1,58 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 望书阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.wangshugu.net",
+    "bookUrlPattern": "http://wap.wangshuge.info/book-\\d+/",
+    "customOrder": 240,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/sort/1-{{page}}.html\n武侠修真::/sort/2-{{page}}.html\n都市言情::/sort/3-{{page}}.html\n历史军事::/sort/4-{{page}}.html\n网游动漫::/sort/5-{{page}}.html\n科幻小说::/sort/6-{{page}}.html\n侦探推理::/sort/7-{{page}}.html\n恐怖灵异::/sort/8-{{page}}.html\n同人小说::/sort/9-{{page}}.html\n其他类型::/sort/10-{{page}}.html\n全本小说::/top/full-{{page}}.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1729849856031,
+    "respondTime": 7933,
+    "ruleBookInfo": {
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "init": "@put:{n:\"[property$=book_name]@content\",\n\ta:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nl:\"[property$=latest_chapter_name]@content\",\ni:\"[property$=description]@content\",\nc:\"[property$=image]@content\"}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}"
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A0-9\\uFF10-\\uFF19-]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]{2,}.*|{{chapter.title}}|第[0-9一二两三四五六七八九十百千万]{1,9}章.*|[(（]?本章未?完[）)]?.*|\\(第.+页\\)|.?加入书签.*|.*下一页继续阅读.*|.*退出阅读模式.*|.*点击下载{{book.name}}.*|.*最新永久域名.*"
+    },
+    "ruleExplore": {
+      "author": "p@ownText##.*\\/",
+      "bookList": ".line",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href\n@js:\nvar id=result.match(/\\d+/);\nvar iid=parseInt(id/1000);\n`http://www.wangshuge.info/files/article/image/${iid}/${id}/${id}s.jpg`",
+      "kind": "p@ownText##\\[|\\].+",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": "p.-2@text",
+      "bookList": ".block",
+      "bookUrl": "h2 a@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@src",
+      "kind": "p.-3@text##分类：",
+      "lastChapter": "a.-1@text",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter.1@li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}search.php,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

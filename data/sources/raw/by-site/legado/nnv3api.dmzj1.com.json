@@ -1,0 +1,24 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "☣️漫画lateral,🎨漫画,搜索链接规则为空",
+    "bookSourceName": "动漫之家",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://nnv3api.dmzj1.com",
+    "customOrder": 1179,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

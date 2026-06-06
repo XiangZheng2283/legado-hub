@@ -1,0 +1,188 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "2K小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.2kxs.info/",
+    "bookUrlPattern": "",
+    "customOrder": 816,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685886105654,
+    "loginUrl": "",
+    "respondTime": 2005,
+    "ruleBookInfo": {
+      "author": "tag.h3.0@tag.a.0@text",
+      "coverUrl": "class.pannel-body info@class.info1@tag.img.0@src",
+      "init": "",
+      "intro": "class.pannel-body info@tag.p.0@textNodes",
+      "kind": ".panel-body.text-center.info3@p.0:1@text<js>##小说类别：|写作状态：|最后更新：</js><js>##\\s\\/\\s##,</js>",
+      "lastChapter": "class.panel-body text-center info3@tag.p.2@a@text",
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.panel-body content-body content-ext@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.tr@tag.p.1@tag.a.0@text||tag.h3.0@tag.a.0@text",
+      "bookList": "//*[@id=\"bookcon\"]//tr",
+      "bookUrl": "tag.tr@tag.p.0@tag.a.0@href",
+      "coverUrl": "",
+      "kind": "tag.tr@tag.p.3@text||tag.p.1@text##.*状态：",
+      "lastChapter": "",
+      "name": "tag.tr@tag.p.0@tag.a.0@text||tag.h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-group list-charts.0@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "modules/article/search.php?searchkey={{key}}&submit=搜索",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌸2K小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.2kxs.info",
+    "bookUrlPattern": "",
+    "customOrder": 1430,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682088709455,
+    "loginUrl": "",
+    "respondTime": 2202,
+    "ruleBookInfo": {
+      "author": "tag.h3.0@tag.a.0@text",
+      "coverUrl": "class.pannel-body info@class.info1@tag.img.0@src",
+      "init": "",
+      "intro": "class.pannel-body info@tag.p.0@textNodes",
+      "lastChapter": "class.panel-body text-center info3@tag.p.2@a@text",
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.panel-body content-body content-ext@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.tr@tag.p.1@tag.a.0@text||tag.h3.0@tag.a.0@text",
+      "bookList": "//*[@id=\"bookcon\"]//tr",
+      "bookUrl": "tag.tr@tag.p.0@tag.a.0@href",
+      "coverUrl": "",
+      "kind": "tag.tr@tag.p.3@text||tag.p.1@text##.*状态：",
+      "lastChapter": "",
+      "name": "tag.tr@tag.p.0@tag.a.0@text||tag.h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-group list-charts.0@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?searchkey={{key}}&submit=搜索",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "🌸2K小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.2kxs.info",
+    "bookUrlPattern": "",
+    "customOrder": 1429,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682088709455,
+    "loginUrl": "",
+    "respondTime": 1164,
+    "ruleBookInfo": {
+      "author": "tag.h3.0@tag.a.0@text",
+      "coverUrl": "class.pannel-body info@class.info1@tag.img.0@src",
+      "init": "",
+      "intro": "class.pannel-body info@tag.p.0@textNodes",
+      "lastChapter": "class.panel-body text-center info3@tag.p.2@a@text",
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.panel-body content-body content-ext@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.tr@tag.p.1@tag.a.0@text||tag.h3.0@tag.a.0@text",
+      "bookList": "//*[@id=\"bookcon\"]//tr",
+      "bookUrl": "tag.tr@tag.p.0@tag.a.0@href",
+      "coverUrl": "",
+      "kind": "tag.tr@tag.p.3@text||tag.p.1@text##.*状态：",
+      "lastChapter": "",
+      "name": "tag.tr@tag.p.0@tag.a.0@text||tag.h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-group list-charts.0@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?searchkey={{key}}&submit=搜索",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸2K小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.2kxs.info",
+    "bookUrlPattern": "",
+    "customOrder": -2085958988,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1682088709455,
+    "loginUrl": "",
+    "respondTime": 39162,
+    "ruleBookInfo": {
+      "author": "tag.h3.0@tag.a.0@text",
+      "coverUrl": "class.pannel-body info@class.info1@tag.img.0@src",
+      "init": "",
+      "intro": "class.pannel-body info@tag.p.0@textNodes",
+      "lastChapter": "class.panel-body text-center info3@tag.p.2@a@text",
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.panel-body content-body content-ext@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.tr@tag.p.1@tag.a.0@text||tag.h3.0@tag.a.0@text",
+      "bookList": "//*[@id=\"bookcon\"]//tr",
+      "bookUrl": "tag.tr@tag.p.0@tag.a.0@href",
+      "coverUrl": "",
+      "kind": "tag.tr@tag.p.3@text||tag.p.1@text##.*状态：",
+      "lastChapter": "",
+      "name": "tag.tr@tag.p.0@tag.a.0@text||tag.h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-group list-charts.0@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?searchkey={{key}}&submit=搜索",
+    "weight": 0
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "腐书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fushubook.com",
+    "bookUrlPattern": "http://www.fushubook.com/fu/\\d+",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1406,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "————————🧊分类小说🧊————————\n玄幻魔法::/sort/xuanhuan/1.html\n武侠修真::/sort/wuxia/1.html\n仙侠小说::/sort/xianxia/1.html\n都市言情::/sort/dushi/1.html\n历史军事::/sort/lishi/1.html\n科幻灵异::/sort/kehuan/1.html\n游戏竞技::/sort/youxi/1.html\n女生小说::/sort/nvsheng/1.html\n其它小说::/sort/qita/1.html\n\n————————🧊完结小说🧊————————\n玄幻魔法::/full/xuanhuan/1.html\n武侠修真::/full/wuxia/1.html\n仙侠小说::/full/xianxia/1.html\n都市言情::/full/dushi/1.html\n历史军事::/full/lishi/1.html\n科幻灵异::/full/kehuan/1.html\n游戏竞技::/full/youxi/1.html\n女生小说::/full/nvsheng/1.html\n其它小说::/full/qita/1.html\n\n————————🧊排行榜🧊————————\n总排行榜::/rank/allvisit/1.html\n月排行榜::/rank/monthvisit/1.html\n周排行榜::/rank/weekvisit/1.html\n日排行榜::/rank/dayvisit/1.html\n收藏榜::/rank/goodnum/1.html\n字数榜::/rank/words/1.html\n推荐榜::/rank/allvote/1.html\n新书榜::/rank/postdate/1.html\n更新榜::/rank/lastupdate/1.html",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 387,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&\n[property=\"og:novel:status\"]@content&&\n[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "{{@@[property$=chapter_name]@content}}\n@js:result\n.replace(\"••\",\"\")\n.replace(/^(\\d+).第/,'第')\n.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|[\\(\\{（｛【].*[求含理更谢乐发推票盟补加字Kk\\/].*/g,'')\n.replace(/^(\\d+)[、．]第.+章/,'第$1章')\n.replace(/^(\\d+)、\\d+、/,'第$1章 ')\n.replace(/^(\\d+)、\\d+/,'第$1章')\n.replace(/^(第.+章)\\s?\\d+/,'$1')\n.replace(/^(\\d+)、/,'第$1章 ')\n.replace(/^(第.+章)\\s?第.+章/,'$1')\n.replace(/第\\s(.+)\\s章/,'第$1章')\n.replace(/.*(chapter|Chapter)\\s?(\\d+)\\s?/,'$1 $2 ')\n.replace(/\\(.+\\)/,'')\n.replace(/\\[|。/,'')\n.replace(/第([零一二两三四五六七八九十百千]+)章/g,java.toNumChapter(result))\n##(章)([^\\s]+)(\\s·)##$1 $2$3",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.booktxt@p!0@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##1秒记住114中文：|www.。|手机版阅读网址：.|[<r r=\"//.\"></r>]"
+    },
+    "ruleExplore": {
+      "author": "td.3@text&&class.fs-14 text-muted@text",
+      "bookList": "tbody@tr!0&&class.col-xs-4 book-coverlist",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.*/(\\d+)/##$1\n@js:\nn=result\nm=parseInt(result/1000)\n\"http://www.fushubook.com/\"+m+\"/\"+n+\"/\"+n+\"s.jpg\"",
+      "intro": "class.fs-12 text-justify hidden-xs@text",
+      "kind": "td.0:4:5:6@text",
+      "lastChapter": "td.2@a@text",
+      "name": "td.1@a@text&&h4@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.fs-14 text-muted@text",
+      "bookList": "class.col-xs-4 book-coverlist",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.*/(\\d+)/##$1\n@js:\nn=result\nm=parseInt(result/1000)\n\"http://www.fushubook.com/\"+m+\"/\"+n+\"/\"+n+\"s.jpg\"",
+      "intro": "class.fs-12 text-justify hidden-xs@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h4@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.newlist@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.fushubook.com/search,{\n  \"method\": \"POST\",\n  \"body\": \"code=id&searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

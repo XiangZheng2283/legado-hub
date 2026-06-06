@@ -1,0 +1,174 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "番茄小说[api1]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://154.37.154.143/",
+    "customOrder": 823,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n\t\"Host\": \"m.xhsxsw.com\",\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; PCAM10 Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko)  Chrome/77.0.3865.92 Mobile Safari/537.36\",\n\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n}",
+    "lastUpdateTime": 1686035025771,
+    "respondTime": 1172,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "coverUrl": "tag.img@src",
+      "intro": "id.intro@text",
+      "lastChapter": "id.info@tag.p.-1@text",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##.*【.*目前用下来.*】.*\\s|.*【.*章节更新迟缓的问题.*在能换源的app.*】\\s"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": ".bookname@a@href##https:\\/\\/m\\.xhsxsw\\.com\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)",
+      "checkKeyWord": "",
+      "coverUrl": "",
+      "lastChapter": ".update@a@text",
+      "name": ".bookname@text##\\[.*\\]"
+    },
+    "ruleToc": {
+      "chapterList": "#list a",
+      "chapterName": "text",
+      "chapterUrl": "href\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)"
+    },
+    "searchUrl": "modules/article/search.php,{\n    \"method\": \"POST\",\n    \"body\": \"keyword={{key}}&submit=搜索\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "西红柿网：https://www.xhsxsw.com",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 西红柿网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://154.37.154.143",
+    "customOrder": 1162,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n\t\"Host\": \"m.xhsxsw.com\",\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; PCAM10 Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko)  Chrome/77.0.3865.92 Mobile Safari/537.36\",\n\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n}",
+    "lastUpdateTime": 1691098483490,
+    "respondTime": 1434,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##\\s*【.*最新章节。】\\s*|（未完待续）|【.*换源.pp.*】"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": ".bookname@a@href##https:\\/\\/m\\.xhsxsw\\.com\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)",
+      "checkKeyWord": "",
+      "lastChapter": ".update@a@text",
+      "name": ".bookname@text##\\[.*\\]"
+    },
+    "ruleToc": {
+      "chapterList": "#list a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)"
+    },
+    "searchUrl": "/modules/article/search.php,{\n    \"method\": \"POST\",\n    \"body\": \"keyword={{key}}&submit=搜索\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "西红柿网：https://www.xhsxsw.com",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "西红柿网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://154.37.154.143/",
+    "customOrder": 823,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n\t\"Host\": \"m.xhsxsw.com\",\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; PCAM10 Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko)  Chrome/77.0.3865.92 Mobile Safari/537.36\",\n\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n}",
+    "lastUpdateTime": 1690087296554,
+    "respondTime": 1795,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##\\s*【.*最新章节。】\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": ".bookname@a@href##https:\\/\\/m\\.xhsxsw\\.com\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)",
+      "checkKeyWord": "",
+      "lastChapter": ".update@a@text",
+      "name": ".bookname@text##\\[.*\\]"
+    },
+    "ruleToc": {
+      "chapterList": "#list a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)"
+    },
+    "searchUrl": "/modules/article/search.php,{\n    \"method\": \"POST\",\n    \"body\": \"keyword={{key}}&submit=搜索\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "西红柿网：https://www.xhsxsw.com",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 西红柿网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://154.37.154.143",
+    "customOrder": 1286,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n\t\"Host\": \"m.xhsxsw.com\",\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; PCAM10 Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko)  Chrome/77.0.3865.92 Mobile Safari/537.36\",\n\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n}",
+    "lastUpdateTime": 1691098483490,
+    "respondTime": 926,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##\\s*【.*最新章节。】\\s*|（未完待续）|【.*换源.pp.*】"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": ".bookname@a@href##https:\\/\\/m\\.xhsxsw\\.com\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)",
+      "checkKeyWord": "",
+      "lastChapter": ".update@a@text",
+      "name": ".bookname@text##\\[.*\\]"
+    },
+    "ruleToc": {
+      "chapterList": "#list a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href\n@js:\noption = {\n\t\"headers\": {\n\t\t\"Host\": \"www.xhsxsw.com\",\n\t\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.62\",\n\t\t\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\"\n\t}\n}\nresult + \",\" + JSON.stringify(option)"
+    },
+    "searchUrl": "/modules/article/search.php,{\n    \"method\": \"POST\",\n    \"body\": \"keyword={{key}}&submit=搜索\"\n}",
+    "weight": 0
+  }
+]

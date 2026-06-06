@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceGroup": "_1yunnain精选",
+    "bookSourceName": "笔趣阁⁴",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.biqukun.com",
+    "bookUrlPattern": "https://m.biqukun.com/\\d+/\\d+/",
+    "customOrder": 22,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreScreen": "",
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/sort/1_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"修真小说\",\"url\":\"/sort/2_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市小说\",\"url\":\"/sort/3_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越小说\",\"url\":\"/sort/4_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游小说\",\"url\":\"/sort/5_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/sort/6_{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1769001240036,
+    "respondTime": 11382,
+    "ruleBookInfo": {
+      "author": "text.作者@text##作者：",
+      "coverUrl": ".block_img2 img@src",
+      "intro": ".intro_info@text##最新章节.*",
+      "kind": "text.状态@text##状态：",
+      "lastChapter": ".chapter a.1@text",
+      "name": "h2@text",
+      "wordCount": "text.更新@text##更新：|.*更新时间：.*"
+    },
+    "ruleContent": {
+      "content": "#nr@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##第\\d+章.*|.*本章未完.*"
+    },
+    "ruleExplore": {
+      "bookList": ".xbk li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": ".xsm@text",
+      "wordCount": ".tjrs@text"
+    },
+    "ruleSearch": {
+      "author": "ownText##.*/|/",
+      "bookList": ".fk li",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##.*/(\\d+)/(\\d+)/##https://www.biqukun.com/d/image/$1/$2/$2s.jpg",
+      "kind": "textNodes##/.*|\\[|\\]",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "https://m.biqukun.com/search.php?s=4532499176958073452&submit=&type=articlename&searchkey={{key}}",
+    "weight": 2
+  }
+]

@@ -1,0 +1,66 @@
+[
+  {
+    "bookSourceGroup": "💐 女频,发现,搜索链接规则为空",
+    "bookSourceName": "💐69书啦",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.69shu.la",
+    "customOrder": 900,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "69书啦",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.69shu.la",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 1362,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1652720820632,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 21781,
+    "ruleBookInfo": {
+      "author": "@css:div.xx > ul > li:nth-child(3) > a@text",
+      "init": "",
+      "name": "@css:div.xx > ul > li:nth-child(1)@text",
+      "tocUrl": "@css:div.gengduo > a@href"
+    },
+    "ruleContent": {
+      "content": "@css:#nr@text"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": " @css:ul > li<js>\nresult.toArray().slice(0, 3).map(p => {\n\tvar url = (java.getElement(\"@css:body > div > ul > li > a.blue\").attr(\"href\"));\n\tvar K = org.jsoup.Jsoup.parse(java.ajax(url));\n\tvar n = selector => String(K.select(selector).text());\n\tvar og = selector => String(K.select('[property=\"og:' + selector + '\"]').attr('content'));\n\treturn {\n\t\tname: og('novel:book_name'),\n\t\tauthor: og('novel:author'),\n\t\tkind: og('novel:category') + ',' + og('novel:status'),\n\t\tlatest: og('novel:latest_chapter_name') + ' • ' + og('novel:update_time'),\n\t\tintro: og('description'),\n\t\tcover: og('image'),\n\t\turl: url,\n\t};\n}); \n</js>",
+      "bookUrl": "url",
+      "coverUrl": "cover",
+      "intro": "intro",
+      "kind": "kind",
+      "lastChapter": "latest",
+      "name": "name"
+    },
+    "ruleToc": {
+      "chapterList": "@css:#zjlb > ul > li",
+      "chapterName": "@css:a@text",
+      "chapterUrl": "@css:a@href",
+      "nextTocUrl": "@js:\nurl = baseUrl.replace(/\\.html/,\"\")\nvar list=[];\nfor(var i=2;i<=150;i++)\nlist.push(url+\"_\"+i+\".html\");\nlist"
+    },
+    "searchUrl": "https://m.69shu.la/s.php,{\n    \"charset\": \"gbk\",\n    \"method\": \"POST\",\n    \"body\": \"submit=&type=articlename&s={{key}}\"\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "560小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.560xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 47,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 23137,
+    "ruleBookInfo": {
+      "coverUrl": "class.imgbox@img@src",
+      "intro": "class.m-desc xs-show@textNodes",
+      "lastChapter": "class.section-list fix.0@tag.li.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list txt-list-row5@li",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##/(.*?)/##https://img.560xs.com/BookFiles/BookImages/$1.jpg",
+      "kind": "class.s1@text##\\[|\\]",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-list fix.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.560xs.com/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: Timed out waiting for 60000 ms",
+    "bookSourceGroup": "校验可用,校验超时",
+    "bookSourceName": "560小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.560xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 47,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 120132,
+    "ruleBookInfo": {
+      "coverUrl": "class.imgbox@img@src",
+      "intro": "class.m-desc xs-show@textNodes",
+      "lastChapter": "class.section-list fix.0@tag.li.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list txt-list-row5@li",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##/(.*?)/##https://img.560xs.com/BookFiles/BookImages/$1.jpg",
+      "kind": "class.s1@text##\\[|\\]",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-list fix.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.560xs.com/ar.php?keyWord={{key}}",
+    "weight": 0
+  }
+]

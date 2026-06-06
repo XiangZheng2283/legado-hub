@@ -1,0 +1,286 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "恋听网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://ting55.com/",
+    "bookUrlPattern": "https://ting55.com/book/\\d+",
+    "customOrder": 512,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐::/tuijian<,/page/{{page}}>\n玄幻::/category/1<,/page/{{page}}>\n武侠::/category/2<,/page/{{page}}>\n都市::/category/3<,/page/{{page}}>\n言情::/category/4<,/page/{{page}}>\n穿越::/category/5<,/page/{{page}}>\n科幻::/category/6<,/page/{{page}}>\n推理::/category/7<,/page/{{page}}>\n恐怖::/category/8<,/page/{{page}}>\n惊悚::/category/9<,/page/{{page}}>\n历史::/category/10<,/page/{{page}}>\n经典::/category/11<,/page/{{page}}>\n相声::/category/12<,/page/{{page}}>\n评书::/category/14<,/page/{{page}}>\n讲坛::/category/13<,/page/{{page}}>",
+    "lastUpdateTime": 1684072837910,
+    "respondTime": 1460,
+    "ruleBookInfo": {
+      "author": "class.binfo@tag.p.2@text##播音：",
+      "coverUrl": "class.bimg@img@src",
+      "init": "",
+      "intro": "class.intro@text",
+      "kind": "class.binfo@tag.p.0@text&&\nclass.binfo@tag.p.1@text&&\nclass.binfo@tag.p.4@text##类别：|时间：",
+      "lastChapter": "class.binfo@tag.p.3@text##状态：",
+      "name": "class.binfo@h1@text##有声小说|\\（.*"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.p.1@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：|类别：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.info@tag.p.1@text##播音：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：",
+      "lastChapter": "",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.plist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "https://ting55.com/search/{{key}}/page/{{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "📻 恋听1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://ting55.com#",
+    "customOrder": 529,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "｡◕‿◕｡",
+    "respondTime": 1,
+    "weight": 195
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "恋听网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://ting55.com",
+    "customOrder": 633,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 372
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "有声",
+    "bookSourceName": "恋听网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://ting55.com/",
+    "bookUrlPattern": "https://ting55.com/book/\\d+",
+    "customOrder": 1174,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐::/tuijian<,/page/{{page}}>\n玄幻::/category/1<,/page/{{page}}>\n武侠::/category/2<,/page/{{page}}>\n都市::/category/3<,/page/{{page}}>\n言情::/category/4<,/page/{{page}}>\n穿越::/category/5<,/page/{{page}}>\n科幻::/category/6<,/page/{{page}}>\n推理::/category/7<,/page/{{page}}>\n恐怖::/category/8<,/page/{{page}}>\n惊悚::/category/9<,/page/{{page}}>\n历史::/category/10<,/page/{{page}}>\n经典::/category/11<,/page/{{page}}>\n相声::/category/12<,/page/{{page}}>\n评书::/category/14<,/page/{{page}}>\n讲坛::/category/13<,/page/{{page}}>",
+    "lastUpdateTime": 1684072837910,
+    "respondTime": 2118,
+    "ruleBookInfo": {
+      "author": "class.binfo@tag.p.2@text##播音：",
+      "coverUrl": "class.bimg@img@src",
+      "init": "",
+      "intro": "class.intro@text",
+      "kind": "class.binfo@tag.p.0@text&&\nclass.binfo@tag.p.1@text&&\nclass.binfo@tag.p.4@text##类别：|时间：",
+      "lastChapter": "class.binfo@tag.p.3@text##状态：",
+      "name": "class.binfo@h1@text##有声小说|\\（.*"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.p.1@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：|类别：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.info@tag.p.1@text##播音：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：",
+      "lastChapter": "",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.plist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "https://ting55.com/search/{{key}}/page/{{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "📻 恋听网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://ting55.com",
+    "customOrder": 1433,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐::/tuijian<,/page/{{page}}>\n玄幻::/category/1<,/page/{{page}}>\n武侠::/category/2<,/page/{{page}}>\n都市::/category/3<,/page/{{page}}>\n言情::/category/4<,/page/{{page}}>\n穿越::/category/5<,/page/{{page}}>\n科幻::/category/6<,/page/{{page}}>\n推理::/category/7<,/page/{{page}}>\n恐怖::/category/8<,/page/{{page}}>\n惊悚::/category/9<,/page/{{page}}>\n历史::/category/10<,/page/{{page}}>\n经典::/category/11<,/page/{{page}}>\n相声::/category/12<,/page/{{page}}>\n评书::/category/14<,/page/{{page}}>\n讲坛::/category/13<,/page/{{page}}>",
+    "lastUpdateTime": 1630769175941,
+    "respondTime": 1813,
+    "ruleBookInfo": {
+      "author": "class.binfo@tag.p.1@text##作者：",
+      "coverUrl": "class.bimg@img@src",
+      "intro": "class.intro@text",
+      "kind": "class.binfo@tag.p.0@text&&\nclass.binfo@tag.p.2@text&&\nclass.binfo@tag.p.4@text##类别：|时间：",
+      "lastChapter": "class.binfo@tag.p.3@text##状态：",
+      "name": "class.binfo@h1@text##有声小说|\\（.*"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.p.1@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：|类别：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleSearch": {
+      "author": "class.info@tag.p.0@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.1@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.plist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "https://ting55.com/search/{{key}}/page/{{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "有声",
+    "bookSourceName": "恋听网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://ting55.com/",
+    "bookUrlPattern": "https://ting55.com/book/\\d+",
+    "customOrder": 185,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐::/tuijian<,/page/{{page}}>\n玄幻::/category/1<,/page/{{page}}>\n武侠::/category/2<,/page/{{page}}>\n都市::/category/3<,/page/{{page}}>\n言情::/category/4<,/page/{{page}}>\n穿越::/category/5<,/page/{{page}}>\n科幻::/category/6<,/page/{{page}}>\n推理::/category/7<,/page/{{page}}>\n恐怖::/category/8<,/page/{{page}}>\n惊悚::/category/9<,/page/{{page}}>\n历史::/category/10<,/page/{{page}}>\n经典::/category/11<,/page/{{page}}>\n相声::/category/12<,/page/{{page}}>\n评书::/category/14<,/page/{{page}}>\n讲坛::/category/13<,/page/{{page}}>",
+    "lastUpdateTime": 1684072837910,
+    "respondTime": 180000,
+    "ruleBookInfo": {
+      "author": "class.binfo@tag.p.2@text##播音：",
+      "coverUrl": "class.bimg@img@src",
+      "init": "",
+      "intro": "class.intro@text",
+      "kind": "class.binfo@tag.p.0@text&&\nclass.binfo@tag.p.1@text&&\nclass.binfo@tag.p.4@text##类别：|时间：",
+      "lastChapter": "class.binfo@tag.p.3@text##状态：",
+      "name": "class.binfo@h1@text##有声小说|\\（.*"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.p.1@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：|类别：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.info@tag.p.1@text##播音：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：",
+      "lastChapter": "",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.plist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "https://ting55.com/search/{{key}}/page/{{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "📻 有声",
+    "bookSourceName": "📻 恋听网站",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://ting55.com",
+    "customOrder": 356,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐::/tuijian<,/page/{{page}}>\n玄幻::/category/1<,/page/{{page}}>\n武侠::/category/2<,/page/{{page}}>\n都市::/category/3<,/page/{{page}}>\n言情::/category/4<,/page/{{page}}>\n穿越::/category/5<,/page/{{page}}>\n科幻::/category/6<,/page/{{page}}>\n推理::/category/7<,/page/{{page}}>\n恐怖::/category/8<,/page/{{page}}>\n惊悚::/category/9<,/page/{{page}}>\n历史::/category/10<,/page/{{page}}>\n经典::/category/11<,/page/{{page}}>\n相声::/category/12<,/page/{{page}}>\n评书::/category/14<,/page/{{page}}>\n讲坛::/category/13<,/page/{{page}}>",
+    "lastUpdateTime": 1693564645030,
+    "respondTime": 2503,
+    "ruleBookInfo": {
+      "author": "class.binfo@tag.p.1@text##作者：",
+      "coverUrl": "class.bimg@img@src",
+      "intro": "class.intro@text",
+      "kind": "class.binfo@tag.p.0@text&&\nclass.binfo@tag.p.2@text&&\nclass.binfo@tag.p.4@text##类别：|时间：",
+      "lastChapter": "class.binfo@tag.p.3@text##状态：",
+      "name": "class.binfo@h1@text##有声小说|\\（.*"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.p.1@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：|类别：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleSearch": {
+      "author": "class.info@tag.p.0@text##作者：",
+      "bookList": "class.category-list@ul@li",
+      "bookUrl": "class.info@h4@a@href",
+      "coverUrl": "img@src",
+      "kind": "class.info@tag.p.1@text&&\nclass.info@tag.p.2@text&&\nclass.info@tag.p.3@text##时间：|状态：",
+      "name": "class.info@h4@a@text##（.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.plist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:result+',{webView:“true”}'"
+    },
+    "searchUrl": "https://ting55.com/search/{{key}}/page/{{page}}",
+    "weight": 0
+  }
+]

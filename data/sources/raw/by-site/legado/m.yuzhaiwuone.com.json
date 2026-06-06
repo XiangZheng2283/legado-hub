@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "❤️笔趣阁🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.yuzhaiwuone.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 382,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部/最新\",\"url\":\"/wapsort/0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"校园\",\"url\":\"/wapsort/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"都市\",\"url\":\"/wapsort/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"古代\",\"url\":\"/wapsort/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"罗曼史\",\"url\":\"/wapsort/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"耽美\",\"url\":\"/wapsort/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"百合\",\"url\":\"/wapsort/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"同人\",\"url\":\"/wapsort/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"奇幻\",\"url\":\"/wapsort/8_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"网游\",\"url\":\"/wapsort/9_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"科幻\",\"url\":\"/wapsort/10_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"恐怖\",\"url\":\"/wapsort/11_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"惊悚\",\"url\":\"/wapsort/12_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"武侠\",\"url\":\"/wapsort/13_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"历史\",\"url\":\"/wapsort/14_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"穿越\",\"url\":\"/wapsort/15_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"其他\",\"url\":\"/wapsort/16_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}}]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1769592232481,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1282,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "//*[@id=\"novelMain\"]/div[1]/table/tbody/tr/td[1]/div[1]/h2/text()",
+      "coverUrl": "",
+      "intro": "//*[@id=\"novelMain\"]/div[3]/div/pre/text()@js:result.replace(/^/,'    ')",
+      "kind": "class.article_info_td@tag.a.0@text&&class.article_info_td@tag.time@text",
+      "lastChapter": "class.article_info_td@tag.a.1@text&&class.article_info_td@tag.time@text\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>",
+      "name": "//*[@id=\"nr_body\"]/nav/ul/li[2]/text()##\\_.*",
+      "canReName": "",
+      "tocUrl": "//*[@style=\"color:red;\"]/@href",
+      "wordCount": "##总字数：([^<]+)<##$1###@js:result+'字'",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "nextContentUrl": "//*[@id=\"pt_next\"]/@href",
+      "imageStyle": "0",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "tag.strong@text||class.list_author@tag.span@text",
+      "bookList": "class.common-bookele||id.list_ul@tag.li",
+      "bookUrl": "tag.a.1@href||h3@tag.a.0@href",
+      "coverUrl": "@js:'https://img.gb84.com/image/0/15/15s.jpg'",
+      "intro": "class.abstract@tag.a@textNodes",
+      "kind": "tag.li@tag.a.0@text",
+      "lastChapter": "",
+      "name": "h3@tag.a.0@text||tag.a.1@text##_PO18",
+      "wordCount": "class.lastupdate@tag.time@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "tag.strong@text",
+      "bookList": "class.common-bookele[0:4]",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "@js:'https://img.gb84.com/image/0/15/15s.jpg'",
+      "intro": "",
+      "kind": "tag.p.1@text##栏目.",
+      "lastChapter": "",
+      "name": "tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "tag.div.0@tag.ul@tag.li!-1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "//*[@style=\"color:red;\"]/@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/s.php,{\n  \"method\": \"POST\",\n  \"body\": \"type=articlename&s={{key}}\"\n}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

@@ -1,0 +1,108 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁❤️💜",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://xs.pigqq.com",
+    "bookUrlPattern": "",
+    "customOrder": 31,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "热门连载::https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html&&抖音热书::https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html&&高分神作::https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html&&微信热书::https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html&&完结精选::https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html&&豆瓣高分::https://scxs.pysmei.com/top/man/top/new/week/{{page}}.html\n&&玄幻奇幻::https://scxs.pigqq.com/Categories/1/over/{{page}}.html&&武侠仙侠::https://scxs.pigqq.com/Categories/2/over/{{page}}.html&&都市言情::https://scxs.pigqq.com/Categories/3/over/{{page}}.html&&历史军事::https://scxs.pigqq.com/Categories/4/over/{{page}}.html&&科幻灵异::https://scxs.pigqq.com/Categories/5/over/{{page}}.html&&网游竞技::https://scxs.pigqq.com/Categories/6/over/{{page}}.html&&女生频道::https://scxs.pigqq.com/Categories/7/over/{{page}}.html&&同人小说::https://scxs.pigqq.com/Categories/66/over/{{page}}.html",
+    "lastUpdateTime": 1618208321063,
+    "loginUrl": "",
+    "respondTime": 1919,
+    "ruleBookInfo": {
+      "author": "",
+      "intro": "",
+      "name": "$..Name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "$.Author",
+      "bookList": "$..data.BookList[*]",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\njava.put('sid',sid);\nbid=result;\njava.put('bid',bid);\nresult=\"https://infosxs.pigqq.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/index.html\";\n</js>",
+      "coverUrl": "https://imgapixs.pigqq.com/BookFiles/BookImages/{$.Img}",
+      "intro": "$.Desc",
+      "kind": "$.CName&&$.BookStatus",
+      "name": "$.Name"
+    },
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$..data[*]",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\njava.put('sid',sid);\nbid=result;\njava.put('bid',bid);\nresult=\"https://infosxs.pigqq.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/index.html\";\n</js>",
+      "coverUrl": "$.Img",
+      "intro": "$.Desc",
+      "kind": "$.CName&&$.BookStatus",
+      "lastChapter": "$.LastChapter",
+      "name": "$.Name"
+    },
+    "ruleToc": {
+      "chapterList": "$..list[*].list[*]",
+      "chapterName": "$.name",
+      "chapterUrl": "https://contentxs.pigqq.com/BookFiles/Html/@get:{sid}/@get:{bid}/{{$.id}}.html",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://souxs.pigqq.com/search.aspx?page={{page}}&siteid=app2&key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁❤️💜",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://xs.pigqq.com",
+    "bookUrlPattern": "",
+    "customOrder": 31,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "热门连载::https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html&&抖音热书::https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html&&高分神作::https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html&&微信热书::https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html&&完结精选::https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html&&豆瓣高分::https://scxs.pysmei.com/top/man/top/new/week/{{page}}.html\n&&玄幻奇幻::https://scxs.pigqq.com/Categories/1/over/{{page}}.html&&武侠仙侠::https://scxs.pigqq.com/Categories/2/over/{{page}}.html&&都市言情::https://scxs.pigqq.com/Categories/3/over/{{page}}.html&&历史军事::https://scxs.pigqq.com/Categories/4/over/{{page}}.html&&科幻灵异::https://scxs.pigqq.com/Categories/5/over/{{page}}.html&&网游竞技::https://scxs.pigqq.com/Categories/6/over/{{page}}.html&&女生频道::https://scxs.pigqq.com/Categories/7/over/{{page}}.html&&同人小说::https://scxs.pigqq.com/Categories/66/over/{{page}}.html",
+    "lastUpdateTime": 1618208321063,
+    "loginUrl": "",
+    "respondTime": 2116,
+    "ruleBookInfo": {
+      "author": "",
+      "intro": "",
+      "name": "$..Name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "$.Author",
+      "bookList": "$..data.BookList[*]",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\njava.put('sid',sid);\nbid=result;\njava.put('bid',bid);\nresult=\"https://infosxs.pigqq.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/index.html\";\n</js>",
+      "coverUrl": "https://imgapixs.pigqq.com/BookFiles/BookImages/{$.Img}",
+      "intro": "$.Desc",
+      "kind": "$.CName&&$.BookStatus",
+      "name": "$.Name"
+    },
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$..data[*]",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\njava.put('sid',sid);\nbid=result;\njava.put('bid',bid);\nresult=\"https://infosxs.pigqq.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/index.html\";\n</js>",
+      "coverUrl": "$.Img",
+      "intro": "$.Desc",
+      "kind": "$.CName&&$.BookStatus",
+      "lastChapter": "$.LastChapter",
+      "name": "$.Name"
+    },
+    "ruleToc": {
+      "chapterList": "$..list[*].list[*]",
+      "chapterName": "$.name",
+      "chapterUrl": "https://contentxs.pigqq.com/BookFiles/Html/@get:{sid}/@get:{bid}/{{$.id}}.html",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://souxs.pigqq.com/search.aspx?page={{page}}&siteid=app2&key={{key}}",
+    "weight": 0
+  }
+]

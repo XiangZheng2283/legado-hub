@@ -1,0 +1,86 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔墨看书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bimoks.com/",
+    "customOrder": 102,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1637225151368,
+    "respondTime": 5286,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@tag.a.0@text",
+      "coverUrl": "id.fmimg@tag.img.0@src",
+      "intro": "class.chapter-desc@text",
+      "name": "id.info@tag.h1.0@text"
+    },
+    "ruleContent": {
+      "content": "<js>let json = java.ajax(\"https://\" + result.match(/q.bimoks.com\\/data.*?\\.xs/)[0])\r\n        if (json != null) {\r\n            json = eval(\"(\" + json.replace(\"_txt_call(\", \"\").replace(\")\", \"\") + \")\")\r\n            for (let key in json.replace) {\r\n                let i = new RegExp(json.replace[key], \"ig\");\r\n                json.content = json.content.replace(i, key)\r\n            }\r\n            result = json.content\r\n        }</js>",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslistss@tag.li",
+      "bookUrl": "class.s2@tag.a@href",
+      "kind": "class.s1@text",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "false",
+      "nextTocUrl": "//div[@class=\"pages\"]/a[text()=\"下页\"]/@href"
+    },
+    "searchUrl": "https://www.bimoks.com/search/,{\n\t\"method\":\"post\",\n\t\"body\":\"keyword={{key}}\"\n\t}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔墨看书网W[分页]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bimoks.com",
+    "customOrder": 384,
+    "enabled": false,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1676837009830,
+    "respondTime": 2882,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@tag.a.0@text",
+      "coverUrl": "id.fmimg@tag.img.0@src||img@data-lazy",
+      "intro": "class.chapter-desc@text",
+      "name": "id.info@tag.h1.0@text"
+    },
+    "ruleContent": {
+      "content": "<js>let json = java.ajax(\"https://\" + result.match(/q.bimoks.com\\/data.*?\\.xs/)[0])\r\n        if (json != null) {\r\n            json = eval(\"(\" + json.replace(\"_txt_call(\", \"\").replace(\")\", \"\") + \")\")\r\n            for (let key in json.replace) {\r\n                let i = new RegExp(json.replace[key], \"ig\");\r\n                json.content = json.content.replace(i, key)\r\n            }\r\n            result = json.content\r\n        }</js>",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslistss@tag.li",
+      "bookUrl": "class.s2@tag.a@href",
+      "kind": "class.s1@text",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "@text",
+      "chapterUrl": "tag.a@href",
+      "isPay": "false",
+      "isVip": "false",
+      "nextTocUrl": "//div[@class=\"pages\"]/a[text()=\"下页\"]/@href"
+    },
+    "searchUrl": "https://www.bimoks.com/search/,{\n\t\"method\":\"post\",\n\t\"body\":\"keyword={{key}}\"\n\t}",
+    "weight": 0
+  }
+]

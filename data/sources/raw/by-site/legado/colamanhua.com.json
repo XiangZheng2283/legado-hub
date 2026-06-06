@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "COCO漫画",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.colamanhua.com",
+    "customOrder": 646,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "https://www.colamanhua.com/dynamic/user/",
+    "respondTime": 1,
+    "weight": 404
+  }
+]

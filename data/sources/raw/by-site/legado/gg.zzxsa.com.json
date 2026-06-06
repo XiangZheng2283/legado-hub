@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🌙 猪猪小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://gg.zzxsa.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2173,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nvar sort = [];\npush=(title,link,size)=>sort.push({\n    \"title\": title,\n    \"url\": link,\n    \"style\": {\n      \"layout_flexGrow\": 1,\n       \"layout_flexBasisPercent\": size\n    }\n  });\npush(\"男主角🔹按分类\",\"\",1);\ntags=[\"玄幻\",\"奇幻\",\"武侠\",\"仙侠\",\n\"灵异\",\"科幻\",\"游戏\",\"竞技\",\n\"职场\",\"都市\",\"历史\",\"军事\",\"轻小说\",\n\"同人\",\"其他\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booksort/list?gender=0&type=star&major=${t}&minor=&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t push(\"男主角🔹按题材\",\"\",1);\ntags=[\"装备\",\"赚钱\",\"轮回\",\"重生\",\n\"种田\",\"治愈\",\"直播\",\"征战\",\n\"征服\",\"争斗\",\"战争\",\"缘分\",\"游戏\",\n\"阴阳\",\"异世\",\"异能\",\"异界\",\"医术\",\"妖魔\",\n\"血脉\",\"悬疑\",\"虚拟\",\"修炼\",\n\"兄弟\",\"星辰\",\"信仰\",\"邪恶\",\"现实\",\n\"武道\",\"五行\",\"文明\",\"位面\",\"未来\",\"猥琐\",\n\"危机\",\"同人\",\"挑战\",\"体育\",\n\"逃亡\",\"守护\",\"生死\",\"生活\",\"神兽\",\n\"神魔\",\"神秘\",\"神话\",\"烧脑\",\"杀戮\",\"任务\",\n\"热血\",\"权谋\",\"求生\",\"奇幻\",\n\"破案\",\"泡妞\",\"逆袭\",\"逆天\",\"末世\",\n\"魔法\",\"命运\",\"秘术\",\n\"梦想\",\"冒险\",\"炼药\",\"恐怖\",\"空间\",\n\"科技\",\"科幻\",\"开局\",\n\"军事\",\"竞技\",\"惊悚\",\"僵尸\",\n\"鉴宝\",\"家族\",\"回忆\",\n\"荒岛\",\"红颜\",\"鬼怪\",\"功夫\",\"搞笑\",\n\"复仇\",\"封印\",\"奋斗\",\n\"废物\",\"犯罪\",\"电竞\",\"大唐\",\"传说\",\n\"称霸\",\"变异\",\"变身\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t push(\"男主角🔹按流派\",\"\",1);\ntags=[\"金手指\",\"重生\",\"直播\",\"争霸流\",\n\"召唤流\",\"异兽流\",\"医生\",\"学院流\",\n\"校花\",\"乡村\",\"系统流\",\"武侠\",\"无限流\",\n\"无敌流\",\"文娱\",\"网游\",\"透视\",\"天才流\",\"随身流\",\n\"爽文\",\"升级流\",\"神豪\",\"软饭流\",\n\"轻小说\",\"奶爸\",\"练功流\",\"可爱流\",\"惊悚\",\n\"技术流\",\"洪荒流\",\"红包\",\"废材流\",\"凡人流\",\"恶搞\",\n\"都市\",\"兵王\",\"保镖\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"男主角🔹按身份\",\"\",1);\ntags=[\"至尊\",\"战神\",\"宅男\",\"业界精英\",\n\"药师\",\"学生\",\"枭雄\",\"仙尊\",\n\"武神\",\"同人\",\"特种兵\",\"书生\",\"神医\",\n\"神豪\",\"少年\",\"商人\",\"杀手\",\"强者\",\"乞丐\",\n\"女婿\",\"农民\",\"奶爸\",\"明星\",\n\"美女\",\"流氓\",\"教师\",\"剑客\",\"火影\",\n\"黑客\",\"海贼\",\"贵族\",\"盗贼\",\"孤儿\",\"公子\",\n\"法医\",\"帝王\",\"道士\",\"大侠\",\"刺客\",\"吃货\",\"草根\",\"兵王\",\n\"保镖\",\"保安\",\"白领\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t \t push(\"男主角🔹按性格\",\"\",1);\ntags=[\"装逼\",\"勇猛\",\"野蛮\",\"阳光\",\n\"嚣张\",\"侠义\",\"玩世不恭\",\"铁血\",\n\"杀伐果断\",\"懦弱\",\"狂傲\",\"狡猾\",\"坚毅\",\n\"搞笑\",\"疯狂\",\"风流\",\"逗逼\",\"暗黑\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t \t \t push(\"男主角🔹按情节\",\"\",1);\ntags=[\"扮猪吃虎\",\"宝物\",\"超能力\",\"打脸\",\n\"丹药\",\"吊炸天\",\"发财\",\"翻身\",\n\"废材\",\"废材逆袭\",\"洪荒\",\"戒指\",\"金手指\",\n\"金庸\",\"坑爹\",\"逆天改命\",\"入侵\",\"三国\",\"神器\",\"随身空间\",\"特殊技能\",\"天书\",\n\"王者荣耀\",\"西游\",\"咸鱼翻身\",\"血腥\",\"一统天下\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t push(\"女主角🔸♀️按分类\",\"\",1);\ntags=[\"玄幻奇幻\",\"武侠仙侠\",\"悬疑灵异\",\"游戏竞技\",\n\"古代言情\",\"现代言情\",\"青春校园\",\"同人\",\n\"科幻\",\"女尊\",\"其他\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booksort/list?gender=1&type=star&major=${t}&minor=&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t push(\"女主角🔸♀️按题材\",\"\",1);\ntags=[\"总裁\",\"赚钱\",\"专宠\",\"重逢\",\n\"智谋\",\"职场\",\"正剧\",\"争斗\",\n\"争宠\",\"缘分\",\"冤家\",\"娱乐圈\",\"友情\",\n\"游戏\",\"音乐\",\"妖魔\",\"选秀\",\"相亲\",\"现实\",\n\"喜剧\",\"亡国\",\"吐槽\",\"甜心\",\n\"甜宠\",\"替身\",\"替嫁\",\"桃花\",\"守护\",\n\"嗜血\",\"生活\",\"深情\",\"烧脑\",\"商业\",\"伤痛\",\n\"闪婚\",\"三生三世\",\"日常\",\"权利\",\n\"情有独钟\",\"倾城\",\"青梅竹马\",\"青春\",\"契约\",\n\"婆媳\",\"虐渣\",\"男强\",\"命运\",\"美食\",\"卖萌\",\n\"励志\",\"江山\",\"家族\",\"家长里短\",\n\"婚姻\",\"回忆\",\"皇权\",\"欢乐\",\"豪门\",\n\"闺蜜\",\"古风\",\"孤独\",\n\"狗血\",\"宫斗宅斗\",\"搞笑\",\"感人\",\"复仇\",\n\"斗智斗勇\",\"初念\",\"宠妻\",\n\"宠溺\",\"宠婚\",\"车祸\",\"背叛\",\n\"爱情\",\"BE\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按流派\",\"\",1);\ntags=[\"搞笑\",\"种田文\",\"医生\",\"养成\",\n\"言情\",\"现言\",\"甜宠文\",\"爽文\",\n\"轻小说\",\"轻松文\",\"女尊文\",\"虐文\",\"虐恋\",\n\"暖文\",\"年代文\",\"脑洞\",\"萌宠\",\"可爱流\",\"婚恋\",\n\"古言\",\"总裁文\",\"穿越\",\"宝宝\",\n].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按身份\",\"\",1);\ntags=[\"御姐\",\"娱乐明星\",\"业界精英\",\"学霸\",\n\"校花\",\"王侯将相\",\"王妃\",\"替身\",\n\"特工\",\"庶女\",\"首席\",\"神医\",\"设计师\",\n\"商女\",\"人妻\",\"前妻\",\"千金\",\"弃妇\",\"女强\",\n\"女配\",\"农女\",\"明星\",\"萌宝\",\n\"灰姑娘\",\"皇后\",\"贵族\",\"公主\",\"高富帅\",\n\"毒医\",\"第三者\",\"嫡女\",\"变身\",\"白领\",\"BL\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按性格\",\"\",1);\ntags=[\"搞笑\",\"懦弱\",\"腹黑\",\"霸道\",\n\"冰冷\",\"温柔\",\"阳光\",\"可爱\",\n\"傲娇\",\"冷酷\",\"淡定\",\"纯真\",\"善良\",\n\"强势\",\"高冷\",\"八卦\",\"妖娆\",\"风流\",\"杀伐果断\",\n\"情深\",\"专情\",\"甜美\",\"张扬\",\n\"奇葩\",\"冰山\",\"冷血\",\"狡猾\",\"柔情\",\n\"毒舌\",\"呆萌\",\"玩世不恭\",\"刁蛮\",\"野蛮\",\"古灵精怪\",\n\"勇敢\",\"花心\",\"妖媚\",\"逗逼\",\n\"幽默\",\"多情\",\"机智\",\"暖心\",\"欢脱\",\n\"专一\",\"傻白甜\",\"萌萌哒\",\"高智商\",\"慢热\",\"敢爱敢恨\",\n\"逗比\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按情节\",\"\",1);\ntags=[\"阴差阳错\",\"一往情深\",\"一见钟情\",\"未婚先孕\",\n\"逃婚\",\"死缠烂打\",\"生死大爱\",\"情有独钟\",\n\"青梅竹马\",\"强取豪夺\",\"破镜重圆\",\"女追男\",\"女强男尊\",\n\"虐渣打脸\",\"涅槃\",\"麻雀变凤凰\",\"浪漫情缘\",\"纠缠\",\"欢喜冤家\",\n\"黑化\",\"复婚\",\"复合\",\"反转\",\n\"反套路\",\"错嫁\",\"错爱\",\"变身\",\"出轨\",\n\"不离不弃\",\"春风一度\",\"爱而不得\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\nJSON.stringify(sort);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1759283388703,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 390,
+    "ruleBookInfo": {
+      "init": "$.data",
+      "author": "$.writer",
+      "coverUrl": "$.cover",
+      "intro": "$.bookJs",
+      "kind": "$.tags",
+      "lastChapter": "$.chapterLast",
+      "name": "$.bookName@put:{xid:x_id}",
+      "canReName": "",
+      "tocUrl": "https://gg.zzxsa.com/chapters/{{$._id}}?view=chapters&appName=com.zhuxshah.mszlhdgwa&https=1&language=zh_cn",
+      "wordCount": "$.wordNum",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "$.chapter.body||$.msg",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "$.writer",
+      "bookList": "$.books[*]",
+      "bookUrl": "https://gg.zzxsa.com/bookintro/{{$._id}}?language=zh_cn",
+      "coverUrl": "$.cover",
+      "intro": "$.bookJs",
+      "kind": "$.tags",
+      "lastChapter": "",
+      "name": "$.bookName",
+      "wordCount": "$.wordNum"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.chapters",
+      "chapterName": "$.tit",
+      "chapterUrl": "https://xs.zzxsa.com/read/@get:{xid}/{{$.num}}?app_name=com.zhuxshah.mszlhdgwa&app_vn=2.7&dev_id=89b2628c-292f-32c6-b512-8ef3cbe58315&ts={{Date.now()}}&app_vc=20227&token=030590f5f9f4b2ab0879ea5cda0670a2",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://gg.zzxsa.com/search/result?query={{key}}&language=zh_cn",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃猪猪小说🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://gg.zzxsa.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3312,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nvar sort = [];\npush=(title,link,size)=>sort.push({\n    \"title\": title,\n    \"url\": link,\n    \"style\": {\n      \"layout_flexGrow\": 1,\n       \"layout_flexBasisPercent\": size\n    }\n  });\npush(\"男主角🔹♂️按分类\",\"\",1);\ntags=[\"玄幻\",\"奇幻\",\"武侠\",\"仙侠\",\n\"灵异\",\"科幻\",\"游戏\",\"竞技\",\n\"职场\",\"都市\",\"历史\",\"军事\",\"轻小说\",\n\"同人\",\"其他\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booksort/list?gender=0&type=star&major=${t}&minor=&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t push(\"男主角🔹♂️按题材\",\"\",1);\ntags=[\"装备\",\"赚钱\",\"轮回\",\"重生\",\n\"种田\",\"治愈\",\"直播\",\"征战\",\n\"征服\",\"争斗\",\"战争\",\"缘分\",\"游戏\",\n\"阴阳\",\"异世\",\"异能\",\"异界\",\"医术\",\"妖魔\",\n\"血脉\",\"悬疑\",\"虚拟\",\"修炼\",\n\"兄弟\",\"星辰\",\"信仰\",\"邪恶\",\"现实\",\n\"武道\",\"五行\",\"文明\",\"位面\",\"未来\",\"猥琐\",\n\"危机\",\"同人\",\"挑战\",\"体育\",\n\"逃亡\",\"守护\",\"生死\",\"生活\",\"神兽\",\n\"神魔\",\"神秘\",\"神话\",\"烧脑\",\"杀戮\",\"任务\",\n\"热血\",\"权谋\",\"求生\",\"奇幻\",\n\"破案\",\"泡妞\",\"逆袭\",\"逆天\",\"末世\",\n\"魔法\",\"命运\",\"秘术\",\n\"梦想\",\"冒险\",\"炼药\",\"恐怖\",\"空间\",\n\"科技\",\"科幻\",\"开局\",\n\"军事\",\"竞技\",\"惊悚\",\"僵尸\",\n\"鉴宝\",\"家族\",\"回忆\",\n\"荒岛\",\"红颜\",\"鬼怪\",\"功夫\",\"搞笑\",\n\"复仇\",\"封印\",\"奋斗\",\n\"废物\",\"犯罪\",\"电竞\",\"大唐\",\"传说\",\n\"称霸\",\"变异\",\"变身\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t push(\"男主角🔹♂️按流派\",\"\",1);\ntags=[\"金手指\",\"重生\",\"直播\",\"争霸流\",\n\"召唤流\",\"异兽流\",\"医生\",\"学院流\",\n\"校花\",\"乡村\",\"系统流\",\"武侠\",\"无限流\",\n\"无敌流\",\"文娱\",\"网游\",\"透视\",\"天才流\",\"随身流\",\n\"爽文\",\"升级流\",\"神豪\",\"软饭流\",\n\"轻小说\",\"奶爸\",\"练功流\",\"可爱流\",\"惊悚\",\n\"技术流\",\"洪荒流\",\"红包\",\"废材流\",\"凡人流\",\"恶搞\",\n\"都市\",\"兵王\",\"保镖\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"男主角🔹♂️按身份\",\"\",1);\ntags=[\"至尊\",\"战神\",\"宅男\",\"业界精英\",\n\"药师\",\"学生\",\"枭雄\",\"仙尊\",\n\"武神\",\"同人\",\"特种兵\",\"书生\",\"神医\",\n\"神豪\",\"少年\",\"商人\",\"杀手\",\"强者\",\"乞丐\",\n\"女婿\",\"农民\",\"奶爸\",\"明星\",\n\"美女\",\"流氓\",\"教师\",\"剑客\",\"火影\",\n\"黑客\",\"海贼\",\"贵族\",\"盗贼\",\"孤儿\",\"公子\",\n\"法医\",\"帝王\",\"道士\",\"大侠\",\"刺客\",\"吃货\",\"草根\",\"兵王\",\n\"保镖\",\"保安\",\"白领\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t \t push(\"男主角🔹♂️按性格\",\"\",1);\ntags=[\"装逼\",\"勇猛\",\"野蛮\",\"阳光\",\n\"嚣张\",\"侠义\",\"玩世不恭\",\"铁血\",\n\"杀伐果断\",\"懦弱\",\"狂傲\",\"狡猾\",\"坚毅\",\n\"搞笑\",\"疯狂\",\"风流\",\"逗逼\",\"暗黑\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t \t \t push(\"男主角🔹♂️按情节\",\"\",1);\ntags=[\"扮猪吃虎\",\"宝物\",\"超能力\",\"打脸\",\n\"丹药\",\"吊炸天\",\"发财\",\"翻身\",\n\"废材\",\"废材逆袭\",\"洪荒\",\"戒指\",\"金手指\",\n\"金庸\",\"坑爹\",\"逆天改命\",\"入侵\",\"三国\",\"神器\",\"随身空间\",\"特殊技能\",\"天书\",\n\"王者荣耀\",\"西游\",\"咸鱼翻身\",\"血腥\",\"一统天下\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=0&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t push(\"女主角🔸♀️按分类\",\"\",1);\ntags=[\"玄幻奇幻\",\"武侠仙侠\",\"悬疑灵异\",\"游戏竞技\",\n\"古代言情\",\"现代言情\",\"青春校园\",\"同人\",\n\"科幻\",\"女尊\",\"其他\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booksort/list?gender=1&type=star&major=${t}&minor=&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t push(\"女主角🔸♀️按题材\",\"\",1);\ntags=[\"总裁\",\"赚钱\",\"专宠\",\"重逢\",\n\"智谋\",\"职场\",\"正剧\",\"争斗\",\n\"争宠\",\"缘分\",\"冤家\",\"娱乐圈\",\"友情\",\n\"游戏\",\"音乐\",\"妖魔\",\"选秀\",\"相亲\",\"现实\",\n\"喜剧\",\"亡国\",\"吐槽\",\"甜心\",\n\"甜宠\",\"替身\",\"替嫁\",\"桃花\",\"守护\",\n\"嗜血\",\"生活\",\"深情\",\"烧脑\",\"商业\",\"伤痛\",\n\"闪婚\",\"三生三世\",\"日常\",\"权利\",\n\"情有独钟\",\"倾城\",\"青梅竹马\",\"青春\",\"契约\",\n\"婆媳\",\"虐渣\",\"男强\",\"命运\",\"美食\",\"卖萌\",\n\"励志\",\"江山\",\"家族\",\"家长里短\",\n\"婚姻\",\"回忆\",\"皇权\",\"欢乐\",\"豪门\",\n\"闺蜜\",\"古风\",\"孤独\",\n\"狗血\",\"宫斗宅斗\",\"搞笑\",\"感人\",\"复仇\",\n\"斗智斗勇\",\"初念\",\"宠妻\",\n\"宠溺\",\"宠婚\",\"车祸\",\"背叛\",\n\"爱情\",\"BE\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按流派\",\"\",1);\ntags=[\"搞笑\",\"种田文\",\"医生\",\"养成\",\n\"言情\",\"现言\",\"甜宠文\",\"爽文\",\n\"轻小说\",\"轻松文\",\"女尊文\",\"虐文\",\"虐恋\",\n\"暖文\",\"年代文\",\"脑洞\",\"萌宠\",\"可爱流\",\"婚恋\",\n\"古言\",\"总裁文\",\"穿越\",\"宝宝\",\n].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按身份\",\"\",1);\ntags=[\"御姐\",\"娱乐明星\",\"业界精英\",\"学霸\",\n\"校花\",\"王侯将相\",\"王妃\",\"替身\",\n\"特工\",\"庶女\",\"首席\",\"神医\",\"设计师\",\n\"商女\",\"人妻\",\"前妻\",\"千金\",\"弃妇\",\"女强\",\n\"女配\",\"农女\",\"明星\",\"萌宝\",\n\"灰姑娘\",\"皇后\",\"贵族\",\"公主\",\"高富帅\",\n\"毒医\",\"第三者\",\"嫡女\",\"变身\",\"白领\",\"BL\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按性格\",\"\",1);\ntags=[\"搞笑\",\"懦弱\",\"腹黑\",\"霸道\",\n\"冰冷\",\"温柔\",\"阳光\",\"可爱\",\n\"傲娇\",\"冷酷\",\"淡定\",\"纯真\",\"善良\",\n\"强势\",\"高冷\",\"八卦\",\"妖娆\",\"风流\",\"杀伐果断\",\n\"情深\",\"专情\",\"甜美\",\"张扬\",\n\"奇葩\",\"冰山\",\"冷血\",\"狡猾\",\"柔情\",\n\"毒舌\",\"呆萌\",\"玩世不恭\",\"刁蛮\",\"野蛮\",\"古灵精怪\",\n\"勇敢\",\"花心\",\"妖媚\",\"逗逼\",\n\"幽默\",\"多情\",\"机智\",\"暖心\",\"欢脱\",\n\"专一\",\"傻白甜\",\"萌萌哒\",\"高智商\",\"慢热\",\"敢爱敢恨\",\n\"逗比\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\n\t \t \t push(\"女主角🔸♀️按情节\",\"\",1);\ntags=[\"阴差阳错\",\"一往情深\",\"一见钟情\",\"未婚先孕\",\n\"逃婚\",\"死缠烂打\",\"生死大爱\",\"情有独钟\",\n\"青梅竹马\",\"强取豪夺\",\"破镜重圆\",\"女追男\",\"女强男尊\",\n\"虐渣打脸\",\"涅槃\",\"麻雀变凤凰\",\"浪漫情缘\",\"纠缠\",\"欢喜冤家\",\n\"黑化\",\"复婚\",\"复合\",\"反转\",\n\"反套路\",\"错嫁\",\"错爱\",\"变身\",\"出轨\",\n\"不离不弃\",\"春风一度\",\"爱而不得\"].map((t,i)=>push(\n\tjava.t2s(t), `https://gg.zzxsa.com/booktag/list?gender=1&type=star&tags=${t}&start={{(page-1)*20}}&limit=20&language=zh_cn`, \n\t t.length > 2 ? 0.25 : 0.2) );\nJSON.stringify(sort);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 395,
+    "ruleBookInfo": {
+      "init": "$.data",
+      "author": "$.writer",
+      "coverUrl": "$.cover",
+      "intro": "$.bookJs",
+      "kind": "$.tags",
+      "lastChapter": "$.chapterLast",
+      "name": "$.bookName@put:{xid:x_id}",
+      "canReName": "",
+      "tocUrl": "https://gg.zzxsa.com/chapters/{{$._id}}?view=chapters&appName=com.zhuxshah.mszlhdgwa&https=1&language=zh_cn",
+      "wordCount": "$.wordNum",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "$.chapter.body",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "$.writer",
+      "bookList": "$.books[*]",
+      "bookUrl": "https://gg.zzxsa.com/bookintro/{{$._id}}?language=zh_cn",
+      "coverUrl": "$.cover",
+      "intro": "$.bookJs",
+      "kind": "$.tags",
+      "lastChapter": "",
+      "name": "$.bookName",
+      "wordCount": "$.wordNum"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.chapters",
+      "chapterName": "$.tit",
+      "chapterUrl": "https://xs.zzxsa.com/read/@get:{xid}/{{$.num}}?app_name=com.zhuxshah.mszlhdgwa&app_vn=2.7&dev_id=89b2628c-292f-32c6-b512-8ef3cbe58315&ts={{Date.now()}}&app_vc=20227&token=030590f5f9f4b2ab0879ea5cda0670a2",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://gg.zzxsa.com/search/result?query={{key}}&language=zh_cn",
+    "variableComment": "",
+    "weight": 1
+  }
+]

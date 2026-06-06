@@ -1,0 +1,46 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 笔趣阁¹",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.666biquge.com",
+    "customOrder": 77,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "lastUpdateTime": 1726507717452,
+    "respondTime": 2748,
+    "ruleBookInfo": {
+      "author": "p:nth-child(4) > a@text",
+      "coverUrl": "#fmimg > img@src",
+      "intro": "#intro > p@text",
+      "kind": "p:nth-child(5) > a@text&&\np:nth-child(6)@text##状态：",
+      "lastChapter": "dd:nth-child(2)@text",
+      "name": "h2 > a@text",
+      "tocUrl": "text.查看目录@href"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A0-9\\uFF10-\\uFF19-]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]{2,}.*|{{chapter.title}}|第[0-9一二两三四五六七八九十百千万]{1,9}章.*|[(（]?本章未?完[）)]?.*|\\(第.+页\\)|.?加入书签.*|.*下一页继续阅读.*|.*退出阅读模式.*|.*点击下载{{book.name}}.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a:nth-child(3)@text",
+      "bookList": ".line",
+      "bookUrl": ".blue@href",
+      "kind": "a:nth-child(1)@text##\\[|\\]",
+      "lastChapter": ".even > a@text",
+      "name": ".blue@text",
+      "wordCount": ".even:nth-child(4)@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter > li > a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ".page > a:nth-child(1)@href"
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}modules/article/waps.php?keyword={{key}}",
+    "weight": 0
+  }
+]

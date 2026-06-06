@@ -1,0 +1,112 @@
+[
+  {
+    "bookSourceComment": "搜索间隔10s",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍁笔下文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bxwx.in",
+    "customOrder": 129,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": " 🍁      完        本      🍁 ::/wanben/{{page}}",
+    "lastUpdateTime": 1692358291478,
+    "respondTime": 16852,
+    "ruleBookInfo": {
+      "author": ".bookTitle@text##.*/",
+      "coverUrl": "class.img-thumbnail@src",
+      "intro": "id.bookIntro@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:status\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": ".bookTitle@text##/.*",
+      "wordCount": "[property=\"og:novel:update_time\"]@content"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html##... --.*\\s|.*bxwx.*|本章未完.*|\n@js:result+'下一页标识'",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*下一页标识\\s*|"
+    },
+    "ruleExplore": {
+      "author": "td.3@text",
+      "bookList": "class.table@tr!0",
+      "bookUrl": "td.1@a@href",
+      "kind": "td.0@text",
+      "lastChapter": "td.2@a@text",
+      "name": "td.1@a@text",
+      "wordCount": "td.4@text"
+    },
+    "ruleSearch": {
+      "author": "td.3@text",
+      "bookList": "class.table@tr!0",
+      "bookUrl": "td.1@a@href",
+      "checkKeyWord": "差一个你",
+      "kind": "td.0@text",
+      "lastChapter": "td.2@a@text",
+      "name": "td.1@a@text",
+      "wordCount": "td.4@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.panel-body panel-chapterlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/modules/article/search.php,{\n\t\"charset\":\"gbk\",\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\",\n  \"webView\":true\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索间隔10s",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍁笔下文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bxwx.in",
+    "customOrder": 129,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": " 🍁      完        本      🍁 ::/wanben/{{page}}",
+    "lastUpdateTime": 1692358291478,
+    "respondTime": 9548,
+    "ruleBookInfo": {
+      "author": ".bookTitle@text##.*/",
+      "coverUrl": "class.img-thumbnail@src",
+      "intro": "id.bookIntro@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:status\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": ".bookTitle@text##/.*",
+      "wordCount": "[property=\"og:novel:update_time\"]@content"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html##... --.*\\s|.*bxwx.*|本章未完.*|\n@js:result+'下一页标识'",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*下一页标识\\s*|"
+    },
+    "ruleExplore": {
+      "author": "td.3@text",
+      "bookList": "class.table@tr!0",
+      "bookUrl": "td.1@a@href",
+      "kind": "td.0@text",
+      "lastChapter": "td.2@a@text",
+      "name": "td.1@a@text",
+      "wordCount": "td.4@text"
+    },
+    "ruleSearch": {
+      "author": "td.3@text",
+      "bookList": "class.table@tr!0",
+      "bookUrl": "td.1@a@href",
+      "checkKeyWord": "差一个你",
+      "kind": "td.0@text",
+      "lastChapter": "td.2@a@text",
+      "name": "td.1@a@text",
+      "wordCount": "td.4@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.panel-body panel-chapterlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/modules/article/search.php,{\n\t\"charset\":\"gbk\",\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\",\n  \"webView\":true\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,140 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "乐文小说①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xlewen.org/",
+    "bookUrlPattern": "https://www.xlewen.org/\\d+/\\d+/",
+    "customOrder": 2,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/list/1-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"/list/2-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情小说\",\"url\":\"/list/3-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"/list/4-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/list/5-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/list/6-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"恐怖小说\",\"url\":\"/list/7-{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"其它小说\",\"url\":\"/list/8-{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1665056903954,
+    "loginUrl": "",
+    "respondTime": 6217,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.bookdetail@id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@textNodes##本小说.*无广告免费阅读。|：。：|一秒记住.*免费阅读！|.*第.*章.*|请退出转码.*阅读最新章节。",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.s4@a@text",
+      "bookList": "class.novelslist2@ul@li||class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.xlewen.org/img/'+iid+'/'+id+'.jpg';\n</js>",
+      "kind": "class.s6@text",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@id=\"list\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href@js:'https://m.xlewen.org'+result"
+    },
+    "searchUrl": "https://www.xlewen.org/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "乐文小说⑦",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xlewen.org/",
+    "bookUrlPattern": "https://www.xlewen.org/\\d+/\\d+/",
+    "customOrder": 2,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/list/1-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"/list/2-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情小说\",\"url\":\"/list/3-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"/list/4-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/list/5-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/list/6-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"恐怖小说\",\"url\":\"/list/7-{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"其它小说\",\"url\":\"/list/8-{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1693915861444,
+    "loginUrl": "",
+    "respondTime": 8517,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.bookdetail@id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@textNodes##本小说.*无广告免费阅读。|：。：|一秒记住.*免费阅读！|.*第.*章.*|请退出转码.*阅读最新章节。",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".s4@a@text",
+      "bookList": "ul@li!0",
+      "bookUrl": ".s2@a@href",
+      "coverUrl": ".s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.xlewen.org/img/'+iid+'/'+id+'.jpg';\n</js>",
+      "kind": ".s6@text",
+      "lastChapter": ".s3@a@text",
+      "name": ".s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@id=\"list\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href@js:'https://m.xlewen.org'+result"
+    },
+    "searchUrl": "https://www.xlewen.org/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "By小新\n首发论坛:https://srcbbs.com/\n请不要修改注释",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "乐文小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xlewen.org/",
+    "customButton": false,
+    "customOrder": 2800,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "[{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"首页\",\"url\":\"/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"玄幻\",\"url\":\"/list/1/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"重生\",\"url\":\"/list/2/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市\",\"url\":\"/list/3/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"军史\",\"url\":\"/list/4/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游\",\"url\":\"/list/5/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻\",\"url\":\"/list/6/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异\",\"url\":\"/list/7/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"言情\",\"url\":\"/list/8/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"排行榜\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"日榜\",\"url\":\"/rank/dayvisit_0_0_0_1.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周榜\",\"url\":\"/rank/weekvisit_0_0_0_1.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月榜\",\"url\":\"/rank/monthvisit_0_0_0_1.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总榜\",\"url\":\"/rank/allvisit_0_0_0_1.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"新书\",\"url\":\"/rank/postdate_0_0_0_1.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"更新\",\"url\":\"/rank/lastupdate_0_0_0_1.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; U; Android 13; zh-Hans-CN; PFJM10 Build/TP1A.220905.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/135.0.4896.58 Quark/6.13.6.581 Mobile Safari/537.36\",\"Accept-Language\":\"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"}",
+    "lastUpdateTime": 1768887496811,
+    "respondTime": 44590,
+    "ruleBookInfo": {
+      "intro": "{{@@[class=\"options\"]@li[!-2:-1]@html}}\n{{java.get(\"t\")}}"
+    },
+    "ruleContent": {
+      "content": "[id=\"novelcontent\"]@p[:-2]@html",
+      "nextContentUrl": "@js:\na=java.getString('[id=\"next\"]@href');\na+\",{\\\"webView\\\": true}\"\n"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".book_other.0@span.0@text",
+      "bookList": "[class=\"row\"]>div>dl",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".book_other.-1@text@put:{\"t\":\"@@.book_other.-1@text\"}",
+      "name": "h3.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".book_list.-1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href@js:result+\",{\\\"webView\\\": true}\"",
+      "nextTocUrl": "[class=\"page-link\"].-1@href"
+    },
+    "searchUrl": "/search.html,{\n\t\"body\": \"s={{key}}\",\n\t\"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

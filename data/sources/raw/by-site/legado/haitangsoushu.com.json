@@ -1,0 +1,131 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "Ⓢ 海棠搜书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haitangsoushu.com#未月十八改",
+    "customOrder": 1432,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1660728630991,
+    "respondTime": 47296,
+    "ruleBookInfo": {
+      "coverUrl": "img.1@src",
+      "intro": "id.intro@html",
+      "lastChapter": "class.newestChapter@a@text",
+      "tocUrl": "class.site.0@tag.a.1@href##.*u=\n<js>\nstr = String(result);\nresult = str.replace(/%3A/g, ':')\n.replace(/%2F/g, '/')\n</js>",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.C0NTENT@html"
+    },
+    "ruleExplore": {
+      "coverUrl": "@js:'https://m.kanshujun.com/style/noimg.jpg'"
+    },
+    "ruleSearch": {
+      "author": "tag.a.1@text",
+      "bookList": "class.SHsectionThree-middle@tag.p",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href<js>java.ajax(\"https://www.haitangsoushu.com\"+result)</js>img.1@src",
+      "intro": "tag.a.0@href<js>java.ajax(\"https://www.haitangsoushu.com\"+result)</js>id.intro@html",
+      "kind": "tag.a.2@text",
+      "lastChapter": "tag.a.0@href<js>java.ajax(\"https://www.haitangsoushu.com\"+result)</js>class.newestChapter@a@text",
+      "name": "tag.a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "class.BCsectionTwo-top@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href<js>result + \",{\\\"webView\\\": true}\"</js>",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.haitangsoushu.com/s/{{key}}/{{page}}/",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "备用地址\nhttps://www.haitangsoshu.com",
+    "bookSourceGroup": "④🎈  普通",
+    "bookSourceName": "🎈海棠搜书「PO文」",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haitangsoushu.com",
+    "customOrder": -2085958985,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1682082575124,
+    "respondTime": 25141,
+    "ruleBookInfo": {
+      "init": "",
+      "intro": "<js>\nlist=java.getElements(\"@@class.BGsectionThree-content@li\").toArray();\nintro=java.getElements('#intro').html();\nhref='';text='';\nfor(i in list){\nhref=href+list[i].select('a:eq(1)').attr('href')+'\\n';\ntext=text+'【'+i+'】'+list[i].html()+'\\n';\n}\njava.put('list',href);\nxu=(book.getVariable(\"custom\")==null||book.getVariable(\"custom\")==\"\")?\"0\":book.getVariable(\"custom\");\nlaiyuan='当前来源【'+xu+'】';\nresult='换源列表（点击设置书籍变量，输入序号，确认后刷新，可更改对应的源，默认为0）\\n'+text+'\\n'+laiyuan+'\\n--------------\\n'+intro\n</js>\n##更新 .*",
+      "tocUrl": "@js:\nlist=java.get('list').split('\\n');\nintro=String(book.intro);\ncustomIntro=intro.match(/来源【(\\d+)】/)[1];\nresult=list[customIntro]"
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction d(a, b) {\n            b = java.md5Encode(b);\n            var d = b.substring(0, 16);\n            var e = b.substring(16);\n            return    java.aesBase64DecodeToString(a,e,\"AES/CBC/PKCS5Padding\",d)}\neval(result.match(/(d\\(\"[\\s\\S]+\"\\))\\)/)[1])",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.1@text",
+      "bookList": "@css:.SHsectionThree-middle p:not(.intro)",
+      "bookUrl": "tag.a.0@href",
+      "kind": "tag.a.-1@text",
+      "name": "tag.a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "class.BCsectionTwo-top-chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href||text.下一頁@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/s/{{key}}/{{page}}/",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "24.12.18修复by 明月",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 海棠搜书-δ",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haitangsoushu.com",
+    "customOrder": 428,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1734536417517,
+    "respondTime": 3998,
+    "ruleBookInfo": {
+      "init": "",
+      "intro": "<js>\nlist=java.getElements(\"@@class.BGsectionThree-content@li\").toArray();\nintro=java.getElements('#intro').html();\nhref='';text='';\nfor(i in list){\nhref=href+list[i].select('a:eq(1)').attr('href')+'\\n';\ntext=text+'【'+i+'】'+list[i].html()+'\\n';\n}\njava.put('list',href);\nxu=(book.getVariable(\"custom\")==null||book.getVariable(\"custom\")==\"\")?\"0\":book.getVariable(\"custom\");\nlaiyuan='当前来源【'+xu+'】';\nresult='换源列表（点击设置书籍变量，输入序号，确认后刷新，可更改对应的源，默认为0）\\n'+text+'\\n'+laiyuan+'\\n--------------\\n'+intro\n</js>\n##更新 .*",
+      "tocUrl": "@js:\nlist=java.get('list').split('\\n');\nintro=String(book.intro);\ncustomIntro=intro.match(/来源【(\\d+)】/)[1];\nresult=list[customIntro]"
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction d(a, b) {\n    b = java.md5Encode(b);\n    var d = b.substring(0, 16);\n    var e = b.substring(16);\n    return java.aesBase64DecodeToString(\n        a, \n        e, \n        \"AES/CBC/PKCS5Padding\", \n        d\n    );\n}\n\neval(result.match(/(d\\(\"[\\s\\S]+?\"\\))\\)/)[1]);",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "tag.a.1@text",
+      "bookList": "@css:.SHsectionThree-middle p:not(.intro)",
+      "bookUrl": "tag.a.0@href",
+      "kind": "tag.a.-1@text",
+      "name": "tag.a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "class.BCsectionTwo-top-chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href||text.下一頁@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/s/{{key}}/{{page}}/",
+    "weight": 0
+  }
+]

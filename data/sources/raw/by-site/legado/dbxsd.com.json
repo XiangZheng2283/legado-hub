@@ -1,0 +1,430 @@
+[
+  {
+    "bookSourceComment": "该网站的搜索功能好像出问题了，什么都搜不到，建议从【发现】中找书，或者在阅读里直接添加书籍详情页的地址 URL 也行",
+    "bookSourceGroup": "搜索暂不可用",
+    "bookSourceName": "独步小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com",
+    "customOrder": 12,
+    "enabled": false,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻奇幻\",\"url\":\"/nav/xh-qh-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻游戏\",\"url\":\"/nav/kh-yx-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"仙侠武侠\",\"url\":\"/nav/xx-wx-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"女生言情\",\"url\":\"/nav/ns-yq-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市娱乐\",\"url\":\"/nav/ds-yl-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史军事\",\"url\":\"/nav/ls-js-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"悬疑灵异\",\"url\":\"/nav/xy-ly-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"耽美纯爱\",\"url\":\"/nav/dm-ca-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"成长励志\",\"url\":\"/nav/cz-lz-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"散文随笔\",\"url\":\"/nav/sw-sb-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"轻の小说\",\"url\":\"/nav/qxs-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"国外文学\",\"url\":\"/nav/gwwx-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"文学名著\",\"url\":\"/nav/wxmz-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"现代当代\",\"url\":\"/nav/xddwx-{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1687361913056,
+    "respondTime": 5768,
+    "ruleBookInfo": {
+      "author": "//meta[@property='og:novel:author']/@content",
+      "coverUrl": "//meta[@property='og:image']/@content",
+      "downloadUrls": "@css:.col-xs-1+a",
+      "intro": "//meta[@property='og:description']/@content",
+      "kind": "//meta[@property='og:novel:category']/@content&&//meta[@property='og:novel:status']/@content",
+      "lastChapter": "//meta[@property='og:novel:latest_chapter_name']/@content",
+      "name": "//meta[@property='og:novel:book_name']/@content"
+    },
+    "ruleContent": {
+      "content": "id.cont-body.0@html",
+      "nextContentUrl": "class.page.0@tag.a@href"
+    },
+    "ruleExplore": {
+      "bookList": "class.media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img.0@src",
+      "intro": "class.media-info@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleSearch": {
+      "author": "tag.td.1@text",
+      "bookList": "tag.tbody.0@tag.tr",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "a.0@href@js:var id=result.match(/(\\d+)\\/?$/)[1];'/uploads/cover/'+id+'s.jpg';",
+      "name": "tag.a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "id.all-chapter.0@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 25
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "独步小说（优+）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com/",
+    "customButton": false,
+    "customOrder": 111,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "header": "{\"User-Agent\": \"\"}",
+    "lastUpdateTime": 1766339825590,
+    "respondTime": 8065,
+    "ruleBookInfo": {
+      "author": "[property*=author]@content",
+      "coverUrl": "[property*=image]@content",
+      "intro": ".book-detail@html",
+      "kind": "[property~=category|status|time]@content",
+      "lastChapter": "[property*=latest_chapter_name]@content",
+      "name": "[property*=title]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "nextContentUrl": ".active+li@a@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "魔王",
+      "name": "a.0@title"
+    },
+    "ruleToc": {
+      "chapterList": "#all-chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "plus/search.php?q={{key}}, {\"webView\": true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "独步小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1916,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/nav/xh-qh-{{page}}.html\n科幻游戏::/nav/kh-yx-{{page}}.html\n仙侠武侠::/nav/xx-wx-{{page}}.html\n女生言情::/nav/ns-yq-{{page}}.html\n都市娱乐::/nav/ds-yl-{{page}}.html\n历史军事::/nav/ls-js-{{page}}.html\n悬疑灵异::/nav/xy-ly-{{page}}.html\n耽美纯爱::/nav/dm-ca-{{page}}.html\n成长励志::/nav/cz-lz-{{page}}.html\n散文随笔::/nav/sw-sb-{{page}}.html\n轻の小说::/nav/qxs-{{page}}.html\n国外文学::/nav/gwwx-{{page}}.html\n文学名著::/nav/wxmz-{{page}}.html\n现代当代::/nav/xddwx-{{page}}.html",
+    "exploreScreen": "",
+    "header": "{\n  'User-Agent': 'Mozilla/5.0 (Linux; Android 9; PDBM00 Build/PPR1.180610.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/70.0.3538.110 Mobile Safari/537.36'\n}",
+    "lastUpdateTime": 1766423680981,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1120,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".media-body@a.1@text",
+      "coverUrl": ".book-img-middel@src",
+      "intro": ".book-detail@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".col-md-4@text##.*：|\\s..:.*",
+      "lastChapter": ".media-body@a.2@text",
+      "name": ".book-name@a@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.cont-body@html  ",
+      "nextContentUrl": ".page@a@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": ".table@tbody@tr",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\n'/uploads/cover/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.0@text##《|》",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.all-chapter@div@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "独步小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com/nav",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 654,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "{\n\t'User-Agent': \"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36 EdgA/127.0.0.0\"\n}",
+    "lastUpdateTime": 1735446877415,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1200,
+    "ruleBookInfo": {
+      "init": "@put:{n:\"[property$=og:title]@content\",\na:\"[property$=author]@content\",\nc:\"[property~=category|status|update_time]@content\",\nl:\"[property$=latest_chapter_name]@content||[property$=lastest_chapter_name]@content\",\nd:\"class.book-detail@text\",\ni:\"[property$=image]@content\"}",
+      "author": "@get:{a}",
+      "coverUrl": "@get:{i}",
+      "intro": "@get:{d}",
+      "kind": "@get:{c}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#cont-body@p@text",
+      "nextContentUrl": "class.col-md-6 text-center@a.-1@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "class.col-md-12 b10@class.media",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.media-info@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.media-title@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody@tr",
+      "bookUrl": "td.0@a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "td.0@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.col-md-6 item@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/plus/search.php?q={{key}},\n{\"body\": \"id\"=\"search-form\"}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "独步小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1671,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "{\n\t'User-Agent': \"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari\\/537.36 EdgA/125.0.0.0\"\n}",
+    "lastUpdateTime": 1734432069048,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1285,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#cont-body@p@text",
+      "nextContentUrl": "class.col-md-6 text-center@a.-1@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody@tr",
+      "bookUrl": "a@href##$##,{'webView': true}",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.0@text##\\《|\\》",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.col-md-6 item@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.dbxsd.com/plus/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🎉 精选",
+    "bookSourceName": "🎉 独步小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com",
+    "bookUrlPattern": "",
+    "customOrder": 15,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/nav/xh-qh-{{page}}.html\n科幻游戏::/nav/kh-yx-{{page}}.html\n仙侠武侠::/nav/xx-wx-{{page}}.html\n女生言情::/nav/ns-yq-{{page}}.html\n都市娱乐::/nav/ds-yl-{{page}}.html\n历史军事::/nav/ls-js-{{page}}.html\n悬疑灵异::/nav/xy-ly-{{page}}.html\n耽美纯爱::/nav/dm-ca-{{page}}.html\n成长励志::/nav/cz-lz-{{page}}.html\n散文随笔::/nav/sw-sb-{{page}}.html\n轻の小说::/nav/qxs-{{page}}.html\n国外文学::/nav/gwwx-{{page}}.html\n文学名著::/nav/wxmz-{{page}}.html\n现代当代::/nav/xddwx-{{page}}.html",
+    "header": "{\n  'User-Agent': 'Mozilla/5.0 (Linux; Android 9; PDBM00 Build/PPR1.180610.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/70.0.3538.110 Mobile Safari/537.36'\n}",
+    "lastUpdateTime": 1734369672961,
+    "loginUrl": "",
+    "respondTime": 18364,
+    "ruleBookInfo": {
+      "author": ".media-body@a.1@text",
+      "coverUrl": ".book-img-middel@src",
+      "init": "",
+      "intro": ".book-detail@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".col-md-4@text##.*：|\\s..:.*",
+      "lastChapter": ".media-body@a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".book-name@a@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.cont-body@html  ",
+      "nextContentUrl": ".page@a@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": ".table@tbody@tr",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "a.0@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\n'/uploads/cover/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "id.all-chapter@div@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "独步小说（优+）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.dbxsd.com/",
+    "customButton": false,
+    "customOrder": 102,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "header": "{\"User-Agent\": \"\"}",
+    "lastUpdateTime": 1766339825590,
+    "respondTime": 8065,
+    "ruleBookInfo": {
+      "author": "[property*=author]@content",
+      "coverUrl": "[property*=image]@content",
+      "intro": ".book-detail@html",
+      "kind": "[property~=category|status|time]@content",
+      "lastChapter": "[property*=latest_chapter_name]@content",
+      "name": "[property*=title]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "nextContentUrl": ".active+li@a@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "魔王",
+      "name": "a.0@title"
+    },
+    "ruleToc": {
+      "chapterList": "#all-chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "plus/search.php?q={{key}}, {\"webView\": true}",
+    "weight": 0
+  }
+]

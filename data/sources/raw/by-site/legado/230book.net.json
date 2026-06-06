@@ -1,0 +1,55 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♜▪︎顶点小说⑤ #一程",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.230book.net#yc1101",
+    "customOrder": 628,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 2,
+    "weight": 855
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "⚡ 顶点小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.230book.net",
+    "customOrder": 718,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 563
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "♜▪︎顶点小说⑤ #一程",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.230book.net#yc1101",
+    "customOrder": 783,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 855
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "♜+顶点小说② #破冰1101",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.230book.net/#pb1101",
+    "customOrder": 802,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 0,
+    "weight": 899
+  }
+]

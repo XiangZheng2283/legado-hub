@@ -1,0 +1,892 @@
+[
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "七七读书💯",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#未月十八repair",
+    "bookUrlPattern": "",
+    "customOrder": 367,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680892435601,
+    "loginUrl": "",
+    "respondTime": 1318,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+|txt下载地址.*|手机阅读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "七七读书 a",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#未月十八改",
+    "bookUrlPattern": "",
+    "customOrder": 577,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680943635664,
+    "loginUrl": "",
+    "respondTime": 1219,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+|txt下载地址.*|手机阅读.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✐   七七读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com",
+    "bookUrlPattern": "",
+    "customOrder": 606,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680504552587,
+    "loginUrl": "",
+    "respondTime": 1047,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(txt下载地址：|更新速度最快赶|全集txt下载)[\\s\\S]+",
+      "replaceRegex": "##最新网.*dus.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📃77读书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com/",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 1116,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1677042655631,
+    "loginUrl": "",
+    "respondTime": 3441,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读："
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "77读书网1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com/#pb1101",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 1445,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1680945502879,
+    "loginUrl": "",
+    "respondTime": 4059,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读："
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "77读书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com/#♤pb",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 1446,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1680945568578,
+    "loginUrl": "",
+    "respondTime": 3329,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读："
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "七七读书1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#未月十八repair#wy18-1001",
+    "bookUrlPattern": "",
+    "customOrder": 1447,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::http://www.77dushu.com/store/1_{{page}}.html\n仙侠小说::http://www.77dushu.com/store/2_{{page}}.html\n都市小说::http://www.77dushu.com/store/3_{{page}}.html\n言情小说::http://www.77dushu.com/store/4_{{page}}.html\n穿越小说::http://www.77dushu.com/store/5_{{page}}.html\n科幻小说::http://www.77dushu.com/store/6_{{page}}.html\n恐怖小说::http://www.77dushu.com/store/7_{{page}}.html\n网游小说::http://www.77dushu.com/store/8_{{page}}.html",
+    "lastUpdateTime": 1680945615324,
+    "loginUrl": "",
+    "respondTime": 3141,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+|txt下载地址.*|手机阅读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌸77读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#关耳",
+    "bookUrlPattern": "",
+    "customOrder": 1471,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::http://www.77dushu.com/store/1_{{page}}.html\n仙侠小说::http://www.77dushu.com/store/2_{{page}}.html\n都市小说::http://www.77dushu.com/store/3_{{page}}.html\n言情小说::http://www.77dushu.com/store/4_{{page}}.html\n穿越小说::http://www.77dushu.com/store/5_{{page}}.html\n科幻小说::http://www.77dushu.com/store/6_{{page}}.html\n恐怖小说::http://www.77dushu.com/store/7_{{page}}.html\n网游小说::http://www.77dushu.com/store/8_{{page}}.html",
+    "lastUpdateTime": 1616324995633,
+    "loginUrl": "",
+    "respondTime": 3309,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✾七七读书 #关耳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#guaner",
+    "bookUrlPattern": "",
+    "customOrder": 1474,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::http://www.77dushu.com/store/1_{{page}}.html\n仙侠小说::http://www.77dushu.com/store/2_{{page}}.html\n都市小说::http://www.77dushu.com/store/3_{{page}}.html\n言情小说::http://www.77dushu.com/store/4_{{page}}.html\n穿越小说::http://www.77dushu.com/store/5_{{page}}.html\n科幻小说::http://www.77dushu.com/store/6_{{page}}.html\n恐怖小说::http://www.77dushu.com/store/7_{{page}}.html\n网游小说::http://www.77dushu.com/store/8_{{page}}.html",
+    "lastUpdateTime": 1636129421853,
+    "loginUrl": "",
+    "respondTime": 2896,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(txt下载地址：|更新速度最快赶|全集txt下载)[\\s\\S]+"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✐   七七读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com",
+    "bookUrlPattern": "",
+    "customOrder": 606,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680504552587,
+    "loginUrl": "",
+    "respondTime": 1348,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(txt下载地址：|更新速度最快赶|全集txt下载)[\\s\\S]+",
+      "replaceRegex": "##最新网.*dus.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "七七读书 a",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#未月十八改",
+    "bookUrlPattern": "",
+    "customOrder": 1118,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680943635664,
+    "loginUrl": "",
+    "respondTime": 9817,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+|txt下载地址.*|手机阅读.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "七七读书💯",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#未月十八repair",
+    "bookUrlPattern": "",
+    "customOrder": 1121,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680892435601,
+    "loginUrl": "",
+    "respondTime": 7772,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+|txt下载地址.*|手机阅读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "77读书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com/",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 1128,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1689602940652,
+    "loginUrl": "",
+    "respondTime": 29282,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读："
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "77读书网1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com/#pb1101",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 1458,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1680945502879,
+    "loginUrl": "",
+    "respondTime": 3518,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读："
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "77读书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com/#♤pb",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 1460,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1680945568578,
+    "loginUrl": "",
+    "respondTime": 3163,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读："
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "未月十八净化",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "七七读书1",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#未月十八repair#wy18-1001",
+    "bookUrlPattern": "",
+    "customOrder": 1465,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::http://www.77dushu.com/store/1_{{page}}.html\n仙侠小说::http://www.77dushu.com/store/2_{{page}}.html\n都市小说::http://www.77dushu.com/store/3_{{page}}.html\n言情小说::http://www.77dushu.com/store/4_{{page}}.html\n穿越小说::http://www.77dushu.com/store/5_{{page}}.html\n科幻小说::http://www.77dushu.com/store/6_{{page}}.html\n恐怖小说::http://www.77dushu.com/store/7_{{page}}.html\n网游小说::http://www.77dushu.com/store/8_{{page}}.html",
+    "lastUpdateTime": 1680945615324,
+    "loginUrl": "",
+    "respondTime": 3144,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+|txt下载地址.*|手机阅读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "🌸77读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#关耳",
+    "bookUrlPattern": "",
+    "customOrder": 1554,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::http://www.77dushu.com/store/1_{{page}}.html\n仙侠小说::http://www.77dushu.com/store/2_{{page}}.html\n都市小说::http://www.77dushu.com/store/3_{{page}}.html\n言情小说::http://www.77dushu.com/store/4_{{page}}.html\n穿越小说::http://www.77dushu.com/store/5_{{page}}.html\n科幻小说::http://www.77dushu.com/store/6_{{page}}.html\n恐怖小说::http://www.77dushu.com/store/7_{{page}}.html\n网游小说::http://www.77dushu.com/store/8_{{page}}.html",
+    "lastUpdateTime": 1616324995633,
+    "loginUrl": "",
+    "respondTime": 3431,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(更新速度最快赶|全集txt下载)[\\s\\S]+"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "✾七七读书 #关耳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com#guaner",
+    "bookUrlPattern": "",
+    "customOrder": 1562,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::http://www.77dushu.com/store/1_{{page}}.html\n仙侠小说::http://www.77dushu.com/store/2_{{page}}.html\n都市小说::http://www.77dushu.com/store/3_{{page}}.html\n言情小说::http://www.77dushu.com/store/4_{{page}}.html\n穿越小说::http://www.77dushu.com/store/5_{{page}}.html\n科幻小说::http://www.77dushu.com/store/6_{{page}}.html\n恐怖小说::http://www.77dushu.com/store/7_{{page}}.html\n网游小说::http://www.77dushu.com/store/8_{{page}}.html",
+    "lastUpdateTime": 1636129421853,
+    "loginUrl": "",
+    "respondTime": 3014,
+    "ruleBookInfo": {
+      "coverUrl": "tag.img.1@src",
+      "intro": "id.intro@text",
+      "lastChapter": "class.update@a@text",
+      "name": "tag.h1@text##搜索关键词.*"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@html##(txt下载地址：|更新速度最快赶|全集txt下载)[\\s\\S]+"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.5@text||class.shu_xinxi@h4@small@text",
+      "bookList": "class.BOX@tag.tr!0||class.shu_cont@children",
+      "bookUrl": "class.red@href||class.shu_xinxi@h4@a@href",
+      "coverUrl": "img@src|class.red@href<js>'/files/article/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3})\\//,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "kind": "tag.td.1@text##\\[|\\]",
+      "lastChapter": "tag.td.3@text",
+      "name": "tag.td.2@text||class.shu_xinxi@h4@a@text##搜索关键词.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 77读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.77dushu.com",
+    "bookUrlPattern": "http://www.77dushu.com/novel/\\d+/",
+    "customOrder": 475,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/store/1_{{page}}.html\n仙侠小说::/store/2_{{page}}.html\n都市小说::/store/3_{{page}}.html\n言情小说::/store/4_{{page}}.html\n穿越小说::/store/5_{{page}}.html\n科幻小说::/store/6_{{page}}.html\n恐怖小说::/store/7_{{page}}.html\n网游小说::/store/8_{{page}}.html",
+    "lastUpdateTime": 1735407409105,
+    "loginUrl": "",
+    "respondTime": 1755,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.img_in@img@src",
+      "intro": "id.intro@ownText",
+      "kind": "class.update@text##.*\\（|\\）",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.ChapterContents@textNodes##txt下载地址：|手机阅读：",
+      "sourceRegex": "##[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A0-9\\uFF10-\\uFF19-]+\\.[\\u0041-\\u005A\\u0061-\\u007A\\uFF21-\\uFF3A\\uFF41-\\uFF5A]{2,}.*|{{chapter.title}}|第[0-9一二两三四五六七八九十百千万]{1,9}章.*|[(（]?本章未?完[）)]?.*|\\(第.+页\\)|.?加入书签.*|.*下一页(翻页)?继续阅读.*|.*退出阅读模式.*|.*点击下载{{book.name}}.*|.*最新(永久域名|网址).*|.*一秒记住本站地址.*"
+    },
+    "ruleExplore": {
+      "author": "h4@small@text",
+      "bookList": "class.shu_box",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "name": "h4@a@text"
+    },
+    "ruleSearch": {
+      "author": "tag.td.5@text",
+      "bookList": "class.BOX@tr!0",
+      "bookUrl": "tag.td.2@a@href",
+      "coverUrl": "tag.td.2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.77dushu.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.3@a@text",
+      "name": "tag.td.2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.77dushu.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

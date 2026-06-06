@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🪔️ 全本小说🔹xqb5",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xqb5.org/##@遇知",
+    "customOrder": 591,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 672
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🪔️ 全本小说🔹xqb5",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xqb5.org/##@遇知",
+    "customOrder": 744,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 672
+  }
+]

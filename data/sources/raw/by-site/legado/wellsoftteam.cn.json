@@ -1,0 +1,165 @@
+[
+  {
+    "bookSourceComment": "api",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "有声小说②",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://www.wellsoftteam.cn/",
+    "customOrder": 238,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427090000&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427350001&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427360002&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427370003&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427390004&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273b0006&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273d0007&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442bbbbbbb&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"官场\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273f0008&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"商战\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427400009&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274b0010&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"评书\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442aaaaaaa&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"文学\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273a0005&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274a000f&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"广播\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442745000c&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"讲坛\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274d0011&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1684155033764,
+    "respondTime": 13777,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {},
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.by##播音:",
+      "bookList": "$.voicelist",
+      "bookUrl": "http://www.wellsoftteam.cn/voice/list/voicepage?pageNum=1&typeid={{$.id}}&userid=7a4ac7e84bc446108a636559302b7e9d",
+      "coverUrl": "$.picurl",
+      "intro": "$.des",
+      "kind": "$.updatetime",
+      "lastChapter": "{{$.js}}集",
+      "name": "$.name@put:{bid:id}"
+    },
+    "ruleToc": {
+      "chapterList": "$.voicelist[*]",
+      "chapterName": "$.title",
+      "chapterUrl": "$.downurl",
+      "nextTocUrl": "<js>\nvar a = 'http://www.wellsoftteam.cn/voice/list/voicepage?typeid=@get:{bid}&pageNum=';\nvar r = [];\nfor(var i=1;i<500;i++){\n    r.push(a + parseInt(i*1));\n}\nr\n</js>",
+      "updateTime": "$.updatetime"
+    },
+    "searchUrl": "http://www.wellsoftteam.cn/voice/list/voicesearchpage?pageNum=1&title={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "api",
+    "bookSourceGroup": "有声",
+    "bookSourceName": "有声小说②",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://www.wellsoftteam.cn/",
+    "customOrder": 1162,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427090000&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427350001&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427360002&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427370003&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427390004&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273b0006&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273d0007&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442bbbbbbb&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"官场\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273f0008&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"商战\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427400009&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274b0010&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"评书\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442aaaaaaa&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"文学\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273a0005&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274a000f&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"广播\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442745000c&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"讲坛\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274d0011&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1684155033764,
+    "respondTime": 17260,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {},
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.by##播音:",
+      "bookList": "$.voicelist",
+      "bookUrl": "http://www.wellsoftteam.cn/voice/list/voicepage?pageNum=1&typeid={{$.id}}&userid=7a4ac7e84bc446108a636559302b7e9d",
+      "coverUrl": "$.picurl",
+      "intro": "$.des",
+      "kind": "$.updatetime",
+      "lastChapter": "{{$.js}}集",
+      "name": "$.name@put:{bid:id}"
+    },
+    "ruleToc": {
+      "chapterList": "$.voicelist[*]",
+      "chapterName": "$.title",
+      "chapterUrl": "$.downurl",
+      "nextTocUrl": "<js>\nvar a = 'http://www.wellsoftteam.cn/voice/list/voicepage?typeid=@get:{bid}&pageNum=';\nvar r = [];\nfor(var i=1;i<500;i++){\n    r.push(a + parseInt(i*1));\n}\nr\n</js>",
+      "updateTime": "$.updatetime"
+    },
+    "searchUrl": "http://www.wellsoftteam.cn/voice/list/voicesearchpage?pageNum=1&title={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "api",
+    "bookSourceGroup": "有声",
+    "bookSourceName": "有声小说②",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://www.wellsoftteam.cn/",
+    "customOrder": 183,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427090000&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427350001&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427360002&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427370003&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427390004&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273b0006&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273d0007&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442bbbbbbb&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"官场\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273f0008&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"商战\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427400009&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274b0010&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"评书\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442aaaaaaa&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"文学\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273a0005&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274a000f&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"广播\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442745000c&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"讲坛\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274d0011&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1684155033764,
+    "respondTime": 180000,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {},
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.by##播音:",
+      "bookList": "$.voicelist",
+      "bookUrl": "http://www.wellsoftteam.cn/voice/list/voicepage?pageNum=1&typeid={{$.id}}&userid=7a4ac7e84bc446108a636559302b7e9d",
+      "coverUrl": "$.picurl",
+      "intro": "$.des",
+      "kind": "$.updatetime",
+      "lastChapter": "{{$.js}}集",
+      "name": "$.name@put:{bid:id}"
+    },
+    "ruleToc": {
+      "chapterList": "$.voicelist[*]",
+      "chapterName": "$.title",
+      "chapterUrl": "$.downurl",
+      "nextTocUrl": "<js>\nvar a = 'http://www.wellsoftteam.cn/voice/list/voicepage?typeid=@get:{bid}&pageNum=';\nvar r = [];\nfor(var i=1;i<500;i++){\n    r.push(a + parseInt(i*1));\n}\nr\n</js>",
+      "updateTime": "$.updatetime"
+    },
+    "searchUrl": "http://www.wellsoftteam.cn/voice/list/voicesearchpage?pageNum=1&title={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "api",
+    "bookSourceGroup": "📻 有声",
+    "bookSourceName": "📻 有声小说",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://www.wellsoftteam.cn/",
+    "customOrder": 354,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427090000&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427350001&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427360002&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427370003&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427390004&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273b0006&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273d0007&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442bbbbbbb&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"官场\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273f0008&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"商战\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a10145134427400009&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274b0010&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"评书\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442aaaaaaa&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"文学\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344273a0005&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274a000f&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"广播\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a1014513442745000c&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"讲坛\",\"url\":\"http://www.wellsoftteam.cn/voice/list/voicetypepage?pageNum={{page}}&title=&keyword=&types=4028818b451343a101451344274d0011&ordercode=\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1685705119256,
+    "respondTime": 12102,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {},
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "$.by##播音:",
+      "bookList": "$.voicelist",
+      "bookUrl": "http://www.wellsoftteam.cn/voice/list/voicepage?pageNum=1&typeid={{$.id}}&userid=7a4ac7e84bc446108a636559302b7e9d",
+      "coverUrl": "$.picurl",
+      "intro": "$.des",
+      "kind": "$.updatetime",
+      "lastChapter": "{{$.js}}集",
+      "name": "$.name@put:{bid:id}"
+    },
+    "ruleToc": {
+      "chapterList": "$.voicelist[*]",
+      "chapterName": "$.title",
+      "chapterUrl": "$.downurl",
+      "nextTocUrl": "<js>\nvar a = 'http://www.wellsoftteam.cn/voice/list/voicepage?typeid=@get:{bid}&pageNum=';\nvar r = [];\nfor(var i=1;i<500;i++){\n    r.push(a + parseInt(i*1));\n}\nr\n</js>",
+      "updateTime": "$.updatetime"
+    },
+    "searchUrl": "http://www.wellsoftteam.cn/voice/list/voicesearchpage?pageNum=1&title={{key}}",
+    "weight": 0
+  }
+]

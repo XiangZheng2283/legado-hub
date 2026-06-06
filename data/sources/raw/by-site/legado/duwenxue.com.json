@@ -1,0 +1,56 @@
+[
+  {
+    "bookSourceComment": "熬夜肝书源",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "读文学网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.duwenxue.com/",
+    "customOrder": 774,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"http://m.duwenxue.com/sort/1/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"武侠\",\"url\":\"http://m.duwenxue.com/sort/2/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"都市\",\"url\":\"http://m.duwenxue.com/sort/3/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"历史\",\"url\":\"http://m.duwenxue.com/sort/4/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"推理\",\"url\":\"http://m.duwenxue.com/sort/5/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"网游\",\"url\":\"http://m.duwenxue.com/sort/6/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"科幻\",\"url\":\"http://m.duwenxue.com/sort/7/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"恐怖\",\"url\":\"http://m.duwenxue.com/sort/8/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"其他\",\"url\":\"http://m.duwenxue.com/sort/10/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"史书\",\"url\":\"http://m.duwenxue.com/sort/12/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"集部\",\"url\":\"http://m.duwenxue.com/sort/14/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"古典\",\"url\":\"http://m.duwenxue.com/sort/16/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}}]",
+    "lastUpdateTime": 1686059880573,
+    "respondTime": 2675,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": ".tabvalue.0@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "##作品分类：([^<]+)[^：]+：([^<]+)[^：]+：([^\\s]+)##$1,$2,$3###",
+      "lastChapter": "h3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "@get:{u}<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\nsource.bookSourceUrl + 'book/html/'+iid+'/'+id+'/'+'index.html';\n</js>",
+      "wordCount": "##全文字数：([^<]+)##$1###"
+    },
+    "ruleContent": {
+      "content": "#acontent@textNodes##(\\()?读文学.*?com(\\)﻿)?|┢┠┅|┇|┆┢|）|\\)"
+    },
+    "ruleExplore": {
+      "author": ".author@text",
+      "bookList": "+@css:.article",
+      "bookUrl": "@get:{u}##.*/book/(\\d+)/##http://www.duwenxue.com/book/info/$1.html",
+      "coverUrl": "img@src",
+      "intro": ".simple@text",
+      "name": "a.1@text@put:{u:\"a.1@href\"}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "##作者：(?:[^>]+>){2}([^<]+)##$1###",
+      "bookList": "+@css:.c_row",
+      "bookUrl": "@get:{u}",
+      "checkKeyWord": "完美世界",
+      "coverUrl": "img@src",
+      "kind": "##类别：(?:[^>]+>){2}([^<]+)<[\\s\\S]*?状态：(?:[^>]+>){2}([^<]+)<[\\s\\S]*?更新：(?:[^>]+>){2}([^<]+)##$1,$2,$3###",
+      "lastChapter": "a.-1@text",
+      "name": "a.1@text@put:{u:\"a.1@href\"}",
+      "wordCount": "##字数：(?:[^>]+>){2}([^<]+)##$1###"
+    },
+    "ruleToc": {
+      "chapterList": "+@css:.chapter a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "modules/article/search.php?q={{key}}",
+    "weight": 0
+  }
+]

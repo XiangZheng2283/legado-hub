@@ -1,0 +1,104 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "先留着",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bgwxc.com/M/novel/search?keyword=我是",
+    "customOrder": 753,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685691676638,
+    "respondTime": 566,
+    "ruleBookInfo": {
+      "tocUrl": ".t-row-2 a@href"
+    },
+    "ruleContent": {
+      "content": "p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": ".list-4 a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".zj-item a",
+      "chapterName": "@text",
+      "chapterUrl": "@href"
+    },
+    "searchUrl": "http://m.bgwxc.com/M/novel/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "布咕阅读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bgwxc.com/",
+    "customOrder": 72,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1691371683216,
+    "respondTime": 705,
+    "ruleBookInfo": {
+      "tocUrl": ".t-row-2 a@href"
+    },
+    "ruleContent": {
+      "content": "p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": ".list-4 a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".zj-item a",
+      "chapterName": "@text",
+      "chapterUrl": "@href"
+    },
+    "searchUrl": "http://m.bgwxc.com/M/novel/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "先留着",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bgwxc.com/M/novel/search?keyword=我是",
+    "customOrder": 1136,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685691676638,
+    "respondTime": 14106,
+    "ruleBookInfo": {
+      "tocUrl": ".t-row-2 a@href"
+    },
+    "ruleContent": {
+      "content": "p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": ".list-4 a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".zj-item a",
+      "chapterName": "@text",
+      "chapterUrl": "@href"
+    },
+    "searchUrl": "http://m.bgwxc.com/M/novel/search?keyword={{key}}",
+    "weight": 0
+  }
+]

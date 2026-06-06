@@ -1,0 +1,327 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖英文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com",
+    "bookUrlPattern": "",
+    "customOrder": 352,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "金典英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&type=2&page={{page}}\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2&page={{page}}\n英文名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2&page={{page}}\n英文励志小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2&page={{page}}\n儿童英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2&page={{page}}\n英文科幻小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2&page={{page}}\n宗教英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 9; zh-cn; MI 6 Build/PKQ1.190118.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.128 Mobile Safari/537.36 XiaoMi/MiuiBrowser/10.8.1\"\n}",
+    "lastUpdateTime": 1678647462242,
+    "loginUrl": "",
+    "respondTime": 7128,
+    "ruleBookInfo": {
+      "author": "class.writer.0@text##\\s+",
+      "coverUrl": "class.f_l@tag.img@src",
+      "intro": "id.infoShort@text",
+      "name": "class.sm@text"
+    },
+    "ruleContent": {
+      "content": "id.tt_text@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.list_1",
+      "bookUrl": "class.name.0@tag.a.0@href##amp;",
+      "coverUrl": "tag.img@src",
+      "name": "class.name.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&areaid=0&type=2&kw={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌐 英文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com/wap/index.php",
+    "bookUrlPattern": "",
+    "customOrder": 1352,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "金典英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&type=2&page={{page}}\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2&page={{page}}\n名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2&page={{page}}\n英文励志::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2&page={{page}}\n儿童英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2&page={{page}}\n英文科幻::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2&page={{page}}\n宗教英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 9; zh-cn; MI 6 Build/PKQ1.190118.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.128 Mobile Safari/537.36 XiaoMi/MiuiBrowser/10.8.1\"\n}",
+    "lastUpdateTime": 1672901821013,
+    "loginUrl": "",
+    "respondTime": 5784,
+    "ruleBookInfo": {
+      "author": "class.writer.0@text##\\s+",
+      "coverUrl": "class.f_l@tag.img@src",
+      "intro": "id.infoShort@text",
+      "name": "class.sm@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html##首页(.|\\n)*尾页|\\\\",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.list_1",
+      "bookUrl": "class.name.0@tag.a.0@href##amp;",
+      "coverUrl": "tag.img@src",
+      "name": "class.name.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&areaid=0&type=2&kw={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🔖英文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com",
+    "bookUrlPattern": "",
+    "customOrder": 1253,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "金典英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&type=2&page={{page}}\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2&page={{page}}\n英文名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2&page={{page}}\n英文励志小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2&page={{page}}\n儿童英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2&page={{page}}\n英文科幻小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2&page={{page}}\n宗教英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 9; zh-cn; MI 6 Build/PKQ1.190118.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.128 Mobile Safari/537.36 XiaoMi/MiuiBrowser/10.8.1\"\n}",
+    "lastUpdateTime": 1678647462242,
+    "loginUrl": "",
+    "respondTime": 4299,
+    "ruleBookInfo": {
+      "author": "class.writer.0@text##\\s+",
+      "coverUrl": "class.f_l@tag.img@src",
+      "intro": "id.infoShort@text",
+      "name": "class.sm@text"
+    },
+    "ruleContent": {
+      "content": "id.tt_text@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.list_1",
+      "bookUrl": "class.name.0@tag.a.0@href##amp;",
+      "coverUrl": "tag.img@src",
+      "name": "class.name.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&areaid=0&type=2&kw={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "🌐 英文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com/wap/index.php",
+    "bookUrlPattern": "",
+    "customOrder": 1564,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "金典英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&type=2&page={{page}}\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2&page={{page}}\n名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2&page={{page}}\n英文励志::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2&page={{page}}\n儿童英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2&page={{page}}\n英文科幻::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2&page={{page}}\n宗教英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 9; zh-cn; MI 6 Build/PKQ1.190118.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.128 Mobile Safari/537.36 XiaoMi/MiuiBrowser/10.8.1\"\n}",
+    "lastUpdateTime": 1672901821013,
+    "loginUrl": "",
+    "respondTime": 4586,
+    "ruleBookInfo": {
+      "author": "class.writer.0@text##\\s+",
+      "coverUrl": "class.f_l@tag.img@src",
+      "intro": "id.infoShort@text",
+      "name": "class.sm@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html##首页(.|\\n)*尾页|\\\\",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.list_1",
+      "bookUrl": "class.name.0@tag.a.0@href##amp;",
+      "coverUrl": "tag.img@src",
+      "name": "class.name.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&areaid=0&type=2&kw={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "英文小说（英）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com/wap",
+    "customButton": false,
+    "customOrder": 222,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "经典小说::http://novel.tingroom.com/wap/?moduleid=1025&catid=1&type=2\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2\n名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2\n励志小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2\n短篇小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=31&type=2\n儿童小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2\n科幻小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2\n宗教小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2",
+    "lastUpdateTime": 1759754353098,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 10424,
+    "ruleBookInfo": {
+      "author": "class.novle@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.zong_list@class.list_1",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "intro": "tag.span@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "http://novel.tingroom.com/wap/&& tag.a@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&type=2&kw={{key}},{\n  \"charset\": \"utf-8\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 英文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com",
+    "bookUrlPattern": "",
+    "customOrder": 96,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "金典英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&type=2&page={{page}}\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2&page={{page}}\n英文名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2&page={{page}}\n英文励志小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2&page={{page}}\n儿童英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2&page={{page}}\n英文科幻小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2&page={{page}}\n宗教英文小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2&page={{page}}",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\",\n\t\"Referer\": \"http://novel.tingroom.com/wap/index.php\"\n}",
+    "lastUpdateTime": 1699815077747,
+    "loginUrl": "",
+    "respondTime": 2088,
+    "ruleBookInfo": {
+      "author": "class.writer.0@text##\\s+",
+      "coverUrl": "class.f_l@tag.img@src",
+      "intro": "id.infoShort@text",
+      "name": "class.sm@text"
+    },
+    "ruleContent": {
+      "content": "id.tt_text@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.list_1",
+      "bookUrl": "class.name.0@tag.a.0@href##amp;",
+      "checkKeyWord": "海底",
+      "coverUrl": "tag.img@src",
+      "name": "class.name.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "/wap/index.php?moduleid=1025&type=2&kw={{key}}",
+    "weight": 62
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 英文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com/wap/index.php",
+    "bookUrlPattern": "",
+    "customOrder": 303,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "金典英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&type=2&page={{page}}\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2&page={{page}}\n名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2&page={{page}}\n英文励志::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2&page={{page}}\n儿童英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2&page={{page}}\n英文科幻::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2&page={{page}}\n宗教英文::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 9; zh-cn; MI 6 Build/PKQ1.190118.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.128 Mobile Safari/537.36 XiaoMi/MiuiBrowser/10.8.1\"\n}",
+    "lastUpdateTime": 1723697906329,
+    "loginUrl": "",
+    "respondTime": 1864,
+    "ruleBookInfo": {
+      "author": "class.writer.0@text##\\s+",
+      "coverUrl": "class.f_l@tag.img@src",
+      "intro": "id.infoShort@text",
+      "name": "class.sm@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html##首页(.|\\n)*尾页|\\\\",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.list_1",
+      "bookUrl": "class.name.0@tag.a.0@href##amp;",
+      "checkKeyWord": "我的",
+      "coverUrl": "tag.img@src",
+      "name": "class.name.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=1&areaid=0&type=2&kw={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "英文小说（英）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://novel.tingroom.com/wap",
+    "customButton": false,
+    "customOrder": 194,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "经典小说::http://novel.tingroom.com/wap/?moduleid=1025&catid=1&type=2\n双语小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=33&type=2\n名人传记::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=32&type=2\n励志小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=6&type=2\n短篇小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=31&type=2\n儿童小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=29&type=2\n科幻小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=30&type=2\n宗教小说::http://novel.tingroom.com/wap/index.php?moduleid=1025&catid=28&type=2",
+    "lastUpdateTime": 1759754353098,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 10424,
+    "ruleBookInfo": {
+      "author": "class.novle@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.zong_list@class.list_1",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "intro": "tag.span@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.listtxt@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "http://novel.tingroom.com/wap/&& tag.a@href"
+    },
+    "searchUrl": "http://novel.tingroom.com/wap/index.php?moduleid=1025&type=2&kw={{key}},{\n  \"charset\": \"utf-8\"\n}",
+    "weight": 0
+  }
+]

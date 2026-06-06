@@ -1,0 +1,42 @@
+[
+  {
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 爱尚",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap.s288.org",
+    "customOrder": 555,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1724910591935,
+    "loginCheckJs": "if (result.code() == 403) {\n  java.initUrl()\n  result = java.getStrResponse()\n} result",
+    "respondTime": 3028,
+    "ruleBookInfo": {
+      "author": ".infotype > p:nth-child(1) > a@text",
+      "intro": ".intro > p:nth-child(3)@html",
+      "kind": ".infotype > p:nth-child(2)@text##类型：",
+      "lastChapter": "{{@@p:nth-child(4) > a@text}}●{{@@.infotype > p:nth-child(3)@text##更新时间：}}",
+      "name": ".cataloginfo > h3@text"
+    },
+    "ruleContent": {
+      "content": "#novelcontent > p@html",
+      "nextContentUrl": ".p3 > a@href",
+      "replaceRegex": "##本章未完.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".author > a@text",
+      "bookList": ".sone",
+      "bookUrl": ".sone > a@href",
+      "checkKeyWord": "星空",
+      "name": ".sone > a@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul:nth-child(2) > li > a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://wap.s288.org/search.php,{\n  \"body\": \"s={{key}}&type=articlename\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

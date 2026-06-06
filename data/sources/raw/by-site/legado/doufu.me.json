@@ -1,0 +1,324 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔰 豆腐文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.doufu.me/",
+    "customOrder": 735,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1680504769821,
+    "respondTime": 9473,
+    "ruleBookInfo": {
+      "author": "class.book_author@text",
+      "wordCount": "class.text-md@text"
+    },
+    "ruleContent": {
+      "content": "class.chapter_text@tag.p@text",
+      "replaceRegex": "##下载豆腐阅读APP,支持正版阅读"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.book-base",
+      "bookUrl": "class.book_sd@tag.a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "img@src",
+      "intro": "class.book_ct@text",
+      "kind": "class.book_subtt@text",
+      "name": "class.book_tt@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "class.list_item@tag.a@text",
+      "chapterUrl": "class.list_item@tag.a@href##$##,{\n  \"webView\": true\n}"
+    },
+    "searchUrl": "search?kd={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "🔰 豆腐文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.doufu.me/",
+    "customOrder": 1109,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1680504769821,
+    "respondTime": 31111,
+    "ruleBookInfo": {
+      "author": "class.book_author@text",
+      "wordCount": "class.text-md@text"
+    },
+    "ruleContent": {
+      "content": "class.chapter_text@tag.p@text",
+      "replaceRegex": "##下载豆腐阅读APP,支持正版阅读"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.book-base",
+      "bookUrl": "class.book_sd@tag.a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "img@src",
+      "intro": "class.book_ct@text",
+      "kind": "class.book_subtt@text",
+      "name": "class.book_tt@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "class.list_item@tag.a@text",
+      "chapterUrl": "class.list_item@tag.a@href##$##,{\n  \"webView\": true\n}"
+    },
+    "searchUrl": "search?kd={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "豆腐文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.doufu.me",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3594,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1716231685252,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1008,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.book_author@text",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.text-md@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.chapter_text@tag.p@text",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##下载豆腐阅读APP,支持正版阅读"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.book-base",
+      "bookUrl": "class.book_sd@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.book_ct@text",
+      "kind": "class.book_subtt@text",
+      "lastChapter": "",
+      "name": "class.book_tt@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "class.list_item@tag.a@text",
+      "chapterUrl": "class.list_item@tag.a@href##$##,{\n  \"webView\": true\n}",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "search?kd={{key}}&page={{page}}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "豆腐文学🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.doufu.me#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2415,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1714635132486,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 516,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.book_author@text",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.text-md@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.chapter_text@tag.p@text",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##下载豆腐阅读APP,支持正版阅读"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.book-base",
+      "bookUrl": "class.book_sd@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.book_ct@text",
+      "kind": "class.book_subtt@text",
+      "lastChapter": "",
+      "name": "class.book_tt@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "class.list_item@tag.a@text",
+      "chapterUrl": "class.list_item@tag.a@href##$##,{\n  \"webView\": true\n}",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "search?kd={{key}}&page={{page}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "豆腐文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.doufu.me#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 465,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1716235609245,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 966,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.book_author@text",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.text-md@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.chapter_text@tag.p@text",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##下载豆腐阅读APP,支持正版阅读"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.book-base",
+      "bookUrl": "class.book_sd@tag.a@href",
+      "coverUrl": "img@src",
+      "intro": "class.book_ct@text",
+      "kind": "class.book_subtt@text",
+      "lastChapter": "",
+      "name": "class.book_tt@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "class.list_item@tag.a@text",
+      "chapterUrl": "class.list_item@tag.a@href##$##,{\n  \"webView\": true\n}",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "search?kd={{key}}&page={{page}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

@@ -1,0 +1,48 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "🚬 第一版主",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.diyibanzhu9.pro",
+    "customOrder": 1345,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678689461684,
+    "loginUrl": "",
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⚡️ 1.3次,搜索链接规则为空,0-1文本",
+    "bookSourceName": "🚬 第一版主",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.diyibanzhu9.pro",
+    "customOrder": 1544,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678689461684,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

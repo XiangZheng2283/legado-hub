@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖爱尚小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.23hh.info/",
+    "customOrder": 650,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 913
+  },
+  {
+    "bookSourceGroup": "校验可用,搜索链接规则为空",
+    "bookSourceName": "🔖爱尚小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.23hh.info/",
+    "customOrder": 650,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 913
+  }
+]

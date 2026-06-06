@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "轻小说百科",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lnovel.org",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1470,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"全部文库\",\"url\":\"/books?page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=3\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"爱情\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=1\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"冒险\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=6\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"搞笑\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=10\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=15\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"魔法\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=2\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"异界\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=17\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"侦探\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=8\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"穿越\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=18\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=4\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"神鬼\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=5\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"后宫\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=12\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=9\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"格斗\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=11\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=7\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"战争\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=16\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"百合\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=20\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"异能\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=14\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"治愈\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=21\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"机战\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=19\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"励志\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=23\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=13\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"历史\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=22\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"纯爱\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=24\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"🎈状态分类🎈\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"连载中\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=15&q%5Bstatus_eq%5D=ongoing\",\"style\":{\"layout_flexBasisPercent\":0.3,\"layout_flexGrow\":1}},\n{\"title\":\"已完结\",\"url\":\"/books?page={{page}}&q%5Bgenres_id_eq%5D=15&q%5Bstatus_eq%5D=completed\",\"style\":{\"layout_flexBasisPercent\":0.3,\"layout_flexGrow\":1}},\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 991,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".text-body-tertiary.0@text",
+      "coverUrl": "https://lnovel.tw{{@@class.w-100 h-100.0@src}}",
+      "intro": "{{@@.card-body@p@text}}",
+      "kind": "{{@@dd.1@a@text}},{{@@dd.2@a@text}}",
+      "lastChapter": "",
+      "name": "h1@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.card-body.0@html##{{title}}",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.col-6 col-md-4 col-md-3 col-lg-6 col-xl-4",
+      "bookUrl": "href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".accordion-item@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/books?page={{page}}&q%5Bname_cont%5D={{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

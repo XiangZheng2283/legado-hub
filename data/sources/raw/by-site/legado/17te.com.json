@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "动漫",
+    "bookSourceName": "特漫网_by_历飞雨",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.17te.com",
+    "customOrder": 568,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 534
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "特漫网_by_历飞雨",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.17te.com",
+    "customOrder": 708,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 534
+  }
+]

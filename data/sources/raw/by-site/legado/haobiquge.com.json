@@ -1,0 +1,24 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,天龙",
+    "bookSourceName": "🍁笔趣阁⑫",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haobiquge.com",
+    "customOrder": 121,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

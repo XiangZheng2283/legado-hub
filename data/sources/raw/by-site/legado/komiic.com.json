@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceGroup": "😈 漫画",
+    "bookSourceName": "😈 komiic",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://komiic.com",
+    "concurrentRate": "2000",
+    "customOrder": 572,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1709949033190,
+    "loginUi": "",
+    "loginUrl": "https://komiic.com/login",
+    "respondTime": 7002,
+    "ruleBookInfo": {
+      "coverUrl": "",
+      "name": "div.text-h6@text"
+    },
+    "ruleContent": {
+      "content": "@js:\nvar x = JSON.parse(result);\nbid=java.get(\"bid\");\ncid=java.get(\"cid\");\nvar options = {\n\t\"headers\": {\n\t\"user-agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36\",\n\t\"referer\": `https://komiic.com/comic/${bid}/chapter/${cid}/images/all`,\n\t\"cookie\": \"mp_187fd3efa614d731e9472e873048c123_mixpanel=%7B%22distinct_id%22%3A%20%22%24device%3A18e1c1d088eedf-09d58c3429424f-b457550-53c31-18e1c1d088eee0%22%2C%22%24device_id%22%3A%20%2218e1c1d088eedf-09d58c3429424f-b457550-53c31-18e1c1d088eee0%22%2C%22%24initial_referrer%22%3A%20%22%24direct%22%2C%22%24initial_referring_domain%22%3A%20%22%24direct%22%7D\"\n\t}};\nlet html = \"\";\nx.data.imagesByChapterId.forEach(image => {\n  let imageUrl = `https://komiic.com/api/image/${image.kid}`;\n  let imgTag = `<img src=\"${imageUrl},${JSON.stringify(options)}\" alt=\"Image\" /><br>`;\n  html += imgTag;\n});\nhtml;",
+      "title": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "$.authors[0].name",
+      "bookList": "$.data.searchComicsAndAuthors.comics",
+      "bookUrl": "$.id\n@js:\nlet bid = result;\njava.put(\"bid\", bid);\n\"https://komiic.com/api/query,\" + JSON.stringify({\n    \"method\": \"POST\",\n    \"headers\": {\n        \"user-agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36\",\n        \"content-type\": \"application/json\"\n    },\n    \"body\": {\n        \"operationName\": \"chapterByComicId\",\n        \"variables\": { \"comicId\": bid },\n        \"query\": \"query chapterByComicId($comicId: ID!) {\\n chaptersByComicId(comicId: $comicId) {\\n id\\n serial\\n type\\n dateCreated\\n dateUpdated\\n size\\n __typename\\n }\\n }\"\n    }\n});\n",
+      "checkKeyWord": "",
+      "coverUrl": "$.imageUrl",
+      "intro": "",
+      "kind": "$.categories[0].name",
+      "lastChapter": "$.lastChapterUpdate",
+      "name": "$.title"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.chaptersByComicId",
+      "chapterName": "$.serial",
+      "chapterUrl": "$.id\n@js:\ncid=result;\njava.put(\"cid\", cid);\n\"https://komiic.com/api/query,\"+JSON.stringify({\n  \"body\": {\n      \"operationName\": \"imagesByChapterId\",\n      \"variables\": {\n        \"chapterId\": cid\n      },\n      \"query\": \"query imagesByChapterId($chapterId: ID!) {\\n  imagesByChapterId(chapterId: $chapterId) {\\n    id\\n    kid\\n    height\\n    width\\n    __typename\\n  }\\n}\"\n  },\n  \"headers\": {\n    \"content-type\": \"application/json\"\n  },\n  \"method\": \"POST\"\n})"
+    },
+    "searchUrl": "https://komiic.com/api/query,{\n  \"body\": {\n  \"operationName\": \"searchComicAndAuthorQuery\",\n  \"variables\": {\n    \"keyword\": {{key}}\n  },\n  \"query\": \"query searchComicAndAuthorQuery($keyword: String!) {\\n  searchComicsAndAuthors(keyword: $keyword) {\\n    comics {\\n      id\\n      title\\n      status\\n      year\\n      imageUrl\\n      authors {\\n        id\\n        name\\n        __typename\\n      }\\n      categories {\\n        id\\n        name\\n        __typename\\n      }\\n      dateUpdated\\n      monthViews\\n      views\\n      favoriteCount\\n      lastBookUpdate\\n      lastChapterUpdate\\n      __typename\\n    }\\n    authors {\\n      id\\n      name\\n      chName\\n      enName\\n      wikiLink\\n      comicCount\\n      views\\n      __typename\\n    }\\n    __typename\\n  }\\n}\"\n},\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

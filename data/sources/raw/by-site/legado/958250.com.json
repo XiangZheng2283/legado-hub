@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "🚬 爱尚文学网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.958250.com",
+    "customOrder": 556,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 474
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🚬 爱尚文学网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.958250.com",
+    "customOrder": 688,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 2,
+    "weight": 474
+  }
+]

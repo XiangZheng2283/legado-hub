@@ -1,0 +1,64 @@
+[
+  {
+    "bookSourceGroup": "🎉 精选,发现,搜索链接规则为空",
+    "bookSourceName": "🎉百里中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.bailizw.com",
+    "customOrder": 881,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "http://www.bailizw.com/account/login",
+    "respondTime": 0,
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "正版",
+    "bookSourceName": "百里中文💰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.bailizw.com/",
+    "bookUrlPattern": "",
+    "customOrder": 81,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部小说::/bk-list/channel_All/<,?pageindex={{page}}>\n男频小说::/bk-list/channel_Male/<,?pageindex={{page}}>\n都市小说::/bk-list/channel_Male/?topcateid=1&subcateid=0&wordsenum=0&freeenum=0&finishenum=0&updateenum=0&pageindex={{page}}\n玄幻小说::/bk-list/channel_Male/?topcateid=2&subcateid=0&wordsenum=0&freeenum=0&finishenum=0&updateenum=0\n仙侠小说::/bk-list/channel_Male/?topcateid=3&subcateid=0&wordsenum=0&freeenum=0&finishenum=0&updateenum=0&pageindex={{page}}\n科幻小说::/bk-list/channel_Male/?topcateid=4&subcateid=0&wordsenum=0&freeenum=0&finishenum=0&updateenum=0&pageindex={{page}}\n奇幻小说::/bk-list/channel_Male/?topcateid=7&subcateid=0&wordsenum=0&freeenum=0&finishenum=0&updateenum=0&pageindex={{page}}\n竞技小说::/bk-list/channel_Male/?topcateid=8&subcateid=0&wordsenum=0&freeenum=0&finishenum=0&updateenum=0&pageindex={{page}}\n女频小说::/bk-list/channel_Female/<,?pageindex={{page}}>",
+    "lastUpdateTime": 1687550520572,
+    "loginUrl": "http://www.bailizw.com/account/login",
+    "respondTime": 5542,
+    "ruleBookInfo": {
+      "author": "class.author fl@text",
+      "coverUrl": "class.pic fl@img@data-original",
+      "intro": "id.intro@text",
+      "kind": "class.tags@text",
+      "lastChapter": "class.chaptername fl@a@text",
+      "name": "",
+      "tocUrl": "text.目录@href",
+      "wordCount": "class.hits@text"
+    },
+    "ruleContent": {
+      "content": "id.j_content@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.dd.0@tag.p.0@tag.a.0@text",
+      "bookList": "class.listboxw@dl||class.secd-rank-list",
+      "bookUrl": "tag.dd.0@tag.a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dd.0@tag.p.1@text",
+      "kind": "tag.dd.0@tag.p.0@tag.a.1@text",
+      "lastChapter": "tag.dd.0@tag.p.2@tag.a@text",
+      "name": "tag.dd.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".cate-list a",
+      "chapterName": "@js:((result.select('em').hasClass('vip')) ? '🔒':'')+result.attr('title')",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.bailizw.com/search?kw={{key}}&pageindex=1",
+    "weight": 0
+  }
+]

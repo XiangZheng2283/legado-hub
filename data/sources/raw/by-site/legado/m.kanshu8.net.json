@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,📖 小说",
+    "bookSourceName": "看书吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.kanshu8.net",
+    "customOrder": 928,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 0
+  }
+]

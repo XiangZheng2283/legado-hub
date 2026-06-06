@@ -1,0 +1,129 @@
+[
+  {
+    "bookSourceComment": "\"error:搜索内容为空并且没有发现\n\"",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "逐浪网手机版",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.zhulang.com",
+    "bookUrlPattern": "",
+    "customOrder": 373,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1659798729284,
+    "loginUrl": "",
+    "respondTime": 1469,
+    "ruleBookInfo": {
+      "author": "class.yellow@text",
+      "coverUrl": "class.bk-info@img@data-src",
+      "intro": "id.bk-brief@p@text",
+      "name": "tag.h3.0@text",
+      "tocUrl": "text.开始阅读@href"
+    },
+    "ruleContent": {
+      "content": "class.rd-txt@p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "h4@text",
+      "bookList": "id.ret-list@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-src",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.idx-ol@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "class.blue.0@option!0@value"
+    },
+    "searchUrl": "https://m.zhulang.com/search/index.html?k={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "逐浪小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.zhulang.com/",
+    "bookUrlPattern": "",
+    "customOrder": 519,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1692440755857,
+    "loginUrl": "",
+    "respondTime": 3745,
+    "ruleBookInfo": {
+      "author": "class.yellow@text",
+      "coverUrl": "class.bk-info@img@data-src",
+      "intro": "id.bk-brief@p@text",
+      "kind": ".tags@a.0:1@text&&.btm-link@em@text##更新",
+      "lastChapter": "",
+      "name": "tag.h3.0@text",
+      "tocUrl": "text.开始阅读@href",
+      "wordCount": ".bk-info@p.3@text"
+    },
+    "ruleContent": {
+      "content": "class.rd-txt@p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "h4@text",
+      "bookList": "id.ret-list@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-src",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.idx-ol@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "class.blue.0@option!0@value"
+    },
+    "searchUrl": "https://m.zhulang.com/search/index.html?k={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\"error:搜索内容为空并且没有发现\n\"",
+    "bookSourceGroup": "",
+    "bookSourceName": "逐浪网手机版",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.zhulang.com",
+    "bookUrlPattern": "",
+    "customOrder": 1264,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1659798729284,
+    "loginUrl": "",
+    "respondTime": 4099,
+    "ruleBookInfo": {
+      "author": "class.yellow@text",
+      "coverUrl": "class.bk-info@img@data-src",
+      "intro": "id.bk-brief@p@text",
+      "name": "tag.h3.0@text",
+      "tocUrl": "text.开始阅读@href"
+    },
+    "ruleContent": {
+      "content": "class.rd-txt@p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "h4@text",
+      "bookList": "id.ret-list@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-src",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.idx-ol@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "class.blue.0@option!0@value"
+    },
+    "searchUrl": "https://m.zhulang.com/search/index.html?k={{key}}",
+    "weight": 0
+  }
+]

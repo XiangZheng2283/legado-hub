@@ -1,0 +1,102 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦幻小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.pan5.la/",
+    "bookUrlPattern": "",
+    "customOrder": 1240,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1686054451280,
+    "loginUrl": "",
+    "respondTime": 2106,
+    "ruleBookInfo": {
+      "author": "class.author fl@text",
+      "coverUrl": "class.pic fl@tag.img@src",
+      "intro": "class.brief_text@text##内容介绍.|阅读.*",
+      "kind": "class.tags.clearfixer@span.0:1@text&&.updatetime.fr@text##更新时间\\s:\\s",
+      "lastChapter": "class.chaptername fl@tag.a.0@text",
+      "name": "class.name fl@text",
+      "tocUrl": "class.tab fl j-content-tab@tag.a.1@href",
+      "wordCount": "class.hits@tag.span.0@text"
+    },
+    "ruleContent": {
+      "content": "@js:\nlist=java.getElements(\"@@id.txt@dd\").toArray().sort((a,b)=>a.attr(\"data-id\")-b.attr(\"data-id\"));\nlist.join('\\n')",
+      "replaceRegex": "##阅读.*最新章节.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "class.secd-rank-list",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "kind": "tag.a.3@text&&tag.p.-1@text##.*\\|\\s|更新",
+      "lastChapter": "tag.p.2@text##最近更新\\s|更新|\\|\\s.*",
+      "name": "tag.a.1@text",
+      "wordCount": "class.clicknum@text##总字数"
+    },
+    "ruleToc": {
+      "chapterList": "@js:\n//获取目录，根据div的data-id排序\nlist=java.getElements(\"@@id.listsss@div\").toArray().sort((a,b)=>a.attr(\"data-id\")-b.attr(\"data-id\"));\n\n//创建数组\nl=[];\n\n\nfor(i in list){\na=list[i].select(\"a\").toArray();\nl=l.concat(a)\n}\n\nl.map(x=>x)",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.pan5.la/search.php?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "梦幻小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.pan5.la/",
+    "bookUrlPattern": "",
+    "customOrder": 1240,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1686054451280,
+    "loginUrl": "",
+    "respondTime": 2502,
+    "ruleBookInfo": {
+      "author": "class.author fl@text",
+      "coverUrl": "class.pic fl@tag.img@src",
+      "intro": "class.brief_text@text##内容介绍.|阅读.*",
+      "kind": "class.tags.clearfixer@span.0:1@text&&.updatetime.fr@text##更新时间\\s:\\s",
+      "lastChapter": "class.chaptername fl@tag.a.0@text",
+      "name": "class.name fl@text",
+      "tocUrl": "class.tab fl j-content-tab@tag.a.1@href",
+      "wordCount": "class.hits@tag.span.0@text"
+    },
+    "ruleContent": {
+      "content": "@js:\nlist=java.getElements(\"@@id.txt@dd\").toArray().sort((a,b)=>a.attr(\"data-id\")-b.attr(\"data-id\"));\nlist.join('\\n')",
+      "replaceRegex": "##阅读.*最新章节.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "class.secd-rank-list",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "kind": "tag.a.3@text&&tag.p.-1@text##.*\\|\\s|更新",
+      "lastChapter": "tag.p.2@text##最近更新\\s|更新|\\|\\s.*",
+      "name": "tag.a.1@text",
+      "wordCount": "class.clicknum@text##总字数"
+    },
+    "ruleToc": {
+      "chapterList": "@js:\n//获取目录，根据div的data-id排序\nlist=java.getElements(\"@@id.listsss@div\").toArray().sort((a,b)=>a.attr(\"data-id\")-b.attr(\"data-id\"));\n\n//创建数组\nl=[];\n\n\nfor(i in list){\na=list[i].select(\"a\").toArray();\nl=l.concat(a)\n}\n\nl.map(x=>x)",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.pan5.la/search.php?key={{key}}",
+    "weight": 0
+  }
+]

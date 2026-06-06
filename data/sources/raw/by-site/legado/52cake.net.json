@@ -1,0 +1,198 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌸 笔趣阁⑲④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.52cake.net",
+    "bookUrlPattern": "http://www.52cake.net/bqg/\\d+/",
+    "customOrder": 569,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1646771755125,
+    "loginUrl": "",
+    "respondTime": 4819,
+    "ruleBookInfo": {
+      "author": "class.fix@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "init": "",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix@tag.p.4@text&&\nclass.fix@tag.p.1@text&&\nclass.fix@tag.p.2@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##章节错误.*并刷新页面。|最快更新.*最新章节！|免费看片APP|美女直播间",
+      "nextContentUrl": "text.下一页.1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": ".s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href",
+      "nextTocUrl": "class.middle@option!0@value"
+    },
+    "searchUrl": "http://www.52cake.net/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍁 笔趣阁⑲④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.52cake.net/",
+    "bookUrlPattern": "http://www.52cake.net/bqg/\\d+/",
+    "customOrder": 617,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678792830408,
+    "loginUrl": "",
+    "respondTime": 17586,
+    "ruleBookInfo": {
+      "author": "class.fix@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "init": "",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix@tag.p.4@text&&\nclass.fix@tag.p.1@text&&\nclass.fix@tag.p.2@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##章节错误.*并刷新页面。|最快更新.*最新章节！|免费看片APP|美女直播间",
+      "nextContentUrl": "text.下一页.1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": ".s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href",
+      "nextTocUrl": "class.middle@option!0@value"
+    },
+    "searchUrl": "http://www.52cake.net/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🌸 笔趣阁⑲④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.52cake.net",
+    "bookUrlPattern": "http://www.52cake.net/bqg/\\d+/",
+    "customOrder": 1038,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1646771755125,
+    "loginUrl": "",
+    "respondTime": 46874,
+    "ruleBookInfo": {
+      "author": "class.fix@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "init": "",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix@tag.p.4@text&&\nclass.fix@tag.p.1@text&&\nclass.fix@tag.p.2@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##章节错误.*并刷新页面。|最快更新.*最新章节！|免费看片APP|美女直播间",
+      "nextContentUrl": "text.下一页.1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": ".s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href",
+      "nextTocUrl": "class.middle@option!0@value"
+    },
+    "searchUrl": "http://www.52cake.net/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🍁 笔趣阁⑲④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.52cake.net/",
+    "bookUrlPattern": "http://www.52cake.net/bqg/\\d+/",
+    "customOrder": 1053,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678792830408,
+    "loginUrl": "",
+    "respondTime": 47822,
+    "ruleBookInfo": {
+      "author": "class.fix@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "init": "",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix@tag.p.4@text&&\nclass.fix@tag.p.1@text&&\nclass.fix@tag.p.2@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##章节错误.*并刷新页面。|最快更新.*最新章节！|免费看片APP|美女直播间",
+      "nextContentUrl": "text.下一页.1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": ".s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href",
+      "nextTocUrl": "class.middle@option!0@value"
+    },
+    "searchUrl": "http://www.52cake.net/ar.php?keyWord={{key}}",
+    "weight": 0
+  }
+]

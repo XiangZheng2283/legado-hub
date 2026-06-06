@@ -1,0 +1,347 @@
+[
+  {
+    "bookSourceComment": "搜索全名",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♛ 读书阁▪︎API #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net#♤yuan",
+    "bookUrlPattern": "",
+    "customOrder": 307,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1678679535476,
+    "loginUrl": "",
+    "respondTime": 4135,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n//java.put(\"url\",url)\noption={\"method\":\"POST\",\"body\":{\"keyword\":key}}\nurl+\"search,\"+JSON.stringify(option)",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\n搜索全名，与读书阁一样",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📖💯读书阁🔖🅰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net",
+    "bookUrlPattern": "",
+    "customOrder": 534,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n\nlist=[{\"title\":\"全部小说\",\"url\":\"rankList?type=全部&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"rankList?type=都市&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"rankList?type=科幻&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"女频小说\",\"url\":\"rankList?type=女频&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"rankList?type=历史&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"rankList?type=网游&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"rankList?type=玄幻&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他小说\",\"url\":\"rankList?type=其他&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"修真小说\",\"url\":\"rankList?type=修真&page={{page}}&state=0\",\"style\":{\"layout_flexGrow\":0.25}}]\n\nlist.forEach(x=>{\n\tx.url=url+x.url\n\t})\nJSON.stringify(list)",
+    "header": "",
+    "lastUpdateTime": 1683168241021,
+    "loginUrl": "",
+    "respondTime": 3882,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&updatetime\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}",
+      "wordCount": "updatetime"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "$.data[*]",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "checkKeyWord": "我的咒灵天下第一",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\njava.log(url)\n//java.put(\"url\",url)\n\nopt={\"method\":\"POST\",\"body\":{\"keyword\":\"{{key}}\"}}\nurl+\"search,\"+JSON.stringify(opt)",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索全名",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♛ 读书阁 #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 1475,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1627904531646,
+    "loginUrl": "",
+    "respondTime": 3499,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n//java.put(\"url\",url)\noption={\"method\":\"POST\",\"body\":{\"keyword\":key}}\nurl+\"search,\"+JSON.stringify(option)",
+    "weight": 60
+  },
+  {
+    "bookSourceComment": "搜索全名",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "读书阁③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net",
+    "bookUrlPattern": "",
+    "customOrder": 63,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1692449747899,
+    "loginUrl": "",
+    "respondTime": 56595,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n//java.put(\"url\",url)\noption={\"method\":\"POST\",\"body\":{\"keyword\":key}}\nurl+\"search,\"+JSON.stringify(option)",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索全名",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "♛ 读书阁▪︎API #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net#♤yuan",
+    "bookUrlPattern": "",
+    "customOrder": 1157,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1678679535476,
+    "loginUrl": "",
+    "respondTime": 55695,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n//java.put(\"url\",url)\noption={\"method\":\"POST\",\"body\":{\"keyword\":key}}\nurl+\"search,\"+JSON.stringify(option)",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索全名",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "♛ 读书阁 #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 1563,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1627904531646,
+    "loginUrl": "",
+    "respondTime": 50854,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime##\\n##·",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n//java.put(\"url\",url)\noption={\"method\":\"POST\",\"body\":{\"keyword\":key}}\nurl+\"search,\"+JSON.stringify(option)",
+    "weight": 60
+  },
+  {
+    "bookSourceComment": "APP\n搜索全名",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 舟默途桐",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zmtt.net",
+    "bookUrlPattern": "",
+    "customOrder": 152,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1680504660055,
+    "loginUrl": "",
+    "respondTime": 2110,
+    "ruleBookInfo": {
+      "author": "author",
+      "init": "data.book",
+      "intro": "intro",
+      "kind": "type&&update_state",
+      "lastChapter": "last_chapter_name&&last_chapter_updatetime\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>",
+      "name": "name",
+      "tocUrl": "/getCataLogs?bookid={{$._id}}&page=1&limit={{$.total_num}}",
+      "wordCount": "last_chapter_updatetime"
+    },
+    "ruleContent": {
+      "content": "data.chapterInfo.content<js>java.aesBase64DecodeToString(result,\"6CE93717FBEA3E4F\",\"AES/CBC/NoPadding\",\"6CE93717FBEA3E4F\")</js>##\\#\\#\\#\\$\\$\\$##<br>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "/bookInfo?bookid={{$._id}}",
+      "checkKeyWord": "我的咒灵天下第一",
+      "coverUrl": "image_url",
+      "intro": "intro",
+      "kind": "type",
+      "lastChapter": "",
+      "name": "name@put:{bid:_id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list",
+      "chapterName": "name",
+      "chapterUrl": "/getContent?bookid=@get:{bid}&chapterid={{$._id}}"
+    },
+    "searchUrl": "@js:\noption={\"method\":\"POST\",\"body\":{\"version\":\"2.0\"}}\nurl=\"http://\"+JSON.parse(java.ajax(\"http://www.zmtt.net/checkUpdate,\"+JSON.stringify(option))).data.url\n//java.put(\"url\",url)\noption={\"method\":\"POST\",\"body\":{\"keyword\":key}}\nurl+\"search,\"+JSON.stringify(option)",
+    "weight": 0
+  }
+]

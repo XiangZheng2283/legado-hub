@@ -1,0 +1,57 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖废文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.feiwen123.com",
+    "customOrder": 621,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 836
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "废文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.feiwen123.com",
+    "bookUrlPattern": "",
+    "customOrder": 777,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1689597952854,
+    "loginUrl": "",
+    "respondTime": 3016,
+    "ruleBookInfo": {
+      "coverUrl": "class.BGsectionOne-top-left@img@src",
+      "intro": "class.BGsectionTwo-bottom@textNodes",
+      "kind": "class.category@tag.a.0@text",
+      "lastChapter": "class.BGsectionThree-content@tag.li.0@a@text",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "<js>\njm=result.match(/\\('\\#C0NTENT'\\)\\.html\\(d\\(\"(.*)\"\\)\\);/)[1];\njms=jm.split(\"\\\", \\\"\");\nkeyiv=java.md5Encode(jms[1]);\nkey=String(keyiv).substring(16);\niv=String(keyiv).substring(0,16);\njava.aesBase64DecodeToString(jms[0],key,\"AES/CBC/PKCS5Padding\",iv)\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.g.1@text",
+      "bookList": "class.SHsectionThree-middle@p",
+      "bookUrl": "tag.span.1@tag.a.0@href",
+      "kind": "class.g.0@text",
+      "name": "tag.span.1@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.BCsectionTwo-top@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search/{{key}}",
+    "weight": 0
+  }
+]

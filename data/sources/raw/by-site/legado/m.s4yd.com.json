@@ -1,0 +1,51 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "盛世阅读网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.s4yd.com",
+    "customOrder": 846,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1679576474920,
+    "respondTime": 2615,
+    "ruleBookInfo": {
+      "author": "tag.p.0@text",
+      "coverUrl": "class.unit-0@img@src",
+      "intro": "tag.p.4@text",
+      "kind": "tag.p.3@text",
+      "lastChapter": "class.other@tag.a@text",
+      "name": "class.tit@tag.div@text",
+      "tocUrl": "text.查看目录@href",
+      "wordCount": "tag.p.1@text"
+    },
+    "ruleContent": {
+      "content": "p@ownText"
+    },
+    "ruleExplore": {
+      "kind": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@tag.span@text",
+      "bookList": "class.flex-left latest-0",
+      "bookUrl": "class.tit@tag.a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "class.unit-0 pic@img@src",
+      "intro": "class.desc@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.tit@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://m.s4yd.com/search/index?w={{key}}",
+    "weight": 0
+  }
+]

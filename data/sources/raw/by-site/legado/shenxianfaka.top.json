@@ -1,0 +1,103 @@
+[
+  {
+    "bookSourceComment": "//搜索间隔30秒\n//备用搜索规则：http://www.shenxianfaka.top/search.html?ie=utf-8&word={{key}}",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 神仙书阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shenxianfaka.top",
+    "customOrder": 561,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"周点击榜\",\"url\":\"/Ranking_weekvisit/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"月点击榜\",\"url\":\"/Ranking_monthvisit/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"总点击榜\",\"url\":\"/Ranking_allvisit/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"周推荐榜\",\"url\":\"/Ranking_weekvote/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"月推荐榜\",\"url\":\"/Ranking_monthvote/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"总推荐榜\",\"url\":\"/Ranking_allvote/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"总收藏榜\",\"url\":\"/Ranking_goodnum/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"总字数榜\",\"url\":\"/Ranking_size/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"最新入库\",\"url\":\"/Ranking_postdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"最近更新\",\"url\":\"/Ranking_lastupdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"玄幻\",\"url\":\"/list/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/list/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/list/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"穿越\",\"url\":\"/list/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"网游\",\"url\":\"/list/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/list/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/list/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"女生\",\"url\":\"/list/8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/list/9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"完本\",\"url\":\"/wanben_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1685774413390,
+    "respondTime": 6693,
+    "ruleBookInfo": {
+      "author": ".small span.0@text",
+      "coverUrl": "#fmimg img@src",
+      "intro": "[property~=og:description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".small span.1:2:4@text##.*：|小说|\\s.*",
+      "lastChapter": ".small a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "#info h1@text",
+      "wordCount": "##字数.([^<]+)##$1###"
+    },
+    "ruleContent": {
+      "content": "style@all&&#nr_content@all\n@js:\njava.log(result)\nnum=result.split('._').length-1\nfor (var i=0;i<num;i++){\n\tresult=result.replace(/.*?\\}/,'')\n\tjava.log(result)\n\ts=result.match(/\\.(_.*?):.*?\".(.*?)\"/)\n\tjava.log(s[1])\n\tjava.log(s[2])\n\ts1=\"<span class=\\\"\"+s[1]+\"\\\"></span>\"\n\tjava.log(s1)\n\ts2=\"%u\"+s[2]\n\tjava.log(s2)\nresult=result.replace(new RegExp(s1,'g'),unescape(s2))\n}\nresult=result.replace(/\\s/g,'').replace(/.*?最新章节！/,'分页合并>').replace(/([^>]+)(天才一秒记住|保存好书签).*/,'').replace(/@神仙书阁/,'').replace(title.replace(/ /,''),'').replace(/「/g,'“').replace(/」/g,'”')",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##(?<=[\\u4e00-\\u9fa5\\dA-Za-z，])\\n*\\s*分页合并>\\n*\\s*|分页合并>|\\s第.*?章"
+    },
+    "ruleExplore": {
+      "author": ".s4@text||.p3@text",
+      "bookList": ".list_ul li||.l li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##https://www.shenxianfaka.top/files/article/image/$2/$1/$1s.jpg###",
+      "kind": ".s5@text&&.pa@text&&.p6@text&&.p5@text##\\[|\\]|小说|\\s.*",
+      "lastChapter": "a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.0@text",
+      "wordCount": ".p4@text##字"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".p3@text",
+      "bookList": ".list_ul li",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##https://www.shenxianfaka.top/files/article/image/$2/$1/$1s.jpg###",
+      "kind": ".p6@text&&.p5@text##\\s.*",
+      "lastChapter": "a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.0@text",
+      "wordCount": ".p4@text"
+    },
+    "ruleToc": {
+      "chapterList": "#list dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.html?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "精华书阁",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "神仙书阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shenxianfaka.top/",
+    "customOrder": 715,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690616949548,
+    "respondTime": 4035,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "@js:\nnum=result.split('\"_').length-1\nfor (var i=0;i<num;i++){\nstr=result.match(/(<span class=\"(_.*?)\".*?span>)/)\nstr2=result.match(str[2]+':.*?\"(.*?)\"')[1].replace(/\\\\/,'%u')\nresult=result.replace(str[1],unescape(str2))\n}\nresult.replace(/[\\r\\n]/g,'').replace(/.*最新章节！/,'').replace(/([^>]+)最快更新.*/,'')",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##精华书阁.*|.*免费阅读.*https.*com.*|为您提供.*请务必保存好书签.|最新章节！|（本章未完，请点击下一页继续阅读）|@|具体最快.*|最快更新.*|看《.*》|[\\(（]本章完[\\)）]|www.*|</a.*|温馨提示.*|域名更换.*|本章未完！|『章节有误？登录后点此报错~』|最快更请.*|神仙书阁.*|@神仙书阁"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".p3@text",
+      "bookList": "class.list_ul@li",
+      "bookUrl": "a.0@href",
+      "kind": ".p6@text",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text",
+      "wordCount": "{{@@.p4@text}}k"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dl.1@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "search.html?searchkey={{key}}",
+    "weight": 0
+  }
+]

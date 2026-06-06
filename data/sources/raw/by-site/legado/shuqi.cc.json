@@ -1,0 +1,210 @@
+[
+  {
+    "bookSourceComment": "//2025.1.21by.◎辞晨◎",
+    "bookSourceGroup": "",
+    "bookSourceName": "书旗小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shuqi.cc",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2208,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nsort=[];\npush=(title,url,type1,type2)=>sort.push({\n\t\ttitle: title,\n\t\turl: url,\n\t\tstyle: {\n\t\t\t\tlayout_flexGrow: type1,\n\t\t\t\tlayout_flexBasisPercent: type2\n\t\t\t}\n\t});\npush(\"全部🌊分类\",null,1,1)\npush(\"🌊全本🌊\",`/full/0_{{page}}.html`,1,1)\n\tarList=[\"玄幻\",\"武侠\",\"都市\",\"历史\",\"网游\",\"科幻\",\"言情\",\"其他\"]\n\tarList.map((tag,index)=>{\n\t\turl=`/list${index+1}/{{page}}.html`;\n\t\tpush(tag, url, 1, 0.25);\n\t\t});\n//java.log(JSON.stringify(sort))\nJSON.stringify(sort)",
+    "exploreScreen": "",
+    "header": "{\n  'User-Agent': \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0\",\n  'sec-ch-ua-platform': \"\\\"Android\\\"\",\n  'origin': \"baseUrl\",\n  'x-requested-with': \"cn.mujiankeji.mbrowser\",\n  'referer': \"baseUrl\",\n  'accept-language': \"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"\n}",
+    "lastUpdateTime": 1769602683387,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 700,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content##\\s",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".font_max@html",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##第\\(\\d+\\/\\d+\\)页|.*\\.com.*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@h3@a@text##\\[|\\].*}},{{@@.book_other!0:-1@text##状态：|更新时间：}}",
+      "lastChapter": "dd.-1@text##最新章节：",
+      "name": "h3@a@text##.*\\]",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book_list2@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "http://www.shuqi.cc/97/97201/",
+      "isVolume": "",
+      "nextTocUrl": "<js>\np=java.getString(\".page-link@html\").match(/\\>\\d\\/(.*?)\\</);\np=p?p[1]:1\n//java.log(p);\npageSum=parseInt(p)\nburl=String(baseUrl)\n//java.log(burl);\nArray.from({length:pageSum-1},(_,i)=>{return burl.replace(/^(.*?)$/,`$1index_${i+2}.html`)})\n</js>",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}&p={{page}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "书旗小说网🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shuqi.cc#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1093,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nsort=[];\npush=(title,url,type1,type2)=>sort.push({\n\t\ttitle: title,\n\t\turl: url,\n\t\tstyle: {\n\t\t\t\tlayout_flexGrow: type1,\n\t\t\t\tlayout_flexBasisPercent: type2\n\t\t\t}\n\t});\npush(\"全部🌊分类\",null,1,1)\npush(\"🌊全本🌊\",`/full/0_{{page}}.html`,1,1)\n\tarList=[\"玄幻\",\"武侠\",\"都市\",\"历史\",\"网游\",\"科幻\",\"言情\",\"其他\"]\n\tarList.map((tag,index)=>{\n\t\turl=`/list${index+1}/{{page}}.html`;\n\t\tpush(tag, url, 1, 0.25);\n\t\t});\n//java.log(JSON.stringify(sort))\nJSON.stringify(sort)",
+    "exploreScreen": "",
+    "header": "{\n  'User-Agent': \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0\",\n  'sec-ch-ua-platform': \"\\\"Android\\\"\",\n  'origin': \"baseUrl\",\n  'x-requested-with': \"cn.mujiankeji.mbrowser\",\n  'referer': \"baseUrl\",\n  'accept-language': \"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"\n}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1200,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content##\\s",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".font_max@html",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##第\\(\\d+\\/\\d+\\)页|.*\\.com.*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@h3@a@text##\\[|\\].*}},{{@@.book_other!0:-1@text##状态：|更新时间：}}",
+      "lastChapter": "dd.-1@text##最新章节：",
+      "name": "h3@a@text##.*\\]",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book_list2@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "http://www.shuqi.cc/97/97201/",
+      "isVolume": "",
+      "nextTocUrl": "<js>\np=java.getString(\".page-link@html\").match(/\\>\\d\\/(.*?)\\</);\np=p?p[1]:1\n//java.log(p);\npageSum=parseInt(p)\nburl=String(baseUrl)\n//java.log(burl);\nArray.from({length:pageSum-1},(_,i)=>{return burl.replace(/^(.*?)$/,`$1index_${i+2}.html`)})\n</js>",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}&p={{page}}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "//2025.1.21by.◎辞晨◎",
+    "bookSourceGroup": "_1yunnain精选",
+    "bookSourceName": "书旗网[伪书旗]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shuqi.cc",
+    "customOrder": 24,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreScreen": "",
+    "exploreUrl": "@js:\nsort=[];\npush=(title,url,type1,type2)=>sort.push({\n\t\ttitle: title,\n\t\turl: url,\n\t\tstyle: {\n\t\t\t\tlayout_flexGrow: type1,\n\t\t\t\tlayout_flexBasisPercent: type2\n\t\t\t}\n\t});\npush(\"全部🌊分类\",null,1,1)\npush(\"🌊全本🌊\",`/full/0_{{page}}.html`,1,1)\n\tarList=[\"玄幻\",\"武侠\",\"都市\",\"历史\",\"网游\",\"科幻\",\"言情\",\"其他\"]\n\tarList.map((tag,index)=>{\n\t\turl=`/list${index+1}/{{page}}.html`;\n\t\tpush(tag, url, 1, 0.25);\n\t\t});\n//java.log(JSON.stringify(sort))\nJSON.stringify(sort)",
+    "header": "{\n  'User-Agent': \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0\",\n  'sec-ch-ua-platform': \"\\\"Android\\\"\",\n  'origin': \"baseUrl\",\n  'x-requested-with': \"cn.mujiankeji.mbrowser\",\n  'referer': \"baseUrl\",\n  'accept-language': \"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"\n}",
+    "lastUpdateTime": 1769001267826,
+    "respondTime": 8870,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content##\\s",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": ".font_max@html",
+      "nextContentUrl": "text.下一章@href",
+      "replaceRegex": "##第\\(\\d+\\/\\d+\\)页|.*\\.com.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "kind": "{{@@h3@a@text##\\[|\\].*}},{{@@.book_other!0:-1@text##状态：|更新时间：}}",
+      "lastChapter": "dd.-1@text##最新章节：",
+      "name": "h3@a@text##.*\\]"
+    },
+    "ruleToc": {
+      "chapterList": ".book_list2@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "http://www.shuqi.cc/97/97201/",
+      "nextTocUrl": "<js>\np=java.getString(\".page-link@html\").match(/\\>\\d\\/(.*?)\\</);\np=p?p[1]:1\n//java.log(p);\npageSum=parseInt(p)\nburl=String(baseUrl)\n//java.log(burl);\nArray.from({length:pageSum-1},(_,i)=>{return burl.replace(/^(.*?)$/,`$1index_${i+2}.html`)})\n</js>"
+    },
+    "searchUrl": "/search.php?q={{key}}&p={{page}}",
+    "weight": 1
+  }
+]

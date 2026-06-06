@@ -1,0 +1,122 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "快眼小说网[j]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biqugej.net/",
+    "bookUrlPattern": "book/\\d+/\\d+/",
+    "customOrder": 822,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Safari/537.36\"\n}",
+    "lastUpdateTime": 1686034768072,
+    "respondTime": 16896,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:title]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##（本章未完，请翻页）|（本章完）|章节错误.*请耐心等待|快眼小说网为你提供.*免费阅读。|http.*net",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##无尽的昏迷过后.*时宇猛地从床上起身.*想要看最新章节.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslist2@li!0",
+      "bookUrl": "class.s2@a@href",
+      "checkKeyWord": "",
+      "coverUrl": "class.s2@a@href##.+\\D((\\d+)\\d{3})\\D.*##https://www.biqugej.net/img/$2/$1.jpg",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "class.s3@a@text##百度搜索.*",
+      "name": "class.s2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|笔趣阁|小说",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "快眼小说网[j]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biqugej.net/",
+    "bookUrlPattern": "book/\\d+/\\d+/",
+    "customOrder": 822,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Safari/537.36\"\n}",
+    "lastUpdateTime": 1686034768072,
+    "respondTime": 3513,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:title]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##（本章未完，请翻页）|（本章完）|章节错误.*请耐心等待|快眼小说网为你提供.*免费阅读。|http.*net",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##无尽的昏迷过后.*时宇猛地从床上起身.*想要看最新章节.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*\\n.*",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.novelslist2@li!0",
+      "bookUrl": "class.s2@a@href",
+      "checkKeyWord": "",
+      "coverUrl": "class.s2@a@href##.+\\D((\\d+)\\d{3})\\D.*##https://www.biqugej.net/img/$2/$1.jpg",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "class.s3@a@text##百度搜索.*",
+      "name": "class.s2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|笔趣阁|小说",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "search.php?keyword={{key}}",
+    "weight": 0
+  }
+]

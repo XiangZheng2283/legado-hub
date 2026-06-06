@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃笔趣阁🎃#79",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zzrx.net#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3127,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 440,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "#info@p.0:1:-1@text##.*?：",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author@a@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": ".update@p@text",
+      "kind": ".cat@text##.*?：",
+      "lastChapter": ".update@a@text",
+      "name": "h4@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".listmain dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/dshifisdhgujdu.html?act=pytohz&ie=utf-8&q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zzrx.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3142,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 462,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "#info@p.0:1:-1@text##.*?：",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author@a@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": ".update@p@text",
+      "kind": ".cat@text##.*?：",
+      "lastChapter": ".update@a@text",
+      "name": "h4@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".listmain dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/dshifisdhgujdu.html?act=pytohz&ie=utf-8&q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

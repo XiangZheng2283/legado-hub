@@ -1,0 +1,154 @@
+[
+  {
+    "bookSourceComment": "http://bgwxc.com\n清奇女频，咦",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 布咕阅读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://app.api.bgwxc.com",
+    "customOrder": 764,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"༺ˇ»`ʚ排行ɞ´«ˇ༻\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1}},{\"title\":\"周收藏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=10&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周点击\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=5&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周推荐\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=15&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总收藏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=7&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总点击\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=2&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=12&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=1&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完本小说\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=3&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=0&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ˇ»`ʚ分类ɞ´«ˇ༻\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1}},{\"title\":\"༺ 同人 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=1&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"影视\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=9&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"动漫\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=10&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"人物\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=11&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"小说\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=12&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=13&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ 纯爱 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=2&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=14&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=15&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=16&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ 言情 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=3&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=17&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=18&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙剑\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=19&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=20&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=21&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1685721869321,
+    "loginUrl": "",
+    "respondTime": 1068,
+    "ruleBookInfo": {
+      "author": "$.author@put:{tid:$.tid}",
+      "coverUrl": "http://buguceshi.oss-cn-shenzhen.aliyuncs.com/{{$.src}}",
+      "init": "$.data.info",
+      "intro": "<p>{{$.text}}</p>",
+      "kind": "{{$.type&&$.state}}\n{{time=java.timeFormat(java.getString('$.updatetime')*1000),java.put('time',String(time).replace(/\\s.*/,'').replace(/\\//g,'-'))}}",
+      "lastChapter": "{{$.new_name}} • @get:{time}",
+      "name": "$.name@put:{nid:$.nid}",
+      "tocUrl": "http://app.api.bgwxc.com/app/novel/menus,{\n  \"body\": \"nid={{$.nid}}&tid={{$.tid}}&sort=0&page=1\",\n  \"method\": \"POST\"\n}",
+      "wordCount": "$.zishu"
+    },
+    "ruleContent": {
+      "content": "$.data.chapter.contentp"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$.data.list||$.data",
+      "bookUrl": "http://app.api.bgwxc.com/app/novel/getNovelInfo,{\n  \"body\": \"nid={{$.nid}}&tid={{$.tid}}&funname=book\",\n  \"method\": \"POST\"\n}",
+      "coverUrl": "http://buguceshi.oss-cn-shenzhen.aliyuncs.com/{{$.src}}",
+      "intro": "$.text##\\n##&nbsp;",
+      "kind": "{{$.type}}\n连载中{{$.timelimitStatus||$.state}}已完结\n{{time=java.getString('$.updatetime'),time=time.match(/^\\d+$/)?java.timeFormat(time):time,java.put('time',String(time).replace(/\\s.*/,'').replace(/\\//g,'-'))}}\n##连载中1|连载中已完结|0已完结",
+      "lastChapter": "$.new_name\n@js:\nresult?result+\" • @get:{time}\":\"\"",
+      "name": "$.name",
+      "wordCount": "$.zishu"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.menu",
+      "chapterName": "$.cname",
+      "chapterUrl": "http://app.api.bgwxc.com/app/novel/contentV2,{\n  \"body\": \"tid=@get:{tid}&nid=@get:{nid}&cid={{$.cid}}&op={{$.isvip}}&sop=0&token=b42a3abf03892d38bb9df2a0bceb8ff16494db8b\",\n  \"method\": \"POST\"\n}",
+      "isPay": "$.isvip",
+      "isVip": "//删掉这行字，vip章节会显示🔓\n$.isvip"
+    },
+    "searchUrl": "http://app.api.bgwxc.com/app/novel/searchNovelV2,{\n  \"body\": \"key={{key}}&type=3&page={{page}}&token=\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "http://bgwxc.com\n清奇女频，咦",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 布咕阅读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://app.api.bgwxc.com",
+    "customOrder": 1258,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"༺ˇ»`ʚ排行ɞ´«ˇ༻\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1}},{\"title\":\"周收藏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=10&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周点击\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=5&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周推荐\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=15&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总收藏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=7&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总点击\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=2&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=12&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=1&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完本小说\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=3&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=0&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ˇ»`ʚ分类ɞ´«ˇ༻\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1}},{\"title\":\"༺ 同人 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=1&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"影视\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=9&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"动漫\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=10&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"人物\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=11&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"小说\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=12&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=13&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ 纯爱 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=2&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=14&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=15&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=16&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ 言情 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=3&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=17&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=18&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙剑\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=19&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=20&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=21&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1685721869321,
+    "loginUrl": "",
+    "respondTime": 2339,
+    "ruleBookInfo": {
+      "author": "$.author@put:{tid:$.tid}",
+      "coverUrl": "http://buguceshi.oss-cn-shenzhen.aliyuncs.com/{{$.src}}",
+      "init": "$.data.info",
+      "intro": "<p>{{$.text}}</p>",
+      "kind": "{{$.type&&$.state}}\n{{time=java.timeFormat(java.getString('$.updatetime')*1000),java.put('time',String(time).replace(/\\s.*/,'').replace(/\\//g,'-'))}}",
+      "lastChapter": "{{$.new_name}} • @get:{time}",
+      "name": "$.name@put:{nid:$.nid}",
+      "tocUrl": "http://app.api.bgwxc.com/app/novel/menus,{\n  \"body\": \"nid={{$.nid}}&tid={{$.tid}}&sort=0&page=1\",\n  \"method\": \"POST\"\n}",
+      "wordCount": "$.zishu"
+    },
+    "ruleContent": {
+      "content": "$.data.chapter.contentp"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$.data.list||$.data",
+      "bookUrl": "http://app.api.bgwxc.com/app/novel/getNovelInfo,{\n  \"body\": \"nid={{$.nid}}&tid={{$.tid}}&funname=book\",\n  \"method\": \"POST\"\n}",
+      "coverUrl": "http://buguceshi.oss-cn-shenzhen.aliyuncs.com/{{$.src}}",
+      "intro": "$.text##\\n##&nbsp;",
+      "kind": "{{$.type}}\n连载中{{$.timelimitStatus||$.state}}已完结\n{{time=java.getString('$.updatetime'),time=time.match(/^\\d+$/)?java.timeFormat(time):time,java.put('time',String(time).replace(/\\s.*/,'').replace(/\\//g,'-'))}}\n##连载中1|连载中已完结|0已完结",
+      "lastChapter": "$.new_name\n@js:\nresult?result+\" • @get:{time}\":\"\"",
+      "name": "$.name",
+      "wordCount": "$.zishu"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.menu",
+      "chapterName": "$.cname",
+      "chapterUrl": "http://app.api.bgwxc.com/app/novel/contentV2,{\n  \"body\": \"tid=@get:{tid}&nid=@get:{nid}&cid={{$.cid}}&op={{$.isvip}}&sop=0&token=b42a3abf03892d38bb9df2a0bceb8ff16494db8b\",\n  \"method\": \"POST\"\n}",
+      "isPay": "$.isvip",
+      "isVip": "//删掉这行字，vip章节会显示🔓\n$.isvip"
+    },
+    "searchUrl": "http://app.api.bgwxc.com/app/novel/searchNovelV2,{\n  \"body\": \"key={{key}}&type=3&page={{page}}&token=\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "http://bgwxc.com\n清奇女频，咦",
+    "bookSourceGroup": "🌙 ΑΡI",
+    "bookSourceName": "🌙 布咕阅读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://app.api.bgwxc.com",
+    "customOrder": 46,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"༺ˇ»`ʚ排行ɞ´«ˇ༻\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1}},{\"title\":\"周收藏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=10&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周点击\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=5&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周推荐\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=15&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总收藏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=7&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总点击\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=2&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=12&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopList,{\\\"body\\\": \\\"page={{page}}&tid=0&type=1&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完本小说\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=3&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=0&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ˇ»`ʚ分类ɞ´«ˇ༻\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1}},{\"title\":\"༺ 同人 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=1&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"影视\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=9&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"动漫\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=10&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"人物\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=11&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"小说\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=12&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=13&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ 纯爱 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=2&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=14&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=15&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=16&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"༺ 言情 ༻\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=3&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"古代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=17&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=18&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙剑\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=19&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=20&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"幻想\",\"url\":\"http://app.api.bgwxc.com/app/home/getHomeTopClassifyList,{\\\"body\\\": \\\"process=0&word=0&chapter=0&copy=0&cost=0&order=24&letter=0&page={{page}}&tid=21&token=\\\",\\\"method\\\": \\\"POST\\\"}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1726567191381,
+    "loginUrl": "",
+    "respondTime": 929,
+    "ruleBookInfo": {
+      "author": "$.author@put:{tid:$.tid}",
+      "coverUrl": "http://buguceshi.oss-cn-shenzhen.aliyuncs.com/{{$.src}}",
+      "init": "$.data.info",
+      "intro": "<p>{{$.text}}</p>",
+      "kind": "{{$.type&&$.state}}\n{{time=java.timeFormat(java.getString('$.updatetime')*1000),java.put('time',String(time).replace(/\\s.*/,'').replace(/\\//g,'-'))}}",
+      "lastChapter": "{{$.new_name}} • @get:{time}",
+      "name": "$.name@put:{nid:$.nid}",
+      "tocUrl": "http://app.api.bgwxc.com/app/novel/menus,{\n  \"body\": \"nid={{$.nid}}&tid={{$.tid}}&sort=0&page=1\",\n  \"method\": \"POST\"\n}",
+      "wordCount": "$.zishu"
+    },
+    "ruleContent": {
+      "content": "$.data.chapter.contentp"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$.data.list||$.data",
+      "bookUrl": "http://app.api.bgwxc.com/app/novel/getNovelInfo,{\n  \"body\": \"nid={{$.nid}}&tid={{$.tid}}&funname=book\",\n  \"method\": \"POST\"\n}",
+      "coverUrl": "http://buguceshi.oss-cn-shenzhen.aliyuncs.com/{{$.src}}",
+      "intro": "$.text##\\n##&nbsp;",
+      "kind": "{{$.type}}\n连载中{{$.timelimitStatus||$.state}}已完结\n{{time=java.getString('$.updatetime'),time=time.match(/^\\d+$/)?java.timeFormat(time):time,java.put('time',String(time).replace(/\\s.*/,'').replace(/\\//g,'-'))}}\n##连载中1|连载中已完结|0已完结",
+      "lastChapter": "$.new_name\n@js:\nresult?result+\" • @get:{time}\":\"\"",
+      "name": "$.name",
+      "wordCount": "$.zishu"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.menu",
+      "chapterName": "$.cname",
+      "chapterUrl": "http://app.api.bgwxc.com/app/novel/contentV2,{\n  \"body\": \"tid=@get:{tid}&nid=@get:{nid}&cid={{$.cid}}&op={{$.isvip}}&sop=0&token=\",\n  \"method\": \"POST\"\n}",
+      "isPay": "$.isvip",
+      "isVip": "//删掉这行字，vip章节会显示🔓\n$.isvip"
+    },
+    "searchUrl": "http://app.api.bgwxc.com/app/novel/searchNovelV2,{\n  \"body\": \"key={{key}}&type=3&page={{page}}&token=\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

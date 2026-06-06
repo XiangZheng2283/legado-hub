@@ -1,0 +1,33 @@
+[
+  {
+    "url": "https://www.biquge365.net/",
+    "name": "笔趣阁365",
+    "comment": "搜索间隔15秒，若搜索结果为空则手动打开网页搜一次后再试",
+    "search": {
+      "url": "https://www.biquge365.net/s.php",
+      "method": "post",
+      "data": "{type: articlename, s: %s}",
+      "result": "body > div.menu > div > ul > li",
+      "bookName": "span.name > a",
+      "author": "span.zuo > a",
+      "category": "span.lei > a",
+      "latestChapter": "span.jie > a",
+      "lastUpdateTime": "span.time"
+    },
+    "book": {
+      "url": "https://www.biquge365.net/book/(.*?)/"
+    },
+    "toc": {
+      "url": "https://www.biquge365.net/newbook/%s/",
+      "item": "body > div.menu > div.border > ul > li > a"
+    },
+    "chapter": {
+      "title": "#neirong > h1",
+      "content": "#txt",
+      "paragraphTagClosed": false,
+      "paragraphTag": "<br>+",
+      "filterTxt": "",
+      "filterTag": "p"
+    }
+  }
+]

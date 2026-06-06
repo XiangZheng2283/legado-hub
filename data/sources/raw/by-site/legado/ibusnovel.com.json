@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖爱巴士",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ibusnovel.com/",
+    "customOrder": 632,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 873
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖爱巴士",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ibusnovel.com/",
+    "customOrder": 788,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 873
+  }
+]

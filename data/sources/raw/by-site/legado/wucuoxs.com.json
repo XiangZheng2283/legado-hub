@@ -1,0 +1,222 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "无错小说①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wucuoxs.com/",
+    "customOrder": 912,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687595429701,
+    "respondTime": 7968,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@p@html##推荐下.*更新快！|推荐一个.*com ！|广个告.*离线朗读！|广个告.*更新快！|.*咪.*咪.*阅.*读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$..search[*]",
+      "bookUrl": "{{$.book_list_url}}",
+      "checkKeyWord": "",
+      "coverUrl": "{{$.cover}}",
+      "intro": "$.intro",
+      "kind": "{{$.uptime}}\n{{$.cate_name}}\n{{$.status_str}}",
+      "lastChapter": "$.latest_chapter_name",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "id.at@tag.td@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//同库(二Ｋ小说)：https://www.sdhear.com",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 无错小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wucuoxs.com",
+    "customOrder": 1164,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693415422023,
+    "respondTime": 2069,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s..:.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#htmlContent@p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author",
+      "bookList": ".search[*]",
+      "bookUrl": ".book_list_url",
+      "coverUrl": ".cover",
+      "intro": ".intro",
+      "kind": ".cate_name&&.status_str&&.uptime",
+      "lastChapter": ".latest_chapter_name##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".book_name"
+    },
+    "ruleToc": {
+      "chapterList": "#at@td@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "无错小说①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wucuoxs.com/",
+    "customOrder": 368,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687595429701,
+    "respondTime": 24424,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@p@html##推荐下.*更新快！|推荐一个.*com ！|广个告.*离线朗读！|广个告.*更新快！|.*咪.*咪.*阅.*读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$..search[*]",
+      "bookUrl": "{{$.book_list_url}}",
+      "checkKeyWord": "",
+      "coverUrl": "{{$.cover}}",
+      "intro": "$.intro",
+      "kind": "{{$.uptime}}\n{{$.cate_name}}\n{{$.status_str}}",
+      "lastChapter": "$.latest_chapter_name",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "id.at@tag.td@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//同库(二Ｋ小说)：https://www.sdhear.com",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 无错小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wucuoxs.com",
+    "customOrder": 1131,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693415422023,
+    "respondTime": 37987,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s..:.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#htmlContent@p@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author",
+      "bookList": ".search[*]",
+      "bookUrl": ".book_list_url",
+      "coverUrl": ".cover",
+      "intro": ".intro",
+      "kind": ".cate_name&&.status_str&&.uptime",
+      "lastChapter": ".latest_chapter_name##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".book_name"
+    },
+    "ruleToc": {
+      "chapterList": "#at@td@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "无错小说①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wucuoxs.com/",
+    "customOrder": -281,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687595429701,
+    "respondTime": 12771,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@p@html##推荐下.*更新快！|推荐一个.*com ！|广个告.*离线朗读！|广个告.*更新快！|.*咪.*咪.*阅.*读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$..search[*]",
+      "bookUrl": "{{$.book_list_url}}",
+      "checkKeyWord": "",
+      "coverUrl": "{{$.cover}}",
+      "intro": "$.intro",
+      "kind": "{{$.uptime}}\n{{$.cate_name}}\n{{$.status_str}}",
+      "lastChapter": "$.latest_chapter_name",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "id.at@tag.td@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  }
+]

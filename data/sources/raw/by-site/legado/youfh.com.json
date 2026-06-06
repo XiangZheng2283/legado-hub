@@ -1,0 +1,30 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖凤凰书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.youfh.com",
+    "customOrder": 648,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 910
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖凤凰书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.youfh.com",
+    "customOrder": 806,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 910
+  }
+]

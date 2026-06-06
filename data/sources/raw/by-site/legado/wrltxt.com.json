@@ -1,0 +1,107 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "4020电子书④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wrltxt.com",
+    "bookUrlPattern": "",
+    "customOrder": 1036,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1692365619196,
+    "loginUrl": "",
+    "respondTime": 2108,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text##作者：",
+      "coverUrl": "img@src",
+      "kind": "class.block_txt2@tag.p.2@a@text",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text",
+      "name": "class.block_txt2@h2@a@text",
+      "tocUrl": "class.block_txt2@tag.a.0@href##-(\\d+).html##http://www.wrltxt.com/read/$1/###"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes##请记住本书.*",
+      "imageStyle": "0",
+      "replaceRegex": "##.未完待续。.|166阅读网|reads;"
+    },
+    "ruleExplore": {
+      "author": "class.s@text##大小.*",
+      "bookList": "//div[5]/div[2]/div/ul/li",
+      "bookUrl": "class.red@href",
+      "intro": "class.u@text",
+      "lastChapter": "tag.div.-1@text",
+      "name": "tag.a.0@text##txt.*"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "tbody@tr!0",
+      "bookUrl": "tag.a.0@href",
+      "kind": "",
+      "lastChapter": "tag.td.2@text",
+      "name": "tag.td.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "//div[5]/div/div[3]/div[2]/ul/li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.wrlwx.com/so.html?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 4020电子书·肆",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wrltxt.com",
+    "bookUrlPattern": "",
+    "customOrder": 455,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1698551639267,
+    "loginUrl": "",
+    "respondTime": 3546,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text##作者：",
+      "coverUrl": "img@src",
+      "kind": "class.block_txt2@tag.p.2@a@text",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text",
+      "name": "class.block_txt2@h2@a@text",
+      "tocUrl": "class.block_txt2@tag.a.0@href##-(\\d+).html##http://www.wrltxt.com/read/$1/###"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes##请记住本书.*",
+      "imageStyle": "0",
+      "replaceRegex": "##.未完待续。.|166阅读网|reads;"
+    },
+    "ruleExplore": {
+      "author": "class.s@text##大小.*",
+      "bookList": "//div[5]/div[2]/div/ul/li",
+      "bookUrl": "class.red@href",
+      "intro": "class.u@text",
+      "lastChapter": "tag.div.-1@text",
+      "name": "tag.a.0@text##txt.*"
+    },
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "tbody@tr!0",
+      "bookUrl": "tag.a.0@href",
+      "kind": "",
+      "lastChapter": "tag.td.2@text",
+      "name": "tag.td.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "//div[5]/div/div[3]/div[2]/ul/li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.wrlwx.com/so.html?q={{key}}",
+    "weight": 0
+  }
+]

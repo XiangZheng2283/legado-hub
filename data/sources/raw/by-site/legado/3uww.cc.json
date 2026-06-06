@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "炫书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.3uww.cc",
+    "customOrder": 473,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 286
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "炫书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.3uww.cc",
+    "customOrder": 586,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1689894773312,
+    "respondTime": 2983,
+    "ruleBookInfo": {
+      "author": "class.downInfoRowL@tag.a.0@text",
+      "coverUrl": "class.downInfoRowL@tag.img@src",
+      "intro": "id.mainSoftIntro@tag.p@text",
+      "name": "id.downInfoTitle@text##TXT.*",
+      "tocUrl": "class.downlistbox@tag.li.1@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.view_content_txt@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.searchTopic@tag.a@text##.*作者：",
+      "bookList": "id.searchmain@tag.div!0",
+      "bookUrl": "class.searchTopic.0@tag.a@href",
+      "kind": "class.searchInfo@tag.a.0@tag.span.0@text",
+      "name": "class.searchTopic@tag.a@text##/作者.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.read_list@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.3uww.cc/search.html?searchtype=novelname&searchkey={{key}}",
+    "weight": 0
+  }
+]

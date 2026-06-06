@@ -1,0 +1,309 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "♜手机TXT小说 #破冰1101",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xiaxs.la/#pb1101",
+    "customOrder": 706,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 509
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "手机小说下载网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xiaxs.la",
+    "customOrder": 985,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "武侠小说::/soft/1/Soft_001_{{page}}.html&&玄幻小说::/soft/2/Soft_002_{{page}}.html&&都市言情::/soft/3/Soft_003_{{page}}.html&&恐怖灵异::/soft/4/Soft_004_{{page}}.html&&现代文学::/soft/5/Soft_005_{{page}}.html&&侦探推理::/soft/6/Soft_006_{{page}}.html&&科幻小说::/soft/7/Soft_007_{{page}}.html&&穿越架空::/soft/9/Soft_009_{{page}}.html&&古典名著::/soft/10/Soft_010_{{page}}.html&&名人自传::/soft/11/Soft_011_{{page}}.html&&历史军事::/soft/12/Soft_012_{{page}}.html&&制作工具::/soft/13/Soft_013_{{page}}.html&&网游小说::/soft/14/Soft_014_{{page}}.html&&推荐小说::http://www.xiaxs.la/soft/best/index_{{page}}.html&&热门小说::http://www.xiaxs.la/soft/hot/index_{{page}}.html&&最新小说::http://www.xiaxs.la/soft/new/index_{{page}}.html&&全本小说::http://www.xiaxs.la/soft/quanben/index_{{page}}.html&&",
+    "lastUpdateTime": 1680976650505,
+    "respondTime": 5076,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "init": "<js>\nvar act=org.jsoup.Jsoup.parse(result).select(\".downButton\").attr(\"href\");\nvar url = \"http://www.xiaxs.la\"+act;\njava.put(\"url\",url);\njava.ajax(url)</js>\n",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "@get:{url}",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#content1@html##.*?www.xiaxs.la.*",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "author": "##作者：([^<]+)<##$1###",
+      "bookList": ".listBox ul li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".u@text",
+      "lastChapter": "tag.a.1@text##最新章节[:：]",
+      "name": "tag.a.0@text##全集"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "em@text",
+      "bookList": ".listBox ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": "a@text##全集"
+    },
+    "ruleToc": {
+      "chapterList": ".pc_list a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.xiaxs.la/search.php?s=&searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "小说下载网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xiaxs.la",
+    "customOrder": 1077,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "武侠小说::/soft/1/Soft_001_{{page}}.html&&玄幻小说::/soft/2/Soft_002_{{page}}.html&&都市言情::/soft/3/Soft_003_{{page}}.html&&恐怖灵异::/soft/4/Soft_004_{{page}}.html&&现代文学::/soft/5/Soft_005_{{page}}.html&&侦探推理::/soft/6/Soft_006_{{page}}.html&&科幻小说::/soft/7/Soft_007_{{page}}.html&&穿越架空::/soft/9/Soft_009_{{page}}.html&&古典名著::/soft/10/Soft_010_{{page}}.html&&名人自传::/soft/11/Soft_011_{{page}}.html&&历史军事::/soft/12/Soft_012_{{page}}.html&&制作工具::/soft/13/Soft_013_{{page}}.html&&网游小说::/soft/14/Soft_014_{{page}}.html&&推荐小说::http://www.xiaxs.la/soft/best/index_{{page}}.html&&热门小说::http://www.xiaxs.la/soft/hot/index_{{page}}.html&&最新小说::http://www.xiaxs.la/soft/new/index_{{page}}.html&&全本小说::http://www.xiaxs.la/soft/quanben/index_{{page}}.html&&",
+    "lastUpdateTime": 1689054734794,
+    "respondTime": 15609,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "init": "<js>\nvar act=org.jsoup.Jsoup.parse(result).select(\".downButton\").attr(\"href\");\nvar url = \"http://www.xiaxs.la\"+act;\njava.put(\"url\",url);\njava.ajax(url)</js>\n",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "@get:{url}",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#content1@html##.*?www.xiaxs.la.*",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "author": "##作者：([^<]+)<##$1###",
+      "bookList": ".listBox ul li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".u@text",
+      "lastChapter": "tag.a.1@text##最新章节[:：]",
+      "name": "tag.a.0@text##全集"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "em@text",
+      "bookList": ".listBox ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": "a@text##全集"
+    },
+    "ruleToc": {
+      "chapterList": ".pc_list a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.xiaxs.la/search.php?s=&searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🎉手机TXT小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xiaxs.la/",
+    "bookUrlPattern": "",
+    "customOrder": 1078,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1679612012107,
+    "loginUrl": "",
+    "respondTime": 10832,
+    "ruleBookInfo": {
+      "author": "class.detail_right@ul@tag.li.5@text##书籍作者：",
+      "coverUrl": "class.detail_pic@img@src",
+      "intro": "class.showInfo@p@text",
+      "kind": "class.detail_right@ul@tag.li.3@text##更新日期：",
+      "lastChapter": "class.detail_right@ul@tag.li.7@a@text",
+      "name": "class.detail_right@h1@text##《|》全集下载",
+      "tocUrl": "text.在线阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.content1@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.block_txt@tag.p.3@text",
+      "bookList": "class.block",
+      "bookUrl": "h2@a@href@js:'https://www.xiaxs.la'+result",
+      "coverUrl": "img@src",
+      "lastChapter": "tag.a.-1@text",
+      "name": "h2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.pc_list.1@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://m.xiaxs.la/search.php?keyword={{key}}&submit=",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♜手机TXT小说 #破冰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xiaxs.la/#♤pb",
+    "bookUrlPattern": "",
+    "customOrder": 1624,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1637257717141,
+    "loginUrl": "",
+    "respondTime": 7727,
+    "ruleBookInfo": {
+      "author": "class.detail_right@ul@tag.li.5@text##书籍作者：",
+      "coverUrl": "class.detail_pic@img@src",
+      "intro": "class.showInfo@p@text",
+      "kind": "class.detail_right@ul@tag.li.3@text##更新日期：",
+      "lastChapter": "class.detail_right@ul@tag.li.7@a@text",
+      "name": "class.detail_right@h1@text##《|》全集下载",
+      "tocUrl": "text.在线阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.content1@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.block_txt@tag.p.3@text",
+      "bookList": "class.block",
+      "bookUrl": "h2@a@href@js:'https://www.xiaxs.la'+result",
+      "coverUrl": "img@src",
+      "kind": "",
+      "lastChapter": "tag.a.-1@text",
+      "name": "h2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.pc_list.1@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://m.xiaxs.la/search.php?keyword={{key}}&submit=",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 手机小说下载网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xiaxs.la",
+    "customOrder": 244,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "武侠小说::/soft/1/Soft_001_{{page}}.html&&玄幻小说::/soft/2/Soft_002_{{page}}.html&&都市言情::/soft/3/Soft_003_{{page}}.html&&恐怖灵异::/soft/4/Soft_004_{{page}}.html&&现代文学::/soft/5/Soft_005_{{page}}.html&&侦探推理::/soft/6/Soft_006_{{page}}.html&&科幻小说::/soft/7/Soft_007_{{page}}.html&&穿越架空::/soft/9/Soft_009_{{page}}.html&&古典名著::/soft/10/Soft_010_{{page}}.html&&名人自传::/soft/11/Soft_011_{{page}}.html&&历史军事::/soft/12/Soft_012_{{page}}.html&&制作工具::/soft/13/Soft_013_{{page}}.html&&网游小说::/soft/14/Soft_014_{{page}}.html&&推荐小说::http://www.xiaxs.la/soft/best/index_{{page}}.html&&热门小说::http://www.xiaxs.la/soft/hot/index_{{page}}.html&&最新小说::http://www.xiaxs.la/soft/new/index_{{page}}.html&&全本小说::http://www.xiaxs.la/soft/quanben/index_{{page}}.html&&",
+    "lastUpdateTime": 1699786515737,
+    "respondTime": 3838,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "init": "<js>\nvar act=org.jsoup.Jsoup.parse(result).select(\".downButton\").attr(\"href\");\nvar url = \"http://www.xiaxs.la\"+act;\njava.put(\"url\",url);\njava.ajax(url)</js>\n",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "@get:{url}",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#content1@html##.*?www.xiaxs.la.*",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "author": "##作者：([^<]+)<##$1###",
+      "bookList": ".listBox ul li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".u@text",
+      "lastChapter": "tag.a.1@text##最新章节[:：]",
+      "name": "tag.a.0@text##全集"
+    },
+    "ruleSearch": {
+      "author": "##作者：(.+)##$1###||\n##作者：##未知###",
+      "bookList": ".listBox ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": "a@text##全集|《|》"
+    },
+    "ruleToc": {
+      "chapterList": ".pc_list a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.xiaxs.la/search.php?s=&searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 手机小说下载网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xiaxs.la",
+    "customOrder": 550,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "武侠小说::/soft/1/Soft_001_{{page}}.html&&玄幻小说::/soft/2/Soft_002_{{page}}.html&&都市言情::/soft/3/Soft_003_{{page}}.html&&恐怖灵异::/soft/4/Soft_004_{{page}}.html&&现代文学::/soft/5/Soft_005_{{page}}.html&&侦探推理::/soft/6/Soft_006_{{page}}.html&&科幻小说::/soft/7/Soft_007_{{page}}.html&&穿越架空::/soft/9/Soft_009_{{page}}.html&&古典名著::/soft/10/Soft_010_{{page}}.html&&名人自传::/soft/11/Soft_011_{{page}}.html&&历史军事::/soft/12/Soft_012_{{page}}.html&&制作工具::/soft/13/Soft_013_{{page}}.html&&网游小说::/soft/14/Soft_014_{{page}}.html&&推荐小说::http://www.xiaxs.la/soft/best/index_{{page}}.html&&热门小说::http://www.xiaxs.la/soft/hot/index_{{page}}.html&&最新小说::http://www.xiaxs.la/soft/new/index_{{page}}.html&&全本小说::http://www.xiaxs.la/soft/quanben/index_{{page}}.html&&",
+    "lastUpdateTime": 1699786356977,
+    "respondTime": 2672,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "init": "<js>\nvar act=org.jsoup.Jsoup.parse(result).select(\".downButton\").attr(\"href\");\nvar url = \"http://www.xiaxs.la\"+act;\njava.put(\"url\",url);\njava.ajax(url)</js>\n",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "@get:{url}",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#content1@html##.*?www.xiaxs.la.*",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "author": "##作者：([^<]+)<##$1###",
+      "bookList": ".listBox ul li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".u@text",
+      "lastChapter": "tag.a.1@text##最新章节[:：]",
+      "name": "tag.a.0@text##全集"
+    },
+    "ruleSearch": {
+      "author": "##作者：(.+)##$1###||\n##作者：##未知###",
+      "bookList": ".listBox ul li[0:9]",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": "a@text##全集|《|》"
+    },
+    "ruleToc": {
+      "chapterList": ".pc_list a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.xiaxs.la/search.php?s=&searchkey={{key}}",
+    "weight": 0
+  }
+]

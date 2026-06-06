@@ -1,0 +1,231 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "话本小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://so.ihuaben.com/search?keyword=我是",
+    "customOrder": 183,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681943269936,
+    "respondTime": 1220,
+    "ruleBookInfo": {
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.text-muted@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2 a@href",
+      "checkKeyWord": "",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "-.chapters p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": ".pagination a@href",
+      "updateTime": ".updateTime@text"
+    },
+    "searchUrl": "https://so.ihuaben.com/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "@chaogei\n时间：2022.12.5",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "话本小说",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://so.ihuaben.com",
+    "customOrder": 184,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"女频\",\"url\":\"https://www.ihuaben.com/girl/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"现代\",\"url\":\"https://www.ihuaben.com/xiandai/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代\",\"url\":\"https://www.ihuaben.com/gudai/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想\",\"url\":\"https://www.ihuaben.com/huanxiang/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"https://www.ihuaben.com/xiaoyuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"穿越\",\"url\":\"https://www.ihuaben.com/chuanyue/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异言情\",\"url\":\"https://www.ihuaben.com/lingyiyanqing/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男频\",\"url\":\"https://www.ihuaben.com/boy/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"短篇\",\"url\":\"https://www.ihuaben.com/duanpian/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"二次元\",\"url\":\"https://www.ihuaben.com/erciyuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异\",\"url\":\"https://www.ihuaben.com/lingyi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"https://www.ihuaben.com/dushi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"https://www.ihuaben.com/xuanhuanqihuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"https://www.ihuaben.com/lishijunshi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"https://www.ihuaben.com/wuxiaxianxia/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏竞技\",\"url\":\"https://www.ihuaben.com/youxijingji/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻末世\",\"url\":\"https://www.ihuaben.com/kehuanmoshi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男频同人\",\"url\":\"https://www.ihuaben.com/nanpintongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"https://www.ihuaben.com/tongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"明星同人\",\"url\":\"https://www.ihuaben.com/mingxingtongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"动漫同人\",\"url\":\"https://www.ihuaben.com/dongmantongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏同人\",\"url\":\"https://www.ihuaben.com/youxitongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"影视同人\",\"url\":\"https://www.ihuaben.com/yingshitongren/clickcount_days_7/{{pge}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"小说同人\",\"url\":\"https://www.ihuaben.com/xiaoshuotongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}\n]",
+    "header": "{\n\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:107.0) Gecko/20100101 Firefox/107.0\"\n}",
+    "lastUpdateTime": 1681943339661,
+    "respondTime": 14802,
+    "ruleBookInfo": {
+      "coverUrl": ".biginfo@.cover@img@src",
+      "kind": "label.bg-dwarning@text&&.HuabenListUL[3]@li@text",
+      "lastChapter": "",
+      "tocUrl": "",
+      "wordCount": ".HuabenListUL.hidden-md.hidden-lg@text"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "author": "a.text-lightgrey@text",
+      "bookList": "ul.list-inline.booklist@li",
+      "bookUrl": "p.text-center@a@href",
+      "coverUrl": "img.suggestCover@src",
+      "kind": "p.hidden-lg.hidden-md@text##标签：",
+      "name": "h3@text"
+    },
+    "ruleSearch": {
+      "author": "a.text-muted@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img.img-rounded@src",
+      "intro": ".clearfix.searchresult-info@p@text",
+      "kind": ".list-inline.text-muted@text",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapterlist@p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "a.btn.btn-default[-1]@href",
+      "updateTime": ".updateTime@text"
+    },
+    "searchUrl": "https://so.ihuaben.com/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "5.6",
+    "bookSourceName": "话本小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://so.ihuaben.com/search?keyword=我是",
+    "customOrder": 52,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681943269936,
+    "respondTime": 1770,
+    "ruleBookInfo": {
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.text-muted@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2 a@href",
+      "checkKeyWord": "",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "-.chapters p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": ".pagination a@href",
+      "updateTime": ".updateTime@text"
+    },
+    "searchUrl": "https://so.ihuaben.com/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "@chaogei\n时间：2022.12.5",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "话本小说②",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://so.ihuaben.com",
+    "customOrder": 54,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"女频\",\"url\":\"https://www.ihuaben.com/girl/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"现代\",\"url\":\"https://www.ihuaben.com/xiandai/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代\",\"url\":\"https://www.ihuaben.com/gudai/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想\",\"url\":\"https://www.ihuaben.com/huanxiang/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"https://www.ihuaben.com/xiaoyuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"穿越\",\"url\":\"https://www.ihuaben.com/chuanyue/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异言情\",\"url\":\"https://www.ihuaben.com/lingyiyanqing/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男频\",\"url\":\"https://www.ihuaben.com/boy/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"短篇\",\"url\":\"https://www.ihuaben.com/duanpian/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"二次元\",\"url\":\"https://www.ihuaben.com/erciyuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异\",\"url\":\"https://www.ihuaben.com/lingyi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"https://www.ihuaben.com/dushi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"https://www.ihuaben.com/xuanhuanqihuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"https://www.ihuaben.com/lishijunshi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"https://www.ihuaben.com/wuxiaxianxia/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏竞技\",\"url\":\"https://www.ihuaben.com/youxijingji/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻末世\",\"url\":\"https://www.ihuaben.com/kehuanmoshi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男频同人\",\"url\":\"https://www.ihuaben.com/nanpintongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"https://www.ihuaben.com/tongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"明星同人\",\"url\":\"https://www.ihuaben.com/mingxingtongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"动漫同人\",\"url\":\"https://www.ihuaben.com/dongmantongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏同人\",\"url\":\"https://www.ihuaben.com/youxitongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"影视同人\",\"url\":\"https://www.ihuaben.com/yingshitongren/clickcount_days_7/{{pge}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"小说同人\",\"url\":\"https://www.ihuaben.com/xiaoshuotongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}\n]",
+    "header": "{\n\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:107.0) Gecko/20100101 Firefox/107.0\"\n}",
+    "lastUpdateTime": 1692373714292,
+    "respondTime": 17111,
+    "ruleBookInfo": {
+      "coverUrl": ".biginfo@.cover@img@src",
+      "kind": "label.bg-dwarning@text&&.HuabenListUL[3]@li@text",
+      "lastChapter": "",
+      "tocUrl": "",
+      "wordCount": ".HuabenListUL.hidden-md.hidden-lg@text"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "author": "a.text-lightgrey@text",
+      "bookList": "ul.list-inline.booklist@li",
+      "bookUrl": "p.text-center@a@href",
+      "coverUrl": "img.suggestCover@src",
+      "kind": "p.hidden-lg.hidden-md@text##标签：",
+      "name": "h3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.text-muted@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img.img-rounded@src",
+      "intro": ".clearfix.searchresult-info@p@text",
+      "kind": ".list-inline.text-muted@text",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapterlist@p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "a.btn.btn-default[-1]@href",
+      "updateTime": ".updateTime@text"
+    },
+    "searchUrl": "https://so.ihuaben.com/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "@chaogei\n时间：2022.12.5",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 话本小说",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://so.ihuaben.com",
+    "customOrder": 265,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"女频\",\"url\":\"https://www.ihuaben.com/girl/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"现代\",\"url\":\"https://www.ihuaben.com/xiandai/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代\",\"url\":\"https://www.ihuaben.com/gudai/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"幻想\",\"url\":\"https://www.ihuaben.com/huanxiang/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"https://www.ihuaben.com/xiaoyuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"穿越\",\"url\":\"https://www.ihuaben.com/chuanyue/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异言情\",\"url\":\"https://www.ihuaben.com/lingyiyanqing/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男频\",\"url\":\"https://www.ihuaben.com/boy/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"短篇\",\"url\":\"https://www.ihuaben.com/duanpian/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"二次元\",\"url\":\"https://www.ihuaben.com/erciyuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"灵异\",\"url\":\"https://www.ihuaben.com/lingyi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"https://www.ihuaben.com/dushi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"https://www.ihuaben.com/xuanhuanqihuan/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"https://www.ihuaben.com/lishijunshi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"https://www.ihuaben.com/wuxiaxianxia/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏竞技\",\"url\":\"https://www.ihuaben.com/youxijingji/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻末世\",\"url\":\"https://www.ihuaben.com/kehuanmoshi/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男频同人\",\"url\":\"https://www.ihuaben.com/nanpintongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"https://www.ihuaben.com/tongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"明星同人\",\"url\":\"https://www.ihuaben.com/mingxingtongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"动漫同人\",\"url\":\"https://www.ihuaben.com/dongmantongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏同人\",\"url\":\"https://www.ihuaben.com/youxitongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"影视同人\",\"url\":\"https://www.ihuaben.com/yingshitongren/clickcount_days_7/{{pge}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"小说同人\",\"url\":\"https://www.ihuaben.com/xiaoshuotongren/clickcount_days_7/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}\n]",
+    "header": "{\n\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:107.0) Gecko/20100101 Firefox/107.0\"\n}",
+    "lastUpdateTime": 1697767648892,
+    "respondTime": 1903,
+    "ruleBookInfo": {
+      "coverUrl": ".biginfo@.cover@img@src",
+      "kind": "label.bg-dwarning@text&&.HuabenListUL[3]@li@text",
+      "lastChapter": "",
+      "tocUrl": "",
+      "wordCount": ".HuabenListUL.hidden-md.hidden-lg@text"
+    },
+    "ruleContent": {
+      "content": "#contentsource@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "author": "a.text-lightgrey@text",
+      "bookList": "ul.list-inline.booklist@li",
+      "bookUrl": "p.text-center@a@href",
+      "coverUrl": "img.suggestCover@src",
+      "kind": "p.hidden-lg.hidden-md@text##标签：",
+      "name": "h3@text"
+    },
+    "ruleSearch": {
+      "author": "a.text-muted@text",
+      "bookList": ".searchresult",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img.img-rounded@src",
+      "intro": ".clearfix.searchresult-info@p@text",
+      "kind": ".list-inline.text-muted@text",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapterlist@p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "a.btn.btn-default[-1]@href",
+      "updateTime": ".updateTime@text"
+    },
+    "searchUrl": "/search?keyword={{key}}",
+    "weight": 0
+  }
+]

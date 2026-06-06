@@ -1,0 +1,120 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "有声",
+    "bookSourceName": "有声听书网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://m.ysts.cc/",
+    "bookUrlPattern": "https://www.ysts5.com/tingshu/\\d+/",
+    "customOrder": 1172,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"最新排行\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"玄幻有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=1&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声小品\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=2&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"综艺娱乐\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=3&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"长篇评书\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=4&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=5&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"百家讲坛\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=6&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=7&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"儿童故事\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=8&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游竞技\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=9&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=11&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"职场有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=12&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=14&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"人气排行\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"玄幻有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=1&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声小品\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=2&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"综艺娱乐\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=3&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"长篇评书\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=4&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=5&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"百家讲坛\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=6&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=7&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"儿童故事\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=8&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游竞技\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=9&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=11&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"职场有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=12&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=14&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "header": "",
+    "lastUpdateTime": 1684509467066,
+    "loginUrl": "",
+    "respondTime": 11559,
+    "ruleBookInfo": {
+      "author": "class.book-info@tag.dd.3@text##演播：",
+      "coverUrl": "class.book-img@img@src",
+      "intro": "class.book-des@text",
+      "kind": "class.book-info@tag.dd.1@a@text&&\nclass.book-info@tag.dd.2@a@text&&\nclass.book-info@tag.dd.5@text##时间：",
+      "lastChapter": "class.book-info@tag.dd.4@text##状态：|更至",
+      "name": "class.book-info@tag.dt@h1@text##有声小说"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "replaceRegex": "",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "$.boyin",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://www.ysts5.com{$.url}",
+      "coverUrl": "https://www.ysts5.com{{$.pic}}",
+      "intro": "$.content",
+      "kind": "{{$.author}}\n{{$.serialize_text}}",
+      "lastChapter": "$.chapter_title",
+      "name": "$.title"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.boyin.name",
+      "bookList": "$.[*]",
+      "bookUrl": "https://www.ysts.cc{$..url}",
+      "coverUrl": "https://www.ysts5.com{$..cover}",
+      "intro": "$..intro",
+      "kind": "",
+      "lastChapter": "$.last.name",
+      "name": "$..name##\\s.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.playlist@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:'https://www.ysts.cc'+result+',{webView:“true”}'",
+      "nextTocUrl": "class.hd-sel@option!0@value"
+    },
+    "searchUrl": "https://m.ysts.cc/api/ajax/solist?word={{key}}&type=name&page={{page}}&order=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "有声",
+    "bookSourceName": "有声听书网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "https://m.ysts.cc/",
+    "bookUrlPattern": "https://www.ysts5.com/tingshu/\\d+/",
+    "customOrder": 184,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"最新排行\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"玄幻有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=1&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声小品\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=2&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"综艺娱乐\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=3&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"长篇评书\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=4&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=5&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"百家讲坛\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=6&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=7&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"儿童故事\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=8&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游竞技\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=9&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=11&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"职场有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=12&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=14&order=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"人气排行\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"玄幻有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=1&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"相声小品\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=2&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"综艺娱乐\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=3&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"长篇评书\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=4&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=5&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"百家讲坛\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=6&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=7&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"儿童故事\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=8&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游竞技\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=9&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=11&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"职场有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=12&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他有声\",\"url\":\"https://m.ysts5.com/api/ajax/list?sort=1&key=14&order=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "header": "",
+    "lastUpdateTime": 1684509467066,
+    "loginUrl": "",
+    "respondTime": 180000,
+    "ruleBookInfo": {
+      "author": "class.book-info@tag.dd.3@text##演播：",
+      "coverUrl": "class.book-img@img@src",
+      "intro": "class.book-des@text",
+      "kind": "class.book-info@tag.dd.1@a@text&&\nclass.book-info@tag.dd.2@a@text&&\nclass.book-info@tag.dd.5@text##时间：",
+      "lastChapter": "class.book-info@tag.dd.4@text##状态：|更至",
+      "name": "class.book-info@tag.dt@h1@text##有声小说"
+    },
+    "ruleContent": {
+      "content": "<js>result</js>",
+      "replaceRegex": "",
+      "sourceRegex": ".*\\.(mp3|m4a).*"
+    },
+    "ruleExplore": {
+      "author": "$.boyin",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://www.ysts5.com{$.url}",
+      "coverUrl": "https://www.ysts5.com{{$.pic}}",
+      "intro": "$.content",
+      "kind": "{{$.author}}\n{{$.serialize_text}}",
+      "lastChapter": "$.chapter_title",
+      "name": "$.title"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.boyin.name",
+      "bookList": "$.[*]",
+      "bookUrl": "https://www.ysts.cc{$..url}",
+      "coverUrl": "https://www.ysts5.com{$..cover}",
+      "intro": "$..intro",
+      "kind": "",
+      "lastChapter": "$.last.name",
+      "name": "$..name##\\s.*"
+    },
+    "ruleToc": {
+      "chapterList": "class.playlist@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href@js:'https://www.ysts.cc'+result+',{webView:“true”}'",
+      "nextTocUrl": "class.hd-sel@option!0@value"
+    },
+    "searchUrl": "https://m.ysts.cc/api/ajax/solist?word={{key}}&type=name&page={{page}}&order=1",
+    "weight": 0
+  }
+]

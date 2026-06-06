@@ -1,0 +1,157 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "豆腐app",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.doufuyuedu.com/",
+    "customOrder": 1393,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1673193497788,
+    "loginUrl": "",
+    "respondTime": 1318,
+    "ruleBookInfo": {
+      "coverUrl": "",
+      "intro": "//*[@property=\"og:description\"]/@ content@js:java.put('id','{{//meta[@name=\"csrf-token\"]/@content}}');result.replace(/下载豆腐阅读APP,支持正版阅读/g,'')",
+      "lastChapter": "class.list-inline-3.-1@tag.li.-1@html<js>String(result).replace(/<i class=\"icon icon-lock-on fr\"><\\/i>/g,'🔒').replace(/<li class=\"list_item\">/g,'').replace(/<a href=\"[^\"]+\">\\s*/g,'').replace(/<\\/a>/g,'').replace(/<\\/li>/g,'').replace(/^\\s/,'')\n</js>",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$.chapter.content##下载豆腐阅读APP,支持正版阅读|TBC"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.user.name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://www.doufuyuedu.com/novel-{{$.id}}",
+      "coverUrl": "$.with_image_w",
+      "intro": "$.des",
+      "kind": "$.tags[*].name",
+      "name": "$.title"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "<js>String(result).replace(/<i class=\"icon icon-lock-on fr\"><\\/i>/g,'🔒').replace(/<li class=\"list_item\">/g,'').replace(/<a href=\"[^\"]+\">\\s*/g,'').replace(/<\\/a>/g,'').replace(/<\\/li>/g,'').replace(/^\\s/,'')\n</js>",
+      "chapterUrl": "a@href##(\\d+)##https://m.doufuyuedu.com/api/getChapter,{\"method\": \"POST\",\"body\": \"chapterId=$1\",\"headers\":{\"X-CSRF-TOKEN\":\"@get:{id}\"}}###",
+      "isVip": ""
+    },
+    "searchUrl": "http://api.doufuyuedu.com/index.php/search/content?keyword={{key}}&start=0&rows={{page*20}}&types=18",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "💰 豆腐阅读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.doufuyuedu.com",
+    "customOrder": 299,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1661887116250,
+    "loginUi": "",
+    "loginUrl": "https://m.doufuyuedu.com/login",
+    "respondTime": 3254,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": "🏷️   {{@.book_tags.0@text}}{{'\\n'+'​'}}\n{{@.hidden@html}}##下载豆腐阅读APP,支持正版阅读",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": ".see_all_catalogue@href",
+      "wordCount": ".book_profile@textNodes##\\s.*"
+    },
+    "ruleContent": {
+      "content": ".chapter_ct@p@text",
+      "replaceRegex": "##下载豆腐阅读APP,支持正版阅读"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": ".book_author@text",
+      "bookList": ".book",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-src",
+      "intro": ".book_ct@text##\\s",
+      "kind": ".book_tags a@text",
+      "name": ".book_tt@text"
+    },
+    "ruleToc": {
+      "chapterList": ".catalogue li a",
+      "chapterName": "text",
+      "chapterUrl": "href##$##,{'webView': true}",
+      "isVip": "i@html"
+    },
+    "searchUrl": "/search?keyword={{key}}&type=1&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⭐️小说",
+    "bookSourceName": "豆腐app",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.doufuyuedu.com/",
+    "customOrder": 1682,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1673193497788,
+    "loginUrl": "",
+    "respondTime": 1860,
+    "ruleBookInfo": {
+      "coverUrl": "",
+      "intro": "//*[@property=\"og:description\"]/@ content@js:java.put('id','{{//meta[@name=\"csrf-token\"]/@content}}');result.replace(/下载豆腐阅读APP,支持正版阅读/g,'')",
+      "lastChapter": "class.list-inline-3.-1@tag.li.-1@html<js>String(result).replace(/<i class=\"icon icon-lock-on fr\"><\\/i>/g,'🔒').replace(/<li class=\"list_item\">/g,'').replace(/<a href=\"[^\"]+\">\\s*/g,'').replace(/<\\/a>/g,'').replace(/<\\/li>/g,'').replace(/^\\s/,'')\n</js>",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$.chapter.content##下载豆腐阅读APP,支持正版阅读|TBC"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.user.name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://www.doufuyuedu.com/novel-{{$.id}}",
+      "coverUrl": "$.with_image_w",
+      "intro": "$.des",
+      "kind": "$.tags[*].name",
+      "name": "$.title"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-inline-3@li",
+      "chapterName": "<js>String(result).replace(/<i class=\"icon icon-lock-on fr\"><\\/i>/g,'🔒').replace(/<li class=\"list_item\">/g,'').replace(/<a href=\"[^\"]+\">\\s*/g,'').replace(/<\\/a>/g,'').replace(/<\\/li>/g,'').replace(/^\\s/,'')\n</js>",
+      "chapterUrl": "a@href##(\\d+)##https://m.doufuyuedu.com/api/getChapter,{\"method\": \"POST\",\"body\": \"chapterId=$1\",\"headers\":{\"X-CSRF-TOKEN\":\"@get:{id}\"}}###",
+      "isVip": ""
+    },
+    "searchUrl": "http://api.doufuyuedu.com/index.php/search/content?keyword={{key}}&start=0&rows={{page*20}}&types=18",
+    "weight": 0
+  }
+]

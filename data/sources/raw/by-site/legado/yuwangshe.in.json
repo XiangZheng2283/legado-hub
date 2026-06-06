@@ -1,0 +1,151 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔴新欲望社[分页]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://yuwangshe.in",
+    "customOrder": 1130,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::/top/allvisit_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n字数排行::/top/size_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n最新入库::/top/postdate_{{page}}/\n最近更新::/top/lastupdate_{{page}}/\n玄幻奇幻::/sort/1_{{page}}/\n武侠仙侠::/sort/2_{{page}}/\n都市青春::/sort/3_{{page}}/\n科幻悬疑::/sort/4_{{page}}/\n穿越历史::/sort/5_{{page}}/\n耽美纯情::/sort/6_{{page}}/\n游戏竞技::/sort/7_{{page}}/\n精品其他::/sort/8_{{page}}/\n完本小说::/full/{{page}}/",
+    "lastUpdateTime": 1676833373535,
+    "respondTime": 7579,
+    "ruleBookInfo": {
+      "author": ".options a.0@text",
+      "intro": ".bookinfo_intro@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".title a.1:2@text&&.options span.1@text##\\s.*",
+      "lastChapter": ".update a@text##最新章节",
+      "name": "#info h1@text",
+      "tocUrl": "text.查看全部目录@href"
+    },
+    "ruleContent": {
+      "content": "#htmlContent@html"
+    },
+    "ruleExplore": {
+      "author": ".s4@text",
+      "bookList": ".news li",
+      "bookUrl": "a.0@href",
+      "kind": ".s1@text",
+      "name": ".s2@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".cover p",
+      "bookUrl": "a.1@href",
+      "kind": "a.0@text##\\[|\\]",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "#all_chapter li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"type=articlename&s={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: Timed out waiting for 60000 ms",
+    "bookSourceGroup": "校验可用,校验超时",
+    "bookSourceName": "🔴新欲望社[分页]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://yuwangshe.in",
+    "customOrder": 1130,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::/top/allvisit_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n字数排行::/top/size_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n最新入库::/top/postdate_{{page}}/\n最近更新::/top/lastupdate_{{page}}/\n玄幻奇幻::/sort/1_{{page}}/\n武侠仙侠::/sort/2_{{page}}/\n都市青春::/sort/3_{{page}}/\n科幻悬疑::/sort/4_{{page}}/\n穿越历史::/sort/5_{{page}}/\n耽美纯情::/sort/6_{{page}}/\n游戏竞技::/sort/7_{{page}}/\n精品其他::/sort/8_{{page}}/\n完本小说::/full/{{page}}/",
+    "lastUpdateTime": 1676833373535,
+    "respondTime": 120138,
+    "ruleBookInfo": {
+      "author": ".options a.0@text",
+      "intro": ".bookinfo_intro@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".title a.1:2@text&&.options span.1@text##\\s.*",
+      "lastChapter": ".update a@text##最新章节",
+      "name": "#info h1@text",
+      "tocUrl": "text.查看全部目录@href"
+    },
+    "ruleContent": {
+      "content": "#htmlContent@html"
+    },
+    "ruleExplore": {
+      "author": ".s4@text",
+      "bookList": ".news li",
+      "bookUrl": "a.0@href",
+      "kind": ".s1@text",
+      "name": ".s2@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".cover p",
+      "bookUrl": "a.1@href",
+      "kind": "a.0@text##\\[|\\]",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "#all_chapter li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"type=articlename&s={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 新雨王社",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yuwangshe.in",
+    "bookUrlPattern": "https://www.yuwangshe.in/book/\\d+",
+    "customOrder": 393,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1735653464519,
+    "respondTime": 4401,
+    "ruleBookInfo": {
+      "author": "span.p_author@a@text",
+      "coverUrl": "#bookimg img@src",
+      "intro": "#bookintro > p:nth-child(1)@html",
+      "kind": "#count > ul > li:nth-child(1) > span@text&&\n#uptime > span@text",
+      "lastChapter": "",
+      "name": ".d_title h1@text",
+      "tocUrl": "",
+      "wordCount": "#count > ul > li:nth-child(2) > span@text"
+    },
+    "ruleContent": {
+      "content": "#TextContent@html"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "kind": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "a.0@href\n<js>\nlet url = result.includes(\"http\") ? result : source.key+result;\njava.log(url);\nlet html = java.ajax(url);\njava.put(\"html\", html);\n</js>\nspan.p_author@a@text",
+      "bookList": "#sitebox dl[0:4]",
+      "bookUrl": "a.0@href",
+      "coverUrl": "<js>java.get('html')</js>\n#bookimg > img@src",
+      "intro": "<js>java.get('html')</js>\n#bookintro > p:nth-child(1)@html",
+      "kind": "<js>java.get('html')</js>\n#count > ul > li:nth-child(1) > span@text&&\n#uptime > span@text",
+      "name": "a.1@text",
+      "wordCount": "<js>java.get('html')</js>\n#count > ul > li:nth-child(2) > span@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterList > li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&searchtype=articlename&Submit=\"\n}",
+    "weight": 0
+  }
+]

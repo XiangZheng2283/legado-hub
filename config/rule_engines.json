@@ -1,0 +1,12 @@
+{
+  "engines": [
+    {
+      "id": "legado",
+      "name": "阅读/Legado 规则引擎",
+      "type": "legado",
+      "enabled": true,
+      "default": true,
+      "description": "独立执行阅读/Legado 书源规则，负责搜索、详情、目录、正文解析。"
+    }
+  ]
+}

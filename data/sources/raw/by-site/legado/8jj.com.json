@@ -1,0 +1,99 @@
+[
+  {
+    "bookSourceComment": "天天gg制作",
+    "bookSourceGroup": "☣️精选senhora,☣️漫画lateral,🎨漫画",
+    "bookSourceName": "八极漫画",
+    "bookSourceType": 2,
+    "bookSourceUrl": "http://www.8jj.com",
+    "bookUrlPattern": "",
+    "customOrder": 205,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1648560062081,
+    "loginUrl": "http://www.8jj.com",
+    "respondTime": 2395,
+    "ruleBookInfo": {
+      "author": "class.csly1z z@tag.a.3@text&&class.csly1z z@tag.a.4@text",
+      "coverUrl": "class.cs1z@tag.img@src",
+      "init": "",
+      "intro": "class.cs1y3@text##^.*?简介：",
+      "kind": "class.csly1z z@tag.a.1@text&&class.csly1z z@tag.a.2@text",
+      "lastChapter": "class.nr6.0@tag.a.0@text",
+      "name": "class.csly1z@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "<js>\neval(eval(result.match(/(eval.*?\\))\\s*<\\//)[1].replace(/^eval/,'')).replace(/;.+/,''))\njava.log('key:'+guidkey)\n\ncid=result.match(/cid\\s*=\\s*(\\d+)/)[1]\njava.log('cid:'+cid)\n\nimagecount=result.match(/imagecount\\s*=\\s*(\\d+)/)[1]\n\n\nurl=baseUrl+'chapterimagefun.ashx?d='+new Date()+\",\"\n\nbody='cid='+cid+'&page=1&key='+guidkey+'&showcount=5'\n\noptions={\n\"method\":\"post\",\n\"X-Requested-With\":\"XMLHttpRequest\",\n\"headers\": {\"Referer\": baseUrl,\"Cookie\":\"showcount=5; norefresh=true; autosize=false\"},\n\"body\": String(body)\n}\n\nresponse=String(java.ajax(url+JSON.stringify(options)))\n\nif(response){\neval(response)\npicarr=dm5imagefun()\njava.log('图片总数:'+imagecount)\njava.log('请求图片总数'+picarr.length)\npicarr.map(a=>'<img src=\"'+a+',{\"headers\": {\"Referer\":\"{{baseUrl}}\"}}\">').join(\"\\n\")}else{\"图片防盗了\"}\n</js>",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.huih.0@text@js:\norg.jsoup.Jsoup.parse(result).text()",
+      "bookList": "class.ssnrk||class.cover",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.img@src",
+      "kind": "class.huih.1@text",
+      "lastChapter": "class.sr_dlj@tag.a.0@text||tag.a.1@text##\\[|\\]",
+      "name": "tag.a.0@text##1-.*"
+    },
+    "ruleToc": {
+      "chapterList": "-id.cbc_1@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.8jj.com/search?page={{page}}&title={{key}}&language=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "天天gg制作",
+    "bookSourceGroup": "🎨漫画,☣️漫画lateral",
+    "bookSourceName": "✐ 八极漫画 #Haxc",
+    "bookSourceType": 2,
+    "bookSourceUrl": "http://www.8jj.com#♤Haxc",
+    "bookUrlPattern": "",
+    "customOrder": 1155,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1618124446305,
+    "loginUrl": "http://www.8jj.com",
+    "respondTime": 1699,
+    "ruleBookInfo": {
+      "author": "class.csly1z z@tag.a.3@text&&class.csly1z z@tag.a.4@text",
+      "coverUrl": "class.cs1z@tag.img@src",
+      "intro": "class.cs1y3@text##^.*?简介：",
+      "kind": "class.csly1z z@tag.a.1@text&&class.csly1z z@tag.a.2@text",
+      "lastChapter": "class.nr6.0@tag.a.0@text",
+      "name": "class.csly1z@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "<js>\neval(eval(result.match(/(eval.*?\\))\\s*<\\//)[1].replace(/^eval/,'')).replace(/;.+/,''))\njava.log('key:'+guidkey)\n\ncid=result.match(/cid\\s*=\\s*(\\d+)/)[1]\njava.log('cid:'+cid)\n\nimagecount=result.match(/imagecount\\s*=\\s*(\\d+)/)[1]\n\n\nurl=baseUrl+'chapterimagefun.ashx?d='+new Date()+\",\"\n\nbody='cid='+cid+'&page=1&key='+guidkey+'&showcount=5'\n\noptions={\n\"method\":\"post\",\n\"X-Requested-With\":\"XMLHttpRequest\",\n\"headers\": {\"Referer\": baseUrl,\"Cookie\":\"showcount=5; norefresh=true; autosize=false\"},\n\"body\": String(body)\n}\n\nresponse=String(java.ajax(url+JSON.stringify(options)))\n\nif(response){\neval(response)\npicarr=dm5imagefun()\njava.log('图片总数:'+imagecount)\njava.log('请求图片总数'+picarr.length)\npicarr.map(a=>'<img src=\"'+a+',{\"headers\": {\"Referer\":\"{{baseUrl}}\"}}\">').join(\"\\n\")}else{\"图片防盗了\"}\n</js>",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.huih.0@text@js:\norg.jsoup.Jsoup.parse(result).text()",
+      "bookList": "class.ssnrk||class.cover",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.img@src",
+      "kind": "class.huih.1@text",
+      "lastChapter": "class.sr_dlj@tag.a.0@text||tag.a.1@text##\\[|\\]",
+      "name": "tag.a.0@text##1-.*"
+    },
+    "ruleToc": {
+      "chapterList": "-id.cbc_1@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.8jj.com/search?page={{page}}&title={{key}}&language=1",
+    "weight": 80
+  }
+]

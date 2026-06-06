@@ -1,0 +1,777 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#kd11",
+    "bookUrlPattern": "",
+    "customOrder": 696,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻·玄幻\",\"url\":\"/list/qihuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·游戏\",\"url\":\"/list/kehuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠·仙侠\",\"url\":\"/list/wuxia.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生·言情\",\"url\":\"/list/yanqing.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·娱乐\",\"url\":\"/list/dushi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史·军事\",\"url\":\"/list/lishi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑·灵异\",\"url\":\"/list/xuanyi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美·纯爱\",\"url\":\"/list/chunai.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list/foreign.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成长·励志\",\"url\":\"/list/lizhi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文·随笔\",\"url\":\"/list/sanwen.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代文学\",\"url\":\"/list/china.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"轻小说\",\"url\":\"/list/lightnovel.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"健康·生活\",\"url\":\"/list/health.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学名著\",\"url\":\"/list/mingzhu.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1681034829511,
+    "loginUrl": "",
+    "respondTime": 5315,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content&&[property=\"og:novel:update_time\"]@content##\\n##·",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@p@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".pagination li~li@a@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.text-layout@class.ellipsis.0@text",
+      "bookList": "class.vrResult!0",
+      "bookUrl": "h3@tag.a.0@href",
+      "intro": "class.clamp3@text",
+      "kind": "class.text-layout@class.ellipsis.-1@text##状态：(.*)##$1###",
+      "lastChapter": "{{@@class.clamp3@text##(.|\\n)*最新章节(.*|\\n*)##$2###}}·{{@@class.cite-date@text}}",
+      "name": "h3@text##(.*?)最新章节.*##$1###"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.yeban360.com"
+    },
+    "searchUrl": "https://wap.sogou.com/web/sl?keyword={{key}} site:https://www.yeban360.com",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com",
+    "customOrder": 1037,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/list/qihuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/list/kehuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/list/wuxia{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女生言情\",\"url\":\"/list/yanqing{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/list/dushi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/list/lishi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/list/xuanyi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美纯爱\",\"url\":\"/list/chunai{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国文学\",\"url\":\"/list/foreign{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"成长励志\",\"url\":\"/list/lizhi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"散文随笔\",\"url\":\"/list/sanwen{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代当代\",\"url\":\"/list/china{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"轻小说\",\"url\":\"/list/lightnovel{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"健康生活\",\"url\":\"/list/health{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"文学名著\",\"url\":\"/list/mingzhu{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1678685283239,
+    "loginUrl": "",
+    "respondTime": 5008,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": ".book-detail@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a@href",
+      "kind": "",
+      "name": "td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "完本\n校对\n🔗圣武",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📥夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#📥",
+    "customOrder": 1207,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "<js>\n(()=>{\n\tvar ua = \"navigator.userAgent.toLowerCase(); \t\t\treturn { \t\t\t\t'mobile': !!(ua.match(/applewebkit.*mobile.*/) || ua.match(/iemobile/) || ua.match(/windows phone/) || ua.match(/android/) || ua.match(/iphone/) || ua.match(/ipad/)), \t\t\t\t'weixin': ua.indexOf('micromessenger') > -1 \t\t\t};\";\n\tvar heders = {\"User-Agent\": ua};\n\treturn JSON.stringify(heders);\n})()\n</js>",
+    "lastUpdateTime": 1620137127265,
+    "respondTime": 1953,
+    "ruleBookInfo": {
+      "author": "",
+      "canReName": "true",
+      "coverUrl": "class.panel-info.0@class.media-right@tag.img@src",
+      "intro": "class.panel-info.1@class.panel-body@html##集下载",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.1@text",
+      "bookList": "@css:.panel-body tbody tr",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "{{'点击地址栏下载📥'}}",
+      "name": "tag.a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "class.col-md-6 text-center@tag.a.0",
+      "chapterName": "{{'点击地址栏下载📥'}}",
+      "chapterUrl": "{{'https://www.yeban360.com'}}{{@@href}}"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1234,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻·玄幻\",\"url\":\"/list/qihuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·游戏\",\"url\":\"/list/kehuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠·仙侠\",\"url\":\"/list/wuxia.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生·言情\",\"url\":\"/list/yanqing.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·娱乐\",\"url\":\"/list/dushi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史·军事\",\"url\":\"/list/lishi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑·灵异\",\"url\":\"/list/xuanyi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美·纯爱\",\"url\":\"/list/chunai.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list/foreign.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成长·励志\",\"url\":\"/list/lizhi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文·随笔\",\"url\":\"/list/sanwen.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代文学\",\"url\":\"/list/china.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"轻小说\",\"url\":\"/list/lightnovel.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"健康·生活\",\"url\":\"/list/health.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学名著\",\"url\":\"/list/mingzhu.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1686054098124,
+    "loginUrl": "",
+    "respondTime": 6220,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##·",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@p@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".pagination li~li@a@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.text-layout@class.ellipsis.0@text",
+      "bookList": "class.vrResult!0",
+      "bookUrl": "h3@tag.a.0@href",
+      "intro": "class.clamp3@text",
+      "kind": "class.text-layout@class.ellipsis.-1@text##状态：(.*)##$1###",
+      "lastChapter": "{{@@class.cite-date@text}}",
+      "name": "h3@text##(.*?)最新章节.*##$1###"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.yeban360.com"
+    },
+    "searchUrl": "https://wap.sogou.com/web/sl?keyword={{key}} site:https://www.yeban360.com",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♛ 夜伴书屋 #一程",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#♤yc",
+    "customOrder": 1532,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/list/qihuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/list/kehuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/list/wuxia{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女生言情\",\"url\":\"/list/yanqing{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/list/dushi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/list/lishi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/list/xuanyi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美纯爱\",\"url\":\"/list/chunai{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国文学\",\"url\":\"/list/foreign{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"成长励志\",\"url\":\"/list/lizhi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"散文随笔\",\"url\":\"/list/sanwen{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代当代\",\"url\":\"/list/china{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"轻小说\",\"url\":\"/list/lightnovel{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"健康生活\",\"url\":\"/list/health{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"文学名著\",\"url\":\"/list/mingzhu{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1637913743072,
+    "loginUrl": "",
+    "respondTime": 6635,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a@href",
+      "kind": "",
+      "name": "td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♛ 夜伴书屋 #一程1101",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#yc1101",
+    "customOrder": 1534,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/list/qihuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/list/kehuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/list/wuxia{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女生言情\",\"url\":\"/list/yanqing{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/list/dushi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/list/lishi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/list/xuanyi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美纯爱\",\"url\":\"/list/chunai{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国文学\",\"url\":\"/list/foreign{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"成长励志\",\"url\":\"/list/lizhi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"散文随笔\",\"url\":\"/list/sanwen{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代当代\",\"url\":\"/list/china{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"轻の小说\",\"url\":\"/list/lightnovel{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"健康生活\",\"url\":\"/list/health{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"文学名著\",\"url\":\"/list/mingzhu{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1637913743072,
+    "loginUrl": "",
+    "respondTime": 5737,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##[\\(（【].*?[求更谢乐发订合补].*?[】）\\)]",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a@href",
+      "kind": "",
+      "name": "td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌸 夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com/分页",
+    "bookUrlPattern": "",
+    "customOrder": 1536,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻·玄幻\",\"url\":\"/list/qihuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·游戏\",\"url\":\"/list/kehuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠·仙侠\",\"url\":\"/list/wuxia.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生·言情\",\"url\":\"/list/yanqing.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·娱乐\",\"url\":\"/list/dushi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史·军事\",\"url\":\"/list/lishi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑·灵异\",\"url\":\"/list/xuanyi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美·纯爱\",\"url\":\"/list/chunai.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list/foreign.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成长·励志\",\"url\":\"/list/lizhi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文·随笔\",\"url\":\"/list/sanwen.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代文学\",\"url\":\"/list/china.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"轻小说\",\"url\":\"/list/lightnovel.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"健康·生活\",\"url\":\"/list/health.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学名著\",\"url\":\"/list/mingzhu.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1668707782179,
+    "loginUrl": "",
+    "respondTime": 6302,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center@tag.a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "name": "tag.a.1@text"
+    },
+    "ruleSearch": {
+      "author": "tag.td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "tag.a@href",
+      "name": "tag.td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "1",
+    "bookSourceName": "夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#kd11",
+    "bookUrlPattern": "",
+    "customOrder": 74,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻·玄幻\",\"url\":\"/list/qihuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·游戏\",\"url\":\"/list/kehuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠·仙侠\",\"url\":\"/list/wuxia.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生·言情\",\"url\":\"/list/yanqing.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·娱乐\",\"url\":\"/list/dushi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史·军事\",\"url\":\"/list/lishi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑·灵异\",\"url\":\"/list/xuanyi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美·纯爱\",\"url\":\"/list/chunai.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list/foreign.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成长·励志\",\"url\":\"/list/lizhi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文·随笔\",\"url\":\"/list/sanwen.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代文学\",\"url\":\"/list/china.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"轻小说\",\"url\":\"/list/lightnovel.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"健康·生活\",\"url\":\"/list/health.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学名著\",\"url\":\"/list/mingzhu.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1681034829511,
+    "loginUrl": "",
+    "respondTime": 9069,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content&&[property=\"og:novel:update_time\"]@content##\\n##·",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@p@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".pagination li~li@a@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.text-layout@class.ellipsis.0@text",
+      "bookList": "class.vrResult!0",
+      "bookUrl": "h3@tag.a.0@href",
+      "intro": "class.clamp3@text",
+      "kind": "class.text-layout@class.ellipsis.-1@text##状态：(.*)##$1###",
+      "lastChapter": "{{@@class.clamp3@text##(.|\\n)*最新章节(.*|\\n*)##$2###}}·{{@@class.cite-date@text}}",
+      "name": "h3@text##(.*?)最新章节.*##$1###"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.yeban360.com"
+    },
+    "searchUrl": "https://wap.sogou.com/web/sl?keyword={{key}} site:https://www.yeban360.com",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🔖夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com",
+    "customOrder": 1182,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/list/qihuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/list/kehuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/list/wuxia{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女生言情\",\"url\":\"/list/yanqing{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/list/dushi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/list/lishi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/list/xuanyi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美纯爱\",\"url\":\"/list/chunai{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国文学\",\"url\":\"/list/foreign{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"成长励志\",\"url\":\"/list/lizhi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"散文随笔\",\"url\":\"/list/sanwen{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代当代\",\"url\":\"/list/china{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"轻小说\",\"url\":\"/list/lightnovel{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"健康生活\",\"url\":\"/list/health{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"文学名著\",\"url\":\"/list/mingzhu{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1678685283239,
+    "loginUrl": "",
+    "respondTime": 40759,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": ".book-detail@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a@href",
+      "kind": "",
+      "name": "td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "完本\n校对\n🔗圣武",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "📥夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#📥",
+    "customOrder": 1641,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "header": "<js>\n(()=>{\n\tvar ua = \"navigator.userAgent.toLowerCase(); \t\t\treturn { \t\t\t\t'mobile': !!(ua.match(/applewebkit.*mobile.*/) || ua.match(/iemobile/) || ua.match(/windows phone/) || ua.match(/android/) || ua.match(/iphone/) || ua.match(/ipad/)), \t\t\t\t'weixin': ua.indexOf('micromessenger') > -1 \t\t\t};\";\n\tvar heders = {\"User-Agent\": ua};\n\treturn JSON.stringify(heders);\n})()\n</js>",
+    "lastUpdateTime": 1620137127265,
+    "respondTime": 32203,
+    "ruleBookInfo": {
+      "author": "",
+      "canReName": "true",
+      "coverUrl": "class.panel-info.0@class.media-right@tag.img@src",
+      "intro": "class.panel-info.1@class.panel-body@html##集下载",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.1@text",
+      "bookList": "@css:.panel-body tbody tr",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "{{'点击地址栏下载📥'}}",
+      "name": "tag.a.0@text##《|》"
+    },
+    "ruleToc": {
+      "chapterList": "class.col-md-6 text-center@tag.a.0",
+      "chapterName": "{{'点击地址栏下载📥'}}",
+      "chapterUrl": "{{'https://www.yeban360.com'}}{{@@href}}"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♛ 夜伴书屋 #一程",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#♤yc",
+    "customOrder": 1648,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/list/qihuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/list/kehuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/list/wuxia{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女生言情\",\"url\":\"/list/yanqing{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/list/dushi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/list/lishi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/list/xuanyi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美纯爱\",\"url\":\"/list/chunai{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国文学\",\"url\":\"/list/foreign{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"成长励志\",\"url\":\"/list/lizhi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"散文随笔\",\"url\":\"/list/sanwen{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代当代\",\"url\":\"/list/china{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"轻小说\",\"url\":\"/list/lightnovel{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"健康生活\",\"url\":\"/list/health{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"文学名著\",\"url\":\"/list/mingzhu{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1637913743072,
+    "loginUrl": "",
+    "respondTime": 36450,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a@href",
+      "kind": "",
+      "name": "td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♛ 夜伴书屋 #一程1101",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com#yc1101",
+    "customOrder": 1650,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻玄幻\",\"url\":\"/list/qihuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻游戏\",\"url\":\"/list/kehuan{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/list/wuxia{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女生言情\",\"url\":\"/list/yanqing{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市娱乐\",\"url\":\"/list/dushi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/list/lishi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑灵异\",\"url\":\"/list/xuanyi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"耽美纯爱\",\"url\":\"/list/chunai{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国文学\",\"url\":\"/list/foreign{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"成长励志\",\"url\":\"/list/lizhi{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"散文随笔\",\"url\":\"/list/sanwen{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代当代\",\"url\":\"/list/china{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"轻の小说\",\"url\":\"/list/lightnovel{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"健康生活\",\"url\":\"/list/health{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"文学名著\",\"url\":\"/list/mingzhu{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1637913743072,
+    "loginUrl": "",
+    "respondTime": 35468,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##[\\(（【].*?[求更谢乐发订合补].*?[】）\\)]",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a@href",
+      "kind": "",
+      "name": "td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🌸 夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com/分页",
+    "bookUrlPattern": "",
+    "customOrder": 1652,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻·玄幻\",\"url\":\"/list/qihuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·游戏\",\"url\":\"/list/kehuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠·仙侠\",\"url\":\"/list/wuxia.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生·言情\",\"url\":\"/list/yanqing.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·娱乐\",\"url\":\"/list/dushi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史·军事\",\"url\":\"/list/lishi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑·灵异\",\"url\":\"/list/xuanyi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美·纯爱\",\"url\":\"/list/chunai.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list/foreign.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成长·励志\",\"url\":\"/list/lizhi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文·随笔\",\"url\":\"/list/sanwen.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代文学\",\"url\":\"/list/china.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"轻小说\",\"url\":\"/list/lightnovel.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"健康·生活\",\"url\":\"/list/health.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学名著\",\"url\":\"/list/mingzhu.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1668707782179,
+    "loginUrl": "",
+    "respondTime": 35092,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center@tag.a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "name": "tag.a.1@text"
+    },
+    "ruleSearch": {
+      "author": "tag.td.1@text",
+      "bookList": "tbody tr",
+      "bookUrl": "tag.a@href",
+      "name": "tag.td.0@text##\\《|\\》|没有找到包.*"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1656,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"奇幻·玄幻\",\"url\":\"/list/qihuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·游戏\",\"url\":\"/list/kehuan.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠·仙侠\",\"url\":\"/list/wuxia.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"女生·言情\",\"url\":\"/list/yanqing.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·娱乐\",\"url\":\"/list/dushi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史·军事\",\"url\":\"/list/lishi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑·灵异\",\"url\":\"/list/xuanyi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美·纯爱\",\"url\":\"/list/chunai.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"外国文学\",\"url\":\"/list/foreign.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"成长·励志\",\"url\":\"/list/lizhi.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文·随笔\",\"url\":\"/list/sanwen.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代文学\",\"url\":\"/list/china.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"轻小说\",\"url\":\"/list/lightnovel.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"健康·生活\",\"url\":\"/list/health.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"文学名著\",\"url\":\"/list/mingzhu.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 9; HWI-AL00 Build/HUAWEIHWI-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1686054098124,
+    "loginUrl": "",
+    "respondTime": 10318,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": ".book-detail@html",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##·",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@p@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".pagination li~li@a@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".media-info@text\n<js>result.replace(/(.*)/,' ○○○STORY:\\n$1')</js>",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.text-layout@class.ellipsis.0@text",
+      "bookList": "class.vrResult!0",
+      "bookUrl": "h3@tag.a.0@href",
+      "intro": "class.clamp3@text",
+      "kind": "class.text-layout@class.ellipsis.-1@text##状态：(.*)##$1###",
+      "lastChapter": "{{@@class.cite-date@text}}",
+      "name": "h3@text##(.*?)最新章节.*##$1###"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.yeban360.com"
+    },
+    "searchUrl": "https://wap.sogou.com/web/sl?keyword={{key}} site:https://www.yeban360.com",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "网站搜索功能维护中……",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸夜伴书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yeban360.com",
+    "customOrder": -2085959033,
+    "enabled": false,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "enabledReview": false,
+    "exploreUrl": "奇幻玄幻::/list/qihuan{{page}}.html\n科幻游戏::/list/kehuan{{page}}.html\n武侠仙侠::/list/wuxia{{page}}.html\n女生言情::/list/yanqing{{page}}.html\n都市娱乐::/list/dushi{{page}}.html\n历史军事::/list/lishi{{page}}.html\n悬疑灵异::/list/xuanyi{{page}}.html\n耽美纯爱::/list/chunai{{page}}.html\n外国文学::/list/foreign{{page}}.html\n成长励志::/list/lizhi{{page}}.html\n散文随笔::/list/sanwen{{page}}.html\n现代当代::/list/china{{page}}.html\n轻の小说::/list/lightnovel{{page}}.html\n健康生活::/list/health{{page}}.html\n文学名著::/list/mingzhu{{page}}.html",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 8.0.0; MIX 2 Build/OPR1.170623.027) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 YaBrowser/18.9.1.2199.00 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1682082803455,
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 180000,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": ".book-detail@textNodes",
+      "kind": "[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#cont-body@html",
+      "imageStyle": "FULL",
+      "nextContentUrl": ".text-center@tag.a.2@href"
+    },
+    "ruleExplore": {
+      "bookList": ".media",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "intro": ".media-info@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.1@text",
+      "bookList": "tbody@tag.tr",
+      "bookUrl": "tag.a@href",
+      "name": "tag.td.0@text##\\《|\\》"
+    },
+    "ruleToc": {
+      "chapterList": ".col-md-6 a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  }
+]

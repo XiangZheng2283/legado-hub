@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "💰小说阅读网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.readnovel.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3549,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"🍀全部🎀分类🍀\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻\",\"url\":\"https://www.readnovel.com/category/20001_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":11,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"都市\",\"url\":\"https://www.readnovel.com/category/20019_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":11,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"奇幻\",\"url\":\"https://www.readnovel.com/category/20005_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"武侠\",\"url\":\"https://www.readnovel.com/category/20010_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"仙侠\",\"url\":\"https://www.readnovel.com/category/20014_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"现实\",\"url\":\"https://www.readnovel.com/category/20065_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"军事\",\"url\":\"https://www.readnovel.com/category/20032_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"历史\",\"url\":\"https://www.readnovel.com/category/20028_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"游戏\",\"url\":\"https://www.readnovel.com/category/20050_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"体育\",\"url\":\"https://www.readnovel.com/category/20054_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"https://www.readnovel.com/category/20042_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"悬疑\",\"url\":\"https://www.readnovel.com/category/20037_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"轻小说\",\"url\":\"https://www.readnovel.com/category/20059_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.18}},\n{\"title\":\"短篇\",\"url\":\"https://www.readnovel.com/category/20076_f1_f1_f1_f1_f1_0_{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n\n{\"title\":\"🎖 排行榜 🎖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"风云榜\",\"url\":\"https://www.readnovel.com/rank/hxyuepiao?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"阅文风云榜\",\"url\":\"https://www.readnovel.com/rank/ywyuepiao?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"周推榜\",\"url\":\"https://www.readnovel.com/rank/recom?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"热销榜\",\"url\":\"https://www.readnovel.com/rank/hotsales?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"完本榜\",\"url\":\"https://www.readnovel.com/rank/finish?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.26}},\n{\"title\":\"点击榜\",\"url\":\"https://www.readnovel.com/rank/click?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.26}},\n{\"title\":\"收藏榜\",\"url\":\"https://www.readnovel.com/rank/collect?pageNum={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.26}},\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1708543661917,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 242,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".book-title@text",
+      "canReName": "",
+      "tocUrl": "@js:baseUrl+'\\#Catalog'",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".ywskythunderfont@html",
+      "nextContentUrl": "text.下一页@href||text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "h4@text||.book-mid-info@tag.p.0@class.name default@text",
+      "bookList": ".right-book-list@tag.li||.book-img-text@tag.li",
+      "bookUrl": ".book-img@tag.a.0@href||.red-btn@href",
+      "coverUrl": ".book-img@tag.img.0@src||.book-img-box@tag.img@src",
+      "intro": ".intro@text||.intro@text",
+      "kind": ".org@text||.author@tag.a.1@text",
+      "lastChapter": ".update@tag.a.0@text##最新更新 (.*)##$1",
+      "name": "h3@text||h4@text",
+      "wordCount": ".blue@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".book-mid-info@tag.p.0@class.name default@text",
+      "bookList": ".book-img-text@tag.li",
+      "bookUrl": ".red-btn@href",
+      "coverUrl": ".book-img-box@tag.img@src",
+      "intro": ".intro@text",
+      "kind": ".author@tag.a.1@text",
+      "lastChapter": ".update@tag.a.0@text##最新更新 (.*)##$1",
+      "name": "h4@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".volume-wrap@class.volume@tag.li\n||class.volume-wrap@class.volume!0@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.readnovel.com/so/{{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

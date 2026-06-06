@@ -1,0 +1,59 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "妙笔阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.mbgbook.com/",
+    "bookUrlPattern": "https://www.mbgbook.com/shu\\d+/",
+    "customOrder": 1134,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1686049773696,
+    "respondTime": 1751,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##一秒记住.*免费阅读！|喜欢.*更新速度最快。|喜欢.*收藏.*速度最快。|\\(|记住本站.*com|\\)",
+      "nextContentUrl": "text.下一页@href",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text||[property=og:novel:author]@content",
+      "bookList": "class.grid@tr!0||tag.html",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.mbgbook.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "tag.td.1@a@text||[property=og:novel:latest_chapter_name]@content",
+      "name": "tag.td.0@a@text||[property=og:novel:book_name]@content",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://www.mbgbook.com/modules/article/search.php?searchkey={{key}},{\n'charset': 'gbk'\n}",
+    "weight": 0
+  }
+]

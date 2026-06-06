@@ -1,0 +1,15 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "百漫谷",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://darpou.com",
+    "customOrder": 626,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 8,
+    "weight": 354
+  }
+]

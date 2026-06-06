@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "💐 女频,发现,搜索链接规则为空",
+    "bookSourceName": "💐公主书城",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.gzdushu.com",
+    "customOrder": 902,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "https://m.gzdushu.com/login.php",
+    "respondTime": 0,
+    "weight": 0
+  }
+]

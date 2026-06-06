@@ -1,0 +1,80 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "肉文屋②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.powenwu4.com/#🚀",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customButton": false,
+    "customOrder": 57,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreScreen": "",
+    "exploreUrl": "                         排  行 (可点击)                      ::/top_{{page}}.html\n                               分  类                              \n玄幻奇幻::/class_visit_1/{{page}}.html\n武侠仙侠::/class_visit_2/{{page}}.html\n都市言情::/class_visit_3/{{page}}.html\n科幻网游::/class_visit_4/{{page}}.html\n惊悚悬疑::/class_visit_5/{{page}}.html\n耽美同人::/class_visit_6/{{page}}.html\n穿越架空::/class_visit_7/{{page}}.html\n高辣浓情::/class_visit_8/{{page}}.html\n禁忌百合::/class_visit_9/{{page}}.html\n精品文学::/class_visit_10/{{page}}.html\n                         全  本 (可点击)                      ::/quanben_0/{{page}}.html\n玄幻奇幻::/quanben_1/{{page}}.html\n武侠仙侠::/quanben_2/{{page}}.html\n都市言情::/quanben_3/{{page}}.html\n科幻网游::/quanben_4/{{page}}.html\n惊悚悬疑::/quanben_5/{{page}}.html\n耽美同人::/quanben_6/{{page}}.html\n穿越架空::/quanben_7/{{page}}.html\n高辣浓情::/quanben_8/{{page}}.html\n禁忌百合::/quanben_9/{{page}}.html\n精品文学::/quanben_10/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1721299115860,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 80277,
+    "ruleBookInfo": {
+      "author": "",
+      "canReName": "",
+      "coverUrl": ".pic@img@src",
+      "init": "",
+      "intro": ".intro@text",
+      "kind": "##\\[状态\\]：([^<]+)</p>##$1###",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": "text.打开目录@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "imageStyle": "",
+      "nextContentUrl": "",
+      "replaceRegex": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": ".pictext",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": ".book_description@text||.info_description@text",
+      "kind": ".author_intro@text",
+      "lastChapter": "",
+      "name": "img@alt||.info_title@text",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "span.2@text",
+      "bookList": "class.partlist-info@dl||class.slist xbk@li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.a.1@href<js>'http://img.powenwu4.com/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "intro": "tag.span.1@text",
+      "kind": "##\\[类别\\]：\\s*<[^>]+>(.*?)<##$1###",
+      "lastChapter": "class.latest_title ablue@title",
+      "name": "a.0@text",
+      "wordCount": "##\\[字数\\]：\\s*<[^>]+>(.*?)<##$1###"
+    },
+    "ruleToc": {
+      "chapterList": ".list@li",
+      "chapterName": "span@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "variableComment": "",
+    "weight": 0
+  }
+]

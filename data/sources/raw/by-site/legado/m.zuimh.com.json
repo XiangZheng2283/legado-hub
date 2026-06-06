@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "最漫画(常用)",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.zuimh.com/#♤Haxc",
+    "customOrder": 717,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 562
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎨 最漫画",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.zuimh.com#一程",
+    "customOrder": 732,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 630
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceComment": "需登录",
+    "bookSourceGroup": "③📖  论坛",
+    "bookSourceName": "📖百合会论坛",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://bbs.yamibo.com",
+    "customOrder": -2085958956,
+    "enabled": false,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "exploreUrl": "動漫區::/forum.php?mod=forumdisplay&fid=5&mobile=2&page={{page}}\n海域區::/forum.php?mod=forumdisplay&fid=33&mobile=2&page={{page}}\n貼圖區::/forum.php?mod=forumdisplay&fid=13&mobile=2&page={{page}}\n文學區::/forum.php?mod=forumdisplay&fid=49&mobile=2&page={{page}}\n遊戲區::/forum.php?mod=forumdisplay&fid=44&mobile=2&page={{page}}",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 8.1.0; JKM-AL00b Build/HUAWEIJKM-AL00b; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.126 MQQBrowser/6.2 TBS/044807 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1653413601912,
+    "loginUrl": "https://bbs.yamibo.com",
+    "respondTime": 183361,
+    "ruleBookInfo": {
+      "init": "",
+      "name": ""
+    },
+    "ruleContent": {
+      "content": ".authi,.message,.img_list@html##(<ul class=\"authi\">)##<br>&lrm;<br>",
+      "imageStyle": "FULL",
+      "replaceRegex": "##\\s+(\\d{4}-\\d{0,2}-\\d{0,2}\\s\\d{0,2}:\\d{0,2})## ⌚️$1"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.by@text",
+      "bookList": "class.threadlist@li",
+      "bookUrl": "a@href",
+      "coverUrl": "class.icon_tu@img@src",
+      "intro": "tag.a.0@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "@js:page=result.match(/=\"共\\s*(\\d+)\\s*页\">/)?result.match(/=\"共\\s*(\\d+)\\s*页\">/)[1]:1;\nlist=[];\nfor(i=1;i<=page;i++){\nlist.push({text:String(i),href:baseUrl+'&page='+i})\n}\nlist",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://bbs.yamibo.com/search.php?mod=forum&mobile=2,{\n\"method\": \"POST\",\n\"body\": \"searchsubmit=yes&srchtxt={{key}}&submit=搜索&page={{page}}\"\n}",
+    "weight": 0
+  }
+]

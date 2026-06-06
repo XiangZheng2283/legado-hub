@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "蜘蛛小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhizhuxs.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2191,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n  {\n    \"title\": \"全部小说\",\n    \"url\": \"/sort/0/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 1\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/sort/1/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/sort/2/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/sort/3/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/sort/4/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"百合\",\n    \"url\": \"/sort/5/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"超爽\",\n    \"url\": \"/sort/6/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"浓情\",\n    \"url\": \"/sort/7/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"其他\",\n    \"url\": \"/sort/8/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"全部全本\",\n    \"url\": \"/quanben/sort/0/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 1\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/quanben/sort/1/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/quanben/sort/2/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/quanben/sort/3/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/quanben/sort/4/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"百合\",\n    \"url\": \"/quanben/sort/5/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"超爽\",\n    \"url\": \"/quanben/sort/6/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"浓情\",\n    \"url\": \"/quanben/sort/7/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"其他\",\n    \"url\": \"/quanben/sort/8/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  }\n]",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; U; Android 13; zh-Hans-CN; PFJM10 Build/TP1A.220905.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/135.0.4896.58 Quark/6.13.6.581 Mobile Safari/537.36\",\"Accept-Language\":\"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"}",
+    "lastUpdateTime": 1755542046007,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 538,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "text.目录@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#content@p@html",
+      "nextContentUrl": "text.下一@href\n@js:\nvar next=/_\\d+\\.html/.test(result) ? result : '';\nnext;",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": ".CGsectionTwo-right-content-unit",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##\\/(\\d+)\\/$##$1###\n@js:\nbid = parseInt(result);\naid = parseInt(bid / 1000);\nresult = `/images/${aid}/${bid}/${bid}s.jpg`;",
+      "intro": "p.2@text",
+      "kind": "p.3@text##最近更新\\s",
+      "lastChapter": "",
+      "name": "a.0@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".SHsectionThree-middle@p",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a.1@href##\\/(\\d+)\\/$##$1###\n@js:\nbid = parseInt(result);\naid = parseInt(bid / 1000);\nresult = `/images/${aid}/${bid}/${bid}s.jpg`;",
+      "intro": "",
+      "kind": "a.0@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".BCsectionTwo-top@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "/search/,{\n  \"body\": \"searchkey={{key}}&searchtype=all&submit=\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃蜘蛛小说网🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhizhuxs.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1191,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n  {\n    \"title\": \"全部小说\",\n    \"url\": \"/sort/0/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 1\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/sort/1/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/sort/2/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/sort/3/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/sort/4/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"百合\",\n    \"url\": \"/sort/5/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"超爽\",\n    \"url\": \"/sort/6/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"浓情\",\n    \"url\": \"/sort/7/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"其他\",\n    \"url\": \"/sort/8/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"全部全本\",\n    \"url\": \"/quanben/sort/0/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 1\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/quanben/sort/1/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"耽美\",\n    \"url\": \"/quanben/sort/2/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/quanben/sort/3/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"言情\",\n    \"url\": \"/quanben/sort/4/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"百合\",\n    \"url\": \"/quanben/sort/5/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"超爽\",\n    \"url\": \"/quanben/sort/6/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"浓情\",\n    \"url\": \"/quanben/sort/7/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  },\n  {\n    \"title\": \"其他\",\n    \"url\": \"/quanben/sort/8/{{page}}/\",\n    \"style\": {\n      \"layout_flexGrow\": 1,\n      \"layout_flexBasisPercent\": 0.4\n    }\n  }\n]",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; U; Android 13; zh-Hans-CN; PFJM10 Build/TP1A.220905.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/135.0.4896.58 Quark/6.13.6.581 Mobile Safari/537.36\",\"Accept-Language\":\"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 566,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "text.目录@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#content@p@html",
+      "nextContentUrl": "text.下一@href\n@js:\nvar next=/_\\d+\\.html/.test(result) ? result : '';\nnext;",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": ".CGsectionTwo-right-content-unit",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##\\/(\\d+)\\/$##$1###\n@js:\nbid = parseInt(result);\naid = parseInt(bid / 1000);\nresult = `/images/${aid}/${bid}/${bid}s.jpg`;",
+      "intro": "p.2@text",
+      "kind": "p.3@text##最近更新\\s",
+      "lastChapter": "",
+      "name": "a.0@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".SHsectionThree-middle@p",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a.1@href##\\/(\\d+)\\/$##$1###\n@js:\nbid = parseInt(result);\naid = parseInt(bid / 1000);\nresult = `/images/${aid}/${bid}/${bid}s.jpg`;",
+      "intro": "",
+      "kind": "a.0@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".BCsectionTwo-top@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "/search/,{\n  \"body\": \"searchkey={{key}}&searchtype=all&submit=\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

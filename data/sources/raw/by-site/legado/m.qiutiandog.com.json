@@ -1,0 +1,49 @@
+[
+  {
+    "bookSourceComment": "23.10.9",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🌸秋田书屋uuu",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.qiutiandog.com/##@鱼",
+    "customButton": false,
+    "customOrder": 1395,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "lastUpdateTime": 1770711083508,
+    "respondTime": 7325,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "☁️ 更新：\n{{@@[property$=update_time]@content}}\n👻  简介：\n{{@@[property$=description]@content}}##(^|[。！？……；]+[”」）……】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "{{baseUrl}}##//m##//www",
+      "wordCount": "text.字数@text##字数："
+    },
+    "ruleContent": {
+      "content": "#content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "诡秘之主",
+      "coverUrl": "img@src",
+      "kind": "text.分类@text##分类：",
+      "lastChapter": "a.-1@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".listmain@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "https://m.qiutiandog.com/sdfgsdyugfsdugf.html?ie=gbk&s=5256649918672294880&q={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,172 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍺 海普文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haipu-xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1537,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/class1/?page={{page}}\n仙侠修真::/class2/?page={{page}}\n都市现实::/class3/?page={{page}}\n历史军事::/class4/?page={{page}}\n游戏竞技::/class5/?page={{page}}\n科幻灵异::/class6/?page={{page}}\n女生言情::/class7/?page={{page}}\nN次元::/class8/?page={{page}}\n其他类型::/class9/?page={{page}}\n全本小说::/finish/?page={{page}}",
+    "lastUpdateTime": 1680622000173,
+    "loginUrl": "",
+    "respondTime": 2738,
+    "ruleBookInfo": {
+      "author": "$.info.author",
+      "canReName": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "$.info.intro",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "$.info.lastupdate@put:{la:$.info.lastchapter}<js>String(java.timeFormat(result+\"000\")).replace(/\\s.*/,'∶')+java.get(\"la\")</js>",
+      "name": "$.info.articlename",
+      "tocUrl": "",
+      "wordCount": "$.info.size"
+    },
+    "ruleContent": {
+      "content": "<js>eval(String(result))</js>",
+      "imageStyle": "",
+      "nextContentUrl": "",
+      "webJs": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".book-info,.info@class.author@text",
+      "bookList": ".sort-view-list@li||.rec-focus-book",
+      "bookUrl": "@tag.img@src##jpg##json",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": ".intro@html",
+      "kind": "class.tag@span@text",
+      "name": ".book-info,.text@tag.h4.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "$..list[*]@put:{bid:$.info.articleid}",
+      "chapterName": "chaptername",
+      "chapterUrl": "/files/article/html555/{{parseInt(java.get('bid')/1000)}}/@get:{bid}/{{$.chapterid}}.html",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "海普文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haipu-xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1654,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/class1/?page={{page}}\n仙侠修真::/class2/?page={{page}}\n都市现实::/class3/?page={{page}}\n历史军事::/class4/?page={{page}}\n游戏竞技::/class5/?page={{page}}\n科幻灵异::/class6/?page={{page}}\n女生言情::/class7/?page={{page}}\nN次元::/class8/?page={{page}}\n其他类型::/class9/?page={{page}}\n全本小说::/finish/?page={{page}}",
+    "lastUpdateTime": 1689392161056,
+    "loginUrl": "",
+    "respondTime": 3262,
+    "ruleBookInfo": {
+      "author": "$.info.author",
+      "canReName": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "$.info.intro",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "$.info.lastupdate@put:{la:$.info.lastchapter}<js>String(java.timeFormat(result+\"000\")).replace(/\\s.*/,'∶')+java.get(\"la\")</js>",
+      "name": "$.info.articlename",
+      "tocUrl": "",
+      "wordCount": "$.info.size"
+    },
+    "ruleContent": {
+      "content": "<js>eval(String(result))</js>",
+      "imageStyle": "",
+      "nextContentUrl": "",
+      "webJs": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".book-info,.info@class.author@text",
+      "bookList": ".sort-view-list@li||.rec-focus-book",
+      "bookUrl": "@tag.img@src##jpg##json",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": ".intro@html",
+      "kind": "class.tag@span@text",
+      "name": ".book-info,.text@tag.h4.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "$..list[*]@put:{bid:$.info.articleid}",
+      "chapterName": "chaptername",
+      "chapterUrl": "/files/article/html555/{{parseInt(java.get('bid')/1000)}}/@get:{bid}/{{$.chapterid}}.html",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "preUpdateJs": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 海普文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haipu-xs.com",
+    "bookUrlPattern": "",
+    "customOrder": 543,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/class1/?page={{page}}\n仙侠修真::/class2/?page={{page}}\n都市现实::/class3/?page={{page}}\n历史军事::/class4/?page={{page}}\n游戏竞技::/class5/?page={{page}}\n科幻灵异::/class6/?page={{page}}\n女生言情::/class7/?page={{page}}\nN次元::/class8/?page={{page}}\n其他类型::/class9/?page={{page}}\n全本小说::/finish/?page={{page}}",
+    "lastUpdateTime": 1680622000173,
+    "loginUrl": "",
+    "respondTime": 3329,
+    "ruleBookInfo": {
+      "author": "$.info.author",
+      "canReName": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "$.info.intro",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "$.info.lastupdate@put:{la:$.info.lastchapter}<js>String(java.timeFormat(result+\"000\")).replace(/\\s.*/,'∶')+java.get(\"la\")</js>",
+      "name": "$.info.articlename",
+      "tocUrl": "",
+      "wordCount": "$.info.size"
+    },
+    "ruleContent": {
+      "content": "<js>eval(String(result))</js>",
+      "imageStyle": "",
+      "nextContentUrl": "",
+      "webJs": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".book-info,.info@class.author@text",
+      "bookList": ".sort-view-list@li||.rec-focus-book",
+      "bookUrl": "@tag.img@src##jpg##json",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": ".intro@html",
+      "kind": "class.tag@span@text",
+      "name": ".book-info,.text@tag.h4.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "$..list[*]@put:{bid:$.info.articleid}",
+      "chapterName": "chaptername",
+      "chapterUrl": "/files/article/html555/{{parseInt(java.get('bid')/1000)}}/@get:{bid}/{{$.chapterid}}.html",
+      "isPay": "",
+      "isVip": "",
+      "isVolume": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/",
+    "weight": 0
+  }
+]

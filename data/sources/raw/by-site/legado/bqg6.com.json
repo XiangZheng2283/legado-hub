@@ -1,0 +1,130 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑥",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg6.com/",
+    "bookUrlPattern": "",
+    "customOrder": 316,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1687350208844,
+    "loginUrl": "",
+    "respondTime": 7125,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##全本小说网.*最新章节！|全本小说网.*最快更新|最新章节！|一秒记住.*免费阅读！|.*第.*章.*|笔趣阁.*最快更新.*",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text||id.info@tag.p.0@a@text",
+      "bookList": "class.novelslistss@tag.li||id.maininfo",
+      "bookUrl": "class.s2@tag.a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.bqg6.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@tag.a@text||id.info@tag.p.3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "class.s2@tag.a@text||id.info@h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.bqg6.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\"charset\":\"gbk\"}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉 笔趣阁⑦②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg6.com",
+    "customOrder": 507,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 1,
+    "weight": 167
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "笔趣阁①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg6.com/",
+    "bookUrlPattern": "",
+    "customOrder": -265,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1687350208844,
+    "loginUrl": "",
+    "respondTime": 13383,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##全本小说网.*最新章节！|全本小说网.*最快更新|最新章节！|一秒记住.*免费阅读！|.*第.*章.*|笔趣阁.*最快更新.*",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text||id.info@tag.p.0@a@text",
+      "bookList": "class.novelslistss@tag.li||id.maininfo",
+      "bookUrl": "class.s2@tag.a@href",
+      "coverUrl": "class.s2@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.bqg6.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@tag.a@text||id.info@tag.p.3@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "class.s2@tag.a@text||id.info@h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.bqg6.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\"charset\":\"gbk\"}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": " 笔趣阁㊼",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://bqg123.net",
+    "bookUrlPattern": "",
+    "customOrder": 1456,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n\t\"Cookie\":\"user_key=981985189731687400;t=t20230309;t=t20230309\"\n\t}",
+    "lastUpdateTime": 1682688929966,
+    "respondTime": 2802,
+    "ruleBookInfo": {
+      "author": "p.0@text##作者：",
+      "intro": ".intro@text",
+      "kind": "",
+      "lastChapter": "p.1@a@text",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": "<js>\na = result.match(/data_show_str=\"([\\s\\S]+?)\"/)[1];\nresult = decodeURIComponent(java.base64Decode(a));\n</js>\n$.content_html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "<js>\nresult.match(/var book_list=([\\s\\S]+?);/)[1];\n</js>\n$.[*]",
+      "bookUrl": "/{{$.book_id}}.html?t=20230309,{\"headers\":{\"referer\":\"{{baseUrl}}\"}}",
+      "checkKeyWord": "斗破苍穹",
+      "kind": "",
+      "lastChapter": "https://mjjxs.net/141518151.html?t=20230301",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "<js>\na = result.match(/data_show_str=\"([\\s\\S]+?)\"/)[1];\nresult = decodeURIComponent(java.base64Decode(a));\n</js>\n$.chapter_list[*]",
+      "chapterName": "$.name",
+      "chapterUrl": "https://mjjxs.net/chapter/{{baseUrl.match(/(\\d+)\\.html/)[1]}}/{{$.i}}.html?len={{$.len}},{\"headers\":{\"referer\":\"https://mjjxs.net/{{baseUrl.match(/(\\d+)\\.html/)[1]}}.html\"}}"
+    },
+    "searchUrl": "https://bqg123.net/search?form=biqusoso&keyword={{key}}",
+    "weight": 0
+  }
+]

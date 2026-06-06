@@ -1,0 +1,53 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💐 女频",
+    "bookSourceName": "💐 一百零一",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.txtxs101.com",
+    "bookUrlPattern": "",
+    "customOrder": 43,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "最新入库::/top/postdate_{{page}}.html\n最近更新::/top/lastupdate_{{page}}.html\n总排行榜::/top.php\n古代言情::/class/1_{{page}}.html\n现代言情::/class/2_{{page}}.html\n纯爱耽美::/class/3_{{page}}.html\n仙侠玄幻::/class/4_{{page}}.html\n科幻未来::/class/5_{{page}}.html\n悬疑鬼怪::/class/6_{{page}}.html\n游戏人生::/class/7_{{page}}.html\n女生百合::/class/8_{{page}}.html\n其他类型::/class/56_{{page}}.html",
+    "lastUpdateTime": 1734417123845,
+    "loginUrl": "",
+    "respondTime": 8169,
+    "ruleBookInfo": {
+      "author": "id.listtj@a@textNodes##.*：|\\s（.*",
+      "coverUrl": "",
+      "init": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>",
+      "intro": "id.CrbsSum@textNodes##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "table.-1@td.1:3:5@text##小说|\\s..:.*|\\s.:.*",
+      "lastChapter": "table.-3@font.-1@b@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "id.listtj@b@text",
+      "tocUrl": "table.-1@tr.3@a.0@href",
+      "wordCount": "table.-1@tr.2@td.1@text"
+    },
+    "ruleContent": {
+      "content": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nid.content@textNodes",
+      "replaceRegex": "<js>result.replace(/b近/,'逼近').replace(/cH0U/,'抽').replace(/r0U/,'肉').replace(/lU0/,'裸').replace(/101言情小说/,'')</js>"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": ".author@text||td.4@text",
+      "bookList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\n.bookbox||.sf-grid@tbody@tr",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "kind": ".update@textNodes&&td.0:7:5@text##小说|\\[|\\]|\\s..:.*|\\s.:.*",
+      "lastChapter": "a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nid.defaulthtml@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "isVolume": ""
+    },
+    "searchUrl": "/book/search.aspx?key={{key}}",
+    "weight": 0
+  }
+]

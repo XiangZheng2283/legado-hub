@@ -1,0 +1,140 @@
+[
+  {
+    "bookSourceComment": "同站：\n 海棠城   https://m.powenwu14.com\n PO脸红  https://m.huanxiwu.com  \n新御宅屋 https://m.yuzhaiwude.com\n海棠书屋 https://wap.haitangshuwu.info",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "🔰 BL小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.52blxs.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1948,
+    "enabled": false,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "  总点击  ::/top/allvisit_{{page}}/\n  月点击  ::/top/monthvisit_{{page}}/\n  周点击  ::/top/weekvisit_{{page}}/\n   完  本   ::/full/{{page}}/\n玄幻奇幻::/sort/1_{{page}}/\n武侠仙侠::/sort/2_{{page}}/\n都市言情::/sort/3_{{page}}/\n历史穿越::/sort/4_{{page}}/\n网游竞技::/sort/5_{{page}}/\n科幻灵异::/sort/6_{{page}}/\n恐怖惊悚::/sort/7_{{page}}/\n其他类型::/sort/8_{{page}}/",
+    "exploreScreen": "",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\",\n\"Referer\": \"{{baseUrl}}\"\n\t}",
+    "lastUpdateTime": 1745854119330,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 3033,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".xx a.1@text",
+      "coverUrl": ".xsfm img@src",
+      "intro": ".jianjie@text",
+      "kind": ".xx li.1@text##分类：",
+      "lastChapter": ".xx a.-1@text",
+      "name": ".xx li.0@text",
+      "canReName": "",
+      "tocUrl": "text.更多章节@href##/$##_1/",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#nr@html",
+      "nextContentUrl": "text.下一@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": ".list ul",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "span.-2@text",
+      "kind": "span.-1@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".fk li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "a.0@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".lb li!-1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": ".showpage a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/s.php,{\n  \"body\": \"type=articlename&s={{key}}\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "同站：\n 海棠城   https://m.powenwu14.com\n PO脸红  https://m.huanxiwu.com  \n新御宅屋 https://m.yuzhaiwude.com\n海棠书屋 https://wap.haitangshuwu.info",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🔰 BL小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.52blxs.com",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2156,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "  总点击  ::/top/allvisit_{{page}}/\n  月点击  ::/top/monthvisit_{{page}}/\n  周点击  ::/top/weekvisit_{{page}}/\n   完  本   ::/full/{{page}}/\n玄幻奇幻::/sort/1_{{page}}/\n武侠仙侠::/sort/2_{{page}}/\n都市言情::/sort/3_{{page}}/\n历史穿越::/sort/4_{{page}}/\n网游竞技::/sort/5_{{page}}/\n科幻灵异::/sort/6_{{page}}/\n恐怖惊悚::/sort/7_{{page}}/\n其他类型::/sort/8_{{page}}/",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\",\n\"Referer\": \"{{baseUrl}}\"\n\t}",
+    "lastUpdateTime": 1745854119330,
+    "respondTime": 11049,
+    "ruleBookInfo": {
+      "author": ".xx a.1@text",
+      "coverUrl": ".xsfm img@src",
+      "init": "",
+      "intro": ".jianjie@text",
+      "kind": ".xx li.1@text##分类：",
+      "lastChapter": ".xx a.-1@text",
+      "name": ".xx li.0@text",
+      "tocUrl": "text.更多章节@href##/$##_1/"
+    },
+    "ruleContent": {
+      "content": "#nr@html",
+      "nextContentUrl": "text.下一@href"
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": ".list ul",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "span.-2@text",
+      "kind": "span.-1@text",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".fk li",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "",
+      "kind": "a.0@text##\\[|\\]",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".lb li!-1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ".showpage a@href"
+    },
+    "searchUrl": "/s.php,{\n  \"body\": \"type=articlename&s={{key}}\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

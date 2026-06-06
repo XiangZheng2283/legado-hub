@@ -1,0 +1,53 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "云轩阁小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yunxuange.com/",
+    "customOrder": 631,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690846268607,
+    "respondTime": 3656,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.2@text",
+      "coverUrl": "tag.img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "id.info@tag.p.4@tag.a@text",
+      "name": "tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "imageStyle": "full",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "tag.h4@tag.a@href\n##.+\\D((\\d+)\\d{3})\\D##http://www.yunxuange.com/files/article/html/$2/$1/###",
+      "coverUrl": "tag.img@src",
+      "intro": "class.bookinfo@tag.p.-1@text",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "tag.h4@text",
+      "wordCount": "class.book_other.0@tag.span.1@2"
+    },
+    "ruleToc": {
+      "chapterList": "class.listmain@dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://m.yunxuange.com/drhugirdhugi.php?ie=gbk&s=5256649918672294880&q={{key}}",
+    "weight": 0
+  }
+]

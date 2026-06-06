@@ -1,0 +1,46 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉笔趣阁⑧③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xpsge.com/",
+    "bookUrlPattern": "http://www.xpsge.com/shu_\\d+/",
+    "customOrder": 450,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/sort/xuanhuan/{{page}}.html\n奇幻小说::/sort/qihuan/{{page}}.html\n武侠小说::/sort/wuxia/{{page}}.html\n仙侠小说::/sort/xianxia/{{page}}.html\n都市小说::/sort/dushi/{{page}}.html\n历史小说::/sort/lishi/{{page}}.html\n军事小说::/sort/junshi/{{page}}.html\n游戏小说::/sort/youxi/{{page}}.html\n竞技小说::/sort/jingji/{{page}}.html\n科幻小说::/sort/kehuan/{{page}}.html\n灵异小说::/sort/lingyi/{{page}}.html\n同人小说::/sort/tongren/{{page}}.html\n女生小说::/sort/nvsheng/{{page}}.html\n其他小说::/sort/qita/{{page}}.html",
+    "lastUpdateTime": 1621495632690,
+    "respondTime": 10217,
+    "ruleBookInfo": {
+      "author": "class.novelinfo-l@tag.li.0@a@text",
+      "coverUrl": "class.novelinfo-r@img@src",
+      "intro": "class.novelintro@text",
+      "kind": "class.novelinfo-l@tag.li.6@text##更新：",
+      "lastChapter": "class.novelinfo-l@tag.li.5@a@text",
+      "name": "class.header@h1@text"
+    },
+    "ruleContent": {
+      "content": "class.content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.info@tag.span.1@a@text",
+      "bookList": "class.librarylist@li",
+      "bookUrl": "class.info@tag.span.0@a@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@tag.span.3@a@text",
+      "lastChapter": "class.last@a@text",
+      "name": "class.info@tag.span.0@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.dirlist.1@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href##$##,{\"webView\":true}"
+    },
+    "searchUrl": "http://www.xpsge.com/search.html?searchtype=novelname&searchkey={{key}}",
+    "weight": 0
+  }
+]

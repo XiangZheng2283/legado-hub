@@ -1,0 +1,187 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉31小说网～b",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.31xs.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 524,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1675703981471,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 4365,
+    "ruleBookInfo": {
+      "intro": "meta[property=\"og:description\"]@content"
+    },
+    "ruleContent": {
+      "content": "#content p:not(:matches(^[a-z\\s_-]+\\.[a-z\\s]+\\.[a-z\\s_-]+$))@text",
+      "replaceRegex": "##【31小说网\\s*31xs\\.com】|www\\.31xs\\.net\\s*|(^|\\s+)...[，,]【[^【\\n】]*咪.?咪.?阅.?读[^\\u4e00-\\u9fa5]*(?:\\.com|app)[^】a-z0-9A-Z\\u4e00-\\u9fa5]*】[^\\n]+|【.*】|aiyueshuxiang.com|baimengshu.com"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "@get:{h}",
+      "coverUrl": "@get:{h}##(/\\d+)(/\\d+)##/img$1$2$2s.jpg###",
+      "kind": "td:eq(0),td:eq(5)@text",
+      "lastChapter": "{{@@tag.a.1@text}} {{@@tag.td.4@text}}",
+      "name": "tag.a.0@text@put:{h:\"tag.a.0@href\"}"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.31xs.net/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🎉️精选",
+    "bookSourceName": "31小说网~f",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.31xs.net#Namo1101",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 78,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1680942434154,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2207,
+    "ruleBookInfo": {
+      "intro": "meta[property=\"og:description\"]@content"
+    },
+    "ruleContent": {
+      "content": "#content p:not(:matches(^[a-z\\s_-]+\\.[a-z\\s]+\\.[a-z\\s_-]+$))@text",
+      "replaceRegex": "##【31小说网\\s*31xs\\.com】|www\\.31xs\\.net\\s*|(^|\\s+)...[，,]【[^【\\n】]*咪.?咪.?阅.?读[^\\u4e00-\\u9fa5]*(?:\\.com|app)[^】a-z0-9A-Z\\u4e00-\\u9fa5]*】[^\\n]+"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "@get:{h}",
+      "coverUrl": "@get:{h}##(/\\d+)(/\\d+)##/img$1$2$2s.jpg###",
+      "kind": "td:eq(0),td:eq(5)@text",
+      "lastChapter": "{{@@tag.a.1@text}} {{@@tag.td.4@text}}",
+      "name": "tag.a.0@text@put:{h:\"tag.a.0@href\"}"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.31xs.net/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🎉️精选",
+    "bookSourceName": "🎉31小说网～b",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.31xs.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 247,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1675703981471,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2240,
+    "ruleBookInfo": {
+      "intro": "meta[property=\"og:description\"]@content"
+    },
+    "ruleContent": {
+      "content": "#content p:not(:matches(^[a-z\\s_-]+\\.[a-z\\s]+\\.[a-z\\s_-]+$))@text",
+      "replaceRegex": "##【31小说网\\s*31xs\\.com】|www\\.31xs\\.net\\s*|(^|\\s+)...[，,]【[^【\\n】]*咪.?咪.?阅.?读[^\\u4e00-\\u9fa5]*(?:\\.com|app)[^】a-z0-9A-Z\\u4e00-\\u9fa5]*】[^\\n]+|【.*】|aiyueshuxiang.com|baimengshu.com"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "@get:{h}",
+      "coverUrl": "@get:{h}##(/\\d+)(/\\d+)##/img$1$2$2s.jpg###",
+      "kind": "td:eq(0),td:eq(5)@text",
+      "lastChapter": "{{@@tag.a.1@text}} {{@@tag.td.4@text}}",
+      "name": "tag.a.0@text@put:{h:\"tag.a.0@href\"}"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.31xs.net/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "31小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.31xs.net",
+    "bookUrlPattern": "",
+    "customOrder": 1134,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/list/1/\n修真::/list/2/\n都市::/list/3/\n穿越::/list/4/\n网游::/list/5/\n科幻::/list/6/\n次元::/list/7/\n言情::/list/8/\n青春::/list/9/\n现代::/list/10/\n古代::/list/11/\n幻想::/list/12/",
+    "lastUpdateTime": 1683681200199,
+    "loginUrl": "https://www.31xs.net",
+    "respondTime": 22849,
+    "ruleBookInfo": {
+      "author": "#maininfo@p.0@text##作\\s者：",
+      "coverUrl": "#fmimg@img.0@src",
+      "intro": "id.intro@text",
+      "lastChapter": "#maininfo@p.3@a@text",
+      "name": "#maininfo@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##【31小说网\\s*31xs\\.com】|www\\.31xs\\.net\\s*|(^|\\s+)...[，,]【[^【\\n】]*咪.?咪.?阅.?读[^\\u4e00-\\u9fa5]*(?:\\.com|app)[^】a-z0-9A-Z\\u4e00-\\u9fa5]*】[^\\n]+|[da-zA-Z0-9]+\\.[da-zA-Z0-9]+\\.[da-zA-Z0-9]+"
+    },
+    "ruleExplore": {
+      "author": "tag.td.2@text",
+      "bookList": "tag.tr!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##(/\\d+)(/\\d+)/##/img$1$2$2s.jpg###@js:result.replace('https://www.31xs.com/img/','https://img31xs.cdn.bcebos.com/')",
+      "lastChapter": "tag.td.1@tag.a@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.3@text",
+      "bookList": "id.bookcase_list@tag.tr",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##(/\\d+)(/\\d+)/##/img$1$2$2s.jpg###@js:result.replace('https://www.31xs.com/img/','https://img31xs.cdn.bcebos.com/')",
+      "kind": "tag.td.0@text&&tag.td.5@text",
+      "lastChapter": "tag.a.1@text&&tag.td.4@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.31xs.com/search.php?keyword={{key}}",
+    "weight": 0
+  }
+]

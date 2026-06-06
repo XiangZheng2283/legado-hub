@@ -1,0 +1,175 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "奇书小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qisxs.com/",
+    "customOrder": 1091,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686047490325,
+    "respondTime": 5055,
+    "ruleBookInfo": {
+      "author": ".info a.0@text",
+      "coverUrl": ".pic img.0@src",
+      "intro": ".words p@html##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/简介./g,\"\")",
+      "kind": ".info a.1@text&&.info li.7@textNodes&&.words@ownText##.*\\(|\\s.*\\)",
+      "lastChapter": ".words a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".title h1@text",
+      "wordCount": ".info font.3@text"
+    },
+    "ruleContent": {
+      "content": ".box_box@textNodes",
+      "replaceRegex": "##第.*章.*|壹.小说|Ｗ.Ｗ.Ｗ.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".state a.0@text",
+      "bookList": ".ul_b_list li",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text",
+      "kind": "span.0@text&&p.0@text&&.arcurl@ownText##.*状态.|\\s关键.*|.*更新..|\\s..:.*",
+      "name": "h2 a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list_box li a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "<js>\nhost = \"https://www.qisxs.com\"\nsurl = host + `/plus/search.php?kwtype=0&searchtype=&q=${key},{\n  \"charset\": \"gbk\"\n}`\n</js>",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💠 奇书小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qisxs.com",
+    "customOrder": 1181,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1684941091619,
+    "respondTime": 7134,
+    "ruleBookInfo": {
+      "author": ".info a.0@text",
+      "coverUrl": ".pic img.0@src",
+      "intro": ".words p@html##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/简介./g,\"\")",
+      "kind": ".info a.1@text&&.info li.7@textNodes&&.words@ownText##.*\\(|\\s.*\\)",
+      "lastChapter": ".words a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".title h1@text",
+      "wordCount": ".info font.3@text"
+    },
+    "ruleContent": {
+      "content": ".box_box@textNodes",
+      "replaceRegex": "##第.*章.*|壹.小说|Ｗ.Ｗ.Ｗ.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".state a.0@text",
+      "bookList": ".ul_b_list li",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text",
+      "kind": "span.0@text&&p.0@text&&.arcurl@ownText##.*状态.|\\s关键.*|.*更新..|\\s..:.*",
+      "name": "h2 a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list_box li a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "<js>\nhost = \"https://www.qisxs.com\"\nsurl = host + `/plus/search.php?kwtype=0&searchtype=&q=${key},{\n  \"charset\": \"gbk\"\n}`\n</js>",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//基础源来自「一程」\n//加载较慢",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "奇书④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qisxs.com/",
+    "customOrder": 1091,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1692510126271,
+    "respondTime": 3754,
+    "ruleBookInfo": {
+      "author": ".info a.0@text",
+      "coverUrl": ".pic img.0@src",
+      "intro": ".words p@html##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/简介./g,\"\")",
+      "kind": ".info a.1@text&&.info li.7@textNodes&&.words@ownText##.*\\(|\\s.*\\)",
+      "lastChapter": ".words a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".title h1@text",
+      "wordCount": ".info font.3@text"
+    },
+    "ruleContent": {
+      "content": ".box_box@textNodes",
+      "replaceRegex": "##第.*章.*|壹.小说|Ｗ.Ｗ.Ｗ.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".state a.0@text",
+      "bookList": ".ul_b_list li",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text",
+      "kind": "span.0@text&&p.0@text&&.arcurl@ownText##.*状态.|\\s关键.*|.*更新..|\\s..:.*",
+      "name": "h2 a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list_box li a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "<js>\nhost = \"https://www.qisxs.com\"\nsurl = host + `/plus/search.php?kwtype=0&searchtype=&q=${key},{\n  \"charset\": \"gbk\"\n}`\n</js>",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💠 奇书小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qisxs.com",
+    "customOrder": 1181,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1684941091619,
+    "respondTime": 7105,
+    "ruleBookInfo": {
+      "author": ".info a.0@text",
+      "coverUrl": ".pic img.0@src",
+      "intro": ".words p@html##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/简介./g,\"\")",
+      "kind": ".info a.1@text&&.info li.7@textNodes&&.words@ownText##.*\\(|\\s.*\\)",
+      "lastChapter": ".words a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".title h1@text",
+      "wordCount": ".info font.3@text"
+    },
+    "ruleContent": {
+      "content": ".box_box@textNodes",
+      "replaceRegex": "##第.*章.*|壹.小说|Ｗ.Ｗ.Ｗ.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".state a.0@text",
+      "bookList": ".ul_b_list li",
+      "bookUrl": "h2 a@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text",
+      "kind": "span.0@text&&p.0@text&&.arcurl@ownText##.*状态.|\\s关键.*|.*更新..|\\s..:.*",
+      "name": "h2 a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list_box li a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "<js>\nhost = \"https://www.qisxs.com\"\nsurl = host + `/plus/search.php?kwtype=0&searchtype=&q=${key},{\n  \"charset\": \"gbk\"\n}`\n</js>",
+    "weight": 0
+  }
+]

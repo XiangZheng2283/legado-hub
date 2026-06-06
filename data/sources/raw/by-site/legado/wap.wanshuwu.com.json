@@ -1,0 +1,104 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖万书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.wanshuwu.com",
+    "customOrder": 651,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/sort/1_{{page}}/\n仙侠修真::/sort/2_{{page}}/\n都市言情::/sort/3_{{page}}/\n历史军事::/sort/4_{{page}}/\n网游竞技::/sort/5_{{page}}/\n科幻小说::/sort/6_{{page}}/\n恐怖灵异::/sort/7_{{page}}/\n其他小说::/sort/8_{{page}}/",
+    "lastUpdateTime": 1678647594023,
+    "respondTime": 150318,
+    "ruleBookInfo": {
+      "author": ".info_t4@a@text",
+      "coverUrl": ".info_novel_img@img@src",
+      "intro": ".info_intro@textNodes##最新章节推荐地址.*",
+      "kind": ".info_t2@text##类别.",
+      "lastChapter": ".info_t6@a@text",
+      "name": ".info_t1@text##书名.",
+      "wordCount": ".info_t5@text##更新."
+    },
+    "ruleContent": {
+      "content": "#nr1@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".newbook_author@a@text",
+      "bookList": ".newbook_list",
+      "bookUrl": ".newbook_title@a@href",
+      "coverUrl": ".newbook_pic@a@img@src",
+      "intro": ".newbook_intor@text",
+      "kind": ".wanben_serial_novelsort@span@text",
+      "name": ".newbook_title@a@text"
+    },
+    "ruleSearch": {
+      "author": "span@a@text",
+      "bookList": ".sone",
+      "bookUrl": "a@href",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".info_newest.1@ul@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/s.php,{\n  \"body\": \"search_key={{key}}\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🔖万书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.wanshuwu.com",
+    "customOrder": 1054,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/sort/1_{{page}}/\n仙侠修真::/sort/2_{{page}}/\n都市言情::/sort/3_{{page}}/\n历史军事::/sort/4_{{page}}/\n网游竞技::/sort/5_{{page}}/\n科幻小说::/sort/6_{{page}}/\n恐怖灵异::/sort/7_{{page}}/\n其他小说::/sort/8_{{page}}/",
+    "lastUpdateTime": 1678647594023,
+    "respondTime": 41365,
+    "ruleBookInfo": {
+      "author": ".info_t4@a@text",
+      "coverUrl": ".info_novel_img@img@src",
+      "intro": ".info_intro@textNodes##最新章节推荐地址.*",
+      "kind": ".info_t2@text##类别.",
+      "lastChapter": ".info_t6@a@text",
+      "name": ".info_t1@text##书名.",
+      "wordCount": ".info_t5@text##更新."
+    },
+    "ruleContent": {
+      "content": "#nr1@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".newbook_author@a@text",
+      "bookList": ".newbook_list",
+      "bookUrl": ".newbook_title@a@href",
+      "coverUrl": ".newbook_pic@a@img@src",
+      "intro": ".newbook_intor@text",
+      "kind": ".wanben_serial_novelsort@span@text",
+      "name": ".newbook_title@a@text"
+    },
+    "ruleSearch": {
+      "author": "span@a@text",
+      "bookList": ".sone",
+      "bookUrl": "a@href",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".info_newest.1@ul@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/s.php,{\n  \"body\": \"search_key={{key}}\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

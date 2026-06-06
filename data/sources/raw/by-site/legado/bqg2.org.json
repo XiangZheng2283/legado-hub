@@ -1,0 +1,98 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑩⑩",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg2.org",
+    "bookUrlPattern": "http://www.bqg2.org/\\d+/\\d+/",
+    "customOrder": 247,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1681954896089,
+    "respondTime": 2120,
+    "ruleBookInfo": {
+      "author": "[name=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[name=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[name=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[name=og:novel:book_name]@content",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.articlecontent@html##本章未完.*翻下一页.*|《.*》 最新章节.*|本章已完成！",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.0@textNodes##.*]|/",
+      "bookList": "class.grid@tr",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.bqg2.org/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "lastChapter": "tag.td.1@a@text",
+      "name": "tag.td.0@a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ml_list@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://www.bqg2.org/search.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"s={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍁笔趣阁⑩⑨",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg2.org/",
+    "bookUrlPattern": "http://www.bqg2.org/\\d+/\\d+/",
+    "customOrder": 488,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1646508207704,
+    "respondTime": 6351,
+    "ruleBookInfo": {
+      "author": "[name=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[name=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[name=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[name=og:novel:book_name]@content",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.articlecontent@html##本章未完.*翻下一页.*|《.*》 最新章节.*|本章已完成！",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.0@textNodes##.*]|/",
+      "bookList": "class.grid@tr",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.bqg2.org/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "lastChapter": "tag.td.1@a@text",
+      "name": "tag.td.0@a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ml_list@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://www.bqg2.org/search.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"s={{key}}\"\n}",
+    "weight": 0
+  }
+]

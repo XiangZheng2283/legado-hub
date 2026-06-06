@@ -1,0 +1,74 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "AA阅读(需科学上网)",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://aaread.space/",
+    "customOrder": 242,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 11444,
+    "ruleBookInfo": {
+      "tocUrl": "#Catalog"
+    },
+    "ruleContent": {
+      "content": ".read-content@html"
+    },
+    "ruleSearch": {
+      "author": ".author@a.0@text",
+      "bookList": ".book-img-text@li",
+      "bookUrl": ".book-img-box@a@href",
+      "coverUrl": ".book-img-box@img@src",
+      "intro": ".intro@text",
+      "kind": ".author@a.1@text",
+      "lastChapter": ".update@a@text",
+      "name": ".book-mid-info@h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.j-catalogWrap@class.volume@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{'webView':true}"
+    },
+    "searchUrl": "https://aaread.space/search?kw={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "ceshi",
+    "bookSourceName": "AA阅读(需科学上网)",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://aaread.space/",
+    "customOrder": 407,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 7498,
+    "ruleBookInfo": {
+      "tocUrl": "#Catalog"
+    },
+    "ruleContent": {
+      "content": ".read-content@html"
+    },
+    "ruleSearch": {
+      "author": ".author@a.0@text",
+      "bookList": ".book-img-text@li",
+      "bookUrl": ".book-img-box@a@href",
+      "coverUrl": ".book-img-box@img@src",
+      "intro": ".intro@text",
+      "kind": ".author@a.1@text",
+      "lastChapter": ".update@a@text",
+      "name": ".book-mid-info@h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.j-catalogWrap@class.volume@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{'webView':true}"
+    },
+    "searchUrl": "https://aaread.space/search?kw={{key}}",
+    "weight": 0
+  }
+]

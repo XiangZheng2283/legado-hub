@@ -1,0 +1,103 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎨 汉化吧-发现",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.hanhuaba.com",
+    "customOrder": 827,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部::http://www.hanhuaba.com/list/0/-{{page}}\n恋爱::/list/1/-{{page}}\n热血::/list/10/-{{page}}\n恐怖::/list/9/-{{page}}\n悬疑::/list/8/-{{page}}\n都市::/list/7/-{{page}}\n奇幻::/list/6/-{{page}}\n豪门::/list/5/-{{page}}\n搞笑::/list/4/-{{page}}\n校园::/list/3/-{{page}}\n少女::/list/2/-{{page}}\n剧情::/list/11/-{{page}}",
+    "lastUpdateTime": 0,
+    "respondTime": 2304,
+    "ruleBookInfo": {
+      "author": "class.info@class.att@tag.span.1@text##作者：",
+      "coverUrl": "class.pic@tag.a@tag.img@src",
+      "intro": "class.dtbarcont.0@text||id.zuop1C@text",
+      "kind": "class.info@class.att@tag.span.0@text&&class.info@class.att@tag.span.2@text##类别|进度|：",
+      "lastChapter": "class.dtbarcont.2@text||id.zuop3C@text##最后更新时间：",
+      "name": "class.info@class.title yahei@class.t@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.contentimg@html"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.span.0@text##作者：",
+      "bookList": "class.book-list@class.clearfix@tag.li",
+      "bookUrl": "class.tit@tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@tag.span.1@text&&class.info@tag.span.2@text##分类：",
+      "name": "class.tit@tag.a@text"
+    },
+    "ruleSearch": {
+      "author": "class.info@tag.span.0@text##作者|:|：",
+      "bookList": "class.book-list@tag.ul@tag.li",
+      "bookUrl": "class.tit@tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@tag.span.1@text&&class.info@tag.span.2@text##分类|:|：",
+      "name": "class.tit@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "-class.column-list@class.text@tag.a||class.column-list@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.hanhuaba.com/plus/comic/search.php?keyword={{key}},<\n  \"charset\": \"gb2312\"\n>",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "汉化吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.hanhuaba.com",
+    "customOrder": 1237,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部::http://www.hanhuaba.com/list/0/-{{page}}\n恋爱::/list/1/-{{page}}\n热血::/list/10/-{{page}}\n恐怖::/list/9/-{{page}}\n悬疑::/list/8/-{{page}}\n都市::/list/7/-{{page}}\n奇幻::/list/6/-{{page}}\n豪门::/list/5/-{{page}}\n搞笑::/list/4/-{{page}}\n校园::/list/3/-{{page}}\n少女::/list/2/-{{page}}\n剧情::/list/11/-{{page}}",
+    "lastUpdateTime": 1689168304396,
+    "respondTime": 3766,
+    "ruleBookInfo": {
+      "author": "class.info@class.att@tag.span.1@text##作者：",
+      "coverUrl": "class.pic@tag.a@tag.img@src",
+      "intro": "class.dtbarcont.0@text||id.zuop1C@text",
+      "kind": "class.info@class.att@tag.span.0@text&&class.info@class.att@tag.span.2@text##类别|进度|：",
+      "lastChapter": "class.dtbarcont.2@text||id.zuop3C@text##最后更新时间：",
+      "name": "class.info@class.title yahei@class.t@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.contentimg@html"
+    },
+    "ruleExplore": {
+      "author": "class.info@tag.span.0@text##作者：",
+      "bookList": "class.book-list@class.clearfix@tag.li",
+      "bookUrl": "class.tit@tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@tag.span.1@text&&class.info@tag.span.2@text##分类：",
+      "name": "class.tit@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.info@tag.span.0@text##作者|:|：",
+      "bookList": "class.book-list@tag.ul@tag.li",
+      "bookUrl": "class.tit@tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@tag.span.1@text&&class.info@tag.span.2@text##分类|:|：",
+      "name": "class.tit@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "-class.column-list@class.text@tag.a||class.column-list@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.hanhuaba.com/plus/comic/search.php?keyword={{key}},<\n  \"charset\": \"gb2312\"\n>",
+    "weight": 0
+  }
+]

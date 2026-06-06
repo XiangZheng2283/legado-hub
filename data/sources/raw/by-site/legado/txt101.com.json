@@ -1,0 +1,368 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💗 言情小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txt101.com",
+    "bookUrlPattern": "",
+    "customOrder": 908,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::http://www.txt101.com/top/lastupdate_{{page}}.html\n最新入库::http://www.txt101.com/top/postdate_{{page}}.html\n总排行榜::http://www.txt101.com/top.php\n古代言情::http://www.txt101.com/class/1_{{page}}.html\n现代言情::http://www.txt101.com/class/2_{{page}}.html\n纯爱耽美::http://www.txt101.com/class/3_{{page}}.html\n仙侠玄幻::http://www.txt101.com/class/4_{{page}}.html\n科幻未来::http://www.txt101.com/class/5_{{page}}.html\n悬疑鬼怪::http://www.txt101.com/class/6_{{page}}.html\n游戏人生::http://www.txt101.com/class/7_{{page}}.html\n百合GL::http://www.txt101.com/class/8_{{page}}.html\n其他类型::http://www.txt101.com/class/9_{{page}}.html",
+    "lastUpdateTime": 1685800615722,
+    "loginUrl": "",
+    "respondTime": 3681,
+    "ruleBookInfo": {
+      "coverUrl": "class.picborder@src",
+      "intro": "id.CrbsSum@textNodes",
+      "lastChapter": "font@a@text",
+      "tocUrl": "font@a@href##/(\\d+)/(\\d+).html##/$1/"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "class.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "class.chaper0@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "101言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.txt101.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1265,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1686056888574,
+    "loginUrl": "",
+    "respondTime": 6768,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "class.picborder@src",
+      "init": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>",
+      "intro": "id.CrbsSum@textNodes",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:title\"]@content",
+      "tocUrl": "font@a@href##(.*?)/(\\d+)/(\\d+).html##https://m.txt101.com/id/$2/"
+    },
+    "ruleContent": {
+      "content": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nid.content@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nclass.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nclass.chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.txt101.com",
+      "isVolume": ""
+    },
+    "searchUrl": "https://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "QD♥️♥️♥️ cccc\n0++8++ 9+7+2=||1💯101言情🌸🅰️🅰️🅱️🅰️🌸🌸🅰️",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✾♛+101言情 #关耳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txt101.com#♤guaner",
+    "bookUrlPattern": "",
+    "customOrder": 1479,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::http://www.txt101.com/top/lastupdate_{{page}}.html\n最新入库::http://www.txt101.com/top/postdate_{{page}}.html\n总排行榜::http://www.txt101.com/top.php\n古代言情::http://www.txt101.com/class/1_{{page}}.html\n现代言情::http://www.txt101.com/class/2_{{page}}.html\n纯爱耽美::http://www.txt101.com/class/3_{{page}}.html\n仙侠玄幻::http://www.txt101.com/class/4_{{page}}.html\n科幻未来::http://www.txt101.com/class/5_{{page}}.html\n悬疑鬼怪::http://www.txt101.com/class/6_{{page}}.html\n游戏人生::http://www.txt101.com/class/7_{{page}}.html\n百合GL::http://www.txt101.com/class/8_{{page}}.html\n其他类型::http://www.txt101.com/class/9_{{page}}.html",
+    "lastUpdateTime": 1639822618491,
+    "loginUrl": "",
+    "respondTime": 6291,
+    "ruleBookInfo": {
+      "coverUrl": "class.picborder@src",
+      "intro": "id.CrbsSum@textNodes",
+      "lastChapter": "font@a@text",
+      "tocUrl": "font@a@href##/(\\d+)/(\\d+).html##/$1/"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "class.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "class.chaper0@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "QD♥️♥️♥️ cccc\n0++8++ 9+7+2=||1💯101言情🌸🅰️🅰️🅱️🅰️🌸🌸🅰️",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "101言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txt101.com/",
+    "bookUrlPattern": "",
+    "customOrder": 465,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::http://www.txt101.com/top/lastupdate_{{page}}.html\n最新入库::http://www.txt101.com/top/postdate_{{page}}.html\n总排行榜::http://www.txt101.com/top.php\n古代言情::http://www.txt101.com/class/1_{{page}}.html\n现代言情::http://www.txt101.com/class/2_{{page}}.html\n纯爱耽美::http://www.txt101.com/class/3_{{page}}.html\n仙侠玄幻::http://www.txt101.com/class/4_{{page}}.html\n科幻未来::http://www.txt101.com/class/5_{{page}}.html\n悬疑鬼怪::http://www.txt101.com/class/6_{{page}}.html\n游戏人生::http://www.txt101.com/class/7_{{page}}.html\n百合GL::http://www.txt101.com/class/8_{{page}}.html\n其他类型::http://www.txt101.com/class/9_{{page}}.html",
+    "lastUpdateTime": 1692198905475,
+    "loginUrl": "",
+    "respondTime": 6988,
+    "ruleBookInfo": {
+      "coverUrl": "class.picborder@src",
+      "intro": "id.CrbsSum@textNodes",
+      "lastChapter": "font@a@text",
+      "tocUrl": "font@a@href##/(\\d+)/(\\d+).html##/$1/"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "class.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "class.chaper0@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "mat = result.match(/text=new Array\\(\".*?\"\\)/);\nif(mat){\n\t\teval(mat[0]);\n\t\ttext = java.base64Decode(text.join(\"\"));\n\t\tresult = String(text);\n\t}\nresult",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "101言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txt101.com",
+    "bookUrlPattern": "",
+    "customOrder": 1028,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1691914891660,
+    "loginUrl": "",
+    "respondTime": 4055,
+    "ruleBookInfo": {
+      "coverUrl": "class.picborder@src",
+      "init": "<js>eval(String(source.bookSourceComment))</js>",
+      "intro": "id.CrbsSum@textNodes",
+      "lastChapter": "font@a@text",
+      "tocUrl": "font@a@href##(.*?)/(\\d+)/(\\d+).html##https://m.txt101.com/id/$2/"
+    },
+    "ruleContent": {
+      "content": "<js>eval(String(source.bookSourceComment))</js>\nid.content@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "<js>eval(String(source.bookSourceComment))</js>\nclass.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "checkKeyWord": "",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "<js>eval(String(source.bookSourceComment))</js>\nclass.chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.txt101.com",
+      "isVolume": ""
+    },
+    "searchUrl": "https://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "101言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.txt101.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1265,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1693566512707,
+    "loginUrl": "",
+    "respondTime": 3988,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "class.picborder@src",
+      "init": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>",
+      "intro": "id.CrbsSum@textNodes",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:title\"]@content",
+      "tocUrl": "font@a@href##(.*?)/(\\d+)/(\\d+).html##https://m.txt101.com/id/$2/"
+    },
+    "ruleContent": {
+      "content": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nid.content@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nclass.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nclass.chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.txt101.com",
+      "isVolume": ""
+    },
+    "searchUrl": "https://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "QD♥️♥️♥️ cccc\n0++8++ 9+7+2=||1💯101言情🌸🅰️🅰️🅱️🅰️🌸🌸🅰️",
+    "bookSourceGroup": "18-小说",
+    "bookSourceName": "✾♛+101言情 #关耳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txt101.com#♤guaner",
+    "bookUrlPattern": "",
+    "customOrder": 1447,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::http://www.txt101.com/top/lastupdate_{{page}}.html\n最新入库::http://www.txt101.com/top/postdate_{{page}}.html\n总排行榜::http://www.txt101.com/top.php\n古代言情::http://www.txt101.com/class/1_{{page}}.html\n现代言情::http://www.txt101.com/class/2_{{page}}.html\n纯爱耽美::http://www.txt101.com/class/3_{{page}}.html\n仙侠玄幻::http://www.txt101.com/class/4_{{page}}.html\n科幻未来::http://www.txt101.com/class/5_{{page}}.html\n悬疑鬼怪::http://www.txt101.com/class/6_{{page}}.html\n游戏人生::http://www.txt101.com/class/7_{{page}}.html\n百合GL::http://www.txt101.com/class/8_{{page}}.html\n其他类型::http://www.txt101.com/class/9_{{page}}.html",
+    "lastUpdateTime": 1639822618491,
+    "loginUrl": "",
+    "respondTime": 4311,
+    "ruleBookInfo": {
+      "coverUrl": "class.picborder@src",
+      "intro": "id.CrbsSum@textNodes",
+      "lastChapter": "font@a@text",
+      "tocUrl": "font@a@href##/(\\d+)/(\\d+).html##/$1/"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "class.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "class.chaper0@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸101言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.txt101.com",
+    "bookUrlPattern": "",
+    "customOrder": -2085959021,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "enabledReview": false,
+    "exploreUrl": "",
+    "lastUpdateTime": 1682084853871,
+    "loginUrl": "",
+    "respondTime": 180454,
+    "ruleBookInfo": {
+      "coverUrl": "class.picborder@src",
+      "init": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>",
+      "intro": "id.CrbsSum@textNodes",
+      "lastChapter": "font@a@text",
+      "tocUrl": "font@a@href##(.*?)/(\\d+)/(\\d+).html##https://m.txt101.com/id/$2/"
+    },
+    "ruleContent": {
+      "content": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nid.content@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||tag.td.4@text",
+      "bookList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nclass.bookbox||class.sf-grid@tr",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##/id/(\\d+).html##/img/$1.jpg",
+      "kind": "class.update@textNodes&&tag.td.0@text&&tag.td.7@text##\\[|]",
+      "lastChapter": "class.cat@a@text||tag.td.2@a@text",
+      "name": "h4@a@text||tag.td.1@a@text##.*完整版.*|.*最新章节.*|小说"
+    },
+    "ruleToc": {
+      "chapterList": "<js>\nif(result.match(/text=new Array\\(\".*?\"\\)/)){\ncon=\"\"\neval(result.match(/text=new Array\\(\".*?\"\\)/)[0]);\nfor(var i=0;i<text.length;i++){con +=text[i];}con=String(java.base64Decode(con));\nresult=con\n}else{\n\tresult=result\n\t}\n</js>\nclass.chapter@a",
+      "chapterName": "text",
+      "chapterUrl": "href##^##https://www.txt101.com",
+      "isVolume": ""
+    },
+    "searchUrl": "http://www.txt101.com/book/search.aspx?key={{key}}",
+    "weight": 0
+  }
+]

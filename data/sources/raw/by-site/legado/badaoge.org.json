@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔尖中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.badaoge.org",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 137,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 376,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "id.info@tag.p.0@text",
+      "coverUrl": "",
+      "intro": "id.intro@tag.p@text##(作者：.+所写的.+无弹窗免费全文阅读为转载作品,章节由网友发布。|推荐地址：http://www.badaoge.org/book/.+)",
+      "kind": "class.con_top@tag.a.2@text",
+      "lastChapter": "id.list@tag.dd.0@text",
+      "name": "id.info@tag.h1@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##(最新网址：www.badaoge.org|请记住本书首发域名：www.badaoge.org。笔尖中文手机版阅读网址：m.badaoge.org|http://www.badaoge.org/book/.+.html)",
+      "nextContentUrl": "",
+      "imageStyle": "0",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "tag.span@text",
+      "bookList": "id.hotcontent@class.item",
+      "bookUrl": "class.image@tag.a@href",
+      "coverUrl": "tag.img.0@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "tag.a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd!0:1:2:3:4:5:6:7:8:9",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/modules/article/search.php,{'body':'searchkey={{key}}','method':'POST'}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

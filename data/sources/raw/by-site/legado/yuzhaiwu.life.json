@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://yuzhaiwu.life",
+    "customOrder": 715,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 1,
+    "weight": 558
+  }
+]

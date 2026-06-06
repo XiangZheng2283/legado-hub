@@ -1,0 +1,152 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "老王小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lwkk.xyz/",
+    "customOrder": 987,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "另类综合::https://lwkk.xyz/?paged={{page}}&cat=7\n暴力虐待::https://lwkk.xyz/?paged={{page}}&cat=5\n都市现代::https://lwkk.xyz/?paged={{page}}&cat=6\n校园春色::https://lwkk.xyz/?paged={{page}}&cat=3\n家庭伦理::https://lwkk.xyz/?paged={{page}}&cat=4\n古典武侠::https://lwkk.xyz/?paged={{page}}&cat=9",
+    "lastUpdateTime": 1678674093865,
+    "respondTime": 2382,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {
+      "content": "class.entry-content@p@text"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "bookList": "id.primary@article",
+      "bookUrl": "a@href",
+      "intro": "class.entry-summary@text",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h2",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://lwkk.xyz/?s={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "🔞 老王看书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lwkk.xyz",
+    "customOrder": 1131,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "校园春色::/?paged={{page}}&cat=3\n家庭伦理::/?paged={{page}}&cat=4\n暴力虐待::/?paged={{page}}&cat=5\n都市现代::/?paged={{page}}&cat=6\n另类综合::/?paged={{page}}&cat=7\n古典武侠::/?paged={{page}}&cat=9",
+    "lastUpdateTime": 1677975338223,
+    "respondTime": 2202,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {
+      "content": ".entry-content@p@html"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@ownText",
+      "bookList": "#primary article",
+      "bookUrl": "a.0@href",
+      "intro": "p.0@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "a.-1@text",
+      "lastChapter": "time@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "h1",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/?paged={{page}}&s={{key}}",
+    "weight": 18
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🔞 老王看书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lwkk.xyz",
+    "customOrder": 96,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "校园春色::/?paged={{page}}&cat=3\n家庭伦理::/?paged={{page}}&cat=4\n暴力虐待::/?paged={{page}}&cat=5\n都市现代::/?paged={{page}}&cat=6\n另类综合::/?paged={{page}}&cat=7\n古典武侠::/?paged={{page}}&cat=9",
+    "lastUpdateTime": 1677975338223,
+    "respondTime": 7452,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {
+      "content": ".entry-content@p@html"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@ownText",
+      "bookList": "#primary article",
+      "bookUrl": "a.0@href",
+      "intro": "p.0@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "a.-1@text",
+      "lastChapter": "time@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "h1",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/?paged={{page}}&s={{key}}",
+    "weight": 18
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精选书源",
+    "bookSourceName": "老王小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://lwkk.xyz/",
+    "customOrder": 1309,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "另类综合::https://lwkk.xyz/?paged={{page}}&cat=7\n暴力虐待::https://lwkk.xyz/?paged={{page}}&cat=5\n都市现代::https://lwkk.xyz/?paged={{page}}&cat=6\n校园春色::https://lwkk.xyz/?paged={{page}}&cat=3\n家庭伦理::https://lwkk.xyz/?paged={{page}}&cat=4\n古典武侠::https://lwkk.xyz/?paged={{page}}&cat=9",
+    "lastUpdateTime": 1678674093865,
+    "respondTime": 8315,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {
+      "content": "class.entry-content@p@text"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "bookList": "id.primary@article",
+      "bookUrl": "a@href",
+      "intro": "class.entry-summary@text",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h2",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://lwkk.xyz/?s={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "bookSourceComment": "（同站）PO18文：\nhttps://wap.po18bl.com\nhttps://m.po18sf.com\nhttps://m.txtyzw.com\nhttps://wap.po18.club\n三九书屋：https://m.sanjiushuwu.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🔰 新御书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ayushuwu.com/",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2537,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "更新时间::/shuku/0/0/0/0/0/0/lastupdate/{{page}}.html\n男点击榜::/top/rank.html\n女点击榜::/top/nrank.html\n  收藏榜  ::/top/collect.html\n  推荐榜  ::/top/vote.html\n  罗曼史  ::/shuku/0/4/0/0/0/0/lastupdate/{{page}}.html\n    耽美    ::/shuku/0/5/0/0/0/0/lastupdate/{{page}}.html\n    百合    ::/shuku/0/6/0/0/0/0/lastupdate/{{page}}.html\n    同人    ::/shuku/0/7/0/0/0/0/lastupdate/{{page}}.html\n校园言情::/shuku/0/1/0/0/0/0/lastupdate/{{page}}.html\n都市言情::/shuku/0/2/0/0/0/0/lastupdate/{{page}}.html\n古代言情::/shuku/0/3/0/0/0/0/lastupdate/{{page}}.html\n奇幻玄幻::/shuku/0/8/0/0/0/0/lastupdate/{{page}}.html\n网游竞技::/shuku/0/9/0/0/0/0/lastupdate/{{page}}.html\n科幻异能::/shuku/0/10/0/0/0/0/lastupdate/{{page}}.html\n恐怖灵异::/shuku/0/11/0/0/0/0/lastupdate/{{page}}.html\n惊悚推理::/shuku/0/12/0/0/0/0/lastupdate/{{page}}.html\n武侠仙侠::/shuku/0/13/0/0/0/0/lastupdate/{{page}}.html\n历史军事::/shuku/0/14/0/0/0/0/lastupdate/{{page}}.html\n穿越重生::/shuku/0/15/0/0/0/0/lastupdate/{{page}}.html\n综合其它::/shuku/0/16/0/0/0/0/lastupdate/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1719532752688,
+    "loginUrl": "",
+    "respondTime": 38072,
+    "ruleBookInfo": {
+      "author": ".xq_bookne@div.-5@text",
+      "coverUrl": ".lazyload.img@src",
+      "init": "",
+      "intro": ".bookintro@text",
+      "kind": ".xq_bookne@div.-4@text##类别：",
+      "lastChapter": "",
+      "name": ".xq_bookne@class.one@em@text",
+      "tocUrl": ".btn_book@a.-1@href",
+      "wordCount": ".xq_bookne@div.-2@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.YiJianZhan@html"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.book_other@ownText",
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@tag.a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "tag.img@src",
+      "intro": "class.book_des@text",
+      "kind": "class.book_other@span@text",
+      "name": "dd@h3@a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@ul@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n\"charset\": \"utf-8\",\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&searchtype=all\"\n}",
+    "weight": 0
+  }
+]

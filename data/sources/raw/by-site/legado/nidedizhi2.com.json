@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "你的地址",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.nidedizhi2.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3674,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"书库\",\"url\":\"/sort/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"高辣小说\",\"url\":\"/sort/1/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"百合肉文\",\"url\":\"/sort/2/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"言情小说\",\"url\":\"/sort/3/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"情欲小说\",\"url\":\"/sort/4/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"耽美小说\",\"url\":\"/sort/5/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"海棠耽美\",\"url\":\"/sort/6/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"空(没标名字能点)\",\"url\":\"/sort/7/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"其他类型\",\"url\":\"/sort/8/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\n{\"title\":\"完本\",\"url\":\"/quanben/sort/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"高辣小说\",\"url\":\"/quanben/sort/1/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"百合肉文\",\"url\":\"/quanben/sort/2/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"言情小说\",\"url\":\"/quanben/sort/3/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"情欲小说\",\"url\":\"/quanben/sort/4/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"耽美小说\",\"url\":\"/quanben/sort/5/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"海棠耽美\",\"url\":\"/quanben/sort/6/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"空(没标名字能点)\",\"url\":\"/quanben/sort/7/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"其他类型\",\"url\":\"/quanben/sort/8/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n]",
+    "exploreScreen": "",
+    "header": "<js>\n(() => {\n\treturn JSON.stringify({\n\t\t\"User-Agent\": \"Mozilla/5.0 (iPhone; CPU iPhone OS 13_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Mobile/15E148 Snapchat/10.77.5.59 (like Safari/604.1)\",\n    \"Referer\":source.bookSourceUrl\n\t})\n})()\n</js>",
+    "lastUpdateTime": 1694673951242,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 549,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".infohead@.infotype@p.0@a@text",
+      "coverUrl": ".infohead@img@src",
+      "intro": ".infohead@.intro@p@text",
+      "kind": ".infohead@.infotype@p.1@text##类型：",
+      "lastChapter": ".infohead@.infotype@p.3@a@text",
+      "name": ".infohead@h3@text",
+      "canReName": "",
+      "tocUrl": ".gochapter@a@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".articlecontent@html##\\s*<a.*<\\/a>\\s*\n@js:\nresult+\"hereispagebreak\"",
+      "nextContentUrl": "#next_url@text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##[\\r\\n]?\\s*(hereispagebreak)[\\r\\n]?\\s*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".branch_menu@.article",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".simple@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h6@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "#indexselect@option!0@value",
+      "updateTime": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.key)}}search/,{\n\tmethod:\"post\",\n\tbody:\"searchkey={{key}}&type=articlename\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

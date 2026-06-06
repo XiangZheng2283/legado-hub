@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "517漫画",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.517mh.net",
+    "customOrder": 733,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 637
+  }
+]

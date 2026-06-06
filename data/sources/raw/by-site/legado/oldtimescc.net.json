@@ -1,0 +1,164 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "旧时光文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.oldtimescc.net/",
+    "bookUrlPattern": "",
+    "customOrder": 818,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685886593447,
+    "loginUrl": "",
+    "respondTime": 1927,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "id.info@.visible-xs.1@text##字数：|\\s"
+    },
+    "ruleContent": {
+      "content": "#booktxt@p!0@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##本站 0zw，最快更新.*|新书发布.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.item@class.btm@tag.a@text",
+      "bookList": "class.l rank@class.item",
+      "bookUrl": "dt@a@href",
+      "coverUrl": "class.item@class.image@tag.img@data-original",
+      "intro": "dd@text",
+      "lastChapter": "",
+      "name": "dt@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "旧时光文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.oldtimescc.net",
+    "bookUrlPattern": "",
+    "customOrder": 1378,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680938830620,
+    "loginUrl": "",
+    "respondTime": 1953,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content%%class.visible-xs.1@text##字数：|\\s\\d.*|\\s",
+      "lastChapter": "[property$=chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#booktxt@p!0@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##本站 0zw，最快更新.*|新书发布.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.item@class.btm@tag.a@text",
+      "bookList": "class.l rank@class.item",
+      "bookUrl": "dt@a@href",
+      "coverUrl": "class.item@class.image@tag.img@data-original",
+      "intro": "dd@text",
+      "lastChapter": "",
+      "name": "dt@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.oldtimescc.net/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💥优质,2",
+    "bookSourceName": "旧时光文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.oldtimescc.net",
+    "bookUrlPattern": "",
+    "customOrder": 1646,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1680938830620,
+    "loginUrl": "",
+    "respondTime": 1183,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content%%class.visible-xs.1@text##字数：|\\s\\d.*|\\s",
+      "lastChapter": "[property$=chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#booktxt@p!0@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##本站 0zw，最快更新.*|新书发布.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.item@class.btm@tag.a@text",
+      "bookList": "class.l rank@class.item",
+      "bookUrl": "dt@a@href",
+      "coverUrl": "class.item@class.image@tag.img@data-original",
+      "intro": "dd@text",
+      "lastChapter": "",
+      "name": "dt@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.oldtimescc.net/search/?searchkey={{key}}",
+    "weight": 0
+  }
+]

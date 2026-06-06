@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉 笔趣阁⑮①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.szfkx.com",
+    "customOrder": 501,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 1,
+    "weight": 158
+  }
+]

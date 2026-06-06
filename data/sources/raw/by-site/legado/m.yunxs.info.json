@@ -1,0 +1,140 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "云中书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.yunxs.info",
+    "customOrder": 782,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682670456293,
+    "respondTime": 5876,
+    "ruleBookInfo": {
+      "author": ".info@li.0@a@text",
+      "coverUrl": ".p_box@.pic@img.0@src",
+      "intro": ".words@p.2@text##.*小说主要讲述.\\s+|无弹.*?在.*?在云中书库|简介：",
+      "kind": ".info@li.1@a@text",
+      "lastChapter": ".words@a.0@text##\\（.*\\）",
+      "name": ".j_box@h1@text",
+      "wordCount": ".info@li.5@font@text"
+    },
+    "ruleContent": {
+      "content": "class.box_box@textNodes",
+      "imageStyle": "0",
+      "replaceRegex": "##推荐阅读：《.*?》"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者.",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookimg@tag.a@href##(.*)##http://www.yunxs.com$1##",
+      "checkKeyWord": "高天之上",
+      "coverUrl": "class.bookimg@tag.a@tag.img@src",
+      "kind": "class.cat@text##分类.",
+      "lastChapter": "class.update@tag.a@text##\\（.*\\）",
+      "name": "class.bookname@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?s=00000&q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "云中书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.yunxs.info/",
+    "customOrder": 1103,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686060463843,
+    "respondTime": 5793,
+    "ruleBookInfo": {
+      "author": ".info@li.0@a@text",
+      "coverUrl": ".p_box@.pic@img.0@src",
+      "intro": ".words@p.2@text##.*小说主要讲述.\\s+|无弹.*?在.*?在云中书库|简介：",
+      "kind": ".info@li.1@a@text&&.info@.wj@textNodes&&.info@#cms_favorites@text",
+      "lastChapter": ".words@a.0@text##\\（.*\\）",
+      "name": ".j_box@h1@text",
+      "wordCount": ".info@li.5@font@text"
+    },
+    "ruleContent": {
+      "content": "class.box_box@html",
+      "imageStyle": "",
+      "replaceRegex": "##推荐阅读：《.*?》|.*扫描下面二维码或者.*|\\<img.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者.",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookimg@tag.a@href##(.*)##http://www.yunxs.com$1##",
+      "checkKeyWord": "高天之上",
+      "coverUrl": "class.bookimg@tag.a@tag.img@src",
+      "kind": "class.cat@text##分类.",
+      "lastChapter": "class.update@tag.a@text##\\（.*\\）",
+      "name": "class.bookname@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?s=00000&q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "云中书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.yunxs.info/",
+    "customOrder": 1103,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690115663652,
+    "respondTime": 7956,
+    "ruleBookInfo": {
+      "author": ".info@li.0@a@text",
+      "coverUrl": ".p_box@.pic@img.0@src",
+      "intro": ".words@p.2@text##.*小说主要讲述.\\s+|无弹.*?在.*?在云中书库|简介：",
+      "kind": ".info@li.1@a@text&&.info@.wj@textNodes&&.info@#cms_favorites@text",
+      "lastChapter": ".words@a.0@text##\\（.*\\）",
+      "name": ".j_box@h1@text",
+      "wordCount": ".info@li.5@font@text"
+    },
+    "ruleContent": {
+      "content": "class.box_box@html",
+      "imageStyle": "",
+      "replaceRegex": "##推荐阅读：《.*?》|.*扫描下面二维码或者.*|\\<img.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者.",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookimg@tag.a@href##(.*)##http://www.yunxs.com$1##",
+      "checkKeyWord": "高天之上",
+      "coverUrl": "class.bookimg@tag.a@tag.img@src",
+      "kind": "class.cat@text##分类.",
+      "lastChapter": "class.update@tag.a@text##\\（.*\\）",
+      "name": "class.bookname@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?s=00000&q={{key}}",
+    "weight": 0
+  }
+]

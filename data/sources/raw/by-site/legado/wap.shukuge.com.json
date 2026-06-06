@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "6",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.shukuge.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 546,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::http://wap.shukuge.com/i-xuanhuan/\n言情::http://wap.shukuge.com/i-yanqing/\n武侠::http://wap.shukuge.com/i-wuxia/\n历史::http://wap.shukuge.com/i-lishi/\n网游::http://wap.shukuge.com/i-wangyou/\n科幻::http://wap.shukuge.com/i-kehuan/\n悬疑::http://wap.shukuge.com/i-xuanyi/\n排行榜::http://wap.shukuge.com/top/\n最新::http://wap.shukuge.com/new/",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1733164664503,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 362,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "class.book_about@dd@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.book_box@dd.1@span.1@text##字数：",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##.*第.*页.*|.*本章未完.*|阅读网址.*"
+    },
+    "ruleExplore": {
+      "author": "span.2@text",
+      "bookList": "class.lis@li",
+      "bookUrl": "span.1@a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "span.1@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text##作者：",
+      "bookList": "class.bookbox",
+      "bookUrl": "h4@a@href",
+      "coverUrl": "class.bookimg@a@img@src",
+      "intro": "",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@a@text",
+      "name": "h4@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.book_last@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "http://wap.shukuge.com/search?q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

@@ -1,0 +1,78 @@
+[
+  {
+    "bookSourceComment": "By关耳",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖 百度百科",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://baike.baidu",
+    "bookUrlPattern": "",
+    "customOrder": 682,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1668711041031,
+    "loginUrl": "",
+    "respondTime": 335,
+    "ruleBookInfo": {
+      "name": ""
+    },
+    "ruleContent": {
+      "content": "@js:String(org.jsoup.Jsoup.parse(result).select('h2,.reference-title,.para,.reference-list,.basic-info')).replace(/<h2 class=\"block-title\">目录<\\/h2>/,'').replace(/<h2.*?>/g,'-----📖').replace(/<\\/h2>/g,'📖-----').replace(/<span class=\"title-prefix\">.*?span>/g,'').replace(/<dt class=\"basicInfo-item name\">/g,'---------')",
+      "imageStyle": "full",
+      "replaceRegex": "##src=\"[^\"]+\" data-src##src"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "class.lemmaWgt-lemmaTitle-title",
+      "bookUrl": "",
+      "kind": "",
+      "name": "tag.h1.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.item!0:1",
+      "chapterName": "tag.a.0@text||tag.span@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "https://baike.baidu.com/item/{{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "By关耳",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖 百度百科",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://baike.baidu",
+    "bookUrlPattern": "",
+    "customOrder": 682,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1668711041031,
+    "loginUrl": "",
+    "respondTime": 360,
+    "ruleBookInfo": {
+      "name": ""
+    },
+    "ruleContent": {
+      "content": "@js:String(org.jsoup.Jsoup.parse(result).select('h2,.reference-title,.para,.reference-list,.basic-info')).replace(/<h2 class=\"block-title\">目录<\\/h2>/,'').replace(/<h2.*?>/g,'-----📖').replace(/<\\/h2>/g,'📖-----').replace(/<span class=\"title-prefix\">.*?span>/g,'').replace(/<dt class=\"basicInfo-item name\">/g,'---------')",
+      "imageStyle": "full",
+      "replaceRegex": "##src=\"[^\"]+\" data-src##src"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "class.lemmaWgt-lemmaTitle-title",
+      "bookUrl": "",
+      "kind": "",
+      "name": "tag.h1.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.item!0:1",
+      "chapterName": "tag.a.0@text||tag.span@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "https://baike.baidu.com/item/{{key}}",
+    "weight": 0
+  }
+]

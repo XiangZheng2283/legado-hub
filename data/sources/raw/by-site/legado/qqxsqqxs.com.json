@@ -1,0 +1,44 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌸 芊芊小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qqxsqqxs.com",
+    "customOrder": 619,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 834
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉芊芊小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qqxsqqxs.com/",
+    "customOrder": 432,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 1,
+    "weight": 24
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🌸 芊芊小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qqxsqqxs.com",
+    "customOrder": 775,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2,
+    "weight": 834
+  }
+]

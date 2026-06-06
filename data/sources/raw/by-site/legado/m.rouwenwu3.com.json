@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "肉肉屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.rouwenwu3.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3038,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::/top/lastupdate_{{page}}/\n最新入库::/top/postdate_{{page}}/\n完本小说::/full/{{page}}/\n总点击榜::/top/allvisit_{{page}}/\n月点击榜::/top/monthvisit_{{page}}/\n周点击榜::/top/weekvisit_{{page}}/\n日点击榜::/top/dayvisit_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n月推荐榜::/top/monthvote_{{page}}/\n周推荐榜::/top/weekvote_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n字数排行::/top/size_{{page}}/\n 玄幻 ::/sort/1_{{page}}/\n 武侠 ::/sort/2_{{page}}/\n 言情 ::/sort/3_{{page}}/\n 穿越 ::/sort/4_{{page}}/\n 都市 ::/sort/5_{{page}}/\n 科幻 ::/sort/6_{{page}}/\n 网游 ::/sort/7_{{page}}/\n 恐怖 ::/sort/8_{{page}}/\n 耽美 ::/sort/9_{{page}}/\n 校园 ::/sort/10_{{page}}/\n 高辣 ::/sort/11_{{page}}/\n 腹黑 ::/sort/12_{{page}}/\n 种田 ::/sort/13_{{page}}/\n 高干 ::/sort/14_{{page}}/\n 百合 ::/sort/15_{{page}}/\n 其他 ::/sort/16_{{page}}/",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1027,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".tab@tag.p.0@text##.*：",
+      "coverUrl": ".tu@img@src",
+      "intro": ".jj@p@html",
+      "kind": ".tab1@tag.p.0@text&&.tab1@tag.p.1@text##小说",
+      "lastChapter": ".tab@a@text",
+      "name": "tag.h1.0@text##\\_.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": ".tab1@tag.p.2@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##分卷阅读.*|.*作者.*"
+    },
+    "ruleExplore": {
+      "author": ".p4@text||.p3 a@text",
+      "bookList": ".tt||.content_link",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": ".p5@text##.*简介.|\\s",
+      "kind": "p@.p2@text&&.p1 a@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text##\\_.*",
+      "wordCount": "p@.p3@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "tag.a.1@text",
+      "lastChapter": "",
+      "name": "tag.a.0@text##\\_.*",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

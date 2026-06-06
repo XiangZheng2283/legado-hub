@@ -1,0 +1,23 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,天龙",
+    "bookSourceName": "🚬 呱呱小说网™九天之狼",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xguaguaxs.com",
+    "customOrder": 204,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

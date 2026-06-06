@@ -1,0 +1,472 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说旗2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com/#pb1101",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 195,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/leibie1_{{page}}.html\n武侠修真::/leibie2_{{page}}.html\n都市言情::/leibie3_{{page}}.html\n历史军事::/leibie4_{{page}}.html\n侦探推理::/leibie5_{{page}}.html\n网游动漫::/leibie6_{{page}}.html\n科幻小说::/leibie7_{{page}}.html\n恐怖灵异::/leibie8_{{page}}.html\n散文诗词::/leibie9_{{page}}.html\n其他类型::/leibie10_{{page}}.html",
+    "lastUpdateTime": 1680945516208,
+    "loginUrl": "",
+    "respondTime": 12088,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "id.info@tag.p.3@text##小说分类：|小说状态：|更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": "l"
+    },
+    "ruleContent": {
+      "content": "id.content@html##投推荐票.*|<a.*|一秒记住.*免费阅读！",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xs7.com/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说旗3",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com/#♤pb",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 196,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/leibie1_{{page}}.html\n武侠修真::/leibie2_{{page}}.html\n都市言情::/leibie3_{{page}}.html\n历史军事::/leibie4_{{page}}.html\n侦探推理::/leibie5_{{page}}.html\n网游动漫::/leibie6_{{page}}.html\n科幻小说::/leibie7_{{page}}.html\n恐怖灵异::/leibie8_{{page}}.html\n散文诗词::/leibie9_{{page}}.html\n其他类型::/leibie10_{{page}}.html",
+    "lastUpdateTime": 1680945545671,
+    "loginUrl": "",
+    "respondTime": 12090,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "id.info@tag.p.3@text##小说分类：|小说状态：|更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": "l"
+    },
+    "ruleContent": {
+      "content": "id.content@html##投推荐票.*|<a.*|一秒记住.*免费阅读！",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xs7.com/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说旗",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 562,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/leibie1_{{page}}.html\n武侠修真::/leibie2_{{page}}.html\n都市言情::/leibie3_{{page}}.html\n历史军事::/leibie4_{{page}}.html\n侦探推理::/leibie5_{{page}}.html\n网游动漫::/leibie6_{{page}}.html\n科幻小说::/leibie7_{{page}}.html\n恐怖灵异::/leibie8_{{page}}.html\n散文诗词::/leibie9_{{page}}.html\n其他类型::/leibie10_{{page}}.html",
+    "lastUpdateTime": 1669206177575,
+    "loginUrl": "",
+    "respondTime": 6308,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "class.introtxt@text",
+      "kind": "id.info@tag.p.3@text##小说分类：|小说状态：|更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": "l"
+    },
+    "ruleContent": {
+      "content": "id.content@html##投推荐票.*|<a.*|一秒记住.*免费阅读！",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xs7.com/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说旗",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com/",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 1259,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"/leibie1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠修真\",\"url\":\"/leibie2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"/leibie3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/leibie4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"侦探推理\",\"url\":\"/leibie5_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游动漫\",\"url\":\"/leibie6_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/leibie7_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"恐怖灵异\",\"url\":\"/leibie8_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文诗词\",\"url\":\"/leibie9_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其他类型\",\"url\":\"/leibie10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.295}}]",
+    "lastUpdateTime": 1686056457120,
+    "loginUrl": "",
+    "respondTime": 8184,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "class.introtxt@text##[da-zA-Z0-9]+\\.[da-zA-Z0-9]+|简介:.*：",
+      "kind": ".con_top@a.1@text&&id.info@tag.p.3@text##更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "imageStyle": "0",
+      "replaceRegex": "##投推荐票.*|<a.*|一秒记住.*免费阅读！"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text##[da-zA-Z0-9]+\\.[da-zA-Z0-9]+|简介:.*：",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "言情,💦精品",
+    "bookSourceName": "小说旗2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com/#pb1101",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 151,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/leibie1_{{page}}.html\n武侠修真::/leibie2_{{page}}.html\n都市言情::/leibie3_{{page}}.html\n历史军事::/leibie4_{{page}}.html\n侦探推理::/leibie5_{{page}}.html\n网游动漫::/leibie6_{{page}}.html\n科幻小说::/leibie7_{{page}}.html\n恐怖灵异::/leibie8_{{page}}.html\n散文诗词::/leibie9_{{page}}.html\n其他类型::/leibie10_{{page}}.html",
+    "lastUpdateTime": 1680945516208,
+    "loginUrl": "",
+    "respondTime": 5001,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "id.info@tag.p.3@text##小说分类：|小说状态：|更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": "l"
+    },
+    "ruleContent": {
+      "content": "id.content@html##投推荐票.*|<a.*|一秒记住.*免费阅读！",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xs7.com/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "言情,💦精品",
+    "bookSourceName": "小说旗3",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com/#♤pb",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 152,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/leibie1_{{page}}.html\n武侠修真::/leibie2_{{page}}.html\n都市言情::/leibie3_{{page}}.html\n历史军事::/leibie4_{{page}}.html\n侦探推理::/leibie5_{{page}}.html\n网游动漫::/leibie6_{{page}}.html\n科幻小说::/leibie7_{{page}}.html\n恐怖灵异::/leibie8_{{page}}.html\n散文诗词::/leibie9_{{page}}.html\n其他类型::/leibie10_{{page}}.html",
+    "lastUpdateTime": 1680945545671,
+    "loginUrl": "",
+    "respondTime": 5154,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "class.introtxt@text",
+      "kind": "id.info@tag.p.3@text##小说分类：|小说状态：|更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": "l"
+    },
+    "ruleContent": {
+      "content": "id.content@html##投推荐票.*|<a.*|一秒记住.*免费阅读！",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xs7.com/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "☣️精选senhora,♑qd书",
+    "bookSourceName": "小说旗",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 248,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::/leibie1_{{page}}.html\n武侠修真::/leibie2_{{page}}.html\n都市言情::/leibie3_{{page}}.html\n历史军事::/leibie4_{{page}}.html\n侦探推理::/leibie5_{{page}}.html\n网游动漫::/leibie6_{{page}}.html\n科幻小说::/leibie7_{{page}}.html\n恐怖灵异::/leibie8_{{page}}.html\n散文诗词::/leibie9_{{page}}.html\n其他类型::/leibie10_{{page}}.html",
+    "lastUpdateTime": 1669206177575,
+    "loginUrl": "",
+    "respondTime": 4731,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "class.introtxt@text",
+      "kind": "id.info@tag.p.3@text##小说分类：|小说状态：|更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": "l"
+    },
+    "ruleContent": {
+      "content": "id.content@html##投推荐票.*|<a.*|一秒记住.*免费阅读！",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.xs7.com/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说旗",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xs7.com/",
+    "bookUrlPattern": "https://www.xs7.com/shu/\\d+/",
+    "customOrder": 939,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"/leibie1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠修真\",\"url\":\"/leibie2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"/leibie3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/leibie4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"侦探推理\",\"url\":\"/leibie5_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游动漫\",\"url\":\"/leibie6_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/leibie7_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"恐怖灵异\",\"url\":\"/leibie8_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"散文诗词\",\"url\":\"/leibie9_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其他类型\",\"url\":\"/leibie10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.295}}]",
+    "lastUpdateTime": 1686056457120,
+    "loginUrl": "",
+    "respondTime": 5815,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者:",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "class.introtxt@text##[da-zA-Z0-9]+\\.[da-zA-Z0-9]+|简介:.*：",
+      "kind": ".con_top@a.1@text&&id.info@tag.p.3@text##更新时间：",
+      "lastChapter": "id.info@tag.p.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|作者.*",
+      "tocUrl": "class.btopt@tag.a.0@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "imageStyle": "0",
+      "replaceRegex": "##投推荐票.*|<a.*|一秒记住.*免费阅读！"
+    },
+    "ruleExplore": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@tag.li@tag.a@text",
+      "name": "class.title@tag.h2@tag.a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.title@tag.span@text##作者：",
+      "bookList": "id.alistbox",
+      "bookUrl": "h2@tag.a@href",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text##[da-zA-Z0-9]+\\.[da-zA-Z0-9]+|简介:.*：",
+      "kind": "",
+      "lastChapter": "class.sys@tag.li@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.title@tag.h2@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n'method': 'POST',\n'body': 's=articlename&searchkey={{key}}&Submit='\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,有声",
+    "bookSourceName": "📻 轻音乐网",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://m.htqyy.com",
+    "customOrder": 188,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"/top\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热门\",\"url\":\"/album\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"纯音乐\",\"url\":\"/album/index/1\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"新世纪\",\"url\":\"/album/index/2\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"钢琴曲集\",\"url\":\"/album/index/3\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"减压放松\",\"url\":\"/album/index/4\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"中国音乐\",\"url\":\"/album/index/5\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"天籁之音\",\"url\":\"/album/index/6\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"影视原声\",\"url\":\"/album/index/7\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"电子音乐\",\"url\":\"/album/index/8\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"背景音乐\",\"url\":\"/album/index/9\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"手机铃声\",\"url\":\"/album/index/10\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"流行金曲\",\"url\":\"/album/index/11\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"胎教音乐\",\"url\":\"/album/index/12\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"佛教音乐\",\"url\":\"/album/index/13\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1668708649429,
+    "loginUrl": "",
+    "respondTime": 1667,
+    "ruleBookInfo": {
+      "intro": ".q@html",
+      "kind": "",
+      "lastChapter": ".nowrap@text"
+    },
+    "ruleContent": {
+      "content": "#jp_audio_0@src"
+    },
+    "ruleExplore": {
+      "author": "em@text",
+      "bookList": ".line",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "name": ""
+    },
+    "ruleToc": {
+      "chapterList": ".list li||h1",
+      "chapterName": "{{@@em@text}} - {{@@a@text}}",
+      "chapterUrl": "a@href##$##,{\"webView\":true}"
+    },
+    "searchUrl": "",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,有声",
+    "bookSourceName": "♬ 轻音乐网 💡 #一程1101",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://m.htqyy.com#yc1101",
+    "customOrder": 1592,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"/top\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热门\",\"url\":\"/album\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"纯音乐\",\"url\":\"/album/index/1\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"新世纪\",\"url\":\"/album/index/2\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"钢琴曲集\",\"url\":\"/album/index/3\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"减压放松\",\"url\":\"/album/index/4\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"中国音乐\",\"url\":\"/album/index/5\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"天籁之音\",\"url\":\"/album/index/6\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"影视原声\",\"url\":\"/album/index/7\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"电子音乐\",\"url\":\"/album/index/8\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"背景音乐\",\"url\":\"/album/index/9\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"手机铃声\",\"url\":\"/album/index/10\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"流行金曲\",\"url\":\"/album/index/11\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"胎教音乐\",\"url\":\"/album/index/12\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"佛教音乐\",\"url\":\"/album/index/13\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1638109971462,
+    "loginUrl": "",
+    "respondTime": 2443,
+    "ruleBookInfo": {
+      "intro": ".q@html",
+      "kind": "",
+      "lastChapter": ".nowrap@text"
+    },
+    "ruleContent": {
+      "content": "#jp_audio_0@src"
+    },
+    "ruleExplore": {
+      "author": "em@text",
+      "bookList": ".line",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "name": ""
+    },
+    "ruleToc": {
+      "chapterList": ".list li||h1",
+      "chapterName": "{{@@em@text}} - {{@@a@text}}",
+      "chapterUrl": "a@href##$##,{\"webView\":true}"
+    },
+    "searchUrl": "",
+    "weight": 67
+  }
+]

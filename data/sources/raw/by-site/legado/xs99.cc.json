@@ -1,0 +1,24 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,天龙",
+    "bookSourceName": "言情小说大全™",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xs99.cc",
+    "customOrder": 232,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1608880594621,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

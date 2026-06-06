@@ -1,0 +1,193 @@
+[
+  {
+    "bookSourceComment": "&dmxs",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "言情小筑",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yqxz.org",
+    "customOrder": 34,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "总排行::/hot/index<,_{{page}}>.html\n周榜::/hot_zhou/index<,_{{page}}>.html\n月榜::/hot_yue/index<,_{{page}}>.html\n\n\n♯现代言情♯::/xdyq/index<,_{{page}}>.html\nTop100::/hot4/index<,_{{page}}>.html\n\n♯古代言情♯::/gdyq/index<,_{{page}}>.html\nTop100::/hot5/index<,_{{page}}>.html\n\n♯穿越重生♯::/cycs/index<,_{{page}}>.html\nTop100::/hot6/index<,_{{page}}>.html\n\n♯玄幻仙侠♯::/xhxx/index<,_{{page}}>.html\nTop100::/hot7/index<,_{{page}}>.html\n\n♯网游竞技♯::/wyjj/index<,_{{page}}>.html\nTop100::/hot8/index<,_{{page}}>.html\n\n♯台湾小言♯::/twxy/index<,_{{page}}>.html\nTop100::/hot9/index<,_{{page}}>.html\n\n♯ BG 同人 ♯::/BGTR/index<,_{{page}}>.html\nTop100::/hot10/index<,_{{page}}>.html",
+    "header": "",
+    "lastUpdateTime": 1619062316333,
+    "respondTime": 3991,
+    "ruleBookInfo": {
+      "author": "",
+      "init": "",
+      "intro": "class.infos@tag.p@textNodes##^##<br>",
+      "kind": "class.tags@tag.a@text&&class.date@tag.span!0@text##时间|状态|：",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "class.read_chapterDetail@html",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.autor@text",
+      "bookList": "@css:.bk a",
+      "bookUrl": "href",
+      "intro": "tag.p@textNodes",
+      "kind": "class.date@text##日期\\:\\s",
+      "lastChapter": "{{'完本'}}",
+      "name": "tag.h3@text",
+      "wordCount": "class.size@text##大小\\:\\s"
+    },
+    "ruleToc": {
+      "chapterList": "@css:.book_list li a",
+      "chapterName": "text##章##节",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/e/search/index.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "言情小筑",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yqxz.org/",
+    "customOrder": 1248,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"总排行榜\",\"url\":\"/hot/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"周排行榜\",\"url\":\"/hot_zhou/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"月排行榜\",\"url\":\"/hot_yue/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"♯现代言情♯\",\"url\":\"/xdyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot4/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯古代言情♯\",\"url\":\"/gdyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot5/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯穿越重生♯\",\"url\":\"/cycs/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot6/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯玄幻仙侠♯\",\"url\":\"/xhxx/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot7/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯网游竞技♯\",\"url\":\"/wyjj/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot8/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯台湾小言♯\",\"url\":\"/twxy/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot9/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯ BG 同人 ♯\",\"url\":\"/BGTR/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot10/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "header": "",
+    "lastUpdateTime": 1686055461016,
+    "respondTime": 5599,
+    "ruleBookInfo": {
+      "author": ".infos@span.0@a@text",
+      "canReName": "true",
+      "init": "",
+      "intro": "class.infos@tag.p@textNodes##^##<br>",
+      "kind": "class.tags@tag.a.0@text&&class.date@tag.span.2:1@text##.*：|\\s",
+      "lastChapter": ".book_list.clearfix@ul@li.-1@a@text",
+      "name": ".infos@h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "class.read_chapterDetail@html",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.autor@text",
+      "bookList": "@css:.bk a",
+      "bookUrl": "href",
+      "intro": "tag.p@textNodes",
+      "kind": "class.date@text##日期\\:\\s",
+      "lastChapter": "{{@@class.date@text##日期\\:\\s}} ",
+      "name": "tag.h3@text",
+      "wordCount": "class.size@text##大小\\:\\s"
+    },
+    "ruleToc": {
+      "chapterList": "@css:.book_list li a",
+      "chapterName": "text##章##节",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/e/search/index.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "&dmxs",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 言情小筑",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yqxz.org",
+    "customOrder": 409,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"总排行榜\",\"url\":\"/hot/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"周排行榜\",\"url\":\"/hot_zhou/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"月排行榜\",\"url\":\"/hot_yue/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"tag\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"♯现代言情♯\",\"url\":\"/xdyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot4/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯古代言情♯\",\"url\":\"/gdyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot5/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯穿越重生♯\",\"url\":\"/cycs/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot6/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯玄幻仙侠♯\",\"url\":\"/xhxx/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot7/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯网游竞技♯\",\"url\":\"/wyjj/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot8/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯台湾小言♯\",\"url\":\"/twxy/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot9/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"♯ BG 同人 ♯\",\"url\":\"/BGTR/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"☆Top100☆\",\"url\":\"/hot10/index<,_{{page}}>.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "header": "",
+    "lastUpdateTime": 1680505261264,
+    "respondTime": 1885,
+    "ruleBookInfo": {
+      "author": "",
+      "canReName": "true",
+      "init": "",
+      "intro": "class.infos@tag.p@textNodes##^##<br>",
+      "kind": "class.tags@tag.a@text&&class.date@tag.span!0@text##时间|状态|：",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "class.read_chapterDetail@html",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.autor@text",
+      "bookList": "@css:.bk a",
+      "bookUrl": "href",
+      "intro": "tag.p@textNodes",
+      "kind": "class.date@text##日期\\:\\s",
+      "lastChapter": "{{@@class.date@text##日期\\:\\s}} • {{@@class.size@text##大小\\:\\s}}",
+      "name": "tag.h3@text",
+      "wordCount": "class.size@text##大小\\:\\s"
+    },
+    "ruleToc": {
+      "chapterList": "@css:.book_list li a",
+      "chapterName": "text##章##节",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/e/search/index.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💐 女频",
+    "bookSourceName": "💐 言情小筑",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.yqxz.org",
+    "customOrder": 42,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"排行榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"总排行榜\",\"url\":\"/hot/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"月排行榜\",\"url\":\"/hot_yue/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"周排行榜\",\"url\":\"/hot_zhou/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"前百榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"现代言情Top100\",\"url\":\"/hot4/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"古代言情Top100\",\"url\":\"/hot5/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"穿越重生Top100\",\"url\":\"/hot6/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"玄幻武侠Top100\",\"url\":\"/hot7/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"BG同人Top100\",\"url\":\"/hot10/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"游戏竞技Top100\",\"url\":\"/hot3/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"台湾小言Top100\",\"url\":\"/hot9/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"现代言情\",\"url\":\"/xdyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"古代言情\",\"url\":\"/gdyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"穿越重生\",\"url\":\"/cycs/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"玄幻仙侠\",\"url\":\"/xhxx/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"BG同人\",\"url\":\"/BGTR/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"网游竞技\",\"url\":\"/wyjj/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"长篇言情\",\"url\":\"/cpyq/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"台湾小言\",\"url\":\"/twxy/index<,_{{page}}>.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "",
+    "lastUpdateTime": 1722282034119,
+    "respondTime": 4527,
+    "ruleBookInfo": {
+      "author": ".date@a@text",
+      "init": "",
+      "intro": ".infos@p@textNodes##^##<br>",
+      "kind": ".tags@a@text&&.date@span!0@text##.*：",
+      "lastChapter": "",
+      "name": ".infos@h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": ".read_chapterDetail@html",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".autor@text",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "快穿",
+      "coverUrl": "",
+      "intro": "p@text##\\s",
+      "kind": ".date@text##日期\\:\\s",
+      "lastChapter": "",
+      "name": "h3@text",
+      "wordCount": ".size@text##大小\\:\\s"
+    },
+    "ruleToc": {
+      "chapterList": ".book_list@li@a",
+      "chapterName": "text##章##节",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/e/search/index.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"post\",\n  \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  }
+]

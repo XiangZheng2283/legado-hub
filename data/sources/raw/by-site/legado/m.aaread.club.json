@@ -1,0 +1,23 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "原仓库,搜索链接规则为空",
+    "bookSourceName": "疯情阅读?",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.aaread.club",
+    "customOrder": 1099,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

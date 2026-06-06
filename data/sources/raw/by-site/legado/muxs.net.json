@@ -1,0 +1,94 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "🚬 木小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.muxs.net",
+    "bookUrlPattern": "http://www.muxs.net/info.+\\d.html",
+    "customOrder": 574,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::http://www.muxs.net/xuanhuan/{{page}}.html\n武侠::http://www.muxs.net/wuxia/{{page}}.html\n历史::http://www.muxs.net/lishi/{{page}}.html\n恐怖::http://www.muxs.net/kongbu/{{page}}.html\n科幻::http://www.muxs.net/kehuan/{{page}}.html\n都市::http://www.muxs.net/dushi/{{page}}.html\n言情::http://www.muxs.net/yanqing/{{page}}.html\n穿越::http://www.muxs.net/chuanyue/{{page}}.html\n青春::http://www.muxs.net/qingchun/{{page}}.html\n同人::http://www.muxs.net/tongren/{{page}}.html\n游戏::http://www.muxs.net/youxi/{{page}}.html\n耽美::http://www.muxs.net/danmei/{{page}}.html\n文学::http://www.muxs.net/wenxue/{{page}}.html\n其他::http://www.muxs.net/qita/{{page}}.html\n激情::http://www.muxs.net/jiqing/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1624022775948,
+    "loginUrl": "",
+    "respondTime": 3968,
+    "ruleBookInfo": {
+      "coverUrl": "class.con_limg@tag.img@src",
+      "intro": "class.r_cons@text",
+      "name": "tag.h1@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "class.content@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "class.alistbox",
+      "bookUrl": "class.title@tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.intro@text##\\(\\)：\\/.+\\d\\/",
+      "name": "class.title@tag.a@title"
+    },
+    "ruleSearch": {
+      "bookList": "class.list@tag.tbody",
+      "bookUrl": "class.name@tag.a@href",
+      "coverUrl": "class.cover@tag.img@src",
+      "intro": "class.intro@text##电子书简介：\\{",
+      "name": "class.name@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.muxs.net/search.php?keyword={{key}}&submit=,{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "木小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.muxs.net/",
+    "bookUrlPattern": "http://www.muxs.net/info.+\\d.html",
+    "customOrder": 1503,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::http://www.muxs.net/xuanhuan/{{page}}.html\n武侠::http://www.muxs.net/wuxia/{{page}}.html\n历史::http://www.muxs.net/lishi/{{page}}.html\n恐怖::http://www.muxs.net/kongbu/{{page}}.html\n科幻::http://www.muxs.net/kehuan/{{page}}.html\n都市::http://www.muxs.net/dushi/{{page}}.html\n言情::http://www.muxs.net/yanqing/{{page}}.html\n穿越::http://www.muxs.net/chuanyue/{{page}}.html\n青春::http://www.muxs.net/qingchun/{{page}}.html\n同人::http://www.muxs.net/tongren/{{page}}.html\n游戏::http://www.muxs.net/youxi/{{page}}.html\n耽美::http://www.muxs.net/danmei/{{page}}.html\n文学::http://www.muxs.net/wenxue/{{page}}.html\n其他::http://www.muxs.net/qita/{{page}}.html\n激情::http://www.muxs.net/jiqing/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1624022775948,
+    "loginUrl": "",
+    "respondTime": 11260,
+    "ruleBookInfo": {
+      "coverUrl": "class.con_limg@tag.img@src",
+      "intro": "class.r_cons@text",
+      "name": "tag.h1@tag.a@text"
+    },
+    "ruleContent": {
+      "content": "class.content@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": "class.alistbox",
+      "bookUrl": "class.title@tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "intro": "class.intro@text##\\(\\)：\\/.+\\d\\/",
+      "name": "class.title@tag.a@title"
+    },
+    "ruleSearch": {
+      "bookList": "class.list@tag.tbody",
+      "bookUrl": "class.name@tag.a@href",
+      "coverUrl": "class.cover@tag.img@src",
+      "intro": "class.intro@text##电子书简介：\\{",
+      "name": "class.name@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-item@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.muxs.net/search.php?keyword={{key}}&submit=,{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  }
+]

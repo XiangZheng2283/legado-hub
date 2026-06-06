@@ -1,0 +1,104 @@
+[
+  {
+    "bookSourceComment": "阅读书源长期更新地址↓\nhttps://blog.itaj.xyz/2021/09/34.html",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "[阿玖·AJiu]云中书库.PC",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yunxs.com/",
+    "bookUrlPattern": "",
+    "customOrder": 902,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t排行\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t::\n玄幻.奇幻::/xuanhuan/shuku_1949_{{page}}.html\n仙侠.武侠::/xianxia/shuku_3336_{{page}}.html\n都市.言情::/dushi/shuku_8625_{{page}}.html\n穿越.历史::/chuanyue/shuku_1335_{{page}}.html\n科幻.灵异::/kehuan/shuku_1500_{{page}}.html\n同人.网游::/tongren/shuku_1056_{{page}}.html",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36\"}",
+    "lastUpdateTime": 1624540505210,
+    "loginUrl": "",
+    "respondTime": 9556,
+    "ruleBookInfo": {
+      "author": "tag.meta.9@content",
+      "coverUrl": "tag.meta.7@content",
+      "init": "",
+      "intro": "class.j_box@class.words.0@tag.p.2@text",
+      "kind": "tag.meta.8@content",
+      "lastChapter": "tag.meta.16@content",
+      "name": "tag.meta.10@content",
+      "tocUrl": "tag.meta.11@content",
+      "wordCount": "class.j_box@class.info.0@tag.li.5@text##.字数：##"
+    },
+    "ruleContent": {
+      "content": "class.box_box@textNodes",
+      "nextContentUrl": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "class.author@text",
+      "bookList": "class.ul_m_list@li",
+      "bookUrl": "class.t@tag.a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "class.c@text##\\[(.*)\\]##$1",
+      "lastChapter": "class.n@tag.a.1@text",
+      "name": "class.t@text",
+      "wordCount": "class.words@text"
+    },
+    "ruleSearch": {
+      "author": "class.state@text##作者：|类型.*##",
+      "bookList": "class.ul_b_list@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img.0@src",
+      "intro": "tag.p.2@text",
+      "kind": "class.state@text##作者：.*类型：|状态.*##",
+      "lastChapter": "",
+      "name": "tag.h2@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": "id.cms_favorites@text"
+    },
+    "searchUrl": "/plus/search.php?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉云中书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yunxs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1213,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1612777312854,
+    "respondTime": 9422,
+    "ruleBookInfo": {
+      "intro": "tag.p.2@text##简介：",
+      "lastChapter": "//meta[@property=\"og:novel:latest_chapter_name\"]/@content"
+    },
+    "ruleContent": {
+      "content": "class.box_box@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.state@text##\\s+.*",
+      "bookList": "class.ul_b_list@tag.li||id.box_01_zong",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.pic@tag.img@src",
+      "kind": "tag.span.0@text",
+      "name": "tag.h2@tag.a.0@text||tag.apan.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/plus/search.php?kwtype=0&searchtype=搜索&q={{key}},{\n  \"charset\": \"utf-8\"\n}",
+    "weight": 0
+  }
+]

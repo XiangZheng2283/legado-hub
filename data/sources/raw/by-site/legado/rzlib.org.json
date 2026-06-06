@@ -1,0 +1,74 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "日照小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.rzlib.org/",
+    "bookUrlPattern": "book_\\d+/",
+    "customOrder": 797,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685874262956,
+    "loginUrl": "",
+    "respondTime": 8980,
+    "ruleBookInfo": {
+      "author": "id.info@tag.h1@tag.small@tag.a@text",
+      "coverUrl": "class.img_in@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "class.update@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "id.info@tag.h1@text##/.*",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##日照小说网.*最新章节！| 本章未完.*页继续阅读|N：0／D",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.news@ul@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\nsource.bookSourceUrl + 'files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "class.s1@text&&\nclass.s5@text",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\nsource.bookSourceUrl + 'files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.5:4@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "modules/article/search.php?searchkey={{key}}&submit=%CB%D1%CB%F7&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🍺 日照小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.rzlib.org",
+    "customOrder": 460,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 0,
+    "weight": 88
+  }
+]

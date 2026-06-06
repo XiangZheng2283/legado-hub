@@ -1,0 +1,80 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "🔞 免费小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.b483.com/",
+    "customOrder": 1522,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678613120405,
+    "respondTime": 2115,
+    "ruleBookInfo": {
+      "author": "class.gray fss@text",
+      "name": "tag.h4@text",
+      "tocUrl": "text.显示全部章节@href"
+    },
+    "ruleContent": {
+      "content": "id.acontent@text",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".gray@text##\\|.*",
+      "bookList": "class.blockcontent@class.c_row cf",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.row_cover@tag.img@src",
+      "intro": "",
+      "name": "tag.h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.dl@dd",
+      "chapterName": "@a@text",
+      "chapterUrl": "@a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.b483.com/modules/article/search.php,{\n\"charset\": \"utf-8\",\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&searchtype=all\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 免费小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.b483.com/",
+    "customOrder": 110,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1726573198244,
+    "respondTime": 18652,
+    "ruleBookInfo": {
+      "author": "",
+      "name": "tag.h4@text##.*《(.+)》##$1",
+      "tocUrl": "text.显示全部章节@href"
+    },
+    "ruleContent": {
+      "content": "id.acontent@text",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.blockcontent@class.c_row cf",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.row_cover@tag.img@src",
+      "intro": "",
+      "name": "tag.h4@text##.*《(.+)》##$1"
+    },
+    "ruleToc": {
+      "chapterList": "tag.dl@dd",
+      "chapterName": "@a@text",
+      "chapterUrl": "@a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.b483.com/modules/article/search.php,{\n\"charset\": \"utf-8\",\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&searchtype=all\"\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "@MR.无名",
+    "bookSourceGroup": "",
+    "bookSourceName": "酷酷看书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kuku3.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 91,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js: var result = [];\njava.toast(\"🔥动态获取发现中……\");\nvar push=(title,url,size)=>result.push({\n  \t\"title\": title,\n  \t\"url\": url,\n  \t\"style\": {\n   \"layout_flexGrow\": 1,\n   \"layout_flexBasisPercent\": size\n   }\n });\nvar top = java.ajax(\"https://www.kuku3.com/rank\");\nvar tag = java.ajax(\"https://www.kuku3.com/quanban/sort/\")\nif (top&&tag) {\na=org.jsoup.Jsoup.parse(top).select(\".sortChannel_nav a\");\nb=org.jsoup.Jsoup.parse(tag).select(\".sortChannel_nav a\");\npush(\"排行榜\",null,1)\n    for(i in a){\n        title=a[i].text()\n        url=a[i].attr(\"href\")\n        size=0.4;\n  //url=String(url).replace(\"1\",\"{{page}}\")\n        push(title,url,size)\n    };\n    push(\"分类\",null,1)\n    for(i in b){\n        title=b[i].text()\n        url=b[i].attr(\"href\")\n        size=0.25\n        if (url.endsWith(\"sort/\")) {\n            url=url+\"1\"\n            url=String(url).replace(\"1\",\"{{page}}\")\n            push(title,url,size)\n        } else if (url.endsWith(\"sort/1/1/\")) {\n            url=String(url).replace(url,\"sort/1/{{page}}\")\n            push(title,url,size)\n        } else {\n            url=String(url).replace(\"1\",\"{{page}}\")\n            push(title,url,size)\n    }}\n      } else { \n      java.toast(\"🚫发现获取失败……\");\n}\nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1733846548929,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1655,
+    "ruleBookInfo": {
+      "init": ".synopsisArea_detail",
+      "author": ".author@text##作者：",
+      "coverUrl": "img@src",
+      "intro": ".review@text",
+      "kind": ".sort@text##类别：",
+      "lastChapter": "a[0]@text",
+      "name": "{{book.name}}",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@p@text##\\(\\'|\\', \\'\\'\\)|请收藏本站.*",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".author@text##作者：",
+      "bookList": ".hot_sale",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": ".review@text##简介：",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".title@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author[0]@text##作者：",
+      "bookList": ".bookbox",
+      "bookUrl": "a[1]@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": ".author[1]@text##类型：",
+      "lastChapter": "a[2]@text",
+      "name": "a[1]@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".directoryArea@p",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.key)}}\n/search/,{\n\"method\":\"POST\",\n\"body\":\"searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 2
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "测试",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://nhentai.net",
+    "customOrder": 713,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {
+      "coverUrl": "",
+      "init": "",
+      "intro": ""
+    },
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleToc": {
+      "chapterList": "",
+      "chapterName": "",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,有效书源",
+    "bookSourceName": "测试",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://nhentai.net",
+    "customOrder": 164,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {
+      "coverUrl": "",
+      "init": "",
+      "intro": ""
+    },
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "FULL",
+      "nextContentUrl": ""
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "name": ""
+    },
+    "ruleToc": {
+      "chapterList": "",
+      "chapterName": "",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "",
+    "weight": 0
+  }
+]

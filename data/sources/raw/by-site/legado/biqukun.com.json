@@ -1,0 +1,55 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "笔趣阁④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biqukun.com/",
+    "bookUrlPattern": "https://www.biqukun.com/\\d+/\\d+/",
+    "customOrder": -262,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/xiaoshuo1/index{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"修真小说\",\"url\":\"/xiaoshuo2/index{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/xiaoshuo3/index{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"穿越小说\",\"url\":\"/xiaoshuo4/index{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/xiaoshuo5/index{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/xiaoshuo6/index{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1692661067385,
+    "loginUrl": "",
+    "respondTime": 14149,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text##作者：",
+      "coverUrl": "id.fmimg@tag.img.0@src",
+      "init": "",
+      "intro": "id.intro@tag.p.0@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@tag.h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "tag.dt@span@text",
+      "bookList": "class.item",
+      "bookUrl": "tag.dt@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd@text",
+      "name": "tag.dt@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a.0@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'/d/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "tag.td.1@tag.span.0@tag.a.0@text##正文",
+      "name": "tag.td.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

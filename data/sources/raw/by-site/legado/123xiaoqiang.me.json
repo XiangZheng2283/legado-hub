@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃小强小说🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://123xiaoqiang.me#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2036,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[             {\"title\":\"全部分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n            \t\t{\"title\":\"耽美小说\",\"url\":\"/sort/1/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"耽美肉文\",\"url\":\"/sort/2/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"言情小说\",\"url\":\"/sort/3/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"言情肉文\",\"url\":\"/sort/4/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"百合小说\",\"url\":\"/sort/5/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"超爽肉文\",\"url\":\"/sort/6/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"浓情肉文\",\"url\":\"/sort/7/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\t\t\t\t\t\t\t{\"title\":\"其他类型\",\"url\":\"/sort/8/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "exploreScreen": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36\"\n}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 367,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".booktag@a.0@text",
+      "coverUrl": "img@src",
+      "intro": ".bookintro@text",
+      "kind": "",
+      "lastChapter": "p.2@text##最新章节：|.*\\s",
+      "name": "h1@text##作者：.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": ".blue.0@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#rtext@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##.*返回顶部.*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author.0@text",
+      "bookList": ".bookbox",
+      "bookUrl": "h4@a.0@href",
+      "coverUrl": "h4@a.0@href##.+\\D((\\d+)\\d{3})\\D##http://123xiaoqiang.me/images/$2/$1/$1s.jpg###",
+      "intro": ".update@text",
+      "kind": "",
+      "lastChapter": ".cat@text##更新到：|.*\\s",
+      "name": "h4@a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#list-chapterAll@dd@a",
+      "chapterName": "text##.*\\s",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.key)}}/search/,{\n \"body\": \"searchkey={{key}}&submit=\",\n \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

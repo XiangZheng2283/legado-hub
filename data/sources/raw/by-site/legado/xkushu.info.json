@@ -1,0 +1,62 @@
+[
+  {
+    "bookSourceComment": "// 登录模板",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 三五中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xkushu.info",
+    "bookUrlPattern": "https://www.xkushu.info/35zwhtml/\\d+/\\d+/",
+    "customOrder": 94,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻奇幻\",\"url\":\"/zwwsort1/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"修真武侠\",\"url\":\"/zwwsort2/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"/zwwsort3/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/zwwsort4/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人名著\",\"url\":\"/zwwsort5/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"/zwwsort6/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻灵异\",\"url\":\"/zwwsort7/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美动漫\",\"url\":\"/zwwsort8/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总榜\",\"url\":\"/zwwtopallvisit/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月榜\",\"url\":\"/zwwtopmonthvisit/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周榜\",\"url\":\"/zwwtopweekvisit/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总榜\",\"url\":\"/zwwtopallvote/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月榜\",\"url\":\"/zwwtopmonthvote/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周榜\",\"url\":\"/zwwtopweekvote/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏榜\",\"url\":\"/zwwtopgoodnum/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"字数榜\",\"url\":\"/zwwtopsize/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新更新\",\"url\":\"/zwwtoplastupdate/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"/zwwtoppostdate/0/{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"我的书架\",\"url\":\"/modules/article/bookcase.php\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "{\n\t\"x-requested-with\": \"XMLHttpRequest\",\n\t\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5938.92 Safari/537.36\"\n}",
+    "lastUpdateTime": 1719639386257,
+    "loginCheckJs": "if ( (cookie.getKey(source.key, \"username\")) == \"User\" ) {\n\tjava.log(\"登录状态：已登录\")\n}else{\n\tjava.log(\"登录状态：未登录\")\n}result",
+    "loginUi": "[\n    {\n        name: \"用户名\",\n        type: \"text\"\n    },\n    {\n        name: \"密码\",\n        type: \"password\"\n    },\n    {\n    \t   name: \"注册\",\n    \t   type: \"button\",\n    \t   action: \"http://www.xkushu.info/register.php\"\n    \t},\n    \t{\n    \t\t  name: \"清除登录信息\",\n    \t\t  type: \"button\",\n    \t\t  action: \"clearLogin()\"\n    \t}\n]",
+    "loginUrl": "function login() {\n  let une = source.getLoginInfoMap().get(\"用户名\");\n  let pwd = source.getLoginInfoMap().get(\"密码\");\n\n  if (une && pwd) {\n    let url = source.key + '/login.php';\n    let body = `LoginForm%5Busername%5D=${une}&LoginForm%5Bpassword%5D=${pwd}&action=login&jumpurl=http%3A%2F%2Fwww.xkushu.info%2F&usecookie=1&submit=%E7%99%BB%E5%BD%95`;\n    let head = JSON.parse(source.header);\n    var login = java.post(url, body, head).body();\n  }\n\n  source.putLoginHeader(login);\n}\n\nfunction clearLogin() {\n  cookie.removeCookie(source.getKey());\n  source.removeLoginHeader();\n  java.longToast('清除成功！');\n}",
+    "respondTime": 1778,
+    "ruleBookInfo": {
+      "author": "id.details@tag.a.0@text",
+      "coverUrl": "class.pic@img@src",
+      "init": "",
+      "intro": "class.bookinfo_intro@text",
+      "kind": "id.details@text##.*更新时间：|\\|| |手机阅读.*",
+      "lastChapter": "id.details@tag.a.2@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.title@h1@text##全文阅读"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "nextContentUrl": "",
+      "payAction": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": ""
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}modules/article/search.php,{\n\"charset\": \"\",\n\"method\": \"POST\",\n\"body\": \"searchtype=articlename&searchkey={{key}}&Submit=+%E6%90%9C+%E7%B4%A2+\"\n}",
+    "weight": 0
+  }
+]

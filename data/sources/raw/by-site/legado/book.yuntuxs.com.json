@@ -1,0 +1,100 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "常用（精选）",
+    "bookSourceName": "🏖️云兔小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://book.yuntuxs.com/",
+    "customOrder": 820,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"http://book.yuntuxs.com/sort/1/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"修真\",\"url\":\"http://book.yuntuxs.com/sort/2/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市\",\"url\":\"http://book.yuntuxs.com/sort/3/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史\",\"url\":\"http://book.yuntuxs.com/sort/4/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"军事\",\"url\":\"http://book.yuntuxs.com/sort/5/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻\",\"url\":\"http://book.yuntuxs.com/sort/6/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"灵异\",\"url\":\"http://book.yuntuxs.com/sort/7/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏\",\"url\":\"http://book.yuntuxs.com/sort/8/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"\\t其他\",\"url\":\"http://book.yuntuxs.com/sort/9/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"古代言情\",\"url\":\"http://book.yuntuxs.com/sort/10/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"现代言情\",\"url\":\"http://book.yuntuxs.com/sort/11/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"玄幻仙侠\",\"url\":\"http://book.yuntuxs.com/sort/12/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻悬疑\",\"url\":\"http://book.yuntuxs.com/sort/13/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美纯爱\",\"url\":\"http://book.yuntuxs.com/sort/14/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"青春校园\",\"url\":\"http://book.yuntuxs.com/sort/15/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1686102552327,
+    "respondTime": 3415,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.booktxt@html##一秒记住.*免费阅读！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.dd.1@a@text",
+      "bookList": "class.content@dl",
+      "bookUrl": "tag.dt@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.0@text",
+      "lastChapter": "tag.dd.2@a@text",
+      "name": "tag.dt@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.all@ul@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://book.yuntuxs.com/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "已检验",
+    "bookSourceName": "🍊 云兔小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://book.yuntuxs.com",
+    "bookUrlPattern": "http://book.yuntuxs.com/book/\\d+/",
+    "customOrder": 1311,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "耽美纯爱::/sort/14/{{page}}/\n现代言情::/sort/11/{{page}}/\n古代言情::/sort/10/{{page}}/\n玄幻仙侠::/sort/12/{{page}}/\n科幻悬疑::/sort/13/{{page}}/\n青春校园::/sort/15/{{page}}/",
+    "lastUpdateTime": 1668280153779,
+    "loginUrl": "",
+    "respondTime": 18475,
+    "ruleBookInfo": {
+      "author": "class.booktitle@h2@text",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.bookintro@tag.p.0@text##.*简介：",
+      "kind": "class.bookdes@tag.p.0@text&&class.bookdes@tag.p.3@text##最后更新：",
+      "lastChapter": "class.bookdes@tag.p.2@a@text",
+      "name": "class.booktitle@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.booktxt@html##.*最新阅读！|.*免费阅读！|\\n",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "tag.a.2@text",
+      "bookList": "class.content@dl",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://bw.yiruiweb.xyz/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "tag.dd.0@text",
+      "kind": "tag.span.0@text&&\ntag.span.1@text&&\ntag.span.2@text&&\ntag.span.3@text",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleSearch": {
+      "author": "tag.dd.1@a@text",
+      "bookList": "class.content@dl",
+      "bookUrl": "tag.dt@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.0@text",
+      "kind": "tag.dd.1@tag.span.0@text",
+      "lastChapter": "tag.dt@a@href<js>java.ajax('http://book.yuntuxs.com'+result)</js>class.bookdes@tag.p.2@a@text",
+      "name": "tag.dt@a@text",
+      "wordCount": "tag.dd.1@tag.span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.all@li",
+      "chapterName": "tag.a@text##\\d+.第##第",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://book.yuntuxs.com/search/?searchkey={{key}}",
+    "weight": 0
+  }
+]

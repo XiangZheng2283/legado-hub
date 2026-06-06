@@ -1,0 +1,172 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "泡泡中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.paopaoxs.cn",
+    "customOrder": 245,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 8.1.0) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1682657937517,
+    "respondTime": 4772,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "canReName": "1",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=status|category|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content&&[property$=update_time]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "tag.p!0@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span@textNodes",
+      "bookList": "ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".intro@text",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".bookshelf-list@ul li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/search.html?keyword={{key}}&page=2{\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "泡泡小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.paopaoxs.cn/",
+    "customOrder": 1274,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 8.1.0) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1686057178363,
+    "respondTime": 6296,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "canReName": "1",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=status|category|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "tag.p!0@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@textNodes",
+      "bookList": "ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".intro@text",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".bookshelf-list@ul li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/search.html?keyword={{key}}&page=2{\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🏖️免费",
+    "bookSourceName": "泡泡中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.paopaoxs.cn",
+    "customOrder": 974,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 8.1.0) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1682657937517,
+    "respondTime": 2601,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "canReName": "1",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=status|category|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content&&[property$=update_time]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "tag.p!0@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span@textNodes",
+      "bookList": "ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".intro@text",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".bookshelf-list@ul li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/search.html?keyword={{key}}&page=2{\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "泡泡小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.paopaoxs.cn/",
+    "customOrder": 1274,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{ \"User-Agent\": \"Mozilla/5.0 (Linux; Android 8.1.0) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1686057178363,
+    "respondTime": 10723,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "canReName": "1",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=status|category|update_time]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "tag.p!0@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@textNodes",
+      "bookList": "ul li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".intro@text",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".bookshelf-list@ul li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/search.html?keyword={{key}}&page=2{\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

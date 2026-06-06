@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "❤️笔趣阁移动版🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ttwcm.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 309,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"总点击\",\"url\":\"/rank/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":null}},{\"title\":\"月点击\",\"url\":\"/rank/monthvisit/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":null}},{\"title\":\"周点击\",\"url\":\"/rank/weekvisit/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":null}},{\"title\":\"收  藏\",\"url\":\"/rank/goodnum/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":null}}]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1769587402071,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 528,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".author@text##作者：",
+      "coverUrl": "ing@src",
+      "intro": ".review p@text",
+      "kind": ".sort@text##类别：",
+      "lastChapter": ".lastchapter a@text",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": ".synopsisArea_detail@p.1@text##更新：",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#chaptercontent p@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "a p.1@text",
+      "bookList": ".hot_sale",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "a p.2@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".title@textNodes",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".author.0@text##作者：",
+      "bookList": ".bookbox",
+      "bookUrl": ".iTit a@href",
+      "coverUrl": ".bookimg a img@src",
+      "intro": "",
+      "kind": ".author.1@text##类型：",
+      "lastChapter": ".update@text",
+      "name": ".bookname i a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".directoryArea.1@p@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}\n/search/,{\n  \"body\": \"searchkey={{key}}&submit=\",\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

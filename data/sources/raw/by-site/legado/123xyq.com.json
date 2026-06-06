@@ -1,0 +1,69 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "123言情网①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.123xyq.com",
+    "customOrder": 595,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 300
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "123x言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.123xyq.com/",
+    "bookUrlPattern": "http://www.123xyq.com/xiaoshuo_\\d+.html",
+    "customOrder": 931,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/sort/1/{{page}}/\n奇幻小说::/sort/2/{{page}}/\n武侠小说::/sort/3/{{page}}/\n都市小说::/sort/4/{{page}}/\n历史小说::/sort/5/{{page}}/\n军事小说::/sort/6/{{page}}/\n悬疑小说::/sort/7/{{page}}/\n游戏小说::/sort/8/{{page}}/\n科幻小说::/sort/9/{{page}}/\n体育小说::/sort/10/{{page}}/\n官场小说::/sort/11/{{page}}/\n古言小说::/sort/12/{{page}}/\n现言小说::/sort/13/{{page}}/\n幻言小说::/sort/14/{{page}}/\n仙侠小说::/sort/15/{{page}}/\n青春小说::/sort/16/{{page}}/\n穿越小说::/sort/17/{{page}}/\n女生小说::/sort/18/{{page}}/\nN次あ 元::/sort/19/{{page}}/",
+    "lastUpdateTime": 1689914386462,
+    "respondTime": 4937,
+    "ruleBookInfo": {
+      "author": "h1@em@a@text",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.play-list@tag.a.0@text",
+      "name": "h1@textNodes",
+      "tocUrl": "class.btopt@a@href"
+    },
+    "ruleContent": {
+      "content": "id.TXT@textNodes##om.*最新章节！|http.*read.*"
+    },
+    "ruleExplore": {
+      "author": "class.title@span@text",
+      "bookList": "id.alistbox",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "lastChapter": "class.sys@a@text",
+      "name": "h2@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tr!0",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/_(\\d+)\\.html/)[1];\nvar iid = parseInt(id/1000);\n'http://www.123xyq.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text",
+      "name": "tag.td.0@a@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.123xyq.com/modules/article/search.php?s=articlename&searchkey={{key}}&Submit=&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

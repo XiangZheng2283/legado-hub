@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "读了小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.dule.cc",
+    "bookUrlPattern": "",
+    "customOrder": 628,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36\",\"Accept\":\"*/*\"}",
+    "lastUpdateTime": 1686915431002,
+    "loginUrl": "",
+    "respondTime": 1324,
+    "ruleBookInfo": {
+      "author": "class.status@tag.p.1@text",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "intro": "class.con@tag.p@text",
+      "kind": "class.status@tag.a.0@text",
+      "lastChapter": "class.red@text",
+      "name": "class.status@tag.h1@text",
+      "tocUrl": "text.点击阅读@href",
+      "wordCount": "class.status@tag.p.-3@text##总字数."
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.s4@text",
+      "bookList": "ul.txt-list@li!0",
+      "bookUrl": "span.s2@a@href",
+      "name": "span.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul.section-list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/ar.php?keyWord={{key}}",
+    "weight": 0
+  }
+]

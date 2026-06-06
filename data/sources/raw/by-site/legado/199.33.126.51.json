@@ -1,0 +1,44 @@
+[
+  {
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 同人圈",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://199.33.126.51",
+    "customOrder": 172,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"同人小说\",\"url\":\"/tongren/<,index_{{page}}.html>\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"全本同人\",\"url\":\"/tags-%C8%AB%B1%BE-{{page-1}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"连载同人\",\"url\":\"/tags-%C1%AC%D4%D8-{{page-1}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"同人榜单\",\"url\":\"/hot/<,index_{{page}}.html>\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "header": "{ \"Host\": \"tongrenquan.org\",\n\t\"referer\": \"{{source.getKey()}}\",\n\"x-requested-with\": \"mark.via\",\n\"accept-language\": \"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\",\n\"user-agent\": \"Mozilla/5.0 (Linux; Android 10; PACM00 Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.79 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1696309972090,
+    "respondTime": 1284,
+    "ruleBookInfo": {
+      "author": "span@text",
+      "coverUrl": "img@src",
+      "init": ".book_info",
+      "intro": "p@textNodes",
+      "kind": ".date@ownText##日期：",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": ".read_chapterDetail@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".booknews@ownText",
+      "bookList": ".bk",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": ".date@text",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".book_list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/e/search/indexstart.php,{\n  \"body\": \"keyboard={{key}}&show=title&classid=0\",\n  \"charset\": \"GB2312\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

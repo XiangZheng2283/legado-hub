@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "by:繁̌華̌落̌盡̌終̌成̌殤̌",
+    "bookSourceGroup": "",
+    "bookSourceName": "露露书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.lulushuwu.com",
+    "bookUrlPattern": "http://m.lulushuwu.com/\\d+_\\d+/",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2546,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "@js: \nvar result = [];\njava.toast(\"🔥正在刷新列表,请稍等！\");\nvar push = (title, url, size) => result.push({\n  \"title\": title,\n  \"url\": url,\n  \"style\": {\n    \"layout_flexGrow\": 1,\n    \"layout_flexBasisPercent\": size\n  }\n});\n\nvar fl = java.ajax(\"https://m.lulushuwu.com/xiaoshuodaquan\");\n\nif (fl) {\n  \n  a = org.jsoup.Jsoup.parse(fl).select(\".typelist a\")\npush(\"🔥分类小说🔥\",null,1)\n    for(var i=0;i<a.length;i++){\n        title=a[i].text()\n        url=a[i].attr(\"href\")\n        size=0.33;\n        title = String(title).replace(/\\s/g, \"\");\n        url=baseUrl+String(url).replace(/\\d+\\/$/,\"\")+\"/page_{{page}}.html\";\n        push(title,url,size)\n    };\n} else {\n  \n  java.toast(\"🤔列表刷新失败！！！\");\n}\nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1745497017794,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 666,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".pt-info.1@text",
+      "coverUrl": "img.0@src",
+      "intro": ".intro@text",
+      "kind": ".pt-info.0:2:3@text##.*：",
+      "lastChapter": "#newchaperlist@li.0@a.0@text",
+      "name": ".pt-name@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#BookText@html",
+      "nextContentUrl": "text.下一@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##[くくく√]"
+    },
+    "ruleExplore": {
+      "author": ".s712.1@text",
+      "bookList": ".book-li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".pt-desc@text",
+      "kind": "{{@@.s712.0@text##.*:}}\n{{@@.s713@text}}",
+      "lastChapter": "",
+      "name": ".pt-name@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": ".ptm-list-view-cell",
+      "bookUrl": "a.1@href",
+      "coverUrl": ".ptm-img-object@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://m.lulushuwu.com/home/search,{\n  \"body\": \"action=search&q={{key}}\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "燕子书屋🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.yuzhaiwen.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 789,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1663382115074,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1949,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "#novelMain h2@text",
+      "coverUrl": "",
+      "intro": "pre@text##\\s",
+      "kind": "#novelMain@tag.a.0@text&&#novelMain time@text",
+      "lastChapter": "#novelMain@tag.a.1@text&&#novelMain time@text\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>",
+      "name": ".h_nav_items@tag.li.1@text",
+      "canReName": "",
+      "tocUrl": "class.lb_mulu@tag.li.10@tag.a@href",
+      "wordCount": "##总字数：([^<]+)<##$1###",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#nr1@textNodes",
+      "nextContentUrl": "",
+      "imageStyle": "0",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "tag.strong@text",
+      "bookList": "class.common-bookele",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "intro": "tag.a.1@text##\\s",
+      "kind": "tag.p.1@text##.*：",
+      "lastChapter": "",
+      "name": "tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "tag.ul@tag.li!-1",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/s.php,{\n  \"method\":\"POST\",\n  \"body\":\"type=articlename&s={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 2
+  }
+]

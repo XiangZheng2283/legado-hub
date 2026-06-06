@@ -1,0 +1,51 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "笔趣阁ᶻ",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquzge.com",
+    "customOrder": 1033,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1691994952086,
+    "respondTime": 1201,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "init": "meta",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property$=chapter_name]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "@js:\n\nmat = baseUrl.match(/info\\/(\\d+)\\/(\\d+)(_(\\d+))?.html/);\n\nbody = \"articleid=\"+mat[1]+\"&chapterid=\"+mat[2]+\"&pid=\"+(mat[4]||1)\n\n// java.log(body);\n\n\najaxurl = \"https://www.biquzge.com/api/reader_js.php,\" + JSON.stringify({\n  \"body\": body,\n  \"method\": \"POST\"\n});\n\n\njava.ajax(ajaxurl)+'🍑下一页'",
+      "nextContentUrl": "@css:a:contains(下一页)@href",
+      "replaceRegex": "##\\s*🍑下一页\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": "+@css:.category-div",
+      "bookUrl": "@get:{u}",
+      "checkKeyWord": "",
+      "coverUrl": ".lazy@data-original",
+      "intro": ".intro@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.1@text@put:{u:\"a.1@href\"}",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".info-chapters!0@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "/search/,{\"method\": \"POST\",\"body\": \"searchkey={{key}}&Submit=\"}",
+    "weight": 0
+  }
+]

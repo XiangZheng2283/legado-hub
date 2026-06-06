@@ -1,0 +1,51 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "溜达小说[to]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.org/",
+    "customOrder": 584,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685878399036,
+    "respondTime": 2104,
+    "ruleBookInfo": {
+      "author": "#author@a@text",
+      "coverUrl": "#bookimg@img@src",
+      "intro": "#bookintro@p@text",
+      "kind": ".bookright@span.1:5@text",
+      "lastChapter": "#newlist@li.0@a@text",
+      "name": "h1@text",
+      "tocUrl": "div.newrap@a.0@href",
+      "wordCount": ".bookright@span.7@text&&span.uptime@sapn@text@js:result+'字'"
+    },
+    "ruleContent": {
+      "content": "id.content@html"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.book_other.0@tag.span.0@text",
+      "bookList": "id.sitembox@tag.dl",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.img@src",
+      "kind": "class.book_other.0@tag.span.1@text",
+      "lastChapter": "class.book_other.1@tag.a@text",
+      "name": "tag.a.1@text",
+      "wordCount": "class.book_other.0@tag.span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@tag.li@tag.a",
+      "chapterName": "text##正文|_",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

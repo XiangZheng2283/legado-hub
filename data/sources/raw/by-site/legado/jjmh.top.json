@@ -1,0 +1,133 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "漫小肆韩漫",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jjmh.top",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 406,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"性感\",\"url\": \"/booklist/?page={{page}}&tag=%E6%80%A7%E6%84%9F\",\n\"style\": {\"layout_flexGrow\": 1,\n\"layout_flexBasisPercent\": 0.25\n}},\n{\"title\": \"巨乳\",\"url\": \"/booklist/?page={{page}}&tag=%E5%B7%A8%E4%B9%B3\",\n\"style\": {\"layout_flexGrow\": 1,\n\"layout_flexBasisPercent\": 0.25\n}},\n{\"title\": \"连载\",\"url\": \"/booklist/?page={{page}}&end=0\",\n\"style\": {\"layout_flexGrow\": 1,\n\"layout_flexBasisPercent\": 0.25\n}},\n{\"title\": \"完结\",\"url\": \"/booklist/?page={{page}}&tag=%E5%85%A8%E9%83%A8&area=-1&end=1\",\n\"style\": {\"layout_flexGrow\": 1,\n\"layout_flexBasisPercent\": 0.25\n}}\n]",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 12; 22041211AC Build/SP1A.210812.016) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2271,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "简介：{{@@.detail-desc@text}}",
+      "kind": ".detail-main-info@p.4@text",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "@js: \n   let pics=java.getString('img@data-original');   \n   let p=String(pics).split(\"\\n\").map(i=>`<img src=\"${i}\">`).join(\"\\n\");\n   p;",
+      "nextContentUrl": "",
+      "imageStyle": "FULL",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "ul@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": "class.manga-list-2-tip@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.manga-list-2-title@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".book-list-info-bottom-item@text",
+      "bookList": "ul@li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": ".book-list-info-desc@text",
+      "kind": ".book-list-info-bottom-right-font@text",
+      "lastChapter": "",
+      "name": ".book-list-info-title@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul@li",
+      "chapterName": ".chapteritem@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/search?keyword={{key}}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceGroup": "测试",
+    "bookSourceName": "漫小肆20251217",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://www.jjmh.top/",
+    "customButton": false,
+    "customOrder": 188,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "[{\"title\":\"连载\",\"url\":\"/booklist?tag=全部&area=-1&end=0&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},\n{\"title\":\"完结\",\"url\":\"/booklist?tag=全部&area=-1&end=1&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/booklist?tag=都市&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}},\n{\"title\":\"出版\",\"url\":\"/booklist?tag=出版漫画&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.4,\"layout_flexGrow\":1}}]",
+    "header": "",
+    "lastUpdateTime": 1770457118485,
+    "respondTime": 11434,
+    "ruleBookInfo": {
+      "author": "class.subtitle.1@text",
+      "coverUrl": "class.cover.0@tag.img@src",
+      "intro": "class.block.4@text",
+      "kind": "class.block.3@text",
+      "lastChapter": "class.block.3@text",
+      "name": "class.info@tag.h1@text",
+      "tocUrl": "",
+      "wordCount": "class.block.0@text"
+    },
+    "ruleContent": {
+      "content": "class.comiclist@tag.div@class.comicpage@tag.div@tag.img@html\n\n@js:\nfunction removeDuplicateImgTags(str) { \n// 定义了一个名为 removeDuplicateImgTags 的函数，它接受一个字符串参数 str\n\nvar imgTags = str.split(/\\n|\\r/).filter(Boolean); \n// 将输入的字符串 str 按照换行符 \\n 或回车符 \\r 进行分割，得到一个字符串数组 imgTags\n// 然后使用 filter(Boolean) 方法过滤掉空字符串元素\n\nvar uniqueImgTags = Array.from(new Set(imgTags)); \n// 通过创建一个 Set 数据结构来去除 imgTags 数组中的重复元素，并使用 Array.from 方法将其转换回数组 uniqueImgTags\n\nreturn uniqueImgTags.join('\\n'); \n// 将 uniqueImgTags 数组的元素用换行符 \\n 连接成一个字符串并返回\n\n}\n\njava.log(removeDuplicateImgTags(result));\n// 调用 removeDuplicateImgTags 函数，并将结果传递给 java.log 方法进行输出，这里的 result 是“class.comiclist@tag.div@class.comicpage@tag.div@tag.img@html”字符串变量",
+      "title": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "coverUrl": "class.mh-item@tag.a@tag.p@style\n@js:\nfunction extractUrl(str) {\n  var regex = /url\\((.*?)\\)/;\n  var match = str.match(regex);\n  return match? match[1] : null;\n}\njava.log(extractUrl(result))"
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.mh-list col7@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.mh-item@tag.a@tag.p@style\n@js:\nfunction extractUrl(str) {\n  var regex = /url\\((.*?)\\)/;\n  var match = str.match(regex);\n  return match? match[1] : null;\n}\njava.log(extractUrl(result))",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "class.chapter@text",
+      "name": "class.mh-item@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.view-win-list detail-list-select@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.jjmh.top/search?keyword={{key}}",
+    "weight": 0
+  }
+]

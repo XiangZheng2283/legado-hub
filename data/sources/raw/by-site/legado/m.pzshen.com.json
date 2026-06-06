@@ -1,0 +1,98 @@
+[
+  {
+    "bookSourceComment": "//网站很卡，不是搜索到问题\n//尽量搜多个字，搜索太多列容易崩",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "⭐胖子小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.pzshen.com",
+    "customOrder": 327,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/xuanhuan/{{page}}.html\n武侠::/wuxia/{{page}}.html\n都市::/dushi/{{page}}.html\n历史::/lishi/{{page}}.html\n网游::/wangyou/{{page}}.html\n科幻::/kehuan/{{page}}.html\n女生::/mm/{{page}}.html\n完本::/finish/{{page}}.html",
+    "header": "{\"referer\":\"https://m.pzshen.com\"}",
+    "lastUpdateTime": 1684211069977,
+    "loginUrl": "",
+    "respondTime": 7518,
+    "ruleBookInfo": {
+      "author": ".dd_box.0@span.0@text##作者：",
+      "coverUrl": "img@src",
+      "kind": ".dd_box.0@span.1@text##分类：",
+      "name": "dl@.name@text",
+      "tocUrl": "text.查看更多章节@href",
+      "wordCount": ".dd_box.1@span.1@text##字数："
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html##请收藏.*\\n.*",
+      "nextContentUrl": "#pb_next@href",
+      "replaceRegex": "",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".item",
+      "bookUrl": "a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "img@src",
+      "intro": "dd@textNodes",
+      "name": "img@alt"
+    },
+    "ruleToc": {
+      "chapterList": "tag.dd.!0",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/s?q={{key}},{\"webView\": true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//网站很卡，不是搜索到问题\n//尽量搜多个字，搜索太多列容易崩",
+    "bookSourceGroup": "",
+    "bookSourceName": "⭐胖子小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.pzshen.com",
+    "customOrder": 1189,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "玄幻::/xuanhuan/{{page}}.html\n武侠::/wuxia/{{page}}.html\n都市::/dushi/{{page}}.html\n历史::/lishi/{{page}}.html\n网游::/wangyou/{{page}}.html\n科幻::/kehuan/{{page}}.html\n女生::/mm/{{page}}.html\n完本::/finish/{{page}}.html",
+    "header": "{\"referer\":\"https://m.pzshen.com\"}",
+    "lastUpdateTime": 1684211069977,
+    "loginUrl": "",
+    "respondTime": 9427,
+    "ruleBookInfo": {
+      "author": ".dd_box.0@span.0@text##作者：",
+      "coverUrl": "img@src",
+      "kind": ".dd_box.0@span.1@text##分类：",
+      "name": "dl@.name@text",
+      "tocUrl": "text.查看更多章节@href",
+      "wordCount": ".dd_box.1@span.1@text##字数："
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html##请收藏.*\\n.*",
+      "nextContentUrl": "#pb_next@href",
+      "replaceRegex": "",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".item",
+      "bookUrl": "a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "img@src",
+      "intro": "dd@textNodes",
+      "name": "img@alt"
+    },
+    "ruleToc": {
+      "chapterList": "tag.dd.!0",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/s?q={{key}},{\"webView\": true}",
+    "weight": 0
+  }
+]

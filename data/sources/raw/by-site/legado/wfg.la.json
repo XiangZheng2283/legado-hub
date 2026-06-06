@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "文坊阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wfg.la",
+    "bookUrlPattern": "https://wfg.la/novel/.*",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2142,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\" 系统 \",\"url\":\"//wfg.la/category/3007_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 奇幻 \",\"url\":\"//wfg.la/category/3006_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 武侠 \",\"url\":\"//wfg.la/category/3005_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 科幻 \",\"url\":\"//wfg.la/category/3003_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 穿越 \",\"url\":\"//wfg.la/category/3002_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 玄幻 \",\"url\":\"//wfg.la/category/3001_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 言情 \",\"url\":\"//wfg.la/category/3000_{{page}}\",\"style\":{\"layout_flexGrow\":1}}]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 186,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".auth@text",
+      "coverUrl": "",
+      "intro": ".intro@p@text##简介：",
+      "kind": ".tags.0@span[0,1]@text",
+      "lastChapter": "",
+      "name": "h1@text##_.*",
+      "canReName": "",
+      "tocUrl": ".g-nav-control@a.0@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".js_text@p@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".name@text##(.*)by(.*)##$2",
+      "bookList": "ul.g-list@li",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": ".info@text##.*『(.*)』##$1",
+      "lastChapter": "",
+      "name": ".name@text##(.*)by(.*)##$1",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "$.auth",
+      "bookList": "data.list[*]",
+      "bookUrl": "https://wfg.la/novel/{{$._id}}",
+      "coverUrl": "",
+      "intro": "$.intro##简介：",
+      "kind": "$.type",
+      "lastChapter": "",
+      "name": "$.name",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul.list@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{\"webView\": true}",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "ul.section-list@li@a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "https://wfg.la/api/search/list,{\n  \"body\": \"name={{key}}&searchkey=\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "api，json\n同模板：\nhttps://www.ibus2333.com\nhttps://www.ibusxs.com",
+    "bookSourceGroup": "",
+    "bookSourceName": "文坊阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wfg.la##防同",
+    "bookUrlPattern": "https://wfg.la/novel/.*",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 598,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\" 系统 \",\"url\":\"//wfg.la/category/3007_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 奇幻 \",\"url\":\"//wfg.la/category/3006_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 武侠 \",\"url\":\"//wfg.la/category/3005_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 科幻 \",\"url\":\"//wfg.la/category/3003_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 穿越 \",\"url\":\"//wfg.la/category/3002_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 玄幻 \",\"url\":\"//wfg.la/category/3001_{{page}}\",\"style\":{\"layout_flexGrow\":1}},{\"title\":\" 言情 \",\"url\":\"//wfg.la/category/3000_{{page}}\",\"style\":{\"layout_flexGrow\":1}}]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1746597040469,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 235,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".auth@text",
+      "coverUrl": "",
+      "intro": ".intro@p@text##简介：",
+      "kind": ".tags.0@span[0,1]@text",
+      "lastChapter": "",
+      "name": "h1@text##_.*",
+      "canReName": "",
+      "tocUrl": ".g-nav-control@a.0@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".js_text@p@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".name@text##(.*)by(.*)##$2",
+      "bookList": "ul.g-list@li",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": ".info@text##.*『(.*)』##$1",
+      "lastChapter": "",
+      "name": ".name@text##(.*)by(.*)##$1",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "$.auth",
+      "bookList": "data.list[*]",
+      "bookUrl": "https://wfg.la/novel/{{$._id}}",
+      "coverUrl": "",
+      "intro": "$.intro##简介：",
+      "kind": "$.type",
+      "lastChapter": "",
+      "name": "$.name",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul.list@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{\"webView\": true}",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "ul.section-list@li@a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "https://wfg.la/api/search/list,{\n  \"body\": \"name={{key}}&searchkey=\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

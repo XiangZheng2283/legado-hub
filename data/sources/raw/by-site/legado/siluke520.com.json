@@ -1,0 +1,56 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "思路客",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.siluke520.com/",
+    "bookUrlPattern": "https://www.siluke520.com/book/\\d+/",
+    "customOrder": 57,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/fenlei/1_{{page}}/\n修真小说::/fenlei/2_{{page}}/\n都市小说::/fenlei/3_{{page}}/\n穿越小说::/fenlei/4_{{page}}/\n网游小说::/fenlei/5_{{page}}/\n科幻小说::/fenlei/6_{{page}}/\n恐怖小说::/fenlei/7_{{page}}/\n其他小说::/fenlei/8_{{page}}/\n完本小说::/quanben/{{page}}",
+    "lastUpdateTime": 1621495387386,
+    "respondTime": 4540,
+    "ruleBookInfo": {
+      "author": "id.info@h1@a@text",
+      "coverUrl": "class.pic@img@src",
+      "init": "",
+      "intro": "class.bookinfo_intro@text",
+      "kind": "class.update@text##.*（|）",
+      "lastChapter": "class.update@tag.a@text##章节目录|免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@h1@text##/.*|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html##思路客小说网.*最新章节！",
+      "replaceRegex": "##&lt;/p&gt;"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.news@ul@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.siluke520.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s1@text&&\nclass.s5@text",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.siluke520.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##章节目录|免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.siluke520.com/modules/article/search.php?searchkey={{key}}&submit=%CB%D1%CB%F7&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

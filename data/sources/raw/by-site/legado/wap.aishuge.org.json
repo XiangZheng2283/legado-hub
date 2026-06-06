@@ -1,0 +1,96 @@
+[
+  {
+    "bookSourceComment": "haxc",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "明月小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap.aishuge.org/",
+    "customOrder": 824,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686038052530,
+    "loginUrl": "",
+    "respondTime": 2554,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "class.intro.0@text##阅读.*请关注.*",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "id.reading@href",
+      "wordCount": "[property=\"og:novel:status\"]@content"
+    },
+    "ruleContent": {
+      "content": "<js>\njava.getElements('@@id.txt@dd').toArray().sort((a,b)=>a.attr('data-id')-b.attr('data-id')).map(x=>x.html()).join('')</js>\n##阅读.*?最新章节.*",
+      "imageStyle": "",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##第.*页\\)\\s*|\\s*（本章未完，请点击下一页继续\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.mod mod-search@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.a@href<js>\nvar id = result.match(/(\\d{3,})/)[1];\nvar iid = parseInt(id/1000);\n'https://www.aishuge.org/' + 'files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.span@text##\\[|\\]",
+      "name": "tag.a@text##^\\[.{1,20}]"
+    },
+    "ruleToc": {
+      "chapterList": "+@js:org.jsoup.Jsoup.parse(result.replace(/\\.html/g,\"\")).select('.list li a').toArray().sort((a,b)=>a.attr('href')-b.attr('href')).map(x=>({n:x.text(),u:x.attr('href')+\".html\"}))",
+      "chapterName": "n",
+      "chapterUrl": "u"
+    },
+    "searchUrl": "/s.php?s={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "haxc",
+    "bookSourceGroup": "",
+    "bookSourceName": "明月小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wap.aishuge.org/",
+    "customOrder": 62,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686038052530,
+    "loginUrl": "",
+    "respondTime": 2725,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "class.intro.0@text##阅读.*请关注.*",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "id.reading@href",
+      "wordCount": "[property=\"og:novel:status\"]@content"
+    },
+    "ruleContent": {
+      "content": "<js>\njava.getElements('@@id.txt@dd').toArray().sort((a,b)=>a.attr('data-id')-b.attr('data-id')).map(x=>x.html()).join('')</js>\n##阅读.*?最新章节.*",
+      "imageStyle": "",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##第.*页\\)\\s*|\\s*（本章未完，请点击下一页继续\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.mod mod-search@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.a@href<js>\nvar id = result.match(/(\\d{3,})/)[1];\nvar iid = parseInt(id/1000);\n'https://www.aishuge.org/' + 'files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.span@text##\\[|\\]",
+      "name": "tag.a@text##^\\[.{1,20}]"
+    },
+    "ruleToc": {
+      "chapterList": "+@js:org.jsoup.Jsoup.parse(result.replace(/\\.html/g,\"\")).select('.list li a').toArray().sort((a,b)=>a.attr('href')-b.attr('href')).map(x=>({n:x.text(),u:x.attr('href')+\".html\"}))",
+      "chapterName": "n",
+      "chapterUrl": "u"
+    },
+    "searchUrl": "/s.php?s={{key}}",
+    "weight": 0
+  }
+]

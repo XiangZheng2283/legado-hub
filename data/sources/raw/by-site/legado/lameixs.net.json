@@ -1,0 +1,112 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 辣妹小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.lameixs.net",
+    "bookUrlPattern": "",
+    "customOrder": 1124,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/sort/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠\",\"url\":\"/sort/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/sort/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史\",\"url\":\"/sort/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游\",\"url\":\"/sort/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"/sort/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/sort/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"其他\",\"url\":\"/sort/8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1645127140344,
+    "loginUrl": "",
+    "respondTime": 39056,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content##小说",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.点击阅读@href"
+    },
+    "ruleContent": {
+      "content": "#con@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "##作 者：([^<]+)<##$1###",
+      "bookList": ".Comic_Pic_List",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "li.1@text##.*作 者：",
+      "kind": "a.3@text&&li.1@text##小说|.*小说\\s/\\s|\\s/\\s作.*",
+      "lastChapter": "a.2@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": ".zz@text",
+      "bookList": ".book_list_main li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://pic.lameixs.net/image/$2/$1/$1s.jpg###",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".sm@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list_Content li a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: Timed out waiting for 60000 ms",
+    "bookSourceGroup": "校验可用,校验超时",
+    "bookSourceName": "👍 辣妹小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.lameixs.net",
+    "bookUrlPattern": "",
+    "customOrder": 1124,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/sort/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠\",\"url\":\"/sort/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/sort/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史\",\"url\":\"/sort/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游\",\"url\":\"/sort/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"/sort/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/sort/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"其他\",\"url\":\"/sort/8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1645127140344,
+    "loginUrl": "",
+    "respondTime": 120023,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content##小说",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.点击阅读@href"
+    },
+    "ruleContent": {
+      "content": "#con@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "##作 者：([^<]+)<##$1###",
+      "bookList": ".Comic_Pic_List",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "li.1@text##.*作 者：",
+      "kind": "a.3@text&&li.1@text##小说|.*小说\\s/\\s|\\s/\\s作.*",
+      "lastChapter": "a.2@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "a.1@text"
+    },
+    "ruleSearch": {
+      "author": ".zz@text",
+      "bookList": ".book_list_main li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://pic.lameixs.net/image/$2/$1/$1s.jpg###",
+      "kind": "",
+      "lastChapter": "",
+      "name": ".sm@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list_Content li a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "weight": 0
+  }
+]

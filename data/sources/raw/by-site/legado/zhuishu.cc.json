@@ -1,0 +1,53 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "追书网[cc]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.zhuishu.cc/",
+    "customOrder": 637,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690850427293,
+    "respondTime": 1174,
+    "ruleBookInfo": {
+      "author": "#info@p.2@text##作\\s者：",
+      "coverUrl": "#fmimg@img@src",
+      "init": "",
+      "intro": "#intro@p.0@text##最新章节推荐地址：.*|\\s.*\\.com",
+      "kind": "#info@p.0@text&&#info@p.1:5@text##最后更新：|分类：|状.*态：",
+      "lastChapter": "#info@p.4@a@text##最新：",
+      "name": "#info@h1.0@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": ".showtxt@html",
+      "nextContentUrl": "",
+      "replaceRegex": "##.*第.*章.*\\s|\\(.*\\)|wap.*|\\/\\d+.*"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookimg@tag.a@href\n##.+\\D((\\d+)\\d{3})\\D##http://www.zhuishu.cc/id$1/###",
+      "checkKeyWord": "元尊",
+      "coverUrl": "tag.img@src",
+      "intro": ".bookinfo@p@text",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "class.bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": ".listmain@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "http://m.zhuishu.cc/drhugirdhugi.php?ie=gbk&s=5256649918672294880&q={{key}}",
+    "weight": 0
+  }
+]

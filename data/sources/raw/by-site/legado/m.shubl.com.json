@@ -1,0 +1,85 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔥 书耽 💰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.shubl.com",
+    "customOrder": 634,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "https://m.shubl.com/signup/login?redirect=https%3A%2F%2Fm.shubl.com%2Freader%2Fget_my_info",
+    "respondTime": 0,
+    "weight": 374
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖书耽",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.shubl.com",
+    "customOrder": 758,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "https://m.shubl.com/signup/login",
+    "respondTime": 0,
+    "weight": 754
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 书耽网站",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.shubl.com",
+    "bookUrlPattern": "",
+    "customOrder": 424,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"签约\",\"url\":\"/index/filter_book_list?tag=%E7%AD%BE%E7%BA%A6&tag_module=signed&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"甜文\",\"url\":\"/index/filter_book_list?tag=%E7%94%9C%E6%96%87&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"爽文\",\"url\":\"/index/filter_book_list?tag=%E7%88%BD%E6%96%87&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"ＨＥ\",\"url\":\"/index/filter_book_list?tag=HE&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"ＢＥ\",\"url\":\"/index/filter_book_list?tag=BE&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"快穿\",\"url\":\"/index/filter_book_list?tag=%E5%BF%AB%E7%A9%BF&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"青春\",\"url\":\"/index/filter_book_list?tag=%E9%9D%92%E6%98%A5&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"校园\",\"url\":\"/index/filter_book_list?tag=%E6%A0%A1%E5%9B%AD&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"百合\",\"url\":\"/index/filter_book_list?tag=%E7%99%BE%E5%90%88&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"/index/filter_book_list?tag=%E7%A7%91%E5%B9%BB&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"古代\",\"url\":\"/index/filter_book_list?tag=%E5%8F%A4%E4%BB%A3&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"民国\",\"url\":\"/index/filter_book_list?tag=%E6%B0%91%E5%9B%BD&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"现代\",\"url\":\"/index/filter_book_list?tag=%E7%8E%B0%E4%BB%A3&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/index/filter_book_list?tag=%E9%83%BD%E5%B8%82&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"武侠\",\"url\":\"/index/filter_book_list?tag=%E6%AD%A6%E4%BE%A0&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"仙侠\",\"url\":\"/index/filter_book_list?tag=%E4%BB%99%E4%BE%A0&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻\",\"url\":\"/index/filter_book_list?tag=%E7%8E%84%E5%B9%BB&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"架空\",\"url\":\"/index/filter_book_list?tag=%E6%9E%B6%E7%A9%BA&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"穿越\",\"url\":\"/index/filter_book_list?tag=%E7%A9%BF%E8%B6%8A&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"重生\",\"url\":\"/index/filter_book_list?tag=%E9%87%8D%E7%94%9F&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"动漫\",\"url\":\"/index/filter_book_list?tag=%E5%8A%A8%E6%BC%AB&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"网游\",\"url\":\"/index/filter_book_list?tag=%E7%BD%91%E6%B8%B8&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑\",\"url\":\"/index/filter_book_list?tag=%E6%82%AC%E7%96%91&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"灵异\",\"url\":\"/index/filter_book_list?tag=%E7%81%B5%E5%BC%82&tag_module=&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"完本\",\"url\":\"/index/filter_book_list?tag=%E5%AE%8C%E6%9C%AC&tag_module=ended&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.21}}]",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1699816506221,
+    "loginUrl": "https://m.shubl.com/signup/login",
+    "respondTime": 2743,
+    "ruleBookInfo": {
+      "author": "class.author.0@text##\\s.*",
+      "coverUrl": "class.thumb.0@img@data-original",
+      "intro": ".info div.4@html&&.J_DescContent@html",
+      "kind": "class.author.0@text&&class.pull-right.0@text##.*\\s|.*：",
+      "name": ".name@text",
+      "tocUrl": "class.container.1@a@href",
+      "wordCount": ".numbers span.0@text"
+    },
+    "ruleContent": {
+      "content": "#J_BookRead@html",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "div.1@text",
+      "bookList": ".book-list li",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": "div.2@text",
+      "name": "span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list li",
+      "chapterName": "p.0@text",
+      "chapterUrl": "a@href##$##,{\"webView\":true}",
+      "isVip": "i@text##^##🔒",
+      "updateTime": "p.1@text"
+    },
+    "searchUrl": "/index/search_book?key={{key}}",
+    "weight": 0
+  }
+]

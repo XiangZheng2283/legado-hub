@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉 下书网②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xiashuyun.com",
+    "customOrder": 515,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 1,
+    "weight": 180
+  }
+]

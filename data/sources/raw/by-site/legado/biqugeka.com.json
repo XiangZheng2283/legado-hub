@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 笔趣阁⑮⑨",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biqugeka.com",
+    "customOrder": 401,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 157
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉 笔趣阁⑮⑨",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biqugeka.com",
+    "customOrder": 500,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 157
+  }
+]

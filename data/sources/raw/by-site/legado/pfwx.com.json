@@ -1,0 +1,134 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "平凡文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pfwx.com",
+    "bookUrlPattern": "",
+    "customOrder": 89,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1556,
+    "ruleBookInfo": {
+      "author": "class.jieshaokaishi@tag.h2.0@text",
+      "coverUrl": "class.jieshaoTu@tag.img@src",
+      "intro": "class.jieshaokaishi@tag.h3@text##介 绍：|－－－.*",
+      "lastChapter": "class.zuixin@tag.a@text",
+      "name": "class.jieshaokaishi@tag.h1@text",
+      "wordCount": "class.jieshaokaishi@tag.h2.1@text##更新时间："
+    },
+    "ruleContent": {
+      "content": "id.booktext@html##<!--.*-->|★★.*朋友吧！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.h3.0@text",
+      "bookList": "class.tutui",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.a.2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zhangjiekaishi@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.pfwx.com/modules/article/search.php?searchkey={{key}}&searchtype=articlename",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "平凡文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pfwx.com",
+    "bookUrlPattern": "",
+    "customOrder": 89,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2621,
+    "ruleBookInfo": {
+      "author": "class.jieshaokaishi@tag.h2.0@text",
+      "coverUrl": "class.jieshaoTu@tag.img@src",
+      "intro": "class.jieshaokaishi@tag.h3@text##介 绍：|－－－.*",
+      "lastChapter": "class.zuixin@tag.a@text",
+      "name": "class.jieshaokaishi@tag.h1@text",
+      "wordCount": "class.jieshaokaishi@tag.h2.1@text##更新时间："
+    },
+    "ruleContent": {
+      "content": "id.booktext@html##<!--.*-->|★★.*朋友吧！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.h3.0@text",
+      "bookList": "class.tutui",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.a.2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zhangjiekaishi@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.pfwx.com/modules/article/search.php?searchkey={{key}}&searchtype=articlename",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 平凡文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pfwx.com",
+    "bookUrlPattern": "",
+    "customOrder": 447,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1629773627345,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 1914,
+    "ruleBookInfo": {
+      "author": "class.jieshaokaishi@tag.h2.0@text",
+      "coverUrl": "class.jieshaoTu@tag.img@src",
+      "intro": "class.jieshaokaishi@tag.h3@text##介 绍：|－－－.*",
+      "lastChapter": "class.zuixin@tag.a@text",
+      "name": "class.jieshaokaishi@tag.h1@text",
+      "wordCount": "class.jieshaokaishi@tag.h2.1@text##更新时间："
+    },
+    "ruleContent": {
+      "content": "id.booktext@html##<!--.*-->|★★.*朋友吧！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.h3.0@text",
+      "bookList": "class.tutui",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "lastChapter": "tag.a.2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zhangjiekaishi@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?searchkey={{key}}&searchtype=articlename",
+    "weight": 0
+  }
+]

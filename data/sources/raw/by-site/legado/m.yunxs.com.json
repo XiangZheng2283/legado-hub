@@ -1,0 +1,76 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "云中书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.yunxs.com",
+    "customOrder": 1102,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1675926133256,
+    "respondTime": 10492,
+    "ruleBookInfo": {
+      "intro": "//meta[@name='description']/@content##.*小说主要讲述.\\s+|无弹.*?在.*?在云中书库"
+    },
+    "ruleContent": {
+      "content": "class.box_box@textNodes##推荐阅读：《.*?》",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者.",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookimg@tag.a@href##(.*)##http://www.yunxs.com$1##",
+      "coverUrl": "class.bookimg@tag.a@tag.img@src",
+      "kind": "class.cat@text##分类.",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "class.bookname@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?s=00000&q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "云中书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.yunxs.com",
+    "customOrder": 1102,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1675926133256,
+    "respondTime": 12286,
+    "ruleBookInfo": {
+      "intro": "//meta[@name='description']/@content##.*小说主要讲述.\\s+|无弹.*?在.*?在云中书库"
+    },
+    "ruleContent": {
+      "content": "class.box_box@textNodes##推荐阅读：《.*?》",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者.",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookimg@tag.a@href##(.*)##http://www.yunxs.com$1##",
+      "coverUrl": "class.bookimg@tag.a@tag.img@src",
+      "kind": "class.cat@text##分类.",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "class.bookname@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list_box@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?s=00000&q={{key}}",
+    "weight": 0
+  }
+]

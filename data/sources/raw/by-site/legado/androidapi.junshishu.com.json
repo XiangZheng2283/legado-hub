@@ -1,0 +1,252 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "铁血读书💰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://androidapi.junshishu.com/",
+    "customOrder": 759,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"军事小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=40\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=41\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=42\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=43\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=44\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=45\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=46\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=47\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"短篇小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=48\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"免费小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=21\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"完本小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=22\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"排行榜\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"热销榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=31\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"会员榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=30\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"更新榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=32\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=33\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=34\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"收藏榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=35\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687550484755,
+    "respondTime": 471,
+    "ruleBookInfo": {
+      "author": "$.penname",
+      "coverUrl": "$.coverurl",
+      "init": "",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}\n{{$.bookstatename}}",
+      "lastChapter": "$.chapters[0].chaptername",
+      "name": "$.bookname@put:{bid:$.bookid}",
+      "tocUrl": "http://androidapi.junshishu.com/book/ReadCatalog.aspx?ver=255&from=1&bookid={{$.bookid}}"
+    },
+    "ruleContent": {
+      "content": "$..content||$.msg"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.penname",
+      "bookList": "$.bookinfos[*]",
+      "bookUrl": "http://androidapi.junshishu.com/book/ReadBookDetail.aspx?ver=255&from=1&bookid={{$.bookid}}",
+      "coverUrl": "$.coverurl",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}",
+      "name": "$.bookname"
+    },
+    "ruleToc": {
+      "chapterList": "$..chapterList[*]||$.volumes[*]",
+      "chapterName": "$.chapterName||$.volumeName",
+      "chapterUrl": "http://androidapi.junshishu.com/book/ReadContent.aspx?ver=255&from=1&chapterids={{$.id}}&bookid=@get:{bid}",
+      "isPay": "",
+      "isVip": "$.isVip@js:result.replace(/0!/, '').replace(/1!/, '🔒')",
+      "updateTime": "{{java.timeFormat(java.getString('$.lastUpdateTime'))}}\n字数：{{$.wordCount}}"
+    },
+    "searchUrl": "http://androidapi.junshishu.com/book/ReadSearch.aspx?ver=255&pagesize=10&pageindex=1&from=1&keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌟 铁血读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://androidapi.junshishu.com",
+    "customOrder": 978,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"军事小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=40\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=41\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=42\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=43\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=44\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=45\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=46\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=47\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"短篇小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=48\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"免费小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=21\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"完本小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=22\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"排行榜\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"热销榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=31\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"会员榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=30\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"更新榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=32\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=33\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=34\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"收藏榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=35\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1680619927702,
+    "respondTime": 480,
+    "ruleBookInfo": {
+      "author": "$.penname",
+      "coverUrl": "$.coverurl",
+      "init": "",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}\n{{$.bookstatename}}",
+      "lastChapter": "$.chapters[0].chaptername",
+      "name": "$.bookname@put:{bid:$.bookid}",
+      "tocUrl": "http://androidapi.junshishu.com/book/ReadCatalog.aspx?ver=255&from=1&bookid={{$.bookid}}"
+    },
+    "ruleContent": {
+      "content": "$..content||$.msg"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.penname",
+      "bookList": "$.bookinfos[*]",
+      "bookUrl": "http://androidapi.junshishu.com/book/ReadBookDetail.aspx?ver=255&from=1&bookid={{$.bookid}}",
+      "coverUrl": "$.coverurl",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}",
+      "name": "$.bookname"
+    },
+    "ruleToc": {
+      "chapterList": "$..chapterList[*]||$.volumes[*]",
+      "chapterName": "$.chapterName||$.volumeName",
+      "chapterUrl": "http://androidapi.junshishu.com/book/ReadContent.aspx?ver=255&from=1&chapterids={{$.id}}&bookid=@get:{bid}",
+      "isPay": "",
+      "isVip": "$.isVip@js:result.replace(/0!/, '').replace(/1!/, '🔒')",
+      "updateTime": "{{java.timeFormat(java.getString('$.lastUpdateTime'))}}\n字数：{{$.wordCount}}"
+    },
+    "searchUrl": "http://androidapi.junshishu.com/book/ReadSearch.aspx?ver=255&pagesize=10&pageindex=1&from=1&keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "铁血读书💰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://androidapi.junshishu.com/",
+    "customOrder": 331,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"军事小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=40\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=41\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=42\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=43\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=44\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=45\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=46\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=47\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"短篇小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=48\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"免费小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=21\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"完本小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=22\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"排行榜\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"热销榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=31\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"会员榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=30\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"更新榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=32\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=33\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=34\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"收藏榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=35\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687550484755,
+    "respondTime": 1021,
+    "ruleBookInfo": {
+      "author": "$.penname",
+      "coverUrl": "$.coverurl",
+      "init": "",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}\n{{$.bookstatename}}",
+      "lastChapter": "$.chapters[0].chaptername",
+      "name": "$.bookname@put:{bid:$.bookid}",
+      "tocUrl": "http://androidapi.junshishu.com/book/ReadCatalog.aspx?ver=255&from=1&bookid={{$.bookid}}"
+    },
+    "ruleContent": {
+      "content": "$..content||$.msg"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.penname",
+      "bookList": "$.bookinfos[*]",
+      "bookUrl": "http://androidapi.junshishu.com/book/ReadBookDetail.aspx?ver=255&from=1&bookid={{$.bookid}}",
+      "coverUrl": "$.coverurl",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}",
+      "name": "$.bookname"
+    },
+    "ruleToc": {
+      "chapterList": "$..chapterList[*]||$.volumes[*]",
+      "chapterName": "$.chapterName||$.volumeName",
+      "chapterUrl": "http://androidapi.junshishu.com/book/ReadContent.aspx?ver=255&from=1&chapterids={{$.id}}&bookid=@get:{bid}",
+      "isPay": "",
+      "isVip": "$.isVip@js:result.replace(/0!/, '').replace(/1!/, '🔒')",
+      "updateTime": "{{java.timeFormat(java.getString('$.lastUpdateTime'))}}\n字数：{{$.wordCount}}"
+    },
+    "searchUrl": "http://androidapi.junshishu.com/book/ReadSearch.aspx?ver=255&pagesize=10&pageindex=1&from=1&keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精选书源",
+    "bookSourceName": "🌟 铁血读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://androidapi.junshishu.com",
+    "customOrder": 1376,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"军事小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=40\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=41\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=42\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=43\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=44\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=45\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=46\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=47\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"短篇小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=48\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"免费小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=21\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"完本小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=22\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"排行榜\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"热销榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=31\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"会员榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=30\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"更新榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=32\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=33\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=34\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"收藏榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=35\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1680619927702,
+    "respondTime": 973,
+    "ruleBookInfo": {
+      "author": "$.penname",
+      "coverUrl": "$.coverurl",
+      "init": "",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}\n{{$.bookstatename}}",
+      "lastChapter": "$.chapters[0].chaptername",
+      "name": "$.bookname@put:{bid:$.bookid}",
+      "tocUrl": "http://androidapi.junshishu.com/book/ReadCatalog.aspx?ver=255&from=1&bookid={{$.bookid}}"
+    },
+    "ruleContent": {
+      "content": "$..content||$.msg"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.penname",
+      "bookList": "$.bookinfos[*]",
+      "bookUrl": "http://androidapi.junshishu.com/book/ReadBookDetail.aspx?ver=255&from=1&bookid={{$.bookid}}",
+      "coverUrl": "$.coverurl",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}",
+      "name": "$.bookname"
+    },
+    "ruleToc": {
+      "chapterList": "$..chapterList[*]||$.volumes[*]",
+      "chapterName": "$.chapterName||$.volumeName",
+      "chapterUrl": "http://androidapi.junshishu.com/book/ReadContent.aspx?ver=255&from=1&chapterids={{$.id}}&bookid=@get:{bid}",
+      "isPay": "",
+      "isVip": "$.isVip@js:result.replace(/0!/, '').replace(/1!/, '🔒')",
+      "updateTime": "{{java.timeFormat(java.getString('$.lastUpdateTime'))}}\n字数：{{$.wordCount}}"
+    },
+    "searchUrl": "http://androidapi.junshishu.com/book/ReadSearch.aspx?ver=255&pagesize=10&pageindex=1&from=1&keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "正版",
+    "bookSourceName": "铁血读书💰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://androidapi.junshishu.com/",
+    "customOrder": 87,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"全部分类\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"军事小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=40\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=41\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=42\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=43\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=44\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"情感小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=45\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"推理小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=46\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"悬疑小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=47\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"短篇小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=48\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"免费小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=21\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"完本小说\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=22\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"排行榜\",\"url\":\"\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":1}},{\"title\":\"热销榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=31\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"会员榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=30\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"更新榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=32\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军事榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=33\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=34\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"收藏榜\",\"url\":\"http://androidapi.junshishu.com/book/ReadListNew.aspx?ver=255&pagesize=10&pageindex={{page}}&from=1&type=35\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687550484755,
+    "respondTime": 3514,
+    "ruleBookInfo": {
+      "author": "$.penname",
+      "coverUrl": "$.coverurl",
+      "init": "",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}\n{{$.bookstatename}}",
+      "lastChapter": "$.chapters[0].chaptername",
+      "name": "$.bookname@put:{bid:$.bookid}",
+      "tocUrl": "http://androidapi.junshishu.com/book/ReadCatalog.aspx?ver=255&from=1&bookid={{$.bookid}}"
+    },
+    "ruleContent": {
+      "content": "$..content||$.msg"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.penname",
+      "bookList": "$.bookinfos[*]",
+      "bookUrl": "http://androidapi.junshishu.com/book/ReadBookDetail.aspx?ver=255&from=1&bookid={{$.bookid}}",
+      "coverUrl": "$.coverurl",
+      "intro": "$.summary",
+      "kind": "{{$.bookkindname}}",
+      "name": "$.bookname"
+    },
+    "ruleToc": {
+      "chapterList": "$..chapterList[*]||$.volumes[*]",
+      "chapterName": "$.chapterName||$.volumeName",
+      "chapterUrl": "http://androidapi.junshishu.com/book/ReadContent.aspx?ver=255&from=1&chapterids={{$.id}}&bookid=@get:{bid}",
+      "isPay": "",
+      "isVip": "$.isVip@js:result.replace(/0!/, '').replace(/1!/, '🔒')",
+      "updateTime": "{{java.timeFormat(java.getString('$.lastUpdateTime'))}}\n字数：{{$.wordCount}}"
+    },
+    "searchUrl": "http://androidapi.junshishu.com/book/ReadSearch.aspx?ver=255&pagesize=10&pageindex=1&from=1&keyword={{key}}",
+    "weight": 0
+  }
+]

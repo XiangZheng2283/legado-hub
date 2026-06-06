@@ -1,0 +1,46 @@
+[
+  {
+    "bookSourceComment": "24.9.9 修复_明月\n24.7.22 by_明月",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 字码小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://zmhxs.com",
+    "customOrder": 90,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1725876266049,
+    "respondTime": 14024,
+    "ruleBookInfo": {
+      "author": ".red:nth-child(1)@text",
+      "intro": ".bookintro@textNodes",
+      "name": ".booktitle@text"
+    },
+    "ruleContent": {
+      "content": "html",
+      "replaceRegex": "##.*[a-z0-9-]+\\.[a-z]{2,}.*|{{chapter.title}}|[(（]?本章未?完[）)]?.*|\\(第.+页\\)|.?加入书签.*|.*下一页继续阅读.*|第\\d+章.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": ".bookbox[0:9]\n<js>\nbookList = result;\nh = java.getStringList(\".bookname > a@href\", bookList);\n\nht = h[1].includes(\"http\") ? Array.from(h) : Array.from(h, x => `${source.key}${x}`);\n\nd = java.ajaxAll(ht).map(x => x.body());\n\n$=(b,c)=>java.getString(b,c);\n\nArray.from(bookList,(a,i)=>{\n\tlist={\n\t\tname:$(\".bookname > a@text\",a),\n\t\tauthor:$(\".author:nth-child(2)@text##作者：\",a),\n\t\tkind:$(\"li:nth-child(2) > a@text\",d[i]),\n\t\twords:$(\".blue:nth-child(2)@text\",d[i]),\n\t\tlastc:$(\"a:nth-child(2)@text\",a),\n\t\tintro:$(\".update@text##简介：\",a),\n\t\tcover:$(\".bookcover > .thumbnail@src\",d[i]),\n\t\tlink:$(\".bookname > a@href\",a)\n\t\t};\n\t\treturn list\n\t});\n</js>",
+      "bookUrl": "link",
+      "coverUrl": "cover",
+      "intro": "intro",
+      "kind": "kind",
+      "lastChapter": "lastc",
+      "name": "name",
+      "wordCount": "words"
+    },
+    "ruleToc": {
+      "chapterList": "#list-chapterAll > dd > a",
+      "chapterName": "text",
+      "chapterUrl": "href\n<js>\nrex = result.match(/(\\d+)\\/(\\d+)\\.html/);\nbid = rex[1];\ncid = rex[2];\nbody = `articleid=${bid}&chapterid=${cid}&pid=1`;\nu = \"/api/reader_js.php\";\n`${u},{\n  \"body\": \"${body}\",\n  \"method\": \"POST\"\n}`\n</js>",
+      "formatJs": "try{let e=title.match(/第\\s*(\\d+)\\s*(章\\s*(\\d+))?/);if(e?(title=title.replace(/.*第\\s*\\d+\\s*章\\s*[\\.，、]*\\d*(.*)/,\"$1\"),t=e[3]||e[1]):(e=title.match(/(\\d+)/))&&(title=title.replace(/.*?\\d+\\s*(.+)/,\"$1\"),t=e[1]),t)t=t.replace(/^0+(?=[1-9])/,\"\"),title=`第${t}章 `+title.trim();else{let t=title.match(/第.+?章(.).+?/);t&&t[1]&&[\"　\",\"，\",\"、\",\"：\"].includes(t[1])&&(title=title.replace(t[1],\" \"))}}catch(t){}",
+      "isVolume": "",
+      "nextTocUrl": "#indexselect > option@value"
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}search/,{\n  \"body\": \"searchkey={{key}}&action=login&searchtype=all&submit=\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

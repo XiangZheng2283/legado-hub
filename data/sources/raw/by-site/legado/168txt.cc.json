@@ -1,0 +1,203 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖168小说天堂",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.168txt.cc",
+    "customOrder": 731,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678678017530,
+    "respondTime": 2441,
+    "ruleBookInfo": {
+      "author": "dt.1@text##.*\\：",
+      "init": "",
+      "intro": ".mh_js@text",
+      "kind": "dt a.0@text",
+      "name": ".mh h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#ml_imgs@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.1@text",
+      "bookList": ".mh_list li",
+      "bookUrl": "a@href",
+      "intro": "dd@text",
+      "name": "label@text"
+    },
+    "ruleToc": {
+      "chapterList": "#mlbox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/s/,{\n  \"body\": \"s= &s={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "168",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.168txt.cc/",
+    "customOrder": 796,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685874008349,
+    "respondTime": 1579,
+    "ruleBookInfo": {
+      "author": "dt.1@text##.*\\：",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": ".mh_js@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "id.mlbox@li.-1@a@text",
+      "name": ".mh h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#ml_imgs@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.1@text",
+      "bookList": ".mh_list li",
+      "bookUrl": "a@href",
+      "intro": "dd@text",
+      "name": "label@text"
+    },
+    "ruleToc": {
+      "chapterList": "#mlbox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "s/,{\n  \"body\": \"s= &s={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "168",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.168txt.cc/",
+    "customOrder": 92,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685874008349,
+    "respondTime": 1419,
+    "ruleBookInfo": {
+      "author": "dt.1@text##.*\\：",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": ".mh_js@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "id.mlbox@li.-1@a@text",
+      "name": ".mh h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#ml_imgs@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.1@text",
+      "bookList": ".mh_list li",
+      "bookUrl": "a@href",
+      "intro": "dd@text",
+      "name": "label@text"
+    },
+    "ruleToc": {
+      "chapterList": "#mlbox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "s/,{\n  \"body\": \"s= &s={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⚡️ 1.1次,0-1文本",
+    "bookSourceName": "🔖168小说天堂",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.168txt.cc",
+    "customOrder": 822,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678678017530,
+    "respondTime": 3151,
+    "ruleBookInfo": {
+      "author": "dt.1@text##.*\\：",
+      "init": "",
+      "intro": ".mh_js@text",
+      "kind": "dt a.0@text",
+      "name": ".mh h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#ml_imgs@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.1@text",
+      "bookList": ".mh_list li",
+      "bookUrl": "a@href",
+      "intro": "dd@text",
+      "name": "label@text"
+    },
+    "ruleToc": {
+      "chapterList": "#mlbox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/s/,{\n  \"body\": \"s= &s={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "24.12.18修复by 明月",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 168小说天堂",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.168txt.cc",
+    "customOrder": 262,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1734516771491,
+    "respondTime": 2166,
+    "ruleBookInfo": {
+      "author": "dt.1@text##.*\\：",
+      "init": "",
+      "intro": ".mh_js@text",
+      "kind": "dt a.0@text",
+      "name": ".mh h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "#ml_imgs@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.1@text",
+      "bookList": ".mh_list li",
+      "bookUrl": "a@href",
+      "intro": "dd@text",
+      "name": "label@text"
+    },
+    "ruleToc": {
+      "chapterList": "#mlbox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}s/,{\n  \"body\": \"s= &s={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

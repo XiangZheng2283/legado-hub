@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃123文学网🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.123txt.cc#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3077,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nvar result = [];\nvar push = (title, url, size) => result.push({\"title\": title,\"url\": url,\"style\": {\"layout_flexGrow\": 1,\"layout_flexBasisPercent\": size}});\nvar tagUrl = source.key;\nvar tag = java.ajax(tagUrl);\nvar tagList = org.jsoup.Jsoup.parse(tag).select(\".nav a\");\nvar tagSize = 0.4;\npush(\"分类\",null,1);\nfor (var i=1;i < tagList.length-2;i++) {\n    var title = tagList[i].text();\n    var url = source.key + String(tagList[i].attr(\"href\")).replace(/$/, `{{page}}.html`);\n    title = String(title).replace(/\\s/g, \"\");\n    push(title, url, tagSize);\n}\nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 596,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "article@html",
+      "nextContentUrl": "text.下一章@href\n@js:\n/_\\d+.html/.test(result)?result:\"\"\nresult",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##第\\(.+\\)页|.*\\.com|.*\\.cn|.*\\.cc|.*\\.net|book chapter list"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@.book_other.1@text##状态：}}\n{{@@.book_other.-2@text##更新时间：}}",
+      "lastChapter": "a.-1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book_list2@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": ".pagination@.page-item[2:-2]@a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "123文学网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.123txt.cc",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3053,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nvar result = [];\nvar push = (title, url, size) => result.push({\"title\": title,\"url\": url,\"style\": {\"layout_flexGrow\": 1,\"layout_flexBasisPercent\": size}});\nvar tagUrl = source.key;\nvar tag = java.ajax(tagUrl);\nvar tagList = org.jsoup.Jsoup.parse(tag).select(\".nav a\");\nvar tagSize = 0.4;\npush(\"分类\",null,1);\nfor (var i=1;i < tagList.length-2;i++) {\n    var title = tagList[i].text();\n    var url = source.key + String(tagList[i].attr(\"href\")).replace(/$/, `{{page}}.html`);\n    title = String(title).replace(/\\s/g, \"\");\n    push(title, url, tagSize);\n}\nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1748448148414,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 700,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "article@html",
+      "nextContentUrl": "text.下一章@href\n@js:\n/_\\d+.html/.test(result)?result:\"\"\nresult",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##第\\(.+\\)页|.*\\.com|.*\\.cn|.*\\.cc|.*\\.net|book chapter list"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@.book_other.1@text##状态：}}\n{{@@.book_other.-2@text##更新时间：}}",
+      "lastChapter": "a.-1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book_list2@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": ".pagination@.page-item[2:-2]@a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceComment": "// Error: Timed out waiting for 60000 ms",
+    "bookSourceGroup": "笔趣阁0905,校验超时",
+    "bookSourceName": "笔趣阁④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.biqooge.com",
+    "customOrder": 866,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693363111613,
+    "respondTime": 120001,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##小说|\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@textNodes",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.p.1@text##.*作者.",
+      "bookList": ".hot_sale",
+      "bookUrl": "tag.a@href",
+      "kind": "tag.p.1:2@text##小说.*|\\s.*",
+      "lastChapter": "tag.p.2@text##.*更新.",
+      "name": "tag.p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".directoryArea p a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/s.php,{\n  \"method\": \"POST\",\n  \"body\": \"keyword={{key}}\"\n}",
+    "weight": 0
+  }
+]

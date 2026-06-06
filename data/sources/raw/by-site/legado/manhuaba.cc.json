@@ -1,0 +1,15 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "漫画吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.manhuaba.cc",
+    "customOrder": 632,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 370
+  }
+]

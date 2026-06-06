@@ -1,0 +1,87 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "常·新书网™",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xinshuw.com",
+    "bookUrlPattern": ".+\\/novel_\\d+\\/",
+    "customOrder": 491,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1619356239385,
+    "respondTime": 3198,
+    "ruleBookInfo": {
+      "author": "##:author\"[^\"]*\"([^\"]*)##$1###",
+      "coverUrl": "##:image\"[^\"]*\"([^\"]*)##$1###",
+      "intro": "##:description\"[^\"]*\"([^\"]*)##$1###@js:result.replace(/^\\s*/, '<br>')",
+      "kind": "##:category\"[^\"]*\"([^\"]*)[\\s\\S]*?status\"[^\"]*\"([^\"]*)[\\s\\S]*?_time\"[^\"]*\"([^\"]*)##$1,$2,$3###",
+      "lastChapter": "##_chapter_name\"[^\"]*\"([^\"]*)##$1###",
+      "name": "##:book_name\"[^\"]*\"([^\"]*)##$1###"
+    },
+    "ruleContent": {
+      "content": "#nr@html##手机阅读.+言情中文网|.+yqzw2.+com"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".newlist-zz@text",
+      "bookList": "+@css:.text-more",
+      "bookUrl": ".newlist-title a@href",
+      "coverUrl": ".newlist-title a@href@js:\nvar id = result.match(/_(\\d+)/)[1];\n'/files/article/image/'+parseInt(id/1000)+'/'+id+'/'+id+'s.jpg';",
+      "kind": ".newlist-type a@text&&.newlist-zj@textNodes##\\(|\\)",
+      "lastChapter": ".newlist-zj a@text",
+      "name": ".newlist-title@text"
+    },
+    "ruleToc": {
+      "chapterList": ".dirlist!0@li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "24.12.18修复by 明月",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 新书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xinshuw.com",
+    "bookUrlPattern": ".+\\/novel_\\d+\\/",
+    "customOrder": 251,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1734516678232,
+    "loginUrl": "null",
+    "respondTime": 1993,
+    "ruleBookInfo": {
+      "author": "##:author\"[^\"]*\"([^\"]*)##$1###",
+      "coverUrl": "##:image\"[^\"]*\"([^\"]*)##$1###",
+      "intro": "##:description\"[^\"]*\"([^\"]*)##$1###@js:result.replace(/^\\s*/, '<br>')",
+      "kind": "##:category\"[^\"]*\"([^\"]*)[\\s\\S]*?status\"[^\"]*\"([^\"]*)[\\s\\S]*?_time\"[^\"]*\"([^\"]*)##$1,$2,$3###",
+      "lastChapter": "##_chapter_name\"[^\"]*\"([^\"]*)##$1###",
+      "name": "##:book_name\"[^\"]*\"([^\"]*)##$1###"
+    },
+    "ruleContent": {
+      "content": "#nr@html##手机阅读.+言情中文网|.+yqzw2.+com"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".newlist-zz@text",
+      "bookList": "+@css:.text-more",
+      "bookUrl": ".newlist-title a@href",
+      "coverUrl": ".newlist-title a@href@js:\nvar id = result.match(/_(\\d+)/)[1];\n'/files/article/image/'+parseInt(id/1000)+'/'+id+'/'+id+'s.jpg';",
+      "kind": ".newlist-type a@text&&.newlist-zj@textNodes##\\(|\\)",
+      "lastChapter": ".newlist-zj a@text",
+      "name": ".newlist-title@text"
+    },
+    "ruleToc": {
+      "chapterList": ".dirlist!0@li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search1.php,{\n\"charset\": \"gbk\",\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  }
+]

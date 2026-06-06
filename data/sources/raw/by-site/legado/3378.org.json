@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.3378.org",
+    "customOrder": 355,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 2,
+    "weight": 34
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "笔趣屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.3378.org",
+    "customOrder": 440,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 34
+  }
+]

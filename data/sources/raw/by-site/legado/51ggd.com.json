@@ -1,0 +1,52 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸格格党①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.51ggd.com",
+    "bookUrlPattern": "https://www.51ggd.com/books/\\d+.html",
+    "customOrder": -2085959010,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1682086478708,
+    "loginUrl": "",
+    "respondTime": 16201,
+    "ruleBookInfo": {
+      "author": "class.btitle.0@tag.em.0@tag.a.0@text||class.book-title.0@tag.em.0@text##作者：",
+      "coverUrl": "class.book-img.0@tag.img.0@src",
+      "init": "",
+      "intro": "class.intro.0@text||class.book-intro.0@text##.*格格党.*所有|内容简介：",
+      "lastChapter": "class.details.2@tag.a.0@text",
+      "name": "class.btitle.0@tag.h1.0@text||class.book-title.0@tag.h1.0@text",
+      "tocUrl": "class.b-orange.0@href"
+    },
+    "ruleContent": {
+      "content": "tag.body@textNodes",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s3.0@text||tag.p.0@tag.i.0@text",
+      "bookList": "class.result-item||class.item-pic||class.item-con@tag.li",
+      "bookUrl": "class.result-game-item-title-link.0@href||class.s2.0@tag.a.0@href||tag.h3.0@tag.a.0@href",
+      "coverUrl": "class.result-game-item-pic.0@tag.img.0@src||tag.a.0@tag.img.0@src",
+      "kind": "class.s1.0@text##\\[|\\]",
+      "lastChapter": "class.result-game-item-info-tag-item.0@text||tag.p.1@tag.a.0@text||tag.i.0@text",
+      "name": "class.result-game-item-title-link.0@text||class.s2.0@tag.a.0@text||tag.h3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "tbody@tr||class.chapterlist@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href\n<js>\nid=baseUrl.match(/(\\d+)\\/(\\d+)/)[1];\nid2=baseUrl.match(/(\\d+)\\/(\\d+)/)[2];\nid3=result.match(/(\\d+)/)[1];\n\nresult=\"https://www.51ggd.com/t/t.php?id=/\"+id+\"&did=\"+id2+\"&vid=\"+id3+\"&page=0\"\n\n</js>",
+      "isVolume": ""
+    },
+    "searchUrl": "http://www.51ggd.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

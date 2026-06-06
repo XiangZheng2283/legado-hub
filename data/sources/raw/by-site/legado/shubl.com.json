@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "💰书耽小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.shubl.com",
+    "customOrder": 511,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "http://m.shubl.com/signup/login",
+    "respondTime": 1,
+    "weight": 176
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💰 正版",
+    "bookSourceName": "💰 书耽[搜索]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.shubl.com",
+    "bookUrlPattern": "",
+    "customOrder": 312,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1699553427567,
+    "loginUrl": "http://m.shubl.com/signup/login",
+    "respondTime": 5222,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "class.article-content@p@textNodes",
+      "nextContentUrl": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": ".book-list li@js:\nresult.toArray().map(o =>{\n    var detail= String(o.select('.book-name').attr('href')).replace(/^\\//, baseUrl.match(/(.+\\/\\/.+?\\/)/)[1]);\n    var oText = s=>String(o.select(s).text().trim());\n    var J = org.jsoup.Jsoup.parse(java.ajax(detail));\n    var jText = s=>String(J.select(s).text().trim());\n    return {\n        name: oText('.book-name'),\n        author: oText('.smaller').replace(/\\s*作者：(\\S+).+/, '$1'),\n        tags: [String(J.select('.book-title .tag').toArray().map(tag =>tag.text()).join(' / '),J.select('.book-info > .row .tag').toArray().map(tag =>String(tag.text())).filter(v =>v.length < 5).slice(0, 2).join(','))].join(','),\n        num:jText('.book-info-numbers span:eq(0)').replace(/●|总字数：/g, '')+'字',\n        latest: oText('.smaller').replace(/.+\\D(\\d+-\\d+-\\d+).+\\/\\s*(.+)/, '$2（$1）').replace(/[\\(（【].*[求更谢乐发推].*[】）\\)]/,'').replace(/.*(第[^章]+章)/,'$1'),\n        intro: jText('.book-brief').replace(/\\s*简介：/, '').replace(/[\\s\\t]+/g, ''),\n        cover: o.select('.cover').attr('data-original'),\n        catalogUrl: detail\n    }\n}).filter(v =>v.name);",
+      "bookUrl": "catalogUrl",
+      "coverUrl": "cover",
+      "intro": "intro",
+      "kind": "tags",
+      "lastChapter": "latest",
+      "name": "name",
+      "wordCount": "num"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter_item a",
+      "chapterName": "a@text##.*(第[^章]+章)|[\\(（【].*[求更谢乐发推].*[】）\\)]##$1",
+      "chapterUrl": "a@href##$##,{\"webView\":true}",
+      "isVip": "@js:result.outerHtml().includes('lock')",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/index/get_search_book_list/{{key}}/{{page}}",
+    "weight": 0
+  }
+]

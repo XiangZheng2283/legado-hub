@@ -1,0 +1,36 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "兰兰文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.lanlanguoji.com",
+    "customOrder": 289,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "🎉 精选,发现,搜索链接规则为空",
+    "bookSourceName": "🎉兰兰文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.lanlanguoji.com",
+    "customOrder": 873,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 0
+  }
+]

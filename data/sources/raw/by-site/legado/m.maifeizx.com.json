@@ -1,0 +1,207 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁🎃#45",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.maifeizx.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3337,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"修真\",\"url\":\"/xiuzhen/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"都市\",\"url\":\"/dushi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"历史\",\"url\":\"/lishi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"网游\",\"url\":\"/wangyou/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"科幻\",\"url\":\"/kehuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"言情\",\"url\":\"/yanqing/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"耽美\",\"url\":\"/danmei/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"其他\",\"url\":\"/qita/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"全本\",\"url\":\"/quanben/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "exploreScreen": "",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 493,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "body > div.book_about > dl > dd@html",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##请记住本站(.|\\n)*"
+    },
+    "ruleExplore": {
+      "author": "span.1@a@text",
+      "bookList": "body > div.wrap > div.block > ul > li",
+      "bookUrl": "span@a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "span.0@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "div.author@a@text",
+      "bookList": "body > div.wrap > div > div",
+      "bookUrl": "h4.bookname@a@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "div.update@a@text",
+      "name": "h4.bookname@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "div.book_last.1@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\nvar url = \"http://m.maifeizx.com/js/common.js\";\nvar head = JSON.parse(source.header);\nhtml = java.ajax(url);\nsu = html.match(/method=\\\\\"get\\\\\" action=\\\\\"(.+?)\\\\\"/)[1];\ns = html.match(/name=\\\\\"s\\\\\" value=\\\\\"(.+?)\\\\\"/)[1];\nbody = 's=' + key + '&act=hztopy';\npy = java.post('http://m.maifeizx.com/pinyin.html', body, head).body();\npy = JSON.parse(py);\nkey = py.data;\njava.log(py);\n'http://m.maifeizx.com' + su + '?ie=gbk&s=' + s + '&q=' + key;",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.maifeizx.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3148,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"修真\",\"url\":\"/xiuzhen/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"都市\",\"url\":\"/dushi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"历史\",\"url\":\"/lishi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"网游\",\"url\":\"/wangyou/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"科幻\",\"url\":\"/kehuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"言情\",\"url\":\"/yanqing/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"耽美\",\"url\":\"/danmei/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"其他\",\"url\":\"/qita/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"全本\",\"url\":\"/quanben/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "exploreScreen": "",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1769589787615,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 494,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "body > div.book_about > dl > dd@html",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##请记住本站(.|\\n)*"
+    },
+    "ruleExplore": {
+      "author": "span.1@a@text",
+      "bookList": "body > div.wrap > div.block > ul > li",
+      "bookUrl": "span@a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "span.0@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "div.author@a@text",
+      "bookList": "body > div.wrap > div > div",
+      "bookUrl": "h4.bookname@a@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "div.update@a@text",
+      "name": "h4.bookname@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "div.book_last.1@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\nvar url = \"http://m.maifeizx.com/js/common.js\";\nvar head = JSON.parse(source.header);\nhtml = java.ajax(url);\nsu = html.match(/method=\\\\\"get\\\\\" action=\\\\\"(.+?)\\\\\"/)[1];\ns = html.match(/name=\\\\\"s\\\\\" value=\\\\\"(.+?)\\\\\"/)[1];\nbody = 's=' + key + '&act=hztopy';\npy = java.post('http://m.maifeizx.com/pinyin.html', body, head).body();\npy = JSON.parse(py);\nkey = py.data;\njava.log(py);\n'http://m.maifeizx.com' + su + '?ie=gbk&s=' + s + '&q=' + key;",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.maifeizx.com",
+    "customOrder": 207,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"修真\",\"url\":\"/xiuzhen/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"都市\",\"url\":\"/dushi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"历史\",\"url\":\"/lishi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"网游\",\"url\":\"/wangyou/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"科幻\",\"url\":\"/kehuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"言情\",\"url\":\"/yanqing/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"耽美\",\"url\":\"/danmei/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"其他\",\"url\":\"/qita/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},{\"title\":\"全本\",\"url\":\"/quanben/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1719012497689,
+    "respondTime": 13913,
+    "ruleBookInfo": {
+      "intro": "body > div.book_about > dl > dd@html"
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##请记住本站(.|\\n)*",
+      "title": ""
+    },
+    "ruleExplore": {
+      "author": "span.1@a@text",
+      "bookList": "body > div.wrap > div.block > ul > li",
+      "bookUrl": "span@a@href",
+      "name": "span.0@a@text"
+    },
+    "ruleSearch": {
+      "author": "div.author@a@text",
+      "bookList": "body > div.wrap > div > div",
+      "bookUrl": "h4.bookname@a@href",
+      "coverUrl": "img@src",
+      "lastChapter": "div.update@a@text",
+      "name": "h4.bookname@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "div.book_last.1@dl@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "@js:\nvar url = \"http://m.maifeizx.com/js/common.js\";\nvar head = JSON.parse(source.header);\nhtml = java.ajax(url);\nsu = html.match(/method=\\\\\"get\\\\\" action=\\\\\"(.+?)\\\\\"/)[1];\ns = html.match(/name=\\\\\"s\\\\\" value=\\\\\"(.+?)\\\\\"/)[1];\nbody = 's=' + key + '&act=hztopy';\npy = java.post('http://m.maifeizx.com/pinyin.html', body, head).body();\npy = JSON.parse(py);\nkey = py.data;\njava.log(py);\n'http://m.maifeizx.com' + su + '?ie=gbk&s=' + s + '&q=' + key;",
+    "weight": 0
+  }
+]

@@ -1,0 +1,118 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉晚秋中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wanqiuwx.com/",
+    "bookUrlPattern": "http://www.wanqiuwx.com/b/\\d+/",
+    "customOrder": 736,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Safari/537.36\"\n}",
+    "lastUpdateTime": 1646770183139,
+    "respondTime": 12569,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁",
+      "tocUrl": ".tgcj@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##（本章未完，请翻页）|（本章完）|",
+      "nextContentUrl": "text.下一页@href",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||[property=og:novel:author]@content",
+      "bookList": "class.grid@tr!0||tag.html",
+      "bookUrl": "tag.td.0@tag.a.0@href",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "tag.td.1@a@text||[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text||[property=og:novel:book_name]@content##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.wanqiuwx.com/modules/article/search.php,{\n\t'charset': 'gbk',\n'method': 'POST',\n'body': 's={{key}}&type=articlename',\n'headers': {\n    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Safari/537.36'\n    }\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🎉 精选 🎉",
+    "bookSourceName": "🎉晚秋中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wanqiuwx.com/",
+    "bookUrlPattern": "http://www.wanqiuwx.com/b/\\d+/",
+    "customOrder": 1331,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Safari/537.36\"\n}",
+    "lastUpdateTime": 1646770183139,
+    "respondTime": 42414,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁",
+      "tocUrl": ".tgcj@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##（本章未完，请翻页）|（本章完）|",
+      "nextContentUrl": "text.下一页@href",
+      "sourceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||[property=og:novel:author]@content",
+      "bookList": "class.grid@tr!0||tag.html",
+      "bookUrl": "tag.td.0@tag.a.0@href",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "tag.td.1@a@text||[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text||[property=og:novel:book_name]@content##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.wanqiuwx.com/modules/article/search.php,{\n\t'charset': 'gbk',\n'method': 'POST',\n'body': 's={{key}}&type=articlename',\n'headers': {\n    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Safari/537.36'\n    }\n}",
+    "weight": 0
+  }
+]

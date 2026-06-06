@@ -1,0 +1,229 @@
+[
+  {
+    "bookSourceComment": "\"error:Connection reset\n\"",
+    "bookSourceGroup": "",
+    "bookSourceName": "💯求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qiuxiaoshuo.org",
+    "bookUrlPattern": "https://www.qiuxiaoshuo.org/book/\\d+.html",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1009,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/xuanhuanxiaoshuo/{{page}}.htm\n奇幻小说::/qihuanxiaoshuo/{{page}}.htm\n修真小说::/xiuzhenxiaoshuo/{{page}}.htm\n都市小说::/dushixiaoshuo/{{page}}.htm\n言情小说::/yanqingxiaoshuo/{{page}}.htm\n历史小说::/lishixiaoshuo/{{page}}.htm\n同人小说::/tongrenxiaoshuo/{{page}}.htm\n武侠小说::/wuxiaxiaoshuo/{{page}}.htm\n科幻小说::/kehuanxiaoshuo/{{page}}.htm\n游戏小说::/youxixiaoshuo/{{page}}.htm\n军事小说::/junshixiaoshuo/{{page}}.htm\n竞技小说::/jingjixiaoshuo/{{page}}.htm\n灵异小说::/lingyixiaoshuo/{{page}}.htm\n商战小说::/shangzhanxiaoshuo/{{page}}.htm\n校园小说::/xiaoyuanxiaoshuo/{{page}}.htm\n官场小说::/guanchangxiaoshuo/{{page}}.htm\n职场小说::/zhichangxiaoshuo/{{page}}.htm\n其他小说::/qitaxiaoshuo/{{page}}.htm",
+    "exploreScreen": "",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36\"\n}",
+    "lastUpdateTime": 1641143830488,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 711,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "h1@small@text",
+      "coverUrl": "class.img-thumbnail@src",
+      "intro": "id.shot@text",
+      "kind": "class.list-group.0@tag.li.3@text&&\nclass.list-group.0@tag.li.2@text##写作进度：|更新时间：",
+      "lastChapter": "class.list-group.0@tag.li.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "h1@text##作者.*",
+      "canReName": "",
+      "tocUrl": "text.开始阅读@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.txtContent@html",
+      "nextContentUrl": "",
+      "imageStyle": "0",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "class.col-xs-2.0@text",
+      "bookList": "id.novel-list@li!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "class.time@text",
+      "lastChapter": "tag.a.1@text",
+      "name": "class.col-xs-3@tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.col-xs-2.0@text",
+      "bookList": "class.panel-body@li!0",
+      "bookUrl": "class.col-xs-3@a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "class.col-xs-1@text&&\nclass.time@text",
+      "lastChapter": "class.col-xs-4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.col-xs-3@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "@css:#chapters-list a",
+      "chapterName": "text##(正文)?(\\s+|_)|[\\(（【].*[求更谢乐发推].*[】）\\)]",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.qiuxiaoshuo.org/search.htm?keyword={{key}}&pn={{page}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qiuxiaoshuo.org/",
+    "bookUrlPattern": "https://www.qiuxiaoshuo.org/book/\\d+.html",
+    "customOrder": 503,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/xuanhuanxiaoshuo/{{page}}.htm\n奇幻小说::/qihuanxiaoshuo/{{page}}.htm\n修真小说::/xiuzhenxiaoshuo/{{page}}.htm\n都市小说::/dushixiaoshuo/{{page}}.htm\n言情小说::/yanqingxiaoshuo/{{page}}.htm\n历史小说::/lishixiaoshuo/{{page}}.htm\n同人小说::/tongrenxiaoshuo/{{page}}.htm\n武侠小说::/wuxiaxiaoshuo/{{page}}.htm\n科幻小说::/kehuanxiaoshuo/{{page}}.htm\n游戏小说::/youxixiaoshuo/{{page}}.htm\n军事小说::/junshixiaoshuo/{{page}}.htm\n竞技小说::/jingjixiaoshuo/{{page}}.htm\n灵异小说::/lingyixiaoshuo/{{page}}.htm\n商战小说::/shangzhanxiaoshuo/{{page}}.htm\n校园小说::/xiaoyuanxiaoshuo/{{page}}.htm\n官场小说::/guanchangxiaoshuo/{{page}}.htm\n职场小说::/zhichangxiaoshuo/{{page}}.htm\n其他小说::/qitaxiaoshuo/{{page}}.htm",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36\"\n}",
+    "lastUpdateTime": 1632155952159,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 3129,
+    "ruleBookInfo": {
+      "author": "h1@small@text",
+      "coverUrl": "class.img-thumbnail@src",
+      "init": "",
+      "intro": "id.shot@text",
+      "kind": "class.list-group.0@tag.li.3@text&&\nclass.list-group.0@tag.li.2@text##写作进度：|更新时间：",
+      "lastChapter": "class.list-group.0@tag.li.4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "h1@text##作者.*",
+      "tocUrl": "text.开始阅读@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.txtContent@html",
+      "imageStyle": "0",
+      "nextContentUrl": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "class.col-xs-2.0@text",
+      "bookList": "id.novel-list@li!0",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "class.time@text",
+      "lastChapter": "tag.a.1@text",
+      "name": "class.col-xs-3@tag.a.0@text",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "class.col-xs-2.0@text",
+      "bookList": "class.panel-body@li!0",
+      "bookUrl": "class.col-xs-3@a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "class.col-xs-1@text&&\nclass.time@text",
+      "lastChapter": "class.col-xs-4@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.col-xs-3@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "@css:#chapters-list a",
+      "chapterName": "text##(正文)?(\\s+|_)|[\\(（【].*[求更谢乐发推].*[】）\\)]",
+      "chapterUrl": "href",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.qiuxiaoshuo.org/search.htm?keyword={{key}}&pn={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.qiuxiaoshuo.org",
+    "customOrder": 544,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1603359034548,
+    "respondTime": 2921,
+    "ruleBookInfo": {
+      "coverUrl": "class.col-xs-2@tag.img.0@src",
+      "intro": "id.all@text##\\[收起\\]",
+      "tocUrl": "class.list-group-item tac@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.txtContent@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.col-xs-2.0@text",
+      "bookList": "class.panel-body@tag.li",
+      "bookUrl": "class.col-xs-3.0@tag.a.0@href",
+      "kind": "class.tag-blue.0@text",
+      "lastChapter": "class.col-xs-4.0@tag.a.0@text",
+      "name": "class.col-xs-3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.list-group-item@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.qiuxiaoshuo.org/search.htm?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qiuxiaoshuo.org",
+    "bookUrlPattern": "",
+    "customOrder": 551,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/xuanhuanxiaoshuo/{{page}}.htm\n奇幻::/qihuanxiaoshuo/{{page}}.htm\n修真::/xiuzhenxiaoshuo/{{page}}.htm\n都市::/doushixiaoshuo/{{page}}.htm\n言情::/yanqingxiaoshuo/{{page}}.htm\n历史::/lishixiaoshuo/{{page}}.htm\n耽美::/danmeixiaoshuo/{{page}}.htm\n武侠::/wuxiaxiaoshuo/{{page}}.htm\n科幻::/kehuanxiaoshuo/{{page}}.htm\n游戏::/youxixiaoshuo/{{page}}.htm\n军事::/junshixiaoshuo/{{page}}.htm\n竞技::/jingjixiaoshuo/{{page}}.htm\n灵异::/lingyixiaoshuo/{{page}}.htm\n商战::/shangzhanxiaoshuo/{{page}}.htm\n校园::/xiaoyuanxiaoshuo/{{page}}.htm\n官场::/guanchangxiaoshuo/{{page}}.htm\n职场::/zhichangxiaoshuo/{{page}}.htm\n其他::/qitaxiaoshuo/{{page}}.htm",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.96 Safari/537.36\"\n}",
+    "lastUpdateTime": 1616245156714,
+    "loginUrl": "",
+    "respondTime": 2595,
+    "ruleBookInfo": {
+      "author": "@css:[property=og:novel:author]@content",
+      "coverUrl": "class.img-thumbnail.0@src",
+      "intro": "id.shot@text##\\[.*",
+      "name": "class.active.0@text",
+      "tocUrl": "class.list-group-item tac@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.txtContent@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.col-xs-2.0@text",
+      "bookList": "id.novel-list@tag.li!0",
+      "bookUrl": "class.col-xs-3.0@tag.a.0@href",
+      "kind": "class.col-xs-1.0@tag.i.0@text",
+      "lastChapter": "class.col-xs-4.0@tag.a.0@text",
+      "name": "class.col-xs-3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.panel panel-default mt20.0@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.qiuxiaoshuo.org/search.htm?keyword={{key}}",
+    "weight": 0
+  }
+]

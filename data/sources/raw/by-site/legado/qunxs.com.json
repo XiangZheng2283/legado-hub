@@ -1,0 +1,292 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "群小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.qunxs.com",
+    "bookUrlPattern": "http://www.qunxs.com/xiaoshuo_\\d+.html",
+    "customOrder": 262,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "首页::/\n玄幻::/xuanhuan/{{page}}\n仙侠::/xianxia/{{page}}\n都市::/dushi/{{page}}\n历史::/lishi/{{page}}\n科幻::/kehuan/{{page}}\n恐怖::/kongbu/{{page}}\n其他::/qita/{{page}}\n热门::/rank/{{page}}\n推荐::/votelist/{{page}}\n全本::/quanben/{{page}}\n记录::/history.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1691276709201,
+    "respondTime": 1874,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "canReName": "true",
+      "coverUrl": "[property$=image]@content",
+      "downloadUrls": "text.TXT 下载@href",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "{{@@text.字数：@text##字数：}}"
+    },
+    "ruleContent": {
+      "content": "#booktxt@p@html",
+      "nextContentUrl": "text.下一页@class\n@js:\nif(result[0]){\n\tvar next=src.match(/next_page = \"(.+)\"/)[1];\n\t//java.log(next)\n\tresult=next;\n\t}else{\n\t\tresult=\"\"\n\t\t}"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".item",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em.-1@text",
+      "name": "a.1@text",
+      "wordCount": "em.-2@text"
+    },
+    "ruleToc": {
+      "chapterList": "#content_1@a",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "@js:\n\nvar html = java.ajax(source.getKey())\n\ntoken = org.jsoup.Jsoup.parse(html).select('input[name=_token]').attr('value')\n\n\"/search,\"+JSON.stringify({\n  \"body\": `_token=${token}&keyword=${key}`,\n  \"method\": \"POST\"\n})",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "群小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.qunxs.com",
+    "bookUrlPattern": "http://www.qunxs.com/xiaoshuo_\\d+.html",
+    "customOrder": 1024,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "首页::/\n玄幻::/xuanhuan/{{page}}\n仙侠::/xianxia/{{page}}\n都市::/dushi/{{page}}\n历史::/lishi/{{page}}\n科幻::/kehuan/{{page}}\n恐怖::/kongbu/{{page}}\n其他::/qita/{{page}}\n热门::/rank/{{page}}\n推荐::/votelist/{{page}}\n全本::/quanben/{{page}}\n记录::/history.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1691276709201,
+    "respondTime": 13067,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "canReName": "true",
+      "coverUrl": "[property$=image]@content",
+      "downloadUrls": "text.TXT 下载@href",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "{{@@text.字数：@text##字数：}}"
+    },
+    "ruleContent": {
+      "content": "#booktxt@p@html",
+      "nextContentUrl": "text.下一页@class\n@js:\nif(result[0]){\n\tvar next=src.match(/next_page = \"(.+)\"/)[1];\n\t//java.log(next)\n\tresult=next;\n\t}else{\n\t\tresult=\"\"\n\t\t}"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".item",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em.-1@text",
+      "name": "a.1@text",
+      "wordCount": "em.-2@text"
+    },
+    "ruleToc": {
+      "chapterList": "#content_1@a",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "@js:\n\nvar html = java.ajax(source.getKey())\n\ntoken = org.jsoup.Jsoup.parse(html).select('input[name=_token]').attr('value')\n\n\"/search,\"+JSON.stringify({\n  \"body\": `_token=${token}&keyword=${key}`,\n  \"method\": \"POST\"\n})",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "车群小说（优）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.qunxs.com/",
+    "bookUrlPattern": "http://www.qunxs.com/xiaoshuo_\\d+.html",
+    "customButton": false,
+    "customOrder": 146,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "首页::/\n玄幻::/xuanhuan/{{page}}\n仙侠::/xianxia/{{page}}\n都市::/dushi/{{page}}\n历史::/lishi/{{page}}\n科幻::/kehuan/{{page}}\n恐怖::/kongbu/{{page}}\n其他::/qita/{{page}}\n热门::/rank/{{page}}\n推荐::/votelist/{{page}}\n全本::/quanben/{{page}}\n记录::/history.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1766349245321,
+    "respondTime": 63811,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "canReName": "true",
+      "coverUrl": "[property$=image]@content",
+      "downloadUrls": "text.TXT 下载@href",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "{{baseUrl.replace(\"xiaoshuo_\",'txt/')}}",
+      "wordCount": "{{@@text.字数：@text##字数：}}"
+    },
+    "ruleContent": {
+      "content": "#booktxt@p@html",
+      "nextContentUrl": "text.下—页@class||text.下一页@class\n@js:\nif(result[0]){\n\t\tvar next=src.match(/next_page = \"(.+)\"/)[1];\n        \tnext = next.replace(\"/_/\",\"_\");\n\t\tresult=next;\n\t}else{\n\t\tresult=\"\";\n\t}\nresult;"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".item",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em.-1@text",
+      "name": "a.1@text",
+      "wordCount": "em.-2@text"
+    },
+    "ruleToc": {
+      "chapterList": "#content_1 a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "@js:\n\nvar html = java.ajax(source.getKey())\n\ntoken = org.jsoup.Jsoup.parse(html).select('input[name=_token]').attr('value')\n\n\"/search,\"+JSON.stringify({\n  \"body\": `_token=${token}&keyword=${key}`,\n  \"method\": \"POST\"\n})",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//2025.8.9 ◎夜泽川◎",
+    "bookSourceGroup": "一",
+    "bookSourceName": "群小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qunxs.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1863,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},{\"title\":\"玄幻\",\"url\":\"/xuanhuan/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"仙侠\",\"url\":\"/xianxia/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"都市\",\"url\":\"/dushi/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"历史\",\"url\":\"/lishi/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"网游\",\"url\":\"/wangyou/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"科幻\",\"url\":\"/kehuan/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"恐怖\",\"url\":\"/kongbu/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"全本\",\"url\":\"/quanben/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}}]",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1754743900060,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 856,
+    "ruleBookInfo": {
+      "init": "@put:{\"n\":\"[property$=book_name]@content\",\n\"a\":\"[property$=author]@content\",\n\"t\":\"[property~=category|status]@content\",\n\"l\":\"[property$=latest_chapter_name]@content\",\n\"i\":\"[property$=image]@content\",\n\"o\":\"[property$=description]@content\",\n\"z\":\"text.字数：@text##字数：\",\n\"g\":\"[property$=update_time]@content\"\n}",
+      "author": "@get:{a}",
+      "coverUrl": "@get:{i}",
+      "intro": "@get:{o}",
+      "kind": "@get:{t}",
+      "lastChapter": "@get:{l}◎@get:{g}",
+      "name": "@get:{n}",
+      "canReName": "",
+      "tocUrl": "{{baseUrl}}##(\\d+)##/txt/$1_1.html###",
+      "wordCount": "@get:{z}",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#booktxt@html",
+      "nextContentUrl": "@js:var result = [];\nvar pages = +String(java.getString('.bookname@text')).match(/\\(\\d+\\/(\\d+)\\)$/)[1];\nfor (let i = 2; i <= pages && !/_/.test(baseUrl); i++) {\n\tresult.push(baseUrl.replace(\".html\", `_${i}.html`));\n}\nresult;",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".s4@text",
+      "bookList": ".l > ul >li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": ".s1@text&&.s5@text",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a[href^=\"/author\"]@text",
+      "bookList": ".item",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em!0@text",
+      "lastChapter": "",
+      "name": "dt@text",
+      "wordCount": "em.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "[rel=\"chapter\"]",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:let data = org.jsoup.Jsoup.parse(java.ajax(source.key)).select('form');\nlet url = data.attr('action') + \",\" + JSON.stringify({\n  \"body\": \"_token=\" + data.select('[name=_token]').attr('value') + \"&keyword={{key}}&page={{page}}\",\n  \"method\": \"POST\"\n});\nurl;",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "车群小说（优）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.qunxs.com/",
+    "bookUrlPattern": "http://www.qunxs.com/xiaoshuo_\\d+.html",
+    "customButton": false,
+    "customOrder": 137,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "首页::/\n玄幻::/xuanhuan/{{page}}\n仙侠::/xianxia/{{page}}\n都市::/dushi/{{page}}\n历史::/lishi/{{page}}\n科幻::/kehuan/{{page}}\n恐怖::/kongbu/{{page}}\n其他::/qita/{{page}}\n热门::/rank/{{page}}\n推荐::/votelist/{{page}}\n全本::/quanben/{{page}}\n记录::/history.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1766349245321,
+    "respondTime": 63811,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "canReName": "true",
+      "coverUrl": "[property$=image]@content",
+      "downloadUrls": "text.TXT 下载@href",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "{{baseUrl.replace(\"xiaoshuo_\",'txt/')}}",
+      "wordCount": "{{@@text.字数：@text##字数：}}"
+    },
+    "ruleContent": {
+      "content": "#booktxt@p@html",
+      "nextContentUrl": "text.下—页@class||text.下一页@class\n@js:\nif(result[0]){\n\t\tvar next=src.match(/next_page = \"(.+)\"/)[1];\n        \tnext = next.replace(\"/_/\",\"_\");\n\t\tresult=next;\n\t}else{\n\t\tresult=\"\";\n\t}\nresult;"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".item",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em.-1@text",
+      "name": "a.1@text",
+      "wordCount": "em.-2@text"
+    },
+    "ruleToc": {
+      "chapterList": "#content_1 a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "@js:\n\nvar html = java.ajax(source.getKey())\n\ntoken = org.jsoup.Jsoup.parse(html).select('input[name=_token]').attr('value')\n\n\"/search,\"+JSON.stringify({\n  \"body\": `_token=${token}&keyword=${key}`,\n  \"method\": \"POST\"\n})",
+    "weight": 0
+  }
+]

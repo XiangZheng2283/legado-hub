@@ -1,0 +1,137 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍁笔趣阁⑨⑧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge123.cc/",
+    "bookUrlPattern": "https://www.biquge123.cc/xs/\\d+/\\d+/",
+    "customOrder": 542,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1624790079661,
+    "loginUrl": "",
+    "respondTime": 5295,
+    "ruleBookInfo": {
+      "author": "class.fix.0@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix.0@tag.p.1@text&&\nclass.fix.0@tag.p.2@text&&\nclass.fix.0@tag.p.4@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.layout layout2 layout-co18@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": "class.s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "https://www.biquge123.cc/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: Timed out waiting for 60000 ms",
+    "bookSourceGroup": "笔趣阁0905,校验超时",
+    "bookSourceName": "笔趣阁⑨⑧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge123.cc",
+    "bookUrlPattern": "https://www.biquge123.cc/xs/\\d+/\\d+/",
+    "customOrder": 434,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693363616165,
+    "loginUrl": "null",
+    "respondTime": 120002,
+    "ruleBookInfo": {
+      "author": "class.fix.0@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix.0@tag.p.1@text&&\nclass.fix.0@tag.p.2@text&&\nclass.fix.0@tag.p.4@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.layout layout2 layout-co18@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": "class.s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "https://www.biquge123.cc/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁⑨⑧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge123.cc/",
+    "bookUrlPattern": "https://www.biquge123.cc/xs/\\d+/\\d+/",
+    "customOrder": 1045,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693363645571,
+    "loginUrl": "",
+    "respondTime": 56574,
+    "ruleBookInfo": {
+      "author": "class.fix.0@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "intro": "class.m-desc@text",
+      "kind": "class.fix.0@tag.p.1@text&&\nclass.fix.0@tag.p.2@text&&\nclass.fix.0@tag.p.4@text##类 别：|状 态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.top@tag.h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.layout layout2 layout-co18@tag.li",
+      "bookUrl": "tag.a.0@href",
+      "kind": "class.s1@text&&\nclass.s5@text##\\[|\\]",
+      "lastChapter": "class.s3@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.s2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@li",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "https://www.biquge123.cc/ar.php?keyWord={{key}}",
+    "weight": 0
+  }
+]

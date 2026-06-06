@@ -1,0 +1,48 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 侠客小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xiakexsw.com",
+    "customOrder": 181,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "header": "{\n\t\"x-requested-with\": \"XMLHttpRequest\",\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; SK) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\",\n\t\"accept-language\": \"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"\n}",
+    "lastUpdateTime": 1721809965848,
+    "respondTime": 2144,
+    "ruleBookInfo": {
+      "author": "span:nth-child(1) > a@text",
+      "coverUrl": ".nbg > img@src",
+      "intro": ".intro:nth-child(2) > p@text",
+      "kind": "#info > a:nth-child(4)@text",
+      "lastChapter": "#info > a:nth-child(13)@text",
+      "name": "h1 > span@text",
+      "tocUrl": ".online-read > a@href"
+    },
+    "ruleContent": {
+      "content": "#txt@html",
+      "replaceRegex": "##.*侠客小说网.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".pub > a:nth-child(1)@text",
+      "bookList": "li.subject-item",
+      "bookUrl": "h2 > a@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "a:nth-child(2)@text",
+      "lastChapter": ".market-info > a@text",
+      "name": "h2 > a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".wrap1200 li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://m.xiakexsw.com/search/?keyword={{key}}&t=0",
+    "weight": 0
+  }
+]

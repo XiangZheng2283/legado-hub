@@ -1,0 +1,295 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 天下书盟",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fbook.net",
+    "customOrder": 1004,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "男生::http://www.fbook.net/all/nansheng?page={{page}}\n玄幻::http://www.fbook.net/all/xuanhuan?page={{page}}&&奇幻::http://www.fbook.net/all/qihuan?page={{page}}&&武侠::http://www.fbook.net/all/wuxia?page={{page}}&&仙侠::http://www.fbook.net/all/xianxia?page={{page}}&&都市::http://www.fbook.net/all/dushi?page={{page}}&&现实::http://www.fbook.net/all/xianshi?page={{page}}&&军事::http://www.fbook.net/all/junshi?page={{page}}&&历史::http://www.fbook.net/all/lishi?page={{page}}&&游戏::http://www.fbook.net/all/youxi?page={{page}}&&体育::http://www.fbook.net/all/tiyu?page={{page}}&&科幻::http://www.fbook.net/all/kehuan?page={{page}}&&刑侦::http://www.fbook.net/all/xingzhen?page={{page}}&&探险::http://www.fbook.net/all/tanxian?page={{page}}&&异能::http://www.fbook.net/all/yineng?page={{page}}&&女生::http://www.fbook.net/all/nvsheng?page={{page}}&&青春::http://www.fbook.net/all/qingchun?page={{page}}&&古言::http://www.fbook.net/all/guyan?page={{page}}&&现言::http://www.fbook.net/all/xianyan?page={{page}}&&穿越::http://www.fbook.net/all/chuanyue?page={{page}}&&纯爱::http://www.fbook.net/all/chunai?page={{page}}&&同人::http://www.fbook.net/all/tongren?page={{page}}&&悬疑::http://www.fbook.net/all/xuanyi?page={{page}}&&灵异::http://www.fbook.net/all/lingyi?page={{page}}&&轻小说::http://www.fbook.net/all/qingxiaoshuo?page={{page}}&&",
+    "lastUpdateTime": 1685774421713,
+    "respondTime": 926,
+    "ruleBookInfo": {
+      "author": "h1@span@text",
+      "intro": "class.cl_box@tag.div.2@text##.*字数：\\d+|免费试读|放入书架|打开目录@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/(\\d+)\\d{4}●/g,'$1万').replace(/(\\d+)\\d{3}/g,'$1千').replace('万藏','万收藏').replace(/●/g,'').replace(/(千|万)/g,'$1 ').replace(/(\\d+)/g,'$1 ')",
+      "kind": ".c_text@a@text##免费试读|放入书架|打开目录",
+      "name": "h1@textNodes",
+      "tocUrl": "@js:baseUrl.replace('/book','/list')",
+      "wordCount": ".c_text@text##.*(字数.*?)总.*##$1###@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/\\d{4}●/g,'万 ').replace(/(\\d+)\\d{3}/g,'$1千 ')"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "nextContentUrl": ".nextchapter@href"
+    },
+    "ruleExplore": {
+      "author": "tag.span.0@text",
+      "bookList": "div.all-book-list ul li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.a.-1@text",
+      "kind": "class.float-l@tag.a!0:-1:-2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "h4@text##作者：",
+      "bookList": "div.container>div.library_zplb>div",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": ".latest_text@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul#list1 li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.fbook.net/Search/Index?searchType=All&searchKey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "天下书盟",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fbook.net/",
+    "customOrder": 362,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"男生\",\"url\":\"http://www.fbook.net/all/nansheng?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"玄幻\",\"url\":\"http://www.fbook.net/all/xuanhuan?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"奇幻\",\"url\":\"http://www.fbook.net/all/qihuan?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"武侠\",\"url\":\"http://www.fbook.net/all/wuxia?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"仙侠\",\"url\":\"http://www.fbook.net/all/xianxia?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"都市\",\"url\":\"http://www.fbook.net/all/dushi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"现实\",\"url\":\"http://www.fbook.net/all/xianshi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"军事\",\"url\":\"http://www.fbook.net/all/junshi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"历史\",\"url\":\"http://www.fbook.net/all/lishi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"游戏\",\"url\":\"http://www.fbook.net/all/youxi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"体育\",\"url\":\"http://www.fbook.net/all/tiyu?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"科幻\",\"url\":\"http://www.fbook.net/all/kehuan?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"刑侦\",\"url\":\"http://www.fbook.net/all/xingzhen?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"探险\",\"url\":\"http://www.fbook.net/all/tanxian?page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.211}},{\"title\":\"异能\",\"url\":\"http://www.fbook.net/all/yineng?page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.211}},\n\n\n\n{\"title\":\"女生\",\"url\":\"http://www.fbook.net/all/nvsheng?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"青春\",\"url\":\"http://www.fbook.net/all/qingchun?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"古言\",\"url\":\"http://www.fbook.net/all/guyan?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"现言\",\"url\":\"http://www.fbook.net/all/xianyan?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"穿越\",\"url\":\"http://www.fbook.net/all/chuanyue?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"纯爱\",\"url\":\"http://www.fbook.net/all/chunai?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"同人\",\"url\":\"http://www.fbook.net/all/tongren?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"悬疑\",\"url\":\"http://www.fbook.net/all/xuanyi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"灵异\",\"url\":\"http://www.fbook.net/all/lingyi?page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"轻小说\",\"url\":\"http://www.fbook.net/all/qingxiaoshuo?page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.211}}]",
+    "lastUpdateTime": 1692440677600,
+    "respondTime": 1169,
+    "ruleBookInfo": {
+      "author": "h1@span@text",
+      "coverUrl": "div.c_img@img@src",
+      "intro": "class.cl_box@tag.div.2@text##.*字数：\\d+|免费试读|放入书架|打开目录@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/(\\d+)\\d{4}●/g,'$1万').replace(/(\\d+)\\d{3}/g,'$1千').replace('万藏','万收藏').replace(/●/g,'').replace(/(千|万)/g,'$1 ').replace(/(\\d+)/g,'$1 ')",
+      "kind": ".c_text@a.0@text&&.cover_content.clearfix@.cover_left@.cl_nrjj.pt_20.0@span.0@textNodes##\\[.*\\].*\\s|免费试读|放入书架|打开目录",
+      "lastChapter": "id.qh-tabcon2@a.0@text",
+      "name": "h1@textNodes",
+      "tocUrl": "@js:baseUrl.replace('/book','/list')",
+      "wordCount": ".c_text@text<js>##.*(字数.*?)总.*##$1###</js><js>##字数：</js>@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/\\d{4}●/g,'万 ').replace(/(\\d+)\\d{3}/g,'$1千 ')"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "nextContentUrl": ".nextchapter@href"
+    },
+    "ruleExplore": {
+      "author": "tag.span.0@text",
+      "bookList": "div.all-book-list ul li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.a.-1@text",
+      "kind": "class.float-l@tag.a!0:-1:-2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "h4@text##作者：",
+      "bookList": "div.container>div.library_zplb>div",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": ".latest_text@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul#list1 li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.fbook.net/Search/Index?searchType=All&searchKey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 天下书盟",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fbook.net",
+    "customOrder": 1308,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "男生::http://www.fbook.net/all/nansheng?page={{page}}\n玄幻::http://www.fbook.net/all/xuanhuan?page={{page}}&&奇幻::http://www.fbook.net/all/qihuan?page={{page}}&&武侠::http://www.fbook.net/all/wuxia?page={{page}}&&仙侠::http://www.fbook.net/all/xianxia?page={{page}}&&都市::http://www.fbook.net/all/dushi?page={{page}}&&现实::http://www.fbook.net/all/xianshi?page={{page}}&&军事::http://www.fbook.net/all/junshi?page={{page}}&&历史::http://www.fbook.net/all/lishi?page={{page}}&&游戏::http://www.fbook.net/all/youxi?page={{page}}&&体育::http://www.fbook.net/all/tiyu?page={{page}}&&科幻::http://www.fbook.net/all/kehuan?page={{page}}&&刑侦::http://www.fbook.net/all/xingzhen?page={{page}}&&探险::http://www.fbook.net/all/tanxian?page={{page}}&&异能::http://www.fbook.net/all/yineng?page={{page}}&&女生::http://www.fbook.net/all/nvsheng?page={{page}}&&青春::http://www.fbook.net/all/qingchun?page={{page}}&&古言::http://www.fbook.net/all/guyan?page={{page}}&&现言::http://www.fbook.net/all/xianyan?page={{page}}&&穿越::http://www.fbook.net/all/chuanyue?page={{page}}&&纯爱::http://www.fbook.net/all/chunai?page={{page}}&&同人::http://www.fbook.net/all/tongren?page={{page}}&&悬疑::http://www.fbook.net/all/xuanyi?page={{page}}&&灵异::http://www.fbook.net/all/lingyi?page={{page}}&&轻小说::http://www.fbook.net/all/qingxiaoshuo?page={{page}}&&",
+    "lastUpdateTime": 1685774421713,
+    "respondTime": 1180,
+    "ruleBookInfo": {
+      "author": "h1@span@text",
+      "intro": "class.cl_box@tag.div.2@text##.*字数：\\d+|免费试读|放入书架|打开目录@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/(\\d+)\\d{4}●/g,'$1万').replace(/(\\d+)\\d{3}/g,'$1千').replace('万藏','万收藏').replace(/●/g,'').replace(/(千|万)/g,'$1 ').replace(/(\\d+)/g,'$1 ')",
+      "kind": ".c_text@a@text##免费试读|放入书架|打开目录",
+      "name": "h1@textNodes",
+      "tocUrl": "@js:baseUrl.replace('/book','/list')",
+      "wordCount": ".c_text@text##.*(字数.*?)总.*##$1###@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/\\d{4}●/g,'万 ').replace(/(\\d+)\\d{3}/g,'$1千 ')"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "nextContentUrl": ".nextchapter@href"
+    },
+    "ruleExplore": {
+      "author": "tag.span.0@text",
+      "bookList": "div.all-book-list ul li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.a.-1@text",
+      "kind": "class.float-l@tag.a!0:-1:-2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "h4@text##作者：",
+      "bookList": "div.container>div.library_zplb>div",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": ".latest_text@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul#list1 li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.fbook.net/Search/Index?searchType=All&searchKey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "天下书盟",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fbook.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1366,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "男生::http://www.fbook.net/all/nansheng?page={{page}}\n玄幻::http://www.fbook.net/all/xuanhuan?page={{page}}&&奇幻::http://www.fbook.net/all/qihuan?page={{page}}&&武侠::http://www.fbook.net/all/wuxia?page={{page}}&&仙侠::http://www.fbook.net/all/xianxia?page={{page}}&&都市::http://www.fbook.net/all/dushi?page={{page}}&&现实::http://www.fbook.net/all/xianshi?page={{page}}&&军事::http://www.fbook.net/all/junshi?page={{page}}&&历史::http://www.fbook.net/all/lishi?page={{page}}&&游戏::http://www.fbook.net/all/youxi?page={{page}}&&体育::http://www.fbook.net/all/tiyu?page={{page}}&&科幻::http://www.fbook.net/all/kehuan?page={{page}}&&刑侦::http://www.fbook.net/all/xingzhen?page={{page}}&&探险::http://www.fbook.net/all/tanxian?page={{page}}&&异能::http://www.fbook.net/all/yineng?page={{page}}&&女生::http://www.fbook.net/all/nvsheng?page={{page}}&&青春::http://www.fbook.net/all/qingchun?page={{page}}&&古言::http://www.fbook.net/all/guyan?page={{page}}&&现言::http://www.fbook.net/all/xianyan?page={{page}}&&穿越::http://www.fbook.net/all/chuanyue?page={{page}}&&纯爱::http://www.fbook.net/all/chunai?page={{page}}&&同人::http://www.fbook.net/all/tongren?page={{page}}&&悬疑::http://www.fbook.net/all/xuanyi?page={{page}}&&灵异::http://www.fbook.net/all/lingyi?page={{page}}&&轻小说::http://www.fbook.net/all/qingxiaoshuo?page={{page}}",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1725764145831,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 104,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "h1@span@text",
+      "coverUrl": "",
+      "intro": "class.cl_box@tag.div.2@text##.*字数：\\d+|免费试读|放入书架|打开目录@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/(\\d+)\\d{4}●/g,'$1万').replace(/(\\d+)\\d{3}/g,'$1千').replace('万藏','万收藏').replace(/●/g,'').replace(/(千|万)/g,'$1 ').replace(/(\\d+)/g,'$1 ')",
+      "kind": ".c_text@a@text##免费试读|放入书架|打开目录",
+      "lastChapter": "",
+      "name": "h1@textNodes",
+      "canReName": "",
+      "tocUrl": "@js:baseUrl.replace('/book','/list')",
+      "wordCount": ".c_text@text##.*(字数.*?)总.*##$1###@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/\\d{4}●/g,'万 ').replace(/(\\d+)\\d{3}/g,'$1千 ')",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "nextContentUrl": ".nextchapter@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "tag.span.0@text",
+      "bookList": "div.all-book-list ul li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.a.-1@text",
+      "kind": "class.float-l@tag.a!0:-1:-2@text",
+      "lastChapter": "",
+      "name": "tag.a.1@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "h4@text##作者：",
+      "bookList": "div.container>div.library_zplb>div",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": ".latest_text@a@text",
+      "name": "h3@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul#list1 li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.fbook.net/Search/Index?searchType=All&searchKey={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 天下书盟",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fbook.net",
+    "customOrder": 190,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "男生::http://www.fbook.net/all/nansheng?page={{page}}\n玄幻::http://www.fbook.net/all/xuanhuan?page={{page}}&&奇幻::http://www.fbook.net/all/qihuan?page={{page}}&&武侠::http://www.fbook.net/all/wuxia?page={{page}}&&仙侠::http://www.fbook.net/all/xianxia?page={{page}}&&都市::http://www.fbook.net/all/dushi?page={{page}}&&现实::http://www.fbook.net/all/xianshi?page={{page}}&&军事::http://www.fbook.net/all/junshi?page={{page}}&&历史::http://www.fbook.net/all/lishi?page={{page}}&&游戏::http://www.fbook.net/all/youxi?page={{page}}&&体育::http://www.fbook.net/all/tiyu?page={{page}}&&科幻::http://www.fbook.net/all/kehuan?page={{page}}&&刑侦::http://www.fbook.net/all/xingzhen?page={{page}}&&探险::http://www.fbook.net/all/tanxian?page={{page}}&&异能::http://www.fbook.net/all/yineng?page={{page}}&&女生::http://www.fbook.net/all/nvsheng?page={{page}}&&青春::http://www.fbook.net/all/qingchun?page={{page}}&&古言::http://www.fbook.net/all/guyan?page={{page}}&&现言::http://www.fbook.net/all/xianyan?page={{page}}&&穿越::http://www.fbook.net/all/chuanyue?page={{page}}&&纯爱::http://www.fbook.net/all/chunai?page={{page}}&&同人::http://www.fbook.net/all/tongren?page={{page}}&&悬疑::http://www.fbook.net/all/xuanyi?page={{page}}&&灵异::http://www.fbook.net/all/lingyi?page={{page}}&&轻小说::http://www.fbook.net/all/qingxiaoshuo?page={{page}}",
+    "lastUpdateTime": 1725764145831,
+    "respondTime": 783,
+    "ruleBookInfo": {
+      "author": "h1@span@text",
+      "intro": "class.cl_box@tag.div.2@text##.*字数：\\d+|免费试读|放入书架|打开目录@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/(\\d+)\\d{4}●/g,'$1万').replace(/(\\d+)\\d{3}/g,'$1千').replace('万藏','万收藏').replace(/●/g,'').replace(/(千|万)/g,'$1 ').replace(/(\\d+)/g,'$1 ')",
+      "kind": ".c_text@a@text##免费试读|放入书架|打开目录",
+      "name": "h1@textNodes",
+      "tocUrl": "@js:baseUrl.replace('/book','/list')",
+      "wordCount": ".c_text@text##.*(字数.*?)总.*##$1###@js:result.replace(/：/g,'\\:').replace(/\\s/g,'').replace(/(\\d+)/g,'$1●').replace(/\\d{4}●/g,'万 ').replace(/(\\d+)\\d{3}/g,'$1千 ')"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "nextContentUrl": ".nextchapter@href"
+    },
+    "ruleExplore": {
+      "author": "tag.span.0@text",
+      "bookList": "div.all-book-list ul li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.a.-1@text",
+      "kind": "class.float-l@tag.a!0:-1:-2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleSearch": {
+      "author": "h4@text##作者：",
+      "bookList": "div.container>div.library_zplb>div",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": ".latest_text@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul#list1 li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.fbook.net/Search/Index?searchType=All&searchKey={{key}}",
+    "weight": 0
+  }
+]

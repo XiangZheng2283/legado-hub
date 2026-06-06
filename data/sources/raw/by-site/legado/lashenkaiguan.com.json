@@ -1,0 +1,40 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁[lashenkaiguan]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.lashenkaiguan.com/",
+    "customOrder": 862,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1624072854874,
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {},
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,小说",
+    "bookSourceName": "笔趣阁[lashenkaiguan]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.lashenkaiguan.com/",
+    "customOrder": 1283,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1624072854874,
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {},
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

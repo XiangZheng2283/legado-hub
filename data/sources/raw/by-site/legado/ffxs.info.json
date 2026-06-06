@@ -1,0 +1,30 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "饭饭小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ffxs.info",
+    "customOrder": 409,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 183
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "饭饭小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ffxs.info",
+    "customOrder": 518,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 183
+  }
+]

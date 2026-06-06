@@ -1,0 +1,342 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "双语小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/",
+    "customOrder": 821,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685890284787,
+    "respondTime": 619,
+    "ruleBookInfo": {
+      "author": "p.0@text##作者：",
+      "coverUrl": ".cover@img@src",
+      "init": "",
+      "intro": ".cont@textNodes",
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text",
+      "name": "h3.0@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "哈利",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💬双语小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/book/",
+    "customOrder": 869,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1675321595933,
+    "respondTime": 439,
+    "ruleBookInfo": {
+      "init": "",
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "哈利",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.shubang.net/book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 双语小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/book",
+    "customOrder": 923,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678671226785,
+    "respondTime": 325,
+    "ruleBookInfo": {
+      "init": "",
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.shubang.net/book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "双语小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/",
+    "customOrder": 61,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685890284787,
+    "respondTime": 470,
+    "ruleBookInfo": {
+      "author": "p.0@text##作者：",
+      "coverUrl": ".cover@img@src",
+      "init": "",
+      "intro": ".cont@textNodes",
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text",
+      "name": "h3.0@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "哈利",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精选书源",
+    "bookSourceName": "📚 双语小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/book",
+    "customOrder": 1366,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678671226785,
+    "respondTime": 530,
+    "ruleBookInfo": {
+      "init": "",
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.shubang.net/book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "💬双语小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/book/",
+    "customOrder": 1531,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 1675321595933,
+    "respondTime": 413,
+    "ruleBookInfo": {
+      "init": "",
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "checkKeyWord": "哈利",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.shubang.net/book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "英文",
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "双语小说（英）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/book#",
+    "customButton": false,
+    "customOrder": 225,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "lastUpdateTime": 1759754331076,
+    "respondTime": 508,
+    "ruleBookInfo": {
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.shubang.net/book/?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "英文",
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "双语小说（英）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.shubang.net/book#",
+    "customButton": false,
+    "customOrder": 197,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "lastUpdateTime": 1759754331076,
+    "respondTime": 508,
+    "ruleBookInfo": {
+      "kind": "class.tags@a@text",
+      "lastChapter": "tr.-1@td@a@text"
+    },
+    "ruleContent": {
+      "content": ".line_en@text%%.line_cn@title",
+      "nextContentUrl": "class.pagebar@a.-1@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.cont@p@text",
+      "bookList": "class.mcon@a",
+      "bookUrl": "a@href",
+      "coverUrl": "class.cover@img@src",
+      "intro": "class.cont@ownText",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "tr@td",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.shubang.net/book/?q={{key}}",
+    "weight": 0
+  }
+]

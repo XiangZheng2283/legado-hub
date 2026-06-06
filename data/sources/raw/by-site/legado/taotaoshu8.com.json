@@ -1,0 +1,116 @@
+[
+  {
+    "bookSourceComment": "//暮秋小说同库",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "桃桃书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.taotaoshu8.com/",
+    "customOrder": 779,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685860846433,
+    "loginCheckJs": "cookie.removeCookie(source.getKey())\nresult",
+    "respondTime": 18825,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##\\s*https.*\\s*|\\s*请记住本书首.*\\s*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".fengtui_top dl",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.mulu.1@li\n@js:\nt=String(result).split(\"\\n\");\nn=t.length;\nif(t[8].slice(-19)==t[n-9].slice(-19)){\n\tt=t.slice(9,);\n\t}\nt;",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVolume": ""
+    },
+    "searchUrl": "home/search,{\n  \"method\": \"post\",\n  \"body\": \"q={{key}}&action=search\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//暮秋小说同库",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "桃桃书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.taotaoshu8.com/",
+    "customOrder": 779,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685860846433,
+    "loginCheckJs": "cookie.removeCookie(source.getKey())\nresult",
+    "respondTime": 3211,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##\\s*https.*\\s*|\\s*请记住本书首.*\\s*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".fengtui_top dl",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.mulu.1@li\n@js:\nt=String(result).split(\"\\n\");\nn=t.length;\nif(t[8].slice(-19)==t[n-9].slice(-19)){\n\tt=t.slice(9,);\n\t}\nt;",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVolume": ""
+    },
+    "searchUrl": "home/search,{\n  \"method\": \"post\",\n  \"body\": \"q={{key}}&action=search\"\n}",
+    "weight": 0
+  }
+]

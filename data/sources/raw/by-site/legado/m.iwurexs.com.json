@@ -1,0 +1,141 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📃4020电子书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.iwurexs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1527,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::https://m.iwurexs.com/paihangbang/index_{{page}}.html\n封面推荐::https://m.iwurexs.com/fengtui/index_{{page}}.html\n字数排行::https://m.iwurexs.com/size/index_{{page}}.html\n金牌推荐::https://m.iwurexs.com/jinpaituijian/index_{{page}}.html\n最新入库::https://m.iwurexs.com/postdate/index_{{page}}.html\n最近更新::https://m.iwurexs.com/new/index_{{page}}.html\n玄幻奇幻::https://m.iwurexs.com/wuxia/index_{{page}}.html\n武侠仙侠::https://m.iwurexs.com/yanqing/index_{{page}}.html\n耽美小说::https://m.iwurexs.com/danmei/index_{{page}}.html\n都市言情::https://m.iwurexs.com/xuanhuan/index_{{page}}.html\n历史军事::https://m.iwurexs.com/xiaoyuan/index_{{page}}.html\n科幻灵异::https://m.iwurexs.com/wangyou/index_{{page}}.html\n网友竞技::https://m.iwurexs.com/kongbu/index_{{page}}.html\n女频频道::https://m.iwurexs.com/jishi/index_{{page}}.html\n军事历史::https://m.iwurexs.com/lishi/index_{{page}}.html\n科幻小说::https://m.iwurexs.com/kehuan/index_{{page}}.html\n管理哲学::https://m.iwurexs.com/zhexue/index_{{page}}.html\n学习资料::https://m.iwurexs.com/xuexi/index_{{page}}.html\n其他小说::https://m.iwurexs.com/qita/index_{{page}}.html\n金牌推荐::https://m.iwurexs.com/jinpaituijian/index_{{page}}.html\n封推小说::https://m.iwurexs.com/fengtui/index_{{page}}.html",
+    "lastUpdateTime": 1673362217832,
+    "loginUrl": "",
+    "respondTime": 18834,
+    "ruleBookInfo": {
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@text##最新章节推荐.+",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@textNodes##.*本章未完.*|.*第.*/.*页.*|请记住本书.*|----|书快.*看书最快.*",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text||class.line@text##.*/",
+      "bookList": "class.read_book@children||class.cover@p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href<js>'http://www.iwurexs.com/headimgs'+String(result).replace(/.*-(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/s$1$2.jpg').replace('//','/0/')</js>",
+      "kind": "class.line@text##\\[|].*",
+      "lastChapter": "class.updatelast@a@text",
+      "name": "class.iTit@text||class.blue@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.iwurexs.com/search.php?searchkey={{key}}&submit=",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "4020电子书②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.iwurexs.com",
+    "bookUrlPattern": "",
+    "customOrder": 1639,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::https://m.iwurexs.com/paihangbang/index_{{page}}.html\n封面推荐::https://m.iwurexs.com/fengtui/index_{{page}}.html\n字数排行::https://m.iwurexs.com/size/index_{{page}}.html\n金牌推荐::https://m.iwurexs.com/jinpaituijian/index_{{page}}.html\n最新入库::https://m.iwurexs.com/postdate/index_{{page}}.html\n最近更新::https://m.iwurexs.com/new/index_{{page}}.html\n玄幻奇幻::https://m.iwurexs.com/wuxia/index_{{page}}.html\n武侠仙侠::https://m.iwurexs.com/yanqing/index_{{page}}.html\n耽美小说::https://m.iwurexs.com/danmei/index_{{page}}.html\n都市言情::https://m.iwurexs.com/xuanhuan/index_{{page}}.html\n历史军事::https://m.iwurexs.com/xiaoyuan/index_{{page}}.html\n科幻灵异::https://m.iwurexs.com/wangyou/index_{{page}}.html\n网友竞技::https://m.iwurexs.com/kongbu/index_{{page}}.html\n女频频道::https://m.iwurexs.com/jishi/index_{{page}}.html\n军事历史::https://m.iwurexs.com/lishi/index_{{page}}.html\n科幻小说::https://m.iwurexs.com/kehuan/index_{{page}}.html\n管理哲学::https://m.iwurexs.com/zhexue/index_{{page}}.html\n学习资料::https://m.iwurexs.com/xuexi/index_{{page}}.html\n其他小说::https://m.iwurexs.com/qita/index_{{page}}.html\n金牌推荐::https://m.iwurexs.com/jinpaituijian/index_{{page}}.html\n封推小说::https://m.iwurexs.com/fengtui/index_{{page}}.html",
+    "lastUpdateTime": 1692365624532,
+    "loginUrl": "",
+    "respondTime": 15199,
+    "ruleBookInfo": {
+      "coverUrl": "class.block_img2@img@src",
+      "init": "",
+      "intro": "class.intro_info@text##最新章节推荐.+",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@textNodes##.*本章未完.*|.*第.*/.*页.*|请记住本书.*|----|书快.*看书最快.*",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||class.line@text##.*/",
+      "bookList": "class.read_book@children||class.cover@p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href<js>'http://www.iwurexs.com/headimgs'+String(result).replace(/.*-(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/s$1$2.jpg').replace('//','/0/')</js>",
+      "kind": "class.line@text##\\[|].*",
+      "lastChapter": "class.updatelast@a@text",
+      "name": "class.iTit@text||class.blue@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.iwurexs.com/search.php?searchkey={{key}}&submit=",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 4020电子书·伍",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.iwurexs.com",
+    "bookUrlPattern": "",
+    "customOrder": 509,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::https://m.iwurexs.com/paihangbang/index_{{page}}.html\n封面推荐::https://m.iwurexs.com/fengtui/index_{{page}}.html\n字数排行::https://m.iwurexs.com/size/index_{{page}}.html\n金牌推荐::https://m.iwurexs.com/jinpaituijian/index_{{page}}.html\n最新入库::https://m.iwurexs.com/postdate/index_{{page}}.html\n最近更新::https://m.iwurexs.com/new/index_{{page}}.html\n玄幻奇幻::https://m.iwurexs.com/wuxia/index_{{page}}.html\n武侠仙侠::https://m.iwurexs.com/yanqing/index_{{page}}.html\n耽美小说::https://m.iwurexs.com/danmei/index_{{page}}.html\n都市言情::https://m.iwurexs.com/xuanhuan/index_{{page}}.html\n历史军事::https://m.iwurexs.com/xiaoyuan/index_{{page}}.html\n科幻灵异::https://m.iwurexs.com/wangyou/index_{{page}}.html\n网友竞技::https://m.iwurexs.com/kongbu/index_{{page}}.html\n女频频道::https://m.iwurexs.com/jishi/index_{{page}}.html\n军事历史::https://m.iwurexs.com/lishi/index_{{page}}.html\n科幻小说::https://m.iwurexs.com/kehuan/index_{{page}}.html\n管理哲学::https://m.iwurexs.com/zhexue/index_{{page}}.html\n学习资料::https://m.iwurexs.com/xuexi/index_{{page}}.html\n其他小说::https://m.iwurexs.com/qita/index_{{page}}.html\n金牌推荐::https://m.iwurexs.com/jinpaituijian/index_{{page}}.html\n封推小说::https://m.iwurexs.com/fengtui/index_{{page}}.html",
+    "lastUpdateTime": 1698551384514,
+    "loginUrl": "",
+    "respondTime": 4196,
+    "ruleBookInfo": {
+      "coverUrl": "class.block_img2@img@src",
+      "init": "",
+      "intro": "class.intro_info@text##最新章节推荐.+",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@textNodes##.*本章未完.*|.*第.*/.*页.*|请记住本书.*|----|书快.*看书最快.*",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text||class.line@text##.*/",
+      "bookList": "class.read_book@children||class.cover@p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href<js>'http://www.iwurexs.com/headimgs'+String(result).replace(/.*-(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/s$1$2.jpg').replace('//','/0/')</js>",
+      "kind": "class.line@text##\\[|].*",
+      "lastChapter": "class.updatelast@a@text",
+      "name": "class.iTit@text||class.blue@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.iwurexs.com/search.php?searchkey={{key}}&submit=",
+    "weight": 0
+  }
+]

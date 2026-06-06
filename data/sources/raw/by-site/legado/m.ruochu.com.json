@@ -1,0 +1,16 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "初若文学M",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochu.com",
+    "customOrder": 563,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "https://m.ruochu.com/accounts/login?backUrl=http://m.ruochu.com/",
+    "respondTime": 1,
+    "weight": 250
+  }
+]

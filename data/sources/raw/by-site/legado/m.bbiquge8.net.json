@@ -1,0 +1,138 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "bbiquge8",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bbiquge8.net",
+    "customOrder": 1211,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682496404485,
+    "respondTime": 2209,
+    "ruleBookInfo": {
+      "author": ".pt-info.0@a@text",
+      "coverUrl": ".baseinfo@img@src",
+      "init": "",
+      "intro": ".intro@text",
+      "kind": ".pt-info.1@a@text",
+      "lastChapter": ".ptm-list-view-cell.0@text",
+      "name": ".pt-name.0@a@text",
+      "tocUrl": ".ptm-card-footer@a@href"
+    },
+    "ruleContent": {
+      "content": ".chaptercontent@p@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".pt-info.0@a@text",
+      "bookList": ".pt-novel",
+      "bookUrl": ".pt-name@a@href",
+      "checkKeyWord": "之上",
+      "kind": ".pt-info.1@a@text",
+      "lastChapter": ".ptm-text-cut@text",
+      "name": ".pt-name@a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ptm-list-view-cell",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.bbiquge8.net/search.html?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁8",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bbiquge8.net",
+    "customOrder": 1399,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1691539416494,
+    "respondTime": 2804,
+    "ruleBookInfo": {
+      "author": ".pt-info.0@a@text",
+      "coverUrl": ".baseinfo@img@src",
+      "init": "",
+      "intro": ".intro@text",
+      "kind": ".pt-info.1@a@text",
+      "lastChapter": ".ptm-list-view-cell.0@text",
+      "name": ".pt-name.0@a@text",
+      "tocUrl": ".ptm-card-footer@a@href"
+    },
+    "ruleContent": {
+      "content": ".chaptercontent@p@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".pt-info.0@a@text",
+      "bookList": ".pt-novel",
+      "bookUrl": ".pt-name@a@href",
+      "checkKeyWord": "之上",
+      "kind": ".pt-info.1@a@text",
+      "lastChapter": ".ptm-text-cut@text",
+      "name": ".pt-name@a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ptm-list-view-cell",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.bbiquge8.net/search.html?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 笔趣阁²",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bbiquge8.net",
+    "customOrder": 523,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "lastUpdateTime": 1719012685186,
+    "respondTime": 7059,
+    "ruleBookInfo": {
+      "author": ".pt-info.0@a@text",
+      "coverUrl": ".baseinfo@img@src",
+      "init": "",
+      "intro": ".intro@text",
+      "kind": ".pt-info.1@a@text",
+      "lastChapter": ".ptm-list-view-cell.0@text",
+      "name": ".pt-name.0@a@text",
+      "tocUrl": ".ptm-card-footer@a@href"
+    },
+    "ruleContent": {
+      "content": ".chaptercontent@p@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".pt-info.0@a@text",
+      "bookList": ".pt-novel",
+      "bookUrl": ".pt-name@a@href",
+      "kind": ".pt-info.1@a@text",
+      "lastChapter": ".ptm-text-cut@text",
+      "name": ".pt-name@a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ptm-list-view-cell",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.bbiquge8.net/search.html?searchkey={{key}}",
+    "weight": 0
+  }
+]

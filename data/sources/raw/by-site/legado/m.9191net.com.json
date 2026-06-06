@@ -1,0 +1,43 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "久久小说[9191]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.9191net.com",
+    "customOrder": 655,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "言情::http://m.9191net.com/search/3/%E8%A8%80%E6%83%85/{{page}}.html\n穿越::http://m.9191net.com/search/3/%E7%A9%BF%E8%B6%8A/{{page}}.html\n重生::http://m.9191net.com/search/3/%E9%87%8D%E7%94%9F/{{page}}.html\n总裁::http://m.9191net.com/search/3/%E6%80%BB%E8%A3%81/{{page}}.html\n都市::http://m.9191net.com/m/cat/ds/{{page}}.html\n青春::http://m.9191net.com/m/cat/qc/{{page}}.html\n武侠::http://m.9191net.com/m/cat/wx/{{page}}.html\n仙侠::http://m.9191net.com/m/cat/xx/{{page}}.html\n玄幻::http://m.9191net.com/m/cat/xh/{{page}}.html\n奇幻::http://m.9191net.com/m/cat/qh/{{page}}.html\n穿越::http://m.9191net.com/m/cat/cy/{{page}}.html\n历史::http://m.9191net.com/m/cat/ls/{{page}}.html\n架空::http://m.9191net.com/m/cat/jk/{{page}}.html\n网游::http://m.9191net.com/m/cat/yx/{{page}}.html\n竞技::http://m.9191net.com/m/cat/jg.html\n科幻::http://m.9191net.com/m/cat/kh/{{page}}.html\n灵异::http://m.9191net.com/m/cat/ly.html\n恐怖::http://m.9191net.com/m/cat/kb/{{page}}.html\n散文::http://m.9191net.com/m/cat/sw.html\n名著::http://m.9191net.com/m/cat/mz/{{page}}.html\n传迹::http://m.9191net.com/m/cat/zj.html\n同人::http://m.9191net.com/m/cat/tr/{{page}}.html\n全部::http://m.9191net.com/m/cat/qj/{{page}}/action/shop/todo/content/do/-1vunionvselectv1f2f3fconcati280x7cfmd5i281122xf0x7cxf5f6f7f8f9f10f11f12f13f14f15f16f17.html\n最新::http://m.9191net.com/m/cat/zx/{{page}}/cat/favicon.html",
+    "lastUpdateTime": 1682691978897,
+    "respondTime": 554,
+    "ruleBookInfo": {
+      "author": "tag.p@text##分类：.*\n状态：.*\n格式：.*\n大小：.*\n更新：.*\nRAR/ZIP.*|苹果端用户下载方式：.*",
+      "init": "",
+      "intro": "class.intro_info.0@html",
+      "kind": "tag.p!0@a@text",
+      "name": "tag.h2@text"
+    },
+    "ruleContent": {
+      "content": "class.downButton@title&&class.downButton@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "class.block",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.a@img@src",
+      "intro": "tag.p@a@html",
+      "name": "tag.h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.ablum_read",
+      "chapterName": "tag.a@text"
+    },
+    "searchUrl": "http://m.9191net.com/search.html?keywords={{key}}&submit=",
+    "weight": 0
+  }
+]

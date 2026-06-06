@@ -1,0 +1,172 @@
+[
+  {
+    "bookSourceComment": "https://celeter.github.io/SourceGo",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💰爱奇艺文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wenxue.iqiyi.com/",
+    "bookUrlPattern": "",
+    "customOrder": 760,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685801161840,
+    "respondTime": 1650,
+    "ruleBookInfo": {
+      "author": "class.writerName.0@text",
+      "coverUrl": ".bookBigCover@img.0@src",
+      "intro": "class.book-details-wrapper pr@tag.p.1@text",
+      "kind": ".breadCrumbNav@a.1@text",
+      "lastChapter": ".chapter-list-newest@h4@a@text",
+      "name": "class.book-details-wrapper pr@tag.span.0@tag.h1@text",
+      "tocUrl": "class.chapter-all@tag.a.0@href||class.a1@tag.a@href",
+      "wordCount": ".book-details-about@em.1@text"
+    },
+    "ruleContent": {
+      "content": "class.reader-article@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.stacksBook-info.0@tag.p.0@tag.em.0@text",
+      "bookList": "class.stacksBook",
+      "bookUrl": "class.stacksBook-info.0@tag.h3.0@tag.a.0@href",
+      "coverUrl": "class.stacksBookCover@tag.a.0@tag.img.0@src",
+      "kind": "class.stacksBook-info.0@tag.p.0@tag.a.0@text",
+      "lastChapter": "class.stacksBook-info.0@tag.p.2@tag.a.0@text##最新章节",
+      "name": "class.stacksBook-info.0@tag.h3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog-chapter",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": ".catalog-chapter@.icon-diamond@html"
+    },
+    "searchUrl": "https://wenxue.iqiyi.com/book/search-{{key}}-{{page-1}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "https://celeter.github.io/SourceGo",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖爱奇艺文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wenxue.iqiyi.com",
+    "bookUrlPattern": "",
+    "customOrder": 874,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1681213262556,
+    "respondTime": 3098,
+    "ruleBookInfo": {
+      "author": "class.writerName.0@text",
+      "intro": "class.book-details-wrapper pr@tag.p.1@text",
+      "name": "class.book-details-wrapper pr@tag.span.0@tag.h1@text",
+      "tocUrl": "class.chapter-all@tag.a.0@href||class.a1@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "class.reader-article@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.stacksBook-info.0@tag.p.0@tag.em.0@text",
+      "bookList": "class.stacksBook",
+      "bookUrl": "class.stacksBook-info.0@tag.h3.0@tag.a.0@href",
+      "coverUrl": "class.stacksBookCover@tag.a.0@tag.img.0@src",
+      "kind": "class.stacksBook-info.0@tag.p.0@tag.a.0@text",
+      "lastChapter": "class.stacksBook-info.0@tag.p.2@tag.a.0@text##最新章节",
+      "name": "class.stacksBook-info.0@tag.h3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog-chapter",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://wenxue.iqiyi.com/book/search-{{key}}-{{page-1}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉爱奇艺文学#嘚嘚21.0201",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wenxue.iqiyi.com#嘚嘚21.0201",
+    "bookUrlPattern": "",
+    "customOrder": 1188,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1613798985658,
+    "loginUrl": "",
+    "respondTime": 559,
+    "ruleBookInfo": {
+      "author": "class.writerName.0@text",
+      "intro": "class.book-details-wrapper pr@tag.p.1@text",
+      "name": "class.book-details-wrapper pr@tag.span.0@tag.h1@text",
+      "tocUrl": "class.chapter-all@tag.a.0@href||class.a1@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "class.reader-article@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.stacksBook-info.0@tag.p.0@tag.em.0@text",
+      "bookList": "class.stacksBook",
+      "bookUrl": "class.stacksBook-info.0@tag.h3.0@tag.a.0@href",
+      "coverUrl": "class.stacksBookCover@tag.a.0@tag.img.0@src",
+      "kind": "class.stacksBook-info.0@tag.p.0@tag.a.0@text",
+      "lastChapter": "class.stacksBook-info.0@tag.p.2@tag.a.0@text##最新章节",
+      "name": "class.stacksBook-info.0@tag.h3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog-chapter",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://wenxue.iqiyi.com/book/search-{{key}}-{{page-1}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "爱奇艺文学2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://wenxue.iqiyi.com#",
+    "bookUrlPattern": "",
+    "customOrder": 1404,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680942800144,
+    "loginUrl": "",
+    "respondTime": 487,
+    "ruleBookInfo": {
+      "author": "class.writerName.0@text",
+      "intro": "class.book-details-wrapper pr@tag.p.1@text",
+      "name": "class.book-details-wrapper pr@tag.span.0@tag.h1@text",
+      "tocUrl": "class.chapter-all@tag.a.0@href||class.a1@tag.a@href"
+    },
+    "ruleContent": {
+      "content": "class.reader-article@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.stacksBook-info.0@tag.p.0@tag.em.0@text",
+      "bookList": "class.stacksBook",
+      "bookUrl": "class.stacksBook-info.0@tag.h3.0@tag.a.0@href",
+      "coverUrl": "class.stacksBookCover@tag.a.0@tag.img.0@src",
+      "kind": "class.stacksBook-info.0@tag.p.0@tag.a.0@text",
+      "lastChapter": "class.stacksBook-info.0@tag.p.2@tag.a.0@text##最新章节",
+      "name": "class.stacksBook-info.0@tag.h3.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog-chapter",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://wenxue.iqiyi.com/book/search-{{key}}-{{page-1}}.html",
+    "weight": 0
+  }
+]

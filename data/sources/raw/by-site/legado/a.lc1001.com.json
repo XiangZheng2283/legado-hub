@@ -1,0 +1,302 @@
+[
+  {
+    "bookSourceComment": "# 获取UID和token\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\n# 移动端 H5 和 app 不能同时登录，建议抓取 H5 上的 token，填写在章节地址中。",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♛ 连城读书 #渊呀1107",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://a.lc1001.com#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 192,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1627572673438,
+    "loginUrl": "",
+    "respondTime": 989,
+    "ruleBookInfo": {
+      "author": "ANAME",
+      "coverUrl": "COVERURL",
+      "init": "DATA",
+      "intro": "CONTENT",
+      "kind": "BTNAME&&BTAG.TAGNAME",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME\n",
+      "name": "BNAME",
+      "tocUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookcata,\" + JSON.stringify(option)",
+      "wordCount": "WORDNUM"
+    },
+    "ruleContent": {
+      "content": "<js>\nvar javaImport = new JavaImporter();\njavaImport.importPackage(\n    Packages.java.lang,\n    Packages.javax.crypto.spec,\n    Packages.javax.crypto,\n    Packages.android.util\n);\n\nwith(javaImport){\n    function decrypt(str){\n        var key=SecretKeySpec(String(\"1701019k\").getBytes(),\"DES\");\n        var iv=IvParameterSpec(java.base64DecodeToByteArray(\"AQIDBAUGBwg=\"));\n        var bytes=Base64.decode(String(str).getBytes(),2);\n        var chipher=Cipher.getInstance(\"DES/CBC/PKCS5Padding\");\n        chipher.init(2,key,iv);\n        return String(chipher.doFinal(bytes));\n    }\n}\nString(decrypt(JSON.parse(result).DATA.CTXT)).replace(/{{title}}/,'')\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "AUTHORNAME",
+      "bookList": "DATA.KEYLIST",
+      "bookUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookindexbID={{$.KEYID}}consumerKey=LCREAD_ANDROIDlmID=1000timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&lmID=1000&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookindex,\" + JSON.stringify(option)",
+      "coverUrl": "COVERURL",
+      "intro": "CONTENT",
+      "kind": "KEYTYPE",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID={{$.KEYID}}consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME",
+      "name": "KEYNAME",
+      "wordCount": "WORDNUM"
+    },
+    "ruleToc": {
+      "chapterList": "DATA.BOOKCATA[*].CHAPTERS[*]",
+      "chapterName": "CNAME",
+      "chapterUrl": "@js:\n/*获取到的 uid 和 token 分别填入*/\nuID=\"0\"\ntoken=\"0\"\ntime=Math.round(new Date())\nisvc={{$.ISVC}}\nif(isvc==0){\nu=\"/app/book/pubchapter\"\n}else{\nu=\"/app/book/vipchapter\"\n}\nurl=\"GEThttp://a.lc1001.com\"+u+\"bID=\"+java.get('bid')+\"cID={{$.CID}}consumerKey=LCREAD_ANDROIDtimestamp=\"+time+\"uID=\"+uID+\"XKrqBSeeEwgDy2pT\"\nu+\"?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID=\"+java.get('bid')+\"&cID={{$.CID}}&uID=\"+uID+\"&token=\"+token+\"&mType=OPPO-PCRT00&PACKINGCHANNEL=YINGYONGBAO\""
+    },
+    "searchUrl": "@js:\n/*isGet=true:获取token;isGet=false:不获取token;*/\n/*想获取改为true,并填上对应的账号密码，获取成功后改为false*/\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\ntime=Math.round(new Date())\nurl=\"POSThttp://a.lc1001.com/app/query/keybooksconsumerKey=LCREAD_ANDROIDpn=\"+(page-1)*20+\"timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\n\"http://a.lc1001.com/app/query/keybooks?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&uID=0&deviceID=0&kw=\"+key+\"&pn=\"+(page-1)*20",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "# 获取UID和token\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\n# 移动端 H5 和 app 不能同时登录，建议抓取 H5 上的 token，填写在章节地址中。",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "连城读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://a.lc1001.com",
+    "bookUrlPattern": "",
+    "customOrder": 1105,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1678646308563,
+    "loginUrl": "",
+    "respondTime": 1052,
+    "ruleBookInfo": {
+      "author": "ANAME",
+      "coverUrl": "COVERURL",
+      "init": "DATA",
+      "intro": "CONTENT",
+      "kind": "BTNAME&&BTAG.TAGNAME",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME\n",
+      "name": "BNAME",
+      "tocUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookcata,\" + JSON.stringify(option)",
+      "wordCount": "WORDNUM"
+    },
+    "ruleContent": {
+      "content": "<js>\nvar javaImport = new JavaImporter();\njavaImport.importPackage(\n    Packages.java.lang,\n    Packages.javax.crypto.spec,\n    Packages.javax.crypto,\n    Packages.android.util\n);\n\nwith(javaImport){\n    function decrypt(str){\n        var key=SecretKeySpec(String(\"1701019k\").getBytes(),\"DES\");\n        var iv=IvParameterSpec(java.base64DecodeToByteArray(\"AQIDBAUGBwg=\"));\n        var bytes=Base64.decode(String(str).getBytes(),2);\n        var chipher=Cipher.getInstance(\"DES/CBC/PKCS5Padding\");\n        chipher.init(2,key,iv);\n        return String(chipher.doFinal(bytes));\n    }\n}\nString(decrypt(JSON.parse(result).DATA.CTXT)).replace(/{{title}}/,'')\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "AUTHORNAME",
+      "bookList": "DATA.KEYLIST",
+      "bookUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookindexbID={{$.KEYID}}consumerKey=LCREAD_ANDROIDlmID=1000timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&lmID=1000&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookindex,\" + JSON.stringify(option)",
+      "coverUrl": "COVERURL",
+      "intro": "CONTENT",
+      "kind": "KEYTYPE",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID={{$.KEYID}}consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME",
+      "name": "KEYNAME",
+      "wordCount": "WORDNUM"
+    },
+    "ruleToc": {
+      "chapterList": "DATA.BOOKCATA[*].CHAPTERS[*]",
+      "chapterName": "CNAME",
+      "chapterUrl": "@js:\n/*获取到的 uid 和 token 分别填入*/\nuID=\"0\"\ntoken=\"0\"\ntime=Math.round(new Date())\nisvc={{$.ISVC}}\nif(isvc==0){\nu=\"/app/book/pubchapter\"\n}else{\nu=\"/app/book/vipchapter\"\n}\nurl=\"GEThttp://a.lc1001.com\"+u+\"bID=\"+java.get('bid')+\"cID={{$.CID}}consumerKey=LCREAD_ANDROIDtimestamp=\"+time+\"uID=\"+uID+\"XKrqBSeeEwgDy2pT\"\nu+\"?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID=\"+java.get('bid')+\"&cID={{$.CID}}&uID=\"+uID+\"&token=\"+token+\"&mType=OPPO-PCRT00&PACKINGCHANNEL=YINGYONGBAO\""
+    },
+    "searchUrl": "@js:\n/*isGet=true:获取token;isGet=false:不获取token;*/\n/*想获取改为true,并填上对应的账号密码，获取成功后改为false*/\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\ntime=Math.round(new Date())\nurl=\"POSThttp://a.lc1001.com/app/query/keybooksconsumerKey=LCREAD_ANDROIDpn=\"+(page-1)*20+\"timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\n\"http://a.lc1001.com/app/query/keybooks?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&uID=0&deviceID=0&kw=\"+key+\"&pn=\"+(page-1)*20",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "# 获取UID和token\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\n# 移动端 H5 和 app 不能同时登录，建议抓取 H5 上的 token，填写在章节地址中。",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "♛ 连城读书▪︎API #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://a.lc1001.com#♤yuan",
+    "bookUrlPattern": "",
+    "customOrder": 1253,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1641372107480,
+    "loginUrl": "",
+    "respondTime": 2356,
+    "ruleBookInfo": {
+      "author": "ANAME",
+      "coverUrl": "COVERURL",
+      "init": "DATA",
+      "intro": "CONTENT",
+      "kind": "BTNAME&&BTAG.TAGNAME",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME\n",
+      "name": "BNAME",
+      "tocUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookcata,\" + JSON.stringify(option)",
+      "wordCount": "WORDNUM"
+    },
+    "ruleContent": {
+      "content": "<js>\nvar javaImport = new JavaImporter();\njavaImport.importPackage(\n    Packages.java.lang,\n    Packages.javax.crypto.spec,\n    Packages.javax.crypto,\n    Packages.android.util\n);\n\nwith(javaImport){\n    function decrypt(str){\n        var key=SecretKeySpec(String(\"1701019k\").getBytes(),\"DES\");\n        var iv=IvParameterSpec(java.base64DecodeToByteArray(\"AQIDBAUGBwg=\"));\n        var bytes=Base64.decode(String(str).getBytes(),2);\n        var chipher=Cipher.getInstance(\"DES/CBC/PKCS5Padding\");\n        chipher.init(2,key,iv);\n        return String(chipher.doFinal(bytes));\n    }\n}\nString(decrypt(JSON.parse(result).DATA.CTXT)).replace(/{{title}}/,'')\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "AUTHORNAME",
+      "bookList": "DATA.KEYLIST",
+      "bookUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookindexbID={{$.KEYID}}consumerKey=LCREAD_ANDROIDlmID=1000timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&lmID=1000&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookindex,\" + JSON.stringify(option)",
+      "coverUrl": "COVERURL",
+      "intro": "CONTENT",
+      "kind": "KEYTYPE",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID={{$.KEYID}}consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME",
+      "name": "KEYNAME",
+      "wordCount": "WORDNUM"
+    },
+    "ruleToc": {
+      "chapterList": "DATA.BOOKCATA[*].CHAPTERS[*]",
+      "chapterName": "CNAME",
+      "chapterUrl": "@js:\n/*获取到的 uid 和 token 分别填入*/\nuID=\"0\"\ntoken=\"0\"\ntime=Math.round(new Date())\nisvc={{$.ISVC}}\nif(isvc==0){\nu=\"/app/book/pubchapter\"\n}else{\nu=\"/app/book/vipchapter\"\n}\nurl=\"GEThttp://a.lc1001.com\"+u+\"bID=\"+java.get('bid')+\"cID={{$.CID}}consumerKey=LCREAD_ANDROIDtimestamp=\"+time+\"uID=\"+uID+\"XKrqBSeeEwgDy2pT\"\nu+\"?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID=\"+java.get('bid')+\"&cID={{$.CID}}&uID=\"+uID+\"&token=\"+token+\"&mType=OPPO-PCRT00&PACKINGCHANNEL=YINGYONGBAO\""
+    },
+    "searchUrl": "@js:\n/*isGet=true:获取token;isGet=false:不获取token;*/\n/*想获取改为true,并填上对应的账号密码，获取成功后改为false*/\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\ntime=Math.round(new Date())\nurl=\"POSThttp://a.lc1001.com/app/query/keybooksconsumerKey=LCREAD_ANDROIDpn=\"+(page-1)*20+\"timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\n\"http://a.lc1001.com/app/query/keybooks?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&uID=0&deviceID=0&kw=\"+key+\"&pn=\"+(page-1)*20",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "# 获取UID和token\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\n# 移动端 H5 和 app 不能同时登录，建议抓取 H5 上的 token，填写在章节地址中。",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♛ 连城读书 #渊呀1107",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://a.lc1001.com#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 85,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1627572673438,
+    "loginUrl": "",
+    "respondTime": 3031,
+    "ruleBookInfo": {
+      "author": "ANAME",
+      "coverUrl": "COVERURL",
+      "init": "DATA",
+      "intro": "CONTENT",
+      "kind": "BTNAME&&BTAG.TAGNAME",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME\n",
+      "name": "BNAME",
+      "tocUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookcata,\" + JSON.stringify(option)",
+      "wordCount": "WORDNUM"
+    },
+    "ruleContent": {
+      "content": "<js>\nvar javaImport = new JavaImporter();\njavaImport.importPackage(\n    Packages.java.lang,\n    Packages.javax.crypto.spec,\n    Packages.javax.crypto,\n    Packages.android.util\n);\n\nwith(javaImport){\n    function decrypt(str){\n        var key=SecretKeySpec(String(\"1701019k\").getBytes(),\"DES\");\n        var iv=IvParameterSpec(java.base64DecodeToByteArray(\"AQIDBAUGBwg=\"));\n        var bytes=Base64.decode(String(str).getBytes(),2);\n        var chipher=Cipher.getInstance(\"DES/CBC/PKCS5Padding\");\n        chipher.init(2,key,iv);\n        return String(chipher.doFinal(bytes));\n    }\n}\nString(decrypt(JSON.parse(result).DATA.CTXT)).replace(/{{title}}/,'')\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "AUTHORNAME",
+      "bookList": "DATA.KEYLIST",
+      "bookUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookindexbID={{$.KEYID}}consumerKey=LCREAD_ANDROIDlmID=1000timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&lmID=1000&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookindex,\" + JSON.stringify(option)",
+      "coverUrl": "COVERURL",
+      "intro": "CONTENT",
+      "kind": "KEYTYPE",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID={{$.KEYID}}consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME",
+      "name": "KEYNAME",
+      "wordCount": "WORDNUM"
+    },
+    "ruleToc": {
+      "chapterList": "DATA.BOOKCATA[*].CHAPTERS[*]",
+      "chapterName": "CNAME",
+      "chapterUrl": "@js:\n/*获取到的 uid 和 token 分别填入*/\nuID=\"0\"\ntoken=\"0\"\ntime=Math.round(new Date())\nisvc={{$.ISVC}}\nif(isvc==0){\nu=\"/app/book/pubchapter\"\n}else{\nu=\"/app/book/vipchapter\"\n}\nurl=\"GEThttp://a.lc1001.com\"+u+\"bID=\"+java.get('bid')+\"cID={{$.CID}}consumerKey=LCREAD_ANDROIDtimestamp=\"+time+\"uID=\"+uID+\"XKrqBSeeEwgDy2pT\"\nu+\"?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID=\"+java.get('bid')+\"&cID={{$.CID}}&uID=\"+uID+\"&token=\"+token+\"&mType=OPPO-PCRT00&PACKINGCHANNEL=YINGYONGBAO\""
+    },
+    "searchUrl": "@js:\n/*isGet=true:获取token;isGet=false:不获取token;*/\n/*想获取改为true,并填上对应的账号密码，获取成功后改为false*/\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\ntime=Math.round(new Date())\nurl=\"POSThttp://a.lc1001.com/app/query/keybooksconsumerKey=LCREAD_ANDROIDpn=\"+(page-1)*20+\"timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\n\"http://a.lc1001.com/app/query/keybooks?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&uID=0&deviceID=0&kw=\"+key+\"&pn=\"+(page-1)*20",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "# 获取UID和token\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\n# 移动端 H5 和 app 不能同时登录，建议抓取 H5 上的 token，填写在章节地址中。",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "连城读书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://a.lc1001.com",
+    "bookUrlPattern": "",
+    "customOrder": 1066,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1678646308563,
+    "loginUrl": "",
+    "respondTime": 3555,
+    "ruleBookInfo": {
+      "author": "ANAME",
+      "coverUrl": "COVERURL",
+      "init": "DATA",
+      "intro": "CONTENT",
+      "kind": "BTNAME&&BTAG.TAGNAME",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME\n",
+      "name": "BNAME",
+      "tocUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookcata,\" + JSON.stringify(option)",
+      "wordCount": "WORDNUM"
+    },
+    "ruleContent": {
+      "content": "<js>\nvar javaImport = new JavaImporter();\njavaImport.importPackage(\n    Packages.java.lang,\n    Packages.javax.crypto.spec,\n    Packages.javax.crypto,\n    Packages.android.util\n);\n\nwith(javaImport){\n    function decrypt(str){\n        var key=SecretKeySpec(String(\"1701019k\").getBytes(),\"DES\");\n        var iv=IvParameterSpec(java.base64DecodeToByteArray(\"AQIDBAUGBwg=\"));\n        var bytes=Base64.decode(String(str).getBytes(),2);\n        var chipher=Cipher.getInstance(\"DES/CBC/PKCS5Padding\");\n        chipher.init(2,key,iv);\n        return String(chipher.doFinal(bytes));\n    }\n}\nString(decrypt(JSON.parse(result).DATA.CTXT)).replace(/{{title}}/,'')\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "AUTHORNAME",
+      "bookList": "DATA.KEYLIST",
+      "bookUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookindexbID={{$.KEYID}}consumerKey=LCREAD_ANDROIDlmID=1000timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&lmID=1000&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookindex,\" + JSON.stringify(option)",
+      "coverUrl": "COVERURL",
+      "intro": "CONTENT",
+      "kind": "KEYTYPE",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID={{$.KEYID}}consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME",
+      "name": "KEYNAME",
+      "wordCount": "WORDNUM"
+    },
+    "ruleToc": {
+      "chapterList": "DATA.BOOKCATA[*].CHAPTERS[*]",
+      "chapterName": "CNAME",
+      "chapterUrl": "@js:\n/*获取到的 uid 和 token 分别填入*/\nuID=\"0\"\ntoken=\"0\"\ntime=Math.round(new Date())\nisvc={{$.ISVC}}\nif(isvc==0){\nu=\"/app/book/pubchapter\"\n}else{\nu=\"/app/book/vipchapter\"\n}\nurl=\"GEThttp://a.lc1001.com\"+u+\"bID=\"+java.get('bid')+\"cID={{$.CID}}consumerKey=LCREAD_ANDROIDtimestamp=\"+time+\"uID=\"+uID+\"XKrqBSeeEwgDy2pT\"\nu+\"?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID=\"+java.get('bid')+\"&cID={{$.CID}}&uID=\"+uID+\"&token=\"+token+\"&mType=OPPO-PCRT00&PACKINGCHANNEL=YINGYONGBAO\""
+    },
+    "searchUrl": "@js:\n/*isGet=true:获取token;isGet=false:不获取token;*/\n/*想获取改为true,并填上对应的账号密码，获取成功后改为false*/\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\ntime=Math.round(new Date())\nurl=\"POSThttp://a.lc1001.com/app/query/keybooksconsumerKey=LCREAD_ANDROIDpn=\"+(page-1)*20+\"timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\n\"http://a.lc1001.com/app/query/keybooks?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&uID=0&deviceID=0&kw=\"+key+\"&pn=\"+(page-1)*20",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "# 获取UID和token\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\n# 移动端 H5 和 app 不能同时登录，建议抓取 H5 上的 token，填写在章节地址中。",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♛ 连城读书▪︎API #渊呀",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://a.lc1001.com#♤yuan",
+    "bookUrlPattern": "",
+    "customOrder": 1424,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1641372107480,
+    "loginUrl": "",
+    "respondTime": 1330,
+    "ruleBookInfo": {
+      "author": "ANAME",
+      "coverUrl": "COVERURL",
+      "init": "DATA",
+      "intro": "CONTENT",
+      "kind": "BTNAME&&BTAG.TAGNAME",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME\n",
+      "name": "BNAME",
+      "tocUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID=\"+java.put('bid',java.getString('$.BID'))+\"consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.BID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookcata,\" + JSON.stringify(option)",
+      "wordCount": "WORDNUM"
+    },
+    "ruleContent": {
+      "content": "<js>\nvar javaImport = new JavaImporter();\njavaImport.importPackage(\n    Packages.java.lang,\n    Packages.javax.crypto.spec,\n    Packages.javax.crypto,\n    Packages.android.util\n);\n\nwith(javaImport){\n    function decrypt(str){\n        var key=SecretKeySpec(String(\"1701019k\").getBytes(),\"DES\");\n        var iv=IvParameterSpec(java.base64DecodeToByteArray(\"AQIDBAUGBwg=\"));\n        var bytes=Base64.decode(String(str).getBytes(),2);\n        var chipher=Cipher.getInstance(\"DES/CBC/PKCS5Padding\");\n        chipher.init(2,key,iv);\n        return String(chipher.doFinal(bytes));\n    }\n}\nString(decrypt(JSON.parse(result).DATA.CTXT)).replace(/{{title}}/,'')\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "AUTHORNAME",
+      "bookList": "DATA.KEYLIST",
+      "bookUrl": "@js:\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookindexbID={{$.KEYID}}consumerKey=LCREAD_ANDROIDlmID=1000timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&lmID=1000&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\n\"/app/info/bookindex,\" + JSON.stringify(option)",
+      "coverUrl": "COVERURL",
+      "intro": "CONTENT",
+      "kind": "KEYTYPE",
+      "lastChapter": "<js>\ntime=Math.round(new Date())\nurl=\"GEThttp://a.lc1001.com/app/info/bookcatabID={{$.KEYID}}consumerKey=LCREAD_ANDROIDisUpdate=0timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\nbody=\"consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID={{$.KEYID}}&isUpdate=0&uID=0\"\noption={\"method\":\"POST\",\"body\":String(body)}\njava.ajax(\"http://a.lc1001.com/app/info/bookcata,\"+JSON.stringify(option))\n</js>$.DATA.BOOKCATA[-1].CHAPTERS[-1].CNAME",
+      "name": "KEYNAME",
+      "wordCount": "WORDNUM"
+    },
+    "ruleToc": {
+      "chapterList": "DATA.BOOKCATA[*].CHAPTERS[*]",
+      "chapterName": "CNAME",
+      "chapterUrl": "@js:\n/*获取到的 uid 和 token 分别填入*/\nuID=\"0\"\ntoken=\"0\"\ntime=Math.round(new Date())\nisvc={{$.ISVC}}\nif(isvc==0){\nu=\"/app/book/pubchapter\"\n}else{\nu=\"/app/book/vipchapter\"\n}\nurl=\"GEThttp://a.lc1001.com\"+u+\"bID=\"+java.get('bid')+\"cID={{$.CID}}consumerKey=LCREAD_ANDROIDtimestamp=\"+time+\"uID=\"+uID+\"XKrqBSeeEwgDy2pT\"\nu+\"?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&bID=\"+java.get('bid')+\"&cID={{$.CID}}&uID=\"+uID+\"&token=\"+token+\"&mType=OPPO-PCRT00&PACKINGCHANNEL=YINGYONGBAO\""
+    },
+    "searchUrl": "@js:\n/*isGet=true:获取token;isGet=false:不获取token;*/\n/*想获取改为true,并填上对应的账号密码，获取成功后改为false*/\nisGet=false\nif(isGet){\nresp=JSON.parse(java.ajax('http://h5.lc1001.com/h5/login,{\"method\":\"POST\",\"body\":\"pcd=账号&pwd=密码\"}'))\njava.log('请复制 UID: '+resp.uID)\njava.log('请复制 token: '+resp.token)}\ntime=Math.round(new Date())\nurl=\"POSThttp://a.lc1001.com/app/query/keybooksconsumerKey=LCREAD_ANDROIDpn=\"+(page-1)*20+\"timestamp=\"+time+\"uID=0XKrqBSeeEwgDy2pT\"\n\"http://a.lc1001.com/app/query/keybooks?consumerKey=LCREAD_ANDROID&timestamp=\"+time+\"&sign=\"+java.md5Encode(encodeURIComponent(url))+\"&uID=0&deviceID=0&kw=\"+key+\"&pn=\"+(page-1)*20",
+    "weight": 0
+  }
+]

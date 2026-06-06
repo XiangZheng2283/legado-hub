@@ -1,0 +1,136 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔尖小说[m]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bjcan8.com/",
+    "customOrder": 1224,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686052636497,
+    "respondTime": 1593,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.查看全部章节@href"
+    },
+    "ruleContent": {
+      "content": "class.content@p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.info@span@text",
+      "bookList": "class.clearfix@li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@class.type@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.clearfix@li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.bjcan8.com/home/search/index.html?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "笔尖小说[m]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bjcan8.com/",
+    "customOrder": 1224,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693566423692,
+    "respondTime": 2053,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "[property=\"og:description\"]@content",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "text.查看全部章节@href"
+    },
+    "ruleContent": {
+      "content": "class.content@p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.info@span@text",
+      "bookList": "class.clearfix@li",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.info@class.type@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.clearfix@li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.bjcan8.com/home/search/index.html?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "24.12.18修复by 明月",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 笔尖小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bjcan8.com",
+    "bookUrlPattern": "http://m.bjcan8.com/book/\\d+.html",
+    "customOrder": 151,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1734536441848,
+    "respondTime": 2478,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": ".intro@textNodes##(^|[。！？]+[”」）】]?)(简介：)?##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s\\d.*",
+      "lastChapter": "{{@@[property$=chapter_name]@content##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]}} • {{@@[property$=update_time]@content##\\s.*}}",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".chapterlist:nth-child(1)@href"
+    },
+    "ruleContent": {
+      "content": ".read-content@html",
+      "replaceRegex": "##.*[a-z0-9-]+\\.[a-z]{2,}.*|{{chapter.title}}|[(（]?本章未?完[）)]?.*|\\(第.+页\\)|.?加入书签.*|.*下一页继续阅读.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": "class.item",
+      "bookUrl": "dt > a@href",
+      "coverUrl": ".lazy@data-src",
+      "intro": ".intro@text##简介：",
+      "kind": "span.0@text##\\/##,",
+      "lastChapter": "span.2@text",
+      "name": "dt > a@text",
+      "wordCount": "span.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul > li > a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "#indexselect > option@value"
+    },
+    "searchUrl": "http://m.bjcan8.com/search?keyword={{key}}<,&page={{page}}>",
+    "weight": 0
+  }
+]

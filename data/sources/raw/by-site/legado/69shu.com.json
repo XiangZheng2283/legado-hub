@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceComment": "需要代理访问",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "69书吧①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.69shu.com/",
+    "bookUrlPattern": "https://www.69shu.com/txt/\\d+.htm",
+    "customOrder": -240,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"最近更新\",\"url\":\"/newhot_0_2_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"新书热榜\",\"url\":\"/newhot_0_1_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完本小说\",\"url\":\"/weekvisit_0_1_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总人气榜\",\"url\":\"/weekvisit_0_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐榜\",\"url\":\"/allvote_0_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"玄幻魔法\",\"url\":\"/weekvisit_1_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"修真武侠\",\"url\":\"/weekvisit_2_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"言情小说\",\"url\":\"/weekvisit_3_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/weekvisit_4_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"/weekvisit_5_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻空间\",\"url\":\"/weekvisit_6_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"悬疑惊悚\",\"url\":\"/weekvisit_7_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人小说\",\"url\":\"/weekvisit_8_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市小说\",\"url\":\"/weekvisit_9_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"官场职场\",\"url\":\"/weekvisit_10_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越时空\",\"url\":\"/weekvisit_11_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}},{\"title\":\"青春校园\",\"url\":\"/weekvisit_12_0_{{page}}.htm\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1692661669367,
+    "loginUrl": "",
+    "respondTime": 197830,
+    "ruleBookInfo": {
+      "author": "class.booknav2@tag.p.0@a@text",
+      "coverUrl": "class.bookimg2@img@src",
+      "init": "",
+      "intro": "class.navtxt@tag.p.0@text",
+      "kind": "class.booknav2@tag.p.1@a@text&&\nclass.booknav2@tag.p.3@text##更新：",
+      "lastChapter": "class.qustime@tag.li.0@span@text##.*\\.",
+      "name": "class.booknav2@h1@a@text",
+      "tocUrl": "text.完整目录@href",
+      "wordCount": "class.booknav2@tag.p.2@text##字.*"
+    },
+    "ruleContent": {
+      "content": "class.txtnav@textNodes"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.label.0@text",
+      "bookList": "class.newbox@li",
+      "bookUrl": "h3@a@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@data-src",
+      "intro": "class.ellipsis_2@text",
+      "kind": "tag.label.1@text&&tag.label.2@text",
+      "lastChapter": "class.zxzj@p@textNodes##.*\\.",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.catalog@li@a",
+      "chapterName": "text##我要报错！",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.69shu.com/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&searchtype=all&action=%CB%D1%CB%F7\"\n}",
+    "weight": 0
+  }
+]

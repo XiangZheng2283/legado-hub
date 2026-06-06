@@ -1,0 +1,60 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "顶点小说[23wx]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.23wx.la/",
+    "bookUrlPattern": "",
+    "customOrder": 1298,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1686059645217,
+    "loginUrl": "",
+    "respondTime": 6813,
+    "ruleBookInfo": {
+      "author": "class.info@tag.p.0@a@text",
+      "coverUrl": "class.bookinfo@img@src",
+      "init": "",
+      "intro": "class.intro@text",
+      "kind": "class.info@tag.p.1:2:3@text##.*：",
+      "lastChapter": "class.info@tag.p.4@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.bookinfo@class.info@h1@text",
+      "tocUrl": "@js:\nid=baseUrl.match(/(\\d+)\\/?$/)[1];\niid = parseInt(id/1000);\n'https://www.23wx.la/'+iid+'_'+id+'/'"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##顶点小说网.*最新章节！|.*顶点小说网.*最快更新.*\\s"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.article@class.mr15@text||class.info@tag.p.0@a@text",
+      "bookList": "class.list-item||tag.body",
+      "bookUrl": "class.article@tag.a.0@href",
+      "coverUrl": "class.bookinfo@img@src||img@src",
+      "intro": "class.article@tag.a.1@text||class.intro@text",
+      "kind": "class.info@tag.p.3@text##更新：",
+      "lastChapter": "class.info@tag.p.4@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.article@tag.a.0@text||class.bookinfo@class.info@h1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://m.23wx.la/modules/article/search.php?searchtype=articlename&searchkey={{key}}&t_btnsearch=,{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

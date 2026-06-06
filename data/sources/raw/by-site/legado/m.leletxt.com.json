@@ -1,0 +1,118 @@
+[
+  {
+    "bookSourceComment": "搜索间隔10秒",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "乐乐小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.leletxt.com",
+    "customOrder": 1053,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1682670566704,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "respondTime": 5102,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##bookhai\\.com|22mt\\.net",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "class.title.0@text",
+      "tocUrl": "[property$=read_url]@content"
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@p@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "##作者.([^<]+)##$1###",
+      "bookList": ".bookbox",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "光阴之外",
+      "coverUrl": "img@src",
+      "kind": "##类型.([^<]+)##$1###",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".directoryArea p a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search/?searchkey={{key}},{'webView': true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "搜索间隔10秒",
+    "bookSourceGroup": "🏖️免费",
+    "bookSourceName": "乐乐小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.leletxt.com",
+    "customOrder": 223,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "exploreUrl": "",
+    "lastUpdateTime": 1682670566704,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "respondTime": 4604,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##bookhai\\.com|22mt\\.net",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "class.title.0@text",
+      "tocUrl": "[property$=read_url]@content"
+    },
+    "ruleContent": {
+      "content": "#chaptercontent@p@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "##作者.([^<]+)##$1###",
+      "bookList": ".bookbox",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "光阴之外",
+      "coverUrl": "img@src",
+      "kind": "##类型.([^<]+)##$1###",
+      "lastChapter": "class.update@tag.a@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".directoryArea p a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search/?searchkey={{key}},{'webView': true}",
+    "weight": 0
+  }
+]

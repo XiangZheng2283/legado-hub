@@ -1,0 +1,79 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "17萌猫",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.17imoe.com/",
+    "customOrder": 639,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"标签\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"动漫美图\",\"url\":\"https://www.17imoe.com/gallery/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"P站精选\",\"url\":\"https://www.17imoe.com/tag/p%e7%ab%99/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"steam\",\"url\":\"https://www.17imoe.com/tag/steam/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"p站美图\",\"url\":\"https://www.17imoe.com/tag/p%e7%ab%99%e7%be%8e%e5%9b%be/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫盘点\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e7%9b%98%e7%82%b9/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫咨询\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e8%b5%84%e8%ae%af/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"鬼灭之刃\",\"url\":\"https://www.17imoe.com/tag/%e9%ac%bc%e7%81%ad%e4%b9%8b%e5%88%83/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"GSC\",\"url\":\"https://www.17imoe.com/tag/gsc/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫墙纸\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e5%a2%99%e7%ba%b8/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫图片\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e5%9b%be%e7%89%87/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"在线漫画\",\"url\":\"https://www.17imoe.com/tag/%e5%9c%a8%e7%ba%bf%e6%bc%ab%e7%94%bb/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫壁纸\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e5%a3%81%e7%ba%b8/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"星期一的丰满\",\"url\":\"https://www.17imoe.com/tag/%e6%98%9f%e6%9c%9f%e4%b8%80%e7%9a%84%e4%b8%b0%e6%bb%a1/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"喜加一\",\"url\":\"https://www.17imoe.com/tag/%e5%96%9c%e5%8a%a0%e4%b8%80/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"比村奇石\",\"url\":\"https://www.17imoe.com/tag/%e6%af%94%e6%9d%91%e5%a5%87%e7%9f%b3/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"画集分享\",\"url\":\"https://www.17imoe.com/tag/%e7%94%bb%e9%9b%86%e5%88%86%e4%ba%ab/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"月曜日のたわわ\",\"url\":\"https://www.17imoe.com/tag/%e6%9c%88%e6%9b%9c%e6%97%a5%e3%81%ae%e3%81%9f%e3%82%8f%e3%82%8f/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"比村乳业\",\"url\":\"https://www.17imoe.com/tag/%e6%af%94%e6%9d%91%e4%b9%b3%e4%b8%9a/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"漫画分享\",\"url\":\"https://www.17imoe.com/tag/%e6%bc%ab%e7%94%bb%e5%88%86%e4%ba%ab/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"周一的丰满\",\"url\":\"https://www.17imoe.com/tag/%e5%91%a8%e4%b8%80%e7%9a%84%e4%b8%b0%e6%bb%a1/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2022年4月新番\",\"url\":\"https://www.17imoe.com/tag/2022%e5%b9%b44%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"Switch\",\"url\":\"https://www.17imoe.com/tag/switch/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2021年1月新番\",\"url\":\"https://www.17imoe.com/tag/2021%e5%b9%b41%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"COSPLAY\",\"url\":\"https://www.17imoe.com/tag/cosplay/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"咒术回战\",\"url\":\"https://www.17imoe.com/tag/%e5%92%92%e6%9c%af%e5%9b%9e%e6%88%98/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"Epic\",\"url\":\"https://www.17imoe.com/tag/epic/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫美图\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e7%be%8e%e5%9b%be/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫推荐\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e6%8e%a8%e8%8d%90/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"Fate/Grand Order\",\"url\":\"https://www.17imoe.com/tag/fate-grand-order/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2021年4月新番\",\"url\":\"https://www.17imoe.com/tag/2021%e5%b9%b44%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"POP UP PARADE\",\"url\":\"https://www.17imoe.com/tag/pop-up-parade/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2021年10月新番\",\"url\":\"https://www.17imoe.com/tag/2021%e5%b9%b410%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2022年新番\",\"url\":\"https://www.17imoe.com/tag/2022%e5%b9%b4%e6%96%b0%e7%95%aa/page/2/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "lastUpdateTime": 1678678037552,
+    "respondTime": 5536,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {
+      "content": ".single-article@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": ".post-list-meta-box@a@text",
+      "bookList": ".b2_gap@li",
+      "bookUrl": "a@href",
+      "coverUrl": ".picture.0@img@src",
+      "intro": ".post-excerpt@html",
+      "name": ".picture@img@alt"
+    },
+    "ruleToc": {
+      "chapterList": "class.entry-header@h1||.entry-content@p.-1",
+      "chapterName": "p@text||h1@text"
+    },
+    "searchUrl": "https://www.17imoe.com/page/{{page}}?s={{key}}&type=post",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "17萌猫",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.17imoe.com/",
+    "customOrder": 1067,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"标签\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"动漫美图\",\"url\":\"https://www.17imoe.com/gallery/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"P站精选\",\"url\":\"https://www.17imoe.com/tag/p%e7%ab%99/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"steam\",\"url\":\"https://www.17imoe.com/tag/steam/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"p站美图\",\"url\":\"https://www.17imoe.com/tag/p%e7%ab%99%e7%be%8e%e5%9b%be/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫盘点\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e7%9b%98%e7%82%b9/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫咨询\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e8%b5%84%e8%ae%af/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"鬼灭之刃\",\"url\":\"https://www.17imoe.com/tag/%e9%ac%bc%e7%81%ad%e4%b9%8b%e5%88%83/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"GSC\",\"url\":\"https://www.17imoe.com/tag/gsc/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫墙纸\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e5%a2%99%e7%ba%b8/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫图片\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e5%9b%be%e7%89%87/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"在线漫画\",\"url\":\"https://www.17imoe.com/tag/%e5%9c%a8%e7%ba%bf%e6%bc%ab%e7%94%bb/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫壁纸\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e5%a3%81%e7%ba%b8/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"星期一的丰满\",\"url\":\"https://www.17imoe.com/tag/%e6%98%9f%e6%9c%9f%e4%b8%80%e7%9a%84%e4%b8%b0%e6%bb%a1/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"喜加一\",\"url\":\"https://www.17imoe.com/tag/%e5%96%9c%e5%8a%a0%e4%b8%80/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"比村奇石\",\"url\":\"https://www.17imoe.com/tag/%e6%af%94%e6%9d%91%e5%a5%87%e7%9f%b3/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"画集分享\",\"url\":\"https://www.17imoe.com/tag/%e7%94%bb%e9%9b%86%e5%88%86%e4%ba%ab/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"月曜日のたわわ\",\"url\":\"https://www.17imoe.com/tag/%e6%9c%88%e6%9b%9c%e6%97%a5%e3%81%ae%e3%81%9f%e3%82%8f%e3%82%8f/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"比村乳业\",\"url\":\"https://www.17imoe.com/tag/%e6%af%94%e6%9d%91%e4%b9%b3%e4%b8%9a/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"漫画分享\",\"url\":\"https://www.17imoe.com/tag/%e6%bc%ab%e7%94%bb%e5%88%86%e4%ba%ab/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"周一的丰满\",\"url\":\"https://www.17imoe.com/tag/%e5%91%a8%e4%b8%80%e7%9a%84%e4%b8%b0%e6%bb%a1/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2022年4月新番\",\"url\":\"https://www.17imoe.com/tag/2022%e5%b9%b44%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"Switch\",\"url\":\"https://www.17imoe.com/tag/switch/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2021年1月新番\",\"url\":\"https://www.17imoe.com/tag/2021%e5%b9%b41%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"COSPLAY\",\"url\":\"https://www.17imoe.com/tag/cosplay/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"咒术回战\",\"url\":\"https://www.17imoe.com/tag/%e5%92%92%e6%9c%af%e5%9b%9e%e6%88%98/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"Epic\",\"url\":\"https://www.17imoe.com/tag/epic/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫美图\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e7%be%8e%e5%9b%be/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"动漫推荐\",\"url\":\"https://www.17imoe.com/tag/%e5%8a%a8%e6%bc%ab%e6%8e%a8%e8%8d%90/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"Fate/Grand Order\",\"url\":\"https://www.17imoe.com/tag/fate-grand-order/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2021年4月新番\",\"url\":\"https://www.17imoe.com/tag/2021%e5%b9%b44%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"POP UP PARADE\",\"url\":\"https://www.17imoe.com/tag/pop-up-parade/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2021年10月新番\",\"url\":\"https://www.17imoe.com/tag/2021%e5%b9%b410%e6%9c%88%e6%96%b0%e7%95%aa/page/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}},\n{\"title\":\"2022年新番\",\"url\":\"https://www.17imoe.com/tag/2022%e5%b9%b4%e6%96%b0%e7%95%aa/page/2/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.4}}]",
+    "lastUpdateTime": 1689054805198,
+    "respondTime": 6233,
+    "ruleBookInfo": {
+      "init": ""
+    },
+    "ruleContent": {
+      "content": ".single-article@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".post-list-meta-box@a@text",
+      "bookList": ".b2_gap@li",
+      "bookUrl": "a@href",
+      "coverUrl": ".picture.0@img@src",
+      "intro": ".post-excerpt@html",
+      "name": ".picture@img@alt"
+    },
+    "ruleToc": {
+      "chapterList": "class.entry-header@h1||.entry-content@p.-1",
+      "chapterName": "p@text||h1@text"
+    },
+    "searchUrl": "https://www.17imoe.com/page/{{page}}?s={{key}}&type=post",
+    "weight": 0
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "bookSourceComment": "@chaogei",
+    "bookSourceGroup": "r",
+    "bookSourceName": "🚭 色情001",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://seqing001.com/",
+    "customOrder": 17,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "exploreUrl": "[{\"title\":\"都市激情\",\"url\":\"/?cat=2\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"家庭乱伦\",\"url\":\"/?cat=1\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"强暴虐待\",\"url\":\"/?cat=9\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"性爱技巧\",\"url\":\"/?cat=8\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"校园春色\",\"url\":\"/?cat=5\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"另类小说\",\"url\":\"/?cat=10\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"人妻交换\",\"url\":\"/?cat=3\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}\n]",
+    "lastUpdateTime": 1772334501813,
+    "respondTime": 23693,
+    "ruleBookInfo": {
+      "coverUrl": ".featured@a@href",
+      "kind": ".cats@text",
+      "name": ".post-title.item.fn@text",
+      "tocUrl": "bookUrl"
+    },
+    "ruleContent": {
+      "content": ".post-content.description@p@html",
+      "imageStyle": "FULL",
+      "replaceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "bookList": ".column.one-third",
+      "bookUrl": "a[1]@href",
+      "coverUrl": "img@src",
+      "intro": ".excerpt@p@text",
+      "name": "a@title"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": ".column.half",
+      "bookUrl": "a[1]@href",
+      "checkKeyWord": "姐姐",
+      "coverUrl": "img@src",
+      "intro": ".excerpt@p@text",
+      "name": "a@title"
+    },
+    "ruleToc": {
+      "chapterList": ".main-wrap",
+      "chapterName": ".post-title.item.fn@text"
+    },
+    "searchUrl": "https://seqing001.com/?s={{key}}",
+    "weight": 0
+  }
+]

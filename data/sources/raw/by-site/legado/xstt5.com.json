@@ -1,0 +1,60 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "📚 出版,搜索链接规则为空",
+    "bookSourceName": "📚 小说天堂",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xstt5.com",
+    "bookUrlPattern": "",
+    "customOrder": 297,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "文学名著::/mingzhu/<,index_{{page}}.html>\n现代小说::/dangdai/<,index_{{page}}.html>\n世界名著::/waiwen/<,index_{{page}}.html>\n儿童文学::/ertong/<,index_{{page}}.html>\n古典名著::/gudian/<,index_{{page}}.html>\n散文随笔::/sanwen/<,index_{{page}}.html>\n青春校园::/qingchun/<,index_{{page}}.html>\n文学评论::/pinglun/<,index_{{page}}.html>\n玄幻仙侠::/xuanhuan/<,index_{{page}}.html>\n言情小说::/yanqing/<,index_{{page}}.html>\n武侠小说::/wuxia/<,index_{{page}}.html>\n穿越小说::/chuanyue/<,index_{{page}}.html>\n侦探悬疑::/xuanyi/<,index_{{page}}.html>\n科幻小说::/kehuan/<,index_{{page}}.html>\n网游小说::/wangyou/<,index_{{page}}.html>\n人文社科::/renwen/<,index_{{page}}.html>\n人物传记::/zhuanji/<,index_{{page}}.html>\n历史小说::/lishi/<,index_{{page}}.html>\n军事小说::/junshi/<,index_{{page}}.html>\n励志书籍::/lizhi/<,index_{{page}}.html>\n生活科普::/shenghuo/<,index_{{page}}.html>",
+    "lastUpdateTime": 1670858166885,
+    "loginUrl": "",
+    "respondTime": 611,
+    "ruleBookInfo": {
+      "author": "a.0@text",
+      "coverUrl": "img.0@src",
+      "init": "#zuo",
+      "intro": "p@html",
+      "kind": "a.1@text&&li.3:5@text##写作进程.|更新时间.|小说",
+      "lastChapter": "tbody a.-1@text",
+      "name": "h1@text##txt.*",
+      "wordCount": "##字数：([^<]+)##$1###"
+    },
+    "ruleContent": {
+      "content": ".zw@html",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": ".bbox",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@text##简介.|\\s",
+      "kind": "span.0@text",
+      "lastChapter": "a.1@text##正文.",
+      "name": "a.0@text"
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "tbody@td.0@li%%tbody@td.1@li%%tbody@td.2@li",
+      "chapterName": "a@text##正文.",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "",
+    "weight": 0
+  }
+]

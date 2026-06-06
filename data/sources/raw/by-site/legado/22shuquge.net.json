@@ -1,0 +1,51 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.22shuquge.net",
+    "bookUrlPattern": "",
+    "customOrder": 368,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\"\n}",
+    "lastUpdateTime": 1721236127147,
+    "respondTime": 4782,
+    "ruleBookInfo": {
+      "author": "class.info@tag.p.0@text##作.*者：",
+      "coverUrl": "class.imgbox@tag.img@src",
+      "intro": "class.desc@textNodes",
+      "kind": "class.info@tag.p.1@text##类.*别：",
+      "lastChapter": "class.info@tag.p.4@tag.a.0@text",
+      "name": "class.info@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##.*{{book.name}}.*|.*{{book.author}}.*|.*{{chapter.title}}.*|\\(?本章未?完\\)?.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@tag.li!0",
+      "bookUrl": "class.s2@tag.a.0@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "class.s1@text##\\W",
+      "lastChapter": "class.s3@tag.a.0@text",
+      "name": "class.s2@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-list.1@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "formatJs": "try{let t=title.match(/\\u7b2c\\s*(\\d+)\\s*\\u7ae0/),e=title.match(/(\\d+)/),l=t?t[1]:e[1];l&&(/\\u7b2c.+?\\u7ae0/.test(title)?(title=title.replace(/.*\\u7b2c\\s*\\d+\\s*\\u7ae0\\s*(.*)/,\"$1\"),console.log(title),title=`\\u7b2c${l}\\u7ae0 ${title}`):(title=title.replace(/.*\\d+[ .\\u3001]+(\\D*.*)/,\"$1\"),title=`\\u7b2c${l}\\u7ae0 ${title}`))}catch(t){/\\u7b2c.+[\\u7ae0\\u56de|\\u5377|\\u8282]/.test(title)?title:(title=/\\u5e8f\\u7ae0|\\u6954\\u5b50|\\u5f15\\u5b50|\\u7b80\\u4ecb|\\u80cc\\u666f|\\u4e16\\u754c\\u89c2|\\u8bbe\\u5b9a/.test(title)?title:`\\u7b2c${index}\\u7ae0 ${title}`,title)}",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey());java.connect(source.getKey()).raw().request().url()}}search/,{\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&Submit=搜索\"\n}",
+    "weight": 0
+  }
+]

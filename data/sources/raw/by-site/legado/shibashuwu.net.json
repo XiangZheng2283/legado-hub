@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "🔞 十八书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.shibashuwu.net/",
+    "customOrder": 730,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678612052987,
+    "respondTime": 12459,
+    "ruleBookInfo": {
+      "author": "a.b@text",
+      "intro": "p.BGsectionTwo-bottom@text",
+      "kind": ".category@span:nth-of-type(1)@text",
+      "lastChapter": "a.r@text",
+      "name": "p.title@text",
+      "tocUrl": ".BGsectionThree@a.sectionTwo-bottom@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "p@html",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span:nth-of-type(3)@a@text",
+      "bookList": "class.SHsectionThree-middle@p",
+      "bookUrl": "span:nth-of-type(2)@a@href",
+      "kind": "span:nth-of-type(1)@a.g@text",
+      "lastChapter": "",
+      "name": "span:nth-of-type(2)@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "li",
+      "chapterName": "a.g@text",
+      "chapterUrl": "a.g@href"
+    },
+    "searchUrl": "https://www.shibashuwu.net/search/,{\r\n  \"body\": \"keyword={{key}}\",\r\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

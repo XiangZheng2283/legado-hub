@@ -1,0 +1,59 @@
+[
+  {
+    "bookSourceComment": "同站：https://wap.po18k.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🚬 PO18文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.po18at.com",
+    "customButton": false,
+    "customOrder": 2278,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "                             分  类                               \n耽美小说::/class_visit_1/{{page}}.html\n百合小说::/class_visit_2/{{page}}.html\n言情小说::/class_visit_3/{{page}}.html\n  高辣文  ::/class_visit_4/{{page}}.html\n腹黑小说::/class_visit_5/{{page}}.html\n  种田文  ::/class_visit_6/{{page}}.html\n  高干文  ::/class_visit_7/{{page}}.html\n玄幻小说::/class_visit_8/{{page}}.html\n修真小说::/class_visit_9/{{page}}.html\n其他小说::/class_visit_10/{{page}}.html\n武侠小说::/class_visit_11/{{page}}.html\n都市小说::/class_visit_12/{{page}}.html\n科幻小说::/class_visit_13/{{page}}.html\n网游小说::/class_visit_14/{{page}}.html\n恐怖小说::/class_visit_15/{{page}}.html\n历史小说::/class_visit_16/{{page}}.html\n同人小说::/class_visit_17/{{page}}.html\n                             全  本                               \n全部分类::/quanben_0/{{page}}.html\n耽美小说::/quanben_1/{{page}}.html\n百合小说::/quanben_2/{{page}}.html\n言情小说::/quanben_3/{{page}}.html\n  高辣文  ::/quanben_4/{{page}}.html\n腹黑小说::/quanben_5/{{page}}.html\n  种田文  ::/quanben_6/{{page}}.html\n  高干文  ::/quanben_7/{{page}}.html\n玄幻小说::/quanben_8/{{page}}.html\n修真小说::/quanben_9/{{page}}.html\n其他小说::/quanben_10/{{page}}.html\n武侠小说::/quanben_11/{{page}}.html\n都市小说::/quanben_12/{{page}}.html\n科幻小说::/quanben_13/{{page}}.html\n网游小说::/quanben_14/{{page}}.html\n恐怖小说::/quanben_15/{{page}}.html\n历史小说::/quanben_16/{{page}}.html\n同人小说::/quanben_17/{{page}}.html",
+    "lastUpdateTime": 1724314991014,
+    "respondTime": 16208,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": ".pic@img@src",
+      "downloadUrls": "",
+      "intro": ".intro@text",
+      "kind": "##\\[状态\\]：([^<]+)</p>##$1###",
+      "lastChapter": "",
+      "name": "",
+      "tocUrl": "text.打开目录@href"
+    },
+    "ruleContent": {
+      "content": ".content@html"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": ".pictext",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": ".info_description@text",
+      "kind": ".author_intro@text",
+      "name": ".info_title@text"
+    },
+    "ruleSearch": {
+      "author": "span.0@text",
+      "bookList": "class.partlist-info@dl||class.slist xbk@li",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.a.1@href<js>'http://img.po18at.com/image'+String(result).replace(/.*?(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/$1$2s.jpg').replace('//','/0/')</js>",
+      "intro": "tag.span.2@text",
+      "kind": "##\\[类别\\]：\\s*<[^>]+>(.*?)<##$1###",
+      "lastChapter": "class.latest_title ablue@title",
+      "name": "a.0@text",
+      "wordCount": "##\\[字数\\]：\\s*<[^>]+>(.*?)<##$1###"
+    },
+    "ruleToc": {
+      "chapterList": ".list@li",
+      "chapterName": "span@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

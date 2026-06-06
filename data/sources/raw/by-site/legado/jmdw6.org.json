@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "禁漫大王🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://jmdw6.org#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1025,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "韩漫::https://jmdw6.org/sort/%E9%9F%A9%E6%BC%AB/ob/time/st/all/page/{{page}}\n日漫::https://jmdw6.org/sort/%E6%97%A5%E6%BC%AB/ob/time/st/all/page/{{page}}\n3D漫画::https://jmdw6.org/sort/3D%E6%BC%AB%E7%94%BB/ob/time/st/all/page/{{page}}\n美女::https://jmdw6.org/sort/%E7%BE%8E%E5%A5%B3/ob/time/st/all/page/{{page}}\n短篇::https://jmdw6.org/sort/%E7%9F%AD%E7%AF%87/ob/time/st/all/page/{{page}}",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2855,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.product-excerpt.0@a@text",
+      "coverUrl": "class.product-header@img@src",
+      "intro": "class.product-excerpt.3@span@text",
+      "kind": "class.product-excerpt.1@a@text",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.container@img@html",
+      "nextContentUrl": "",
+      "imageStyle": "FULL",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "class.lists-content@li",
+      "bookUrl": "h2@a@href",
+      "coverUrl": "a.0@img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h2@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.lists-content@li",
+      "bookUrl": "h2@a@href",
+      "coverUrl": "a.0@img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h2@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.playlist clearfix@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/cata.php,{\n  \"body\": \"key={{key}}&page={{page}}\",\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "禁漫大王",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://jmdw6.org",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1545,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "韩漫::https://jmdw6.org/sort/%E9%9F%A9%E6%BC%AB/ob/time/st/all/page/{{page}}\n日漫::https://jmdw6.org/sort/%E6%97%A5%E6%BC%AB/ob/time/st/all/page/{{page}}\n3D漫画::https://jmdw6.org/sort/3D%E6%BC%AB%E7%94%BB/ob/time/st/all/page/{{page}}\n美女::https://jmdw6.org/sort/%E7%BE%8E%E5%A5%B3/ob/time/st/all/page/{{page}}\n短篇::https://jmdw6.org/sort/%E7%9F%AD%E7%AF%87/ob/time/st/all/page/{{page}}",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1733675630927,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2962,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.product-excerpt.0@a@text",
+      "coverUrl": "class.product-header@img@src",
+      "intro": "class.product-excerpt.3@span@text",
+      "kind": "class.product-excerpt.1@a@text",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.container@img@html",
+      "nextContentUrl": "",
+      "imageStyle": "FULL",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "class.lists-content@li",
+      "bookUrl": "h2@a@href",
+      "coverUrl": "a.0@img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h2@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "",
+      "bookList": "class.lists-content@li",
+      "bookUrl": "h2@a@href",
+      "coverUrl": "a.0@img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h2@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.playlist clearfix@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/cata.php,{\n  \"body\": \"key={{key}}&page={{page}}\",\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

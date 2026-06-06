@@ -1,0 +1,552 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎻全本同人小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qbtr.cc",
+    "customOrder": 614,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "首页::https://www.qbtr.cc/tongren/index<,_{{page}}>.html\n排行::https://www.qbtr.cc/hot/index<,_{{page}}>.html\n火影::https://www.qbtr.cc/tag/{{page}}_huoying\n系统::https://www.qbtr.cc/tag/{{page}}_xitong\n海贼::https://www.qbtr.cc/tag/{{page}}_haizei\n漫威::https://www.qbtr.cc/tag/{{page}}_manwei\n综漫::https://www.qbtr.cc/tag/{{page}}_zongman\n斗罗::https://www.qbtr.cc/tag/{{page}}_douluo\n型月::https://www.qbtr.cc/tag/{{page}}_xingyue\n聊天群::https://www.qbtr.cc/tag/{{page}}_liaotianqun\n洪荒::https://www.qbtr.cc/tag/{{page}}_honghuang\n柯南::https://www.qbtr.cc/tag/{{page}}_kenan\n娱乐::https://www.qbtr.cc/tag/{{page}}_yule\n后宫::https://www.qbtr.cc/tag/{{page}}_hougong\n盗墓::https://www.qbtr.cc/tag/{{page}}_daomu\nFATE::https://www.qbtr.cc/tag/{{page}}_FATE",
+    "lastUpdateTime": 1673495565421,
+    "respondTime": 4490,
+    "ruleBookInfo": {
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.desc@textNodes||class.infos@p@textNodes",
+      "kind": "class.nav_time@textNodes"
+    },
+    "ruleContent": {
+      "content": "class.read_chapterDetail@p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "a@href",
+      "intro": "p@textNodes##简介：",
+      "lastChapter": "class.date@text",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.clearfix@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.qbtr.cc/e/search/index.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"POST\",\n  \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "全本同人，标签",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://qbtr.cc",
+    "customOrder": 694,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "火影:: /tag/{{page-1}}_huoying\n系统:: /tag/{{page-1}}_xitong\n海贼:: /tag/{{page-1}}_haizei\n斗罗:: /tag/{{page-1}}_douluo\n综漫:: /tag/{{page-1}}_zongman\n漫威:: /tag/{{page-1}}_manwei\n型月:: /tag/{{page-1}}_xingyue\n聊天群:: /tag/{{page-1}}_liaotianqun\n洪荒:: /tag/{{page-1}}_honghuang\n柯南:: /tag/{{page-1}}_kenan\n娱乐:: /tag/{{page-1}}_yule\n后宫:: /tag/{{page-1}}_hougong\n盗墓:: /tag/{{page-1}}_daomu\nFATE:: /tag/{{page-1}}_FATE",
+    "header": "{\n'headers': {\n    'User-Agent': 'Referer: http://qbtr.cc/'\n    }\n}",
+    "lastUpdateTime": 1685984372495,
+    "respondTime": 7419,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "class.read_chapterDetail@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "我的",
+      "intro": "tag.p@text",
+      "kind": "",
+      "name": "tag.a.0@text",
+      "wordCount": "class.date@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list clearfix@class.clearfix@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nvar body=\"keyboard=\"+key+\"&show=\"+\"title\"+\"&classid=\"+\"0\";\nvar option={\"method\":\"POST\",\"charset\": \"gbk\",\"body\":String(body)};\na=java.ajax(\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option));\nb=a.match(/searchid=(\\d+)/);if(b==null){\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option)}else{\n\"http://qbtr.cc/e/search/result/index.php?page={{page-1}}&searchid=\"+b[1]}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🪵 全本同人小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://qbtr.cc",
+    "customOrder": 845,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"常规小说\",\"url\":\"https://qbtr.cc/changgui/index{{page - 1 == 0 ? '': '_'+page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}}]",
+    "lastUpdateTime": 1686102593263,
+    "respondTime": 6884,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ".read_chapterDetail@html"
+    },
+    "ruleExplore": {
+      "author": ".booknews.0@text##\\s.*##",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "p.0@text",
+      "kind": "",
+      "name": "h3.0@text"
+    },
+    "ruleSearch": {
+      "author": ".booknews.0@text##\\s\\d{4}.*##",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "哈利波特",
+      "intro": "p.0@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul[class='clearfix'] > li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://qbtr.cc/e/search/index.php,{\n    \"charset\": \"gb2312\",\n    \"method\": \"POST\",\n    \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "by_夏尔",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🪵全本同人小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://qbtr.cc/##by_夏尔",
+    "customOrder": 1358,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "火影:: /tag/{{page-1}}_huoying\n系统:: /tag/{{page-1}}_xitong\n海贼:: /tag/{{page-1}}_haizei\n斗罗:: /tag/{{page-1}}_douluo\n综漫:: /tag/{{page-1}}_zongman\n漫威:: /tag/{{page-1}}_manwei\n型月:: /tag/{{page-1}}_xingyue\n聊天群:: /tag/{{page-1}}_liaotianqun\n洪荒:: /tag/{{page-1}}_honghuang\n柯南:: /tag/{{page-1}}_kenan\n娱乐:: /tag/{{page-1}}_yule\n后宫:: /tag/{{page-1}}_hougong\n盗墓:: /tag/{{page-1}}_daomu\nFATE:: /tag/{{page-1}}_FATE",
+    "header": "{\n'headers': {\n    'User-Agent': 'Referer: http://qbtr.cc/'\n    }\n}",
+    "lastUpdateTime": 1674201042810,
+    "respondTime": 4771,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "class.read_chapterDetail@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "我的",
+      "intro": "tag.p@text",
+      "kind": "",
+      "name": "tag.a.0@text",
+      "wordCount": "class.date@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list clearfix@class.clearfix@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nvar body=\"keyboard=\"+key+\"&show=\"+\"title\"+\"&classid=\"+\"0\";\nvar option={\"method\":\"POST\",\"charset\": \"gbk\",\"body\":String(body)};\na=java.ajax(\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option));\nb=a.match(/searchid=(\\d+)/);if(b==null){\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option)}else{\n\"http://qbtr.cc/e/search/result/index.php?page={{page-1}}&searchid=\"+b[1]}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "常用（精选）",
+    "bookSourceName": "🪵 全本同人小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://qbtr.cc",
+    "customOrder": 20,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"常规小说\",\"url\":\"https://qbtr.cc/changgui/index{{page - 1 == 0 ? '': '_'+page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}}]",
+    "lastUpdateTime": 1686102593263,
+    "respondTime": 3170,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": ".read_chapterDetail@html"
+    },
+    "ruleExplore": {
+      "author": ".booknews.0@text##\\s.*##",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "p.0@text",
+      "kind": "",
+      "name": "h3.0@text"
+    },
+    "ruleSearch": {
+      "author": ".booknews.0@text##\\s\\d{4}.*##",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "哈利波特",
+      "intro": "p.0@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul[class='clearfix'] > li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "https://qbtr.cc/e/search/index.php,{\n    \"charset\": \"gb2312\",\n    \"method\": \"POST\",\n    \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "全本同人，标签",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://qbtr.cc",
+    "customOrder": 50,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "火影:: /tag/{{page-1}}_huoying\n系统:: /tag/{{page-1}}_xitong\n海贼:: /tag/{{page-1}}_haizei\n斗罗:: /tag/{{page-1}}_douluo\n综漫:: /tag/{{page-1}}_zongman\n漫威:: /tag/{{page-1}}_manwei\n型月:: /tag/{{page-1}}_xingyue\n聊天群:: /tag/{{page-1}}_liaotianqun\n洪荒:: /tag/{{page-1}}_honghuang\n柯南:: /tag/{{page-1}}_kenan\n娱乐:: /tag/{{page-1}}_yule\n后宫:: /tag/{{page-1}}_hougong\n盗墓:: /tag/{{page-1}}_daomu\nFATE:: /tag/{{page-1}}_FATE",
+    "header": "{\n'headers': {\n    'User-Agent': 'Referer: http://qbtr.cc/'\n    }\n}",
+    "lastUpdateTime": 1685984372495,
+    "respondTime": 2417,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "class.read_chapterDetail@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "我的",
+      "intro": "tag.p@text",
+      "kind": "",
+      "name": "tag.a.0@text",
+      "wordCount": "class.date@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list clearfix@class.clearfix@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nvar body=\"keyboard=\"+key+\"&show=\"+\"title\"+\"&classid=\"+\"0\";\nvar option={\"method\":\"POST\",\"charset\": \"gbk\",\"body\":String(body)};\na=java.ajax(\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option));\nb=a.match(/searchid=(\\d+)/);if(b==null){\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option)}else{\n\"http://qbtr.cc/e/search/result/index.php?page={{page-1}}&searchid=\"+b[1]}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "🎈 全本同人小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qbtr.cc",
+    "customOrder": 187,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "首页::https://www.qbtr.cc/tongren/index<,_{{page}}>.html\n排行::https://www.qbtr.cc/hot/index<,_{{page}}>.html\n火影::https://www.qbtr.cc/tag/{{page}}_huoying\n系统::https://www.qbtr.cc/tag/{{page}}_xitong\n海贼::https://www.qbtr.cc/tag/{{page}}_haizei\n漫威::https://www.qbtr.cc/tag/{{page}}_manwei\n综漫::https://www.qbtr.cc/tag/{{page}}_zongman\n斗罗::https://www.qbtr.cc/tag/{{page}}_douluo\n型月::https://www.qbtr.cc/tag/{{page}}_xingyue\n聊天群::https://www.qbtr.cc/tag/{{page}}_liaotianqun\n洪荒::https://www.qbtr.cc/tag/{{page}}_honghuang\n柯南::https://www.qbtr.cc/tag/{{page}}_kenan\n娱乐::https://www.qbtr.cc/tag/{{page}}_yule\n后宫::https://www.qbtr.cc/tag/{{page}}_hougong\n盗墓::https://www.qbtr.cc/tag/{{page}}_daomu\nFATE::https://www.qbtr.cc/tag/{{page}}_FATE",
+    "lastUpdateTime": 1692349137420,
+    "respondTime": 2720,
+    "ruleBookInfo": {
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.desc@textNodes||class.infos@p@textNodes",
+      "kind": "class.nav_time@textNodes"
+    },
+    "ruleContent": {
+      "content": "class.read_chapterDetail@p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "a@href",
+      "intro": "p@textNodes##简介：",
+      "lastChapter": "class.date@text",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.clearfix@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.qbtr.cc/e/search/index.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"POST\",\n  \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "by_夏尔",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "全本同人小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://qbtr.cc/",
+    "customOrder": 849,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "火影:: /tag/{{page-1}}_huoying\n系统:: /tag/{{page-1}}_xitong\n海贼:: /tag/{{page-1}}_haizei\n斗罗:: /tag/{{page-1}}_douluo\n综漫:: /tag/{{page-1}}_zongman\n漫威:: /tag/{{page-1}}_manwei\n型月:: /tag/{{page-1}}_xingyue\n聊天群:: /tag/{{page-1}}_liaotianqun\n洪荒:: /tag/{{page-1}}_honghuang\n柯南:: /tag/{{page-1}}_kenan\n娱乐:: /tag/{{page-1}}_yule\n后宫:: /tag/{{page-1}}_hougong\n盗墓:: /tag/{{page-1}}_daomu\nFATE:: /tag/{{page-1}}_FATE",
+    "header": "{\n'headers': {\n    'User-Agent': 'Referer: http://qbtr.cc/'\n    }\n}",
+    "lastUpdateTime": 1690290679407,
+    "respondTime": 8742,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "class.read_chapterDetail@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "tag.a.0@href",
+      "intro": "tag.p@text",
+      "kind": "",
+      "name": "tag.a.0@text",
+      "wordCount": "class.date@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list clearfix@class.clearfix@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nvar body=\"keyboard=\"+key+\"&show=\"+\"title\"+\"&classid=\"+\"0\";\nvar option={\"method\":\"POST\",\"charset\": \"gbk\",\"body\":String(body)};\na=java.ajax(\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option));\nb=a.match(/searchid=(\\d+)/);if(b==null){\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option)}else{\n\"http://qbtr.cc/e/search/result/index.php?page={{page-1}}&searchid=\"+b[1]}",
+    "weight": 10
+  },
+  {
+    "bookSourceComment": "by_夏尔",
+    "bookSourceGroup": "",
+    "bookSourceName": "🪵全本同人小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://qbtr.cc/##by_夏尔",
+    "customOrder": 1582,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "火影:: /tag/{{page-1}}_huoying\n系统:: /tag/{{page-1}}_xitong\n海贼:: /tag/{{page-1}}_haizei\n斗罗:: /tag/{{page-1}}_douluo\n综漫:: /tag/{{page-1}}_zongman\n漫威:: /tag/{{page-1}}_manwei\n型月:: /tag/{{page-1}}_xingyue\n聊天群:: /tag/{{page-1}}_liaotianqun\n洪荒:: /tag/{{page-1}}_honghuang\n柯南:: /tag/{{page-1}}_kenan\n娱乐:: /tag/{{page-1}}_yule\n后宫:: /tag/{{page-1}}_hougong\n盗墓:: /tag/{{page-1}}_daomu\nFATE:: /tag/{{page-1}}_FATE",
+    "header": "{\n'headers': {\n    'User-Agent': 'Referer: http://qbtr.cc/'\n    }\n}",
+    "lastUpdateTime": 1674201042810,
+    "respondTime": 2962,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "class.read_chapterDetail@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "我的",
+      "intro": "tag.p@text",
+      "kind": "",
+      "name": "tag.a.0@text",
+      "wordCount": "class.date@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list clearfix@class.clearfix@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nvar body=\"keyboard=\"+key+\"&show=\"+\"title\"+\"&classid=\"+\"0\";\nvar option={\"method\":\"POST\",\"charset\": \"gbk\",\"body\":String(body)};\na=java.ajax(\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option));\nb=a.match(/searchid=(\\d+)/);if(b==null){\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option)}else{\n\"http://qbtr.cc/e/search/result/index.php?page={{page-1}}&searchid=\"+b[1]}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "全本同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://qbtr.cc#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3637,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"常规小说\",\"url\":\"https://qbtr.cc/changgui/index{{page - 1 == 0 ? '': '_'+page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}}]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1734496424600,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2621,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".read_chapterDetail@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": ".booknews.0@text##\\s.*##",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "p.0@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h3.0@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".booknews.0@text##\\s\\d{4}.*##",
+      "bookList": ".bk",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "p.0@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul[class='clearfix'] > li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://qbtr.cc/e/search/index.php,{\n    \"charset\": \"gb2312\",\n    \"method\": \"POST\",\n    \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "variableComment": "",
+    "weight": -5
+  },
+  {
+    "bookSourceComment": "by_夏尔",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 全本同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://qbtr.cc",
+    "customOrder": 112,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "exploreUrl": "火影:: /tag/{{page-1}}_huoying\n系统:: /tag/{{page-1}}_xitong\n海贼:: /tag/{{page-1}}_haizei\n斗罗:: /tag/{{page-1}}_douluo\n综漫:: /tag/{{page-1}}_zongman\n漫威:: /tag/{{page-1}}_manwei\n型月:: /tag/{{page-1}}_xingyue\n聊天群:: /tag/{{page-1}}_liaotianqun\n洪荒:: /tag/{{page-1}}_honghuang\n柯南:: /tag/{{page-1}}_kenan\n娱乐:: /tag/{{page-1}}_yule\n后宫:: /tag/{{page-1}}_hougong\n盗墓:: /tag/{{page-1}}_daomu\nFATE:: /tag/{{page-1}}_FATE",
+    "header": "{\n'headers': {\n    'User-Agent': 'Referer: http://qbtr.cc/'\n    }\n}",
+    "lastUpdateTime": 1714008806031,
+    "respondTime": 1624,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "class.read_chapterDetail@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "tag.a.0@href",
+      "intro": "tag.p@text",
+      "kind": "",
+      "name": "tag.a.0@text",
+      "wordCount": "class.date@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list clearfix@class.clearfix@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nvar body=\"keyboard=\"+key+\"&show=\"+\"title\"+\"&classid=\"+\"0\";\nvar option={\"method\":\"POST\",\"charset\": \"gbk\",\"body\":String(body)};\na=java.ajax(\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option));\nb=a.match(/searchid=(\\d+)/);if(b==null){\"http://qbtr.cc/e/search/index.php,\"+JSON.stringify(option)}else{\n\"http://qbtr.cc/e/search/result/index.php?page={{page-1}}&searchid=\"+b[1]}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 全本同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://qbtr.cc",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 182,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1719538613007,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1868,
+    "ruleBookInfo": {
+      "author": ".date span@text##作者：",
+      "intro": "p@all",
+      "kind": "div.date@textNodes##日期：",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": ".read_chapterDetail p@all"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "div.booknews@textNodes",
+      "bookList": "div.bk",
+      "bookUrl": "h3 a@href",
+      "intro": "p@all##简介：",
+      "kind": "label@text",
+      "name": "h3 a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".clearfix li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/e/search/index.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"POST\",\n  \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 全本同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.qbtr.cc/",
+    "customOrder": 261,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "首页::tongren/index<,_{{page}}>.html\n排行::hot/index<,_{{page}}>.html\n火影::tag/{{page}}_huoying\n系统::tag/{{page}}_xitong\n海贼::tag/{{page}}_haizei\n漫威::tag/{{page}}_manwei\n综漫::tag/{{page}}_zongman\n斗罗::tag/{{page}}_douluo\n型月::tag/{{page}}_xingyue\n聊天群::tag/{{page}}_liaotianqun\n洪荒::tag/{{page}}_honghuang\n柯南::tag/{{page}}_kenan\n娱乐::tag/{{page}}_yule\n后宫::tag/{{page}}_hougong\n盗墓::tag/{{page}}_daomu\nFATE::tag/{{page}}_FATE",
+    "lastUpdateTime": 1680471779336,
+    "respondTime": 1160,
+    "ruleBookInfo": {
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.desc@textNodes||class.infos@p@textNodes",
+      "kind": "class.nav_time@textNodes"
+    },
+    "ruleContent": {
+      "content": "class.read_chapterDetail@p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.booknews@textNodes",
+      "bookList": "class.bk",
+      "bookUrl": "a@href",
+      "intro": "p@textNodes##简介：",
+      "lastChapter": "class.date@text",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.clearfix@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "e/search/index.php,{\n  \"charset\": \"gb2312\",\n  \"method\": \"POST\",\n  \"body\": \"keyboard={{key}}&show=title&classid=0\"\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁[3ren]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.3renwx.com",
+    "customOrder": 345,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693368924633,
+    "respondTime": 34682,
+    "ruleBookInfo": {
+      "coverUrl": "class.xsfm@img@src",
+      "init": "",
+      "intro": "class.jianjie bk@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.xx@li.-1@text##最新章节：",
+      "tocUrl": "class.zxjz@class.gengduo@a@href"
+    },
+    "ruleContent": {
+      "content": "class.content_detail@html",
+      "nextContentUrl": "class.Readpage@a.-1@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": "class.fk@li",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "深空彼岸",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'/pic/'+iid+.jpg';\n</js>",
+      "kind": "a.0@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "ul@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "class.listpage@class.right@a@href"
+    },
+    "searchUrl": "/search?keyword={{key}}",
+    "weight": 0
+  }
+]

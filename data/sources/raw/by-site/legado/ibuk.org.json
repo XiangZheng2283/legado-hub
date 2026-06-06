@@ -1,0 +1,70 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,📻有声",
+    "bookSourceName": "📻 ASMR1",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://ibuk.org#",
+    "bookUrlPattern": "",
+    "customOrder": 358,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最新::/category/asmr%e5%9c%a8%e7%ba%bf%e9%9f%b3%e9%a2%91/<,page/{{page}}/>",
+    "lastUpdateTime": 1621901480320,
+    "loginUrl": "｡◕‿◕｡",
+    "respondTime": 1281,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "<js>\nvar matcher = result.match(/(http[^\\\"]+mp3)|iframe src=\\\"([^\\\"]+)\\\"/);\nmatcher[1] || matcher[2];\n</js>"
+    },
+    "ruleExplore": {
+      "author": "class.clean-grid-grid-post-author@tag.a@text",
+      "bookList": "class.clean-grid-posts-container@class.clean-grid-grid-post",
+      "bookUrl": "tag.h3@tag.a@href",
+      "coverUrl": "class.clean-grid-grid-post-thumbnail-img@src",
+      "kind": "class.clean-grid-grid-post-date@text",
+      "name": "tag.h3@tag.a@text"
+    },
+    "ruleSearch": {},
+    "ruleToc": {
+      "chapterList": "class.post-title",
+      "chapterName": "text"
+    },
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,有声",
+    "bookSourceName": "📻 ASMR",
+    "bookSourceType": 1,
+    "bookSourceUrl": "http://ibuk.org",
+    "bookUrlPattern": "",
+    "customOrder": 1591,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最新::/category/asmr%e5%9c%a8%e7%ba%bf%e9%9f%b3%e9%a2%91/<,page/{{page}}/>",
+    "lastUpdateTime": 1668710160526,
+    "loginUrl": "",
+    "respondTime": 1720,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "<js>\nvar matcher = result.match(/(http[^\\\"]+mp3)|iframe src=\\\"([^\\\"]+)\\\"/);\nmatcher[1] || matcher[2];\n</js>"
+    },
+    "ruleExplore": {
+      "author": "class.clean-grid-grid-post-author@tag.a@text",
+      "bookList": "class.clean-grid-posts-container@class.clean-grid-grid-post",
+      "bookUrl": "tag.h3@tag.a@href",
+      "coverUrl": "class.clean-grid-grid-post-thumbnail-img@src",
+      "kind": "class.clean-grid-grid-post-date@text",
+      "name": "tag.h3@tag.a@text"
+    },
+    "ruleSearch": {},
+    "ruleToc": {
+      "chapterList": "class.post-title",
+      "chapterName": "text"
+    },
+    "weight": 0
+  }
+]

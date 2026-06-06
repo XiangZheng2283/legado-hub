@@ -1,0 +1,98 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "广安中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tianshuwx.com/",
+    "bookUrlPattern": "",
+    "customOrder": 772,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"list/1_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠修真\",\"url\":\"list/2_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"list/3_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"list/4_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游动漫\",\"url\":\"list/6_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"list/7_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"恐怖灵异\",\"url\":\"list/8_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美同人\",\"url\":\"list/9_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"社会文学\",\"url\":\"list/10_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"综合其他\",\"url\":\"list/11_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完本小说\",\"url\":\"quanben/1/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"排行\",\"url\":\"top/postdate/1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1685855070464,
+    "loginUrl": "",
+    "respondTime": 2591,
+    "ruleBookInfo": {
+      "author": "class.s1.0@tag.a@text",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "p.s1.1@text##.*：",
+      "lastChapter": "p.s2.1@a@text",
+      "name": "tag.h1@text",
+      "tocUrl": "id.info@tag.a.4@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##广安中.*|〈|.*最新网址.*\\s|.*更多精彩.*\\n.*.*|（|（|更新最快的小说网.*|）|）|）"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4.0@text",
+      "bookList": "li!1",
+      "bookUrl": "class.s2.0@tag.a@href",
+      "checkKeyWord": "完美世界",
+      "coverUrl": "tag.a.1@href##/xs(\\d+)(\\d{3}).shtml##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "kind": "class.s1.0@text##\\[|]",
+      "lastChapter": "class.s3@tag.a@text",
+      "name": "class.s2.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd!0",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "广安中文③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.tianshuwx.com/",
+    "bookUrlPattern": "",
+    "customOrder": 55,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"list/1_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠修真\",\"url\":\"list/2_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"list/3_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"list/4_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游动漫\",\"url\":\"list/6_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻小说\",\"url\":\"list/7_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"恐怖灵异\",\"url\":\"list/8_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"耽美同人\",\"url\":\"list/9_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"社会文学\",\"url\":\"list/10_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"综合其他\",\"url\":\"list/11_1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完本小说\",\"url\":\"quanben/1/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"排行\",\"url\":\"top/postdate/1.shtml\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1692493085632,
+    "loginUrl": "",
+    "respondTime": 2678,
+    "ruleBookInfo": {
+      "author": "class.s1.0@tag.a@text",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "p.s1.1@text##.*：",
+      "lastChapter": "p.s2.1@a@text",
+      "name": "tag.h1@text",
+      "tocUrl": "id.info@tag.a.4@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##广安中.*|〈|.*最新网址.*\\s|.*更多精彩.*\\n.*.*|（|（|更新最快的小说网.*|）|）|）"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4.0@text",
+      "bookList": "li!1",
+      "bookUrl": "class.s2.0@tag.a@href",
+      "checkKeyWord": "完美世界",
+      "coverUrl": "tag.a.1@href##/xs(\\d+)(\\d{3}).shtml##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "kind": "class.s1.0@text##\\[|]",
+      "lastChapter": "class.s3@tag.a@text",
+      "name": "class.s2.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd!0",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?keyword={{key}}",
+    "weight": 0
+  }
+]

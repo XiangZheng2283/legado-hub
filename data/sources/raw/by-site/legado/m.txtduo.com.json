@@ -1,0 +1,100 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 多多书院",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.txtduo.com",
+    "customOrder": 1538,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"日榜\",\"url\":\"/dayvisit/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"周榜\",\"url\":\"/weekvisit/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"月榜\",\"url\":\"/monthvisit/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"总榜\",\"url\":\"/allvisit/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"推荐\",\"url\":\"/allvote/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏\",\"url\":\"/goodnum/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"字数\",\"url\":\"/size/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"强推\",\"url\":\"/toptime/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"新书\",\"url\":\"/goodnew/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"连载\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻魔法\",\"url\":\"/type/0_1_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠修真\",\"url\":\"/type/0_2_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市言情\",\"url\":\"/type/0_3_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"/type/0_4_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"侦探推理\",\"url\":\"/type/0_5_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网游动漫\",\"url\":\"/type/0_6_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻小说\",\"url\":\"/type/0_7_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"恐怖灵异\",\"url\":\"/type/0_8_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"散文诗词\",\"url\":\"/type/0_9_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"其他类型\",\"url\":\"/type/0_10_0_1_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"完结\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻魔法\",\"url\":\"/type/0_1_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠修真\",\"url\":\"/type/0_2_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市言情\",\"url\":\"/type/0_3_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"/type/0_4_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"侦探推理\",\"url\":\"/type/0_5_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网游动漫\",\"url\":\"/type/0_6_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻小说\",\"url\":\"/type/0_7_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"恐怖灵异\",\"url\":\"/type/0_8_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"散文诗词\",\"url\":\"/type/0_9_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"其他类型\",\"url\":\"/type/0_10_0_2_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1678647246140,
+    "respondTime": 11228,
+    "ruleBookInfo": {
+      "author": ".author a@text",
+      "coverUrl": ".detail img@src",
+      "init": "",
+      "intro": "",
+      "kind": ".detail p.2@a@text&&.detail p.2@span.0@text&&.detail p.4@text##.*：|小说|\\s.*",
+      "lastChapter": ".new a@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": ".name@text",
+      "wordCount": ".detail p.2@span.1@text"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "replaceRegex": "##\\s*喜欢.*速度最快。\\s*|[（\\(]本章完[\\)）]"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".list li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "span@text##小说",
+      "lastChapter": "a.3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".read li a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/search.html,{\n  'method': 'POST',\n  'body': 'searchkey={{key}}'\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "🎉 多多书院",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.txtduo.com",
+    "customOrder": 1655,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"日榜\",\"url\":\"/dayvisit/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"周榜\",\"url\":\"/weekvisit/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"月榜\",\"url\":\"/monthvisit/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"总榜\",\"url\":\"/allvisit/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"推荐\",\"url\":\"/allvote/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏\",\"url\":\"/goodnum/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"字数\",\"url\":\"/size/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"强推\",\"url\":\"/toptime/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"新书\",\"url\":\"/goodnew/{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"连载\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻魔法\",\"url\":\"/type/0_1_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠修真\",\"url\":\"/type/0_2_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市言情\",\"url\":\"/type/0_3_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"/type/0_4_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"侦探推理\",\"url\":\"/type/0_5_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网游动漫\",\"url\":\"/type/0_6_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻小说\",\"url\":\"/type/0_7_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"恐怖灵异\",\"url\":\"/type/0_8_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"散文诗词\",\"url\":\"/type/0_9_0_1_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"其他类型\",\"url\":\"/type/0_10_0_1_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"完结\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻魔法\",\"url\":\"/type/0_1_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠修真\",\"url\":\"/type/0_2_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市言情\",\"url\":\"/type/0_3_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"/type/0_4_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"侦探推理\",\"url\":\"/type/0_5_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网游动漫\",\"url\":\"/type/0_6_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻小说\",\"url\":\"/type/0_7_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"恐怖灵异\",\"url\":\"/type/0_8_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"散文诗词\",\"url\":\"/type/0_9_0_2_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"其他类型\",\"url\":\"/type/0_10_0_2_0_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1678647246140,
+    "respondTime": 9881,
+    "ruleBookInfo": {
+      "author": ".author a@text",
+      "coverUrl": ".detail img@src",
+      "init": "",
+      "intro": "",
+      "kind": ".detail p.2@a@text&&.detail p.2@span.0@text&&.detail p.4@text##.*：|小说|\\s.*",
+      "lastChapter": ".new a@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": ".name@text",
+      "wordCount": ".detail p.2@span.1@text"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "replaceRegex": "##\\s*喜欢.*速度最快。\\s*|[（\\(]本章完[\\)）]"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".list li",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@src",
+      "intro": "p.2@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "span@text##小说",
+      "lastChapter": "a.3@text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".read li a",
+      "chapterName": "text##[\\(（【].*?[求更谢乐发订合补加].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/search.html,{\n  'method': 'POST',\n  'body': 'searchkey={{key}}'\n}",
+    "weight": 0
+  }
+]

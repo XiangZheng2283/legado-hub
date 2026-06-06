@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "全本小说🎃#2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.quanben5.com#🎃",
+    "bookUrlPattern": "https://www.quanben5.com/\\d+/\\d+/",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2139,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/category/1_{{page}}.html\n都市::/category/2_{{page}}.html\n仙侠::/category/3_{{page}}.html\n武侠::/category/4_{{page}}.html\n言情::/category/5_{{page}}.html\n穿越::/category/6_{{page}}.html\n网游::/category/7_{{page}}.html\n奇幻::/category/8_{{page}}.html\n科幻::/category/9_{{page}}.html\n悬疑::/category/10_{{page}}.html\n青春::/category/11_{{page}}.html\n校园::/category/12_{{page}}.html\n军事::/category/13_{{page}}.html\n历史::/category/14_{{page}}.html\n同人::/category/15_{{page}}.html\n其它::/category/18_{{page}}.html",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10;  Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 2240,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".author@text",
+      "coverUrl": "img.0@src",
+      "intro": ".description@text",
+      "kind": ".info.1:2@text##类别:|状态:",
+      "lastChapter": "",
+      "name": ".pic_txt_list.0@h3@span@text",
+      "canReName": "",
+      "tocUrl": "text.点击阅读@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "<js>\nsearch=(result)=>result.content;\nbaseUrl.match(/&b=/)?eval(result):result;\n</js>\nclass.pic_txt_list",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.description@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list@li",
+      "chapterName": "a@span@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\nfunction base64(_str){\n\tvar staticchars=\"PXhw7UT1B0a9kQDKZsjIASmOezxYG4CHo5Jyfg2b8FLpEvRr3WtVnlqMidu6cN\";\n\tvar encodechars=\"\";\n\tfor(var i=0;i<_str.length;i++){\n\t\tvar num0=staticchars.indexOf(_str[i]);\n\t\tvar code=num0==-1 ? _str[i] : staticchars[(num0+3)%62];\n\t\tvar num1=parseInt(Math.random()*62,10);\n\t\tvar num2=parseInt(Math.random()*62,10);\n\t\tencodechars += staticchars[num1]+code+staticchars[num2]\n\t\t}\n\treturn encodechars\n};\n\n'/?c=book&a=search.json&callback=search&t='+Date.now()+'&keywords='+key+'&b='+\nencodeURI(base64(encodeURI(key)))\n+',{\"headers\":{\"Referer\":\"https://www.quanben5.com/search.html\"}}';",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "全本小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.quanben5.com",
+    "bookUrlPattern": "https://www.quanben5.com/\\d+/\\d+/",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3577,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/category/1_{{page}}.html\n都市::/category/2_{{page}}.html\n仙侠::/category/3_{{page}}.html\n武侠::/category/4_{{page}}.html\n言情::/category/5_{{page}}.html\n穿越::/category/6_{{page}}.html\n网游::/category/7_{{page}}.html\n奇幻::/category/8_{{page}}.html\n科幻::/category/9_{{page}}.html\n悬疑::/category/10_{{page}}.html\n青春::/category/11_{{page}}.html\n校园::/category/12_{{page}}.html\n军事::/category/13_{{page}}.html\n历史::/category/14_{{page}}.html\n同人::/category/15_{{page}}.html\n其它::/category/18_{{page}}.html",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10;  Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36\"}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 672,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".author@text",
+      "coverUrl": "img.0@src",
+      "intro": ".description@text",
+      "kind": ".info.1:2@text##类别:|状态:",
+      "lastChapter": "",
+      "name": ".pic_txt_list.0@h3@span@text",
+      "canReName": "",
+      "tocUrl": "text.点击阅读@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "<js>\nsearch=(result)=>result.content;\nbaseUrl.match(/&b=/)?eval(result):result;\n</js>\nclass.pic_txt_list",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "class.description@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.list@li",
+      "chapterName": "a@span@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "@js:\nfunction base64(_str){\n\tvar staticchars=\"PXhw7UT1B0a9kQDKZsjIASmOezxYG4CHo5Jyfg2b8FLpEvRr3WtVnlqMidu6cN\";\n\tvar encodechars=\"\";\n\tfor(var i=0;i<_str.length;i++){\n\t\tvar num0=staticchars.indexOf(_str[i]);\n\t\tvar code=num0==-1 ? _str[i] : staticchars[(num0+3)%62];\n\t\tvar num1=parseInt(Math.random()*62,10);\n\t\tvar num2=parseInt(Math.random()*62,10);\n\t\tencodechars += staticchars[num1]+code+staticchars[num2]\n\t\t}\n\treturn encodechars\n};\n\n'/?c=book&a=search.json&callback=search&t='+Date.now()+'&keywords='+key+'&b='+\nencodeURI(base64(encodeURI(key)))\n+',{\"headers\":{\"Referer\":\"https://www.quanben5.com/search.html\"}}';",
+    "variableComment": "",
+    "weight": 1
+  }
+]

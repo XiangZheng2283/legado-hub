@@ -1,0 +1,114 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "飘天文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.piaotian.so/",
+    "bookUrlPattern": "https://www.piaotian.org/book_\\d+/",
+    "customOrder": 931,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"/fenlei/1_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠修真\",\"url\":\"/fenlei/2_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市言情\",\"url\":\"/fenlei/3_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史军事\",\"url\":\"/fenlei/4_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"侦探推理\",\"url\":\"/fenlei/5_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游动漫\",\"url\":\"/fenlei/6_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/fenlei/7_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"恐怖灵异\",\"url\":\"/fenlei/8_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"完本小说\",\"url\":\"/quanben/{{page}}\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687545300577,
+    "loginUrl": "",
+    "respondTime": 7930,
+    "ruleBookInfo": {
+      "author": "id.info@tag.h1@tag.small@tag.a@text",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.update@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@tag.h1@text##/.*",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##飘天文学.*最新章节！|【看书领红包】关注.*现金红包！"
+    },
+    "ruleExplore": {
+      "author": "class.author@text",
+      "bookList": "class.titlelist@ul@li",
+      "bookUrl": "class.zp@a@href",
+      "coverUrl": "class.zp@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.piaotian.so/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.sj@text",
+      "lastChapter": "class.zz@a@text",
+      "name": "class.zp@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.piaotian.so/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.piaotian.so/modules/article/search.php?searchkey={{key}}&submit=%CB%D1%CB%F7&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "飘天文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.piaotian.so/",
+    "bookUrlPattern": "https://www.piaotian.org/book_\\d+/",
+    "customOrder": -222,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻魔法\",\"url\":\"/fenlei/1_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠修真\",\"url\":\"/fenlei/2_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市言情\",\"url\":\"/fenlei/3_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史军事\",\"url\":\"/fenlei/4_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"侦探推理\",\"url\":\"/fenlei/5_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游动漫\",\"url\":\"/fenlei/6_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/fenlei/7_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"恐怖灵异\",\"url\":\"/fenlei/8_{{page}}/\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"完本小说\",\"url\":\"/quanben/{{page}}\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687545300577,
+    "loginUrl": "",
+    "respondTime": 23416,
+    "ruleBookInfo": {
+      "author": "id.info@tag.h1@tag.small@tag.a@text",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.update@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "id.info@tag.h1@text##/.*",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##飘天文学.*最新章节！|【看书领红包】关注.*现金红包！"
+    },
+    "ruleExplore": {
+      "author": "class.author@text",
+      "bookList": "class.titlelist@ul@li",
+      "bookUrl": "class.zp@a@href",
+      "coverUrl": "class.zp@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.piaotian.so/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.sj@text",
+      "lastChapter": "class.zz@a@text",
+      "name": "class.zp@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.piaotian.so/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjlist@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.piaotian.so/modules/article/search.php?searchkey={{key}}&submit=%CB%D1%CB%F7&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

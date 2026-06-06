@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "一",
+    "bookSourceName": "看书网🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kanshuw.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3254,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js: var result = [];\njava.toast(\"🔥动态获取发现中……\");\nvar push=(title,url,size)=>result.push({\n  \t\"title\": title,\n  \t\"url\": url,\n  \t\"style\": {\n   \"layout_flexGrow\": 1,\n   \"layout_flexBasisPercent\": size\n   }\n });\nvar top = java.ajax(\"https://www.kanshuw.com/top/all_0_1.html\");\nvar full = java.ajax(\"https://www.kanshuw.com/full/0_1.html\")\nif (top&&full) {\na=org.jsoup.Jsoup.parse(top).select(\".row\").eq(2);\na=org.jsoup.Jsoup.parse(a).select(\"a\");\nb=org.jsoup.Jsoup.parse(full).select(\".row\").eq(1);\nb=org.jsoup.Jsoup.parse(b).select(\"a\");\nc=org.jsoup.Jsoup.parse(full).select(\".container a\")\npush(\"排行总榜分类\",null,1)\n    for(i in a){\n        title=a[i].text()\n        url=a[i].attr(\"href\")\n        if (url.endsWith(\"_1.html\")) {\n        url=String(url).replace(/_1\\.html$/,\"_{{page}}.html\")\n        size=0.3;\n        push(title,url,size)\n    }};\n    push(\"完本分类\",null,1)\n    for(i in b){\n        title=b[i].text()\n        url=b[i].attr(\"href\")\n        if (url.endsWith(\"_1.html\")) {\n        url=String(url).replace(/_1\\.html$/,\"_{{page}}.html\")\n        size=0.3;\n        push(title,url,size)\n    }};\n    \n    push(\"分类\",null,1)\n    for(i in c){\n        title=c[i].text()\n        url=c[i].attr(\"href\")\n        if(url.match(/\\/list/)){\n         url=url+\"1.html\"\n         if (url.endsWith(\"1.html\")) {\n        url=String(url).replace(/1\\.html$/,\"{{page}}.html\")\n        size=0.3;\n        push(title,url,size)\n    }}};\n      } else { \n      java.toast(\"🚫发现获取失败……\");\n}\nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1835,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.row book_info@a[0]@text",
+      "coverUrl": "class.row book_info@img@src",
+      "intro": "class.row book_info@id.intro_pc@oweText",
+      "kind": "class.title@a[1]@text",
+      "lastChapter": "class.row book_info@a[2]@text",
+      "name": "class.row book_info@h1@text##免费阅读.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".font_max@html##第\\(\\d+/\\d+\\)页",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##[a-zA-Z0-9-]+[a-zA-Z0-9-].*\\.[a-zA-Z0-9-].*"
+    },
+    "ruleExplore": {
+      "author": "span@text",
+      "bookList": ".row[-1]@dl",
+      "bookUrl": "a[0]@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": ".book_other[1]@text",
+      "lastChapter": ".book_other[-1]@text",
+      "name": "h3@text##\\[|.*\\]|免费阅读.*",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a[0]@href",
+      "coverUrl": "tag.dt@tag.a@img@src",
+      "intro": "",
+      "kind": "h3@text##\\[|\\].*",
+      "lastChapter": "a[-1]@text",
+      "name": "h3@text##\\[|.*\\]|免费阅读.*",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".row[-1]@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "class.pages@tag.ul@tag.li.!0:1:-1@tag.a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceComment": "@MR.无名",
+    "bookSourceGroup": "",
+    "bookSourceName": "看书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kanshuw.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3135,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "@js: var result = [];\njava.toast(\"🔥动态获取发现中……\");\nvar push=(title,url,size)=>result.push({\n  \t\"title\": title,\n  \t\"url\": url,\n  \t\"style\": {\n   \"layout_flexGrow\": 1,\n   \"layout_flexBasisPercent\": size\n   }\n });\nvar top = java.ajax(\"https://www.kanshuw.com/top/all_0_1.html\");\nvar full = java.ajax(\"https://www.kanshuw.com/full/0_1.html\")\nif (top&&full) {\na=org.jsoup.Jsoup.parse(top).select(\".row\").eq(2);\na=org.jsoup.Jsoup.parse(a).select(\"a\");\nb=org.jsoup.Jsoup.parse(full).select(\".row\").eq(1);\nb=org.jsoup.Jsoup.parse(b).select(\"a\");\nc=org.jsoup.Jsoup.parse(full).select(\".container a\")\npush(\"排行总榜分类\",null,1)\n    for(i in a){\n        title=a[i].text()\n        url=a[i].attr(\"href\")\n        if (url.endsWith(\"_1.html\")) {\n        url=String(url).replace(/_1\\.html$/,\"_{{page}}.html\")\n        size=0.3;\n        push(title,url,size)\n    }};\n    push(\"完本分类\",null,1)\n    for(i in b){\n        title=b[i].text()\n        url=b[i].attr(\"href\")\n        if (url.endsWith(\"_1.html\")) {\n        url=String(url).replace(/_1\\.html$/,\"_{{page}}.html\")\n        size=0.3;\n        push(title,url,size)\n    }};\n    \n    push(\"分类\",null,1)\n    for(i in c){\n        title=c[i].text()\n        url=c[i].attr(\"href\")\n        if(url.match(/\\/list/)){\n         url=url+\"1.html\"\n         if (url.endsWith(\"1.html\")) {\n        url=String(url).replace(/1\\.html$/,\"{{page}}.html\")\n        size=0.3;\n        push(title,url,size)\n    }}};\n      } else { \n      java.toast(\"🚫发现获取失败……\");\n}\nJSON.stringify(result);",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1754709966427,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1838,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.row book_info@a[0]@text",
+      "coverUrl": "class.row book_info@img@src",
+      "intro": "class.row book_info@id.intro_pc@oweText",
+      "kind": "class.title@a[1]@text",
+      "lastChapter": "class.row book_info@a[2]@text",
+      "name": "class.row book_info@h1@text##免费阅读.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".font_max@html##第\\(\\d+/\\d+\\)页",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##[a-zA-Z0-9-]+[a-zA-Z0-9-].*\\.[a-zA-Z0-9-].*"
+    },
+    "ruleExplore": {
+      "author": "span@text",
+      "bookList": ".row[-1]@dl",
+      "bookUrl": "a[0]@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": ".book_other[1]@text",
+      "lastChapter": ".book_other[-1]@text",
+      "name": "h3@text##\\[|.*\\]|免费阅读.*",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".row@dl",
+      "bookUrl": "a[0]@href",
+      "coverUrl": "tag.dt@tag.a@img@src",
+      "intro": "",
+      "kind": "h3@text##\\[|\\].*",
+      "lastChapter": "a[-1]@text",
+      "name": "h3@text##\\[|.*\\]|免费阅读.*",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".row[-1]@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "class.pages@tag.ul@tag.li.!0:1:-1@tag.a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}",
+    "variableComment": "",
+    "weight": 2
+  }
+]

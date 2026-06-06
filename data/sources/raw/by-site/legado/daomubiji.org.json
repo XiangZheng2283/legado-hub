@@ -1,0 +1,142 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 盗墓笔记全集",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.org/?yuedu",
+    "bookUrlPattern": "",
+    "customOrder": 716,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全集::/",
+    "lastUpdateTime": 1668349892425,
+    "loginUrl": "",
+    "respondTime": 34057,
+    "ruleBookInfo": {
+      "name": "h1.text"
+    },
+    "ruleContent": {
+      "content": "class.content@p!0@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.header@a!0:-1:-2",
+      "bookUrl": "href",
+      "name": "text"
+    },
+    "ruleToc": {
+      "chapterList": "class.page-content@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "?{{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖盗墓笔记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.org",
+    "bookUrlPattern": "",
+    "customOrder": 971,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "盗墓笔记1::/dao-mu-bi-ji-1\n盗墓笔记2::/dao-mu-bi-ji-2\n盗墓笔记3::/dao-mu-bi-ji-3\n盗墓笔记4::/dao-mu-bi-ji-4\n盗墓笔记5::/dao-mu-bi-ji-5\n盗墓笔记6::/dao-mu-bi-ji-6\n盗墓笔记7::/dao-mu-bi-ji-6\n盗墓笔记8::/dao-mu-bi-ji-6\n藏海花1::/zang-hai-hua-1\n藏海花2::/zang-hai-hua-2\n沙海::/sha-hai\n圣雪寻踪(后传)::/dao-mu-bi-ji-hou-zhuan\n盗墓笔记9(邪灵一把刀续)::/dao-mu-bi-ji-9\n勇者大冒险(黄泉手记)::/yong-zhe-da-mao-xian\n贺岁篇::/he-sui-pian\n钓王::/diao-wang\n盲塚::/mang-zhong\n南部档案::/nan-bu-dang-an\n老九门::/lao-jiu-men\n吴邪的孤岛生涯::/wu-xie-de-gu-dao-sheng-ya\n十年之后::/shi-nian-zhi-hou\n重启::/dao-mu-bi-ji-chong-qi\n微信短篇::/nan-pai-san-shu-wei-xin\n幻境::/huan-jing\n吴邪的私家笔记::/wu-xie-de-si-jia-bi-ji\n世界::/shi-jie\n大漠苍狼::/da-mo-cang-lang\n怒江之战::/nu-jiang-zhi-zhan\n黄河鬼棺::/huang-he-gui-guan\n铁衣寒::/tie-yi-han\n南派三叔::/nan-pai-san-shu\n微博::/nan-pai-san-shu-wei-bo\n藏海戏麟::/zang-hai-xi-lin\n微访谈::/wei-fang-tan\n鬼吹灯::/gui-chui-deng",
+    "lastUpdateTime": 1678669547551,
+    "loginUrl": "",
+    "respondTime": 6868,
+    "ruleBookInfo": {
+      "name": "h1.text"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.header@tag.center@tag.a!0",
+      "bookUrl": "href",
+      "name": "text"
+    },
+    "ruleToc": {
+      "chapterList": "class.panel@tag.li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.daomubiji.org/?{{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "📚 盗墓笔记全集",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.org/?yuedu",
+    "bookUrlPattern": "",
+    "customOrder": 267,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "exploreUrl": "全集::/",
+    "lastUpdateTime": 1668349892425,
+    "loginUrl": "",
+    "respondTime": 3097,
+    "ruleBookInfo": {
+      "name": "h1.text"
+    },
+    "ruleContent": {
+      "content": "class.content@p!0@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.header@a!0:-1:-2",
+      "bookUrl": "href",
+      "name": "text"
+    },
+    "ruleToc": {
+      "chapterList": "class.page-content@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "?{{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⚡️ 1.2次,0-1文本",
+    "bookSourceName": "🔖盗墓笔记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.org",
+    "bookUrlPattern": "",
+    "customOrder": 1304,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "盗墓笔记1::/dao-mu-bi-ji-1\n盗墓笔记2::/dao-mu-bi-ji-2\n盗墓笔记3::/dao-mu-bi-ji-3\n盗墓笔记4::/dao-mu-bi-ji-4\n盗墓笔记5::/dao-mu-bi-ji-5\n盗墓笔记6::/dao-mu-bi-ji-6\n盗墓笔记7::/dao-mu-bi-ji-6\n盗墓笔记8::/dao-mu-bi-ji-6\n藏海花1::/zang-hai-hua-1\n藏海花2::/zang-hai-hua-2\n沙海::/sha-hai\n圣雪寻踪(后传)::/dao-mu-bi-ji-hou-zhuan\n盗墓笔记9(邪灵一把刀续)::/dao-mu-bi-ji-9\n勇者大冒险(黄泉手记)::/yong-zhe-da-mao-xian\n贺岁篇::/he-sui-pian\n钓王::/diao-wang\n盲塚::/mang-zhong\n南部档案::/nan-bu-dang-an\n老九门::/lao-jiu-men\n吴邪的孤岛生涯::/wu-xie-de-gu-dao-sheng-ya\n十年之后::/shi-nian-zhi-hou\n重启::/dao-mu-bi-ji-chong-qi\n微信短篇::/nan-pai-san-shu-wei-xin\n幻境::/huan-jing\n吴邪的私家笔记::/wu-xie-de-si-jia-bi-ji\n世界::/shi-jie\n大漠苍狼::/da-mo-cang-lang\n怒江之战::/nu-jiang-zhi-zhan\n黄河鬼棺::/huang-he-gui-guan\n铁衣寒::/tie-yi-han\n南派三叔::/nan-pai-san-shu\n微博::/nan-pai-san-shu-wei-bo\n藏海戏麟::/zang-hai-xi-lin\n微访谈::/wei-fang-tan\n鬼吹灯::/gui-chui-deng",
+    "lastUpdateTime": 1678669547551,
+    "loginUrl": "",
+    "respondTime": 2763,
+    "ruleBookInfo": {
+      "name": "h1.text"
+    },
+    "ruleContent": {
+      "content": "class.content@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": "class.header@tag.center@tag.a!0",
+      "bookUrl": "href",
+      "name": "text"
+    },
+    "ruleToc": {
+      "chapterList": "class.panel@tag.li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.daomubiji.org/?{{key}}",
+    "weight": 0
+  }
+]

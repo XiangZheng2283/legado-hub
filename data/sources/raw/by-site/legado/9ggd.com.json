@@ -1,0 +1,50 @@
+[
+  {
+    "bookSourceComment": "by歌行灯",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "格格党⑥",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.9ggd.com/",
+    "customOrder": 934,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\nsort=[];\npush=(title,url,type)=>sort.push({\n\t\ttitle: title,\n\t\turl: url,\n\t\tstyle: {\n\t\t\t\tlayout_flexGrow: 1,\n\t\t\t\tlayout_flexBasisPercent: type\n\t\t\t}\n\t});\n\n$$=(uri)=>`/flei${uri}/{{page}\\}/`;\n[\n[\"综合全部\",\"\"],\n[\"玄幻小说\",\"/xuanhuan\"],\n[\"仙侠小说\",\"/xianxia\"],\n[\"都市小说\",\"/dushi\"],\n[\"历史军事\",\"/lishi\"],\n[\"游戏竞技\",\"/youxi\"],\n[\"科幻小说\",\"/kehuan\"],\n[\"恐怖小说\",\"/kongbu\"],\n[\"其他类型\",\"/qita\"]\n].map([title,uri]=>{\n\tpush(title,$$(uri),0.25);\n});\nJSON.stringify(sort);",
+    "header": "{\n  \"Referer\":\"http://www.9ggd.com\"\n}",
+    "lastUpdateTime": 1693968965455,
+    "respondTime": 2775,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "#bookintro@html",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s\\d.*",
+      "lastChapter": "{{@@.chaw@li.0@a@text}} · {{@@#uptime@span@text##^20}}\n<js>result.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|[\\(\\{（｛【].*[求更谢乐发推票盟补加字Kk\\/].*[\\)\\}）｝】]/g,'')</js>\n<js>\nresult.replace(/^(\\d+)、第.+章/,'第$1章')\n.replace(/^(\\d+)、\\d+、/,'第$1章 ')\n.replace(/^(\\d+)、\\d+/,'第$1章')\n.replace(/^(第.+章)\\s?\\d+\\s/,'$1 ')\n.replace(/^(\\d+)(、|. ?)/,'第$1章 ')\n.replace(/^(第.+章)\\s?第.+章/,'$1')\n.replace(/第\\s(.+)\\s章/,'第$1章')\n.replace(/.*(chapter|Chapter)\\s?(\\d+)\\s?/,'$1 $2 ')\n.replace(/(章)([^\\s]+)(\\s·)*/,'$1 $2$3')\n.replace(/第([零一二三四五六七八九十百千]+)章/g,java.toNumChapter(result))\n.replace(/第0+/,'第')\n.replace(/(第\\d+章)\\s\\d+(.*)/,'$1$2')\n</js>",
+      "name": "[property$=book_name]@content",
+      "wordCount": "#count@span.1@text##$##字"
+    },
+    "ruleContent": {
+      "content": "#TextContent@all"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".book_other@span.0@text",
+      "bookList": "#sitebox dl",
+      "bookUrl": "dd@h3@a@href",
+      "checkKeyWord": "灰色童话",
+      "coverUrl": "img@data-original",
+      "intro": ".book_des@text",
+      "kind": "dt@span@text",
+      "lastChapter": "{{@@dd.3@a@text}} · {{@@class.uptime@text##^20}}\n<js>result.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|[\\(\\{（｛【].*[求更谢乐发推票盟补加字Kk\\/].*[\\)\\}）｝】]/g,'')</js>\n<js>\nresult.replace(/^(\\d+)、第.+章/,'第$1章')\n.replace(/^(\\d+)、\\d+、/,'第$1章 ')\n.replace(/^(\\d+)、\\d+/,'第$1章')\n.replace(/^(第.+章)\\s?\\d+\\s/,'$1 ')\n.replace(/^(\\d+)(、|. ?)/,'第$1章 ')\n.replace(/^(第.+章)\\s?第.+章/,'$1')\n.replace(/第\\s(.+)\\s章/,'第$1章')\n.replace(/.*(chapter|Chapter)\\s?(\\d+)\\s?/,'$1 $2 ')\n.replace(/(章)([^\\s]+)(\\s·)*/,'$1 $2$3')\n.replace(/第([零一二三四五六七八九十百千]+)章/g,java.toNumChapter(result))\n.replace(/第0+/,'第')\n.replace(/(第\\d+章)\\s\\d+(.*)/,'$1$2')\n</js>",
+      "name": "dd@h3@a@text",
+      "wordCount": ".book_other@span.2@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterList@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}/search/,{\"method\":\"post\",\"body\":\"searchkey={{key}}\"}",
+    "weight": 0
+  }
+]

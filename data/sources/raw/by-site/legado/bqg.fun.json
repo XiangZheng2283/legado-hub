@@ -1,0 +1,175 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💠 笔趣阁ᶠᵘⁿ",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg.fun",
+    "customOrder": 602,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1685689401331,
+    "respondTime": 3043,
+    "ruleBookInfo": {
+      "author": "#info p.0@text##.*：",
+      "coverUrl": "#fmimg img@src",
+      "intro": "#list p@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "#info p.2@text##.*：|小说.*",
+      "lastChapter": "#info a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "#info h1@text"
+    },
+    "ruleContent": {
+      "content": "#booktext@html",
+      "replaceRegex": "##\\s*[\\(（]本章完[\\)）]\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "td.4@text",
+      "lastChapter": "",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#list dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "笔趣阁[fun]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg.fun/",
+    "customOrder": 592,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1686461806050,
+    "respondTime": 2223,
+    "ruleBookInfo": {
+      "author": "#info p.0@text##.*：",
+      "coverUrl": "#fmimg img@src",
+      "intro": "#list p@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "#info p.2@text##.*：|小说.*",
+      "lastChapter": "#info a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字Kk].*?[】）\\)]",
+      "name": "#info h1@text"
+    },
+    "ruleContent": {
+      "content": "#booktext@html",
+      "replaceRegex": "##\\s*[\\(（]本章完[\\)）]\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##(\\d+)##https://images.bqg.fun/novel_$1/ncs_$1.jpg###",
+      "intro": "",
+      "kind": "td.4@text",
+      "lastChapter": "",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#list dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "破冰&一程0902",
+    "bookSourceName": "笔趣阁ᶠᵘⁿ",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg.fun",
+    "customOrder": 1215,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693648715201,
+    "respondTime": 3239,
+    "ruleBookInfo": {
+      "author": "#info p.0@text##.*：",
+      "coverUrl": "#fmimg img@src",
+      "intro": "#list p@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "#info p.2@text##.*：|小说.*",
+      "lastChapter": "#info a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "#info h1@text"
+    },
+    "ruleContent": {
+      "content": "#booktext@html",
+      "replaceRegex": "##\\s*[\\(（]本章完[\\)）]\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "td.4@text",
+      "lastChapter": "",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#list dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//网站宕机等待恢复，不恢复又等不了就删掉",
+    "bookSourceGroup": "💠 综合",
+    "bookSourceName": "💠 笔趣阁fun",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bqg.fun",
+    "customOrder": 48,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1735642164176,
+    "respondTime": 1888,
+    "ruleBookInfo": {
+      "author": "id.info@p.0@text##.*：",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.list@p@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "id.info@p.2@text##.*：|小说.*",
+      "lastChapter": "id.info@a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.booktext@html",
+      "replaceRegex": "##\\s*[\\(（]本章完[\\)）]\\s*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody@tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "td.4@text",
+      "lastChapter": "",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

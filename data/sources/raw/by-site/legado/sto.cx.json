@@ -1,0 +1,41 @@
+[
+  {
+    "bookSourceComment": "台湾/香港线路",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸思兔（需要🛫）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sto.cx",
+    "customOrder": -2085959036,
+    "enabled": false,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "enabledReview": true,
+    "exploreUrl": "百合::https://www.sto.cx/list-mbook-48-{{page}}-0.html",
+    "lastUpdateTime": 1682079112681,
+    "respondTime": 180000,
+    "ruleBookInfo": {
+      "intro": "{{@@id.si@html}}\n评论：\n{{@@class.commentlist@html}}",
+      "tocUrl": "text.立即阅读@href"
+    },
+    "ruleContent": {
+      "content": "class.bookContent@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "##作者:(.*?)&##$1###",
+      "bookList": ".listap",
+      "bookUrl": ".t@a@href",
+      "coverUrl": "img@src",
+      "intro": ".i@html",
+      "name": ".t@text"
+    },
+    "ruleToc": {
+      "chapterList": "@js:\npage = result.match(/第1\\/(\\d+)页/)[1];\nlist=[];\nurl = baseUrl.replace(/-1.html/,'')\nfor(i=1;i<=page;i++){\n\tlist.push({\n\t\ttext:String(i),\n\t\thref:url+\"-\"+i+\".html\"\n\t\t})\n\t}\nlist",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.sto.cx/msearch.aspx?key={{key}}",
+    "weight": 0
+  }
+]

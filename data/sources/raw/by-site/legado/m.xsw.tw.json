@@ -1,0 +1,104 @@
+[
+  {
+    "bookSourceComment": "//只能用繁體中文搜索，简体中文会乱码",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "台湾小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xsw.tw",
+    "bookUrlPattern": "https?://m.xsw.tw/\\d+/",
+    "customOrder": 176,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小說::/fenlei1_{{page}}.html\n仙俠小說::/fenlei2_{{page}}.html\n都市小說::/fenlei3_{{page}}.html\n曆史小說::/fenlei4_{{page}}.html\n遊戲小說::/fenlei5_{{page}}.html\n科幻小說::/fenlei6_{{page}}.html\n恐怖小說::/fenlei7_{{page}}.html\n綜合其他::/fenlei8_{{page}}.html\n全本小說::/quanben.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1691577242378,
+    "loginUi": "",
+    "respondTime": 84347,
+    "ruleBookInfo": {
+      "author": ".block_txt2 a.0@text",
+      "coverUrl": ".block_img2 img@src",
+      "intro": ".intro_info@text",
+      "kind": ".block_txt2 p.1:2:3@text\n##分類：|狀態：|更新：",
+      "lastChapter": ".block_txt2 a.-1@text",
+      "name": ".block_txt2 h2@text",
+      "tocUrl": "{{$.}}page-1.html"
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "nextContentUrl": "#pb_next@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": ".intro_line@textNodes",
+      "kind": "0",
+      "lastChapter": ".update a@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "@js:\nvar page=src.match(/第\\d+.(\\d+)頁.當前\\d+條.頁/)[1];\nif(page){\n\turl=[];\n\tfor(i=2;i<=page;i++){\n\t\turl.push(baseUrl.replace(/-1/,\"-\"+i))\n\t\t}\n\t\turl;\n\t}"
+    },
+    "searchUrl": "/modules/article/wap_search.php,{\n  \"body\": \"type=articlename&searchkey={{java.s2t(key)}}\",\n  \"charset\": \"big5\",\n  \"method\": \"POST\",\n  \"webView\": true\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//只能用繁體中文搜索，简体中文会乱码",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "台湾小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xsw.tw",
+    "bookUrlPattern": "https?://m.xsw.tw/\\d+/",
+    "customOrder": 176,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小說::/fenlei1_{{page}}.html\n仙俠小說::/fenlei2_{{page}}.html\n都市小說::/fenlei3_{{page}}.html\n曆史小說::/fenlei4_{{page}}.html\n遊戲小說::/fenlei5_{{page}}.html\n科幻小說::/fenlei6_{{page}}.html\n恐怖小說::/fenlei7_{{page}}.html\n綜合其他::/fenlei8_{{page}}.html\n全本小說::/quanben.html",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1691577242378,
+    "loginUi": "",
+    "respondTime": 26589,
+    "ruleBookInfo": {
+      "author": ".block_txt2 a.0@text",
+      "coverUrl": ".block_img2 img@src",
+      "intro": ".intro_info@text",
+      "kind": ".block_txt2 p.1:2:3@text\n##分類：|狀態：|更新：",
+      "lastChapter": ".block_txt2 a.-1@text",
+      "name": ".block_txt2 h2@text",
+      "tocUrl": "{{$.}}page-1.html"
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "nextContentUrl": "#pb_next@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": ".intro_line@textNodes",
+      "kind": "0",
+      "lastChapter": ".update a@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "@js:\nvar page=src.match(/第\\d+.(\\d+)頁.當前\\d+條.頁/)[1];\nif(page){\n\turl=[];\n\tfor(i=2;i<=page;i++){\n\t\turl.push(baseUrl.replace(/-1/,\"-\"+i))\n\t\t}\n\t\turl;\n\t}"
+    },
+    "searchUrl": "/modules/article/wap_search.php,{\n  \"body\": \"type=articlename&searchkey={{java.s2t(key)}}\",\n  \"charset\": \"big5\",\n  \"method\": \"POST\",\n  \"webView\": true\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,61 @@
+[
+  {
+    "bookSourceComment": "//以下地址直接套用，只是具体分类不一致。\n//分类中🌺\"周鲜花\"和\"月鲜花\"🌺内容为空，网址内容问题，并非链接问题。\n（同站）PO18文：\nhttps://wap.po18bl.com\nhttps://m.po18sf.com\nhttps://m.txtyzw.com\nhttps://wap.po18.club\n新御书屋：https://m.ayushuwu.com\n三九书屋：https://m.sanjiushuwu.com\n手动做了详细分类，比较费手，闲的蛋疼。。",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 新御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.yuzhaiwuvip.com",
+    "bookUrlPattern": "",
+    "customOrder": 398,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "                                全      部                                 ::\n 更新时间  ::/shuku/0/0/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/0/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/0/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/0/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/0/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/0/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/0/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/0/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/0/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/0/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/0/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/0/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/0/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/0/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/0/0/0/0/0/goodnum/{{page}}.html\n                                 玄幻奇幻                                 ::\n 更新时间  ::/shuku/0/1/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/1/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/1/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/1/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/1/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/1/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/1/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/1/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/1/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/1/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/1/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/1/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/1/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/1/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/1/0/0/0/0/goodnum/{{page}}.html\n                                武侠仙侠                                 ::\n 更新时间  ::/shuku/0/2/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/2/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/2/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/2/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/2/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/2/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/2/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/2/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/2/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/2/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/2/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/2/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/2/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/2/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/2/0/0/0/0/goodnum/{{page}}.html                           \n                                都市生活                                 ::\n 更新时间  ::/shuku/0/3/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/3/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/3/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/3/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/3/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/3/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/3/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/3/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/3/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/3/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/3/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/3/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/3/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/3/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/3/0/0/0/0/goodnum/{{page}}.html                               \n                                历史穿越                                 ::\n 更新时间  ::/shuku/0/4/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/4/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/4/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/4/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/4/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/4/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/4/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/4/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/4/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/4/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/4/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/4/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/4/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/4/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/4/0/0/0/0/goodnum/{{page}}.html                                \n                                科幻未来                                 ::\n 更新时间  ::/shuku/0/5/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/5/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/5/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/5/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/5/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/5/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/5/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/5/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/5/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/5/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/5/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/5/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/5/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/5/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/5/0/0/0/0/goodnum/{{page}}.html                                \n                                游戏竞技                                 ::\n 更新时间  ::/shuku/0/6/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/6/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/6/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/6/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/6/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/6/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/6/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/6/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/6/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/6/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/6/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/6/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/6/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/6/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/6/0/0/0/0/goodnum/{{page}}.html                                \n                                其他类型                                 ::\n 更新时间  ::/shuku/0/7/0/0/0/0/lastupdate/{{page}}.html\n 入库时间  ::/shuku/0/7/0/0/0/0/postdate/{{page}}.html\n 编辑推荐  ::/shuku/0/7/0/0/0/0/toptime/{{page}}.html\n周点击::/shuku/0/7/0/0/0/0/weekvisit/{{page}}.html\n月点击::/shuku/0/7/0/0/0/0/monthvisit/{{page}}.html\n总点击::/shuku/0/7/0/0/0/0/allvisit/{{page}}.html\n周推荐::/shuku/0/7/0/0/0/0/weekvote/{{page}}.html\n月推荐::/shuku/0/7/0/0/0/0/monthvote/{{page}}.html\n总推荐::/shuku/0/7/0/0/0/0/allvote/{{page}}.html\n周鲜花::/shuku/0/7/0/0/0/0/weekflower/{{page}}.html\n月鲜花::/shuku/0/7/0/0/0/0/monthflower/{{page}}.html\n总鲜花::/shuku/0/7/0/0/0/0/allflower/{{page}}.html\n总月票::/shuku/0/7/0/0/0/0/allvipvote/{{page}}.html\n  字数  ::/shuku/0/7/0/0/0/0/words/{{page}}.html\n收藏数::/shuku/0/7/0/0/0/0/goodnum/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1721596458208,
+    "loginUrl": "",
+    "respondTime": 25307,
+    "ruleBookInfo": {
+      "author": ".xq_bookne@div.-5@text",
+      "coverUrl": ".lazyload.img@src",
+      "init": "",
+      "intro": ".bookintro@text",
+      "kind": ".xq_bookne@div.-4@text##类别：",
+      "lastChapter": "",
+      "name": ".xq_bookne@class.one@em@text",
+      "tocUrl": ".btn_book@a.-1@href",
+      "wordCount": ".xq_bookne@div.-2@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.YiJianZhan@html",
+      "replaceRegex": "##.*{{book.author}}.*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleSearch": {
+      "author": "class.book_other@ownText",
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@tag.a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "tag.img@src",
+      "intro": "class.book_des@text",
+      "kind": "class.book_other@span@text",
+      "name": "dd@h3@a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@ul@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n\"charset\": \"utf-8\",\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}&searchtype=all\"\n}",
+    "weight": 0
+  }
+]

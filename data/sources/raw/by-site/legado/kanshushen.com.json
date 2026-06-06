@@ -1,0 +1,28 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "看书神",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kanshushen.com/",
+    "customOrder": 521,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 2,
+    "weight": 395
+  },
+  {
+    "bookSourceGroup": "校验可用,搜索链接规则为空",
+    "bookSourceName": "看书神",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kanshushen.com/",
+    "customOrder": 521,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 395
+  }
+]

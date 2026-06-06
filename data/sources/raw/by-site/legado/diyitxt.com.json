@@ -1,0 +1,205 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔞",
+    "bookSourceName": "♜第一小说② #破冰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.diyitxt.com/#♤pb",
+    "bookUrlPattern": "https://www.diyitxt.com/shu\\d+/",
+    "customOrder": 189,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/modules/article/articlelist.php?class=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"武侠\",\"url\":\"/modules/article/articlelist.php?class=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"都市\",\"url\":\"/modules/article/articlelist.php?class=3&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"历史\",\"url\":\"/modules/article/articlelist.php?class=4&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"游戏\",\"url\":\"/modules/article/articlelist.php?class=5&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=6&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"恐怖\",\"url\":\"/modules/article/articlelist.php?class=7&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"二次\",\"url\":\"/modules/article/articlelist.php?class=8&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"经典\",\"url\":\"/modules/article/articlelist.php?class=9&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"古代\",\"url\":\"/modules/article/articlelist.php?class=10&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"现代\",\"url\":\"/modules/article/articlelist.php?class=11&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"幻想\",\"url\":\"/modules/article/articlelist.php?class=12&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"青春\",\"url\":\"/modules/article/articlelist.php?class=13&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"网络\",\"url\":\"/modules/article/articlelist.php?class=14&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=15&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"鬼怪\",\"url\":\"/modules/article/articlelist.php?class=16&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"N次\",\"url\":\"/modules/article/articlelist.php?class=17&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"言情\",\"url\":\"/modules/article/articlelist.php?class=18&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}}]\n",
+    "lastUpdateTime": 1629772343113,
+    "loginUrl": "",
+    "respondTime": 6023,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.list@tag.dd.0@a@text",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##点此章节报错|喜欢.*更新速度最快.*",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\(记住本站.*com\\)"
+    },
+    "ruleExplore": {
+      "author": "class.s5@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://img.diyitxt.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||id.info@tag.p.0@text",
+      "bookList": "class.grid@tr!0||id.wrapper",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://img.diyitxt.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text||id.list@tag.dd.0@a@text",
+      "name": "tag.td.0@a@text||id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.diyitxt.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "♜第一小说② #破冰",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.diyitxt.com/#♤pb",
+    "bookUrlPattern": "https://www.diyitxt.com/shu\\d+/",
+    "customOrder": 83,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/modules/article/articlelist.php?class=1&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"武侠\",\"url\":\"/modules/article/articlelist.php?class=2&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"都市\",\"url\":\"/modules/article/articlelist.php?class=3&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"历史\",\"url\":\"/modules/article/articlelist.php?class=4&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"游戏\",\"url\":\"/modules/article/articlelist.php?class=5&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=6&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"恐怖\",\"url\":\"/modules/article/articlelist.php?class=7&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"二次\",\"url\":\"/modules/article/articlelist.php?class=8&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"经典\",\"url\":\"/modules/article/articlelist.php?class=9&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"古代\",\"url\":\"/modules/article/articlelist.php?class=10&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"现代\",\"url\":\"/modules/article/articlelist.php?class=11&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"幻想\",\"url\":\"/modules/article/articlelist.php?class=12&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"青春\",\"url\":\"/modules/article/articlelist.php?class=13&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"网络\",\"url\":\"/modules/article/articlelist.php?class=14&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=15&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"鬼怪\",\"url\":\"/modules/article/articlelist.php?class=16&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"N次\",\"url\":\"/modules/article/articlelist.php?class=17&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}},{\"title\":\"言情\",\"url\":\"/modules/article/articlelist.php?class=18&page={{page}}\",\"style\":{\"layout_flexGrow\":0.25,\"layout_flexBasisPercent\":-1}}]\n",
+    "lastUpdateTime": 1629772343113,
+    "loginUrl": "",
+    "respondTime": 3131,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.list@tag.dd.0@a@text",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##点此章节报错|喜欢.*更新速度最快.*",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\(记住本站.*com\\)"
+    },
+    "ruleExplore": {
+      "author": "class.s5@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://img.diyitxt.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text||id.info@tag.p.0@text",
+      "bookList": "class.grid@tr!0||id.wrapper",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://img.diyitxt.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text||id.list@tag.dd.0@a@text",
+      "name": "tag.td.0@a@text||id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.diyitxt.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "♜第一小说② #破冰1101",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.diyitxt.com/#pb1101",
+    "customOrder": 703,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 1,
+    "weight": 502
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "第一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.diyitxt.com/",
+    "bookUrlPattern": "https://www.diyitxt.com/shu\\d+/",
+    "customOrder": 759,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/modules/article/articlelist.php?class=1&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"武侠\",\"url\":\"/modules/article/articlelist.php?class=2&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"都市\",\"url\":\"/modules/article/articlelist.php?class=3&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"历史\",\"url\":\"/modules/article/articlelist.php?class=4&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"游戏\",\"url\":\"/modules/article/articlelist.php?class=5&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=6&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"恐怖\",\"url\":\"/modules/article/articlelist.php?class=7&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"二次\",\"url\":\"/modules/article/articlelist.php?class=8&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"经典\",\"url\":\"/modules/article/articlelist.php?class=9&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"古代\",\"url\":\"/modules/article/articlelist.php?class=10&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"现代\",\"url\":\"/modules/article/articlelist.php?class=11&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"幻想\",\"url\":\"/modules/article/articlelist.php?class=12&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"青春\",\"url\":\"/modules/article/articlelist.php?class=13&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"网络\",\"url\":\"/modules/article/articlelist.php?class=14&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"科幻\",\"url\":\"/modules/article/articlelist.php?class=15&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"鬼怪\",\"url\":\"/modules/article/articlelist.php?class=16&page={{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},{\"title\":\"N次\",\"url\":\"/modules/article/articlelist.php?class=17&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.213}},{\"title\":\"言情\",\"url\":\"/modules/article/articlelist.php?class=18&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.213}}]",
+    "lastUpdateTime": 1686055114147,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 3001,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "canReName": "",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@text",
+      "kind": ".con_top@a.1@text&&id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.list@tag.dd.0@a@text",
+      "name": "id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\(记住本站.*com\\)|点此章节报错|喜欢.*更新速度最快.*"
+    },
+    "ruleExplore": {
+      "author": "class.s5@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://img.diyitxt.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "lastChapter": "class.s3@text",
+      "name": "class.s2@a@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text||id.info@tag.p.0@text",
+      "bookList": "class.grid@tr!0||id.wrapper",
+      "bookUrl": "tag.td.0@a@href",
+      "coverUrl": "tag.td.0@a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://img.diyitxt.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@a@text||id.list@tag.dd.0@a@text",
+      "name": "tag.td.0@a@text||id.info@h1@text##\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://www.diyitxt.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖第一小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.diyitxt.com",
+    "customOrder": 770,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 0,
+    "weight": 817
+  }
+]

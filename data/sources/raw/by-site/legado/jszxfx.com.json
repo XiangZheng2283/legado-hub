@@ -1,0 +1,100 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "顶点小说[jsz]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jszxfx.com/",
+    "customOrder": 811,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685883874429,
+    "respondTime": 24909,
+    "ruleBookInfo": {
+      "author": "span a@text",
+      "coverUrl": "tag.img@src",
+      "intro": ".info-main-intro p@text##.*推荐阅读|笔趣阁|m.biqugua",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "div.dispc:nth-of-type(2) a@text##最新章节：",
+      "name": "h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "<js>\nstr=java.get(\"java\");\nstr=str.replace(\"/xiaoshuo/\",\"articleid=\");\nstr=str.replace(\"/\",\"&chapterid=\");\nstr=str.replace(\"_\",\"&pid=\");\nstr=str.replace(\".html\",\"\");\nvar ua = \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36\";\n    var headers = {\"User-Agent\": ua};\n    var body = str;\n    var option = {\n        \"charset\": \"utf-8\",\n        \"method\": \"POST\",\n        \"body\": String(body),\n        \"headers\": headers,\n    };\nstr=\"https://www.jszxfx.com/api/reader_js.php,\" + JSON.stringify(option);\njava.ajax(str);\n</js>\n@html",
+      "nextContentUrl": "text.下一页@href\n<js>\nresult=result.toString();\nresult=result.replace(\"[\",\"\");\nresult=result.replace(\"]\",\"\");\njava.put(\"java\",result);\n</js>",
+      "replaceRegex": "##顶点小说.*免费阅读",
+      "webJs": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": "div.category-div",
+      "bookUrl": "a@href",
+      "checkKeyWord": "1980",
+      "coverUrl": "tag.img@src",
+      "intro": "div.intro@text",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".mb20 a",
+      "chapterName": "@text",
+      "chapterUrl": "@href\n<js>\nresult=result.replace(\".html\",\"_1.html\");\njava.put(\"java\",result);\n</js>\n\n"
+    },
+    "searchUrl": "search/,{\n    \"charset\": \"UTF-8\",\n    \"method\": \"POST\",\n    \"body\": \"searchkey={{key}}\",\n    \"headers\": {\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36\"},\n    \"webView\": true\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "顶点小说[jsz]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.jszxfx.com/",
+    "customOrder": 58,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1692365599071,
+    "respondTime": 2422,
+    "ruleBookInfo": {
+      "author": "span a@text",
+      "coverUrl": "tag.img@src",
+      "intro": ".info-main-intro p@text##.*推荐阅读|笔趣阁|m.biqugua",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "div.dispc:nth-of-type(2) a@text##最新章节：",
+      "name": "h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "<js>\nstr=java.get(\"java\");\nstr=str.replace(\"/xiaoshuo/\",\"articleid=\");\nstr=str.replace(\"/\",\"&chapterid=\");\nstr=str.replace(\"_\",\"&pid=\");\nstr=str.replace(\".html\",\"\");\nvar ua = \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36\";\n    var headers = {\"User-Agent\": ua};\n    var body = str;\n    var option = {\n        \"charset\": \"utf-8\",\n        \"method\": \"POST\",\n        \"body\": String(body),\n        \"headers\": headers,\n    };\nstr=\"https://www.jszxfx.com/api/reader_js.php,\" + JSON.stringify(option);\njava.ajax(str);\n</js>\n@html",
+      "nextContentUrl": "text.下一页@href\n<js>\nresult=result.toString();\nresult=result.replace(\"[\",\"\");\nresult=result.replace(\"]\",\"\");\njava.put(\"java\",result);\n</js>",
+      "replaceRegex": "##顶点小说.*免费阅读",
+      "webJs": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": "div.category-div",
+      "bookUrl": "a@href",
+      "checkKeyWord": "1980",
+      "coverUrl": "tag.img@src",
+      "intro": "div.intro@text",
+      "kind": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".mb20 a",
+      "chapterName": "@text",
+      "chapterUrl": "@href\n<js>\nresult=result.replace(\".html\",\"_1.html\");\njava.put(\"java\",result);\n</js>\n\n"
+    },
+    "searchUrl": "search/,{\n    \"charset\": \"UTF-8\",\n    \"method\": \"POST\",\n    \"body\": \"searchkey={{key}}\",\n    \"headers\": {\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36\"},\n    \"webView\": true\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,176 @@
+[
+  {
+    "bookSourceComment": "// Error: timeout",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "落秋中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.luoqiu.cc/",
+    "bookUrlPattern": "",
+    "customOrder": 1017,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1687555344355,
+    "loginUrl": "",
+    "respondTime": 195308,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##一秒记住.*无弹窗免费阅读！|笔趣阁.*最新章节！",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "tag.td.0@tag.a@text##\\（+.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@id=\"list\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "https://www.luoqiu.cc/search.php,{\n  \"body\": \"searchkey={{key}}&searchtype=articlename\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "落秋中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.luoqiu.cc/",
+    "bookUrlPattern": "",
+    "customOrder": 423,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1687555344355,
+    "loginUrl": "",
+    "respondTime": 3876,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##一秒记住.*无弹窗免费阅读！|笔趣阁.*最新章节！",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "tag.td.0@tag.a@text##\\（+.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@id=\"list\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "https://www.luoqiu.cc/search.php,{\n  \"body\": \"searchkey={{key}}&searchtype=articlename\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "落秋中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.luoqiu.cc/",
+    "bookUrlPattern": "",
+    "customOrder": -203,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1687555344355,
+    "loginUrl": "",
+    "respondTime": 11577,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "id.info@tag.p.2@text##最后更新：",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##一秒记住.*无弹窗免费阅读！|笔趣阁.*最新章节！",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "",
+      "kind": "tag.td.4@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 |卷1",
+      "name": "tag.td.0@tag.a@text##\\（+.*",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@id=\"list\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "https://www.luoqiu.cc/search.php,{\n  \"body\": \"searchkey={{key}}&searchtype=articlename\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

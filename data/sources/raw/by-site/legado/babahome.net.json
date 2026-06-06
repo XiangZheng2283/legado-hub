@@ -1,0 +1,124 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "小说精华阁aaa",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.babahome.net#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2057,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1719159686499,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1445,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "class.small@span.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "class.small@span.1@text##分类：",
+      "lastChapter": "class.small@span.5@a@text",
+      "name": "id.info@h1@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "class.small@span.3@text##字数：",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "id.nr_content@html##精华书阁 www.babahome.net，最快更新|(本章未完，请点击下一页继续阅读)|免费阅读.https://www.babahome.net|紧急通知：精华书阁启用新地址-www.babahome.net，请重新收藏书签！",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".p3@text",
+      "bookList": "class.list_ul@tag.li",
+      "bookUrl": ".p1@a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": ".p2@a.0@text",
+      "name": ".p1@a.0@text",
+      "wordCount": ".p4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dl.1@dd",
+      "chapterName": "a.0@text",
+      "chapterUrl": "a.0@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.html?ie=utf-8&word={{key}}",
+    "variableComment": "",
+    "weight": 2
+  },
+  {
+    "bookSourceName": "小说精华阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.babahome.net",
+    "customButton": false,
+    "customOrder": 1,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "lastUpdateTime": 1761125780940,
+    "respondTime": 3687,
+    "ruleBookInfo": {
+      "author": "class.small@span.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "class.small@span.1@text##分类：",
+      "lastChapter": "class.small@span.5@a@text",
+      "name": "id.info@h1@text",
+      "wordCount": "class.small@span.3@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.nr_content@html##精华书阁 www.babahome.net，最快更新|(本章未完，请点击下一页继续阅读)|免费阅读.https://www.babahome.net|紧急通知：精华书阁启用新地址-www.babahome.net，请重新收藏书签！",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleSearch": {
+      "author": ".p3@text",
+      "bookList": "class.list_ul@tag.li",
+      "bookUrl": ".p1@a.0@href",
+      "checkKeyWord": "系统",
+      "lastChapter": ".p2@a.0@text",
+      "name": ".p1@a.0@text",
+      "wordCount": ".p4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dl.1@dd",
+      "chapterName": "a.0@text",
+      "chapterUrl": "a.0@href"
+    },
+    "searchUrl": "/search.html?ie=utf-8&word={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 E小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.eexiaoshuo.co",
+    "bookUrlPattern": "",
+    "customOrder": 260,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"玄幻\",\"url\":\"/class/玄幻/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"武侠\",\"url\":\"/class/武侠/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"都市\",\"url\":\"/class/都市/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"历史\",\"url\":\"/class/历史/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"/class/科幻/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"游戏\",\"url\":\"/class/游戏/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"女生\",\"url\":\"/class/女生/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/class/其他/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n{\"title\":\"全本\",\"url\":\"/class/全本/{{page}}\",\"style\":{\"layout_flexGrow\":1}},\n]",
+    "lastUpdateTime": 1719972907815,
+    "loginUrl": "",
+    "respondTime": 2922,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": "id.article@p@textNodes",
+      "replaceRegex": "##.*红本小说.*|手机版访问.*|.*一起品小说 请记住.*"
+    },
+    "ruleExplore": {
+      "author": "class.gray dispc@text",
+      "bookList": "class.lastupdate@class.list-out",
+      "bookUrl": "class.flex w80@em.1@a@href",
+      "coverUrl": "",
+      "kind": "class.flex w80@em..0@text",
+      "lastChapter": "class.flex w80@em.2@text",
+      "name": "class.flex w80@em.1@text"
+    },
+    "ruleSearch": {
+      "author": "class.commend-title@span@text",
+      "bookList": "class.category-div",
+      "bookUrl": "a@href",
+      "coverUrl": "class.lazy@src",
+      "intro": "class.intro indent@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "class.commend-title@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.mb20@class.info-chapters@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\ncookie.removeCookie(source.getKey());\nx = java.ajax(source.key);\nsu = x.match(/action=\"([^\"]+)\"/)[1];\njava.log(su);\n`${su},{\n  \"method\": \"POST\",\n  \"body\": \"searchkey=${key}&Submit=\"\n}`",
+    "weight": 0
+  }
+]

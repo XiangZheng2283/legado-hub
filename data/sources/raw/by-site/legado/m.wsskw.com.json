@@ -1,0 +1,103 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍺 4020电子书①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.wsskw.com",
+    "customOrder": 366,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 66
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "4020电子书①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.wsskw.com",
+    "bookUrlPattern": "",
+    "customOrder": 451,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::http://m.wsskw.com/paihangbang/index_{{page}}.html\n封面推荐::http://m.wsskw.com/fengtui/index_{{page}}.html\n字数排行::http://m.wsskw.com/size/index_{{page}}.html\n金牌推荐::http://m.wsskw.com/jinpaituijian/index_{{page}}.html\n最新入库::http://m.wsskw.com/postdate/index_{{page}}.html\n最近更新::http://m.wsskw.com/new/index_{{page}}.html\n玄幻奇幻::http://m.wsskw.com/wuxia/index_{{page}}.html\n武侠仙侠::http://m.wsskw.com/yanqing/index_{{page}}.html\n耽美小说::http://m.wsskw.com/danmei/index_{{page}}.html\n都市言情::http://m.wsskw.com/xuanhuan/index_{{page}}.html\n历史军事::http://m.wsskw.com/xiaoyuan/index_{{page}}.html\n科幻灵异::http://m.wsskw.com/wangyou/index_{{page}}.html\n网友竞技::http://m.wsskw.com/kongbu/index_{{page}}.html\n女频频道::http://m.wsskw.com/jishi/index_{{page}}.html\n军事历史::http://m.wsskw.com/lishi/index_{{page}}.html\n科幻小说::http://m.wsskw.com/kehuan/index_{{page}}.html\n管理哲学::http://m.wsskw.com/zhexue/index_{{page}}.html\n学习资料::http://m.wsskw.com/xuexi/index_{{page}}.html\n其他小说::http://m.wsskw.com/qita/index_{{page}}.html\n金牌推荐::http://m.wsskw.com/jinpaituijian/index_{{page}}.html\n封推小说::http://m.wsskw.com/fengtui/index_{{page}}.html",
+    "lastUpdateTime": 1692365541676,
+    "loginUrl": "",
+    "respondTime": 38986,
+    "ruleBookInfo": {
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@text##最新章节推荐.+",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@textNodes##.*本章未完.*|.*第.*/.*页.*|请记住本书.*|----|书快.*看书最快.*",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text||class.line@text##.*/",
+      "bookList": "class.read_book@children||class.cover@p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href<js>'http://www.wsskw.com/headimgs'+String(result).replace(/.*-(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/s$1$2.jpg').replace('//','/0/')</js>",
+      "kind": "class.line@text##\\[|].*",
+      "lastChapter": "class.updatelast@a@text",
+      "name": "class.iTit@text||class.blue@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.wsskw.com/search.php?searchkey={{key}}&submit=",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 4020电子书·叁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.wsskw.com",
+    "bookUrlPattern": "",
+    "customOrder": 507,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "总点击榜::http://m.wsskw.com/paihangbang/index_{{page}}.html\n封面推荐::http://m.wsskw.com/fengtui/index_{{page}}.html\n字数排行::http://m.wsskw.com/size/index_{{page}}.html\n金牌推荐::http://m.wsskw.com/jinpaituijian/index_{{page}}.html\n最新入库::http://m.wsskw.com/postdate/index_{{page}}.html\n最近更新::http://m.wsskw.com/new/index_{{page}}.html\n玄幻奇幻::http://m.wsskw.com/wuxia/index_{{page}}.html\n武侠仙侠::http://m.wsskw.com/yanqing/index_{{page}}.html\n耽美小说::http://m.wsskw.com/danmei/index_{{page}}.html\n都市言情::http://m.wsskw.com/xuanhuan/index_{{page}}.html\n历史军事::http://m.wsskw.com/xiaoyuan/index_{{page}}.html\n科幻灵异::http://m.wsskw.com/wangyou/index_{{page}}.html\n网友竞技::http://m.wsskw.com/kongbu/index_{{page}}.html\n女频频道::http://m.wsskw.com/jishi/index_{{page}}.html\n军事历史::http://m.wsskw.com/lishi/index_{{page}}.html\n科幻小说::http://m.wsskw.com/kehuan/index_{{page}}.html\n管理哲学::http://m.wsskw.com/zhexue/index_{{page}}.html\n学习资料::http://m.wsskw.com/xuexi/index_{{page}}.html\n其他小说::http://m.wsskw.com/qita/index_{{page}}.html\n金牌推荐::http://m.wsskw.com/jinpaituijian/index_{{page}}.html\n封推小说::http://m.wsskw.com/fengtui/index_{{page}}.html",
+    "lastUpdateTime": 1698551371970,
+    "loginUrl": "",
+    "respondTime": 7167,
+    "ruleBookInfo": {
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@text##最新章节推荐.+",
+      "lastChapter": "class.block_txt2@tag.p.6@a@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@textNodes##.*本章未完.*|.*第.*/.*页.*|请记住本书.*|----|书快.*看书最快.*",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text||class.line@text##.*/",
+      "bookList": "class.read_book@children||class.cover@p",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href<js>'http://www.wsskw.com/headimgs'+String(result).replace(/.*-(\\d*?)(\\d{1,3}).html/,'/$1/$1$2/s$1$2.jpg').replace('//','/0/')</js>",
+      "kind": "class.line@text##\\[|].*",
+      "lastChapter": "class.updatelast@a@text",
+      "name": "class.iTit@text||class.blue@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter.1@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "http://m.wsskw.com/search.php?searchkey={{key}}&submit=",
+    "weight": 0
+  }
+]

@@ -1,0 +1,326 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yetianlian.info",
+    "customOrder": 264,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 2153,
+    "ruleBookInfo": {
+      "author": "span.1@text",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "span.2@text",
+      "lastChapter": "span.last.1@text",
+      "name": "h2@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleContent": {
+      "content": "div#content.showtxt@text",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "img@src",
+      "kind": "class.cat@text",
+      "lastChapter": "class.update@text",
+      "name": "class.bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": "dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.yetianlian.info/s.php?ie=utf-8&q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yetianlian.info",
+    "customOrder": 264,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 3824,
+    "ruleBookInfo": {
+      "author": "span.1@text",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "span.2@text",
+      "lastChapter": "span.last.1@text",
+      "name": "h2@text",
+      "wordCount": "span.4@text"
+    },
+    "ruleContent": {
+      "content": "div#content.showtxt@text",
+      "nextContentUrl": "text.下一章@href"
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "a@href",
+      "checkKeyWord": "我的",
+      "coverUrl": "img@src",
+      "kind": "class.cat@text",
+      "lastChapter": "class.update@text",
+      "name": "class.bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": "dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://www.yetianlian.info/s.php?ie=utf-8&q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//2025，2月14号，静白，制作教程接来自：源论坛:ysqbbs.com \n质量较差-模板雷同",
+    "bookSourceGroup": "",
+    "bookSourceName": "奇怪小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yetianlian.info",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2489,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1753430318039,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 721,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "span.1@text",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "span.2@text",
+      "lastChapter": "span.last.1@text",
+      "name": "h2@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "span.4@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div#content.showtxt@text",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "class.cat@text",
+      "lastChapter": "class.update@text",
+      "name": "class.bookname@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.yetianlian.info/s.php?ie=utf-8&q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "小说🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yetianlian.info#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3009,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 769,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "span.1@text",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "span.2@text",
+      "lastChapter": "span.last.1@text",
+      "name": "h2@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "span.4@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div#content.showtxt@text",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "class.cat@text",
+      "lastChapter": "class.update@text",
+      "name": "class.bookname@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.yetianlian.info/s.php?ie=utf-8&q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yetianlian.info#",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2485,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1716234635971,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 810,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "span.1@text",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "span.2@text",
+      "lastChapter": "span.last.1@text",
+      "name": "h2@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "span.4@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div#content.showtxt@text",
+      "nextContentUrl": "text.下一章@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "class.cat@text",
+      "lastChapter": "class.update@text",
+      "name": "class.bookname@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "dd",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.yetianlian.info/s.php?ie=utf-8&q={{key}}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "言情书吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.bgnovel.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1240,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n  {\n    \"title\":\"分类\",\n    \"url\":\"\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":1\n    }\n  },\n\n  {\n    \"title\":\"现代情感\",\n    \"url\":\"/xiandaixiaoshuo/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"古装迷情\",\n    \"url\":\"/gudaixiaoshuo/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"穿越重生\",\n    \"url\":\"/chuanyuechongsheng/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"仙侠魔幻\",\n    \"url\":\"/xianxiamohuan/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"现代情感\",\n    \"url\":\"https://m.bgnovel.com/xiandaixiaoshuo/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"网游竞技\",\n    \"url\":\"/wangyoujingji/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"ＢＧ同人\",\n    \"url\":\"/bgtongren/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"无ＣＰ向\",\n    \"url\":\"/wucpxiang/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"无限流派\",\n    \"url\":\"/wuxianliu/{{'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"排行\",\n    \"url\":\"\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":1\n    }\n  },\n  {\n    \"title\":\"热门排行\",\n    \"url\":\"/bzremen/{{page==1?'':'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"周排行榜\",\n    \"url\":\"/bzremenweek/{{page==1?'':'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n  {\n    \"title\":\"月排行榜\",\n    \"url\":\"/bzremenmonth/{{page==1?'':'index_'+page+'.html'}}\",\n    \"style\":{\n      \"layout_flexGrow\":1,\n      \"layout_flexBasisPercent\":0.25\n    }\n  },\n\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1732662826980,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 363,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": ".title_info_left@img@src",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#text@p@textNodes",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##自愿捐助网站|网站无广告收入,非盈利,捐助用于服务器开支！|怕迷路，可前往捐助页面加联系方式！"
+    },
+    "ruleExplore": {
+      "author": "span.0@text",
+      "bookList": "li.book-li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "span.1@text&&span.2@text##类型：|时间：",
+      "lastChapter": "",
+      "name": "h4@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span.1@text",
+      "bookList": "class.r",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a.0@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "option",
+      "chapterName": "text",
+      "chapterUrl": "value",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}/e/search/index.php,{\n  \"body\": \"keyboard={{key}}&show=title&tempid=1&tbname=article&page={{page}}\",\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

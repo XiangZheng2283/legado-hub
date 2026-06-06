@@ -1,0 +1,189 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "临高启明同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://lgqm.huijiwiki.com/wiki/同人作品列表",
+    "bookUrlPattern": "",
+    "customOrder": 894,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1686056931049,
+    "loginUrl": "",
+    "respondTime": 1565,
+    "ruleBookInfo": {
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.mw-parser-output@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.wikitable@tr",
+      "bookUrl": "tag.a@href",
+      "intro": "tag.td.9@text&&tag.td.3@text&&tag.td.6@text&&tag.td.4@text",
+      "kind": "tag.td.7@text&&tag.td.8@text",
+      "name": "tag.td.1@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h1",
+      "chapterName": "text"
+    },
+    "searchUrl": "http://lgqm.huijiwiki.com/wiki/同人作品列表",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\"error:timeout\n\"",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖临高启明同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://lgqm.huijiwiki.com/wiki/",
+    "bookUrlPattern": "",
+    "customOrder": 1338,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "同人作品列表::http://lgqm.huijiwiki.com/wiki/同人作品列表\n2017年铁拳爆菊大出血杯::http://lgqm.huijiwiki.com/wiki/2017年铁拳爆菊大出血杯\n2017年吹牛文学奖::http://lgqm.huijiwiki.com/wiki/2017年吹牛文学奖\n2016年铁拳爆菊大出血杯::http://lgqm.huijiwiki.com/wiki/2016年铁拳爆菊大出血杯",
+    "lastUpdateTime": 1678646711102,
+    "loginUrl": "",
+    "respondTime": 3104,
+    "ruleBookInfo": {
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.mw-parser-output@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.wikitable@tr",
+      "bookUrl": "tag.a@href",
+      "intro": "tag.td.9@text&&tag.td.3@text&&tag.td.6@text&&tag.td.4@text",
+      "kind": "tag.td.7@text&&tag.td.8@text",
+      "name": "tag.td.1@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h1",
+      "chapterName": "text"
+    },
+    "searchUrl": "http://lgqm.huijiwiki.com/wiki/同人作品列表",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2",
+    "bookSourceName": "📚 灰机wiki",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://lgqm.huijiwiki.com",
+    "bookUrlPattern": "",
+    "customOrder": 1312,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "同人作品列表::/wiki/同人作品列表\n2017年铁拳爆菊大出血杯::/wiki/2017年铁拳爆菊大出血杯\n2017年吹牛文学奖::/wiki/2017年吹牛文学奖\n2016年铁拳爆菊大出血杯::/wiki/2016年铁拳爆菊大出血杯",
+    "lastUpdateTime": 1678646721098,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 7593,
+    "ruleBookInfo": {
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.mw-parser-output@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.wikitable@tr",
+      "bookUrl": "tag.a@href",
+      "intro": "tag.td.9@text&&tag.td.3@text&&tag.td.6@text&&tag.td.4@text",
+      "kind": "tag.td.7@text&&tag.td.8@text",
+      "name": "tag.td.1@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h1",
+      "chapterName": "text"
+    },
+    "searchUrl": "/wiki/同人作品列表",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\"error:timeout\n\"",
+    "bookSourceGroup": "🪜 代理,0-1文本",
+    "bookSourceName": "🔖临高启明同人",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://lgqm.huijiwiki.com/wiki/",
+    "bookUrlPattern": "",
+    "customOrder": 1514,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "同人作品列表::http://lgqm.huijiwiki.com/wiki/同人作品列表\n2017年铁拳爆菊大出血杯::http://lgqm.huijiwiki.com/wiki/2017年铁拳爆菊大出血杯\n2017年吹牛文学奖::http://lgqm.huijiwiki.com/wiki/2017年吹牛文学奖\n2016年铁拳爆菊大出血杯::http://lgqm.huijiwiki.com/wiki/2016年铁拳爆菊大出血杯",
+    "lastUpdateTime": 1678646711102,
+    "loginUrl": "",
+    "respondTime": 11774,
+    "ruleBookInfo": {
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.mw-parser-output@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.wikitable@tr",
+      "bookUrl": "tag.a@href",
+      "intro": "tag.td.9@text&&tag.td.3@text&&tag.td.6@text&&tag.td.4@text",
+      "kind": "tag.td.7@text&&tag.td.8@text",
+      "name": "tag.td.1@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h1",
+      "chapterName": "text"
+    },
+    "searchUrl": "http://lgqm.huijiwiki.com/wiki/同人作品列表",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "国轻\n整理修改：酷安 Wolken",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "临高启明",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://lgqm.huijiwiki.com/wiki/同人作品列表",
+    "bookUrlPattern": "",
+    "customOrder": 1515,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\r\n{\"title\":\"同人作品列表\",\"url\":\"http://lgqm.huijiwiki.com/wiki/同人作品列表\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\r\n{\"title\":\"2017年铁拳爆菊大出血杯\",\"url\":\"http://lgqm.huijiwiki.com/wiki/2017年铁拳爆菊大出血杯\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\r\n{\"title\":\"2017年吹牛文学奖\",\"url\":\"http://lgqm.huijiwiki.com/wiki/2017年吹牛文学奖\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\r\n{\"title\":\"2016年铁拳爆菊大出血杯\",\"url\":\"http://lgqm.huijiwiki.com/wiki/2016年铁拳爆菊大出血杯\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}}\r\n]",
+    "lastUpdateTime": 1692361568843,
+    "loginUrl": "",
+    "respondTime": 12602,
+    "ruleBookInfo": {
+      "name": "tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "class.mw-parser-output@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.wikitable@tr",
+      "bookUrl": "tag.a@href",
+      "intro": "tag.td.9@text&&tag.td.3@text&&tag.td.6@text&&tag.td.4@text",
+      "kind": "tag.td.7@text&&tag.td.8@text",
+      "name": "tag.td.1@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.h1",
+      "chapterName": "text"
+    },
+    "searchUrl": "http://lgqm.huijiwiki.com/wiki/同人作品列表",
+    "weight": 0
+  }
+]

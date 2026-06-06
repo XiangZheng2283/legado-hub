@@ -1,0 +1,112 @@
+[
+  {
+    "bookSourceComment": "//原当书网：https://www.downbook.cc",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 摸鱼小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://sj.downbook.cc",
+    "bookUrlPattern": "https://www.downbook.cc/read/\\d+/\\d+.html",
+    "customOrder": 1163,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1693469184812,
+    "respondTime": 33490,
+    "ruleBookInfo": {
+      "author": ".author@text##\\s.*",
+      "coverUrl": ".book_cover@img@src",
+      "intro": ".intro_txt@p@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".book_info@em.0:1@text&&.bookChapter@span.2@text##.*时间.|\\s..:.*",
+      "lastChapter": ".bookChapter@a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".book_info@h1@text",
+      "tocUrl": "text.全部目录@href",
+      "wordCount": ".book_info@em.3@text"
+    },
+    "ruleContent": {
+      "content": "#showReading@html"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.3@text",
+      "bookList": "#bookList@tr",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a.1@href<js>java.ajax('https://sj.downbook.cc'+result)</js>.book_cover img@src",
+      "kind": "a.0@text##\\[|\\]",
+      "lastChapter": "a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.1@text",
+      "wordCount": "td.5@text"
+    },
+    "ruleToc": {
+      "chapterList": ".dirList@li@a",
+      "chapterName": "span@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "formatJs": "",
+      "isVip": "",
+      "isVolume": "",
+      "updateTime": "i@text"
+    },
+    "searchUrl": "/book/bookclass.html?k={{key}},{'webView': true}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//原当书网：https://www.downbook.cc",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 摸鱼小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://sj.downbook.cc",
+    "bookUrlPattern": "https://www.downbook.cc/read/\\d+/\\d+.html",
+    "customOrder": 1287,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1693469184812,
+    "respondTime": 15028,
+    "ruleBookInfo": {
+      "author": ".author@text##\\s.*",
+      "coverUrl": ".book_cover@img@src",
+      "intro": ".intro_txt@p@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".book_info@em.0:1@text&&.bookChapter@span.2@text##.*时间.|\\s..:.*",
+      "lastChapter": ".bookChapter@a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".book_info@h1@text",
+      "tocUrl": "text.全部目录@href",
+      "wordCount": ".book_info@em.3@text"
+    },
+    "ruleContent": {
+      "content": "#showReading@html"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "bookUrl": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.3@text",
+      "bookList": "#bookList@tr",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a.1@href<js>java.ajax('https://sj.downbook.cc'+result)</js>.book_cover img@src",
+      "kind": "a.0@text##\\[|\\]",
+      "lastChapter": "a.2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.1@text",
+      "wordCount": "td.5@text"
+    },
+    "ruleToc": {
+      "chapterList": ".dirList@li@a",
+      "chapterName": "span@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "formatJs": "",
+      "isVip": "",
+      "isVolume": "",
+      "updateTime": "i@text"
+    },
+    "searchUrl": "/book/bookclass.html?k={{key}},{'webView': true}",
+    "weight": 0
+  }
+]

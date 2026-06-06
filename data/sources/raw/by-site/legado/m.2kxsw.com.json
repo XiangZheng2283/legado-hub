@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 2k小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.2kxsw.com",
+    "bookUrlPattern": "https?://m.2kxsw.com/(xs/)?\\d+(.html)?",
+    "customOrder": 231,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "全部分类::/allsort/<,{{page}}.html>\n全部分类::/allsort/<,{{page}}.html>\n玄幻奇幻::/xuanhuan/<,{{page}}.html>\n武侠仙侠::/wuxia/<,{{page}}.html>\n都市生活::/dushi/<,{{page}}.html>\n历史军事::/lishi/<,{{page}}.html>\n游戏竞技::/youxi/<,{{page}}.html>\n科幻未来::/kehuan/<,{{page}}.html>\n恐怖悬疑::/xuanyi/<,{{page}}.html>\n其他类型::/qita/<,{{page}}.html>\n古代言情::/guyan/<,{{page}}.html>\n现代言情::/xianyan/<,{{page}}.html>\n幻想奇缘::/huanqing/<,{{page}}.html>\n游戏情缘::/zongcai/<,{{page}}.html>\n浪漫青春::/qingchun/<,{{page}}.html>\n言情美文::/wangluo/<,{{page}}.html>\n科幻灵异::/mmkehuan/<,{{page}}.html>\n其他类型::/mmqita/<,{{page}}.html>\n完结小说::/wanjie/all/{{page}}.html\n全部完本::/wanjie/all/{{page}}.html\n玄幻奇幻::/wanjie/xuanhuan/{{page}}.html\n武侠仙侠::/wanjie/wuxia/{{page}}.html\n都市生活::/wanjie/dushi/{{page}}.html\n历史军事::/wanjie/lishi/{{page}}.html\n游戏竞技::/wanjie/youxi/{{page}}.html\n科幻未来::/wanjie/kehuan/{{page}}.html\n恐怖悬疑::/wanjie/xuanyi/{{page}}.html\n其他类型::/wanjie/qita/{{page}}.html\n古代言情::/wanjie/guyan/{{page}}.html\n现代言情::/wanjie/xianyan/{{page}}.html\n幻想奇缘::/wanjie/huanqing/{{page}}.html\n游戏情缘::/wanjie/zongcai/{{page}}.html\n浪漫青春::/wanjie/qingchun/{{page}}.html\n言情美文::/wanjie/wangluo/{{page}}.html\n科幻灵异::/wanjie/mmkehuan/{{page}}.html\n其他类型::/wanjie/mmqita/{{page}}.html",
+    "header": "{\n\t\"cookie\":\"waf_sc=5889647726;__itrace_wid=b156f784-d11b-4ef0-a49d-bc27d5ceba9c\",\n\"Referer\":\"https://m.2kxsw.com/\",\n\t'User-Agent': 'Mozilla/5.0 (linux; u; android 9; zh-cn; v1816a build/pkq1.180819.001) applewebkit/537.36 (khtml, like gecko) version/4.0 chrome/100.0.2987.108 quark/6.5.5.137 mobile safari/537.36'\n\t}",
+    "lastUpdateTime": 1696475295425,
+    "respondTime": 3924,
+    "ruleBookInfo": {
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "init": "@put:{n:\"[property$=book_name]@content\",\na:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nw:\".detail span.-1@text\",\nl:\"[property$=latest_chapter_name]@content\",\ni:\".intro p.0@text\",\nc:\"[property$=image]@content\",\nt:\".now a@href\"}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}",
+      "tocUrl": "@get:{t}",
+      "wordCount": "@get:{w}"
+    },
+    "ruleContent": {
+      "content": ".content>p!-1@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##[本章未完].*继续阅读.*|本站即将关闭.*(\\s.*)*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".list li",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@src",
+      "intro": "p.intro@text",
+      "kind": "span@text",
+      "lastChapter": "a.-1@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".read li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value||text.下一页@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\",\n  \"webView\": true\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "海棠书屋haitang123.net",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://haitang123.net",
+    "customOrder": 532,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 425
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "海棠书屋haitang123.net",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://haitang123.net",
+    "customOrder": 663,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2,
+    "weight": 425
+  }
+]

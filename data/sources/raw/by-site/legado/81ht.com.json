@@ -1,0 +1,256 @@
+[
+  {
+    "bookSourceComment": "//加载较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.81ht.com",
+    "customOrder": 1063,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhenxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqingxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"耽美\",\"url\":\"/danmeixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxiaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingjixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qitaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1680526267696,
+    "respondTime": 7368,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*|小说",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".tac a@href"
+    },
+    "ruleContent": {
+      "content": "#txtContent@textNodes",
+      "replaceRegex": "##http.*|由于各.*避免迷路|网页版.*最新内容|请退出.*最新章节.|新笔趣阁.*"
+    },
+    "ruleExplore": {
+      "author": "div.3@text",
+      "bookList": ".clearfix!0",
+      "bookUrl": "a.0@href",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "textNodes##\\/|\\s",
+      "bookList": ".book_textList2 li",
+      "bookUrl": "a.0@href@js:result.replace(/^/g,\"http://www.81ht.com\").replace(/-/g,\"/\").replace(/\\/$/g,\".html\")",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapters-list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.81ht.com/search.htm?keyword={{key}}&pn=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//加载较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.81ht.com/",
+    "customOrder": 1280,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhenxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqingxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"耽美\",\"url\":\"/danmeixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxiaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingjixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qitaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1686057711044,
+    "respondTime": 5935,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*|小说",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".tac a@href"
+    },
+    "ruleContent": {
+      "content": "#txtContent@textNodes",
+      "replaceRegex": "##http.*|由于各.*避免迷路|网页版.*最新内容|请退出.*最新章节.|新笔趣阁.*"
+    },
+    "ruleExplore": {
+      "author": "div.3@text",
+      "bookList": ".clearfix!0",
+      "bookUrl": "a.0@href",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "textNodes##\\/|\\s",
+      "bookList": ".book_textList2 li",
+      "bookUrl": "a.0@href@js:result.replace(/^/g,\"http://www.81ht.com\").replace(/-/g,\"/\").replace(/\\/$/g,\".html\")",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapters-list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.81ht.com/search.htm?keyword={{key}}&pn=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//加载较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.81ht.com",
+    "customOrder": 1180,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhenxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqingxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"耽美\",\"url\":\"/danmeixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxiaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingjixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qitaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1680526267696,
+    "respondTime": 5701,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*|小说",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".tac a@href"
+    },
+    "ruleContent": {
+      "content": "#txtContent@textNodes",
+      "replaceRegex": "##http.*|由于各.*避免迷路|网页版.*最新内容|请退出.*最新章节.|新笔趣阁.*"
+    },
+    "ruleExplore": {
+      "author": "div.3@text",
+      "bookList": ".clearfix!0",
+      "bookUrl": "a.0@href",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "textNodes##\\/|\\s",
+      "bookList": ".book_textList2 li",
+      "bookUrl": "a.0@href@js:result.replace(/^/g,\"http://www.81ht.com\").replace(/-/g,\"/\").replace(/\\/$/g,\".html\")",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapters-list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.81ht.com/search.htm?keyword={{key}}&pn=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//加载较慢",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.81ht.com/",
+    "customOrder": 1280,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhenxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqingxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"耽美\",\"url\":\"/danmeixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxiaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingjixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qitaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1686057711044,
+    "respondTime": 6548,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*|小说",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".tac a@href"
+    },
+    "ruleContent": {
+      "content": "#txtContent@textNodes",
+      "replaceRegex": "##http.*|由于各.*避免迷路|网页版.*最新内容|请退出.*最新章节.|新笔趣阁.*"
+    },
+    "ruleExplore": {
+      "author": "div.3@text",
+      "bookList": ".clearfix!0",
+      "bookUrl": "a.0@href",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "textNodes##\\/|\\s",
+      "bookList": ".book_textList2 li",
+      "bookUrl": "a.0@href@js:result.replace(/^/g,\"http://www.81ht.com\").replace(/-/g,\"/\").replace(/\\/$/g,\".html\")",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapters-list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.81ht.com/search.htm?keyword={{key}}&pn=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//加载较慢",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 求小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.81ht.com",
+    "customOrder": 294,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻\",\"url\":\"/xuanhuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"奇幻\",\"url\":\"/qihuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"修真\",\"url\":\"/xiuzhenxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市\",\"url\":\"/dushixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"言情\",\"url\":\"/yanqingxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/lishixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"耽美\",\"url\":\"/danmeixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠\",\"url\":\"/wuxiaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻\",\"url\":\"/kehuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"游戏\",\"url\":\"/youxixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"军事\",\"url\":\"/junshixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"竞技\",\"url\":\"/jingjixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"灵异\",\"url\":\"/lingyixiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"商战\",\"url\":\"/shangzhanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"校园\",\"url\":\"/xiaoyuanxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"官场\",\"url\":\"/guanchangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"职场\",\"url\":\"/zhichangxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他\",\"url\":\"/qitaxiaoshuo/{{page}}.htm\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1685774264741,
+    "respondTime": 3135,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*|小说",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": ".tac a@href"
+    },
+    "ruleContent": {
+      "content": "#txtContent@textNodes",
+      "replaceRegex": "##http.*|由于各.*避免迷路|网页版.*最新内容|请退出.*最新章节.|新笔趣阁.*"
+    },
+    "ruleExplore": {
+      "author": "div.3@text",
+      "bookList": ".clearfix!0",
+      "bookUrl": "a.0@href",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleSearch": {
+      "author": "textNodes##\\/|\\s",
+      "bookList": ".book_textList2 li",
+      "bookUrl": "a.0@href@js:result.replace(/^/g,\"http://www.81ht.com\").replace(/-/g,\"/\").replace(/\\/$/g,\".html\")",
+      "kind": "i@text&&span@text##\\s.*",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapters-list li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://m.81ht.com/search.htm?keyword={{key}}&pn=1",
+    "weight": 0
+  }
+]

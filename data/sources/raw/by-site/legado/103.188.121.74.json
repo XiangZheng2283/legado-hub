@@ -1,0 +1,94 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁9x.com",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://103.188.121.74/h5",
+    "customOrder": 1458,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n\t\"Host\": \"gfnormal05at.com\"\n}",
+    "lastUpdateTime": 1682494150839,
+    "respondTime": 704,
+    "ruleBookInfo": {
+      "author": ".upload@text## 著",
+      "coverUrl": ".cover.0@img@src",
+      "intro": ".desc@text",
+      "kind": ".tag.0@span.0@text",
+      "lastChapter": ".name.0@text",
+      "name": "h3.0@text",
+      "tocUrl": ".chapter@a@href"
+    },
+    "ruleContent": {
+      "content": ".weui_article@html",
+      "replaceRegex": "##{{book.durChapterTitle}}|[上下]一章|看小说就用.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".type@span.0@text",
+      "bookList": ".weui-cell.favorite",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "女侠且慢",
+      "coverUrl": "a.0@img@src",
+      "intro": ".desc@text",
+      "kind": ".type@span.1@text",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".child-title a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://103.188.121.74/h5/search?word={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁9x",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://103.188.121.74/h5",
+    "customOrder": 1493,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n\t\"Host\": \"gfnormal05at.com\"\n}",
+    "lastUpdateTime": 1693369225694,
+    "respondTime": 706,
+    "ruleBookInfo": {
+      "author": ".upload@text## 著",
+      "coverUrl": ".cover.0@img@src",
+      "intro": ".desc@text",
+      "kind": ".tag.0@span.0@text",
+      "lastChapter": ".name.0@text",
+      "name": "h3.0@text",
+      "tocUrl": ".chapter@a@href"
+    },
+    "ruleContent": {
+      "content": ".weui_article@html",
+      "replaceRegex": "##{{book.durChapterTitle}}|[上下]一章|看小说就用.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".type@span.0@text",
+      "bookList": ".weui-cell.favorite",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "女侠且慢",
+      "coverUrl": "a.0@img@src",
+      "intro": ".desc@text",
+      "kind": ".type@span.1@text",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".child-title a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://103.188.121.74/h5/search?word={{key}}",
+    "weight": 0
+  }
+]

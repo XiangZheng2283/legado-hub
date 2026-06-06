@@ -1,0 +1,50 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🍉 萝莉文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": " https://www.luoliwx.net",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2835,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "最近更新::https://m.3322t.com/top/lastupdate_{{page}}/\n最新入库::https://m.3322t.com/top/postdate_{{page}}/\n总收藏榜::https://m.3322t.com/top/goodnum_{{page}}/\n总点击榜::https://m.3322t.com/top/allvisit_{{page}}/\n总推荐榜::https://m.3322t.com/top/allvote_{{page}}/\n总字数榜::https://m.3322t.com/top/size_{{page}}/\n玄幻奇幻::https://m.3322t.com/sort/1_{{page}}/\n武侠仙侠::https://m.3322t.com/sort/2_{{page}}/\n都市言情::https://m.3322t.com/sort/3_{{page}}/\n科幻网游::https://m.3322t.com/sort/4_{{page}}/\n惊悚悬疑::https://m.3322t.com/sort/5_{{page}}/\n耽美同人::https://m.3322t.com/sort/6_{{page}}/\n穿越架空::https://m.3322t.com/sort/7_{{page}}/\n高辣浓情::https://m.3322t.com/sort/8_{{page}}/\n禁忌百合::https://m.3322t.com/sort/9_{{page}}/\n精品文学::https://m.3322t.com/sort/10_{{page}}/",
+    "lastUpdateTime": 1746069630794,
+    "loginUrl": "",
+    "respondTime": 6536,
+    "ruleBookInfo": {
+      "author": ".infotype@p.0@a@text",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@p@textNodes",
+      "kind": ".infotype@p.1@text##类型：",
+      "lastChapter": "{{@.infotype@p.3@text}}▪️{{@.infotype@p.2@text}}##最新章节：|更新时间：20",
+      "name": "h3@text",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes||#novelcontent@p@textNodes",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@a@text||tag.a.1@text",
+      "bookList": "class.searchresult@p||class.article||class.articlegeneral",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "kind": "class.p1@text##\\[|]",
+      "name": "h6@a@text||tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapters@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&submit=&type=articlename\"\n}",
+    "weight": 0
+  }
+]

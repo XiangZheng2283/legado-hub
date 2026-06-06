@@ -1,0 +1,94 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "小说路上",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xs631.com",
+    "bookUrlPattern": "",
+    "customOrder": 726,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1663570016497,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleContent": {
+      "content": "",
+      "nextContentUrl": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "kind": "",
+      "name": ""
+    },
+    "ruleToc": {
+      "chapterList": "",
+      "chapterName": "",
+      "chapterUrl": "",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "源仓库,搜索链接规则为空",
+    "bookSourceName": "小说路上",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.xs631.com",
+    "bookUrlPattern": "",
+    "customOrder": 399,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "header": "",
+    "lastUpdateTime": 1663570016497,
+    "loginUrl": "",
+    "respondTime": 9,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleContent": {
+      "content": "",
+      "nextContentUrl": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "kind": "",
+      "name": ""
+    },
+    "ruleToc": {
+      "chapterList": "",
+      "chapterName": "",
+      "chapterUrl": "",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "",
+    "weight": 0
+  }
+]

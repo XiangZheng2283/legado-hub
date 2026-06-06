@@ -1,0 +1,93 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "看点中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kandzww.com/",
+    "customOrder": 477,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1692440742021,
+    "respondTime": 4340,
+    "ruleBookInfo": {
+      "author": "class.con@span.0@text",
+      "coverUrl": "class.img@img@src",
+      "intro": "class.bd_text@class.word-break@text",
+      "kind": "class.con@span.1@text&&class.bd_text@h5@tag.span@text",
+      "lastChapter": "class.bd_text@h5@tag.a@text##>>",
+      "name": "class.con@h3@text##作者.*",
+      "tocUrl": "text.开始阅读@href",
+      "wordCount": "p.lei@span.1@text"
+    },
+    "ruleContent": {
+      "content": "id.text@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@tag.a@text",
+      "bookList": "class.bd@li",
+      "bookUrl": "class.left@tag.a@href",
+      "checkKeyWord": "",
+      "coverUrl": "class.left@img@src",
+      "intro": "class.summary@text##.*简介：\\s",
+      "kind": "span.0@text&&class.status isfinish@text##最后更新：",
+      "lastChapter": "",
+      "name": "class.right@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@li",
+      "chapterName": "tag.a@text##加入书架|联系我们",
+      "chapterUrl": "tag.a@href##$##,{'webView': true}",
+      "isVip": "li@.vip_box@.vipicon@html@js:result.replace(/0/g,\"false\").replace(/1/g,\"true\")",
+      "updateTime": "class.date@text"
+    },
+    "searchUrl": "https://www.kandzww.com/search,{\n  \"body\": \"searchkey={{key}}\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\",\n  \"webView\": true\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 看点",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kandzww.com/",
+    "customOrder": 213,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682528146709,
+    "respondTime": 4804,
+    "ruleBookInfo": {
+      "author": "class.con@span.0@text",
+      "coverUrl": "class.img@img@src",
+      "intro": "class.bd_text@class.word-break@text",
+      "kind": "class.con@span.1@text",
+      "lastChapter": "class.bd_text@h5@tag.a@text&&class.bd_text@h5@tag.span@text##>>##·",
+      "name": "class.con@h3@text##作者.*",
+      "tocUrl": "text.开始阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.text@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@tag.a@text",
+      "bookList": "class.bd@li",
+      "bookUrl": "class.left@tag.a@href",
+      "coverUrl": "class.left@img@src",
+      "intro": "class.summary@text",
+      "lastChapter": "class.status isfinish@text",
+      "name": "class.right@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@li",
+      "chapterName": "tag.a@text##加入书架|联系我们",
+      "chapterUrl": "tag.a@href##$##,{'webView': true}",
+      "updateTime": "class.date@text"
+    },
+    "searchUrl": "https://www.kandzww.com/search,{\n  \"body\": \"searchkey={{key}}&submit=\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\",\n  \"webView\": true\n}",
+    "weight": 0
+  }
+]

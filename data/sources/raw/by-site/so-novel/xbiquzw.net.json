@@ -1,0 +1,32 @@
+[
+  {
+    "url": "http://www.xbiquzw.net/",
+    "name": "笔尖中文",
+    "comment": "",
+    "search": {
+      "url": "http://www.xbiquzw.net/modules/article/search.php",
+      "method": "post",
+      "data": "{searchkey: %s}",
+      "result": "#wrapper > table > tbody > tr",
+      "bookName": "td:nth-child(1) > a",
+      "author": "td:nth-child(3)",
+      "latestChapter": "td:nth-child(2)",
+      "lastUpdateTime": "td:nth-child(5)"
+    },
+    "book": {
+      "url": "http://www.xbiquzw.net/(.*?)/"
+    },
+    "toc": {
+      "baseUri": "http://www.xbiquzw.net/%s/",
+      "item": "#list > dl > dd > a"
+    },
+    "chapter": {
+      "title": ".bookname > h1",
+      "content": "#content",
+      "paragraphTagClosed": false,
+      "paragraphTag": "<br>+",
+      "filterTxt": "<!--.*?-->|喜欢.+请大家收藏：.+|\\(本章完\\)",
+      "filterTag": ""
+    }
+  }
+]

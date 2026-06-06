@@ -1,0 +1,50 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁biquge.at",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge.at",
+    "bookUrlPattern": "",
+    "customOrder": 1415,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1667483046553,
+    "loginUrl": "",
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,小说",
+    "bookSourceName": "笔趣阁biquge.at",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge.at",
+    "bookUrlPattern": "",
+    "customOrder": 1505,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1667483046553,
+    "loginUrl": "",
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

@@ -1,0 +1,301 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💗 十八言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.po18yq.com",
+    "bookUrlPattern": "",
+    "customOrder": 429,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::https://www.po18yq.com/paihang/lastupdate_{{page}}.html\n最新入库::https://www.po18yq.com/paihang/postdate_{{page}}.html\n总排行榜::https://www.po18yq.com/paihang/allvisit_{{page}}.html\n总推荐榜::https://www.po18yq.com/paihang/allvote_{{page}}.html\n总收藏榜::https://www.po18yq.com/paihang/goodnum_{{page}}.html\n总字数榜::https://www.po18yq.com/paihang/size_{{page}}.html\n玄幻奇幻::https://www.po18yq.com/xuanhuan_{{page}}.html\n武侠仙侠::https://www.po18yq.com/wuxia_{{page}}.html\n都市言情::https://www.po18yq.com/dushi_{{page}}.html\n科幻网游::https://www.po18yq.com/kehuan_{{page}}.html\n惊悚悬疑::https://www.po18yq.com/jingsong_{{page}}.html\n耽美同人::https://www.po18yq.com/danmei_{{page}}.html\n穿越架空::https://www.po18yq.com/chuanyue_{{page}}.html\n浓情纯爱::https://www.po18yq.com/nongqing_{{page}}.html\n百合优美::https://www.po18yq.com/baihe_{{page}}.html\n精品文学::https://www.po18yq.com/qita_{{page}}.html",
+    "lastUpdateTime": 1685832662500,
+    "loginUrl": "",
+    "respondTime": 2682,
+    "ruleBookInfo": {
+      "coverUrl": "class.l@img@src",
+      "intro": "class.p3@textNodes",
+      "kind": "class.topmenuchaptermenu@span@a@text",
+      "lastChapter": "class.p4@a@text"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##喜欢请大家收藏.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@a@text||class.p2@a@text",
+      "bookList": "class.lists@li||class.listcon@li",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##http://img.po18yq.com/image/$1/$2/$2s.jpg",
+      "intro": "class.p3@textNodes",
+      "kind": "class.sortname@text||class.articlename@span@text##\\[|]",
+      "lastChapter": "class.lastchapter@a@text",
+      "name": "class.articlename@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.po18yq.com/modules/article/search.php?searchkey={{key}}&t_btnsearch=&page={{page}},{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "PO18文学🔞",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.po18yq.com/#🚀",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customButton": false,
+    "customOrder": 2330,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "最近更新::/paihang/lastupdate_{{page}}.html\n最新入库::/paihang/postdate_{{page}}.html\n总排行榜::/paihang/allvisit_{{page}}.html\n总推荐榜::/paihang/allvote_{{page}}.html\n总收藏榜::/paihang/goodnum_{{page}}.html\n总字数榜::/paihang/size_{{page}}.html\n玄幻奇幻::/xuanhuan_{{page}}.html\n武侠仙侠::/wuxia_{{page}}.html\n都市言情::/dushi_{{page}}.html\n科幻网游::/kehuan_{{page}}.html\n惊悚悬疑::/jingsong_{{page}}.html\n耽美同人::/danmei_{{page}}.html\n穿越架空::/chuanyue_{{page}}.html\n浓情纯爱::/nongqing_{{page}}.html\n百合优美::/baihe_{{page}}.html\n精品文学::/qita_{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1746069229428,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 31936,
+    "ruleBookInfo": {
+      "author": "",
+      "canReName": "",
+      "coverUrl": "class.l@img@src",
+      "init": "",
+      "intro": "class.p3@textNodes",
+      "kind": "class.topmenuchaptermenu@span@a@text",
+      "lastChapter": "class.p4@a@text",
+      "name": "",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##喜欢请大家收藏.*",
+      "imageStyle": "",
+      "nextContentUrl": "",
+      "replaceRegex": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "class.author@a@text||class.p2@a@text",
+      "bookList": "class.lists@li||class.listcon@li",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##http://img.po18yq.com/image/$1/$2/$2s.jpg",
+      "intro": "class.p3@textNodes",
+      "kind": "class.sortname@text||class.articlename@span@text##\\[|]",
+      "lastChapter": "class.lastchapter@a@text",
+      "name": "class.articlename@a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/modules/article/search.php?searchkey={{key}}&t_btnsearch=&page={{page}},{\n\"charset\":\"gbk\"\n}",
+    "variableComment": "",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "PO18文学🎃#19",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.po18yq.com#🎃",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2827,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "最近更新::https://www.po18yq.com/paihang/lastupdate_{{page}}.html\n最新入库::https://www.po18yq.com/paihang/postdate_{{page}}.html\n总排行榜::https://www.po18yq.com/paihang/allvisit_{{page}}.html\n总推荐榜::https://www.po18yq.com/paihang/allvote_{{page}}.html\n总收藏榜::https://www.po18yq.com/paihang/goodnum_{{page}}.html\n总字数榜::https://www.po18yq.com/paihang/size_{{page}}.html\n玄幻奇幻::https://www.po18yq.com/xuanhuan_{{page}}.html\n武侠仙侠::https://www.po18yq.com/wuxia_{{page}}.html\n都市言情::https://www.po18yq.com/dushi_{{page}}.html\n科幻网游::https://www.po18yq.com/kehuan_{{page}}.html\n惊悚悬疑::https://www.po18yq.com/jingsong_{{page}}.html\n耽美同人::https://www.po18yq.com/danmei_{{page}}.html\n穿越架空::https://www.po18yq.com/chuanyue_{{page}}.html\n浓情纯爱::https://www.po18yq.com/nongqing_{{page}}.html\n百合优美::https://www.po18yq.com/baihe_{{page}}.html\n精品文学::https://www.po18yq.com/qita_{{page}}.html",
+    "lastUpdateTime": 1746069438937,
+    "loginUrl": "",
+    "respondTime": 7062,
+    "ruleBookInfo": {
+      "coverUrl": "class.l@img@src",
+      "intro": "class.p3@textNodes",
+      "kind": "class.topmenuchaptermenu@span@a@text",
+      "lastChapter": "class.p4@a@text"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##喜欢请大家收藏.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@a@text||class.p2@a@text",
+      "bookList": "class.lists@li||class.listcon@li",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##http://img.po18yq.com/image/$1/$2/$2s.jpg",
+      "intro": "class.p3@textNodes",
+      "kind": "class.sortname@text||class.articlename@span@text##\\[|]",
+      "lastChapter": "class.lastchapter@a@text",
+      "name": "class.articlename@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.po18yq.com/modules/article/search.php?searchkey={{key}}&t_btnsearch=&page={{page}},{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "👔 脸红心跳",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.po18yq.com/",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2833,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "最近更新::paihang/lastupdate_{{page}}.html\n最新入库::paihang/postdate_{{page}}.html\n总排行榜::paihang/allvisit_{{page}}.html\n总推荐榜::paihang/allvote_{{page}}.html\n总收藏榜::paihang/goodnum_{{page}}.html\n总字数榜::paihang/size_{{page}}.html\n玄幻奇幻::xuanhuan_{{page}}.html\n武侠仙侠::wuxia_{{page}}.html\n都市言情::dushi_{{page}}.html\n科幻网游::kehuan_{{page}}.html\n惊悚悬疑::jingsong_{{page}}.html\n耽美同人::danmei_{{page}}.html\n穿越架空::chuanyue_{{page}}.html\n浓情纯爱::nongqing_{{page}}.html\n百合优美::baihe_{{page}}.html\n精品文学::qita_{{page}}.html",
+    "lastUpdateTime": 1746069618929,
+    "loginUrl": "",
+    "respondTime": 6646,
+    "ruleBookInfo": {
+      "coverUrl": "class.l@img@src",
+      "intro": "class.p3@textNodes",
+      "kind": "class.topmenuchaptermenu@span@a@text",
+      "lastChapter": "class.p4@a@text"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##喜欢请大家收藏.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@a@text||class.p2@a@text",
+      "bookList": "class.lists@li||class.listcon@li",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##http://img.po18yq.com/image/$1/$2/$2s.jpg",
+      "intro": "class.p3@textNodes",
+      "kind": "class.sortname@text||class.articlename@span@text##\\[|]",
+      "lastChapter": "class.lastchapter@a@text",
+      "name": "class.articlename@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "modules/article/search.php?searchkey={{key}}&t_btnsearch=&page={{page}},{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\"error:Unabletoresolvehost\"www.po18yq.com\":Noaddressassociatedwithhostname\n\"",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🔞 PO18脸红心跳②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.po18yq.com已整理",
+    "bookUrlPattern": "已校验",
+    "customButton": false,
+    "customOrder": 2834,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "最近更新::https://www.po18yq.com/paihang/lastupdate_{{page}}.html\n最新入库::https://www.po18yq.com/paihang/postdate_{{page}}.html\n总排行榜::https://www.po18yq.com/paihang/allvisit_{{page}}.html\n总推荐榜::https://www.po18yq.com/paihang/allvote_{{page}}.html\n总收藏榜::https://www.po18yq.com/paihang/goodnum_{{page}}.html\n总字数榜::https://www.po18yq.com/paihang/size_{{page}}.html\n玄幻奇幻::https://www.po18yq.com/xuanhuan_{{page}}.html\n武侠仙侠::https://www.po18yq.com/wuxia_{{page}}.html\n都市言情::https://www.po18yq.com/dushi_{{page}}.html\n科幻网游::https://www.po18yq.com/kehuan_{{page}}.html\n惊悚悬疑::https://www.po18yq.com/jingsong_{{page}}.html\n耽美同人::https://www.po18yq.com/danmei_{{page}}.html\n穿越架空::https://www.po18yq.com/chuanyue_{{page}}.html\n浓情纯爱::https://www.po18yq.com/nongqing_{{page}}.html\n百合优美::https://www.po18yq.com/baihe_{{page}}.html\n精品文学::https://www.po18yq.com/qita_{{page}}.html",
+    "lastUpdateTime": 1746069624444,
+    "loginUrl": "",
+    "respondTime": 66093,
+    "ruleBookInfo": {
+      "coverUrl": "class.l@img@src",
+      "intro": "class.p3@textNodes",
+      "kind": "class.topmenuchaptermenu@span@a@text",
+      "lastChapter": "class.p4@a@text"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##喜欢请大家收藏.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@a@text||class.p2@a@text",
+      "bookList": "class.lists@li||class.listcon@li",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##http://img.po18yq.com/image/$1/$2/$2s.jpg",
+      "intro": "class.p3@textNodes",
+      "kind": "class.sortname@text||class.articlename@span@text##\\[|]",
+      "lastChapter": "class.lastchapter@a@text",
+      "name": "class.articlename@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.po18yq.com/modules/article/search.php?searchkey={{key}}&t_btnsearch=&page={{page}},{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 十八言情",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.po18yq.com",
+    "bookUrlPattern": "",
+    "customOrder": 420,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::https://www.po18yq.com/paihang/lastupdate_{{page}}.html\n最新入库::https://www.po18yq.com/paihang/postdate_{{page}}.html\n总排行榜::https://www.po18yq.com/paihang/allvisit_{{page}}.html\n总推荐榜::https://www.po18yq.com/paihang/allvote_{{page}}.html\n总收藏榜::https://www.po18yq.com/paihang/goodnum_{{page}}.html\n总字数榜::https://www.po18yq.com/paihang/size_{{page}}.html\n玄幻奇幻::https://www.po18yq.com/xuanhuan_{{page}}.html\n武侠仙侠::https://www.po18yq.com/wuxia_{{page}}.html\n都市言情::https://www.po18yq.com/dushi_{{page}}.html\n科幻网游::https://www.po18yq.com/kehuan_{{page}}.html\n惊悚悬疑::https://www.po18yq.com/jingsong_{{page}}.html\n耽美同人::https://www.po18yq.com/danmei_{{page}}.html\n穿越架空::https://www.po18yq.com/chuanyue_{{page}}.html\n浓情纯爱::https://www.po18yq.com/nongqing_{{page}}.html\n百合优美::https://www.po18yq.com/baihe_{{page}}.html\n精品文学::https://www.po18yq.com/qita_{{page}}.html",
+    "lastUpdateTime": 1699494639467,
+    "loginUrl": "",
+    "respondTime": 2852,
+    "ruleBookInfo": {
+      "coverUrl": "class.l@img@src",
+      "intro": "class.p3@textNodes",
+      "kind": "class.topmenuchaptermenu@span@a@text",
+      "lastChapter": "class.p4@a@text"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##喜欢请大家收藏.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@a@text||class.p2@a@text",
+      "bookList": "class.lists@li||class.listcon@li",
+      "bookUrl": "a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##http://img.po18yq.com/image/$1/$2/$2s.jpg",
+      "intro": "class.p3@textNodes",
+      "kind": "class.sortname@text||class.articlename@span@text##\\[|]",
+      "lastChapter": "class.lastchapter@a@text",
+      "name": "class.articlename@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapterlist@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.po18yq.com/modules/article/search.php?searchkey={{key}}&t_btnsearch=&page={{page}},{\n\"charset\":\"gbk\"\n}",
+    "weight": 0
+  }
+]

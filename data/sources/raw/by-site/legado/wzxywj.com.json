@@ -1,0 +1,134 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "燃文小说③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wzxywj.com/",
+    "customOrder": 916,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687595408889,
+    "respondTime": 4864,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##推荐下.*更新快！|推荐一个.*com ！|广个告.*离线朗读！|广个告.*更新快！|.*咪.*咪.*阅.*读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$..search[*]",
+      "bookUrl": "{{$.book_list_url}}",
+      "checkKeyWord": "",
+      "coverUrl": "{{$.cover}}",
+      "intro": "$.intro",
+      "kind": "{{$.uptime}}\n{{$.cate_name}}\n{{$.status_str}}",
+      "lastChapter": "$.latest_chapter_name",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@class=\"book\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "燃文小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wzxywj.com/",
+    "customOrder": 372,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 1689686689267,
+    "respondTime": 1578,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##推荐下.*更新快！|推荐一个.*com ！|广个告.*离线朗读！|广个告.*更新快！|.*咪.*咪.*阅.*读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$..search[*]",
+      "bookUrl": "{{$.book_list_url}}",
+      "checkKeyWord": "万族之劫",
+      "coverUrl": "{{$.cover}}",
+      "intro": "$.intro",
+      "kind": "{{$.uptime}}\n{{$.cate_name}}\n{{$.status_str}}",
+      "lastChapter": "$.latest_chapter_name",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@class=\"book\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "燃文小说③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wzxywj.com/",
+    "customOrder": -277,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687595408889,
+    "respondTime": 13383,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*"
+    },
+    "ruleContent": {
+      "content": "id.content@p@html##推荐下.*更新快！|推荐一个.*com ！|广个告.*离线朗读！|广个告.*更新快！|.*咪.*咪.*阅.*读.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author",
+      "bookList": "$..search[*]",
+      "bookUrl": "{{$.book_list_url}}",
+      "checkKeyWord": "",
+      "coverUrl": "{{$.cover}}",
+      "intro": "$.intro",
+      "kind": "{{$.uptime}}\n{{$.cate_name}}\n{{$.status_str}}",
+      "lastChapter": "$.latest_chapter_name",
+      "name": "$.book_name"
+    },
+    "ruleToc": {
+      "chapterList": "//*[@class=\"book\"]//dt[2]/following-sibling::dd/a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/api/search?q={{key}}",
+    "weight": 0
+  }
+]

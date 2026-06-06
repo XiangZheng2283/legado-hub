@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceComment": "24.12.31\n.replace(/xxchannel/,\"xxlist\")\n动态发现—源论坛无名",
+    "bookSourceGroup": "_1yunnain精选",
+    "bookSourceName": "🍒休闲文学吧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xxwx8.com/",
+    "customOrder": 10,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "@js:\n var result = [];\njava.toast(\"🔥动态获取发现中……\");\nvar push=(title,url,size)=>result.push({\n  \t\"title\": title,\n  \t\"url\": url,\n  \t\"style\": {\n   \"layout_flexGrow\": 1,\n   \"layout_flexBasisPercent\": size\n   }\n });\nvar fl = java.ajax(\"https://www.xxwx8.com/\");\nif (fl) {\na=org.jsoup.Jsoup.parse(fl).select(\".mav_3 a\");\npush(\"🍁分类🍁\",null,1)\npush(\"最近\",\"https://www.xxwx8.com/\",0.25)\n    for(var i=0;i<a.length;i++){\n        title=a[i].text()\n        url=a[i].attr(\"href\")\n        size=0.25;\n        url=url\n        url=String(url).replace(/.html/,\"_{{page}}.html\")\n        push(title,url,size)\n    };\n    \n    \n      } else { \n      java.toast(\"🚫发现获取失败……\");\n}\nJSON.stringify(result);",
+    "lastUpdateTime": 1769448573216,
+    "respondTime": 14444,
+    "ruleBookInfo": {
+      "author": ".nbs_1.0@a@text",
+      "coverUrl": "img.4@src##^##https://www.xxwx8.com",
+      "intro": "🕰  更新：\n{{@@table.0@tbody@tr@td.-1@text}}\n📜  简介：\n{{@@div.35@text##.*【内容简介】|【最新章节】.*}}##(^|[。！？……；]+[”」）】]?)##$1<br>",
+      "kind": "{{@@.nbs_1.1@a@text}}\n{{@@table.0@tbody@tr@td.-1@text}}",
+      "lastChapter": "{{@@table.0@tbody@tr@td.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求含理更谢乐发推票盟补加字].*?[】）\\)]}}•{{@@table.0@tbody@tr@td.-1@text}}\n@js:result\n.replace(\"••\",\"\")\n.replace(/^(\\d+).第/,'第')\n.replace(/^(\\d+)[、．]第.+章/,'第$1章')\n.replace(/^(\\d+)、\\d+、/,'第$1章 ')\n.replace(/^(\\d+)、\\d+/,'第$1章')\n.replace(/^(\\d+)、/,'第$1章 ')\n.replace(/^(第.+章)\\s?第.+章/,'$1')\n.replace(/第\\s(.+)\\s章/,'第$1章')\n.replace(/.*(chapter|Chapter)\\s?(\\d+)\\s?/,'$1 $2 ')\n.replace(/\\(.+\\)/,'')\n.replace(/\\[|。/,'')\n.replace(/第([零一二两三四五六七八九十百千]+)章/g,java.toNumChapter(result))\n##(章)([^\\s]+)(\\s·)##$1 $2$3",
+      "name": "h1@text",
+      "tocUrl": "{{baseUrl}}##xxbook##xxchapter"
+    },
+    "ruleContent": {
+      "content": ".ReadContents@html",
+      "replaceRegex": "##{{book.name}}\\s.*|.*{{book.name}}目录.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "td.1@a@text",
+      "bookList": "table@tbody@tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "我的模拟长生路",
+      "coverUrl": "a.0@href##xxbook\\/(.*)\\.html##https://www.xxwx8.com/images/xxid/$1.jpg###",
+      "kind": "td.-1@text##\\/##-",
+      "lastChapter": "{{@@td.-2@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求含理更谢乐发推票盟补加字].*?[】）\\)]}}•{{@@td.-1@text}}\n@js:result\n.replace(\"••\",\"\")\n.replace(/^(\\d+).第/,'第')\n.replace(/\\//g,'-')\n.replace(/^(\\d+)[、．]第.+章/,'第$1章')\n.replace(/^(\\d+)、\\d+、/,'第$1章 ')\n.replace(/^(\\d+)、\\d+/,'第$1章')\n.replace(/^(\\d+)、/,'第$1章 ')\n.replace(/^(第.+章)\\s?第.+章/,'$1')\n.replace(/第\\s(.+)\\s章/,'第$1章')\n.replace(/.*(chapter|Chapter)\\s?(\\d+)\\s?/,'$1 $2 ')\n.replace(/\\(.+\\)/,'')\n.replace(/\\[|。/,'')\n.replace(/第([零一二两三四五六七八九十百千]+)章/g,java.toNumChapter(result))\n##(章)([^\\s]+)(\\s·)##$1 $2$3",
+      "name": "td.0@a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapterlist@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.xxwx8.com/xxlist/{{key}}_{{page}}.html",
+    "weight": 0
+  }
+]

@@ -1,0 +1,171 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "搜读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.soduzw.com/",
+    "customOrder": 544,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1625397595744,
+    "respondTime": 4809,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property$=category]@content&&[property$=status]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "class.chapterlist2@a@href",
+      "wordCount": "[property$=update_time]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.span.1@text",
+      "bookList": "class.Search",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{'webView':true}"
+    },
+    "searchUrl": "http://www.soduzw.com/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=novelname&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "搜读中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.soduzw.com",
+    "customOrder": 469,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1689894522063,
+    "respondTime": 5613,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property$=category]@content&&[property$=status]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "class.chapterlist2@a@href",
+      "wordCount": "[property$=update_time]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.span.1@text",
+      "bookList": "class.Search",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{'webView':true}"
+    },
+    "searchUrl": "http://www.soduzw.com/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=novelname&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "搜读",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.soduzw.com/",
+    "customOrder": 965,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1625397595744,
+    "respondTime": 4144,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property$=category]@content&&[property$=status]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "class.chapterlist2@a@href",
+      "wordCount": "[property$=update_time]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.span.1@text",
+      "bookList": "class.Search",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{'webView':true}"
+    },
+    "searchUrl": "http://www.soduzw.com/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=novelname&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 搜读中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.soduzw.com",
+    "customOrder": 484,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1631095022811,
+    "respondTime": 7230,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property$=category]@content&&[property$=status]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "tocUrl": "class.chapterlist2@a@href",
+      "wordCount": "[property$=update_time]@content"
+    },
+    "ruleContent": {
+      "content": "class.content@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.span.1@text",
+      "bookList": "class.Search",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href##$##,{'webView':true}"
+    },
+    "searchUrl": "http://www.soduzw.com/search.html,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=novelname&searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

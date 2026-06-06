@@ -1,0 +1,90 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍑 三九书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sanjiushuwu.com",
+    "customOrder": 349,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 6,
+    "weight": 27
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖三九书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sanjiushuwu.com/",
+    "customOrder": 659,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 930
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🍑 三九书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sanjiushuwu.com",
+    "customOrder": 435,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 27
+  },
+  {
+    "bookSourceComment": "笛寄明月楼",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 三九书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sanjiushuwu.com",
+    "bookUrlPattern": "https://www.sanjiushuwu.com/book/\\d+.html",
+    "customOrder": 554,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "{\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; SK) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1713368960705,
+    "loginUrl": "",
+    "respondTime": 22246,
+    "ruleBookInfo": {
+      "author": "#author a@text",
+      "coverUrl": "#bookimg img@src",
+      "intro": "#bookintro@html",
+      "name": "h1@text",
+      "tocUrl": "<js>\ntoc = baseUrl.replace(/.*book\\/(\\d+)\\.html/, \"https://m.sanjiushuwu.com/index/$1/asc/1.html\");\n</js>"
+    },
+    "ruleContent": {
+      "content": "#YiJianZhan@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".book_other span.0@text",
+      "bookList": "#sitembox > dl",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@src",
+      "kind": ".book_other span.2@text&&\n.book_other span.1@text",
+      "lastChapter": ".book_other a@text",
+      "name": "h3 a@text",
+      "wordCount": ".book_other span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "#readerlist ul li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": ".pg-next@href"
+    },
+    "searchUrl": "https://www.sanjiushuwu.com/modules/article/search.php,{\n  \"charset\": \"UTF-8\",\n  \"method\": \"POST\",\n  \"body\": \"searchtype=all&searchkey={{key}}&t_btnsearch\"\n}",
+    "weight": 0
+  }
+]

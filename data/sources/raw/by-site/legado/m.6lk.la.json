@@ -1,0 +1,55 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💠 综合",
+    "bookSourceName": "💠 乐库小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.6lk.la",
+    "customOrder": 51,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "日榜::/rank/dayvisit/{{page}}.html\n周榜::/rank/weekvisit/{{page}}.html\n月榜::/rank/monthvisit/{{page}}.html\n总榜::/rank/allvisit/{{page}}.html\n收藏::/rank/goodnum/{{page}}.html\n字数::/rank/size/{{page}}.html\n日推::/rank/dayvote/{{page}}.html\n周推::/rank/weekvote/{{page}}.html\n月推::/rank/monthvote/{{page}}.html\n总推::/rank/allvote/{{page}}.html\n入库::/rank/postdate/{{page}}.html\n近更::/rank/lastupdate/{{page}}.html\n言情::/sort/1/{{page}}.html\n总裁::/sort/2/{{page}}.html\n都市::/sort/3/{{page}}.html\n穿越::/sort/4/{{page}}.html\n仙侠::/sort/5/{{page}}.html\n武侠::/sort/6/{{page}}.html\n恐怖::/sort/7/{{page}}.html\n悬疑::/sort/8/{{page}}.html\n耽美::/sort/9/{{page}}.html\n玄幻::/sort/10/{{page}}.html\n全本::/quanben/{{page}}.html",
+    "lastUpdateTime": 1734428577496,
+    "respondTime": 17598,
+    "ruleBookInfo": {
+      "author": ".block_txt2@p.2@text",
+      "coverUrl": ".block_img2@img@src",
+      "intro": ".intro_info@text##(^|[。！？]+[”」）】]?)##$1<br>@js:result.replace(/最新章节推荐地址.*/g,\"\")",
+      "kind": ".block_txt2@p.3:4:5@text##.*：|T.*",
+      "lastChapter": ".block_txt2@a.3@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".block_txt2@h2@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "nextContentUrl": "id.pb_next@href",
+      "replaceRegex": "##\\s*.*\\(第\\d/\\d页\\)\\s*|\\s*（.*下一页.*）\\s*|最新网址：m.6lk.la"
+    },
+    "ruleExplore": {
+      "author": "text##.*\\/",
+      "bookList": ".line",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##.+\\D((\\d+)\\d{3})\\D##http://www.6lk.la/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "text##\\[|\\].*",
+      "name": "a@text"
+    },
+    "ruleSearch": {
+      "author": "p.3@text",
+      "bookList": ".block",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "kind": "p.2@text##.*：",
+      "lastChapter": "a.3@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "h2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapter@li@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": ".right@a@href"
+    },
+    "searchUrl": "/s.php,{\n  \"method\": \"post\",\n  \"body\": \"q={{key}}\"\n}",
+    "weight": 0
+  }
+]

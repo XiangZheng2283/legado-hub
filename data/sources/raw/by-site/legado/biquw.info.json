@@ -1,0 +1,170 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.biquw.info/",
+    "bookUrlPattern": "http://www.biquw.info/book/\\d+/",
+    "customOrder": 933,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"书库全部\",\"url\":\"/xs/quanbu-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"/xs/1-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"/xs/2-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/xs/3-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军史小说\",\"url\":\"/xs/4-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/xs/5-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/xs/6-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异小说\",\"url\":\"/xs/7-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情小说\",\"url\":\"/xs/8-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他小说\",\"url\":\"/xs/9-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"全本小说\",\"url\":\"/xs/quanbu-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"最新小说\",\"url\":\"/xs/0-lastupdate-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687237603435,
+    "loginUrl": "",
+    "respondTime": 2913,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.pic@img@src",
+      "init": "",
+      "intro": ".bookinfo_intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html"
+    },
+    "ruleExplore": {
+      "author": "tag.dd.1@span@text",
+      "bookList": "class.sitebox@dl",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "class.uptime@text",
+      "lastChapter": "tag.dd.3@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s3@text",
+      "bookList": "class.toplist@li",
+      "bookUrl": "class.s1@a@href",
+      "coverUrl": "class.s1@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.biquw.info/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s5@text&&\nclass.s6@text",
+      "lastChapter": "class.s2@a@text",
+      "name": "class.s1@a@text",
+      "wordCount": "class.s4@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?action=login&searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "笔趣网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.biquw.info/",
+    "bookUrlPattern": "http://www.biquw.info/book/\\d+/",
+    "customOrder": 387,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"书库全部\",\"url\":\"/xs/quanbu-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"/xs/1-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"/xs/2-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/xs/3-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军史小说\",\"url\":\"/xs/4-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/xs/5-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/xs/6-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异小说\",\"url\":\"/xs/7-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情小说\",\"url\":\"/xs/8-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他小说\",\"url\":\"/xs/9-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"全本小说\",\"url\":\"/xs/quanbu-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"最新小说\",\"url\":\"/xs/0-lastupdate-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687237603435,
+    "loginUrl": "",
+    "respondTime": 13117,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.pic@img@src",
+      "init": "",
+      "intro": ".bookinfo_intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html"
+    },
+    "ruleExplore": {
+      "author": "tag.dd.1@span@text",
+      "bookList": "class.sitebox@dl",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "class.uptime@text",
+      "lastChapter": "tag.dd.3@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s3@text",
+      "bookList": "class.toplist@li",
+      "bookUrl": "class.s1@a@href",
+      "coverUrl": "class.s1@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.biquw.info/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s5@text&&\nclass.s6@text",
+      "lastChapter": "class.s2@a@text",
+      "name": "class.s1@a@text",
+      "wordCount": "class.s4@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?action=login&searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "笔趣网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.biquw.info/",
+    "bookUrlPattern": "http://www.biquw.info/book/\\d+/",
+    "customOrder": -218,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"书库全部\",\"url\":\"/xs/quanbu-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"玄幻小说\",\"url\":\"/xs/1-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠小说\",\"url\":\"/xs/2-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/xs/3-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"军史小说\",\"url\":\"/xs/4-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/xs/5-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/xs/6-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"灵异小说\",\"url\":\"/xs/7-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情小说\",\"url\":\"/xs/8-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"其他小说\",\"url\":\"/xs/9-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"全本小说\",\"url\":\"/xs/quanbu-default-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"最新小说\",\"url\":\"/xs/0-lastupdate-0-0-0-0-0-0-{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1687237603435,
+    "loginUrl": "",
+    "respondTime": 12774,
+    "ruleBookInfo": {
+      "author": "class.options@tag.span.0@text",
+      "coverUrl": "class.pic@img@src",
+      "init": "",
+      "intro": ".bookinfo_intro@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.update@a@text",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.htmlContent@html"
+    },
+    "ruleExplore": {
+      "author": "tag.dd.1@span@text",
+      "bookList": "class.sitebox@dl",
+      "bookUrl": "h3@a@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "class.uptime@text",
+      "lastChapter": "tag.dd.3@a@text",
+      "name": "h3@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s3@text",
+      "bookList": "class.toplist@li",
+      "bookUrl": "class.s1@a@href",
+      "coverUrl": "class.s1@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.biquw.info/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s5@text&&\nclass.s6@text",
+      "lastChapter": "class.s2@a@text",
+      "name": "class.s1@a@text",
+      "wordCount": "class.s4@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_list@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?action=login&searchkey={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,104 @@
+[
+  {
+    "bookSourceComment": "在发现中看言情和纯爱的🍖文很不错。\n——闲乘月",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🍇 海棠看书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wukongkanshu.com",
+    "customOrder": 1125,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"默认\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/category/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/category/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/category/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/category/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"周榜\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/rank/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/rank/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/rank/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/rank/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"月榜\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/rank/month/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/rank/month/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/rank/month/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/rank/month/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"总榜\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/rank/all/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/rank/all/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/rank/all/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/rank/all/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"完结\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/category/finish/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/category/finish/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/category/finish/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/category/finish/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"标签\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/search/耽美/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/search/言情/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/search/同人/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/search/综合/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"正剧\",\"url\":\"/search/正剧/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男男\",\"url\":\"/search/男男/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女女\",\"url\":\"/search/女女/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男女\",\"url\":\"/search/男女/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"美受\",\"url\":\"/search/美人受/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"原创\",\"url\":\"/search/原创/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"1v1\",\"url\":\"/search/1v1/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代\",\"url\":\"/search/古代/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代\",\"url\":\"/search/现代/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"高H\",\"url\":\"/search/高H/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"腹黑\",\"url\":\"/search/腹黑/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1680939669476,
+    "respondTime": 13896,
+    "ruleBookInfo": {
+      "author": ".BGsectionOne-top-right a.0@text",
+      "init": "",
+      "intro": ".BGsectionTwo-bottom@html",
+      "kind": ".BGsectionOne-top-right a.1@text&&.BGsectionOne-top-right span.3:4@text##\\s.*",
+      "lastChapter": ".BGsectionOne-top-right a.-1@text",
+      "name": ".BGsectionOne-top-right p.0@text",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": ".RBGsectionThree-content@p@html",
+      "replaceRegex": "##\\<!.*>"
+    },
+    "ruleExplore": {
+      "author": "p.1@a@text",
+      "bookList": ".book_list_img li&&.CGsectionTwo-right-content-unit",
+      "bookUrl": ".book_img_name a@href||p.0@a.0@href",
+      "intro": "p.2@text",
+      "kind": "p.3@text##.*\\s",
+      "name": ".book_img_name@text||p.0@a.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".SHsectionThree-middle p",
+      "bookUrl": "a.1@href",
+      "kind": "a.0@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".BCsectionTwo-top li a",
+      "chapterName": "text",
+      "chapterUrl": "href##$##,{\"webView\": true}",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search/{{key}}/{{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "在发现中看言情和纯爱的🍖文很不错。\n——闲乘月",
+    "bookSourceGroup": "🌱 网络文学,🍀 发现",
+    "bookSourceName": "🍇 海棠看书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.wukongkanshu.com",
+    "customOrder": 938,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"默认\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/category/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/category/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/category/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/category/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"周榜\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/rank/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/rank/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/rank/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/rank/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"月榜\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/rank/month/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/rank/month/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/rank/month/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/rank/month/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"总榜\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/rank/all/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/rank/all/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/rank/all/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/rank/all/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"完结\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/category/finish/6292259598405/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/category/finish/6292259647558/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/category/finish/6292259696711/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/category/finish/6292261531720/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},\n{\"title\":\"标签\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/search/耽美/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/search/言情/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"同人\",\"url\":\"/search/同人/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"综合\",\"url\":\"/search/综合/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"正剧\",\"url\":\"/search/正剧/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男男\",\"url\":\"/search/男男/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"女女\",\"url\":\"/search/女女/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"男女\",\"url\":\"/search/男女/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"美受\",\"url\":\"/search/美人受/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"原创\",\"url\":\"/search/原创/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"1v1\",\"url\":\"/search/1v1/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古代\",\"url\":\"/search/古代/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代\",\"url\":\"/search/现代/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"高H\",\"url\":\"/search/高H/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"腹黑\",\"url\":\"/search/腹黑/{{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1680939669476,
+    "respondTime": 13009,
+    "ruleBookInfo": {
+      "author": ".BGsectionOne-top-right a.0@text",
+      "init": "",
+      "intro": ".BGsectionTwo-bottom@html",
+      "kind": ".BGsectionOne-top-right a.1@text&&.BGsectionOne-top-right span.3:4@text##\\s.*",
+      "lastChapter": ".BGsectionOne-top-right a.-1@text",
+      "name": ".BGsectionOne-top-right p.0@text",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": ".RBGsectionThree-content@p@html",
+      "replaceRegex": "##\\<!.*>"
+    },
+    "ruleExplore": {
+      "author": "p.1@a@text",
+      "bookList": ".book_list_img li&&.CGsectionTwo-right-content-unit",
+      "bookUrl": ".book_img_name a@href||p.0@a.0@href",
+      "intro": "p.2@text",
+      "kind": "p.3@text##.*\\s",
+      "name": ".book_img_name@text||p.0@a.0@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".SHsectionThree-middle p",
+      "bookUrl": "a.1@href",
+      "kind": "a.0@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".BCsectionTwo-top li a",
+      "chapterName": "text",
+      "chapterUrl": "href##$##,{\"webView\": true}",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search/{{key}}/{{page}}",
+    "weight": 0
+  }
+]

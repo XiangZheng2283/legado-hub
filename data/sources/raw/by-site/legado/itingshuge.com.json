@@ -1,0 +1,26 @@
+[
+  {
+    "bookSourceComment": "                    \"error:搜索内容为空并且没有发现\n                    error:搜索内容为空并且没有发现\n\"",
+    "bookSourceGroup": "搜索链接规则为空,有声",
+    "bookSourceName": "听书阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.itingshuge.com",
+    "bookUrlPattern": "",
+    "customOrder": 1595,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {
+      "content": "",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

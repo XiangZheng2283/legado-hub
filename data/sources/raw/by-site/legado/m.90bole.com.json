@@ -1,0 +1,97 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "啵乐屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.90bole.com/",
+    "customOrder": 1238,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "已完结::http://m.90bole.com/getBooks?tag=%E9%83%BD%E5%B8%82&end=1&page=0\n全部::http://m.90bole.com/getBooks?tag=%E5%85%A8%E9%83%A8&end=1&page=0",
+    "lastUpdateTime": 1649917034133,
+    "respondTime": 4704,
+    "ruleBookInfo": {
+      "init": "",
+      "intro": ".head-info-desc@html",
+      "lastChapter": "id.chapters@li.-1@a@text"
+    },
+    "ruleContent": {
+      "content": ".comic-pic-list@li@img@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "bookList": "$.books[*]",
+      "bookUrl": "http://m.90bole.com/cartoon/yjdnr/{{$.id}}",
+      "coverUrl": "$.cover_url",
+      "intro": "$.summary",
+      "kind": "$.tags",
+      "name": "$.book_name"
+    },
+    "ruleSearch": {
+      "bookList": ".comic-item",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".comic-desc@html",
+      "kind": ".comic-tag@text",
+      "lastChapter": ".comic-update@text##更新",
+      "name": ".comic-title@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapters@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://m.90bole.com/search?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "啵乐屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.90bole.com/",
+    "customOrder": 1419,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "已完结::http://m.90bole.com/getBooks?tag=%E9%83%BD%E5%B8%82&end=1&page=0\n全部::http://m.90bole.com/getBooks?tag=%E5%85%A8%E9%83%A8&end=1&page=0",
+    "lastUpdateTime": 1683551010019,
+    "respondTime": 2420,
+    "ruleBookInfo": {
+      "init": "",
+      "intro": ".head-info-desc@html",
+      "lastChapter": "id.chapters@li.-1@a@text"
+    },
+    "ruleContent": {
+      "content": ".comic-pic-list@li@img@html",
+      "imageStyle": "FULL"
+    },
+    "ruleExplore": {
+      "bookList": "$.books[*]",
+      "bookUrl": "http://m.90bole.com/cartoon/yjdnr/{{$.id}}",
+      "coverUrl": "$.cover_url",
+      "intro": "$.summary",
+      "kind": "$.tags",
+      "name": "$.book_name"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": ".comic-item",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".comic-desc@html",
+      "kind": ".comic-tag@text",
+      "lastChapter": ".comic-update@text##更新",
+      "name": ".comic-title@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapters@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://m.90bole.com/search?keyword={{key}}",
+    "weight": 0
+  }
+]

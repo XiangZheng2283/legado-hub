@@ -1,0 +1,118 @@
+[
+  {
+    "bookSourceComment": "注：小说可下载到本地，若想下载到本地看，把左上角的类型“文本”改为“文件”。",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 云中书库",
+    "bookSourceType": 3,
+    "bookSourceUrl": "http://www.yunxs.info/##@遇知",
+    "customOrder": 456,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"🔖分类🔖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻·奇幻\",\"url\":\"/xuanhuan/shuku_1949_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠·武侠\",\"url\":\"/xianxia/shuku_3336_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·言情\",\"url\":\"/dushi/shuku_8625_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越·历史\",\"url\":\"/chuanyue/shuku_1335_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·灵异\",\"url\":\"/kehuan/shuku_1500_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人·网游\",\"url\":\"/tongren/shuku_1056_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\n{\"title\":\"🔖完结🔖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻·奇幻\",\"url\":\"/xuanhuan/over_20_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠·武侠\",\"url\":\"/xianxia/over_1701_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·言情\",\"url\":\"/dushi/over_5514_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越·历史\",\"url\":\"/chuanyue/over_40_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·灵异\",\"url\":\"/kehuan/over_44_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人·网游\",\"url\":\"/tongren/over_55_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}\n]",
+    "lastUpdateTime": 1685774455664,
+    "respondTime": 4559,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "canReName": "",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "downloadUrls": "<js>a=String(java.getElements(\".btn@a.1\").attr(\"href\"));\njava.ajax('http://www.yunxs.info'+a);\n</js>.down a@href",
+      "intro": "🔔 更新时间：{{@@[property=\"og:novel:update_time\"]@content##\\s##🔸}}\n🏷 {{@@.info li[2:4]@text##\\s##🔸}}\n📂 内容简介：{{@@[property=\"og:description\"]@content}}##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "",
+      "wordCount": "#cms_ready_1@text"
+    },
+    "ruleContent": {
+      "content": ".box_box@textNodes"
+    },
+    "ruleExplore": {
+      "author": ".author a@text",
+      "bookList": ".ul_m_list li",
+      "bookUrl": ".t a@href",
+      "coverUrl": "",
+      "kind": ".c a@text&&.abover@text",
+      "lastChapter": ".n a.1@text",
+      "name": ".t a@text",
+      "wordCount": ".words@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".state@text##\\s.*",
+      "bookList": ".ul_b_list li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@h2 span@text}}\n{{@@.state@text##.*状态：|\\s.*}}\n{{@@.arcurl@textNodes##.*：}}",
+      "lastChapter": "",
+      "name": "h2 a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".list_box li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.yunxs.info/plus/search.php?kwtype=0&searchtype=&q={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "注：小说可下载到本地，若想下载到本地看，把左上角的类型“文本”改为“文件”。",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 云中书库",
+    "bookSourceType": 3,
+    "bookSourceUrl": "http://www.yunxs.info/##@遇知",
+    "customOrder": 456,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"🔖分类🔖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻·奇幻\",\"url\":\"/xuanhuan/shuku_1949_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠·武侠\",\"url\":\"/xianxia/shuku_3336_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·言情\",\"url\":\"/dushi/shuku_8625_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越·历史\",\"url\":\"/chuanyue/shuku_1335_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·灵异\",\"url\":\"/kehuan/shuku_1500_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人·网游\",\"url\":\"/tongren/shuku_1056_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\n{\"title\":\"🔖完结🔖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻·奇幻\",\"url\":\"/xuanhuan/over_20_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"仙侠·武侠\",\"url\":\"/xianxia/over_1701_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市·言情\",\"url\":\"/dushi/over_5514_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"穿越·历史\",\"url\":\"/chuanyue/over_40_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻·灵异\",\"url\":\"/kehuan/over_44_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"同人·网游\",\"url\":\"/tongren/over_55_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}\n]",
+    "lastUpdateTime": 1685774455664,
+    "respondTime": 14052,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "canReName": "",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "downloadUrls": "<js>a=String(java.getElements(\".btn@a.1\").attr(\"href\"));\njava.ajax('http://www.yunxs.info'+a);\n</js>.down a@href",
+      "intro": "🔔 更新时间：{{@@[property=\"og:novel:update_time\"]@content##\\s##🔸}}\n🏷 {{@@.info li[2:4]@text##\\s##🔸}}\n📂 内容简介：{{@@[property=\"og:description\"]@content}}##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "",
+      "wordCount": "#cms_ready_1@text"
+    },
+    "ruleContent": {
+      "content": ".box_box@textNodes"
+    },
+    "ruleExplore": {
+      "author": ".author a@text",
+      "bookList": ".ul_m_list li",
+      "bookUrl": ".t a@href",
+      "coverUrl": "",
+      "kind": ".c a@text&&.abover@text",
+      "lastChapter": ".n a.1@text",
+      "name": ".t a@text",
+      "wordCount": ".words@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".state@text##\\s.*",
+      "bookList": ".ul_b_list li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@h2 span@text}}\n{{@@.state@text##.*状态：|\\s.*}}\n{{@@.arcurl@textNodes##.*：}}",
+      "lastChapter": "",
+      "name": "h2 a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".list_box li a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.yunxs.info/plus/search.php?kwtype=0&searchtype=&q={{key}}",
+    "weight": 0
+  }
+]

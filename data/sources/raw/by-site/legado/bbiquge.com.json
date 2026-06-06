@@ -1,0 +1,43 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁㉝",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bbiquge.com",
+    "bookUrlPattern": "",
+    "customOrder": 29,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko, By Black Prism) Chrome/99.0 Safari/537.36\"\n}",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 8530,
+    "ruleBookInfo": {
+      "coverUrl": "id.fmimg@tag.img.0@src",
+      "intro": "id.intro@textNodes",
+      "lastChapter": "id.info@tag.p.3@a@text##正文"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes##一秒记住【.*窗免费阅读！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.s4@text||tag.p.0@tag.a@text",
+      "bookList": "class.novelslistss@tag.li||id.info",
+      "bookUrl": "class.s2@tag.a.0@href",
+      "coverUrl": "tag.a.0@href##/book_(\\d+)(\\d{3})/##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "kind": "class.s1@text##\\[||\\]",
+      "lastChapter": "class.s3@tag.a.0@text||tag.p.3@tag.a@text",
+      "name": "class.s2@tag.a@text||tag.h1@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dd",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "https://www.bbiquge.com/modules/article/search.php?searchkey={{key}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

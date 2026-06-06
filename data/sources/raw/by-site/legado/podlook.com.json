@@ -1,0 +1,53 @@
+[
+  {
+    "bookSourceComment": "error:null\nerror:Unable to resolve host \"www.podlook.com\": No address associated with hostname\nerror:Unable to resolve host \"www.podlook.com\": No address associated with hostname\nerror:Unable to resolve host \"www.podlook.com\": No address associated with hostname\nerror:null\nerror:null\nerror:null\nerror:null\nerror:null\nerror:null\n",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "菠萝网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.podlook.com",
+    "bookUrlPattern": "",
+    "customOrder": 45,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2315,
+    "ruleBookInfo": {
+      "author": "##作者：([^<]*)##$1####",
+      "intro": ".public_ad_content@textNodes",
+      "lastChapter": ".public_col_3@tag.li.-1@a@text"
+    },
+    "ruleContent": {
+      "content": ".public_ad_content@textNodes##.*第\\d+章.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "bookList": ".public_col_3@li",
+      "bookUrl": "a@href",
+      "lastChapter": "span@text##：",
+      "name": "a@text"
+    },
+    "ruleToc": {
+      "chapterList": ".public_col_3@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.podlook.com/modules/article/search.php?searchkey={{key}}&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,📖 小说",
+    "bookSourceName": "菠萝网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.podlook.com",
+    "customOrder": 929,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 0
+  }
+]

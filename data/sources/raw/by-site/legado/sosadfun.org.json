@@ -1,0 +1,120 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "废文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sosadfun.org",
+    "customOrder": 392,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 7952313600000,
+    "respondTime": 3624,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content##《{{book.name}}》是由.*一本.*书籍。",
+      "kind": "[property=og:novel:category],[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "tocUrl": "{{baseUrl}}catalog/"
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction d(a,b){\n\tb=java.md5Encode(b);\n\tvar d=b.substring(0,16);\n\tvar e=b.substring(16);\n\treturn java.aesBase64DecodeToString(a,e,\"AES/CBC/PKCS5Padding\",d)\n}\neval(result.match(/(d\\(\"[\\s\\S]+\"\\))\\)/)[1])"
+    },
+    "ruleSearch": {
+      "author": "a[-1]@text",
+      "bookList": ".SHsectionThree-middle>p",
+      "bookUrl": "a[1]@href",
+      "kind": "a[0]@text",
+      "name": "a[1]@text"
+    },
+    "ruleToc": {
+      "chapterList": "ol a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "#end@href\n@js:\nn=parseInt(result[0].match(/\\/(\\d+)\\.html/)[1]);\nlist=[];\nfor (i=2;i<=n;i++)\nlist.push(i+\".html\");\nlist"
+    },
+    "searchUrl": "/search/{{key}}/{{page}}/",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👀小说",
+    "bookSourceName": "废文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sosadfun.org",
+    "customOrder": 217,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 7952313600000,
+    "respondTime": 2760,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content##《{{book.name}}》是由.*一本.*书籍。",
+      "kind": "[property=og:novel:category],[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "tocUrl": "{{baseUrl}}catalog/"
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction d(a,b){\n\tb=java.md5Encode(b);\n\tvar d=b.substring(0,16);\n\tvar e=b.substring(16);\n\treturn java.aesBase64DecodeToString(a,e,\"AES/CBC/PKCS5Padding\",d)\n}\neval(result.match(/(d\\(\"[\\s\\S]+\"\\))\\)/)[1])"
+    },
+    "ruleSearch": {
+      "author": "a[-1]@text",
+      "bookList": ".SHsectionThree-middle>p",
+      "bookUrl": "a[1]@href",
+      "kind": "a[0]@text",
+      "name": "a[1]@text"
+    },
+    "ruleToc": {
+      "chapterList": "ol a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "#end@href\n@js:\nn=parseInt(result[0].match(/\\/(\\d+)\\.html/)[1]);\nlist=[];\nfor (i=2;i<=n;i++)\nlist.push(i+\".html\");\nlist"
+    },
+    "searchUrl": "/search/{{key}}/{{page}}/",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "24.12.18修复by 明月",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 废文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.sosadfun.org",
+    "customOrder": 400,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1734536392011,
+    "respondTime": 3586,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "init": "meta",
+      "intro": "[property=og:description]@content##《{{book.name}}》是由.*一本.*书籍。",
+      "kind": "[property=og:novel:category],[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "tocUrl": "{{baseUrl}}catalog/"
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction d(a, b) {\n    b = java.md5Encode(b);\n    var d = b.substring(0, 16);\n    var e = b.substring(16);\n    return java.aesBase64DecodeToString(\n        a, \n        e, \n        \"AES/CBC/PKCS5Padding\", \n        d\n    );\n}\n\neval(result.match(/(d\\(\"[\\s\\S]+?\"\\))\\)/)[1]);"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "a[-1]@text",
+      "bookList": ".SHsectionThree-middle>p",
+      "bookUrl": "a[1]@href",
+      "kind": "a[0]@text",
+      "name": "a[1]@text"
+    },
+    "ruleToc": {
+      "chapterList": "ol a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "#end@href\n@js:\nn=parseInt(result[0].match(/\\/(\\d+)\\.html/)[1]);\nlist=[];\nfor (i=2;i<=n;i++)\nlist.push(i+\".html\");\nlist"
+    },
+    "searchUrl": "/search/{{key}}/{{page}}/",
+    "weight": 0
+  }
+]

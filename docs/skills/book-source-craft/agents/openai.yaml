@@ -1,0 +1,4 @@
+interface:
+  display_name: "Book Source Craft"
+  short_description: "Create and evolve Legado book sources"
+  default_prompt: "Use $book-source-craft to create a Legado book source from a target website."

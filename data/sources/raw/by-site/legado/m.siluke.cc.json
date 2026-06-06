@@ -1,0 +1,45 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 思路客",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.siluke.cc",
+    "bookUrlPattern": "",
+    "customOrder": 268,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1612812255047,
+    "loginUrl": "",
+    "respondTime": 4640,
+    "ruleBookInfo": {
+      "author": "class.author@tag.a.0@text",
+      "coverUrl": "id.thumb@tag.img@src",
+      "intro": "class.review@text",
+      "kind": "class.sort@tag.li@text",
+      "name": "class.title@tag.span.0@text",
+      "tocUrl": "class.btn@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html##『章节错误[\\w\\W]*无广告！|.*\\/2页\\][\\w\\W]*方便阅读』",
+      "nextContentUrl": "class.Readpage@tag.a.2@href",
+      "replaceRegex": "##[（本章未完，请点击下一页继续阅读）]|『加入书签，方便阅读』|第.*[(]第./.页[)]"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author.0@tag.a.1@text",
+      "bookList": "class.slide-item list1@children",
+      "bookUrl": "tag.a.0@href",
+      "lastChapter": "class.author.1@tag.a@text",
+      "name": "class.title@tag.p@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterlist@tag.p!0",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://m.siluke.cc/SearchBook.php?keyword={{key}}",
+    "weight": 0
+  }
+]

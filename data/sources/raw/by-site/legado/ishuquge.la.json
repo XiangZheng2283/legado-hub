@@ -1,0 +1,374 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la/",
+    "bookUrlPattern": "https://www.ishuquge.la/txt/\\d+/index.html",
+    "customOrder": 928,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠小说\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"侦探小说\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\": 0.29}}]",
+    "lastUpdateTime": 1687526007056,
+    "loginUrl": "",
+    "respondTime": 2294,
+    "ruleBookInfo": {
+      "author": "class.info@class.small@tag.span.0@text##作者：",
+      "coverUrl": "class.cover@img@src",
+      "init": "",
+      "intro": "class.intro@text##作者.*|简介：",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.info@class.small@tag.span.5@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.info@tag.h2@text",
+      "wordCount": "class.info@class.small@tag.span.3@text@js:parseInt(result.replace('字数：','')/10000) + '万'"
+    },
+    "ruleContent": {
+      "content": "id.content@html##看小说,去书趣阁.*阅读环境好.|http.*html|请记住本书.*com|thu.*2013|最新网址.*la"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s5@text",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者：",
+      "bookList": "class.bookbox",
+      "bookUrl": "h4@tag.a@href",
+      "coverUrl": "h4@tag.a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "h4@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.listmain@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.ishuquge.la/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la",
+    "bookUrlPattern": "",
+    "customOrder": 1083,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1675926023196,
+    "loginUrl": "",
+    "respondTime": 1514,
+    "ruleBookInfo": {
+      "author": "class.small.0@tag.span.0@text##作者：",
+      "coverUrl": "class.cover.0@tag.img.0@src",
+      "intro": "class.intro.0@textNodes##简介：",
+      "kind": "class.small.0@tag.span.1@text##分类：",
+      "lastChapter": "class.small.0@tag.span.5@tag.a.0@text",
+      "name": "class.info.0@tag.h2.0@text",
+      "wordCount": "class.small.0@tag.span.3@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.content.0@textNodes##(https:\\/\\/.+)|(请记住本书.+)"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author.0@text",
+      "bookList": "class.bookbox",
+      "bookUrl": "class.bookname.0@tag.a.0@href",
+      "kind": "class.cat.0@text##分类：",
+      "lastChapter": "class.update.0@tag.a.0@text",
+      "name": "class.bookname.0@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "//dt[2]/following-sibling::dd",
+      "chapterName": "tag.a.0@text",
+      "chapterUrl": "tag.a.0@href"
+    },
+    "searchUrl": "/search.php,{'method':'POST','charset': 'utf-8','body':'s=0000000000000000000&searchkey={{key}}'}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "🪔️ i书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la/##@遇知",
+    "customOrder": 57,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"🔖分类🔖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻\",\"url\":\"https://www.ishuquge.la/category/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠\",\"url\":\"https://www.ishuquge.la/category/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市\",\"url\":\"https://www.ishuquge.la/category/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史\",\"url\":\"https://www.ishuquge.la/category/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"侦探\",\"url\":\"https://www.ishuquge.la/category/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"网游\",\"url\":\"https://www.ishuquge.la/category/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻\",\"url\":\"https://www.ishuquge.la/category/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"——\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"——\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\n{\"title\":\"🔖榜单🔖\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"日点击榜\",\"url\":\"https://wap.ishuquge.la/store/dayvisit-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周点击榜\",\"url\":\"https://wap.ishuquge.la/store/weekvisit-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月点击榜\",\"url\":\"https://wap.ishuquge.la/store/monthvisit-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总点击榜\",\"url\":\"https://wap.ishuquge.la/store/allvisit-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总收藏榜\",\"url\":\"https://wap.ishuquge.la/store/goodnum-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"字数排行\",\"url\":\"https://wap.ishuquge.la/store/size-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"日推荐榜\",\"url\":\"https://wap.ishuquge.la/store/dayvote-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周推荐榜\",\"url\":\"https://wap.ishuquge.la/store/weekvote-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月推荐榜\",\"url\":\"https://wap.ishuquge.la/store/monthvote-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐榜\",\"url\":\"https://wap.ishuquge.la/store/allvote-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"https://wap.ishuquge.la/store/postdate-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最近更新\",\"url\":\"https://wap.ishuquge.la/store/lastupdate-{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n\n{\"title\":\"🔖完结🔖\",\"url\":\"https://wap.ishuquge.la/quanben/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}}\n]",
+    "lastUpdateTime": 1683766836712,
+    "respondTime": 2275,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "intro": "🔔 更新时间：{{@@[property=\"og:novel:update_time\"]@content##\\s##🔸}}\n\n📂 内容简介：{{@@[property=\"og:description\"]@content}}##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "wordCount": ".small@span.3@text##.*：(?i)(\\d+).*##$1"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "imageStyle": "",
+      "replaceRegex": "##.*www.ishuquge.la.*|请记住本书首发域名.*"
+    },
+    "ruleExplore": {
+      "author": ".s4@text||p@textNodes##\\/",
+      "bookList": ".l li||.cover p",
+      "bookUrl": ".s2 a@href||p a.1@href@js:##.+\\D(\\d+)\\D##https://www.ishuquge.la/txt/$1/index.html###",
+      "coverUrl": ".s2 a@href||p a.1@href@js:\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';",
+      "intro": "",
+      "kind": "{{@@.s1@text}}\n{{@@.s5@text}}\n{{@@p a.0@text}}##\\[|\\]",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text||a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookbox",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href<js>\nvar id = result.match(/(\\d+)\\/$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": ".cat@text##.*：",
+      "lastChapter": ".update a@text",
+      "name": ".bookname@text"
+    },
+    "ruleToc": {
+      "chapterList": "dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.ishuquge.la/search.php,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la/",
+    "bookUrlPattern": "https://www.ishuquge.la/txt/\\d+/index.html",
+    "customOrder": 338,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠小说\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"侦探小说\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\": 0.29}}]",
+    "lastUpdateTime": 1687526007056,
+    "loginUrl": "",
+    "respondTime": 2416,
+    "ruleBookInfo": {
+      "author": "class.info@class.small@tag.span.0@text##作者：",
+      "coverUrl": "class.cover@img@src",
+      "init": "",
+      "intro": "class.intro@text##作者.*|简介：",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.info@class.small@tag.span.5@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.info@tag.h2@text",
+      "wordCount": "class.info@class.small@tag.span.3@text@js:parseInt(result.replace('字数：','')/10000) + '万'"
+    },
+    "ruleContent": {
+      "content": "id.content@html##看小说,去书趣阁.*阅读环境好.|http.*html|请记住本书.*com|thu.*2013|最新网址.*la"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s5@text",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者：",
+      "bookList": "class.bookbox",
+      "bookUrl": "h4@tag.a@href",
+      "coverUrl": "h4@tag.a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "h4@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.listmain@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.ishuquge.la/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la",
+    "customOrder": 1083,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/category/1_{{page}}.html\n武侠::/category/2_{{page}}.html\n都市::/category/3_{{page}}.html\n历史::/category/4_{{page}}.html\n侦探::/category/5_{{page}}.html\n网游::/category/6_{{page}}.html\n科幻::/category/7_{{page}}.html",
+    "lastUpdateTime": 1692019490319,
+    "respondTime": 1990,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s\\d.*",
+      "lastChapter": "{{@@[property$=chapter_name]@content}} • {{@@[property$=update_time]@content##\\s.*}}",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#content@html##.*ishuquge.la.*"
+    },
+    "ruleExplore": {
+      "author": ".s4@text",
+      "bookList": ".l@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##\\d+##$0###\n@js:\nid=result\niid=parseInt(id/1e3)\n\"/files/article/image/\"+iid+\"/\"+id+\"/\"+id+\"s.jpg\"",
+      "kind": ".s1@text&&.s5@text##\\[|\\]",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookinfo",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##\\d+##$0###\n@js:\nid=result\niid=parseInt(id/1e3)\n\"/files/article/image/\"+iid+\"/\"+id+\"/\"+id+\"s.jpg\"",
+      "kind": ".cat@text##分类：",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".listmain@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.php,{\n  \"body\": \"s=0000000000000000000&searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la/",
+    "bookUrlPattern": "https://www.ishuquge.la/txt/\\d+/index.html",
+    "customOrder": -231,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/category/1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"武侠小说\",\"url\":\"/category/2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/category/3_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"/category/4_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"侦探小说\",\"url\":\"/category/5_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/category/6_{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/category/7_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\": 0.29}}]",
+    "lastUpdateTime": 1687526007056,
+    "loginUrl": "",
+    "respondTime": 24938,
+    "ruleBookInfo": {
+      "author": "class.info@class.small@tag.span.0@text##作者：",
+      "coverUrl": "class.cover@img@src",
+      "init": "",
+      "intro": "class.intro@text##作者.*|简介：",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.info@class.small@tag.span.5@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "class.info@tag.h2@text",
+      "wordCount": "class.info@class.small@tag.span.3@text@js:parseInt(result.replace('字数：','')/10000) + '万'"
+    },
+    "ruleContent": {
+      "content": "id.content@html##看小说,去书趣阁.*阅读环境好.|http.*html|请记住本书.*com|thu.*2013|最新网址.*la"
+    },
+    "ruleExplore": {
+      "author": "class.s4@text",
+      "bookList": "class.l@li",
+      "bookUrl": "class.s2@a@href",
+      "coverUrl": "class.s2@a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.s5@text",
+      "lastChapter": "class.s3@a@text",
+      "name": "class.s2@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author@text##作者：",
+      "bookList": "class.bookbox",
+      "bookUrl": "h4@tag.a@href",
+      "coverUrl": "h4@tag.a@href<js>\nvar id = result.match(/(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'https://www.ishuquge.la/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.cat@text##分类：",
+      "lastChapter": "class.update@a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "h4@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.listmain@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.ishuquge.la/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👑 精选",
+    "bookSourceName": "👑 书趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ishuquge.la",
+    "customOrder": 205,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/category/1_{{page}}.html\n武侠::/category/2_{{page}}.html\n都市::/category/3_{{page}}.html\n历史::/category/4_{{page}}.html\n侦探::/category/5_{{page}}.html\n网游::/category/6_{{page}}.html\n科幻::/category/7_{{page}}.html",
+    "lastUpdateTime": 1713282081543,
+    "respondTime": 2956,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s\\d.*",
+      "lastChapter": "{{@@[property$=chapter_name]@content}} • {{@@[property$=update_time]@content##\\s.*}}",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#content@html##.*ishuquge.la.*",
+      "replaceRegex": "##http.*html|请记住本书首发.*"
+    },
+    "ruleExplore": {
+      "author": ".s4@text",
+      "bookList": ".l@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##\\d+##$0###\n@js:\nid=result\niid=parseInt(id/1e3)\n\"/files/article/image/\"+iid+\"/\"+id+\"/\"+id+\"s.jpg\"",
+      "kind": ".s1@text&&.s5@text##\\[|\\]",
+      "lastChapter": ".s3@text",
+      "name": ".s2@text",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": ".author@text",
+      "bookList": ".bookinfo",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##\\d+##$0###\n@js:\nid=result\niid=parseInt(id/1e3)\n\"/files/article/image/\"+iid+\"/\"+id+\"/\"+id+\"s.jpg\"",
+      "kind": ".cat@text##分类：",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".listmain@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "{{java.connect(source.getKey()).raw().request().url()}}search.php,{\n  \"body\": \"s=0000000000000000000&searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

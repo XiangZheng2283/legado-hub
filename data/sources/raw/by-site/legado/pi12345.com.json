@@ -1,0 +1,60 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸神书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pi12345.com",
+    "customOrder": -2085959012,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "enabledReview": false,
+    "exploreUrl": "",
+    "lastUpdateTime": 1682086430803,
+    "loginCheckJs": "",
+    "respondTime": 181228,
+    "ruleBookInfo": {
+      "author": "//meta[@property=\"og:novel:author\"]/@content",
+      "coverUrl": "//meta[@property=\"og:image\"]/@content##.*nocover.*",
+      "init": "",
+      "intro": "//meta[@property=\"og:description\"]/@content",
+      "kind": "//meta[@property=\"og:novel:category\"]/@content",
+      "lastChapter": "//meta[@property=\"og:novel:lastest_chapter_name\"]/@content&&//meta[@property=\"og:novel:update_time\"]/@content##\\n##•",
+      "name": "//meta[@property=\"og:title\"]/@content",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##$##🍵",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*🍵\\s*"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "lastChapter": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.-1@text",
+      "bookList": "class.SHsectionThree-middle",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "tag.a.0@text",
+      "lastChapter": "",
+      "name": "tag.a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.BCsectionTwo-top@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "http://www.pi12345.com/search/,{\n\t\"method\":\"POST\",\n\t\"body\":\"searchkey={{key}}\"\n\t}",
+    "weight": 0
+  }
+]

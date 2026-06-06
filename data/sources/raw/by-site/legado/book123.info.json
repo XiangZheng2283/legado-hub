@@ -1,0 +1,114 @@
+[
+  {
+    "bookSourceComment": "// Error: 下载链接为空",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "无名图书",
+    "bookSourceType": 3,
+    "bookSourceUrl": "https://www.book123.info",
+    "customOrder": 604,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::/list/?tag=最近更新\n文学::/list/?tag=文学\n社会文化::/list/?tag=社会文化\n历史::/list/?tag=历史\n经济::/list/?tag=经济\n理工科::/list/?tag=理工科\n政治::/list?tag=政治\n健康::/list?tag=健康\n计算机::/list?tag=计算机\n自然科学::/list?tag=自然科学\n设计::/list?tag=设计\n美食旅行::/list?tag=美食旅行\n思想::/list?tag=思想\n生物::/list?tag=生物\n建筑::/list?tag=建筑\n绘本::/list?tag=绘本\n天文::/list?tag=天文\n查看全部::/list?tag=最近更新",
+    "lastUpdateTime": 1686110771954,
+    "respondTime": 184462,
+    "ruleBookInfo": {
+      "author": ".detail_author__V_EVp@a@text",
+      "coverUrl": "picture@img@src",
+      "downloadUrls": ".detail_btns_wrapper__310mw@a@href",
+      "intro": ".detail_book_info__Mv_YW@text",
+      "name": "h1@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "p.1@text",
+      "bookList": "ul@li",
+      "bookUrl": "a@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@src",
+      "intro": "p.-1@text",
+      "kind": "0",
+      "name": "p.0@text"
+    },
+    "searchUrl": "https://www.book123.info/list?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//下载",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "无名图书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.book123.info/",
+    "customOrder": 436,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"最新\",\"url\":\"/list?tag=最近更新\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"文学\",\"url\":\"/list?tag=文学\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"社会\",\"url\":\"/list?tag=社会文化\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"历史\",\"url\":\"/list?tag=历史\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"经济\",\"url\":\"/list?tag=经济\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"理工\",\"url\":\"/list?tag=理工科\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"政治\",\"url\":\"/list?tag=政治\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"健康\",\"url\":\"/list?tag=健康\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"计算\",\"url\":\"/list?tag=计算机\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"自然\",\"url\":\"/list?tag=自然科学\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"设计\",\"url\":\"/list?tag=设计\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"美食\",\"url\":\"/list?tag=美食旅行\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"思想\",\"url\":\"/list?tag=思想\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"生物\",\"url\":\"/list?tag=生物\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"建筑\",\"url\":\"/list?tag=建筑\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"天文\",\"url\":\"/list?tag=天文\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"绘本\",\"url\":\"/list?tag=绘本\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"哲学\",\"url\":\"/list?tag=哲学\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"宗教\",\"url\":\"/list?tag=宗教\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"工业\",\"url\":\"/list?tag=工业技术\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"工学\",\"url\":\"/list?tag=工学\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"投资\",\"url\":\"/list?tag=投资\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"地理\",\"url\":\"/list?tag=地理\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}},{\"title\":\"文化\",\"url\":\"/list?tag=文化\",\"style\":{\"layout_flexBasisPercent\":0.2,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1692440710220,
+    "respondTime": 2429,
+    "ruleBookInfo": {
+      "author": ".detail_author__V_EVp@text",
+      "coverUrl": ".detail_img_wrapper__WfTUB img@src",
+      "intro": ".detail_section_detail__CIEGT@html",
+      "kind": ".detail_book_info__Mv_YW p.2:4:6@text&&.detail_starts__dkF9x@title",
+      "name": ".detail_title__wYqGY@text",
+      "wordCount": ".detail_book_info__Mv_YW p.8@text"
+    },
+    "ruleContent": {
+      "content": ".detail_section_title__qRgzS[-1]@text&&.detail_download_btn__v7b7k@href"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "p.1@text",
+      "bookList": ".list_pageContent__z_yzv li",
+      "bookUrl": "a@href",
+      "coverUrl": "a@href##/(\\d+)##https://file2.book123.info:2053/covers/s/$1.jpg###",
+      "intro": "p.3@text",
+      "kind": "p.2@text##.*\\s",
+      "name": "p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "h1",
+      "chapterName": "text"
+    },
+    "searchUrl": "/list?key={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "下载,源仓库,自制,出版,网页源",
+    "bookSourceName": "无名图书",
+    "bookSourceType": 3,
+    "bookSourceUrl": "https://www.book123.info",
+    "customOrder": 1041,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "最近更新::/list/?tag=最近更新\n文学::/list/?tag=文学\n社会文化::/list/?tag=社会文化\n历史::/list/?tag=历史\n经济::/list/?tag=经济\n理工科::/list/?tag=理工科\n政治::/list?tag=政治\n健康::/list?tag=健康\n计算机::/list?tag=计算机\n自然科学::/list?tag=自然科学\n设计::/list?tag=设计\n美食旅行::/list?tag=美食旅行\n思想::/list?tag=思想\n生物::/list?tag=生物\n建筑::/list?tag=建筑\n绘本::/list?tag=绘本\n天文::/list?tag=天文\n查看全部::/list?tag=最近更新",
+    "lastUpdateTime": 1686110771954,
+    "respondTime": 2023,
+    "ruleBookInfo": {
+      "author": ".detail_author__V_EVp@a@text",
+      "coverUrl": "picture@img@src",
+      "downloadUrls": ".detail_btns_wrapper__310mw@a@href",
+      "intro": ".detail_book_info__Mv_YW@text",
+      "name": "h1@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "p.1@text",
+      "bookList": "ul@li",
+      "bookUrl": "a@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@src",
+      "intro": "p.-1@text",
+      "kind": "0",
+      "name": "p.0@text"
+    },
+    "searchUrl": "https://www.book123.info/list?key={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "求书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.aidusk.info/",
+    "bookUrlPattern": "http://www.aidusk.org/t/\\d+/",
+    "customOrder": -214,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1692662371672,
+    "loginUrl": "",
+    "respondTime": 184317,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content",
+      "name": "[property=og:novel:book_name]@content"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.p.-2@text",
+      "bookList": "class.block",
+      "bookUrl": "tag.a.1@href@js:'http://www.aidusk.info/t'+result",
+      "checkKeyWord": "万族之劫",
+      "coverUrl": "img@src",
+      "lastChapter": "tag.p.-1@a@text",
+      "name": "h2@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book_con_list.1@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "http://m.aidusk.info/search.php,{\n  \"body\": \"searchkey={{key}}&submit=\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

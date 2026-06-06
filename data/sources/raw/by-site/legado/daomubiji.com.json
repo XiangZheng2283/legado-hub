@@ -1,0 +1,218 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "盗墓笔记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.com/",
+    "bookUrlPattern": "",
+    "customOrder": 814,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685885363529,
+    "respondTime": 3723,
+    "ruleBookInfo": {
+      "intro": "class.focusbox-text@text",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": "class.article-content@tag.p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "text##(|)",
+      "bookList": "class.container@tag.li!0",
+      "bookUrl": "tag.a@href",
+      "name": "class.menu-item@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.excerpts-wrapper@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "-",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 盗墓笔记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.com",
+    "bookUrlPattern": "",
+    "customOrder": 1407,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "盗墓笔记::http://www.daomubiji.com/",
+    "lastUpdateTime": 1673567305423,
+    "respondTime": 16616,
+    "ruleBookInfo": {
+      "intro": "class.focusbox-text@text"
+    },
+    "ruleContent": {
+      "content": "class.article-content@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "text##(|)",
+      "bookList": "class.container@tag.li!0",
+      "bookUrl": "tag.a@href",
+      "name": "class.menu-item@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.excerpts-wrapper@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "-",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "盗墓笔记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.com/",
+    "bookUrlPattern": "",
+    "customOrder": 59,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685885363529,
+    "respondTime": 1629,
+    "ruleBookInfo": {
+      "intro": "class.focusbox-text@text",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": "class.article-content@tag.p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "text##(|)",
+      "bookList": "class.container@tag.li!0",
+      "bookUrl": "tag.a@href",
+      "name": "class.menu-item@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.excerpts-wrapper@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "-",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⭐️小说",
+    "bookSourceName": "📚 盗墓笔记",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.com",
+    "bookUrlPattern": "",
+    "customOrder": 1724,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "盗墓笔记::http://www.daomubiji.com/",
+    "lastUpdateTime": 1673567305423,
+    "respondTime": 2573,
+    "ruleBookInfo": {
+      "intro": "class.focusbox-text@text"
+    },
+    "ruleContent": {
+      "content": "class.article-content@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "text##(|)",
+      "bookList": "class.container@tag.li!0",
+      "bookUrl": "tag.a@href",
+      "name": "class.menu-item@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.excerpts-wrapper@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "-",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "盗墓笔记（优+）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.com",
+    "customButton": false,
+    "customOrder": 73,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "盗墓笔记::http://www.daomubiji.com/",
+    "lastUpdateTime": 1759387475979,
+    "respondTime": 16490,
+    "ruleBookInfo": {
+      "intro": "class.focusbox-text@text"
+    },
+    "ruleContent": {
+      "content": "class.article-content@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "text##(|)",
+      "bookList": "class.container@tag.li!0",
+      "bookUrl": "tag.a@href",
+      "name": "class.menu-item@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.excerpts-wrapper@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "-",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "盗墓笔记（优+）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.daomubiji.com",
+    "customButton": false,
+    "customOrder": 64,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "盗墓笔记::http://www.daomubiji.com/",
+    "lastUpdateTime": 1759387475979,
+    "respondTime": 16490,
+    "ruleBookInfo": {
+      "intro": "class.focusbox-text@text"
+    },
+    "ruleContent": {
+      "content": "class.article-content@tag.p@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "text##(|)",
+      "bookList": "class.container@tag.li!0",
+      "bookUrl": "tag.a@href",
+      "name": "class.menu-item@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.excerpts-wrapper@tag.a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "-",
+    "weight": 0
+  }
+]

@@ -1,0 +1,98 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "动漫",
+    "bookSourceName": "背窝韩漫🌵",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://bwhanman.com",
+    "customOrder": 320,
+    "enabled": false,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "热门漫画::https://bwhanman.com/list?page={{page}}",
+    "lastUpdateTime": 1648964217405,
+    "respondTime": 8824,
+    "ruleBookInfo": {
+      "author": "",
+      "init": "",
+      "intro": "class.novel-intro@p@html",
+      "kind": "class.hottag flexstart@em@text",
+      "name": "tag.h3@text",
+      "tocUrl": "text.查看全部章节@href"
+    },
+    "ruleContent": {
+      "content": "class.u-reading-content@img@html##src=\"/.*?v=.*\" class=\"lazyload\"",
+      "imageStyle": "FULL",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "bookList": "class.flexbetween@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.newimg@img@data-src",
+      "lastChapter": "tag.span.-1@text##更新至",
+      "name": "tag.h2@text"
+    },
+    "ruleSearch": {
+      "bookList": "class.flexbetween@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.newimg@img@data-src",
+      "lastChapter": "tag.span.-1@text##更新至",
+      "name": "tag.h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapters@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://bwhanman.com/site/search?keyword={{key}}",
+    "weight": 44
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0-2图片,🎨 漫画",
+    "bookSourceName": "🌵背窝韩漫🌵",
+    "bookSourceType": 2,
+    "bookSourceUrl": "https://bwhanman.com",
+    "customOrder": 1353,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "热门漫画::https://bwhanman.com/list?page={{page}}",
+    "lastUpdateTime": 1648964217405,
+    "respondTime": 4936,
+    "ruleBookInfo": {
+      "author": "",
+      "init": "",
+      "intro": "class.novel-intro@p@html",
+      "kind": "class.hottag flexstart@em@text",
+      "name": "tag.h3@text",
+      "tocUrl": "text.查看全部章节@href"
+    },
+    "ruleContent": {
+      "content": "class.u-reading-content@img@html##src=\"/.*?v=.*\" class=\"lazyload\"",
+      "imageStyle": "FULL",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "bookList": "class.flexbetween@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.newimg@img@data-src",
+      "lastChapter": "tag.span.-1@text##更新至",
+      "name": "tag.h2@text"
+    },
+    "ruleSearch": {
+      "bookList": "class.flexbetween@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "class.newimg@img@data-src",
+      "lastChapter": "tag.span.-1@text##更新至",
+      "name": "tag.h2@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapters@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://bwhanman.com/site/search?keyword={{key}}",
+    "weight": 46
+  }
+]

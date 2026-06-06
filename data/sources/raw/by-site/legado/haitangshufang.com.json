@@ -1,0 +1,136 @@
+[
+  {
+    "bookSourceComment": "同站：\n一曲书屋 https://www.yiqushuwu.com",
+    "bookSourceGroup": "",
+    "bookSourceName": "海棠书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haitangshufang.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 571,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/xuanhuan/\n武侠修真::/wuxia/\n都市言情::/dushi/\n历史军事::/lishi/\n网游竞技::/wangyou/\n科幻未来::/kehuan/\n恐怖悬疑::/kongbu/\n其他类型::/qita/\n全本小说::/quanben/\n排行榜单::/paihang/",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1724338207547,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 661,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".auths@textNodes##作者：",
+      "coverUrl": "img@src",
+      "intro": ".u-bx@p@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h1@text",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".zhang-txt-nei-rong@html",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "div.2@text",
+      "bookList": ".topba-list@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "div.5@text",
+      "lastChapter": "div.1@text",
+      "name": "a.0@text",
+      "wordCount": "div.3@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "td.1@text",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".pox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/modules/article/search.php,{\n 'method': 'POST',\n 'charset': 'gbk',\n 'body':'searchkey={{key}}&t_btnsearch=搜索&searchtype=articlename'\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "同站：\n一曲书屋 https://www.yiqushuwu.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🔰 海棠书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.haitangshufang.com",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 706,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "玄幻奇幻::/xuanhuan/\n武侠修真::/wuxia/\n都市言情::/dushi/\n历史军事::/lishi/\n网游竞技::/wangyou/\n科幻未来::/kehuan/\n恐怖悬疑::/kongbu/\n其他类型::/qita/\n全本小说::/quanben/\n排行榜单::/paihang/",
+    "header": "",
+    "lastUpdateTime": 1724338207547,
+    "respondTime": 31202,
+    "ruleBookInfo": {
+      "author": ".auths@textNodes##作者：",
+      "coverUrl": "img@src",
+      "intro": ".u-bx@p@text",
+      "name": "h1@text"
+    },
+    "ruleContent": {
+      "content": ".zhang-txt-nei-rong@html"
+    },
+    "ruleExplore": {
+      "author": "div.2@text",
+      "bookList": ".topba-list@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "kind": "div.5@text",
+      "lastChapter": "div.1@text",
+      "name": "a.0@text",
+      "wordCount": "div.3@text"
+    },
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "",
+      "lastChapter": "td.1@text",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".pox@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n 'method': 'POST',\n 'charset': 'gbk',\n 'body':'searchkey={{key}}&t_btnsearch=搜索&searchtype=articlename'\n}",
+    "weight": 0
+  }
+]

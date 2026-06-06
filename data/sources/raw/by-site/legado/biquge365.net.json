@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁🎃#58",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge365.net#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2339,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻魔法::sort/1_1/\n仙侠修真::sort/2_1/\n都市言情::sort/3_1/\n网游动漫::sort/4_1/\n科幻小说::sort/5_1/\n恐怖灵异::sort/6_1/\n历史军事::sort/7_1/\n其他类型::sort/8_1/",
+    "exploreScreen": "",
+    "header": "{\r\n    \"User-Agent\": Mozilla/5.0 (Windows NT 5.2) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.122 Safari/534.30\",\r\n    \"Accept-Language\":\"zh-CN,zh;q=0.9\"\r\n}",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 879,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".x1 a@text",
+      "coverUrl": ".zhutu img@src",
+      "intro": "div.x3@text",
+      "kind": ".x1.1@text##类型：",
+      "lastChapter": ".x2 a@text",
+      "name": "h1@text",
+      "canReName": "",
+      "tocUrl": "text.全部章节目录@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "div.txt@text##biquge365.net，更新快，无弹窗！",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "span.zuo@text",
+      "bookList": ".gengxin li",
+      "bookUrl": ".name a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": ".jie a@text",
+      "name": ".name a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": ".zuo a@text",
+      "bookList": ".search li!0",
+      "bookUrl": ".name a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": ".lei a@\\[|\\]",
+      "lastChapter": ".jie a@text",
+      "name": ".name a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".info a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/s.php,{\n  \"body\": \"type=articlename&s={{key}}&submit=\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

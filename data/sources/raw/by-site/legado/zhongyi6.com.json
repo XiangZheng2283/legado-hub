@@ -1,0 +1,78 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "中意文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhongyi6.com",
+    "customOrder": 1196,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678685407536,
+    "respondTime": 522,
+    "ruleBookInfo": {
+      "tocUrl": "text.查看目录@href"
+    },
+    "ruleContent": {
+      "content": "#body@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".text_m@text",
+      "bookList": "li.clearfix2",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".t_c.1@text",
+      "kind": ".t_t@a.-1@text&&.m_l_b@text",
+      "lastChapter": "{{@.t_d@a@text}} • {{@.m_l_b.1@text}}",
+      "name": "h5@text",
+      "wordCount": ".t_c.0@text##字"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterDirectory@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/books/search/{{key}}/page_{{page}}.html",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "中意文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.zhongyi6.com",
+    "customOrder": 1351,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678685407536,
+    "respondTime": 566,
+    "ruleBookInfo": {
+      "tocUrl": "text.查看目录@href"
+    },
+    "ruleContent": {
+      "content": "#body@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".text_m@text",
+      "bookList": "li.clearfix2",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "intro": ".t_c.1@text",
+      "kind": ".t_t@a.-1@text&&.m_l_b@text",
+      "lastChapter": "{{@.t_d@a@text}} • {{@.m_l_b.1@text}}",
+      "name": "h5@text",
+      "wordCount": ".t_c.0@text##字"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterDirectory@li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href"
+    },
+    "searchUrl": "/books/search/{{key}}/page_{{page}}.html",
+    "weight": 0
+  }
+]

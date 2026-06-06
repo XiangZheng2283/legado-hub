@@ -1,0 +1,352 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "💊 若初",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochuwx.com",
+    "bookUrlPattern": "",
+    "customOrder": 626,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "全部分类::/finish/allsort/{{page}}.html\n玄幻奇幻::/finish/xuanhuan/{{page}}.html\n武侠仙侠::/finish/wuxia/{{page}}.html\n都市生活::/finish/dushi/{{page}}.html\n历史军事::/finish/lishi/{{page}}.html\n游戏竞技::/finish/youxi/{{page}}.html\n科幻未来::/finish/kehuan/{{page}}.html\n恐怖悬疑::/finish/xuanyi/{{page}}.html\n其他类型::/finish/qita/{{page}}.html\n古代言情::/finish/guyan/{{page}}.html\n现代言情::/finish/xianyan/{{page}}.html\n幻想奇缘::/finish/huanqing/{{page}}.html\n游戏情缘::/finish/zongcai/{{page}}.html\n浪漫青春::/finish/qingchun/{{page}}.html\n言情美文::/finish/wangluo/{{page}}.html\n科幻灵异::/finish/mmkehuan/{{page}}.html\n其他类型::/finish/mmqita/{{page}}.html",
+    "header": "{\n    \"User-Agent\":\"Mozilla/5.0 (Linux; Android 11; PCLM10 Build/RKQ1.200928.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36\",\n\"x-requested-with\":\"XBrowser\",\n\"Referer\":\"https://m.ruochuwx.com/\",\n\"Cookie\":\"uc=wKgDMWDnwnMTX2rpJw0iAg==; bookChapter=true\"\n}",
+    "lastUpdateTime": 1680064743241,
+    "loginUrl": "",
+    "respondTime": 5759,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*更新速度.*"
+    },
+    "ruleExplore": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt"
+    },
+    "ruleSearch": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 若初文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochuwx.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1145,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部分类::/finish/allsort/{{page}}.html\n玄幻奇幻::/finish/xuanhuan/{{page}}.html\n武侠仙侠::/finish/wuxia/{{page}}.html\n都市生活::/finish/dushi/{{page}}.html\n历史军事::/finish/lishi/{{page}}.html\n游戏竞技::/finish/youxi/{{page}}.html\n科幻未来::/finish/kehuan/{{page}}.html\n恐怖悬疑::/finish/xuanyi/{{page}}.html\n其他类型::/finish/qita/{{page}}.html\n古代言情::/finish/guyan/{{page}}.html\n现代言情::/finish/xianyan/{{page}}.html\n幻想奇缘::/finish/huanqing/{{page}}.html\n游戏情缘::/finish/zongcai/{{page}}.html\n浪漫青春::/finish/qingchun/{{page}}.html\n言情美文::/finish/wangluo/{{page}}.html\n科幻灵异::/finish/mmkehuan/{{page}}.html\n其他类型::/finish/mmqita/{{page}}.html",
+    "header": "{\n    \"User-Agent\":\"Mozilla/5.0 (Linux; Android 11; PCLM10 Build/RKQ1.200928.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36\",\n\"x-requested-with\":\"XBrowser\",\n\"Referer\":\"https://m.ruochuwx.com/\",\n\"Cookie\":\"uc=wKgDMWDnwnMTX2rpJw0iAg==; bookChapter=true\"\n}",
+    "lastUpdateTime": 1685721839120,
+    "loginUrl": "",
+    "respondTime": 8289,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*更新速度.*"
+    },
+    "ruleExplore": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "小说",
+    "bookSourceName": "💊 若初",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochuwx.com",
+    "bookUrlPattern": "",
+    "customOrder": 1060,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "exploreUrl": "全部分类::/finish/allsort/{{page}}.html\n玄幻奇幻::/finish/xuanhuan/{{page}}.html\n武侠仙侠::/finish/wuxia/{{page}}.html\n都市生活::/finish/dushi/{{page}}.html\n历史军事::/finish/lishi/{{page}}.html\n游戏竞技::/finish/youxi/{{page}}.html\n科幻未来::/finish/kehuan/{{page}}.html\n恐怖悬疑::/finish/xuanyi/{{page}}.html\n其他类型::/finish/qita/{{page}}.html\n古代言情::/finish/guyan/{{page}}.html\n现代言情::/finish/xianyan/{{page}}.html\n幻想奇缘::/finish/huanqing/{{page}}.html\n游戏情缘::/finish/zongcai/{{page}}.html\n浪漫青春::/finish/qingchun/{{page}}.html\n言情美文::/finish/wangluo/{{page}}.html\n科幻灵异::/finish/mmkehuan/{{page}}.html\n其他类型::/finish/mmqita/{{page}}.html",
+    "header": "{\n    \"User-Agent\":\"Mozilla/5.0 (Linux; Android 11; PCLM10 Build/RKQ1.200928.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36\",\n\"x-requested-with\":\"XBrowser\",\n\"Referer\":\"https://m.ruochuwx.com/\",\n\"Cookie\":\"uc=wKgDMWDnwnMTX2rpJw0iAg==; bookChapter=true\"\n}",
+    "lastUpdateTime": 1680064743241,
+    "loginUrl": "",
+    "respondTime": 4868,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*更新速度.*"
+    },
+    "ruleExplore": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt"
+    },
+    "ruleSearch": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📚 若初文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochuwx.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1070,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部分类::/finish/allsort/{{page}}.html\n玄幻奇幻::/finish/xuanhuan/{{page}}.html\n武侠仙侠::/finish/wuxia/{{page}}.html\n都市生活::/finish/dushi/{{page}}.html\n历史军事::/finish/lishi/{{page}}.html\n游戏竞技::/finish/youxi/{{page}}.html\n科幻未来::/finish/kehuan/{{page}}.html\n恐怖悬疑::/finish/xuanyi/{{page}}.html\n其他类型::/finish/qita/{{page}}.html\n古代言情::/finish/guyan/{{page}}.html\n现代言情::/finish/xianyan/{{page}}.html\n幻想奇缘::/finish/huanqing/{{page}}.html\n游戏情缘::/finish/zongcai/{{page}}.html\n浪漫青春::/finish/qingchun/{{page}}.html\n言情美文::/finish/wangluo/{{page}}.html\n科幻灵异::/finish/mmkehuan/{{page}}.html\n其他类型::/finish/mmqita/{{page}}.html",
+    "header": "{\n    \"User-Agent\":\"Mozilla/5.0 (Linux; Android 11; PCLM10 Build/RKQ1.200928.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36\",\n\"x-requested-with\":\"XBrowser\",\n\"Referer\":\"https://m.ruochuwx.com/\",\n\"Cookie\":\"uc=wKgDMWDnwnMTX2rpJw0iAg==; bookChapter=true\"\n}",
+    "lastUpdateTime": 1685721839120,
+    "loginUrl": "",
+    "respondTime": 5420,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*更新速度.*"
+    },
+    "ruleExplore": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🌿 无错",
+    "bookSourceName": "🌿 若初",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochuwx.com",
+    "bookUrlPattern": "",
+    "customOrder": 56,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "全部分类::/finish/allsort/{{page}}.html\n玄幻奇幻::/finish/xuanhuan/{{page}}.html\n武侠仙侠::/finish/wuxia/{{page}}.html\n都市生活::/finish/dushi/{{page}}.html\n历史军事::/finish/lishi/{{page}}.html\n游戏竞技::/finish/youxi/{{page}}.html\n科幻未来::/finish/kehuan/{{page}}.html\n恐怖悬疑::/finish/xuanyi/{{page}}.html\n其他类型::/finish/qita/{{page}}.html\n古代言情::/finish/guyan/{{page}}.html\n现代言情::/finish/xianyan/{{page}}.html\n幻想奇缘::/finish/huanqing/{{page}}.html\n游戏情缘::/finish/zongcai/{{page}}.html\n浪漫青春::/finish/qingchun/{{page}}.html\n言情美文::/finish/wangluo/{{page}}.html\n科幻灵异::/finish/mmkehuan/{{page}}.html\n其他类型::/finish/mmqita/{{page}}.html",
+    "header": "{\n    \"User-Agent\":\"Mozilla/5.0 (Linux; Android 11; PCLM10 Build/RKQ1.200928.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36\",\n\"x-requested-with\":\"XBrowser\",\n\"Referer\":\"https://m.ruochuwx.com/\",\n\"Cookie\":\"uc=wKgDMWDnwnMTX2rpJw0iAg==; bookChapter=true\"\n}",
+    "lastUpdateTime": 1723714220539,
+    "loginUrl": "",
+    "respondTime": 3618,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*更新速度.*|.*下一页继续阅读.*"
+    },
+    "ruleExplore": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt"
+    },
+    "ruleSearch": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 若初文学",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ruochuwx.com/",
+    "bookUrlPattern": "",
+    "customOrder": 186,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部分类::/finish/allsort/{{page}}.html\n玄幻奇幻::/finish/xuanhuan/{{page}}.html\n武侠仙侠::/finish/wuxia/{{page}}.html\n都市生活::/finish/dushi/{{page}}.html\n历史军事::/finish/lishi/{{page}}.html\n游戏竞技::/finish/youxi/{{page}}.html\n科幻未来::/finish/kehuan/{{page}}.html\n恐怖悬疑::/finish/xuanyi/{{page}}.html\n其他类型::/finish/qita/{{page}}.html\n古代言情::/finish/guyan/{{page}}.html\n现代言情::/finish/xianyan/{{page}}.html\n幻想奇缘::/finish/huanqing/{{page}}.html\n游戏情缘::/finish/zongcai/{{page}}.html\n浪漫青春::/finish/qingchun/{{page}}.html\n言情美文::/finish/wangluo/{{page}}.html\n科幻灵异::/finish/mmkehuan/{{page}}.html\n其他类型::/finish/mmqita/{{page}}.html",
+    "header": "{\n    \"User-Agent\":\"Mozilla/5.0 (Linux; Android 11; PCLM10 Build/RKQ1.200928.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36\",\n\"x-requested-with\":\"XBrowser\",\n\"Referer\":\"https://m.ruochuwx.com/\",\n\"Cookie\":\"uc=wKgDMWDnwnMTX2rpJw0iAg==; bookChapter=true\"\n}",
+    "lastUpdateTime": 1723697795025,
+    "loginUrl": "",
+    "respondTime": 3061,
+    "ruleBookInfo": {
+      "author": "id.info@tag.p.0@a@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p@text",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:update_time\"]@content&&[property=\"og:novel:status\"]@content",
+      "lastChapter": "id.info@tag.p.3@a@text",
+      "name": "id.info@h1.0@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*更新速度.*"
+    },
+    "ruleExplore": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt"
+    },
+    "ruleSearch": {
+      "author": "class.data.0@a@text",
+      "bookList": "class.list@li",
+      "bookUrl": "https://www.ruochuwx.com{{@@class.bookname@a@href}}",
+      "coverUrl": "img@src",
+      "intro": "class.intro@text",
+      "kind": "class.data.0@span@text",
+      "lastChapter": "class.data.1@text",
+      "name": "img@alt",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "id.list@tag.dl@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.html,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

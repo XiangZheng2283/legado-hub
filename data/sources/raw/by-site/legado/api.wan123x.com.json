@@ -1,0 +1,517 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com",
+    "customOrder": 699,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1678673477753,
+    "respondTime": 1367,
+    "ruleBookInfo": {
+      "init": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "lastChapter": "",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "updateTime": "{{$.words}}字"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com/",
+    "customOrder": 1081,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1693536859546,
+    "respondTime": 1129,
+    "ruleBookInfo": {
+      "init": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "lastChapter": "",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "updateTime": ""
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 50
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⚡️ 1.1次,0-1文本",
+    "bookSourceName": "🔖花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com",
+    "customOrder": 99,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1678673477753,
+    "respondTime": 3624,
+    "ruleBookInfo": {
+      "init": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "lastChapter": "",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "updateTime": "{{$.words}}字"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com/",
+    "customOrder": 320,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1693536859546,
+    "respondTime": 1952,
+    "ruleBookInfo": {
+      "init": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "lastChapter": "",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "updateTime": ""
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 50
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "API",
+    "bookSourceName": "花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com/",
+    "customOrder": -318,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1692668403701,
+    "respondTime": 3387,
+    "ruleBookInfo": {
+      "init": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "lastChapter": "",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "updateTime": ""
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: json string can not be null or empty",
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "花生小说（优）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com",
+    "customButton": false,
+    "customOrder": 184,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1759327824877,
+    "respondTime": 180453,
+    "ruleBookInfo": {
+      "lastChapter": "$.data[-1].chapter_name"
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 50
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "🎃花生小说🎃#2",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2132,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 150,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "$..content",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "author_name",
+      "bookList": "data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$..book_id}}&catalog_order=asc",
+      "coverUrl": "cover_url",
+      "intro": "&nbsp;&nbsp;{{$.introduce}}",
+      "kind": "$..category1&&$..category2&&$..role&&$..ability",
+      "lastChapter": "",
+      "name": "book_name",
+      "wordCount": "words"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "$.data[*]\n<js>\n(() => {\n\tlist = Array.from(result).filter(item => item.type == \"book\")\n\treturn list\n})()\n\nbookList = list.map(x => `https://api.wan123x.com/read/getBookDetail?book_id=${x.id}`)\n\nd = java.ajaxAll(bookList).map(x => x.body());\n\n$=(b,c)=>java.getString(b,c);\n\nArray.from(list,(a,i)=>{\n\tlist={\n\t\tname:$(\"name\",a),\n\t\tauthor:$(\"$..author_name\",d[i]),\n\t\tkind:$(\"$..category1&&$..category2&&$..role&&$..ability\",d[i]),\n\t\twords:$(\"$..words\",d[i]),\n\t\tlastc:$(\"\",d[i]),\n\t\tintro:\"&nbsp;&nbsp;\" + $(\"$..intro\",d[i]),\n\t\tcover:$(\"$..cover_url\",d[i]),\n\t\tlink:`https://api.wan123x.com/read/getCatalog?book_id=${$(\"$..book_id\",d[i])}&catalog_order=asc`\n\t\t};\n\t\treturn list\n\t});\n</js>",
+      "bookUrl": "link",
+      "coverUrl": "cover",
+      "intro": "intro",
+      "kind": "kind",
+      "lastChapter": "",
+      "name": "name",
+      "wordCount": "words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": "{{$.words}}字"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getLike?keyword={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 3572,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 150,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "name": "",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "$..content",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "author_name",
+      "bookList": "data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$..book_id}}&catalog_order=asc",
+      "coverUrl": "cover_url",
+      "intro": "&nbsp;&nbsp;{{$.introduce}}",
+      "kind": "$..category1&&$..category2&&$..role&&$..ability",
+      "lastChapter": "",
+      "name": "book_name",
+      "wordCount": "words"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "$.data[*]\n<js>\n(() => {\n\tlist = Array.from(result).filter(item => item.type == \"book\")\n\treturn list\n})()\n\nbookList = list.map(x => `https://api.wan123x.com/read/getBookDetail?book_id=${x.id}`)\n\nd = java.ajaxAll(bookList).map(x => x.body());\n\n$=(b,c)=>java.getString(b,c);\n\nArray.from(list,(a,i)=>{\n\tlist={\n\t\tname:$(\"name\",a),\n\t\tauthor:$(\"$..author_name\",d[i]),\n\t\tkind:$(\"$..category1&&$..category2&&$..role&&$..ability\",d[i]),\n\t\twords:$(\"$..words\",d[i]),\n\t\tlastc:$(\"\",d[i]),\n\t\tintro:\"&nbsp;&nbsp;\" + $(\"$..intro\",d[i]),\n\t\tcover:$(\"$..cover_url\",d[i]),\n\t\tlink:`https://api.wan123x.com/read/getCatalog?book_id=${$(\"$..book_id\",d[i])}&catalog_order=asc`\n\t\t};\n\t\treturn list\n\t});\n</js>",
+      "bookUrl": "link",
+      "coverUrl": "cover",
+      "intro": "intro",
+      "kind": "kind",
+      "lastChapter": "",
+      "name": "name",
+      "wordCount": "words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": "{{$.words}}字"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getLike?keyword={{key}}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "24.9.9修复_明月照大江",
+    "bookSourceGroup": "🌙 ΑΡI",
+    "bookSourceName": "🌙 花生小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com",
+    "customOrder": 24,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1725849002889,
+    "respondTime": 9069,
+    "ruleBookInfo": {
+      "init": "",
+      "lastChapter": "$.data[-1].chapter_name",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {
+      "author": "author_name",
+      "bookList": "data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$..book_id}}&catalog_order=asc",
+      "coverUrl": "cover_url",
+      "intro": "&nbsp;&nbsp;{{$.introduce}}",
+      "kind": "$..category1&&$..category2&&$..role&&$..ability",
+      "name": "book_name",
+      "wordCount": "words"
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "$.data[*]\n<js>\n(() => {\n\tlist = Array.from(result).filter(item => item.type == \"book\")\n\treturn list\n})()\n\nbookList = list.map(x => `https://api.wan123x.com/read/getBookDetail?book_id=${x.id}`)\n\nd = java.ajaxAll(bookList).map(x => x.body());\n\n$=(b,c)=>java.getString(b,c);\n\nArray.from(list,(a,i)=>{\n\tlist={\n\t\tname:$(\"name\",a),\n\t\tauthor:$(\"$..author_name\",d[i]),\n\t\tkind:$(\"$..category1&&$..category2&&$..role&&$..ability\",d[i]),\n\t\twords:$(\"$..words\",d[i]),\n\t\tlastc:$(\"\",d[i]),\n\t\tintro:\"&nbsp;&nbsp;\" + $(\"$..intro\",d[i]),\n\t\tcover:$(\"$..cover_url\",d[i]),\n\t\tlink:`https://api.wan123x.com/read/getCatalog?book_id=${$(\"$..book_id\",d[i])}&catalog_order=asc`\n\t\t};\n\t\treturn list\n\t});\n</js>",
+      "bookUrl": "link",
+      "checkKeyWord": "战神",
+      "coverUrl": "cover",
+      "intro": "intro",
+      "kind": "kind",
+      "lastChapter": "",
+      "name": "name",
+      "wordCount": "words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'",
+      "updateTime": "{{$.words}}字"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getLike?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "// Error: json string can not be null or empty",
+    "bookSourceGroup": "小说 书源",
+    "bookSourceName": "花生小说（优）",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://api.wan123x.com",
+    "customButton": false,
+    "customOrder": 160,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "[\n{\"title\": \"男频分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=all&fullflag=all&sort=all&page={{page}}\",\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"都市生活\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%83%BD%E5%B8%82%E7%94%9F%E6%B4%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生艺术\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E9%87%8D%E7%94%9F%E5%BC%82%E6%9C%AF&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"玄幻武侠\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%8E%84%E5%B9%BB%E6%AD%A6%E4%BE%A0&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"穿越科幻\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E7%A9%BF%E8%B6%8A%E7%A7%91%E5%B9%BB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"游戏动漫\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=1&category=%E6%B8%B8%E6%88%8F%E5%8A%A8%E6%BC%AB&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"女生分类\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=all&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 1\n}},\n{\"title\": \"现代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%8E%B0%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"古代言情\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E5%8F%A4%E4%BB%A3%E8%A8%80%E6%83%85&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"种田经商\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E7%A7%8D%E7%94%B0%E7%BB%8F%E5%95%86&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0.25,\n\"layout_flexBasisPercent\": -1\n}},\n{\"title\": \"重生异能\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E9%87%8D%E7%94%9F%E5%BC%82%E8%83%BD&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}},\n{\"title\": \"悬疑灵异\",\"url\": \"https://api.wan123x.com/book/getBooksByParams?subsite=2&category=%E6%82%AC%E7%96%91%E7%81%B5%E5%BC%82&fullflag=all&sort=all&page={{page}}\",\n\"style\": {\"layout_flexGrow\": 0,\n\"layout_flexBasisPercent\": 0.29\n}}\n]",
+    "lastUpdateTime": 1759327824877,
+    "respondTime": 180453,
+    "ruleBookInfo": {
+      "lastChapter": "$.data[-1].chapter_name"
+    },
+    "ruleContent": {
+      "content": "$..content"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "$.author_name",
+      "bookList": "$.data[*]",
+      "bookUrl": "https://api.wan123x.com/read/getCatalog?book_id={{$.book_id}}&catalog_order=asc",
+      "coverUrl": "$.cover_url",
+      "intro": "$.introduce",
+      "kind": "$.category1&&$.category2&&$.role&&$.ability",
+      "name": "$.book_name",
+      "wordCount": "$.words"
+    },
+    "ruleToc": {
+      "chapterList": "$.data[*]",
+      "chapterName": "$.chapter_name",
+      "chapterUrl": "@js:\nn=baseUrl.match(/book_id=(\\d+)/)[1];\nresult='https://api.wan123x.com/read/getChapterDetail?book_id='+n+'&chapter_id={{$.chapter_id}}'"
+    },
+    "searchUrl": "https://api.wan123x.com/search/getList?keyword={{key}}",
+    "weight": 50
+  }
+]

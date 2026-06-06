@@ -1,0 +1,204 @@
+[
+  {
+    "bookSourceComment": "//不少于6个字符（3个中文）",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "三千五中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.rr3r.com/",
+    "bookUrlPattern": "info-\\d+/",
+    "customOrder": 770,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1685813107423,
+    "loginUrl": "",
+    "respondTime": 2125,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text##作者：",
+      "canReName": "",
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@textNodes",
+      "kind": ".block_txt2@tag.p.-4:-3:-2@text##.*：",
+      "lastChapter": "class.block_txt2@tag.p.-1@text##.*：",
+      "name": "class.block_txt2@tag.h2@tag.a@text",
+      "tocUrl": "class.ablum_read@tag.a.1@href"
+    },
+    "ruleContent": {
+      "content": "id.nr@html##(紧急通知：)*\\n*为您提供.*请务必保存好书签.*|最快更新.*最新.*|『章节有误.*』|\\(本章未完.*下一.*\\)|.*免费阅读：.*更新不易请收藏！|紧急通知.*启用新地址.*com|{{book.name}}|{{title}}|第[零一二两三四五六七八九十百千万\\d+ ]+章.*|你是天才，一秒记住：.*cn3k5.*com",
+      "nextContentUrl": "",
+      "replaceRegex": "##特殊原因.*换网址了.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "class.line",
+      "bookUrl": "tag.a.1@href",
+      "checkKeyWord": "我的马甲",
+      "coverUrl": "tag.a.1@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://image.rr3r.com/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.a.0@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.a",
+      "chapterName": "@text",
+      "chapterUrl": "@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "modules/article/waps.php,{\n'charset': 'gbk',\n'method': 'POST',\n'body': 'searchtype=articlename&searchkey={{key}}&submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//不少于6个字符（3个中文）",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "⭐三千五",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.rr3r.com",
+    "bookUrlPattern": "https://m.rr3r.com/info-\\d+/",
+    "customOrder": 1374,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1679780947526,
+    "loginUrl": "",
+    "respondTime": 2389,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text##作者：",
+      "canReName": "",
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@textNodes",
+      "kind": ".block_txt2@tag.p.-4:-3:-2@text##.*：",
+      "lastChapter": "class.block_txt2@tag.p.-1:-2@text",
+      "name": "class.block_txt2@tag.h2@tag.a@text",
+      "tocUrl": "class.ablum_read@tag.a.1@href"
+    },
+    "ruleContent": {
+      "content": "id.nr@html##(紧急通知：)*\\n*为您提供.*请务必保存好书签.*|最快更新.*最新.*|『章节有误.*』|\\(本章未完.*下一.*\\)|.*免费阅读：.*更新不易请收藏！|紧急通知.*启用新地址.*com|{{book.name}}|{{title}}|第[零一二两三四五六七八九十百千万\\d+ ]+章.*|你是天才，一秒记住：.*cn3k5.*com",
+      "nextContentUrl": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "class.line",
+      "bookUrl": "tag.a.1@href",
+      "checkKeyWord": "我的马甲",
+      "kind": "tag.a.0@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.a",
+      "chapterName": "@text",
+      "chapterUrl": "@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/modules/article/waps.php,{\n'charset': 'gbk',\n'method': 'POST',\n'body': 'searchtype=articlename&searchkey={{key}}&submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//不少于6个字符（3个中文）",
+    "bookSourceGroup": "",
+    "bookSourceName": "三千五中文网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.rr3r.com/",
+    "bookUrlPattern": "info-\\d+/",
+    "customOrder": 53,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1685813107423,
+    "loginUrl": "",
+    "respondTime": 2401,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text##作者：",
+      "canReName": "",
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@textNodes",
+      "kind": ".block_txt2@tag.p.-4:-3:-2@text##.*：",
+      "lastChapter": "class.block_txt2@tag.p.-1@text##.*：",
+      "name": "class.block_txt2@tag.h2@tag.a@text",
+      "tocUrl": "class.ablum_read@tag.a.1@href"
+    },
+    "ruleContent": {
+      "content": "id.nr@html##(紧急通知：)*\\n*为您提供.*请务必保存好书签.*|最快更新.*最新.*|『章节有误.*』|\\(本章未完.*下一.*\\)|.*免费阅读：.*更新不易请收藏！|紧急通知.*启用新地址.*com|{{book.name}}|{{title}}|第[零一二两三四五六七八九十百千万\\d+ ]+章.*|你是天才，一秒记住：.*cn3k5.*com",
+      "nextContentUrl": "",
+      "replaceRegex": "##特殊原因.*换网址了.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "class.line",
+      "bookUrl": "tag.a.1@href",
+      "checkKeyWord": "我的马甲",
+      "coverUrl": "tag.a.1@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://image.rr3r.com/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "tag.a.0@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.a",
+      "chapterName": "@text",
+      "chapterUrl": "@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "modules/article/waps.php,{\n'charset': 'gbk',\n'method': 'POST',\n'body': 'searchtype=articlename&searchkey={{key}}&submit='\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//不少于6个字符（3个中文）",
+    "bookSourceGroup": "2",
+    "bookSourceName": "⭐三千五",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.rr3r.com",
+    "bookUrlPattern": "https://m.rr3r.com/info-\\d+/",
+    "customOrder": 1636,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1679780947526,
+    "loginUrl": "",
+    "respondTime": 2621,
+    "ruleBookInfo": {
+      "author": "class.block_txt2@tag.p.2@text##作者：",
+      "canReName": "",
+      "coverUrl": "class.block_img2@img@src",
+      "intro": "class.intro_info@textNodes",
+      "kind": ".block_txt2@tag.p.-4:-3:-2@text##.*：",
+      "lastChapter": "class.block_txt2@tag.p.-1:-2@text",
+      "name": "class.block_txt2@tag.h2@tag.a@text",
+      "tocUrl": "class.ablum_read@tag.a.1@href"
+    },
+    "ruleContent": {
+      "content": "id.nr@html##(紧急通知：)*\\n*为您提供.*请务必保存好书签.*|最快更新.*最新.*|『章节有误.*』|\\(本章未完.*下一.*\\)|.*免费阅读：.*更新不易请收藏！|紧急通知.*启用新地址.*com|{{book.name}}|{{title}}|第[零一二两三四五六七八九十百千万\\d+ ]+章.*|你是天才，一秒记住：.*cn3k5.*com",
+      "nextContentUrl": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": "class.line",
+      "bookUrl": "tag.a.1@href",
+      "checkKeyWord": "我的马甲",
+      "kind": "tag.a.0@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.a",
+      "chapterName": "@text",
+      "chapterUrl": "@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/modules/article/waps.php,{\n'charset': 'gbk',\n'method': 'POST',\n'body': 'searchtype=articlename&searchkey={{key}}&submit='\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,176 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.net/",
+    "bookUrlPattern": "http://www.liudatxt.org/\\d+/",
+    "customOrder": 74,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/mulu/1-{{page}}.html\n武侠仙侠::/mulu/2-{{page}}.html\n都市言情::/mulu/3-{{page}}.html\n历史军事::/mulu/4-{{page}}.html\n科幻灵异::/mulu/5-{{page}}.html\n网游竞技::/mulu/6-{{page}}.html\n女频频道::/mulu/7-{{page}}.html",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows; U; Windows NT 5.2;. en-US) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.3904.108 Safari/537.36 Quark/4.6.6.164\"\n}",
+    "lastUpdateTime": 1692662444404,
+    "loginUrl": "",
+    "respondTime": 2942,
+    "ruleBookInfo": {
+      "author": "id.author@a@text",
+      "coverUrl": "id.bookimg@img@src",
+      "intro": "id.bookintro@text",
+      "kind": "class.new.0@class.uptime@span@text&&\nclass.count@tag.li.0@span@text&&\nclass.count@tag.li.4@span@text##最后更新.*",
+      "lastChapter": "id.newlist@tag.li.0@a@text",
+      "name": "class.booktitle@h1@text",
+      "tocUrl": "class.motion@tag.a.2@href",
+      "wordCount": "class.count@tag.li.6@span@text@js:parseInt(result.replace('字数：','')/10000) + '万字'"
+    },
+    "ruleContent": {
+      "content": "id.content@html"
+    },
+    "ruleExplore": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@a@href##/so",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.dd.1@tag.span.1@text&&\ntag.dd.1@tag.span.2@text",
+      "lastChapter": "tag.dd.3@tag.a@text",
+      "name": "h3@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitembox@dl",
+      "bookUrl": "h3@a@href##/so",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.dd.3@tag.span.0@text",
+      "lastChapter": "tag.dd.3@tag.a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.php,{\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.net/",
+    "bookUrlPattern": "http://www.liudatxt.org/\\d+/",
+    "customOrder": 74,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/mulu/1-{{page}}.html\n武侠仙侠::/mulu/2-{{page}}.html\n都市言情::/mulu/3-{{page}}.html\n历史军事::/mulu/4-{{page}}.html\n科幻灵异::/mulu/5-{{page}}.html\n网游竞技::/mulu/6-{{page}}.html\n女频频道::/mulu/7-{{page}}.html",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows; U; Windows NT 5.2;. en-US) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.3904.108 Safari/537.36 Quark/4.6.6.164\"\n}",
+    "lastUpdateTime": 1692662444404,
+    "loginUrl": "",
+    "respondTime": 3299,
+    "ruleBookInfo": {
+      "author": "id.author@a@text",
+      "coverUrl": "id.bookimg@img@src",
+      "intro": "id.bookintro@text",
+      "kind": "class.new.0@class.uptime@span@text&&\nclass.count@tag.li.0@span@text&&\nclass.count@tag.li.4@span@text##最后更新.*",
+      "lastChapter": "id.newlist@tag.li.0@a@text",
+      "name": "class.booktitle@h1@text",
+      "tocUrl": "class.motion@tag.a.2@href",
+      "wordCount": "class.count@tag.li.6@span@text@js:parseInt(result.replace('字数：','')/10000) + '万字'"
+    },
+    "ruleContent": {
+      "content": "id.content@html"
+    },
+    "ruleExplore": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@a@href##/so",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.dd.1@tag.span.1@text&&\ntag.dd.1@tag.span.2@text",
+      "lastChapter": "tag.dd.3@tag.a@text",
+      "name": "h3@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitembox@dl",
+      "bookUrl": "h3@a@href##/so",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.dd.3@tag.span.0@text",
+      "lastChapter": "tag.dd.3@tag.a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.php,{\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.net/",
+    "bookUrlPattern": "http://www.liudatxt.org/\\d+/",
+    "customOrder": -199,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/mulu/1-{{page}}.html\n武侠仙侠::/mulu/2-{{page}}.html\n都市言情::/mulu/3-{{page}}.html\n历史军事::/mulu/4-{{page}}.html\n科幻灵异::/mulu/5-{{page}}.html\n网游竞技::/mulu/6-{{page}}.html\n女频频道::/mulu/7-{{page}}.html",
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows; U; Windows NT 5.2;. en-US) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.3904.108 Safari/537.36 Quark/4.6.6.164\"\n}",
+    "lastUpdateTime": 1692662444404,
+    "loginUrl": "",
+    "respondTime": 191185,
+    "ruleBookInfo": {
+      "author": "id.author@a@text",
+      "coverUrl": "id.bookimg@img@src",
+      "intro": "id.bookintro@text",
+      "kind": "class.new.0@class.uptime@span@text&&\nclass.count@tag.li.0@span@text&&\nclass.count@tag.li.4@span@text##最后更新.*",
+      "lastChapter": "id.newlist@tag.li.0@a@text",
+      "name": "class.booktitle@h1@text",
+      "tocUrl": "class.motion@tag.a.2@href",
+      "wordCount": "class.count@tag.li.6@span@text@js:parseInt(result.replace('字数：','')/10000) + '万字'"
+    },
+    "ruleContent": {
+      "content": "id.content@html"
+    },
+    "ruleExplore": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitebox@dl",
+      "bookUrl": "h3@a@href##/so",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.dd.1@tag.span.1@text&&\ntag.dd.1@tag.span.2@text",
+      "lastChapter": "tag.dd.3@tag.a@text",
+      "name": "h3@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.dd.1@tag.span.0@text",
+      "bookList": "id.sitembox@dl",
+      "bookUrl": "h3@a@href##/so",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.dd.3@tag.span.0@text",
+      "lastChapter": "tag.dd.3@tag.a@text",
+      "name": "h3@a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/search.php,{\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

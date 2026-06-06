@@ -1,0 +1,161 @@
+[
+  {
+    "bookSourceComment": "haxc",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "鲲弩小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kunnu.com",
+    "bookUrlPattern": "",
+    "customOrder": 835,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "言情穿越::https://www.kunnu.com/yanqing/\n中文经典::https://www.kunnu.com/jingdian/",
+    "header": "",
+    "lastUpdateTime": 1678681575580,
+    "loginUrl": "",
+    "respondTime": 3290,
+    "ruleBookInfo": {
+      "author": "class.book-describe@tag.p.0@text##作者：",
+      "coverUrl": "class.img-img@src",
+      "intro": "class.describe-html@tag.p!-1@text",
+      "kind": "class.book-describe@tag.p.1@text##类型：",
+      "lastChapter": "class.book-describe@tag.p.4@a@text",
+      "name": "class.book-describe@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html",
+      "imageStyle": "",
+      "replaceRegex": "##鲲.*弩.*小.*说.*"
+    },
+    "ruleExplore": {
+      "author": "class.pop-intro@text##.*\\/",
+      "bookList": "ol@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.img@src",
+      "intro": "",
+      "kind": "class.pop-intro@text##\\/.*",
+      "name": "tag.h2@text"
+    },
+    "ruleSearch": {
+      "bookList": "class.search-list@li",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "",
+      "intro": "",
+      "name": "tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.book-list@tag.li@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.kunnu.com/page/{{page}}/?s={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "合集0905",
+    "bookSourceName": "鲲弩小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kunnu.com",
+    "bookUrlPattern": "",
+    "customOrder": 1049,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"中文经典\",\"url\":\"/jingdian/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"国外名著\",\"url\":\"/mingzhu/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"ＢＬ纯爱\",\"url\":\"/bl/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"经典武侠\",\"url\":\"/wuxia/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"言情穿越\",\"url\":\"/yanqing/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑推理\",\"url\":\"/xuanyi/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"非虚构书\",\"url\":\"/fxg/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"影视原著\",\"url\":\"/yuanzhu/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"金庸作品\",\"url\":\"/jinyong/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1689596677292,
+    "loginUrl": "",
+    "respondTime": 49348,
+    "ruleBookInfo": {
+      "author": ".book-describe p.0@text##.*：",
+      "coverUrl": ".book-img img@src",
+      "init": "",
+      "intro": ".describe-html@html",
+      "kind": ".book-describe@tag.p.1:2:3@text##.*：",
+      "lastChapter": ".book-describe a@text",
+      "name": ".book-describe h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "imageStyle": "0",
+      "nextContentUrl": ".next a@href",
+      "replaceRegex": "##.*鲲.弩.小.说.*"
+    },
+    "ruleExplore": {
+      "author": "span@text##.*\\/",
+      "bookList": ".pop-book2||.hot-book",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@src",
+      "kind": "span@text##\\/.*",
+      "name": "h2@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "",
+      "bookList": ".cat-search-item",
+      "bookUrl": "a@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".book-list li a||h1",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "updateTime": ""
+    },
+    "searchUrl": "/?s={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "鲲弩小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.kunnu.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1242,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693566629454,
+    "loginUrl": "",
+    "respondTime": 8758,
+    "ruleBookInfo": {
+      "author": "div.book-describe@p.0@text##：",
+      "coverUrl": "div.book-img@img@src",
+      "intro": ".describe-html@html@js:'<br>'+result.replace(/.+章节列表.+/, '').trim()",
+      "kind": "div.book-describe@p.1:3@text##：|最近更新",
+      "lastChapter": "div.book-describe@p.4@a@text##：",
+      "name": "h1.1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.nr1@p@text##搜索关注.*更方便！|\\-落-霞-小-说.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": ".cat-search-item a@js:var O=[\"h.i().j(0,3).k(l(a){d b=4(a.e('m')).5(/^\\\\//,n.o(/(.+\\\\/\\\\/.+?\\\\/)/)[1]);d J=q.r.u.v(w.x(b));y{z:J.2('.6-7 A').8(),B:4(J.2('.6-7 p:9(作者：)').8()).5(/.+：/,'').c(),C:4(J.2('.6-f f').e('D'))||'E://F.G/H',I:[4(J.2('.6-7 p:9(类型：)').8()).5(/.+：/,'').c(),4(J.2('.6-7 p:9(状态：)').8()).5(/.+：|已|中/g,'').c()],K:4(J.2('.6-7 p:9(最新章节：)').2('a').8()).c()+'（'+4(J.2('.6-7 p:9(最近更新：)').8()).5(/日|.+：/g,'').5(/年|月/g,'-').c()+'）',L:4(J.2('.7-M').8()).5(/.+章节列表.+/,'').5(/[\\\\s\\\\t]+/g,''),N:b}});\",\"|\",\"split\",\"||select||String|replace|book|describe|text|contains|||trim|var|attr|img||result|toArray|slice|map|function|href|baseUrl|match||org|jsoup|||Jsoup|parse|java|ajax|return|name|h1|author|cover|src|http|uee|me|bNkEy|tags||last|intro|html|url\",\"\",\"fromCharCode\",\"replace\",\"\\\\w+\",\"\\\\b\",\"g\"];eval(function(e,r,t,f,n,a){if(n=function(e){return(e<50?O[4]:n(parseInt(e/50)))+(35<(e%=50)?String[O[5]](e+29):e.toString(36))},!O[4][O[6]](/^/,String)){for(;t--;)a[n(t)]=f[t]||n(t);f=[function(e){return a[e]}],n=function(){return O[7]},t=1}for(;t--;)f[t]&&(e=e[O[6]](new RegExp(O[8]+n(t)+O[8],O[9]),f[t]));return e}(O[0],0,50,O[3][O[2]](O[1]),0,{}));",
+      "bookUrl": "url",
+      "coverUrl": "cover",
+      "intro": "intro@js:result.trim()",
+      "kind": "",
+      "lastChapter": "last",
+      "name": "name"
+    },
+    "ruleToc": {
+      "chapterList": ".book-list a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/?s={{key}}",
+    "weight": 0
+  }
+]

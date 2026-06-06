@@ -1,0 +1,94 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "超凡小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.pan8.info/",
+    "customOrder": 778,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1685860842245,
+    "respondTime": 1954,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "class.imgBox left@img@src",
+      "intro": "class.brief.0@text##小说介绍：|阅读.*最新章节请关注.*",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "class.button clearfix@a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.txt@html",
+      "replaceRegex": "##阅读.*最新章节.*请关注.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.top clearfix@class.s2@text",
+      "bookList": "//div[@class=\"sCboxBookParR left\"]",
+      "bookUrl": "class.top clearfix@h1@a@href",
+      "coverUrl": "class.top.clearfix@h1@a@href<js>\nvar id = result.match(/(\\d{2,})/)[1];\nvar iid = parseInt(id/1000);\nsource.bookSourceUrl+'files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.tips clearfix@a@text&&class.bottom clearfix@.time2@text##.*：",
+      "lastChapter": "class.bottom clearfix@a@text##最近更新|更新时间：",
+      "name": "class.top clearfix@h1@a@text",
+      "wordCount": ".s4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.newlist@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "search.html,{\n  'method': 'POST',\n  'body': 'key={{key}}'\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "超凡小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.pan8.info/",
+    "customOrder": 778,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "",
+    "lastUpdateTime": 1685860842245,
+    "respondTime": 3245,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "class.imgBox left@img@src",
+      "intro": "class.brief.0@text##小说介绍：|阅读.*最新章节请关注.*",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content",
+      "tocUrl": "class.button clearfix@a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.txt@html",
+      "replaceRegex": "##阅读.*最新章节.*请关注.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.top clearfix@class.s2@text",
+      "bookList": "//div[@class=\"sCboxBookParR left\"]",
+      "bookUrl": "class.top clearfix@h1@a@href",
+      "coverUrl": "class.top.clearfix@h1@a@href<js>\nvar id = result.match(/(\\d{2,})/)[1];\nvar iid = parseInt(id/1000);\nsource.bookSourceUrl+'files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "class.tips clearfix@a@text&&class.bottom clearfix@.time2@text##.*：",
+      "lastChapter": "class.bottom clearfix@a@text##最近更新|更新时间：",
+      "name": "class.top clearfix@h1@a@text",
+      "wordCount": ".s4@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.newlist@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "search.html,{\n  'method': 'POST',\n  'body': 'key={{key}}'\n}",
+    "weight": 0
+  }
+]

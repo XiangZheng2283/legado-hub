@@ -1,0 +1,60 @@
+[
+  {
+    "bookSourceComment": "// Error: 搜索失效",
+    "bookSourceGroup": "小说,搜索失效",
+    "bookSourceName": "速读谷伪",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.sudugu.co",
+    "bookUrlPattern": "https://www.sudugu.c/\\d+/",
+    "customButton": false,
+    "customOrder": 83,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "玄幻魔法::/fenlei/1/{{page}}/\n武侠修真::/fenlei/2/{{page}}/\n都市言情::/fenlei/3/{{page}}/\n历史军事::/fenlei/4/{{page}}/\n科幻灵异::/fenlei/5/{{page}}/\n诸天无限::/fenlei/6/{{page}}/\n悬疑小说::/fenlei/7/{{page}}/\n体育小说::/fenlei/8/{{page}}/\n游戏小说::/fenlei/9/{{page}}/\n综合其他::/fenlei/10/{{page}}/",
+    "lastUpdateTime": 1769820576276,
+    "respondTime": 184569,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#article@p@text",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*({{ book.durChapterTitle }}|.*作者：.*|PS：.*求推荐！|PS：.*求收藏！|感谢.*打赏.*|感谢.*推荐票.*|感谢.*月票.*|（.*月票.*）|（为大家的.*票加更.*）|第二更在.*|为防止采集.*支持！|网址：sudugu\\.com|必应.*速读谷|loadAdv.*)\\s*"
+    },
+    "ruleExplore": {
+      "author": "tag.span.0@text",
+      "bookList": ".category-div",
+      "bookUrl": "a@href",
+      "coverUrl": "img@src",
+      "intro": ".intro@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h3@text"
+    },
+    "ruleSearch": {
+      "author": "tag.span.0@text",
+      "bookList": ".category-div",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": ".intro@text",
+      "kind": "",
+      "lastChapter": "",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.info-chapters.1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": ""
+    },
+    "searchUrl": "/search/,{\n    \"body\": \"searchkey={{key}}\",\n    \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

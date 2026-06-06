@@ -1,0 +1,240 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 艾克小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ik555.net",
+    "bookUrlPattern": "",
+    "customOrder": 1094,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685115242509,
+    "loginUrl": "",
+    "respondTime": 990,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": ".img img@src",
+      "init": "",
+      "intro": ".introCon@html##各位书友要.*|最新章节.*",
+      "lastChapter": ".n a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ""
+    },
+    "ruleContent": {
+      "content": "#htmlContent@textNodes",
+      "imageStyle": "0",
+      "replaceRegex": "##.*艾克小说.*|看书请到www.*.com|请记住本站网址www.*com|推荐各位书友阅读.*\\)|\\(.*手机版\\)|7k7k001.com|www.*com|"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "青春",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.ik555.net/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5:4@text",
+      "lastChapter": "td.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ocon dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchtype=1&searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "艾克小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ik555.net/",
+    "bookUrlPattern": "",
+    "customOrder": 1106,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1686047872596,
+    "loginUrl": "",
+    "respondTime": 747,
+    "ruleBookInfo": {
+      "author": "div.title@span.0@textNodes##：",
+      "coverUrl": ".img img@src",
+      "init": "",
+      "intro": ".introCon@html##各位书友要.*|最新章节.*",
+      "kind": "h2.0@a.1@text",
+      "lastChapter": ".n a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "h2.1@text"
+    },
+    "ruleContent": {
+      "content": "#htmlContent@textNodes",
+      "imageStyle": "0",
+      "replaceRegex": "##.*艾克小说.*|看书请到www.*.com|请记住本站网址www.*com|推荐各位书友阅读.*\\)|\\(.*手机版\\)|7k7k001.com|www.*com|"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "青春",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.ik555.net/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5:4@text",
+      "lastChapter": "td.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ocon dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchtype=1&searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "📦 综合",
+    "bookSourceName": "📦 艾克小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ik555.net",
+    "bookUrlPattern": "",
+    "customOrder": 1208,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1685115242509,
+    "loginUrl": "",
+    "respondTime": 2141,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": ".img img@src",
+      "init": "",
+      "intro": ".introCon@html##各位书友要.*|最新章节.*",
+      "lastChapter": ".n a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ""
+    },
+    "ruleContent": {
+      "content": "#htmlContent@textNodes",
+      "imageStyle": "0",
+      "replaceRegex": "##.*艾克小说.*|看书请到www.*.com|请记住本站网址www.*com|推荐各位书友阅读.*\\)|\\(.*手机版\\)|7k7k001.com|www.*com|"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "青春",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.ik555.net/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5:4@text",
+      "lastChapter": "td.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ocon dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchtype=1&searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "艾克小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ik555.net/",
+    "bookUrlPattern": "",
+    "customOrder": 1209,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1686047872596,
+    "loginUrl": "",
+    "respondTime": 1731,
+    "ruleBookInfo": {
+      "author": "div.title@span.0@textNodes##：",
+      "coverUrl": ".img img@src",
+      "init": "",
+      "intro": ".introCon@html##各位书友要.*|最新章节.*",
+      "kind": "h2.0@a.1@text",
+      "lastChapter": ".n a@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "h2.1@text"
+    },
+    "ruleContent": {
+      "content": "#htmlContent@textNodes",
+      "imageStyle": "0",
+      "replaceRegex": "##.*艾克小说.*|看书请到www.*.com|请记住本站网址www.*com|推荐各位书友阅读.*\\)|\\(.*手机版\\)|7k7k001.com|www.*com|"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody tr!0",
+      "bookUrl": "a.0@href",
+      "checkKeyWord": "青春",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.ik555.net/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5:4@text",
+      "lastChapter": "td.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "td.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".ocon dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchtype=1&searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  }
+]

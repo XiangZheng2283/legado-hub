@@ -1,0 +1,29 @@
+[
+  {
+    "url": "http://www.xhytd.com/",
+    "name": "黄易天地",
+    "comment": "非大陆IP可能速度较慢",
+    "search": {
+      "disabled": true,
+      "url": "http://www.xhytd.com/search.html?name=%s",
+      "method": "get",
+      "result": "#main > div.novelslist2 > ul > li",
+      "bookName": "span.s2.wid > a",
+      "author": "span.s4.wid > a",
+      "latestChapter": "span.s3.wid3 > a",
+      "lastUpdateTime": "span.s6.wid6"
+    },
+    "book": {},
+    "toc": {
+      "item": "#list > dl > dt:nth-of-type(2) ~ dd > a"
+    },
+    "chapter": {
+      "title": "h1",
+      "content": "#content",
+      "paragraphTagClosed": false,
+      "paragraphTag": "<br>+",
+      "filterTxt": "",
+      "filterTag": "p, div"
+    }
+  }
+]

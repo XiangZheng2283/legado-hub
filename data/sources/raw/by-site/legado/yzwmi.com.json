@@ -1,0 +1,79 @@
+[
+  {
+    "bookSourceComment": "sspwk.me",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "👔 御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://yzwmi.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customButton": false,
+    "customOrder": 95,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreScreen": "",
+    "exploreUrl": "[{\"title\":\"全部\",\"url\":\"/sort/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"耽美\",\"url\":\"/sort/1_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"百合\",\"url\":\"/sort/2_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻\",\"url\":\"/sort/3_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"修真\",\"url\":\"/sort/4_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"言情\",\"url\":\"/sort/5_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"辣文\",\"url\":\"/sort/6_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"腹黑\",\"url\":\"/sort/7_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"种田\",\"url\":\"/sort/8_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"高干\",\"url\":\"/sort/9_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游\",\"url\":\"/sort/10_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/sort/11_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史\",\"url\":\"/sort/12_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻\",\"url\":\"/sort/13_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖\",\"url\":\"/sort/14_{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "header": "",
+    "lastUpdateTime": 1683335195879,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 36242,
+    "ruleBookInfo": {
+      "author": ".article_info_td a.0@text",
+      "canReName": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "pre@html##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".h_nav_items li.0@text&&.article_info_td time@text##小说",
+      "lastChapter": ".article_info_td a.1@text&&.article_info_td time@text\n<js>result.replace(/(.*)\\s/,'$1 • ')</js>",
+      "name": ".h_nav_items li.1@text",
+      "tocUrl": "text.开始阅读(目录)@href",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "#nr1@html",
+      "imageStyle": "",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "strong@text",
+      "bookList": ".common-bookele",
+      "bookUrl": "a.0@href",
+      "coverUrl": "",
+      "intro": "a.1@text",
+      "kind": "time@text",
+      "lastChapter": "",
+      "name": "a.0@text"
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".SHsectionThree-middle p",
+      "bookUrl": "a.1@href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "a.0@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".list_li li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "search/,{\n  \"method\": \"POST\",\n  \"body\": \"searchtype=articlesearch&searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 0
+  }
+]

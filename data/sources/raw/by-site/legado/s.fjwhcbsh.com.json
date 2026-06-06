@@ -1,0 +1,114 @@
+[
+  {
+    "bookSourceComment": "同源番茄",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖书枫迟诗",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://s.fjwhcbsh.com",
+    "bookUrlPattern": "",
+    "customOrder": 1204,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1684469955538,
+    "loginUrl": "",
+    "respondTime": 25002,
+    "ruleBookInfo": {
+      "author": "author",
+      "coverUrl": "https://res.fjwhcbsh.com/{{$.image}}",
+      "init": "data",
+      "intro": "&nbsp;&nbsp;🔖更新时间：{{$.updated_at}}{{'\\n&lrm;\\n'}}{{$.remark}}",
+      "kind": "ltype&&stype",
+      "lastChapter": "{{$.last_chapter_name}} • {{$.updated_at}}",
+      "name": "name",
+      "tocUrl": "@js:\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\npath=JSON.parse(java.ajax(\"https://book.fjwhcbsh.com/source/\"+parseInt(java.getString('$.book_id')/1000)+\"/\"+java.getString('$.book_id')+\".html,\"+JSON.stringify(option))).data[0].site_path\n\"https://catalog.fjwhcbsh.com/\"+path",
+      "wordCount": "words_number"
+    },
+    "ruleContent": {
+      "content": "data.content@js:java.aesBase64DecodeToString(result,\"Pxga!h*e4@T8xfOm\",\"AES/CBC/PKCS5Padding\",\"E&z!EHGLd$fli*8R\")",
+      "replaceRegex": "##最新网址：\\s"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "https://book.fjwhcbsh.com/details/{{parseInt(java.getString('$.book_id')/1000)}}/{{$.book_id}}.html<js>\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\nresult+\",\"+JSON.stringify(option)\n</js>",
+      "checkKeyWord": "牛爷爷",
+      "coverUrl": "https://res.fjwhcbsh.com/{{$.image}}",
+      "intro": "remark",
+      "kind": "ltype&&stype",
+      "lastChapter": "<js>\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\nresp=JSON.parse(java.ajax(\"https://book.fjwhcbsh.com/details/\"+parseInt(java.getString('$.book_id')/1000)+\"/\"+java.getString('$.book_id')+\".html,\"+JSON.stringify(option))).data;resp.last_chapter_name+\" • \"+resp.updated_at</js>\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>",
+      "name": "name",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "data",
+      "chapterName": "name@js:java.aesBase64DecodeToString(result,\"Pxga!h*e4@T8xfOm\",\"AES/CBC/PKCS5Padding\",\"E&z!EHGLd$fli*8R\")",
+      "chapterUrl": "https://chapter.fjwhcbsh.com/{{$.path}}",
+      "updateTime": "{{java.timeFormat(java.getString('$.updated_at')*1000)}}<js>result.replace(/\\//g,'-')</js>"
+    },
+    "searchUrl": "@js:\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\n\"https://s.fjwhcbsh.com/v1/lists.api?keyword={{key}},\"+JSON.stringify(option)",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "同源番茄",
+    "bookSourceGroup": "⭐️自用",
+    "bookSourceName": "🔖书枫迟诗",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://s.fjwhcbsh.com",
+    "bookUrlPattern": "",
+    "customOrder": 269,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1684469955538,
+    "loginUrl": "",
+    "respondTime": 8618,
+    "ruleBookInfo": {
+      "author": "author",
+      "coverUrl": "https://res.fjwhcbsh.com/{{$.image}}",
+      "init": "data",
+      "intro": "&nbsp;&nbsp;🔖更新时间：{{$.updated_at}}{{'\\n&lrm;\\n'}}{{$.remark}}",
+      "kind": "ltype&&stype",
+      "lastChapter": "{{$.last_chapter_name}} • {{$.updated_at}}",
+      "name": "name",
+      "tocUrl": "@js:\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\npath=JSON.parse(java.ajax(\"https://book.fjwhcbsh.com/source/\"+parseInt(java.getString('$.book_id')/1000)+\"/\"+java.getString('$.book_id')+\".html,\"+JSON.stringify(option))).data[0].site_path\n\"https://catalog.fjwhcbsh.com/\"+path",
+      "wordCount": "words_number"
+    },
+    "ruleContent": {
+      "content": "data.content@js:java.aesBase64DecodeToString(result,\"Pxga!h*e4@T8xfOm\",\"AES/CBC/PKCS5Padding\",\"E&z!EHGLd$fli*8R\")",
+      "replaceRegex": "##最新网址：\\s"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "data",
+      "bookUrl": "https://book.fjwhcbsh.com/details/{{parseInt(java.getString('$.book_id')/1000)}}/{{$.book_id}}.html<js>\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\nresult+\",\"+JSON.stringify(option)\n</js>",
+      "checkKeyWord": "牛爷爷",
+      "coverUrl": "https://res.fjwhcbsh.com/{{$.image}}",
+      "intro": "remark",
+      "kind": "ltype&&stype",
+      "lastChapter": "<js>\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\nresp=JSON.parse(java.ajax(\"https://book.fjwhcbsh.com/details/\"+parseInt(java.getString('$.book_id')/1000)+\"/\"+java.getString('$.book_id')+\".html,\"+JSON.stringify(option))).data;resp.last_chapter_name+\" • \"+resp.updated_at</js>\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>",
+      "name": "name",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "data",
+      "chapterName": "name@js:java.aesBase64DecodeToString(result,\"Pxga!h*e4@T8xfOm\",\"AES/CBC/PKCS5Padding\",\"E&z!EHGLd$fli*8R\")",
+      "chapterUrl": "https://chapter.fjwhcbsh.com/{{$.path}}",
+      "updateTime": "{{java.timeFormat(java.getString('$.updated_at')*1000)}}<js>result.replace(/\\//g,'-')</js>"
+    },
+    "searchUrl": "@js:\ntime=Math.round(new Date()/1000)\nsign=java.md5Encode(\"com.diandianbook.androidreading1\"+time+\"vhjJVz1St6tK7!8n#B0MqRIuE2Dh7!C#\")\nheaders={\"package\":\"com.diandianbook.androidreading\",\"pt\":\"1\",\"time\":String(time),\"sign\":String(sign)}\noption={\"headers\":headers}\n\"https://s.fjwhcbsh.com/v1/lists.api?keyword={{key}},\"+JSON.stringify(option)",
+    "weight": 0
+  }
+]

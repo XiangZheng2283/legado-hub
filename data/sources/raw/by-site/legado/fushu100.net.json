@@ -1,0 +1,52 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 福书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.fushu100.net",
+    "bookUrlPattern": "https?://www.fushuw.co//[\\d_]+/",
+    "customOrder": 423,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "首页::/\n排行::/rank/\n书库::/class/\n玄幻::/class/xuanhuanqihuan/{{page}}/\n武侠::/class/wuxiaxiuzhen/{{page}}/\n都市::/class/dushichongsheng/{{page}}/\n历史::/class/lishijunshi/{{page}}/\n网游::/class/wangyoujingji/{{page}}/\n科幻::/class/kehuanchiyuan/{{page}}/\n灵异::/class/lingyikongbu/{{page}}/\n女生::/class/nvshengyanqing/{{page}}/\n全本::/quanben/class/",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\"}",
+    "lastUpdateTime": 1721590863925,
+    "respondTime": 2327,
+    "ruleBookInfo": {
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "downloadUrls": "@get:{d}",
+      "init": "@put:{n:\"[property$=book_name]@content\",\na:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nl:\"[property$=lastest_chapter_name]@content\",\ni:\"[property$=description]@content\",\nc:\"[property$=image]@content\",\nd:\"text.TXT下载@href\"}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}"
+    },
+    "ruleContent": {
+      "content": "#article@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##最近转码严重.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".category-div",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@data-original",
+      "intro": ".intro@text",
+      "kind": "",
+      "name": "h3@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": ".mb20 a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "{{url=source.getKey();\ncookie.removeCookie(url);\njava.ajax(url).match(/form.*action=\"(.+?)\"/)[1]}}?searchkey={{key}}",
+    "weight": 0
+  }
+]

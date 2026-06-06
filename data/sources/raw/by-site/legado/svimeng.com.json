@@ -1,0 +1,30 @@
+[
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉随梦小说①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.svimeng.com/",
+    "customOrder": 468,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2,
+    "weight": 99
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🍺 随梦小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.svimeng.com",
+    "customOrder": 664,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "{\n  \"url\": \"null\"\n}",
+    "respondTime": 5,
+    "weight": 427
+  }
+]

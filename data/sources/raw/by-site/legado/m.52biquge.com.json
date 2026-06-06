@@ -1,0 +1,84 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑧②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.52biquge.com",
+    "customOrder": 453,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 260
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁⑨⑦",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.52biquge.com/",
+    "bookUrlPattern": "https://m.52biquge.com/biquge/\\d+/\\d+/",
+    "customOrder": 565,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "lastUpdateTime": 1692440466554,
+    "loginUrl": "",
+    "respondTime": 58152,
+    "ruleBookInfo": {
+      "author": "class.info@class.fix@tag.p.0@text##作者：",
+      "coverUrl": "class.imgbox@img@src",
+      "intro": "class.m-desc@text",
+      "kind": "class.info@class.fix@tag.p.1@text&&\nclass.info@class.fix@tag.p.2@text&&\nclass.info@class.fix@tag.p.4@text##类别：|状态：|最后更新：",
+      "lastChapter": "class.section-box.0@tag.li.0@a@text",
+      "name": "class.info@h1@text",
+      "tocUrl": ""
+    },
+    "ruleContent": {
+      "content": "class.content@html##章节错误.*并刷新页面。",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "name": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.s4@text",
+      "bookList": "class.txt-list@li!0",
+      "bookUrl": "class.s2@tag.a@href",
+      "kind": "",
+      "lastChapter": "class.s3@tag.a@text",
+      "name": "class.s2@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.section-box.1@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "class.middle@option!0@value"
+    },
+    "searchUrl": "https://m.52biquge.com/ar.php?keyWord={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "笔趣阁⑧②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.52biquge.com",
+    "customOrder": 570,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 0,
+    "weight": 260
+  }
+]

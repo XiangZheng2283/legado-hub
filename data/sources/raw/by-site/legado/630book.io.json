@@ -1,0 +1,58 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "精品",
+    "bookSourceName": "恋上你看书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.630book.io/",
+    "bookUrlPattern": "",
+    "customOrder": -227,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻小说\",\"url\":\"/list/1/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"言情小说\",\"url\":\"/list/2/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"仙侠修真\",\"url\":\"/list/3/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"都市小说\",\"url\":\"/list/4/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"历史小说\",\"url\":\"/list/5/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"网游小说\",\"url\":\"/list/6/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"竞技小说\",\"url\":\"/list/7/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"科幻小说\",\"url\":\"/list/8/{{page}}.html\",\"style\":{\"layout_flexGrow\":0.25}},{\"title\":\"全本小说\",\"url\":\"/quanben/{{page}}\",\"style\":{\"layout_flexGrow\":0.25}}]",
+    "lastUpdateTime": 1692663390811,
+    "loginUrl": "",
+    "respondTime": 180756,
+    "ruleBookInfo": {
+      "author": "[property=og:novel:author]@content",
+      "coverUrl": "[property=og:image]@content",
+      "init": "",
+      "intro": "[property=og:description]@content",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "[property=og:novel:latest_chapter_name]@content##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "[property=og:novel:book_name]@content##|\\（.*|\\(.*|免费阅读|全文.*阅读|最新章节|小说|笔趣阁|免费.*",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html##恋上你看书网.*最新章节！|uu看书.*com|请记住本书首发域名\\：\\。|手机版更新最快网址："
+    },
+    "ruleExplore": {
+      "author": "class.author@text",
+      "bookList": "class.titlelist@li",
+      "bookUrl": "class.zp@a@href",
+      "coverUrl": "class.zp@a@href@js:\r\nvar id = result.match(/\\/(\\d+)\\.?/)[1];\r\n'/files/article/image/'+parseInt(id/1000)+'/'+id+'/'+id+'s.jpg';",
+      "kind": "class.sj@text",
+      "lastChapter": "class.zz@a@text",
+      "name": "class.zp@a@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href@js:\r\nvar id = result.match(/\\/(\\d+)\\.?/)[1];\r\n'/files/article/image/'+parseInt(id/1000)+'/'+id+'/'+id+'s.jpg';",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##免费章节 |正文卷 |正文 |VIP章节 ",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": "tag.td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.zjbox@tag.dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://www.630book.io/modules/article/search.php?searchkey={{key}}&submit=%CB%D1%CB%F7&page={{page}},{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁[pingtiance]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pingtiance.org/",
+    "customOrder": 875,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1623765705762,
+    "respondTime": 0,
+    "ruleBookInfo": {},
+    "ruleContent": {},
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "搜索链接规则为空,小说",
+    "bookSourceName": "笔趣阁[pingtiance]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.pingtiance.org/",
+    "customOrder": 1291,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1623765705762,
+    "respondTime": 1,
+    "ruleBookInfo": {},
+    "ruleContent": {},
+    "ruleExplore": {},
+    "ruleSearch": {},
+    "ruleToc": {},
+    "weight": 0
+  }
+]

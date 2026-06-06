@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "其他源的小说内容错误，然后自己手写",
+    "bookSourceGroup": "",
+    "bookSourceName": "ryw笔趣阁78",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.biquge78.cc",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 217,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1764643635178,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 684,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "p.booktag@a@text",
+      "coverUrl": "",
+      "intro": "p.bookintro@text",
+      "kind": "ol.breadcrumb@li.1@text",
+      "lastChapter": "a.bookchapter@text",
+      "name": "h1.booktitle@text",
+      "canReName": "",
+      "tocUrl": "div.list-chapterAll@dd@a@href",
+      "wordCount": "p.booktag@span.0@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "class.readcontent@tag.p@html",
+      "nextContentUrl": "id.linkNext@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "div.author.0@text",
+      "bookList": "div.bookbox",
+      "bookUrl": "a.del_but@href",
+      "coverUrl": "",
+      "intro": "div.update@text",
+      "kind": "",
+      "lastChapter": "div.cat@text",
+      "name": "h4.bookname@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#list-chapterAll@dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "{{cookie.removeCookie(source.getKey())}}/search/,{\n\"method\": \"POST\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "variableComment": "",
+    "weight": 1
+  }
+]

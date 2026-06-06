@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💠 综合",
+    "bookSourceName": "💠 亿软小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.yiruan.info",
+    "customOrder": 62,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "周榜::/paihangbang/weekvisit/{{page}}.html\n月榜::/paihangbang/monthvisit/{{page}}.html\n总榜::/paihangbang/allvisit/{{page}}.html\n周推::/paihangbang/weekvote/{{page}}.html\n月推::/paihangbang/monthvote/{{page}}.html\n总推::/paihangbang/allvote/{{page}}.html\n收藏::/paihangbang/goodnum/{{page}}.html\n字数::/paihangbang/size/{{page}}.html\n最新::/paihangbang/postdate/{{page}}.html\n最近::/paihangbang/lastupdate/{{page}}.html\n新书::/paihangbang/goodnew/{{page}}.html\n全本::/wanjiexiaoshuo/{{page}}/\n玄幻::/xuanhuan/{{page}}.html\n修真::/xiuzhen/{{page}}.html\n都市::/dushi/{{page}}.html\n穿越::/chuanyue/{{page}}.html\n网游::/wangyou/{{page}}.html\n科幻::/kehuan/{{page}}.html",
+    "lastUpdateTime": 1734433025803,
+    "respondTime": 8927,
+    "ruleBookInfo": {
+      "author": "id.info@p.0@text",
+      "coverUrl": "id.fmimg@img@src",
+      "intro": "id.intro@p.0@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "id.info@p.1:3@text##.*：|类 别:|小说|\\s..:.*",
+      "lastChapter": "id.info@a.0@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "id.info@h1@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##最新网址.*"
+    },
+    "ruleExplore": {
+      "author": ".s4@text",
+      "bookList": ".l@li||.novelslistss@li",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##/files/article/image/$2/$1/$1s.jpg###",
+      "kind": ".s1,.s7,.s5@text##\\[|\\]|小说",
+      "lastChapter": ".s3@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".s2@text"
+    },
+    "ruleSearch": {
+      "author": "td.2@text",
+      "bookList": "tbody@tr!0",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5:4@text",
+      "lastChapter": "a.1@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "a.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dd@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"method\": \"post\",\n  \"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]

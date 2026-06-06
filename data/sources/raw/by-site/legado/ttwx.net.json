@@ -1,0 +1,133 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "⭐新顶点网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttwx.net",
+    "bookUrlPattern": ".*/\\d+_\\d+/",
+    "customOrder": 601,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1673417715558,
+    "respondTime": 3646,
+    "ruleBookInfo": {
+      "author": "p[2]@text##作 者：(?:佚名$)?|.*免费阅读.*|【完结】",
+      "coverUrl": "http://www.ttwx.net{{@@img!1@src}}",
+      "intro": "p[7]@text##.*简介：主角:|【(?:免费火热|火爆(?:爽文|畅销)|最热门新书)】|★{1,3}本书简介★{1,3}|.*?是一本.*?文讲述：|.amp;lt;.*?gt;|.*?。内容介绍：|.*备受瞩目的一本.*?》，讲述了：?|(?:\\+[\\u4e00-\\u9fa5]{3,6}\\+ m.)?\\w+.(?:c[onc]m?|net)|各位书友(?:要是|如果)觉得.*还不错的话请.*",
+      "kind": "##:cate.{15}(.*?)小说(?:[^\"]*\"){20}([^\"]*)[^\\d]*([^\\s]*)##$1,$2,$3###",
+      "lastChapter": "p[4]@a@text",
+      "name": "h1@text##《|》"
+    },
+    "ruleContent": {
+      "content": "#content@html##(?<=！”)\\.{3}“”，。|一秒记住，精彩小说无弹窗免费阅读！"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text##作者：(?:佚名$)?|.*免费阅读.*|【完结】",
+      "bookList": ".p10",
+      "bookUrl": "http://www.ttwx.net{{@@a[0]@href}}",
+      "coverUrl": "http://www.ttwx.net{{@@img@src}}",
+      "intro": "p@text##……$|.*简介：主角:|【(?:免费火热|火爆(?:爽文|畅销)|最热门新书)】|★{1,3}本书简介★{1,3}|.*?是一本.*?文讲述：|.amp;lt;.*?gt;|.*备受瞩目的一本.*?》，讲述了：?|(?:\\+[\\u4e00-\\u9fa5]{3,6}\\+ m.)?\\w+.(?:c[onc]m?|net)",
+      "kind": ".cat@text##分类：|小说",
+      "lastChapter": "a[2]@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text##",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:u='http://www.ttwx.net/js/common.js';\nn=org.jsoup.Jsoup.parse(java.ajax(u)).html();\nv=n.match(/<form action=\"\\\\.quot;(\\/\\w+.php)/)[1];\nbody='ie=gbk&q='+key;\n'http://www.ttwx.net'+v+'?'+body",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "天龙",
+    "bookSourceName": "📖 5200小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttwx.net/",
+    "bookUrlPattern": ".*/\\d+_\\d+/",
+    "customOrder": 149,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678671558573,
+    "respondTime": 1759,
+    "ruleBookInfo": {
+      "author": "p[2]@text##作 者：(?:佚名$)?|.*免费阅读.*|【完结】",
+      "coverUrl": "http://www.ttwx.net{{@@img!1@src}}",
+      "intro": "p[7]@text##.*简介：主角:|【(?:免费火热|火爆(?:爽文|畅销)|最热门新书)】|★{1,3}本书简介★{1,3}|.*?是一本.*?文讲述：|.amp;lt;.*?gt;|.*?。内容介绍：|.*备受瞩目的一本.*?》，讲述了：?|(?:\\+[\\u4e00-\\u9fa5]{3,6}\\+ m.)?\\w+.(?:c[onc]m?|net)|各位书友(?:要是|如果)觉得.*还不错的话请.*",
+      "kind": "##:cate.{15}(.*?)小说(?:[^\"]*\"){20}([^\"]*)[^\\d]*([^\\s]*)##$1,$2,$3###",
+      "lastChapter": "p[4]@a@text",
+      "name": "h1@text##《|》"
+    },
+    "ruleContent": {
+      "content": "#content@html##(?<=！”)\\.{3}“”，。|一秒记住，精彩小说无弹窗免费阅读！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": ".author@text##作者：(?:佚名$)?|.*免费阅读.*|【完结】",
+      "bookList": ".p10",
+      "bookUrl": "http://www.ttwx.net{{@@a[0]@href}}",
+      "coverUrl": "http://www.ttwx.net{{@@img@src}}",
+      "intro": "p@text##……$|.*简介：主角:|【(?:免费火热|火爆(?:爽文|畅销)|最热门新书)】|★{1,3}本书简介★{1,3}|.*?是一本.*?文讲述：|.amp;lt;.*?gt;|.*备受瞩目的一本.*?》，讲述了：?|(?:\\+[\\u4e00-\\u9fa5]{3,6}\\+ m.)?\\w+.(?:c[onc]m?|net)",
+      "kind": ".cat@text##分类：|小说",
+      "lastChapter": "a[2]@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text##",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:u='http://www.ttwx.net/js/common.js';\nn=org.jsoup.Jsoup.parse(java.ajax(u)).html();\nv=n.match(/<form action=\"\\\\.quot;(\\/\\w+.php)/)[1];\nbody='ie=gbk&q='+key;\n'http://www.ttwx.net'+v+'?'+body",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "♾️备选",
+    "bookSourceName": "⭐新顶点网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.ttwx.net",
+    "bookUrlPattern": ".*/\\d+_\\d+/",
+    "customOrder": 1035,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1673417715558,
+    "respondTime": 2855,
+    "ruleBookInfo": {
+      "author": "p[2]@text##作 者：(?:佚名$)?|.*免费阅读.*|【完结】",
+      "coverUrl": "http://www.ttwx.net{{@@img!1@src}}",
+      "intro": "p[7]@text##.*简介：主角:|【(?:免费火热|火爆(?:爽文|畅销)|最热门新书)】|★{1,3}本书简介★{1,3}|.*?是一本.*?文讲述：|.amp;lt;.*?gt;|.*?。内容介绍：|.*备受瞩目的一本.*?》，讲述了：?|(?:\\+[\\u4e00-\\u9fa5]{3,6}\\+ m.)?\\w+.(?:c[onc]m?|net)|各位书友(?:要是|如果)觉得.*还不错的话请.*",
+      "kind": "##:cate.{15}(.*?)小说(?:[^\"]*\"){20}([^\"]*)[^\\d]*([^\\s]*)##$1,$2,$3###",
+      "lastChapter": "p[4]@a@text",
+      "name": "h1@text##《|》"
+    },
+    "ruleContent": {
+      "content": "#content@html##(?<=！”)\\.{3}“”，。|一秒记住，精彩小说无弹窗免费阅读！"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".author@text##作者：(?:佚名$)?|.*免费阅读.*|【完结】",
+      "bookList": ".p10",
+      "bookUrl": "http://www.ttwx.net{{@@a[0]@href}}",
+      "coverUrl": "http://www.ttwx.net{{@@img@src}}",
+      "intro": "p@text##……$|.*简介：主角:|【(?:免费火热|火爆(?:爽文|畅销)|最热门新书)】|★{1,3}本书简介★{1,3}|.*?是一本.*?文讲述：|.amp;lt;.*?gt;|.*备受瞩目的一本.*?》，讲述了：?|(?:\\+[\\u4e00-\\u9fa5]{3,6}\\+ m.)?\\w+.(?:c[onc]m?|net)",
+      "kind": ".cat@text##分类：|小说",
+      "lastChapter": "a[2]@text",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text##",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:u='http://www.ttwx.net/js/common.js';\nn=org.jsoup.Jsoup.parse(java.ajax(u)).html();\nv=n.match(/<form action=\"\\\\.quot;(\\/\\w+.php)/)[1];\nbody='ie=gbk&q='+key;\n'http://www.ttwx.net'+v+'?'+body",
+    "weight": 0
+  }
+]

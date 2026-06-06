@@ -1,0 +1,140 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "喜纯",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xichubao.com##小说",
+    "customOrder": 734,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1675321547848,
+    "respondTime": 1275,
+    "ruleBookInfo": {
+      "author": "#info@a.0@text",
+      "coverUrl": "img@data-original",
+      "intro": "#intro@html",
+      "kind": "[property~=category|update_time]@content",
+      "lastChapter": "#info@a.1@text",
+      "name": "h1@text",
+      "wordCount": "[property$=status]@content"
+    },
+    "ruleContent": {
+      "content": "#content@p!-1@text",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".btm@a@text",
+      "bookList": "#main@.item||.blockcontent",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@html",
+      "kind": ".btm@em@text",
+      "name": "dt@text||text##错误原因：对不起，.*##搜索间隔 30 s",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#list@a[rel=\"chapter\"]",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVolume": ""
+    },
+    "searchUrl": "/search?keywords={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "喜纯",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xichubao.com##小说",
+    "customOrder": 827,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 1675321547848,
+    "respondTime": 1840,
+    "ruleBookInfo": {
+      "author": "#info@a.0@text",
+      "coverUrl": "img@data-original",
+      "intro": "#intro@html",
+      "kind": "[property~=category|update_time]@content",
+      "lastChapter": "#info@a.1@text",
+      "name": "h1@text",
+      "wordCount": "[property$=status]@content"
+    },
+    "ruleContent": {
+      "content": "#content@p!-1@text",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".btm@a@text",
+      "bookList": "#main@.item||.blockcontent",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@html",
+      "kind": ".btm@em@text",
+      "name": "dt@text||text##错误原因：对不起，.*##搜索间隔 30 s",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#list@a[rel=\"chapter\"]",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVolume": ""
+    },
+    "searchUrl": "/search?keywords={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "喜纯小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xichubao.com/",
+    "customOrder": 1098,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1689901120224,
+    "respondTime": 1273,
+    "ruleBookInfo": {
+      "author": "#info@a.0@text",
+      "coverUrl": "img@data-original",
+      "intro": "#intro@html",
+      "kind": "[property~=category|update_time]@content",
+      "lastChapter": "#info@a.1@text",
+      "name": "h1@text",
+      "wordCount": "[property$=status]@content"
+    },
+    "ruleContent": {
+      "content": "#content@p!-1@text",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": ".btm@a@text",
+      "bookList": "#main@.item||.blockcontent",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@html",
+      "kind": ".btm@em@text",
+      "name": "dt@text||text##错误原因：对不起，.*##搜索间隔 30 s",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "#list@a[rel=\"chapter\"]",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVolume": ""
+    },
+    "searchUrl": "search?keywords={{key}}",
+    "weight": 0
+  }
+]

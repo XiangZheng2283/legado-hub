@@ -1,0 +1,128 @@
+[
+  {
+    "bookSourceComment": "源名：起舞\n来源：风停在了窗边\n修复：白慕颜",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌸 起舞中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.75zhongwen.com/",
+    "bookUrlPattern": "",
+    "customOrder": 1286,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"        🌹排行榜单🌹        \",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"总 榜\",\"url\":\"/shuku/allvisit_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"月 榜\",\"url\":\"/shuku/monthvisit_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"周 榜\",\"url\":\"/shuku/weekvisit_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"日 榜\",\"url\":\"/shuku/dayvisit_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"总 推\",\"url\":\"/shuku/allvote_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"月 推\",\"url\":\"/shuku/monthvote_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"周 推\",\"url\":\"/shuku/weekvote_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"日 推\",\"url\":\"/shuku/dayvote_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"收 藏\",\"url\":\"/shuku/goodnum_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"字 数\",\"url\":\"/shuku/size_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"入 库\",\"url\":\"/shuku/postdate_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"更 新\",\"url\":\"/shuku/lastupdate_0_0_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.2}},\n{\"title\":\"        🌹男生完本🌹        \",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"/shuku/0_1_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠仙侠\",\"url\":\"/shuku/0_2_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市生活\",\"url\":\"/shuku/0_3_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"/shuku/0_4_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"游戏竞技\",\"url\":\"/shuku/0_5_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻未来\",\"url\":\"/shuku/0_6_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"恐怖悬疑\",\"url\":\"/shuku/0_7_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"其他类型\",\"url\":\"/shuku/0_8_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"        🌹男生连载🌹        \",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"/shuku/0_1_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠仙侠\",\"url\":\"/shuku/0_2_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市生活\",\"url\":\"/shuku/0_3_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"/shuku/0_4_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"游戏竞技\",\"url\":\"/shuku/0_5_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻未来\",\"url\":\"/shuku/0_6_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"恐怖悬疑\",\"url\":\"/shuku/0_7_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"其他类型\",\"url\":\"/shuku/0_8_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"        🌹女生完本🌹        \",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"/shuku/0_10_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"现代言情\",\"url\":\"/shuku/0_11_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"幻想奇缘\",\"url\":\"/shuku/0_12_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"青春校园\",\"url\":\"/shuku/0_13_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网络情缘\",\"url\":\"/shuku/0_14_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻空间\",\"url\":\"/shuku/0_15_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"鬼怪灵异\",\"url\":\"/shuku/0_16_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"其他类型\",\"url\":\"/shuku/0_17_2_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"        🌹女生连载🌹        \",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"古代言情\",\"url\":\"/shuku/0_10_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"现代言情\",\"url\":\"/shuku/0_11_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"幻想奇缘\",\"url\":\"/shuku/0_12_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"青春校园\",\"url\":\"/shuku/0_13_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网络情缘\",\"url\":\"/shuku/0_14_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻空间\",\"url\":\"/shuku/0_15_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"鬼怪灵异\",\"url\":\"/shuku/0_16_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}},\n{\"title\":\"其他类型\",\"url\":\"/shuku/0_17_1_{{page}}.html\",\"style\":{\"layout_flexGrow\":0,\"layout_flexBasisPercent\":0.295}}]",
+    "header": "{'cookie':'waf_sc=20230230;sex=boy',\n'referer':'https://www.75zw.com/'}",
+    "lastUpdateTime": 1686057874597,
+    "loginUrl": "",
+    "respondTime": 7447,
+    "ruleBookInfo": {
+      "author": "#info a.0@text",
+      "coverUrl": "img@src",
+      "init": "",
+      "intro": "#intro@tag.p.0@html",
+      "kind": "#intro@p.1@text&&#info@p.2@text##.*：|\\s.*",
+      "lastChapter": "#info a.-1@text##正文卷.|正文.|VIP章节.|免费章节.|VIP卷.|默认卷.|章节目录.|最新章节.|[\\(（【].*?[求更谢乐发订/万架字票合补加].*?[】）\\)]",
+      "name": "#info h1@text##全部目录|全部章节",
+      "wordCount": ".detail span.1@text"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "imageStyle": "0",
+      "nextContentUrl": "text.下一页@href##$##,{\n\"headers\": {\n\"Cookie\": {{\"'novel_\"+baseUrl.match(/\\/(\\d+)\\/\\d+/)[1]+\"=l'\"}}\n}\n}",
+      "replaceRegex": "<js>##喜欢.*请大家收藏.*速度全网最快。|本章未完.*|小主，这个章节.*|本章还未完.*|本章尚未结束.*|本章没有结束.*|.+7天免广告阅读.+</js><js>##(“|‘|’|，|,|「|（|《|『|【|～|~|：|；|、|#|%|¥|/|\\|·|0|[\\u5730\\u5740\\u767c\\u5e03\\u9801])\\n\\s{2}##$1</js><js>##牺如.*牺如|汜减.*汜。|牺如.*牺如。|芈何.*芈。|汜减.*汜|芈何.*芈|\\s*喜欢.*最快。\\s*|本章未完.*|\\s*.+7天免广告阅.+\\s*|\\s*.*点击下一页.*\\s*|免费阅读.|本站域名.|\\s*.*截图二维码.*\\s*|\\s*.*下载本站.*\\s*|\\s*<img.*\\s*</js>"
+    },
+    "ruleExplore": {
+      "author": "tag.span.1@text",
+      "bookList": ".sitebox dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": "tag.a.2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.span.0@text",
+      "bookList": "#sitembox dl",
+      "bookUrl": "tag.a.1@href",
+      "checkKeyWord": "青春",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.span.2:1:-1@text##\\s.*",
+      "lastChapter": "tag.a.-1@text",
+      "name": "tag.a.1@text",
+      "wordCount": "tag.span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "#list dd a",
+      "chapterName": "text##正文卷.|正文.|VIP章节.|免费章节.|VIP卷.|默认卷.|章节目录.|最新章节.|[\\(（【].*?[求更谢乐发订/万架字票合补加].*?[】）\\)]",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/search.html,{\n  \"headers\": \"{Referer:'https://www.75zhongwen.com/search.html',Cookie:'waf_sc=;sex=boy'}\",\n  \"method\": \"POST\",\n  \"body\": \"searchtype=all&searchkey={{key}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸起舞中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.75zhongwen.com",
+    "bookUrlPattern": "",
+    "customOrder": -2085959029,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "enabledReview": false,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1682084587306,
+    "loginUrl": "https://www.75zhongwen.com",
+    "respondTime": 22734,
+    "ruleBookInfo": {
+      "author": "[property=\"og:novel:author\"]@content",
+      "coverUrl": "[property=\"og:image\"]@content",
+      "init": "",
+      "intro": "#intro@tag.p.0@html",
+      "kind": "[property=\"og:novel:category\"]@content&&[property=\"og:novel:status\"]@content&&[property=\"og:novel:update_time\"]@content##\\s.*",
+      "lastChapter": "[property=\"og:novel:latest_chapter_name\"]@content",
+      "name": "[property=\"og:novel:book_name\"]@content"
+    },
+    "ruleContent": {
+      "content": "#content@html",
+      "imageStyle": "0",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##喜欢.*速度最快。|本章未完.*"
+    },
+    "ruleExplore": {
+      "author": "tag.span.1@text",
+      "bookList": ".sitebox dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.span.0@text",
+      "lastChapter": "tag.a.2@text",
+      "name": "tag.a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.span.0@text",
+      "bookList": "\n#sitembox dl",
+      "bookUrl": "tag.a.1@href",
+      "checkKeyWord": "系统",
+      "coverUrl": "img@src",
+      "intro": "tag.dd.2@text",
+      "kind": "tag.span.1:2:-1@text##\\s.*",
+      "lastChapter": "tag.a.-1@text",
+      "name": "tag.a.1@text",
+      "wordCount": "tag.span.3@text"
+    },
+    "ruleToc": {
+      "chapterList": "#list dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "<js>\njava.post(\"https://www.75zw.com/search.html\",\"searchtype=all&searchkey=\"+key,{\"referer\":\"https://www.75zw.com/\",\"cookie\":\"sex=boy\"}).header(\"Location\");\n</js>",
+    "weight": 0
+  }
+]

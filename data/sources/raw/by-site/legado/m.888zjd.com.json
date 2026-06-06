@@ -1,0 +1,67 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👔 柚子小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.888zjd.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "customOrder": 114,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"榜单\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"总点击榜\",\"url\":\"/top/allvisit/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总推荐榜\",\"url\":\"/top/allvote/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总鲜花榜\",\"url\":\"/top/allflower/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总月票榜\",\"url\":\"/top/allvipvote/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总字数榜\",\"url\":\"/top/words/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"总收藏榜\",\"url\":\"/top/goodnum/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"更新时间\",\"url\":\"/top/lastupdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"入库时间\",\"url\":\"/top/postdate/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"编辑推荐\",\"url\":\"/top/toptime/{{page}}.html\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"分类\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻玄幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=1\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠仙侠\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=2\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市言情\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=3\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史军事\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=4\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"穿越女频\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=5\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"网游竞技\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=6\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"科幻灵异\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=7\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"综合其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&page={{page}}&sortid=8\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "header": "'Cookie':'PHPSESSID=ae8luv9321ggcl701gm%D303hnhi; jieqiVisitId=article_articleviews%3D1493; jieqiUserInfo=jieqiUserId%3D8540%2CjieqiUserUname%3D123456123456%2CjieqiUserName%3D123456123456%2CjieqiUserGroup%3D3%2CjieqiUserGroupName%3D%E6%99%AE%E9%80%9A%E4%BC%9A%E5%91%98%2CjieqiUserVip%3D0%2CjieqiUserHonorId%3D0%2CjieqiUserHonor%3D%2CjieqiUserToken%3D9e175e1ee0cde9787161b7660335527f%2CjieqiCodeLogin%3D0%2CjieqiCodePost%3D0%2CjieqiUserLogin%3D1646093717%2CjieqiUserPassword%3D4f0ecbf735f30334d2984266b50fb378; jieqiVisitInfo=jieqiUserLogin%3D1646093717%2CjieqiUserId%3D8540'",
+    "lastUpdateTime": 1693560926493,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 41260,
+    "ruleBookInfo": {
+      "author": ".row_textl p@textNodes##\\s.*",
+      "coverUrl": ".row_coverl img@src",
+      "init": "",
+      "intro": "#introa@ownText##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": ".row_textl span.0@text##\\[|\\]",
+      "lastChapter": ".nw a@text",
+      "name": "h4@textNodes##《|》",
+      "tocUrl": ".more@href",
+      "wordCount": ".row_textl span.1@text##字"
+    },
+    "ruleContent": {
+      "content": "#acontent@html",
+      "imageStyle": "",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*喜欢.*速度最快。\\s*|\\�|\\&em.|.p;"
+    },
+    "ruleExplore": {
+      "author": "span@text##\\/",
+      "bookList": "#jieqi_page_contents tr",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://pic.888zjd.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "kind": "td.0:3@text",
+      "name": "a.0@ownText",
+      "wordCount": "td.2@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "p@text##\\s.*",
+      "bookList": ".c_row",
+      "bookUrl": "a@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@src",
+      "intro": "p@text##.*\\|",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": ".index dd a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href",
+      "updateTime": "title"
+    },
+    "searchUrl": "/modules/article/search.php?searchkey={{key}}&searchtype=all&page={{page}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,110 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "顶点中文①",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.ddsk.la",
+    "customOrder": 472,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 285
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "顶点中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.ddsk.la",
+    "bookUrlPattern": "",
+    "customOrder": 585,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1687881549215,
+    "loginUrl": "{\n  \"url\": \"\"\n}",
+    "respondTime": 1666,
+    "ruleBookInfo": {
+      "coverUrl": "class.synopsisArea_detail@img@src",
+      "intro": "id.notice@text",
+      "lastChapter": "class.directoryArea.0@tag.p.0@a@text",
+      "tocUrl": "text.开始阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##.*第.*/.*页.*|.*天才一秒记住.*|最快更新.无广告.|『加入书签，方便阅读』"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.p.1@text##.*\\s*\\||作者：",
+      "bookList": "class.recommend mybook@div@a",
+      "bookUrl": "tag.a@href",
+      "coverUrl": "tag.a.0@href##/wapbook/(\\d+)(\\d{3}).html##/files/article/image/$1/$1$2/$1$2s.jpg",
+      "kind": "tag.p.1@text&&tag.p.2@text##\\||(作者|更新)：.*|\\s",
+      "lastChapter": "tag.p.2@text##.*\\s*\\||更新：",
+      "name": "tag.p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterlist@tag.p!0@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/s.php?keyword={{key}}&t=1",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "顶点中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://wap.ddsk.la/",
+    "customOrder": 1139,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "全部小说::http://wap.ddsk.la/xclass/0/{{page}}.html\n玄幻魔法::http://wap.ddsk.la/xclass/1/{{page}}.html\n武侠修真::http://wap.ddsk.la/xclass/2/{{page}}.html\n都市言情::http://wap.ddsk.la/xclass/3/{{page}}.html\n历史军事::http://wap.ddsk.la/xclass/4/{{page}}.html\n侦探推理::http://wap.ddsk.la/xclass/5/{{page}}.html\n网游动漫::http://wap.ddsk.la/xclass/6/{{page}}.html\n科幻小说::http://wap.ddsk.la/xclass/7/{{page}}.html\n恐怖灵异::http://wap.ddsk.la/xclass/8/{{page}}.html\n散文诗词::http://wap.ddsk.la/xclass/9/{{page}}.html\n其他类型::http://wap.ddsk.la/xclass/10/{{page}}.html",
+    "lastUpdateTime": 1688441231150,
+    "respondTime": 3126,
+    "ruleBookInfo": {
+      "author": "class.synopsisArea_detail@tag.p.0@text##作者：",
+      "coverUrl": "class.synopsisArea_detail@img@src",
+      "intro": "class.synopsisArea@text##.*更新请点击",
+      "kind": "class.synopsisArea_detail@tag.p.1@text&&\nclass.synopsisArea_detail@tag.p.2@text&&\nclass.synopsisArea_detail@tag.p.3@text##类别：|状态：|更新：",
+      "lastChapter": "class.directoryArea.0@tag.p.0@a@text",
+      "name": "class.title@text",
+      "tocUrl": "text.开始阅读@href"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html##天才一秒记住本站.*无广告!|（本章未完.*下一页继续阅读）|『加入书签，方便阅读』|第.*页\\)",
+      "nextContentUrl": "text.下一页@href"
+    },
+    "ruleExplore": {
+      "author": "class.author@text##作者：",
+      "bookList": "class.hot_sale",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "class.review@text",
+      "name": "class.title@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.a@tag.p.1@text##.*作者：",
+      "bookList": "class.hot_sale",
+      "bookUrl": "tag.a@href",
+      "lastChapter": "tag.a@tag.p.2@text##.*更新：",
+      "name": "tag.a@tag.p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterlist@tag.p!0",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://wap.ddsk.la/s.php?keyword={{key}}&t=1",
+    "weight": 0
+  }
+]

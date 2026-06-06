@@ -1,0 +1,138 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "📖 笔趣阁⑨",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ibiquge.net",
+    "bookUrlPattern": "",
+    "customOrder": 1546,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1680959765933,
+    "loginUrl": "",
+    "respondTime": 2842,
+    "ruleBookInfo": {
+      "author": "id.book_detail@tag.a@text",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "id.book_detail@tag.li.1@text##类别：",
+      "lastChapter": "class.review@text",
+      "name": "class.title@text",
+      "tocUrl": "class.btn@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@textNodes##天才一秒记住.*\\s*[,，]*|章节错误.*?等待。",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##（本章未完，.*继续阅读）|第.*章.*\\(.*\\)\n"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author.0@tag.a@text",
+      "bookList": "class.slide-item list1@children",
+      "bookUrl": "class.hot_sale@tag.a.0@href",
+      "coverUrl": "tag.a.0@href##/(\\d+)_(\\d+)/##https://www.ibiquge.net/files/article/image/$1/$2/$2s.jpg",
+      "kind": "class.author.1@text##\\|.*",
+      "lastChapter": "class.author.1@tag.a.0@text",
+      "name": "class.title@tag.p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterlist@p!0",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://m.ibiquge.net/SearchBook.php?keyword={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "i笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ibiquge.net",
+    "bookUrlPattern": "",
+    "customOrder": 1704,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1690291519733,
+    "loginUrl": "",
+    "respondTime": 1866,
+    "ruleBookInfo": {
+      "author": "id.book_detail@tag.a@text",
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "kind": "id.book_detail@tag.li.1@text##类别：",
+      "lastChapter": "class.review@text",
+      "name": "class.title@text",
+      "tocUrl": "class.btn@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@textNodes##天才一秒记住.*\\s*[,，]*|章节错误.*?等待。",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##（本章未完，.*继续阅读）|第.*章.*\\(.*\\)\n"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author.0@tag.a@text",
+      "bookList": "class.slide-item list1@children",
+      "bookUrl": "class.hot_sale@tag.a.0@href",
+      "coverUrl": "tag.a.0@href##/(\\d+)_(\\d+)/##https://www.ibiquge.net/files/article/image/$1/$2/$2s.jpg",
+      "kind": "class.author.1@text##\\|.*",
+      "lastChapter": "class.author.1@tag.a.0@text",
+      "name": "class.title@tag.p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterlist@p!0",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://m.ibiquge.net/SearchBook.php?keyword={{key}}",
+    "weight": 52
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸笔趣阁②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.ibiquge.net",
+    "bookUrlPattern": "",
+    "customOrder": -2085958998,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1682087554376,
+    "loginUrl": "",
+    "respondTime": 183727,
+    "ruleBookInfo": {
+      "coverUrl": "id.fmimg@tag.img@src",
+      "intro": "id.intro@text",
+      "lastChapter": "id.info@tag.p.3@a@text"
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "replaceRegex": "##天才一秒记住.*\\s*[,，]*|章节错误.*?等待。|最新最快更新"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.author.0@tag.a@text",
+      "bookList": "class.slide-item list1@children",
+      "bookUrl": "tag.a.0@href@js:\"https://www.ibiquge.net\"+result",
+      "coverUrl": "tag.a.0@href##/(\\d+)_(\\d+)/##https://www.ibiquge.net/files/article/image/$1/$2/$2s.jpg",
+      "kind": "class.author.1@text##\\|.*",
+      "lastChapter": "class.author.1@tag.a.0@text",
+      "name": "class.title@tag.p.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.list@dl@dd",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "https://m.ibiquge.net/SearchBook.php?keyword={{key}}",
+    "weight": 0
+  }
+]

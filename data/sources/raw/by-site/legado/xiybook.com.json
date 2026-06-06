@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceComment": "搜索间隔30s",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁[xiy]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.xiybook.com",
+    "customOrder": 310,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693368905378,
+    "respondTime": 1796,
+    "ruleBookInfo": {
+      "author": "class.red@text",
+      "coverUrl": "class.img-thumbnail@tag.img@src",
+      "intro": "class.text-justify@text",
+      "kind": "[property=og:novel:update_time]@content&&\n[property=og:novel:category]@content&&\n[property=og:novel:status]@content",
+      "lastChapter": "class.text-danger@text",
+      "name": "class.bookTitle@text",
+      "tocUrl": "",
+      "wordCount": "class.blue.0@text"
+    },
+    "ruleContent": {
+      "content": "id.booktxt@tag.p!0@html",
+      "nextContentUrl": "class.readPager@tag.a.2@href",
+      "title": "class.readTitle@text"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "class.panel-body@class.col-xs-4",
+      "bookUrl": "class.fs-16@tag.a@href",
+      "checkKeyWord": "",
+      "coverUrl": "",
+      "intro": "class.fs-12@text",
+      "name": "class.fs-16@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.panel-body panel-chapterlist@class.col-sm-4",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.xiybook.com/search/?searchkey={{key}}",
+    "weight": 0
+  }
+]

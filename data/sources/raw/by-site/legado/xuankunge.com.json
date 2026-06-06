@@ -1,0 +1,30 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "玄幻阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http:www.xuankunge.com",
+    "customOrder": 126,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2,
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用,搜索链接规则为空",
+    "bookSourceName": "玄幻阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http:www.xuankunge.com",
+    "customOrder": 126,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 63,
+    "weight": 0
+  }
+]

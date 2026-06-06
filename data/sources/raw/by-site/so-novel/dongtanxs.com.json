@@ -1,0 +1,27 @@
+[
+  {
+    "url": "http://www.dongtanxs.com/",
+    "name": "东滩小说",
+    "comment": "",
+    "search": {
+      "url": "http://www.dongtanxs.com/s.php?ie=utf-8&q=%s",
+      "method": "get",
+      "result": ".bookinfo",
+      "bookName": "h4 > a",
+      "author": "div.author",
+      "category": "div.cat",
+      "latestChapter": "div.update > a"
+    },
+    "book": {},
+    "toc": {
+      "item": "dl > dt:nth-of-type(2) ~ dd > a"
+    },
+    "chapter": {
+      "title": ".content > h1",
+      "content": "#content",
+      "paragraphTagClosed": false,
+      "paragraphTag": "<br>+",
+      "filterTxt": "http://www\\.dongtanxs\\.com/dongtan\\d+/\\d+\\.html\\s*|请记住本书首发域名：www\\.dongtanxs\\.com。东滩小说手机版阅读网址：m\\.dongtanxs\\.com"
+    }
+  }
+]

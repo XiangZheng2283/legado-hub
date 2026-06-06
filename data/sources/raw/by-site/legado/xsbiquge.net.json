@@ -1,0 +1,267 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "🌸笔趣阁③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xsbiquge.net",
+    "bookUrlPattern": "https://www.biqugexx.net/\\d+_\\d+/",
+    "customOrder": 226,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682088712043,
+    "loginUrl": "",
+    "respondTime": 2875,
+    "ruleBookInfo": {
+      "author": "//meta[@property=\"og:novel:author\"]/@content",
+      "coverUrl": "//meta[@property=\"og:image\"]/@content",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "//meta[@property=\"og:novel:category\"]/@content",
+      "lastChapter": "//meta[@property=\"og:novel:latest_chapter_name\"]/@content##章节目录",
+      "name": "//meta[@property=\"og:title\"]/@content",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##----更新快，无防盗上------|热门\\*小说txt下载|.*www.biqugexx.net.*|biqu.*net",
+      "imageStyle": "0",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*.*?本章未完.*\\s*"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "coverUrl": "\nvar id = result.match(/_(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.btm@tag.a.0@text",
+      "bookList": "class.item",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dt.0@dd@text",
+      "kind": "",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.dt.0@a@text",
+      "wordCount": "tag.em.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "select@option@value"
+    },
+    "searchUrl": "https://www.xsbiquge.net/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "1",
+    "bookSourceName": "笔趣阁[xsb]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xsbiquge.net/",
+    "customOrder": 1225,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1682669905068,
+    "respondTime": 12216,
+    "ruleBookInfo": {
+      "author": "#info@p.0@a@text##作者：",
+      "coverUrl": "#fimimg@img.0@src",
+      "intro": "#intro@text",
+      "kind": "#info@p.6@text##最后更新：",
+      "lastChapter": "#info@p.5@a@text",
+      "name": "#info@h1.0@text",
+      "tocUrl": ".readbtn@a.1@href",
+      "wordCount": "#info@p.2@text##字数："
+    },
+    "ruleContent": {
+      "content": "id.booktxt@p!0@html",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*本章未完.*\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "//dl/div[@class=\"btm\"]/a/text()",
+      "bookList": "//div[@id=\"hotcontent\"]/div[@class=\"l rank\"]/div[@class=\"item\"]",
+      "bookUrl": "a@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "lastChapter": "//em[@class=\"blue visible-xs\"]/text()",
+      "name": "//dl/dt/a/text()",
+      "wordCount": "//em[@class=\"orange visible-xs\"]/text()"
+    },
+    "ruleToc": {
+      "chapterList": "#content_1@a",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "♛笔趣阁③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xsbiquge.net#guaner1",
+    "bookUrlPattern": "https://www.biqugexx.net/\\d+_\\d+/",
+    "customOrder": 1487,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1673272036185,
+    "loginUrl": "",
+    "respondTime": 2520,
+    "ruleBookInfo": {
+      "author": "//meta[@property=\"og:novel:author\"]/@content",
+      "coverUrl": "//meta[@property=\"og:image\"]/@content",
+      "intro": "id.intro@text",
+      "kind": "//meta[@property=\"og:novel:category\"]/@content",
+      "lastChapter": "//meta[@property=\"og:novel:latest_chapter_name\"]/@content##章节目录",
+      "name": "//meta[@property=\"og:title\"]/@content",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##----更新快，无防盗上------|热门\\*小说txt下载|.*www.biqugexx.net.*|biqu.*net",
+      "imageStyle": "0",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*.*?本章未完.*\\s*|章节报错\\(免登录\\)"
+    },
+    "ruleExplore": {
+      "coverUrl": "\nvar id = result.match(/_(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.btm@tag.a.0@text",
+      "bookList": "class.item",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dt.0@dd@text",
+      "kind": "",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.dt.0@a@text",
+      "wordCount": "tag.em.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "select@option@value"
+    },
+    "searchUrl": "https://www.xsbiquge.net/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "♛-笔趣阁③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xsbiquge.net#♤guaner1",
+    "bookUrlPattern": "https://www.biqugexx.net/\\d+_\\d+/",
+    "customOrder": 1488,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1673270946923,
+    "loginUrl": "",
+    "respondTime": 2300,
+    "ruleBookInfo": {
+      "author": "//meta[@property=\"og:novel:author\"]/@content",
+      "coverUrl": "//meta[@property=\"og:image\"]/@content",
+      "intro": "id.intro@text",
+      "kind": "//meta[@property=\"og:novel:category\"]/@content",
+      "lastChapter": "//meta[@property=\"og:novel:latest_chapter_name\"]/@content##章节目录",
+      "name": "//meta[@property=\"og:title\"]/@content",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##----更新快，无防盗上------|热门\\*小说txt下载|.*www.biqugexx.net.*|biqu.*net",
+      "imageStyle": "0",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*.*?本章未完.*\\s*|章节报错\\(免登录\\)"
+    },
+    "ruleExplore": {
+      "coverUrl": "\nvar id = result.match(/_(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.btm@tag.a.0@text",
+      "bookList": "class.item",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dt.0@dd@text",
+      "kind": "",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.dt.0@a@text",
+      "wordCount": "tag.em.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "select@option@value"
+    },
+    "searchUrl": "https://www.xsbiquge.net/search/?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸笔趣阁③",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.xsbiquge.net",
+    "bookUrlPattern": "https://www.biqugexx.net/\\d+_\\d+/",
+    "customOrder": -2085958987,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1682088712043,
+    "loginUrl": "",
+    "respondTime": 195029,
+    "ruleBookInfo": {
+      "author": "//meta[@property=\"og:novel:author\"]/@content",
+      "coverUrl": "//meta[@property=\"og:image\"]/@content",
+      "init": "",
+      "intro": "id.intro@text",
+      "kind": "//meta[@property=\"og:novel:category\"]/@content",
+      "lastChapter": "//meta[@property=\"og:novel:latest_chapter_name\"]/@content##章节目录",
+      "name": "//meta[@property=\"og:title\"]/@content",
+      "tocUrl": "text.章节目录@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##----更新快，无防盗上------|热门\\*小说txt下载|.*www.biqugexx.net.*|biqu.*net",
+      "imageStyle": "0",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##\\s*.*?本章未完.*\\s*"
+    },
+    "ruleExplore": {
+      "bookList": "",
+      "coverUrl": "\nvar id = result.match(/_(\\d+)/)[1];\nvar iid = parseInt(id/1000);\n'/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.btm@tag.a.0@text",
+      "bookList": "class.item",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "tag.dt.0@dd@text",
+      "kind": "",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.dt.0@a@text",
+      "wordCount": "tag.em.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.content_1@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "select@option@value"
+    },
+    "searchUrl": "https://www.xsbiquge.net/search/?searchkey={{key}}",
+    "weight": 0
+  }
+]

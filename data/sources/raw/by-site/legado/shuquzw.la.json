@@ -1,0 +1,30 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🔖思路客",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.shuquzw.la",
+    "customOrder": 598,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 718
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🔖思路客",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.shuquzw.la",
+    "customOrder": 753,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 1,
+    "weight": 718
+  }
+]

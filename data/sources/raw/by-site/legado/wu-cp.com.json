@@ -1,0 +1,197 @@
+[
+  {
+    "bookSourceComment": "\"error:Unabletoresolvehost\"www.wu-cp.com\":Noaddressassociatedwithhostname\n\"",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "无CP交流窝",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wu-cp.com/",
+    "customOrder": 174,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1628911413897,
+    "respondTime": 283,
+    "ruleBookInfo": {
+      "coverUrl": "class.book-cover@src",
+      "intro": "class.note@text",
+      "tocUrl": "class.index@href"
+    },
+    "ruleContent": {
+      "content": "class.page-body@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "tag.tbody@tag.tr",
+      "bookUrl": "class.name@href",
+      "lastChapter": "class.chapter@text",
+      "name": "class.name@text",
+      "wordCount": "tag.td.-2@tag.div@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.ul.5@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.wu-cp.com/modules/article/search.php?searchkey={{key}}&searchtype=all,{\"charset\":\"gbk\"}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "无cp交流网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wu-cp.com/",
+    "customOrder": 41,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"西方奇幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"西方奇幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=1&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"异世大陆\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=2&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"领主贵族\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=3&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"亡灵异族\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=4&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"魔法校园\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=5&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"东方玄幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"东方玄幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=6&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠异侠\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=7&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代修真\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=8&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"异世修仙\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=9&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻仙侠\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=10&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"洪荒传说\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=11&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市青春\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"都市生活\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=12&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"商战职场\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=13&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"娱乐明星\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=14&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"异术超能\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=15&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"宦海沉浮\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=16&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"体育竞技\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=17&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"青春校园\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=18&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"历史军事\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"架空历史\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=19&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史传记\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=20&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国历史\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=21&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"军事战争\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=22&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"科幻网游\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"超级科技\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=23&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"未来星际\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=24&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"时空穿梭\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=25&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"进化变异\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=26&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"虚拟网游\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=27&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏生涯\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=28&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏异世\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=29&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"恐怖悬疑\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"灵异奇谈\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=30&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖惊悚\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=31&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"推理侦探\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=32&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑探险\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=33&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"同人无限\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"综合影视\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=37&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"西方影视\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=38&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"东方影视\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=39&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"名著阅读\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=40&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"综合小说\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=41&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏同人\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=42&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他同人\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=43&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"综漫\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=30&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热血\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=34&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"少女\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=35&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=36&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"文学其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"童话\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=44&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代文学\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=45&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古典文学\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=46&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"茶后闲谈\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=47&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"饭后吐槽\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=48&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=49&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"预留分类\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=9&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=9&typeid=48&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1692257406049,
+    "loginUi": "[\n  {\n    \"name\": \"账号\",\n    \"type\": \"text\"\n  },\n  {\n    \"name\": \"密码\",\n    \"type\": \"password\"\n  }\n]",
+    "loginUrl": "@js:\nfunction login() {\n  let une = source.getLoginInfoMap().get(\"账号\")\n  let pwd = source.getLoginInfoMap().get(\"密码\")\n  if (une && pwd) {\n    let body = String('username=' + une + '&password=' + pwd + '&usecookie=315360000&action=login')\n    let url = source.bookSourceUrl + 'login.php'\n    let ck = java.post(url, body, { \"Content-Type\": \"application/x-www-form-urlencoded\" }).cookies()\n    let header = JSON.stringify({\n      \"Cookie\": String(ck).match(/\\{(.*?)\\}/)[1].replace(/,/g, ';')\n    })\n    source.putLoginHeader(header)\n  }\n}",
+    "respondTime": 653,
+    "ruleBookInfo": {
+      "author": ".right strong@text",
+      "coverUrl": ".pic img@src",
+      "intro": ".note@html",
+      "kind": ".cate@text&&.time@text##\\s.*",
+      "lastChapter": "h4 a@text##正文.| >>",
+      "name": "h2@text",
+      "tocUrl": ".buttons a.0@href",
+      "wordCount": ".words@textf#字"
+    },
+    "ruleContent": {
+      "content": ".page-content@html"
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.wu-cp.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5@text",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.3@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "系统",
+      "coverUrl": "a.1@href##.+\\D((\\d+)\\d{3})\\D##http://www.wu-cp.com/files/article/image/$2/$1/$1s.jpg###",
+      "intro": "",
+      "kind": "a.0@text&&span.1@text",
+      "lastChapter": "a.2@text##正文.",
+      "name": "a.1@text",
+      "wordCount": "div.2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".bd li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": ".isvip@text##^##🔒",
+      "updateTime": "span@text"
+    },
+    "searchUrl": "modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&searchtype=all&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "⭐️小说",
+    "bookSourceName": "🍺 无CP交流",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wu-cp.com",
+    "customOrder": 1686,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"西方奇幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"西方奇幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=1&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"异世大陆\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=2&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"领主贵族\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=3&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"亡灵异族\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=4&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"魔法校园\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=1&typeid=5&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"东方玄幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"东方玄幻\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=6&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"武侠异侠\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=7&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代修真\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=8&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"异世修仙\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=9&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"奇幻仙侠\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=10&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"洪荒传说\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=2&typeid=11&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"都市青春\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"都市生活\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=12&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"商战职场\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=13&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"娱乐明星\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=14&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"异术超能\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=15&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"宦海沉浮\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=16&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"体育竞技\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=17&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"青春校园\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=3&typeid=18&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"历史军事\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"架空历史\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=19&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"历史传记\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=20&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"外国历史\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=21&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"军事战争\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=4&typeid=22&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"科幻网游\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"超级科技\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=23&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"未来星际\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=24&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"时空穿梭\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=25&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"进化变异\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=26&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"虚拟网游\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=27&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏生涯\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=28&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏异世\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=5&typeid=29&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"恐怖悬疑\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"灵异奇谈\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=30&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"恐怖惊悚\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=31&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"推理侦探\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=32&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"悬疑探险\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=6&typeid=33&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"同人无限\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"综合影视\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=37&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"西方影视\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=38&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"东方影视\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=39&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"名著阅读\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=40&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"综合小说\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=41&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"游戏同人\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=42&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他同人\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=43&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"综漫\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=30&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"热血\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=34&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"少女\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=35&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=7&typeid=36&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}},\n{\"title\":\"文学其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"童话\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=44&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"现代文学\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=45&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"古典文学\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=46&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"茶后闲谈\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=47&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"饭后吐槽\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=48&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=8&typeid=49&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},\n{\"title\":\"预留分类\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=9&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":1,\"layout_flexGrow\":1}},\n{\"title\":\"其他\",\"url\":\"/modules/article/articlefilter.php?order=lastupdate&sortid=9&typeid=48&page={{page}}\",\"style\":{\"layout_flexBasisPercent\":0.29}}]",
+    "lastUpdateTime": 1680615725789,
+    "loginUrl": "http://www.wu-cp.com/login.php",
+    "respondTime": 7591,
+    "ruleBookInfo": {
+      "author": ".right strong@text",
+      "coverUrl": ".pic img@src",
+      "intro": ".note@html",
+      "kind": ".cate@text&&.time@text##\\s.*",
+      "lastChapter": "h4 a@text##正文.| >>",
+      "name": "h2@text",
+      "tocUrl": ".buttons a.0@href",
+      "wordCount": ".words@textf#字"
+    },
+    "ruleContent": {
+      "content": ".page-content@html"
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.wu-cp.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "td.5@text",
+      "lastChapter": "a.1@text",
+      "name": "a.0@text",
+      "wordCount": "td.3@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "a.3@text",
+      "bookList": "tbody tr",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "系统",
+      "coverUrl": "a.1@href##.+\\D((\\d+)\\d{3})\\D##http://www.wu-cp.com/files/article/image/$2/$1/$1s.jpg###",
+      "intro": "",
+      "kind": "a.0@text&&span.1@text",
+      "lastChapter": "a.2@text##正文.",
+      "name": "a.1@text",
+      "wordCount": "div.2@text"
+    },
+    "ruleToc": {
+      "chapterList": ".bd li",
+      "chapterName": "a@text",
+      "chapterUrl": "a@href",
+      "isVip": ".isvip@text##^##🔒",
+      "updateTime": "span@text"
+    },
+    "searchUrl": "/modules/article/search.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&searchtype=all&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\"error:Unabletoresolvehost\"www.wu-cp.com\":Noaddressassociatedwithhostname\n\"",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 无CP交流窝",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.wu-cp.com",
+    "customOrder": 405,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 1699815451979,
+    "respondTime": 4588,
+    "ruleBookInfo": {
+      "coverUrl": "class.book-cover@src",
+      "intro": "class.note@text",
+      "tocUrl": "class.index@href"
+    },
+    "ruleContent": {
+      "content": "class.page-body@text"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.author@text",
+      "bookList": "tag.tbody@tag.tr",
+      "bookUrl": "class.name@href",
+      "lastChapter": "class.chapter@text",
+      "name": "class.name@text",
+      "wordCount": "tag.td.-2@tag.div@text"
+    },
+    "ruleToc": {
+      "chapterList": "tag.ul.5@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.wu-cp.com/modules/article/search.php?searchkey={{key}}&searchtype=all,{\"charset\":\"gbk\"}",
+    "weight": 0
+  }
+]

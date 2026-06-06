@@ -1,0 +1,54 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "💐 女频",
+    "bookSourceName": "💐 ＵＣ书库",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://m.shukuge.org",
+    "customOrder": 45,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "日点击榜::/top/dayvisit_{{page}}/\n周点击榜::/top/weekvisit_{{page}}/\n月点击榜::/top/monthvisit_{{page}}/\n总点击榜::/top/allvisit_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n字数排行::/top/size_{{page}}/\n日推荐榜::/top/dayvote_{{page}}/\n周推荐榜::/top/weekvote_{{page}}/\n月推荐榜::/top/monthvote_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n最新入库::/top/postdate_{{page}}/\n最近更新::/top/lastupdate_{{page}}/\n奇幻仙侠::/sort/1_{{page}}/\n清穿小说::/sort/2_{{page}}/\n言情小说::/sort/3_{{page}}/\n女尊小说::/sort/4_{{page}}/\n耽美小说::/sort/5_{{page}}/\n同人小说::/sort/6_{{page}}/\n其他小说::/sort/7_{{page}}/\n传统言情::/sort/8_{{page}}/\n现代耽美::/sort/9_{{page}}/\n架空历史::/sort/10_{{page}}/\n全本小说::/full/{{page}}/",
+    "lastUpdateTime": 1751077423042,
+    "respondTime": 16321,
+    "ruleBookInfo": {
+      "author": ".info@p.0@text",
+      "coverUrl": ".info@img@src",
+      "kind": ".info@p.1@text##.*：|\\s..:.*",
+      "lastChapter": ".list[0]@a.0@text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": ".info@h3@text"
+    },
+    "ruleContent": {
+      "content": "id.content@textNodes",
+      "nextContentUrl": "text.下一页@href",
+      "replaceRegex": "##UC小.*|\\s*.*点击下一页.*\\s*|最新网址.*"
+    },
+    "ruleExplore": {
+      "author": "a.2@text",
+      "bookList": ".content_link||.tt",
+      "bookUrl": "a.1@href",
+      "coverUrl": "a.1@href##.+\\D((\\d+)\\d{3})\\D##http://www.shukuge.org/files/article/image/$2/$1/$1s.jpg###",
+      "intro": ".p5@text",
+      "kind": "a.0@text&&.label@p.0@text##\\[|\\]",
+      "name": "a.1@text",
+      "wordCount": ".label@p.1@text"
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "a.0@href",
+      "coverUrl": "a.0@href##.+\\D((\\d+)\\d{3})\\D##http://www.shukuge.org/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "a.1@text##小说",
+      "name": "a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": ".list!0@li@a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "nextTocUrl": ".right@a@href"
+    },
+    "searchUrl": "/s.php?s={{key}}",
+    "weight": 0
+  }
+]

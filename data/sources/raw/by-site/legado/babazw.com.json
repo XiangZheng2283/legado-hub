@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "0905校验",
+    "bookSourceName": "88中文",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.babazw.com",
+    "customOrder": 1141,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "中国名著::/zgmz/\n世界名著::/sjmz/\n中国文字::/zgwx/\n外国文字::/wgwx/",
+    "lastUpdateTime": 1689754722568,
+    "respondTime": 4439,
+    "ruleBookInfo": {
+      "coverUrl": ".img-thumbnail@src",
+      "init": ""
+    },
+    "ruleContent": {
+      "content": "#booktxt@html"
+    },
+    "ruleExplore": {
+      "author": "span@text",
+      "bookList": ".list-group-item",
+      "bookUrl": "a@href",
+      "lastChapter": "{{'全本'}}",
+      "name": "ownText"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "small@text",
+      "bookList": ".book-coverlist",
+      "bookUrl": "a@href",
+      "checkKeyWord": "人间词话",
+      "coverUrl": "##image:url\\((.*)\\)##$1###",
+      "lastChapter": "{{'全本'}}",
+      "name": "h4@text"
+    },
+    "ruleToc": {
+      "chapterList": "dl a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "/plus/search.php?keyword={{key}}",
+    "weight": 0
+  }
+]

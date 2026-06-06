@@ -1,0 +1,162 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "看情言小说网🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.gaoyuantong.com#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1468,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 931,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "canReName": "",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction x(encryptedData, key, iv) {\r\n  const ciphertext = CryptoJS.enc.Base64.parse(encryptedData);\r\n  const ivBytes = CryptoJS.enc.Base64.parse(iv);\r\n  const keyBytes = CryptoJS.enc.Utf8.parse(key);\r\n  const decrypted = CryptoJS.AES.decrypt(\r\n    { ciphertext: ciphertext },\r\n    keyBytes,\r\n    { iv: ivBytes, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.ZeroPadding }\r\n  );\r\n  const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);\r\n return decryptedText;\r\n  \r\n}\nmatch=src.match(/#booktxthtml'\\).html\\((.*?\\))\\)/);\n//java.log(match[1])\nif(match){\nresult=eval(match[1])}else result",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".item",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em.-1@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": "em.0@text##.*："
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "{{url=source.getKey();cookie.removeCookie(url)}}\n/search,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "by天天的鸟蛋蛋",
+    "bookSourceGroup": "",
+    "bookSourceName": "看情言小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.gaoyuantong.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2216,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1736419358566,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 1224,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property$=latest_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "canReName": "",
+      "tocUrl": "text.章节目录@href",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "@js:\nfunction x(encryptedData, key, iv) {\r\n  const ciphertext = CryptoJS.enc.Base64.parse(encryptedData);\r\n  const ivBytes = CryptoJS.enc.Base64.parse(iv);\r\n  const keyBytes = CryptoJS.enc.Utf8.parse(key);\r\n  const decrypted = CryptoJS.AES.decrypt(\r\n    { ciphertext: ciphertext },\r\n    keyBytes,\r\n    { iv: ivBytes, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.ZeroPadding }\r\n  );\r\n  const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);\r\n return decryptedText;\r\n  \r\n}\nmatch=src.match(/#booktxthtml'\\).html\\((.*?\\))\\)/);\n//java.log(match[1])\nif(match){\nresult=eval(match[1])}else result",
+      "nextContentUrl": "text.下一页@href",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "a.2@text",
+      "bookList": ".item",
+      "bookUrl": "a.0@href",
+      "coverUrl": "img@data-original",
+      "intro": "dd@text",
+      "kind": "em.-1@text",
+      "lastChapter": "",
+      "name": "a.1@text",
+      "wordCount": "em.0@text##.*："
+    },
+    "ruleToc": {
+      "chapterList": "dl@dd@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "{{url=source.getKey();cookie.removeCookie(url)}}\n/search,{\n  \"body\": \"searchkey={{key}}\",\n  \"method\": \"POST\"\n}",
+    "variableComment": "",
+    "weight": -5
+  }
+]

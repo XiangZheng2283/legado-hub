@@ -1,0 +1,49 @@
+[
+  {
+    "bookSourceComment": "//搜索间隔30秒",
+    "bookSourceGroup": "👍 优质",
+    "bookSourceName": "👍 全本小说[apap]",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.apap.net",
+    "bookUrlPattern": "http://www.iqb8.cc/[\\d_]+/",
+    "customOrder": 120,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/class/xuanhuan/{{page}}/\n修真::/class/xiuzhen/{{page}}/\n都市::/class/dushi/{{page}}/\n穿越::/class/chuanyue/{{page}}/\n网游::/class/wangyou/{{page}}/\n科幻::/class/kehuan/{{page}}/\n其他::/class/qita/{{page}}/\n全本::/quanben/class/{{page}}/",
+    "header": "{\n\t\"x-requested-with\": \"XMLHttpRequest\",\n\t\"User-Agent\": \"Mozilla/5.0 (Linux; Android 10; SK) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36\"\n}",
+    "lastUpdateTime": 1721977268210,
+    "respondTime": 2460,
+    "ruleBookInfo": {
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "init": "@put:{n:\"[property$=book_name]@content\",\n\ta:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nl:\"[property$=lastest_chapter_name]@content\",\ni:\"[property$=description]@content\",\nc:\"[property$=image]@content\"}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}"
+    },
+    "ruleContent": {
+      "content": ".content@html",
+      "nextContentUrl": "#next_url@href"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".category-div",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-original",
+      "intro": ".intro@text",
+      "kind": "0",
+      "name": "h3@text"
+    },
+    "ruleToc": {
+      "chapterList": ".info-chapters.1@a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nhp = java.ajax(source.key);\nsu = hp.match(/action=\"([^\"]+?)\"/)[1];\n\n`${su},{\n  \"body\": \"searchkey=${key}&Submit=\",\n  \"method\": \"POST\"\n}`",
+    "weight": 0
+  }
+]

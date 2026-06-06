@@ -1,0 +1,96 @@
+[
+  {
+    "bookSourceComment": "20230311 制作该书源",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✨我看书斋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.5ccc.net",
+    "bookUrlPattern": "",
+    "customOrder": 729,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1678529323069,
+    "loginUrl": "",
+    "respondTime": 7058,
+    "ruleBookInfo": {
+      "author": "class.book-info@class.tag-link.1@a@text",
+      "coverUrl": "class.module-item-pic.0@img.0@data-src##^##https://www.5ccc.net",
+      "init": "",
+      "intro": "class.book-info-content@html",
+      "kind": "{{@@class.book-info@class.book-tag-icon@text}}\n{{@@class.book-info-main@class.book-info-item.0@text}}",
+      "lastChapter": "class.book-info-main@a.0@text",
+      "name": "class.page-title@text",
+      "tocUrl": "{{baseUrl}}more,{\"headers\":{\"x-requested-with\":\"XMLHttpRequest\"}}"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.book-info-item@a@text",
+      "bookList": "class.module-items@class.module-search-item",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@data-original##^##https://www.5ccc.net",
+      "intro": "class.book-info-item.1@text",
+      "kind": "class.book-info-aux@a@text",
+      "lastChapter": "tag.a.0@href##^##https://www.5ccc.net<js>java.ajax(result)</js>class.book-info-main@a.0@text&&class.book-info-main@class.book-info-item.0@text##\\n(.)## • $1",
+      "name": "h3@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.volumelist@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.5ccc.net/search/{{key}}",
+    "weight": 68
+  },
+  {
+    "bookSourceComment": "20230311 制作该书源",
+    "bookSourceGroup": "0-1文本",
+    "bookSourceName": "✨我看书斋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.5ccc.net",
+    "bookUrlPattern": "",
+    "customOrder": 821,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": false,
+    "lastUpdateTime": 1678529323069,
+    "loginUrl": "",
+    "respondTime": 10020,
+    "ruleBookInfo": {
+      "author": "class.book-info@class.tag-link.1@a@text",
+      "coverUrl": "class.module-item-pic.0@img.0@data-src##^##https://www.5ccc.net",
+      "init": "",
+      "intro": "class.book-info-content@html",
+      "kind": "{{@@class.book-info@class.book-tag-icon@text}}\n{{@@class.book-info-main@class.book-info-item.0@text}}",
+      "lastChapter": "class.book-info-main@a.0@text",
+      "name": "class.page-title@text",
+      "tocUrl": "{{baseUrl}}more,{\"headers\":{\"x-requested-with\":\"XMLHttpRequest\"}}"
+    },
+    "ruleContent": {
+      "content": "id.chaptercontent@html"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "class.book-info-item@a@text",
+      "bookList": "class.module-items@class.module-search-item",
+      "bookUrl": "tag.a.0@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@data-original##^##https://www.5ccc.net",
+      "intro": "class.book-info-item.1@text",
+      "kind": "class.book-info-aux@a@text",
+      "lastChapter": "tag.a.0@href##^##https://www.5ccc.net<js>java.ajax(result)</js>class.book-info-main@a.0@text&&class.book-info-main@class.book-info-item.0@text##\\n(.)## • $1",
+      "name": "h3@tag.a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.volumelist@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "https://www.5ccc.net/search/{{key}}",
+    "weight": 68
+  }
+]

@@ -1,0 +1,110 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉 溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.com，",
+    "customOrder": 424,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 210
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.com",
+    "customOrder": 510,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 339
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "🎉 溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.com，",
+    "customOrder": 540,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 0,
+    "weight": 210
+  },
+  {
+    "bookSourceGroup": "搜索链接规则为空,兔兔兔",
+    "bookSourceName": "👍 溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.com",
+    "customOrder": 618,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "lastUpdateTime": 0,
+    "respondTime": 1,
+    "weight": 339
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 溜达小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.liudatxt.com",
+    "customOrder": 452,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/mulu/1-{{page}}.html\n武侠仙侠::/mulu/2-{{page}}.html\n都市言情::/mulu/3-{{page}}.html\n历史军事::/mulu/4-{{page}}.html\n科幻灵异::/mulu/5-{{page}}.html\n网游竞技::/mulu/6-{{page}}.html\n女频频道::/mulu/7-{{page}}.html",
+    "lastUpdateTime": 1624101811346,
+    "respondTime": 4607,
+    "ruleBookInfo": {
+      "author": "id.smallcons@tag.span.1@tag.a@text",
+      "coverUrl": "",
+      "init": "",
+      "intro": "id.bookintro@textNodes",
+      "kind": "id.smallcons@tag.span.0@text",
+      "lastChapter": "",
+      "name": "id.smallcons@h1@text",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.content@html",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "author": "tag.a.2@text",
+      "bookList": "id.sitebox@tag.dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@data-original",
+      "intro": "class.book_des@textNodes",
+      "kind": "tag.span.2@text&&tag.span.3@text",
+      "lastChapter": "tag.a.3@text",
+      "name": "tag.a.1@text",
+      "wordCount": "tag.span.0@text"
+    },
+    "ruleSearch": {
+      "author": "class.book_other.0@tag.span.0@text",
+      "bookList": "id.sitembox@tag.dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src",
+      "kind": "",
+      "lastChapter": "class.book_other.1@tag.a@text&&@tag.span.5@text",
+      "name": "tag.a.1@text",
+      "wordCount": "class.book_other.0@tag.span.3@text@js:result+'字'"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@tag.li@tag.a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "http://www.liudatxt.com/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

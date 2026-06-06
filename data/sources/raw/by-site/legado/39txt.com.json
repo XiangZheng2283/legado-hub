@@ -1,0 +1,127 @@
+[
+  {
+    "bookSourceComment": "error:unexpected end of stream on http://www.39txt.com/...\n",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑥⑧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.39txt.com",
+    "bookUrlPattern": "",
+    "customOrder": 22,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3704.400 QQBrowser/10.4.3587.400\"\n}",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2947,
+    "ruleBookInfo": {
+      "author": "class.info@tag.h3@tag.a@text",
+      "coverUrl": "class.img@tag.img@src",
+      "intro": "id.intro@html",
+      "lastChapter": "class.info@span@a@text",
+      "name": "class.info@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.book_text@html##一秒记住.*|www.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##/files/article/image/$1/$2/$2s.jpg",
+      "kind": "class.even.2@text",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.article_texttitleb@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.39txt.com/modules/article/search.php?q={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "error:unexpected end of stream on http://www.39txt.com/...\n",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁⑥⑧",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.39txt.com",
+    "bookUrlPattern": "",
+    "customOrder": 22,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3704.400 QQBrowser/10.4.3587.400\"\n}",
+    "lastUpdateTime": 0,
+    "loginUrl": "",
+    "respondTime": 2420,
+    "ruleBookInfo": {
+      "author": "class.info@tag.h3@tag.a@text",
+      "coverUrl": "class.img@tag.img@src",
+      "intro": "id.intro@html",
+      "lastChapter": "class.info@span@a@text",
+      "name": "class.info@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.book_text@html##一秒记住.*|www.*"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.a.0@href##.*/(\\d+)/(\\d+)/##/files/article/image/$1/$2/$2s.jpg",
+      "kind": "class.even.2@text",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.article_texttitleb@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "http://www.39txt.com/modules/article/search.php?q={{key}}&page={{page}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "🔰 普通",
+    "bookSourceName": "🔰 笔趣阁¹",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.39txt.com",
+    "customOrder": 517,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3704.400 QQBrowser/10.4.3587.400\"\n}",
+    "lastUpdateTime": 1719012527379,
+    "respondTime": 13808,
+    "ruleBookInfo": {
+      "author": "class.info@tag.h3@tag.a@text",
+      "coverUrl": "class.img@tag.img@src",
+      "intro": "id.intro@html",
+      "name": "class.info@tag.h1@text"
+    },
+    "ruleContent": {
+      "content": "id.book_text@html",
+      "replaceRegex": "##一秒记住.*免费阅读！"
+    },
+    "ruleExplore": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tag.tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "lastChapter": "tag.td.1@text",
+      "name": "tag.td.0@tag.a@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.chapterlist@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href"
+    },
+    "searchUrl": "/modules/article/search.php?q={{key}}&page={{page}}",
+    "weight": 0
+  }
+]

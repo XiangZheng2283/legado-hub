@@ -1,0 +1,787 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁a",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://souxs.leeyegy.com",
+    "customOrder": 300,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n  \"Accept-Language\": \"zh-CN,zh;q=0.8\",\n\"User-Agent\":\"okhttp-okgo/jeasonlzy\"\n}",
+    "lastUpdateTime": 1645592804196,
+    "respondTime": 5009,
+    "ruleBookInfo": {
+      "author": "author",
+      "coverUrl": "cover",
+      "init": "@js://详情\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse(result);\nlet data = json.data;\nlet info = {\n    title: decrypt(data.Name),\n    cover: 'https://imgapixs.pysmei.com/bookfiles/bookimages/' + decrypt(data.Img),\n    desc: decrypt(data.Desc),\n    author: decrypt(data.Author),\n    category: decrypt(data.CName),\n    status: decrypt(data.BookStatus),\n    update: decrypt(data.LastChapter),\n    updateTime: decrypt(data.LastTime),\n    tocUrl: baseUrl.replace('info.html', 'index.html')\n};\ninfo;",
+      "intro": "desc",
+      "kind": "category",
+      "lastChapter": "update",
+      "name": "title",
+      "tocUrl": "tocUrl"
+    },
+    "ruleContent": {
+      "content": "<js>\n//内容\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse(result);\ndecrypt(json.data.content);\n</js><js>\ntry {\n    if (!global.okhttp) {\n        global.okhttp = {\n            JString: Packages.java.lang.String,\n            Request: Packages.okhttp3.Request,\n            client: new Packages.okhttp3.OkHttpClient()\n        }\n    }\n    if (!global.wesrc) {\n        let request = new global.okhttp.Request.Builder().url('http://yck.hr7t4h.cn/yck/funcs').build();\n        global.wesrc = [global.okhttp.client.newCall(request).execute().body().string()].join('');\n    }\n    eval([new global.okhttp.JString(android.util.Base64.decode(global.wesrc, 0))].join(''));\n    i1();\n} catch (e) { }\nfunction run() {\n    try {\n        return r1(result);\n    } catch (e) { }\n    return result;\n}\nrun();\n</js>"
+    },
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "<js>\n//搜索结果列表\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse(result);\nfunction getResult() {\n    return json.data.map(function (item) {\n        let id = Number.parseInt(decrypt(item.Id + ''));\n        return {\n            cover: decrypt(item.Img),\n            url: 'https://infosxs.pysmei.com/BookFiles/Html/' + (Math.floor(id / 1000) + 1) + '/' + item.Id + '/info.html',\n            title: decrypt(item.Name),\n            author: decrypt(item.Author),\n            category: decrypt(item.CName),\n            update: decrypt(item.LastChapter),\n            updateTime: decrypt(item.UpdateTime),\n            desc: decrypt(item.Desc)\n        }\n    })\n}\ngetResult();\n</js><js>\ntry {\n    //we.comment\n    if (!global.okhttp) {\n        global.okhttp = {\n            JString: Packages.java.lang.String,\n            Request: Packages.okhttp3.Request,\n            client: new Packages.okhttp3.OkHttpClient()\n        }\n    }\n    if (!global.wesrc) {\n        let request = new global.okhttp.Request.Builder().url('http://yck.hr7t4h.cn/yck/funcs').build();\n        global.wesrc = [global.okhttp.client.newCall(request).execute().body().string()].join('');\n    }\n    eval([new global.okhttp.JString(android.util.Base64.decode(global.wesrc, 0))].join(''));\n    d1();\n    i1();\n} catch (e) { }\nresult;\n</js>",
+      "bookUrl": "url",
+      "coverUrl": "cover",
+      "intro": "desc",
+      "kind": "category",
+      "lastChapter": "update",
+      "name": "title"
+    },
+    "ruleToc": {
+      "chapterList": "@js://目录\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse([result].join('').replace(/},]/g, '}]'));\nlet chapters = [];\njson.data.list.forEach(group => {\n    group.list.forEach(chapter => {\n        if (chapter.hasContent == 1) {\n            chapters.push(\n                {\n                    title: decrypt(chapter.name),\n                    url: baseUrl.replace('infosxs.pysmei.com', 'contentxs.pysmei.com').replace('index.html', chapter.id + '.html')\n                }\n            );\n        }\n    });\n});\nchapters;",
+      "chapterName": "title",
+      "chapterUrl": "url"
+    },
+    "searchUrl": "https://souxs.leeyegy.com/search.aspx?key={{key}}&page=1&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "和笔趣阁app同资源",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "猴子阅读②",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com/",
+    "bookUrlPattern": "",
+    "customOrder": 302,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "❀                       热 门 专 区                      ❀::\n玄幻奇幻::https://scxs.pysmei.com/Categories/1/hot/{{page}}.html\n武侠仙侠::https://scxs.pysmei.com/Categories/2/hot/{{page}}.html\n都市言情::https://scxs.pysmei.com/Categories/3/hot/{{page}}.html\n历史军事::https://scxs.pysmei.com/Categories/4/hot/{{page}}.html\n科幻灵异::https://scxs.pysmei.com/Categories/5/hot/{{page}}.html\n网游竞技::https://scxs.pysmei.com/Categories/6/hot/{{page}}.html\n女生频道::https://scxs.pysmei.com/Categories/7/hot/{{page}}.html\n小说同人::https://scxs.pysmei.com/Categories/66/hot/{{page}}.html\n\n❀                       完 结 专 区                      ❀::\n玄幻奇幻::https://scxs.pysmei.com/Categories/1/over/{{page}}.html\n武侠仙侠::https://scxs.pysmei.com/Categories/2/over/{{page}}.html\n都市言情::https://scxs.pysmei.com/Categories/3/over/{{page}}.html\n历史军事::https://scxs.pysmei.com/Categories/4/over/{{page}}.html\n科幻灵异::https://scxs.pysmei.com/Categories/5/over/{{page}}.html\n网游竞技::https://scxs.pysmei.com/Categories/6/over/{{page}}.html\n女生频道::https://scxs.pysmei.com/Categories/7/over/{{page}}.html\n小说同人::https://scxs.pysmei.com/Categories/66/over/{{page}}.html\n\n❀                       最 新 专 区                      ❀::\n玄幻奇幻::https://scxs.pysmei.com/Categories/1/new/{{page}}.html\n武侠仙侠::https://scxs.pysmei.com/Categories/2/new/{{page}}.html\n都市言情::https://scxs.pysmei.com/Categories/3/new/{{page}}.html\n历史军事::https://scxs.pysmei.com/Categories/4/new/{{page}}.html\n科幻灵异::https://scxs.pysmei.com/Categories/5/new/{{page}}.html\n网游竞技::https://scxs.pysmei.com/Categories/6/new/{{page}}.html\n女生频道::https://scxs.pysmei.com/Categories/7/new/{{page}}.html\n小说同人::https://scxs.pysmei.com/Categories/66/new/{{page}}.html\n\n❀                       评 分 专 区                      ❀::\n玄幻奇幻::https://scxs.pysmei.com/Categories/1/vote/{{page}}.html\n武侠仙侠::https://scxs.pysmei.com/Categories/2/vote/{{page}}.html\n都市言情::https://scxs.pysmei.com/Categories/3/vote/{{page}}.html\n历史军事::https://scxs.pysmei.com/Categories/4/vote/{{page}}.html\n科幻灵异::https://scxs.pysmei.com/Categories/5/vote/{{page}}.html\n网游竞技::https://scxs.pysmei.com/Categories/6/vote/{{page}}.html\n女生频道::https://scxs.pysmei.com/Categories/7/vote/{{page}}.html\n小说同人::https://scxs.pysmei.com/Categories/66/vote/{{page}}.html\n\n❀                       周 榜 排 行                      ❀::\n最热榜单::https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\n完结榜单::https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\n推荐榜单::https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\n新书榜单::https://scxs.pysmei.com/top/man/top/new/week/{{page}}.html\n评分榜单::https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\n收藏榜单::https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\n\n❀                       月 榜 排 行                      ❀::\n最热榜单::https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\n完结榜单::https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\n推荐榜单::https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\n新书榜单::https://scxs.pysmei.com/top/man/top/new/month/{{page}}.html\n评分榜单::https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\n收藏榜单::https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\n\n❀                       总 榜 排 行                      ❀::\n最热榜单::https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html\n完结榜单::https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\n推荐榜单::https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\n新书榜单::https://scxs.pysmei.com/top/man/top/new/total/{{page}}.html\n评分榜单::https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\n收藏榜单::https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html",
+    "lastUpdateTime": 1684818576492,
+    "respondTime": 25583,
+    "ruleBookInfo": {
+      "author": "$.data.Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/BookImages/{$.data.Img}",
+      "intro": "$.data.Desc",
+      "kind": "$.data.LastTime&&\n$.data.CName&&\n$.data.BookStatus&&\n{$.Score}分",
+      "lastChapter": "$.data.LastChapter",
+      "name": "$.data.Name",
+      "tocUrl": "$.data.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pysmei.com/BookFiles/Html/'+result+'/index.html';"
+    },
+    "ruleContent": {
+      "content": "$.data.content"
+    },
+    "ruleExplore": {
+      "author": "$.Author",
+      "bookList": "$..BookList[*]",
+      "bookUrl": "$.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pysmei.com/BookFiles/Html/'+result+'/info.html';",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{$.Img}",
+      "intro": "$.Desc",
+      "kind": "$.BookStatus&&\n$.CName&&\n{$.Score}分",
+      "name": "$.Name"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$.data[*]",
+      "bookUrl": "$.Id@js:\nvar n=result.match(/(^\\d+)\\d{3,}/);\nn=(n)?n[1]:'0';\nresult=(Number(n)+1)+'/'+result;\n'https://infosxs.pysmei.com/BookFiles/Html/'+result+'/info.html';",
+      "coverUrl": "$.Img@put:{bid:$.Id}",
+      "intro": "$.Desc",
+      "kind": "$.BookStatus&&$.CName&&$.UpdateTime",
+      "lastChapter": "$.LastChapter",
+      "name": "$.Name"
+    },
+    "ruleToc": {
+      "chapterList": "$..[?(@.hasContent)]",
+      "chapterName": "$.name",
+      "chapterUrl": "$.id@js:\nbaseUrl.replace(/index.html/,result).replace(/infos/,'content')+'.html'"
+    },
+    "searchUrl": "https://souxs.leeyegy.com/search.aspx?key={{key}}&page={{page}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "scxs.pysmei.com\n渊呀ID9113\nQD♥♥♥ ZH♥♥  17K♥♥\n9--5+||🅰️💯笔趣阁🅰API-1🅰️🅱️💜💜💜🅰️🔎leeyegy.com#渊呀81",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁▪︎API",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#md-yuan11",
+    "bookUrlPattern": "",
+    "customOrder": 303,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐 · 周榜::https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\n推荐 · 月榜::https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\n✱推荐 · 总榜::https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\n收藏 · 周榜::https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\n收藏 · 月榜::https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\n✱收藏 · 总榜::https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\n评分 · 周榜::https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\n评分 · 月榜::https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\n✱评分 · 总榜::https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\n完结 · 周榜::https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\n完结 · 月榜::https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\n✱完结 · 总榜::https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\n最热 · 周榜::https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\n最热 · 月榜::https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\n✱最热 · 总榜::https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1684185167647,
+    "loginUrl": "",
+    "respondTime": 9320,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "💡作者:渊呀",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁A25",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#",
+    "bookUrlPattern": "",
+    "customOrder": 309,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1680940880993,
+    "loginUrl": "",
+    "respondTime": 1974,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com",
+    "bookUrlPattern": "",
+    "customOrder": 313,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"推荐 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"推荐 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"推荐 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"评分 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"评分 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"评分 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完结 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完结 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完结 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最热 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最热 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最热 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "",
+    "lastUpdateTime": 1687401770197,
+    "loginUrl": "",
+    "respondTime": 6399,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content##第.*|<!---->.*"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 60
+  },
+  {
+    "bookSourceComment": "作者:渊呀",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "✎ 笔趣阁30",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 1413,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1680679029609,
+    "loginUrl": "",
+    "respondTime": 3723,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\n笔趣阁APP\nhttps://www.biqugeapp.com/\nhttps://kuaiapi.jiaston.com/\nhttps://souxs.pigqq.com\nhttps://sou.jiaston.com\nhttps://souxs.leeyegy.com\nhttps://scxs.pysmei.com\nhttps://scxs.pigqq.com\nhttps://infos.anchengcn.com\nhttps://quapp.shenbabao.com",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🌾色彩夏书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com##目录分卷",
+    "customOrder": 1457,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"——————榜单——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"推荐·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"推荐·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"推荐·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"评分·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"评分·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"评分·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"完结·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"完结·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"完结·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"最热·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"最热·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"最热·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"tag\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"https://scxs.pigqq.com/Categories/1/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠仙侠\",\"url\":\"https://scxs.pigqq.com/Categories/2/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市言情\",\"url\":\"https://scxs.pigqq.com/Categories/3/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"https://scxs.pigqq.com/Categories/4/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻灵异\",\"url\":\"https://scxs.pigqq.com/Categories/5/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网游竞技\",\"url\":\"https://scxs.pigqq.com/Categories/6/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"女生频道\",\"url\":\"https://scxs.pigqq.com/Categories/7/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"小说同人\",\"url\":\"https://scxs.pigqq.com/Categories/66/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1682682688458,
+    "loginUrl": "",
+    "respondTime": 19625,
+    "ruleBookInfo": {
+      "author": "$.data.Author",
+      "canReName": "true",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{$.data.Img}",
+      "init": "",
+      "intro": "&nbsp;&nbsp;🔖更新时间：{{$.data.LastTime}}{{'\\n&lrm;\\n'}}{{$.data.Desc}}<js>result=\"\\t\"+result</js>",
+      "kind": "$.data.CName&&$.data.BookStatus&&$.data.LastTime",
+      "lastChapter": "$.data.LastChapter&&$.data.LastTime##\\d+:\\d+\n<js>result.replace(/(.*)\\s/,'$1 • ')</js><js>result.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|\\s\\S*[求更谢乐发推票盟补加字Kk\\/]\\S*\\s/g,'')</js>",
+      "name": "$.data.Name@js:java.put('sm',result)",
+      "tocUrl": "$.data.Id<js>sid=parseInt(Number(result)/1000+1);\njava.put('sid',sid);\nbid=result;\njava.put('bid',bid);\nresult=\"https://content.shenbabao.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/index.html\";\n</js>",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "<js>\n!(/google.cn/).test(baseUrl)?\njava.getString(\"$..content\"):\ndecodeURIComponent(baseUrl.replace(/^.*?text=/, ''))\n</js>##作者有话.*说：##▍作者有话说：",
+      "imageStyle": "FULL",
+      "replaceRegex": "##@@|：。：|\\<fontface=宋体color=blacksize=4\\>"
+    },
+    "ruleExplore": {
+      "author": "$.Author",
+      "bookList": "$..data.BookList[*]",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\nbid=result;\nresult=\"https://content.shenbabao.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/info.html\";\n</js>",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{$.Img}",
+      "intro": "$.Desc",
+      "kind": "$.CName",
+      "name": "$.Name"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$.data",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\nbid=result;\nresult=\"https://content.shenbabao.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/info.html\";\n</js>",
+      "checkKeyWord": "我的治愈系游戏",
+      "coverUrl": "$.Img",
+      "intro": "$.Desc",
+      "kind": "$.BookStatus&&$.CName&&$.UpdateTime##00:00:00",
+      "lastChapter": "{{$.LastChapter}} • {{$.UpdateTime}}\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>\n<js>result.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|\\s\\S*[求更谢乐发推票盟补加字Kk\\/]\\S*\\s/g,'')</js>",
+      "name": "$.Name",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "$.data.list\n<js>\n//二级目录，Json\nvar sid = java.get('sid');\nvar bid = java.get('bid');\nvar jdoc = JSON.parse(result);\nvar chUrl = 'https://contentxs.pigqq.com/BookFiles/Html/'+sid+'/'+bid+'/';\nvar volUrl = 'https://translate.google.cn/#view=home&op=translate&sl=zh-CN&tl=en&text=';\nvar list = [];\n\n\n//章节名显示卷名\nvar opts = {\n  showVolName: false\n};\n\nsm=java.get('sm');\n\nfunction format(title){\n  return title.trim().replace(/^(\\d+)(?![\\s\\d卷部章节回.])/, '$1 ').replace(/\\s+/g, \"\\x20\\x20\");\n}\n\njdoc.forEach((vol,idx) => {\n  var chs = vol.list.map(ch => ({\n  \ttext: !vol.name?format(ch.name):((opts.showVolName ? format(vol.name) + '☪' :(ch.IsVip === '1' ? '❍·' : '').padStart(3, \"\"))+format(ch.name).replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|\\s\\S*[求更谢乐发推票盟补加字Kk\\/]\\S*\\s/g,'')),\n    href: chUrl+ch.id+'.html',\n    name: format(ch.name),\n  }));\n  \n  if(vol.name!=\"\"){\n  var volInfo = sm+'\\\\'+ format(vol.name);\n  list.push({\n    text: '————◆ [' + format(vol.name) + '] ◆————',\n    href: volUrl + encodeURIComponent(volInfo),\n\n    VolName:true\n    });\n    }\n  list = list.concat(chs);\n});\nresult = list;\n</js>",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "VolName",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.aspx?key={{key}}&page={{page}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "scxs.pysmei.com\n渊呀ID9113\nQD♥♥♥ ZH♥♥  17K♥♥\n9--5+||🅰️💯笔趣阁🅰API-1🅰️🅱️💜💜💜🅰️🔎leeyegy.com#渊呀81\n##第.*|<!---->.*",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#渊呀81",
+    "bookUrlPattern": "",
+    "customOrder": 1460,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐 · 周榜::https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\n推荐 · 月榜::https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\n💠推荐 · 总榜::https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\n收藏 · 周榜::https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\n收藏 · 月榜::https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\n💠收藏 · 总榜::https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\n评分 · 周榜::https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\n评分 · 月榜::https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\n💠评分 · 总榜::https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\n完结 · 周榜::https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\n完结 · 月榜::https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\n💠完结 · 总榜::https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\n最热 · 周榜::https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\n最热 · 月榜::https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\n💠最热 · 总榜::https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1681943230452,
+    "loginUrl": "",
+    "respondTime": 9125,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁a",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://souxs.leeyegy.com",
+    "customOrder": 3,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\n  \"Accept-Language\": \"zh-CN,zh;q=0.8\",\n\"User-Agent\":\"okhttp-okgo/jeasonlzy\"\n}",
+    "lastUpdateTime": 1689215477732,
+    "respondTime": 8758,
+    "ruleBookInfo": {
+      "author": "author",
+      "coverUrl": "cover",
+      "init": "@js://详情\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse(result);\nlet data = json.data;\nlet info = {\n    title: decrypt(data.Name),\n    cover: 'https://imgapixs.pysmei.com/bookfiles/bookimages/' + decrypt(data.Img),\n    desc: decrypt(data.Desc),\n    author: decrypt(data.Author),\n    category: decrypt(data.CName),\n    status: decrypt(data.BookStatus),\n    update: decrypt(data.LastChapter),\n    updateTime: decrypt(data.LastTime),\n    tocUrl: baseUrl.replace('info.html', 'index.html')\n};\ninfo;",
+      "intro": "desc",
+      "kind": "category",
+      "lastChapter": "update",
+      "name": "title",
+      "tocUrl": "tocUrl"
+    },
+    "ruleContent": {
+      "content": "<js>\n//内容\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse(result);\ndecrypt(json.data.content);\n</js>"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "author",
+      "bookList": "<js>\n//搜索结果列表\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse(result);\nfunction getResult() {\n    return json.data.map(function (item) {\n        let id = Number.parseInt(decrypt(item.Id + ''));\n        return {\n            cover: decrypt(item.Img),\n            url: 'https://infosxs.pysmei.com/BookFiles/Html/' + (Math.floor(id / 1000) + 1) + '/' + item.Id + '/info.html',\n            title: decrypt(item.Name),\n            author: decrypt(item.Author),\n            category: decrypt(item.CName),\n            update: decrypt(item.LastChapter),\n            updateTime: decrypt(item.UpdateTime),\n            desc: decrypt(item.Desc)\n        }\n    })\n}\ngetResult();\n</js>",
+      "bookUrl": "url",
+      "coverUrl": "cover",
+      "intro": "desc",
+      "kind": "category",
+      "lastChapter": "update",
+      "name": "title"
+    },
+    "ruleToc": {
+      "chapterList": "@js://目录\nfunction decrypt(data) {\n    try {\n        let mark = decodeURI('%7B%7B%7B%7D%7D%7D');\n        if (data && data.indexOf(mark) > -1) {\n            let part = data.split(mark)[1];\n            let decrypted = java.createSymmetricCrypto('desede/CBC/PKCS5Padding', 'OW84U8Eerdb99rtsTXWSILDO', 'SK8bncVu').decryptStr(part);\n            if (decrypted) {\n                return decrypted;\n            }\n        }\n    } catch (e) {\n    }\n    return data;\n}\nlet json = JSON.parse([result].join('').replace(/},]/g, '}]'));\nlet chapters = [];\njson.data.list.forEach(group => {\n    group.list.forEach(chapter => {\n        if (chapter.hasContent == 1) {\n            chapters.push(\n                {\n                    title: decrypt(chapter.name),\n                    url: baseUrl.replace('infosxs.pysmei.com', 'contentxs.pysmei.com').replace('index.html', chapter.id + '.html')\n                }\n            );\n        }\n    });\n});\nchapters;",
+      "chapterName": "title",
+      "chapterUrl": "url"
+    },
+    "searchUrl": "https://souxs.leeyegy.com/search.aspx?key={{key}}&page=1&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "💡作者:渊呀",
+    "bookSourceGroup": "",
+    "bookSourceName": "笔趣阁A25",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#",
+    "bookUrlPattern": "",
+    "customOrder": 80,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1680940880993,
+    "loginUrl": "",
+    "respondTime": 2809,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com",
+    "bookUrlPattern": "",
+    "customOrder": 281,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"推荐 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"推荐 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"推荐 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"收藏 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"评分 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"评分 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"评分 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完结 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完结 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"完结 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最热 · 周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最热 · 月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最热 · 总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "header": "",
+    "lastUpdateTime": 1687401770197,
+    "loginUrl": "",
+    "respondTime": 11944,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content##第.*|<!---->.*"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 60
+  },
+  {
+    "bookSourceComment": "作者:渊呀",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "✎ 笔趣阁30",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#yuan1107",
+    "bookUrlPattern": "",
+    "customOrder": 1483,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1680679029609,
+    "loginUrl": "",
+    "respondTime": 1821,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "\n笔趣阁APP\nhttps://www.biqugeapp.com/\nhttps://kuaiapi.jiaston.com/\nhttps://souxs.pigqq.com\nhttps://sou.jiaston.com\nhttps://souxs.leeyegy.com\nhttps://scxs.pysmei.com\nhttps://scxs.pigqq.com\nhttps://infos.anchengcn.com\nhttps://quapp.shenbabao.com",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "🌾色彩夏书",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com##目录分卷",
+    "customOrder": 1492,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[\n{\"title\":\"——————榜单——————\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"推荐·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"推荐·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"推荐·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"收藏·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"评分·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"评分·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"评分·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"完结·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"完结·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"完结·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"最热·周榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"最热·月榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"最热·总榜\",\"url\":\"https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"tag\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"https://scxs.pigqq.com/Categories/1/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"武侠仙侠\",\"url\":\"https://scxs.pigqq.com/Categories/2/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"都市言情\",\"url\":\"https://scxs.pigqq.com/Categories/3/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"历史军事\",\"url\":\"https://scxs.pigqq.com/Categories/4/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"科幻灵异\",\"url\":\"https://scxs.pigqq.com/Categories/5/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"网游竞技\",\"url\":\"https://scxs.pigqq.com/Categories/6/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"女生频道\",\"url\":\"https://scxs.pigqq.com/Categories/7/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"小说同人\",\"url\":\"https://scxs.pigqq.com/Categories/66/new/{{page}}.html\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},\n{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1682682688458,
+    "loginUrl": "",
+    "respondTime": 2219,
+    "ruleBookInfo": {
+      "author": "$.data.Author",
+      "canReName": "true",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{$.data.Img}",
+      "init": "",
+      "intro": "&nbsp;&nbsp;🔖更新时间：{{$.data.LastTime}}{{'\\n&lrm;\\n'}}{{$.data.Desc}}<js>result=\"\\t\"+result</js>",
+      "kind": "$.data.CName&&$.data.BookStatus&&$.data.LastTime",
+      "lastChapter": "$.data.LastChapter&&$.data.LastTime##\\d+:\\d+\n<js>result.replace(/(.*)\\s/,'$1 • ')</js><js>result.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|\\s\\S*[求更谢乐发推票盟补加字Kk\\/]\\S*\\s/g,'')</js>",
+      "name": "$.data.Name@js:java.put('sm',result)",
+      "tocUrl": "$.data.Id<js>sid=parseInt(Number(result)/1000+1);\njava.put('sid',sid);\nbid=result;\njava.put('bid',bid);\nresult=\"https://content.shenbabao.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/index.html\";\n</js>",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "<js>\n!(/google.cn/).test(baseUrl)?\njava.getString(\"$..content\"):\ndecodeURIComponent(baseUrl.replace(/^.*?text=/, ''))\n</js>##作者有话.*说：##▍作者有话说：",
+      "imageStyle": "FULL",
+      "replaceRegex": "##@@|：。：|\\<fontface=宋体color=blacksize=4\\>"
+    },
+    "ruleExplore": {
+      "author": "$.Author",
+      "bookList": "$..data.BookList[*]",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\nbid=result;\nresult=\"https://content.shenbabao.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/info.html\";\n</js>",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{$.Img}",
+      "intro": "$.Desc",
+      "kind": "$.CName",
+      "name": "$.Name"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "$.Author",
+      "bookList": "$.data",
+      "bookUrl": "$.Id<js>sid=parseInt(Number(result)/1000+1);\nbid=result;\nresult=\"https://content.shenbabao.com/BookFiles/Html/\"+sid+\"/\"+bid+\"/info.html\";\n</js>",
+      "checkKeyWord": "我的治愈系游戏",
+      "coverUrl": "$.Img",
+      "intro": "$.Desc",
+      "kind": "$.BookStatus&&$.CName&&$.UpdateTime##00:00:00",
+      "lastChapter": "{{$.LastChapter}} • {{$.UpdateTime}}\n<js>result.replace(/\\s\\d+:\\d+:\\d+/,'')</js>\n<js>result.replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|\\s\\S*[求更谢乐发推票盟补加字Kk\\/]\\S*\\s/g,'')</js>",
+      "name": "$.Name",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "$.data.list\n<js>\n//二级目录，Json\nvar sid = java.get('sid');\nvar bid = java.get('bid');\nvar jdoc = JSON.parse(result);\nvar chUrl = 'https://contentxs.pigqq.com/BookFiles/Html/'+sid+'/'+bid+'/';\nvar volUrl = 'https://translate.google.cn/#view=home&op=translate&sl=zh-CN&tl=en&text=';\nvar list = [];\n\n\n//章节名显示卷名\nvar opts = {\n  showVolName: false\n};\n\nsm=java.get('sm');\n\nfunction format(title){\n  return title.trim().replace(/^(\\d+)(?![\\s\\d卷部章节回.])/, '$1 ').replace(/\\s+/g, \"\\x20\\x20\");\n}\n\njdoc.forEach((vol,idx) => {\n  var chs = vol.list.map(ch => ({\n  \ttext: !vol.name?format(ch.name):((opts.showVolName ? format(vol.name) + '☪' :(ch.IsVip === '1' ? '❍·' : '').padStart(3, \"\"))+format(ch.name).replace(/^(正文|VIP章节|最新章节)?(\\s+|_)|\\s\\S*[求更谢乐发推票盟补加字Kk\\/]\\S*\\s/g,'')),\n    href: chUrl+ch.id+'.html',\n    name: format(ch.name),\n  }));\n  \n  if(vol.name!=\"\"){\n  var volInfo = sm+'\\\\'+ format(vol.name);\n  list.push({\n    text: '————◆ [' + format(vol.name) + '] ◆————',\n    href: volUrl + encodeURIComponent(volInfo),\n\n    VolName:true\n    });\n    }\n  list = list.concat(chs);\n});\nresult = list;\n</js>",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "VolName",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.aspx?key={{key}}&page={{page}}&siteid=app2",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "scxs.pysmei.com\n渊呀ID9113\nQD♥♥♥ ZH♥♥  17K♥♥\n9--5+||🅰️💯笔趣阁🅰API-1🅰️🅱️💜💜💜🅰️🔎leeyegy.com#渊呀81\n##第.*|<!---->.*",
+    "bookSourceGroup": "2023.7.20效验",
+    "bookSourceName": "笔趣阁",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://souxs.leeyegy.com#渊呀81",
+    "bookUrlPattern": "",
+    "customOrder": 1496,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "推荐 · 周榜::https://scxs.pysmei.com/top/man/top/commend/week/{{page}}.html\n推荐 · 月榜::https://scxs.pysmei.com/top/man/top/commend/month/{{page}}.html\n💠推荐 · 总榜::https://scxs.pysmei.com/top/man/top/commend/total/{{page}}.html\n收藏 · 周榜::https://scxs.pysmei.com/top/man/top/collect/week/{{page}}.html\n收藏 · 月榜::https://scxs.pysmei.com/top/man/top/collect/month/{{page}}.html\n💠收藏 · 总榜::https://scxs.pysmei.com/top/man/top/collect/total/{{page}}.html\n评分 · 周榜::https://scxs.pysmei.com/top/man/top/vote/week/{{page}}.html\n评分 · 月榜::https://scxs.pysmei.com/top/man/top/vote/month/{{page}}.html\n💠评分 · 总榜::https://scxs.pysmei.com/top/man/top/vote/total/{{page}}.html\n完结 · 周榜::https://scxs.pysmei.com/top/man/top/over/week/{{page}}.html\n完结 · 月榜::https://scxs.pysmei.com/top/man/top/over/month/{{page}}.html\n💠完结 · 总榜::https://scxs.pysmei.com/top/man/top/over/total/{{page}}.html\n最热 · 周榜::https://scxs.pysmei.com/top/man/top/hot/week/{{page}}.html\n最热 · 月榜::https://scxs.pysmei.com/top/man/top/hot/month/{{page}}.html\n💠最热 · 总榜::https://scxs.pysmei.com/top/man/top/hot/total/{{page}}.html",
+    "header": "",
+    "lastUpdateTime": 1681943230452,
+    "loginUrl": "",
+    "respondTime": 3132,
+    "ruleBookInfo": {
+      "author": "Author",
+      "coverUrl": "https://imgapi.jiaston.com/BookFiles/Bookimages/{{$.Img}}",
+      "init": "data",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name",
+      "tocUrl": "https://infosxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/index.html"
+    },
+    "ruleContent": {
+      "content": "data.content"
+    },
+    "ruleExplore": {
+      "author": "Author",
+      "bookList": "data.BookList",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "https://imgapixs.pysmei.com/BookFiles/BookImages/{{$.Img}}",
+      "intro": "Desc",
+      "kind": "CName",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "Author",
+      "bookList": "data",
+      "bookUrl": "<js>java.put('cid',Math.floor({{$.Id}}/1000)+1)</js>https://infosxs.pysmei.com/BookFiles/Html/{{result}}/{{$.Id}}/info.html",
+      "coverUrl": "Img",
+      "intro": "Desc",
+      "kind": "CName",
+      "lastChapter": "LastChapter",
+      "name": "Name@put:{id:$.Id}"
+    },
+    "ruleToc": {
+      "chapterList": "data.list[*].list[*]",
+      "chapterName": "name",
+      "chapterUrl": "https://contentxs.pysmei.com/BookFiles/Html/@get:{cid}/@get:{id}/{{$.id}}.html"
+    },
+    "searchUrl": "/search.aspx?key={{key}}&siteid=app2",
+    "weight": 0
+  }
+]

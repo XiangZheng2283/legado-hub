@@ -1,0 +1,44 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "春雨书屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.chunyushuwu.com/",
+    "customOrder": 41,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1693572343184,
+    "respondTime": 4133,
+    "ruleBookInfo": {
+      "author": "class.author.0@a@text",
+      "coverUrl": "class.pic@img@src",
+      "intro": "class.intro@text",
+      "kind": "class.infotype@p.1@text##.*：",
+      "lastChapter": "class.list_xm@li.0@text",
+      "name": "class.cataloginfo@h3@text",
+      "tocUrl": "class.gochapter@a@href",
+      "wordCount": "class.infotype@p.2@text##.*："
+    },
+    "ruleContent": {
+      "content": "class.novelcontent@p@textNodes"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.sone@a.1@text",
+      "bookList": "class.sone",
+      "bookUrl": "class.sone@a@href",
+      "name": "class.sone@a.0@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapters@li@a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "s.html,{\n  \"body\": \"s={{key}}&type=articlename\",\n  \"charset\": \"GBK\",\n  \"method\": \"POST\"\n}",
+    "weight": 0
+  }
+]

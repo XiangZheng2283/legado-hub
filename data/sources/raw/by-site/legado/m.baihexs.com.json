@@ -1,0 +1,187 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "☘️百合小说☘️",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.baihexs.com#响海",
+    "customOrder": 107,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::https://m.baihexs.com/sort-1-{{page}}/\n武侠仙侠::https://m.baihexs.com/sort-2-{{page}}/\n都市言情::https://m.baihexs.com/sort-3-{{page}}/\n历史军事::https://m.baihexs.com/sort-4-{{page}}/\n游戏竞技::https://m.baihexs.com/sort-5-{{page}}/\n科幻灵异::https://m.baihexs.com/sort-6-{{page}}/\n其他类型::https://m.baihexs.com/sort-7-{{page}}/\n全本小说::https://m.baihexs.com/full-{{page}}/",
+    "lastUpdateTime": 1643974153532,
+    "respondTime": 28094,
+    "ruleBookInfo": {
+      "author": "class.block_txt2.0@tag.p.2@text##作\\s*者：",
+      "coverUrl": "class.block_img2@tag.img@src",
+      "intro": "class.intro_info@text",
+      "name": "class.block_txt2.0@tag.h2.0@text",
+      "tocUrl": "text.查看目录@href"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html"
+    },
+    "ruleExplore": {
+      "author": "tag.a.-1@text",
+      "bookList": "class.line",
+      "bookUrl": "class.blue@tag.a@href",
+      "kind": "tag.a.0@text",
+      "lastChapter": "tag.a.1@href<js>java.ajax('https://m.baihexs.com'+result)</js>class.block_txt2@tag.p.-1@a@text&&class.block_txt2@tag.p.-2@text##更新：(.*)## • $1",
+      "name": "class.blue@text"
+    },
+    "ruleSearch": {
+      "author": "tag.p@text",
+      "bookList": "class.block_txt2.0||class.line||class.cover@tag.p",
+      "bookUrl": "tag.a.-1@href",
+      "coverUrl": "",
+      "kind": "tag.a.0@text",
+      "lastChapter": "tag.a.1@href<js>java.ajax('https://m.baihexs.com'+result)</js>class.block_txt2@tag.p.-1@a@text&&class.block_txt2@tag.p.-2@text##更新：(.*)## • $1",
+      "name": "class.blue@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.baihexs.com/modules/article/waps.php?searchtype=articlename&searchkey={{key}}&submit=,{\n\"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🐳百合小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.baihexs.com##",
+    "bookUrlPattern": "",
+    "customOrder": 554,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"♧                   排  行                   ♧\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},{\"title\":\"日点击榜\",\"url\":\"/top-dayvisit-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周点击榜\",\"url\":\"/top-weekvisit-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月点击榜\",\"url\":\"/top-monthvisit-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总点击榜\",\"url\":\"/top-allvisit-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总收藏榜\",\"url\":\"/top-goodnum-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"字数排行\",\"url\":\"/top-size-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"日推荐榜\",\"url\":\"/top-dayvote-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"周推荐榜\",\"url\":\"/top-weekvote-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"月推荐榜\",\"url\":\"/top-monthvote-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"总推荐榜\",\"url\":\"/top-allvote-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最新入库\",\"url\":\"/top-postdate-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"最近更新\",\"url\":\"/top-lastupdate-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"♧                   分  类                   ♧\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":1}},\n{\"title\":\"玄幻奇幻\",\"url\":\"/sort-1-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"武侠仙侠\",\"url\":\"/sort-2-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"都市言情\",\"url\":\"/sort-3-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"历史军事\",\"url\":\"/sort-4-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"游戏竞技\",\"url\":\"/sort-5-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"科幻灵异\",\"url\":\"/sort-6-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"其他类型\",\"url\":\"/sort-7-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"全本小说\",\"url\":\"/full-{{page}}/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}},{\"title\":\"这是空的\",\"url\":\"\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.25}}]",
+    "lastUpdateTime": 1684841810108,
+    "loginUrl": "",
+    "respondTime": 48209,
+    "ruleBookInfo": {
+      "author": "class.block_txt2.0@tag.p.2@text##作\\s*者：",
+      "coverUrl": "class.block_img2.0@tag.img.0@src",
+      "intro": "class.intro_info.0@text##(^|[。！？]+[”」）】]?)##$1<br>",
+      "name": "class.block_txt2.0@tag.h2.0@text",
+      "tocUrl": "class.ablum_read.0@tag.span.1@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.nr1@html##感谢阅读，请您牢记.*|.*?请牢记，百合小说.*|请牢记.*|天才一秒记住本站地址.*|手机版阅读网址.*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.block_txt2.0@tag.p.2@text||tag.a.2@text||tag.p@text##.*/",
+      "bookList": "class.block_txt2.0||class.cover@tag.p",
+      "bookUrl": "class.block_txt2.0@tag.p.0@tag.a.0@href||tag.a.1@href",
+      "coverUrl": "class.block_img2.0@tag.img.0@src",
+      "kind": "class.block_txt2.0@tag.p.2@tag.a.0@text||tag.a.0@text",
+      "lastChapter": "tag.a.1@href<js>java.ajax('https://m.baihexs.com'+result)</js>class.block_txt2@tag.p.-1@a@text&&class.block_txt2@tag.p.-2@text##更新：(.*)## • $1",
+      "name": "class.block_txt2.0@tag.p.0@tag.a.0@tag.h2.0@text||tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.li",
+      "chapterName": "tag.a@text##第.*?章\\s?(第.*?章)(.*$)##$1 $2",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "class.page.0@text.下一页.0@href"
+    },
+    "searchUrl": "https://m.baihexs.com/modules/article/waps.php?searchtype=articlename&searchkey={{key}}&submit=,{\n  \"charset\": \"gbk\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "👍 百合小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.baihexs.com",
+    "customOrder": 1177,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "lastUpdateTime": 1691097991811,
+    "respondTime": 1094,
+    "ruleBookInfo": {
+      "author": "class.block_txt2.0@tag.p.2@text",
+      "coverUrl": "class.block_img2.0@tag.img.0@src",
+      "intro": "class.intro_info.0@text",
+      "name": "class.block_txt2.0@tag.p.0@tag.a.0@text",
+      "tocUrl": "class.ablum_read.0@tag.span.1@tag.a.0@href"
+    },
+    "ruleContent": {
+      "content": "id.nr1@textNodes",
+      "replaceRegex": "##请牢记.*aihexs.*\\s*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.block_txt2.0@tag.p.2@text||tag.a.2@text||tag.p@text##.*/",
+      "bookList": "class.block_txt2.0||class.cover@tag.p",
+      "bookUrl": "class.block_txt2.0@tag.p.0@tag.a.0@href||tag.a.1@href",
+      "coverUrl": "class.block_img2.0@tag.img.0@src",
+      "kind": "class.block_txt2.0@tag.p.2@tag.a.0@text||tag.a.0@text",
+      "lastChapter": "class.block_txt2.0@tag.p.5@tag.a.0@text||class.even.0@tag.a.0@text",
+      "name": "class.block_txt2.0@tag.p.0@tag.a.0@tag.h2.0@text||tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "class.chapter@tag.li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "class.page.0@text.下一页.0@href"
+    },
+    "searchUrl": "http://m.baihexsw.com/modules/article/waps.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "②🌸  常用",
+    "bookSourceName": "🌸百合小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.baihexs.com",
+    "bookUrlPattern": "",
+    "customOrder": -2085958991,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "enabledReview": false,
+    "lastUpdateTime": 1682088604878,
+    "respondTime": 21696,
+    "ruleBookInfo": {
+      "author": "",
+      "coverUrl": "",
+      "init": "",
+      "intro": "id.bookintro@html",
+      "name": "",
+      "tocUrl": "text.打开完整目录列表@href"
+    },
+    "ruleContent": {
+      "content": "id.content@html##感谢阅读，请您牢记.*|.*?请牢记，百合小说.*|请牢记.*",
+      "imageStyle": "0"
+    },
+    "ruleExplore": {
+      "bookList": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "class.block_txt2.0@tag.p.2@text||tag.a.2@text||tag.p@text##.*/",
+      "bookList": "@css:.cover>p:lt(5)",
+      "bookUrl": "tag.a.1@href##(\\d+)##https://www.baihexs.com/book/$1.html###",
+      "coverUrl": "class.block_img2.0@tag.img.0@src",
+      "kind": "class.block_txt2.0@tag.p.2@tag.a.0@text||tag.a.0@text##\\[|\\]",
+      "lastChapter": "tag.a.1@href<js>java.ajax('https://m.baihexs.com'+result)</js>class.block_txt2@tag.p.-1@a@text",
+      "name": "class.block_txt2.0@tag.p.0@tag.a.0@tag.h2.0@text||tag.a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "id.readerlist@li@a",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "text.下一页@href"
+    },
+    "searchUrl": "https://m.baihexs.com/modules/article/waps.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"searchkey={{key}}&page={{page}}\"\n}",
+    "weight": 0
+  }
+]

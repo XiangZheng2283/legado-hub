@@ -1,0 +1,201 @@
+[
+  {
+    "bookSourceComment": "error:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Unable to resolve host \"www.bequgew.com\": No address associated with hostname\n",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉笔趣阁⑦④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.bequgew.com/",
+    "bookUrlPattern": "https://www.bequgew.com/\\d+/",
+    "customOrder": 18,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1621495603415,
+    "loginUrl": "",
+    "respondTime": 1011,
+    "ruleBookInfo": {
+      "author": "class.info@h3@text",
+      "coverUrl": "class.img@img@src",
+      "init": "class.content",
+      "intro": "id.intro@tag.p.0@text",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.1@text&&\nclass.info@tag.p.2@text##所属类型：|更新时间：|连载完成：",
+      "lastChapter": "class.info@tag.span@tag.a@text##百度搜索.*",
+      "name": "class.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.book_text@html##记住本站网址(.*|\\n)本站|最新网址.*com|快捷c作: 按键盘上方向键.*加入书签” 功能！|.*免费电子书下载|手机用户请.*阅读更方便。|\\\\|\\║|作者.*|.*本书公告.*",
+      "nextContentUrl": "text.下一页@href",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.bequgew.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##百度搜索.*",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.article_texttitleb@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.bequgew.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "error:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Timed out waiting for 180000 ms\nerror:Unable to resolve host \"www.bequgew.com\": No address associated with hostname\n",
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "🎉笔趣阁⑦④",
+    "bookSourceType": 0,
+    "bookSourceUrl": "http://www.bequgew.com/",
+    "bookUrlPattern": "https://www.bequgew.com/\\d+/",
+    "customOrder": 18,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "",
+    "header": "",
+    "lastUpdateTime": 1621495603415,
+    "loginUrl": "",
+    "respondTime": 1103,
+    "ruleBookInfo": {
+      "author": "class.info@h3@text",
+      "coverUrl": "class.img@img@src",
+      "init": "class.content",
+      "intro": "id.intro@tag.p.0@text",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.1@text&&\nclass.info@tag.p.2@text##所属类型：|更新时间：|连载完成：",
+      "lastChapter": "class.info@tag.span@tag.a@text##百度搜索.*",
+      "name": "class.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.book_text@html##记住本站网址(.*|\\n)本站|最新网址.*com|快捷c作: 按键盘上方向键.*加入书签” 功能！|.*免费电子书下载|手机用户请.*阅读更方便。|\\\\|\\║|作者.*|.*本书公告.*",
+      "nextContentUrl": "text.下一页@href",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'http://www.bequgew.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##百度搜索.*",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.article_texttitleb@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "http://www.bequgew.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "笔趣阁0905",
+    "bookSourceName": "笔趣阁A20",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.bequgew.com",
+    "bookUrlPattern": "https://www.bequgew.com/\\d+/",
+    "customOrder": 1169,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻小说::/fenlei/1_{{page}}/\n修真小说::/fenlei/2_{{page}}/\n都市小说::/fenlei/3_{{page}}/\n历史小说::/fenlei/4_{{page}}/\n网游小说::/fenlei/5_{{page}}/\n科幻小说::/fenlei/6_{{page}}/\n其他小说::/fenlei/7_{{page}}/",
+    "header": "",
+    "lastUpdateTime": 1693367094089,
+    "loginUrl": "",
+    "respondTime": 2603,
+    "ruleBookInfo": {
+      "author": "class.info@h3@text",
+      "coverUrl": "class.img@img@src",
+      "init": "class.content",
+      "intro": "id.intro@tag.p.0@text",
+      "kind": "class.info@tag.p.0@text&&\nclass.info@tag.p.1@text&&\nclass.info@tag.p.2@text##所属类型：|更新时间：|连载完成：",
+      "lastChapter": "class.info@tag.span@tag.a@text##百度搜索.*",
+      "name": "class.info@h1@text",
+      "tocUrl": "",
+      "wordCount": ""
+    },
+    "ruleContent": {
+      "content": "id.book_text@html##记住本站网址(.*|\\n)本站|最新网址.*com|快捷c作: 按键盘上方向键.*加入书签” 功能！|.*免费电子书下载|手机用户请.*阅读更方便。|\\\\|\\║|作者.*|.*本书公告.*",
+      "nextContentUrl": "text.下一页@href",
+      "sourceRegex": "",
+      "webJs": ""
+    },
+    "ruleExplore": {
+      "author": "class.name@tag.span.1@text",
+      "bookList": "id.BookList@li",
+      "bookUrl": "class.name@a@href",
+      "coverUrl": "img@src",
+      "intro": "p@text",
+      "kind": "dl@em@text",
+      "lastChapter": "dl@a@text##最新章节：",
+      "name": "class.name@a@text",
+      "wordCount": ""
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "tag.td.2@text",
+      "bookList": "class.grid@tr!0",
+      "bookUrl": "tag.td.0@tag.a@href",
+      "coverUrl": "tag.td.0@tag.a@href<js>\nvar id = result.match(/(\\d+)\\/?$/)[1];\nvar iid = parseInt(id/1000);\n'https://www.bequgew.com/files/article/image/'+iid+'/'+id+'/'+id+'s.jpg';\n</js>",
+      "intro": "",
+      "kind": "tag.td.4@text&&\ntag.td.5@text",
+      "lastChapter": "tag.td.1@tag.a@text##百度搜索.*",
+      "name": "tag.td.0@tag.a@text",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "class.article_texttitleb@li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "nextTocUrl": "",
+      "updateTime": ""
+    },
+    "searchUrl": "https://www.bequgew.com/modules/article/search.php?searchkey={{key}}",
+    "weight": 0
+  }
+]

@@ -1,0 +1,273 @@
+[
+  {
+    "bookSourceComment": "同站：\n新御书屋 https://m.eyushuwu.com\n新欲望社 https://m.yuwangshe.net\n 19书院   https://m.19shuyuan.com\n  56ms    https://m.jizai12.com",
+    "bookSourceGroup": "轩1",
+    "bookSourceName": "🔰 新御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.nprouwen.net",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 2248,
+    "enabled": false,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "                                榜   单                                 \n最近更新::/top/lastupdate_{{page}}/\n最新入库::/top/postdate_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n总点击榜::/top/allvisit_{{page}}/\n日点击榜::/top/dayvisit_{{page}}/\n周点击榜::/top/weekvisit_{{page}}/\n月点击榜::/top/monthvisit_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n字数排行::/top/size_{{page}}/\n                                分   类                                  \n校园言情::/sort/1_{{page}}/\n都市言情::/sort/2_{{page}}/\n古代言情::/sort/3_{{page}}/\n  罗曼史  ::/sort/4_{{page}}/\n   耽 美   ::/sort/5_{{page}}/\n   百 合   ::/sort/6_{{page}}/\n   同 人   ::/sort/7_{{page}}/\n奇幻玄幻::/sort/8_{{page}}/\n网游竞技::/sort/9_{{page}}/\n科幻异能::/sort/10_{{page}}/\n恐怖灵异::/sort/11_{{page}}/\n惊悚推理::/sort/12_{{page}}/\n武侠仙侠::/sort/13_{{page}}/\n历史军事::/sort/14_{{page}}/\n穿越重生::/sort/15_{{page}}/\n综合其他::/sort/16_{{page}}/\n   完 本   ::/full/{{page}}/",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 1724318449132,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 902,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".tab@tag.p.0@text##.*：",
+      "coverUrl": ".tu@img@src",
+      "intro": ".jj@p@html",
+      "kind": ".tab1@tag.p.0@text&&.tab1@tag.p.1@text##小说",
+      "lastChapter": ".tab@a@text",
+      "name": "tag.h1.0@text##\\_.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": ".tab1@tag.p.2@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##分卷阅读.*|.*作者.*"
+    },
+    "ruleExplore": {
+      "author": ".p4@text||.p3 a@text",
+      "bookList": ".tt||.content_link",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.net/image/$1/$2/$2s.jpg",
+      "intro": ".p5@text##.*简介.|\\s",
+      "kind": "p@.p2@text&&.p1 a@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text##\\_.*",
+      "wordCount": "p@.p3@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.net/image/$1/$2/$2s.jpg",
+      "intro": "",
+      "kind": "tag.a.1@text",
+      "lastChapter": "",
+      "name": "tag.a.0@text##\\_.*",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "新",
+    "bookSourceName": "🎃新御宅屋🎃",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.nprouwen.net#🎃",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 1989,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "exploreUrl": "                                榜   单                                 \n最近更新::/top/lastupdate_{{page}}/\n最新入库::/top/postdate_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n总点击榜::/top/allvisit_{{page}}/\n日点击榜::/top/dayvisit_{{page}}/\n周点击榜::/top/weekvisit_{{page}}/\n月点击榜::/top/monthvisit_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n字数排行::/top/size_{{page}}/\n                                分   类                                  \n校园言情::/sort/1_{{page}}/\n都市言情::/sort/2_{{page}}/\n古代言情::/sort/3_{{page}}/\n#罗曼史 ::/sort/4_{{page}}/\n  耽 美  ::/sort/5_{{page}}/\n  百 合  ::/sort/6_{{page}}/\n  同 人  ::/sort/7_{{page}}/\n奇幻玄幻::/sort/8_{{page}}/\n网游竞技::/sort/9_{{page}}/\n科幻异能::/sort/10_{{page}}/\n恐怖灵异::/sort/11_{{page}}/\n惊悚推理::/sort/12_{{page}}/\n武侠仙侠::/sort/13_{{page}}/\n历史军事::/sort/14_{{page}}/\n穿越重生::/sort/15_{{page}}/\n综合其他::/sort/16_{{page}}/\n  完 本  ::/full/{{page}}/",
+    "exploreScreen": "",
+    "header": "",
+    "lastUpdateTime": 0,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 927,
+    "ruleBookInfo": {
+      "init": "",
+      "author": ".tab@tag.p.0@text##.*：",
+      "coverUrl": ".tu@img@src",
+      "intro": ".jj@p@html",
+      "kind": ".tab1@tag.p.0@text&&.tab1@tag.p.1@text##小说",
+      "lastChapter": ".tab@a@text",
+      "name": "tag.h1.0@text##\\_.*",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": ".tab1@tag.p.2@text",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes",
+      "nextContentUrl": "",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##分卷阅读.*|.*作者.*"
+    },
+    "ruleExplore": {
+      "author": ".p4@text||.p3 a@text",
+      "bookList": ".tt||.content_link",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.net/image/$1/$2/$2s.jpg",
+      "intro": ".p5@text##.*简介.|\\s",
+      "kind": "p@.p2@text&&.p1 a@text##\\[|\\]",
+      "lastChapter": "",
+      "name": "tag.a.1@text##\\_.*",
+      "wordCount": "p@.p3@text"
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.net/image/$1/$2/$2s.jpg",
+      "intro": "",
+      "kind": "tag.a.1@text",
+      "lastChapter": "",
+      "name": "tag.a.0@text##\\_.*",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": "option@value",
+      "updateTime": ""
+    },
+    "searchUrl": "s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "variableComment": "",
+    "weight": 1
+  },
+  {
+    "bookSourceComment": "同站：\n新御书屋 https://m.eyushuwu.com\n新欲望社 https://m.yuwangshe.net\n 19书院   https://m.19shuyuan.com\n  56ms    https://m.jizai12.com",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "🔰 新御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.nprouwen.net/",
+    "bookUrlPattern": "",
+    "customButton": false,
+    "customOrder": 2370,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "                                榜   单                                 \n最近更新::/top/lastupdate_{{page}}/\n最新入库::/top/postdate_{{page}}/\n总收藏榜::/top/goodnum_{{page}}/\n总点击榜::/top/allvisit_{{page}}/\n日点击榜::/top/dayvisit_{{page}}/\n周点击榜::/top/weekvisit_{{page}}/\n月点击榜::/top/monthvisit_{{page}}/\n总推荐榜::/top/allvote_{{page}}/\n字数排行::/top/size_{{page}}/\n                                分   类                                  \n校园言情::/sort/1_{{page}}/\n都市言情::/sort/2_{{page}}/\n古代言情::/sort/3_{{page}}/\n  罗曼史  ::/sort/4_{{page}}/\n   耽 美   ::/sort/5_{{page}}/\n   百 合   ::/sort/6_{{page}}/\n   同 人   ::/sort/7_{{page}}/\n奇幻玄幻::/sort/8_{{page}}/\n网游竞技::/sort/9_{{page}}/\n科幻异能::/sort/10_{{page}}/\n恐怖灵异::/sort/11_{{page}}/\n惊悚推理::/sort/12_{{page}}/\n武侠仙侠::/sort/13_{{page}}/\n历史军事::/sort/14_{{page}}/\n穿越重生::/sort/15_{{page}}/\n综合其他::/sort/16_{{page}}/\n   完 本   ::/full/{{page}}/",
+    "lastUpdateTime": 1724318449132,
+    "respondTime": 36096,
+    "ruleBookInfo": {
+      "author": ".tab@tag.p.0@text##.*：",
+      "coverUrl": ".tu@img@src",
+      "intro": ".jj@p@html",
+      "kind": ".tab1@tag.p.0@text&&.tab1@tag.p.1@text##小说",
+      "lastChapter": ".tab@a@text",
+      "name": "tag.h1.0@text##\\_.*",
+      "wordCount": ".tab1@tag.p.2@text"
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes",
+      "replaceRegex": "##分卷阅读.*|.*作者.*"
+    },
+    "ruleExplore": {
+      "author": ".p4@text||.p3 a@text",
+      "bookList": ".tt||.content_link",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.net/image/$1/$2/$2s.jpg",
+      "intro": ".p5@text##.*简介.|\\s",
+      "kind": "p@.p2@text&&.p1 a@text##\\[|\\]",
+      "name": "tag.a.1@text##\\_.*",
+      "wordCount": "p@.p3@text"
+    },
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "class.content_link@tag.p.1@a@href||tag.a.0@href##.*/(\\d+)/(\\d+)/##https://img.nprouwen.net/image/$1/$2/$2s.jpg",
+      "kind": "tag.a.1@text",
+      "name": "tag.a.0@text##\\_.*"
+    },
+    "ruleToc": {
+      "chapterList": "li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "error:timeout\nerror:timeout\nerror:Read error: ssl=0x7f518b9880: I/O error during system call, Connection timed out\nerror:timeout\nerror:Read timed out\n//加载超级慢",
+    "bookSourceGroup": "皇叔",
+    "bookSourceName": "👔 新御宅屋",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.nprouwen.net",
+    "customButton": false,
+    "customOrder": 2551,
+    "enabled": true,
+    "enabledCookieJar": false,
+    "enabledExplore": true,
+    "eventListener": false,
+    "exploreUrl": "总榜::/top/allvisit_{{page}}/\n月榜::/top/monthvisit_{{page}}/\n周榜::/top/weekvisit_{{page}}/\n总推::/top/allvote_{{page}}/\n月推::/top/monthvote_{{page}}/\n周推::/top/weekvote_{{page}}/\n站推::/top/toptime_{{page}}/\n收藏::/top/goodnum_{{page}}/\n字数::/top/size_{{page}}/\n最近::/top/lastupdate_{{page}}/\n最新::/top/postdate_{{page}}/\n耽美::/sort/1_{{page}}/\n百合::/sort/2_{{page}}/\n言情::/sort/3_{{page}}/\n高辣::/sort/4_{{page}}/\n腹黑::/sort/5_{{page}}/\n种田::/sort/6_{{page}}/\n高干::/sort/7_{{page}}/\n玄幻::/sort/8_{{page}}/\n修真::/sort/9_{{page}}/\n其他::/sort/10_{{page}}/\n武侠::/sort/11_{{page}}/\n都市::/sort/12_{{page}}/\n科幻::/sort/13_{{page}}/\n网游::/sort/14_{{page}}/\n恐怖::/sort/15_{{page}}/\n历史::/sort/16_{{page}}/\n同人::/sort/17_{{page}}/",
+    "lastUpdateTime": 1681108249429,
+    "respondTime": 39647,
+    "ruleBookInfo": {
+      "author": ".tab@tag.p.0@text##.*：",
+      "coverUrl": ".tu@img@src",
+      "intro": ".jj@p@html",
+      "kind": ".tab1@tag.p.0@text&&.tab1@tag.p.1@text##小说",
+      "lastChapter": ".tab@a@text",
+      "name": "tag.h1.0@text##\\_.*",
+      "wordCount": ".tab1@tag.p.2@text"
+    },
+    "ruleContent": {
+      "content": "#novelcontent@textNodes",
+      "replaceRegex": "##分卷阅读.*|.*作者.*"
+    },
+    "ruleExplore": {
+      "author": ".p4@text||.p3 a@text",
+      "bookList": ".tt||.content_link",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "tag.img@src||tag.a.1@href##.+\\D((\\d+)\\d{3})\\D##https://www.wmp8.com/files/article/image/$2/$1/$1s.jpg###",
+      "intro": ".p5@text##.*简介.|\\s",
+      "kind": "p@.p2@text&&.p1 a@text##\\[|\\]",
+      "name": "tag.a.1@text##\\_.*",
+      "wordCount": "p@.p3@text"
+    },
+    "ruleSearch": {
+      "author": "tag.a.2@text",
+      "bookList": ".search_list",
+      "bookUrl": "tag.a.0@href",
+      "coverUrl": "tag.a.0@href##.+\\D((\\d+)\\d{3})\\D##https://www.wmp8.com/files/article/image/$2/$1/$1s.jpg###",
+      "kind": "tag.a.1@text",
+      "name": "tag.a.0@text##\\_.*"
+    },
+    "ruleToc": {
+      "chapterList": "li",
+      "chapterName": "tag.a@text",
+      "chapterUrl": "tag.a@href",
+      "nextTocUrl": "option@value"
+    },
+    "searchUrl": "/s.php,{\n  \"charset\": \"gbk\",\n  \"method\": \"POST\",\n  \"body\": \"s={{key}}&type=articlename\"\n}",
+    "weight": 0
+  }
+]

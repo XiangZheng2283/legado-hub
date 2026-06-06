@@ -1,0 +1,154 @@
+[
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "一读小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.121ds.cc",
+    "bookUrlPattern": "https?://\\w+.121ds.cc/\\d+/",
+    "customOrder": 301,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/xuanhuan/<,{{page}}/>\n武侠仙侠::/wuxia/<,{{page}}/>\n都市言情::/dushi/<,{{page}}/>\n历史军事::/lishi/<,{{page}}/>\n科幻灵异::/kehuan/<,{{page}}/>\n网游竞技::/wangyou/<,{{page}}/>\n女频频道::/nvpin/<,{{page}}/>\n其他小说::/qita/<,{{page}}/>",
+    "header": "{\n\t\"User-Agent\":\"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\",\"Referer\":\"{{baseUrl}}\"\n\t}",
+    "lastUpdateTime": 1692069411369,
+    "respondTime": 3111,
+    "ruleBookInfo": {
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "init": "@put:{n:\"[property$=book_name]@content\",\n\ta:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nl:\"[property$=latest_chapter_name]@content\",\ni:\"[property$=description]@content\",\nc:\"[property$=image]@content\"}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}"
+    },
+    "ruleContent": {
+      "content": "#BookText@html"
+    },
+    "ruleExplore": {
+      "author": "span.1@text",
+      "bookList": "#sitebox dl",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@data-src",
+      "intro": ".book_des@textNodes##简介：",
+      "kind": "span.-2:-3:0@text",
+      "lastChapter": "a.-1@text",
+      "name": "a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "<js>\nif(result.match(/^<script/)&&result.match(/\\/script>$/)){\njava.log('get Cookie...')\n\n$ = java.head(baseUrl,{referer:baseUrl}).cookies();\n\nsource.putLoginHeader(JSON.stringify({\n\t\t\"Cookie\": \"t=\"+$.token+\";r=\"+($.secret-100)\n}));\n\nurl=baseUrl+`,{\"headers\":{\"referer\":\"${baseUrl}\"}}`\nresult=java.ajax(url);\n}\nresult;\n</js>\n.ptm-list-view li",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-src",
+      "kind": "0",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterlist li a||.chapterlist dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nurl=\"https://m.121ds.cc/search/?wd=\"+encodeURI(key);\n\nurl+`,{\"headers\":{\"referer\":\"${url}\"}}`",
+    "weight": 0
+  },
+  {
+    "bookSourceComment": "//基础源来自「一程」",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "一读小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.121ds.cc/",
+    "customOrder": 529,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "[{\"title\":\"玄幻奇幻\",\"url\":\"/xuanhuan/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"武侠仙侠\",\"url\":\"/wuxia/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"都市言情\",\"url\":\"/dushi/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"历史军事\",\"url\":\"/lishi/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"科幻灵异\",\"url\":\"/kehuan/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"网游竞技\",\"url\":\"/wangyou/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"女频频道\",\"url\":\"/nvpin/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"其他小说\",\"url\":\"/qita/{{page-1}}/\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}},{\"title\":\"\",\"url\":\"\",\"style\":{\"layout_flexBasisPercent\":0.25,\"layout_flexGrow\":1}}]",
+    "lastUpdateTime": 1690931790413,
+    "respondTime": 3057,
+    "ruleBookInfo": {
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content##小说|\\s.*",
+      "lastChapter": "[property$=latest_chapter_name]@content##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "name": "[property$=book_name]@content"
+    },
+    "ruleContent": {
+      "content": "#BookText@html"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "span.1@text",
+      "bookList": "<js>\nif(result.match(/^<script/)&&result.match(/\\/script>$/)){\njava.log('get Cookie...')\n\n$ = java.head(baseUrl,{referer:baseUrl}).cookies();\n\nsource.putLoginHeader(JSON.stringify({\n\t\t\"Cookie\": \"t=\"+$.token+\";r=\"+($.secret-100)\n}));\n\nurl=baseUrl+`,{\"headers\":{\"referer\":\"${baseUrl}\"}}`\nresult=java.ajax(url)\n}\nresult\n</js>#sitebox@dl",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "",
+      "coverUrl": "img@data-src",
+      "intro": "dd.2@textNodes",
+      "kind": "span.3:2:0@text##\\s\\d.*",
+      "lastChapter": "a.-1@text",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": ".chapterlist dd a",
+      "chapterName": "text##正文卷.|正文.|VIP卷.|默认卷.|卷_|VIP章节.|免费章节.|章节目录.|最新章节.|[\\(（【].*?[求更票谢乐发订合补加架字修Kk].*?[】）\\)]",
+      "chapterUrl": "href",
+      "isVolume": ""
+    },
+    "searchUrl": "@js:\nurl=\"https://www.121ds.cc/search/?wd=\"+encodeURI(key);\n\nurl+`,{\"headers\":{\"referer\":\"${url}\"}}`",
+    "weight": 0
+  },
+  {
+    "bookSourceGroup": "校验可用",
+    "bookSourceName": "一读小说",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.121ds.cc",
+    "bookUrlPattern": "https?://\\w+.121ds.cc/\\d+/",
+    "customOrder": 1151,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻奇幻::/xuanhuan/<,{{page}}/>\n武侠仙侠::/wuxia/<,{{page}}/>\n都市言情::/dushi/<,{{page}}/>\n历史军事::/lishi/<,{{page}}/>\n科幻灵异::/kehuan/<,{{page}}/>\n网游竞技::/wangyou/<,{{page}}/>\n女频频道::/nvpin/<,{{page}}/>\n其他小说::/qita/<,{{page}}/>",
+    "header": "{\n\t\"User-Agent\":\"Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36\",\"Referer\":\"{{baseUrl}}\"\n\t}",
+    "lastUpdateTime": 1692069411369,
+    "respondTime": 5779,
+    "ruleBookInfo": {
+      "author": "@get:{a}",
+      "coverUrl": "@get:{c}",
+      "init": "@put:{n:\"[property$=book_name]@content\",\n\ta:\"[property$=author]@content\",\nk:\"[property~=category|status|update_time]@content\",\nl:\"[property$=latest_chapter_name]@content\",\ni:\"[property$=description]@content\",\nc:\"[property$=image]@content\"}",
+      "intro": "@get:{i}",
+      "kind": "@get:{k}",
+      "lastChapter": "@get:{l}",
+      "name": "@get:{n}"
+    },
+    "ruleContent": {
+      "content": "#BookText@html"
+    },
+    "ruleExplore": {
+      "author": "span.1@text",
+      "bookList": "#sitebox dl",
+      "bookUrl": "a.1@href",
+      "coverUrl": "img@data-src",
+      "intro": ".book_des@textNodes##简介：",
+      "kind": "span.-2:-3:0@text",
+      "lastChapter": "a.-1@text",
+      "name": "a.1@text"
+    },
+    "ruleReview": {},
+    "ruleSearch": {
+      "bookList": "<js>\nif(result.match(/^<script/)&&result.match(/\\/script>$/)){\njava.log('get Cookie...')\n\n$ = java.head(baseUrl,{referer:baseUrl}).cookies();\n\nsource.putLoginHeader(JSON.stringify({\n\t\t\"Cookie\": \"t=\"+$.token+\";r=\"+($.secret-100)\n}));\n\nurl=baseUrl+`,{\"headers\":{\"referer\":\"${baseUrl}\"}}`\nresult=java.ajax(url);\n}\nresult;\n</js>\n.ptm-list-view li",
+      "bookUrl": "a.1@href",
+      "checkKeyWord": "剑来",
+      "coverUrl": "img@data-src",
+      "kind": "0",
+      "name": "a.1@text"
+    },
+    "ruleToc": {
+      "chapterList": "#chapterlist li a||.chapterlist dd a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "@js:\nurl=\"https://m.121ds.cc/search/?wd=\"+encodeURI(key);\n\nurl+`,{\"headers\":{\"referer\":\"${url}\"}}`",
+    "weight": 0
+  }
+]

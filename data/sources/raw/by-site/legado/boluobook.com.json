@@ -1,0 +1,82 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "",
+    "bookSourceName": "菠萝小说网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.boluobook.com",
+    "bookUrlPattern": "",
+    "concurrentRate": "",
+    "coverDecodeJs": "",
+    "customOrder": 479,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "exploreUrl": "玄幻::/list1/{{page}}/html\n武侠::/list2/{{page}}/html\n都市::/list3/{{page}}/html\n历史::/list4/{{page}}/html\n网游::/list5/{{page}}/html\n科幻::/list6/{{page}}/html\n言情::/list7/{{page}}/html\n其他::/list8/{{page}}/html",
+    "exploreScreen": "",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; U; Android 13; zh-Hans-CN; PFJM10 Build/TP1A.251121.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.4896.58 Quark/10.0.6.960 Mobile Safari/537.36\",\n\"Accept-Language\": \"zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\"}",
+    "lastUpdateTime": 1768329748414,
+    "loginCheckJs": "",
+    "loginUi": "",
+    "loginUrl": "",
+    "respondTime": 950,
+    "ruleBookInfo": {
+      "init": "",
+      "author": "[property$=author]@content",
+      "coverUrl": "[property$=image]@content",
+      "intro": "[property$=description]@content##(^|[。！？]+[”」）】]?)##$1<br>",
+      "kind": "[property~=category|status|update_time]@content",
+      "lastChapter": "[property~=las?test_chapter_name]@content",
+      "name": "[property$=book_name]@content",
+      "canReName": "",
+      "tocUrl": "",
+      "wordCount": "",
+      "ttsDice": ""
+    },
+    "ruleContent": {
+      "content": ".font_max@html",
+      "nextContentUrl": "text.下一@href\n<js>\n/_\\d+\\.html/.test(result) ? result : \"\"\n</js>",
+      "imageStyle": "",
+      "webJs": "",
+      "sourceRegex": "",
+      "replaceRegex": "##第\\(.*?\\)页"
+    },
+    "ruleExplore": {
+      "author": "",
+      "bookList": "",
+      "bookUrl": "",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "",
+      "wordCount": ""
+    },
+    "ruleReview": {
+      "review": ""
+    },
+    "ruleSearch": {
+      "author": "span@text",
+      "bookList": ".row dl",
+      "bookUrl": "tag.a.1@href",
+      "coverUrl": "img@src",
+      "intro": "",
+      "kind": "{{@@tag.a.1@text##\\[(.*?)\\].*##$1###}}\n{{@@tag.dd.2:3@text##(状态|更新时间)：}}",
+      "lastChapter": "tag.a.-1@text",
+      "name": "tag.a.1@text##.*\\]",
+      "wordCount": ""
+    },
+    "ruleToc": {
+      "chapterList": "ul.row li a",
+      "chapterName": "text",
+      "chapterUrl": "href",
+      "isVip": "",
+      "isVolume": "",
+      "nextTocUrl": ".page-item.active + .page-item a@href",
+      "updateTime": ""
+    },
+    "searchUrl": "/search.php?q={{key}}<,&p={{page-1}}>",
+    "variableComment": "",
+    "weight": 1
+  }
+]

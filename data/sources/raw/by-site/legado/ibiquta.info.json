@@ -1,0 +1,49 @@
+[
+  {
+    "bookSourceComment": "",
+    "bookSourceGroup": "水幽临渊0905",
+    "bookSourceName": "炫书网",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://www.ibiquta.info/",
+    "bookUrlPattern": "down/197001/\\d+.html",
+    "customOrder": 627,
+    "enabled": true,
+    "enabledCookieJar": true,
+    "enabledExplore": true,
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/113.0\"}",
+    "lastUpdateTime": 1690809580685,
+    "respondTime": 2167,
+    "ruleBookInfo": {
+      "author": "dd.downInfoRowL.1@a.0@text",
+      "coverUrl": ".downInfoRowL img@src",
+      "intro": "p@text",
+      "kind": ".downInfoRowL@a.1@text",
+      "lastChapter": "a.strong@text",
+      "name": "#downInfoTitle@text##《|》.*",
+      "tocUrl": ".downAddress_li a.1@href",
+      "wordCount": "##书籍字数：</b>([^<]+)##$1###"
+    },
+    "ruleContent": {
+      "content": "div#view_content_txt@html##本文每页显示[\\s\\S]*"
+    },
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+      "author": "text##.*/作者：",
+      "bookList": "div.searchTopic:nth-of-type(n+2) a",
+      "bookUrl": "href",
+      "coverUrl": "",
+      "intro": "",
+      "kind": "",
+      "lastChapter": "",
+      "name": "text##/作者：.*"
+    },
+    "ruleToc": {
+      "chapterList": ".read_list a",
+      "chapterName": "text",
+      "chapterUrl": "href"
+    },
+    "searchUrl": "search.html,{\n\"method\": \"POST\",\n\"body\": \"searchkey={{key}}\"\n}",
+    "weight": 0
+  }
+]
