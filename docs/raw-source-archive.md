@@ -1,6 +1,8 @@
 # 原始书源归档说明
 
-本文记录 LegadoHub 当前已拉取到本地的公开书源与规则来源。归档目标是保留原始规则对象，并按站点拆分，方便后续解析引擎、健康检查、去重、清理和书源治理逐步接入。
+本文记录 LegadoHub 当前已拉取到本地的公开书源与规则来源。归档目标是保留原始规则对象，方便后续订阅同步、健康检查、去重、清理和书源治理逐步接入。
+
+当前路线已改为直接移植阅读内核。本文只描述历史归档数据，不再作为阶段一内核实现计划，也不再要求按站点文件作为核心书源模型。
 
 ## 目录结构
 
@@ -8,6 +10,7 @@
   - 阅读/Legado 书源格式。
   - 一个站点或域名一个 JSON 文件。
   - 文件内容是该站点下的原始书源对象数组。
+  - 这是历史归档形态，不是阶段一的内置源输入模型。
 - `data/sources/raw/by-site/so-novel/`
   - `freeok/so-novel` 规则格式。
   - 一个站点或域名一个 JSON 文件。
@@ -150,10 +153,6 @@ python scripts/collect_source_archives.py --clean
 
 ## 后续接入建议
 
-阶段 2 解析 MVP 优先使用：
+阶段一只使用 `data/sources/raw/by-site/legado/sub-xiu2_yuedu.json` 验证 BookSource 导入和内核链路。其他归档文件在直接阅读内核稳定后再进入源治理和订阅同步流程。
 
-1. `data/sources/raw/by-site/legado/qidian.com.json`
-2. `data/sources/raw/by-site/legado/biquge365.net.json`
-3. `data/sources/raw/by-site/so-novel/quanben5.com.json`
-
-优先选择标准 URL、规则字段完整、文件较小、无需复杂登录或验证码的站点。不要一开始直接全量加载 2307 个 Legado 站点文件，否则调试成本和失败噪声会过高。
+后续接入时必须以单个 `BookSource` 对象为单位，身份使用 `bookSourceUrl`。不要再以站点文件名或域名聚合同站点多书源规则。

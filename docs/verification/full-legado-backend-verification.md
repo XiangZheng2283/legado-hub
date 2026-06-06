@@ -1,5 +1,15 @@
 # LegadoHub 完整阅读书源后端与中文后台验收报告
 
+> **历史报告，已被当前 JVM 阅读内核重构路线取代。**
+>
+> 本报告记录的是旧 Python `app/legado_engine` 实验路线的阶段性结果，不能再作为当前架构、验收或后续开发依据。当前权威路线与验收报告见：
+>
+> - `docs/architecture/legadohub-redesign-roadmap.md`
+> - `docs/architecture/legadohub-phase-1-kernel-port-plan.md`
+> - `docs/verification/phase-1-direct-kernel-port.md`
+>
+> 后续不得继续扩展旧 Python 阅读规则执行器；Python 只保留服务编排与文章后处理职责。
+
 > 生成时间：2026-06-05  
 > 验证环境：Windows / Python 3.12 / FastAPI / SQLite  
 > 服务端点：`http://127.0.0.1:8765`

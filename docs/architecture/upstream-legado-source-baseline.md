@@ -1,72 +1,137 @@
-# Luoyacheng Legado 上游源码基线
+# Luoyacheng Legado Upstream Source Baseline
 
-> 本文固定 LegadoHub 新内核重构的阅读源码基准。旧的 Python 近似解析器路线只保留为历史实现，不再作为语义真相。
+> This document fixes the upstream semantic baseline for the direct Kotlin/JVM port. It supersedes the old Python approximate parser route and the self-written Kotlin parser route.
 
-## 基准信息
+## Baseline
 
-- 上游仓库：`https://github.com/Luoyacheng/legado.git`
-- 本地路径：`C:/Home/Workspace/UGit/legado-hub/data/upstreams/luoyacheng-legado`
-- 当前 commit：`44e07fea541287804cc58d0168940a756cd11cfd`
-- 许可：GPL-3.0。若后续直接复制或改写上游核心代码，需要按 GPL-3.0 处理派生代码的授权边界。
+- Upstream repository: `https://github.com/Luoyacheng/legado.git`
+- Local checkout: `C:/Home/Workspace/UGit/legado-hub/data/upstreams/luoyacheng-legado`
+- Locked commit: `44e07fea541287804cc58d0168940a756cd11cfd`
+- License: GPL-3.0. Directly copied or modified upstream kernel code must be treated as GPL-derived code.
 
-## 必读源码入口
+Verify:
 
-- `app/src/main/java/io/legado/app/data/entities/BookSource.kt`
-  - 书源最小单位。
-  - `bookSourceUrl` 是主键和相等性依据。
-  - `bookSourceGroup` 是展示和筛选分组，不参与身份判定。
+```powershell
+git -C data\upstreams\luoyacheng-legado rev-parse HEAD
+```
+
+Expected:
+
+```text
+44e07fea541287804cc58d0168940a756cd11cfd
+```
+
+## Direct-Port Source Files
+
+These upstream files are the first semantic truth set. Port them into `engine-jvm` instead of recreating equivalent behavior from scratch.
+
+### Source Models
+
 - `app/src/main/java/io/legado/app/data/entities/BaseSource.kt`
-  - header、login、cookie、jsLib、source 变量等运行时能力入口。
+- `app/src/main/java/io/legado/app/data/entities/BookSource.kt`
+- `app/src/main/java/io/legado/app/data/entities/rule/SearchRule.kt`
+- `app/src/main/java/io/legado/app/data/entities/rule/BookInfoRule.kt`
+- `app/src/main/java/io/legado/app/data/entities/rule/TocRule.kt`
+- `app/src/main/java/io/legado/app/data/entities/rule/ContentRule.kt`
+
+Required identity rule:
+
+```text
+BookSource identity = bookSourceUrl
+```
+
+Do not group or deduplicate by website host.
+
+### AnalyzeUrl And AnalyzeRule
+
 - `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeUrl.kt`
-  - URL、请求方式、header、body、charset、WebView、JS、cookie、proxy 的核心语义。
 - `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt`
-  - 规则执行总入口，负责 CSS/XPath/JsonPath/Regex/JS/fallback/replace 等组合语义。
+- `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRuleHelper.kt`
 - `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByJSoup.kt`
 - `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByXPath.kt`
 - `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByJSonPath.kt`
 - `app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByRegex.kt`
-- `app/src/main/java/io/legado/app/model/webBook/WebBook.kt`
-  - search/detail/toc/content/explore 的上层执行流程。
-- `app/src/main/java/io/legado/app/ui/association/ImportBookSourceViewModel.kt`
-  - 书源订阅导入、更新、去重、覆盖的行为参考。
-- `modules/web/`
-  - 后台第二阶段的信息架构参考，不直接照搬 UI。
+- `app/src/main/java/io/legado/app/model/analyzeRule/JsExtensions.kt`
 
-## Phase 1 抽取策略
+Required behavior coverage:
 
-LegadoHub 不把 Android App 直接作为服务端运行，而是建立独立 `engine-jvm`：
-
-- 保留阅读规则字段和 JSON 名称。
-- 以 `bookSourceUrl` 作为唯一稳定身份。
-- 把 Android 依赖替换为后端接口：`HttpRuntime`、`CookieStore`、`SourceVariableStore`、`EngineCache`、`WebViewRuntime`、`EngineLogger`。
-- WebView、登录、复杂 JavaScript 在第一批内核中不能静默失败，必须返回结构化 `UnsupportedReason`。
-- 每个 search/detail/toc/content/explore 执行结果都要带 trace、unsupported、error、latencyMs。
-
-## Android 依赖替换表
-
-| 阅读依赖 | 后端替换 |
-| --- | --- |
-| Room / Parcelable / Android Context | Kotlin/JVM data model + 后端数据库映射 |
-| OkHttp helpers | `HttpRuntime` |
-| CookieStore / CookieManager | `CookieStore` 接口 |
-| CacheManager | `EngineCache` |
-| RhinoScriptEngine | 后续独立 JS runtime；当前阶段复杂 JS 结构化 unsupported |
-| BackstageWebView | `WebViewRuntime` |
-| AppConfig.userAgent | `SourceHeaderParser.DEFAULT_USER_AGENT` 或后端配置 |
-| AppLog / Debug | `EngineLogger` + `TraceEvent` |
-
-## 验收命令
-
-```powershell
-git -C data\upstreams\luoyacheng-legado remote -v
-git -C data\upstreams\luoyacheng-legado rev-parse HEAD
-
-# 需要本机有 JDK。若没有系统 Gradle，使用上游 wrapper 运行当前仓库。
-$env:JAVA_HOME = "<JDK 根目录>"
-$env:Path = "$env:JAVA_HOME\bin;$env:Path"
-data\upstreams\luoyacheng-legado\gradlew.bat -p . :engine-jvm:test
+```text
+CSS
+XPath
+JsonPath
+Regex
+fallback ruleA||ruleB
+replace rule##pattern##replacement
+<js> / @js
+java.ajax
+base64/md5 and common JS helpers
 ```
 
-## 当前已知环境状态
+### Web Book Flow
 
-截至本次执行，`java` 和 `gradle` 均未在 PATH 中找到，常见 `Program Files` JDK/JBR 路径也未发现可用 JDK。`engine-jvm` 测试文件已经落地，但运行测试需要先安装或指定 JDK。
+- `app/src/main/java/io/legado/app/model/webBook/WebBook.kt`
+- `app/src/main/java/io/legado/app/model/webBook/BookList.kt`
+- `app/src/main/java/io/legado/app/model/webBook/BookInfo.kt`
+- `app/src/main/java/io/legado/app/model/webBook/BookChapterList.kt`
+- `app/src/main/java/io/legado/app/model/webBook/BookContent.kt`
+
+Required chain:
+
+```text
+search -> detail -> toc -> content
+```
+
+### Import And Web UI References
+
+- `app/src/main/java/io/legado/app/ui/association/ImportBookSourceViewModel.kt`
+  - Reference for subscription import, update, deduplication, and overwrite behavior.
+- `modules/web/`
+  - Reference for later web admin information architecture only. Do not copy its UI directly.
+
+## Android-To-Backend Replacement Table
+
+| Upstream dependency | LegadoHub JVM replacement |
+| --- | --- |
+| `android.util.Log` | `EngineLogger` |
+| `android.content.Context` | `EngineConfig` or removed call site |
+| `android.webkit.WebView` | `WebViewRuntime` |
+| Room entities / DAO | Serializable engine models + Python persistence mapping |
+| Parcelable | Removed on JVM |
+| AppConfig | `EngineConfig` |
+| AppLog / Debug | `EngineLogger` + trace events |
+| CookieStore / CookieManager | `EngineCookieStore` |
+| CacheManager | `EngineCache` |
+| OkHttp helpers | `EngineHttpRuntime` backed by OkHttp |
+| RhinoScriptEngine / JS setup | `EngineJsRuntime` with upstream `JsExtensions` |
+| BackstageWebView | `WebViewRuntime`, default unsupported until backend WebView is selected |
+
+## Engine Port Principles
+
+1. Start from upstream code, then adapt dependencies.
+2. Preserve package/class/function names when that reduces diff from upstream.
+3. Prefer compatibility shims over semantic rewrites.
+4. Delete self-written parser files once direct-port equivalents compile.
+5. Return structured unsupported results for missing backend capabilities.
+6. Tests must prove the direct-port path, not just wrapper behavior.
+
+## Current Local Environment
+
+- Java 17 installed at:
+
+```text
+C:\Program Files\Eclipse Adoptium\jdk-17.0.19.10-hotspot
+```
+
+- On this machine, Gradle dependency resolution for JitPack-backed dependencies has been verified with an empty `GRADLE_OPTS`. The proxy form caused TLS handshake failures against JitPack during Phase 1 verification.
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Eclipse Adoptium\jdk-17.0.19.10-hotspot'
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+$env:GRADLE_OPTS=''
+```
+
+Validation command:
+
+```powershell
+data\upstreams\luoyacheng-legado\gradlew.bat -p . :engine-jvm:test --no-daemon
+```
