@@ -1,0 +1,14 @@
+keyword: 万古神帝
+fixtures: {}
+expect:
+  search:
+    minResults: 1
+  detail:
+    name: 万古神帝
+    author: 飞天鱼
+    hasTocUrl: true
+  toc:
+    minChapters: 1
+    firstTitleContains: 第
+  chapter:
+    minContentLength: 150

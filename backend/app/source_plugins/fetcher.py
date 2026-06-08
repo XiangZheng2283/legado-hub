@@ -1,0 +1,383 @@
+"""Controlled HTTP fetch wrapper for plugin runtime.
+
+Routes through httpx with timeout, proxy, cookie, and trace controls.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+from typing import Any
+from types import SimpleNamespace
+
+import httpx
+
+from app.source_plugins.errors import (
+    FetchNetworkError,
+    FetchHttp4xx,
+    FetchHttp5xx,
+    RateLimited,
+    CloudflareRequired,
+    BrowserRequired,
+)
+from app.source_plugins.challenges import looks_like_browser_challenge, looks_like_cloudflare_challenge
+
+
+class Fetcher:
+    def __init__(
+        self,
+        user_agent: str = "",
+        timeout: float = 8.0,
+        proxy_url: str = "",
+        cookies: dict[str, dict[str, str]] | None = None,
+    ):
+        self.user_agent = user_agent or (
+            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+        )
+        self.timeout = timeout
+        self.proxy_url = proxy_url
+        self._cookies = cookies or {}
+        self._client: httpx.AsyncClient | None = None
+        self._traces: list[dict] = []
+
+    async def _client_instance(self) -> httpx.AsyncClient:
+        if self._client is None:
+            mounts: dict[str, httpx.AsyncHTTPTransport] | None = None
+            if self.proxy_url:
+                mounts = {
+                    "all://": httpx.AsyncHTTPTransport(proxy=self.proxy_url),
+                }
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(self.timeout),
+                mounts=mounts,
+                headers={"User-Agent": self.user_agent},
+                follow_redirects=True,
+            )
+        return self._client
+
+    def _get_cookie_header(self, url: str) -> str:
+        from urllib.parse import urlparse
+        domain = urlparse(url).netloc
+        jar: dict[str, str] = {}
+        for cookie_domain, cookies in self._cookies.items():
+            if self._domain_matches(cookie_domain, domain):
+                jar.update(cookies)
+        return "; ".join(f"{k}={v}" for k, v in jar.items())
+
+    async def fetch_text(
+        self,
+        url: str,
+        *,
+        method: str = "GET",
+        params: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        headers: dict | None = None,
+        timeout: float | None = None,
+        impersonate: str | None = None,
+        proxy: bool = True,
+    ) -> str:
+        text, _ = await self._fetch(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        return text
+
+    async def fetch_json(
+        self,
+        url: str,
+        *,
+        method: str = "GET",
+        params: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        headers: dict | None = None,
+        timeout: float | None = None,
+        impersonate: str | None = None,
+        proxy: bool = True,
+    ) -> Any:
+        text, _ = await self._fetch(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        import json as _json
+        return _json.loads(text)
+
+    async def fetch_bytes(
+        self,
+        url: str,
+        *,
+        method: str = "GET",
+        params: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        headers: dict | None = None,
+        timeout: float | None = None,
+        impersonate: str | None = None,
+        proxy: bool = True,
+    ) -> bytes:
+        _, resp = await self._fetch_raw(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        return resp.content
+
+    async def fetch_many(
+        self,
+        urls: list[str],
+        *,
+        limit: int | None = None,
+    ) -> list[str]:
+        sem = asyncio.Semaphore(limit if limit is not None else 6)
+
+        async def _one(url: str) -> str:
+            async with sem:
+                return await self.fetch_text(url)
+
+        return await asyncio.gather(*[_one(u) for u in urls])
+
+    async def _fetch(
+        self,
+        url: str,
+        method: str,
+        params: dict | None,
+        data: dict | None,
+        json: dict | None,
+        headers: dict | None,
+        timeout: float | None,
+        impersonate: str | None,
+        proxy: bool,
+    ) -> tuple[str, httpx.Response]:
+        text, resp = await self._fetch_raw(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        return text, resp
+
+    async def _fetch_raw(
+        self,
+        url: str,
+        method: str,
+        params: dict | None,
+        data: dict | None,
+        json: dict | None,
+        headers: dict | None,
+        timeout: float | None,
+        impersonate: str | None = None,
+        proxy: bool = True,
+    ) -> tuple[str, Any]:
+        if impersonate:
+            return await self._fetch_raw_impersonate(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        client = await self._client_instance()
+        temp_client: httpx.AsyncClient | None = None
+        if proxy is False and self.proxy_url:
+            temp_client = httpx.AsyncClient(
+                timeout=httpx.Timeout(timeout if timeout is not None else self.timeout),
+                headers={"User-Agent": self.user_agent},
+                follow_redirects=True,
+            )
+            client = temp_client
+        req_headers = dict(headers) if headers else {}
+        cookie_hdr = self._get_cookie_header(url)
+        if cookie_hdr:
+            req_headers["Cookie"] = cookie_hdr
+        try:
+            resp = await client.request(
+                method,
+                url,
+                params=params,
+                data=data,
+                json=json,
+                headers=req_headers,
+                timeout=timeout if timeout is not None else self.timeout,
+            )
+        except httpx.NetworkError as exc:
+            raise FetchNetworkError(str(exc)) from exc
+        except httpx.TimeoutException as exc:
+            from app.source_plugins.errors import PluginTimeout
+            raise PluginTimeout(str(exc)) from exc
+        finally:
+            if temp_client is not None:
+                await temp_client.aclose()
+
+        if resp.status_code == 429:
+            raise RateLimited(f"HTTP {resp.status_code}")
+        if 400 <= resp.status_code < 500:
+            body_sample = resp.text[:1000]
+            if looks_like_cloudflare_challenge(body_sample):
+                raise CloudflareRequired(
+                    "Cloudflare verification required",
+                    url=str(resp.url),
+                    status_code=resp.status_code,
+                    body_sample=body_sample,
+                )
+            if looks_like_browser_challenge(body_sample):
+                raise BrowserRequired(
+                    "Browser verification required",
+                    url=str(resp.url),
+                    status_code=resp.status_code,
+                    body_sample=body_sample,
+                )
+            raise FetchHttp4xx(f"HTTP {resp.status_code}")
+        if 500 <= resp.status_code < 600:
+            raise FetchHttp5xx(f"HTTP {resp.status_code}")
+
+        # Update cookies from response
+        self._update_cookies(resp)
+
+        text = resp.text
+        self._traces.append({
+            "url": str(resp.url),
+            "status": resp.status_code,
+            "method": method,
+        })
+        return text, resp
+
+    async def _fetch_raw_impersonate(
+        self,
+        url: str,
+        method: str,
+        params: dict | None,
+        data: dict | None,
+        json: dict | None,
+        headers: dict | None,
+        timeout: float | None,
+        impersonate: str,
+        proxy: bool = True,
+    ) -> tuple[str, Any]:
+        try:
+            from curl_cffi.requests import AsyncSession
+        except Exception as exc:
+            raise FetchNetworkError("curl_cffi is required for impersonated fetch") from exc
+
+        req_headers = dict(headers) if headers else {}
+        cookie_hdr = self._get_cookie_header(url)
+        if cookie_hdr:
+            req_headers["Cookie"] = cookie_hdr
+        proxies = None
+        if proxy is not False and self.proxy_url:
+            proxies = {"http": self.proxy_url, "https": self.proxy_url}
+        try:
+            async with AsyncSession(impersonate=impersonate, proxies=proxies, timeout=timeout if timeout is not None else self.timeout) as session:
+                resp = await session.request(
+                    method,
+                    url,
+                    params=params,
+                    data=data,
+                    json=json,
+                    headers=req_headers,
+                    allow_redirects=True,
+                )
+        except Exception as exc:
+            message = str(exc).lower()
+            if "timeout" in message:
+                from app.source_plugins.errors import PluginTimeout
+                raise PluginTimeout(str(exc)) from exc
+            raise FetchNetworkError(str(exc)) from exc
+
+        if resp.status_code == 429:
+            raise RateLimited(f"HTTP {resp.status_code}")
+        if 400 <= resp.status_code < 500:
+            body_sample = resp.text[:1000]
+            if looks_like_cloudflare_challenge(body_sample):
+                raise CloudflareRequired(
+                    "Cloudflare verification required",
+                    url=str(resp.url),
+                    status_code=resp.status_code,
+                    body_sample=body_sample,
+                )
+            if looks_like_browser_challenge(body_sample):
+                raise BrowserRequired(
+                    "Browser verification required",
+                    url=str(resp.url),
+                    status_code=resp.status_code,
+                    body_sample=body_sample,
+                )
+            raise FetchHttp4xx(f"HTTP {resp.status_code}")
+        if 500 <= resp.status_code < 600:
+            raise FetchHttp5xx(f"HTTP {resp.status_code}")
+
+        text = self._decode_response_text(resp)
+        wrapped = SimpleNamespace(
+            status_code=resp.status_code,
+            url=str(resp.url),
+            text=text,
+            content=resp.content,
+            headers=SimpleNamespace(get_list=lambda _name: []),
+        )
+        self._traces.append({
+            "url": str(resp.url),
+            "status": resp.status_code,
+            "method": method,
+            "impersonate": impersonate,
+        })
+        return text, wrapped
+
+    def _decode_response_text(self, resp: Any) -> str:
+        content = getattr(resp, "content", b"") or b""
+        if not isinstance(content, bytes):
+            return str(getattr(resp, "text", "") or "")
+        charset = self._charset_from_html_meta(content[:4096])
+        if not charset:
+            content_type = ""
+            headers = getattr(resp, "headers", {}) or {}
+            try:
+                content_type = str(headers.get("content-type", "") or headers.get("Content-Type", ""))
+            except Exception:
+                content_type = ""
+            match = re.search(r"charset=([A-Za-z0-9._-]+)", content_type, re.I)
+            charset = match.group(1) if match else ""
+        for encoding in [charset, "utf-8", "gb18030", "gbk"]:
+            if not encoding:
+                continue
+            try:
+                return content.decode(encoding)
+            except (LookupError, UnicodeDecodeError):
+                continue
+        return content.decode("utf-8", errors="replace")
+
+    def _charset_from_html_meta(self, sample: bytes) -> str:
+        text = sample.decode("ascii", errors="ignore")
+        match = re.search(r"<meta[^>]+charset=[\"']?\s*([A-Za-z0-9._-]+)", text, re.I)
+        if match:
+            return match.group(1).lower()
+        match = re.search(r"content=[\"'][^\"']*charset=([A-Za-z0-9._-]+)", text, re.I)
+        return match.group(1).lower() if match else ""
+
+    def _update_cookies(self, resp: httpx.Response) -> None:
+        from urllib.parse import urlparse
+        domain = urlparse(str(resp.url)).netloc
+        set_cookie = resp.headers.get_list("set-cookie")
+        for raw in set_cookie:
+            if "=" in raw:
+                key, val = raw.split("=", 1)
+                val = val.split(";")[0]
+                cookie_domain = self._cookie_domain_from_header(raw) or domain
+                self._cookies.setdefault(self._normalize_cookie_domain(cookie_domain), {})[key.strip()] = val.strip()
+
+    def get_traces(self) -> list[dict]:
+        return list(self._traces)
+
+    async def close(self) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
+
+    def cookies_for_domain(self, domain: str) -> dict[str, str]:
+        return dict(self._cookies.get(domain, {}))
+
+    def cookie_snapshot(self) -> dict[str, dict[str, str]]:
+        return {domain: dict(jar) for domain, jar in self._cookies.items()}
+
+    def set_cookie(self, domain: str, name: str, value: str) -> None:
+        self._cookies.setdefault(self._normalize_cookie_domain(domain), {})[name] = value
+
+    def clear_cookies(self, domain: str | None = None) -> None:
+        if domain is None:
+            self._cookies.clear()
+        else:
+            self._cookies.pop(self._normalize_cookie_domain(domain), None)
+
+    def _domain_matches(self, cookie_domain: str, request_domain: str) -> bool:
+        cookie_domain = self._normalize_cookie_domain(cookie_domain)
+        request_domain = self._normalize_cookie_domain(request_domain)
+        return request_domain == cookie_domain or request_domain.endswith(f".{cookie_domain}")
+
+    def _normalize_cookie_domain(self, domain: str) -> str:
+        return str(domain or "").split(":", 1)[0].strip().lstrip(".").lower()
+
+    def _cookie_domain_from_header(self, raw: str) -> str:
+        for part in raw.split(";")[1:]:
+            item = part.strip()
+            if item.lower().startswith("domain="):
+                return item.split("=", 1)[1].strip()
+        return ""

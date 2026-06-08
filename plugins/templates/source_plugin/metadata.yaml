@@ -1,0 +1,31 @@
+contractVersion: "1.0"
+id: example_com
+name: 示例书源
+version: 0.1.0
+type: source
+domains:
+  - example.com
+baseUrls:
+  - https://example.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+  loginUrl: https://example.com
+  accountRequiredFor: []
+  cookieDomains:
+    - example.com
+content:
+  access: unknown
+  paid: unknown
+tags:
+  - html
+enabled: true
+sourceSeed:
+  type: manual
+  upstreamId: example.com
+  upstreamFile: ""
+  upstreamCommit: ""

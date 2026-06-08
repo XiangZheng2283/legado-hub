@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-06-06T18:33:34.743082+00:00",
+  "summary": {
+    "passed": 10,
+    "failed": 1,
+    "total": 11
+  },
+  "items": [
+    {
+      "category": "api",
+      "name": "settings_get",
+      "passed": true,
+      "details": "字段存在: sourcePool, ruleEngines, sourceSubscriptions",
+      "timestamp": "2026-06-06T18:33:34.601815+00:00"
+    },
+    {
+      "category": "api",
+      "name": "source_subscriptions_list",
+      "passed": true,
+      "details": "items=11",
+      "timestamp": "2026-06-06T18:33:34.615629+00:00"
+    },
+    {
+      "category": "api",
+      "name": "sources_list",
+      "passed": true,
+      "details": "字段存在: items, stats",
+      "timestamp": "2026-06-06T18:33:34.631205+00:00"
+    },
+    {
+      "category": "api",
+      "name": "search_job_create",
+      "passed": true,
+      "details": "字段存在: jobId, status, keyword",
+      "timestamp": "2026-06-06T18:33:34.634965+00:00"
+    },
+    {
+      "category": "api",
+      "name": "search_stream",
+      "passed": true,
+      "details": "HTTP 200",
+      "timestamp": "2026-06-06T18:33:34.664362+00:00"
+    },
+    {
+      "category": "api",
+      "name": "explore_sources",
+      "passed": true,
+      "details": "items=0",
+      "timestamp": "2026-06-06T18:33:34.679715+00:00"
+    },
+    {
+      "category": "api",
+      "name": "books_list",
+      "passed": true,
+      "details": "items=0",
+      "timestamp": "2026-06-06T18:33:34.683203+00:00"
+    },
+    {
+      "category": "api",
+      "name": "chapter_navigation",
+      "passed": true,
+      "details": "字段存在: prev, next",
+      "timestamp": "2026-06-06T18:33:34.717192+00:00"
+    },
+    {
+      "category": "api",
+      "name": "cache_status",
+      "passed": true,
+      "details": "字段存在: searchCache, bookCache, tocCache, chapterCache",
+      "timestamp": "2026-06-06T18:33:34.720194+00:00"
+    },
+    {
+      "category": "api",
+      "name": "progress_status",
+      "passed": true,
+      "details": "字段存在: aggregate, sources",
+      "timestamp": "2026-06-06T18:33:34.739537+00:00"
+    },
+    {
+      "category": "api",
+      "name": "rule_engine_capabilities",
+      "passed": false,
+      "details": "缺少字段: items",
+      "timestamp": "2026-06-06T18:33:34.740540+00:00"
+    }
+  ]
+}

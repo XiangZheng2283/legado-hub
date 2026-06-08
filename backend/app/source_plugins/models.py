@@ -1,0 +1,257 @@
+"""Canonical plugin metadata and normalized output shapes.
+
+Follows docs/architecture/source-plugin-contract.md exactly.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class PluginMetadata:
+    contract_version: str
+    id: str
+    name: str
+    version: str
+    type: str  # "source"
+    domains: list[str]
+    base_urls: list[str]
+    capabilities: list[str]
+    auth: dict
+    content: dict
+    tags: list[str]
+    # optional
+    priority: int = 50
+    enabled: bool = True
+    language: str = "zh-CN"
+    rate_limit: dict = field(default_factory=dict)
+    proxy: dict = field(default_factory=dict)
+    browser: dict = field(default_factory=dict)
+    domain_profiles: list[dict] = field(default_factory=list)
+    source_seed: dict = field(default_factory=dict)
+    access_strategy: dict = field(default_factory=dict)
+    search_engine: dict = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> PluginMetadata:
+        return cls(
+            contract_version=data.get("contractVersion", "1.0"),
+            id=data["id"],
+            name=data["name"],
+            version=data["version"],
+            type=data.get("type", "source"),
+            domains=data.get("domains", []),
+            base_urls=data.get("baseUrls", []),
+            capabilities=data.get("capabilities", []),
+            auth=data.get("auth", {}),
+            content=data.get("content", {}),
+            tags=data.get("tags", []),
+            priority=data.get("priority", 50),
+            enabled=data.get("enabled", True),
+            language=data.get("language", "zh-CN"),
+            rate_limit=data.get("rateLimit", {}),
+            proxy=data.get("proxy", {}),
+            browser=data.get("browser", {}),
+            domain_profiles=data.get("domainProfiles", []),
+            source_seed=data.get("sourceSeed", {}),
+            access_strategy=data.get("accessStrategy", {}),
+            search_engine=data.get("searchEngine", {}),
+        )
+
+    def validate(self) -> list[str]:
+        errors: list[str] = []
+        if self.contract_version != "1.0":
+            errors.append(f"unsupported contractVersion: {self.contract_version}")
+        if not self.id:
+            errors.append("id is required")
+        if not self.name:
+            errors.append("name is required")
+        if self.type != "source":
+            errors.append(f"type must be 'source', got {self.type}")
+        valid_caps = {"search", "detail", "toc", "chapter", "explore", "auth"}
+        for cap in self.capabilities:
+            if cap not in valid_caps:
+                errors.append(f"invalid capability: {cap}")
+        auth_mode = self.auth.get("mode", "none")
+        if auth_mode not in {"none", "optional", "required", "manual"}:
+            errors.append(f"invalid auth.mode: {auth_mode}")
+        content_access = self.content.get("access", "unknown")
+        if content_access not in {"free", "paid", "mixed", "unknown"}:
+            errors.append(f"invalid content.access: {content_access}")
+        proxy_mode = self.proxy.get("mode", "auto")
+        if proxy_mode not in {"auto", "always", "never"}:
+            errors.append(f"invalid proxy.mode: {proxy_mode}")
+        valid_strategy = {"http", "stealth_http", "search_engine", "browser", "cf_challenge"}
+        for stage, mode in self.access_strategy.items():
+            if stage not in {"search", "detail", "toc", "chapter", "explore"}:
+                errors.append(f"invalid accessStrategy stage: {stage}")
+            if mode not in valid_strategy:
+                errors.append(f"invalid accessStrategy.{stage}: {mode}")
+        profile_ids: set[str] = set()
+        for profile in self.domain_profiles:
+            if not isinstance(profile, dict):
+                errors.append("domainProfiles entries must be mappings")
+                continue
+            profile_id = profile.get("id", "")
+            if not profile_id:
+                errors.append("domainProfiles[].id is required")
+            elif profile_id in profile_ids:
+                errors.append(f"duplicate domainProfiles id: {profile_id}")
+            profile_ids.add(profile_id)
+            role = profile.get("role", "mirror")
+            if role not in {"mirror", "mobile", "desktop", "api", "legacy"}:
+                errors.append(f"invalid domainProfiles[].role: {role}")
+        return errors
+
+
+@dataclass
+class LoadedPlugin:
+    metadata: PluginMetadata
+    module: Any
+    source: Any
+    capabilities: list[str] = field(default_factory=list)
+
+
+@dataclass
+class PluginHealth:
+    plugin_id: str
+    enabled: bool
+    last_smoke_at: str = ""
+    last_smoke_pass: bool = False
+    last_error: str = ""
+    consecutive_failures: int = 0
+    avg_latency_ms: int = 0
+
+
+@dataclass
+class SearchResult:
+    source_id: str
+    name: str
+    author: str = ""
+    book_url: str = ""
+    cover_url: str = ""
+    intro: str = ""
+    kind: str = ""
+    last_chapter: str = ""
+    word_count: str = ""
+    score: float = 0.0
+    extra: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "sourceId": self.source_id,
+            "name": self.name,
+            "author": self.author,
+            "bookUrl": self.book_url,
+            "coverUrl": self.cover_url,
+            "intro": self.intro,
+            "kind": self.kind,
+            "lastChapter": self.last_chapter,
+            "wordCount": self.word_count,
+            "score": self.score,
+            "extra": self.extra,
+        }
+
+
+@dataclass
+class BookDetail:
+    source_id: str
+    name: str = ""
+    author: str = ""
+    book_url: str = ""
+    cover_url: str = ""
+    intro: str = ""
+    kind: str = ""
+    last_chapter: str = ""
+    word_count: str = ""
+    toc_url: str = ""
+    auth_required: bool = False
+    extra: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "sourceId": self.source_id,
+            "name": self.name,
+            "author": self.author,
+            "bookUrl": self.book_url,
+            "coverUrl": self.cover_url,
+            "intro": self.intro,
+            "kind": self.kind,
+            "lastChapter": self.last_chapter,
+            "wordCount": self.word_count,
+            "tocUrl": self.toc_url,
+            "authRequired": self.auth_required,
+            "extra": self.extra,
+        }
+
+
+@dataclass
+class ChapterItem:
+    source_id: str
+    index: int
+    title: str
+    chapter_url: str
+    update_time: str = ""
+    is_vip: bool = False
+    is_locked: bool = False
+    extra: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "sourceId": self.source_id,
+            "index": self.index,
+            "title": self.title,
+            "chapterUrl": self.chapter_url,
+            "updateTime": self.update_time,
+            "isVip": self.is_vip,
+            "isLocked": self.is_locked,
+            "extra": self.extra,
+        }
+
+
+@dataclass
+class ChapterContent:
+    source_id: str
+    title: str = ""
+    chapter_url: str = ""
+    content: str = ""
+    format: str = "text"
+    auth_required: bool = False
+    is_paid: bool = False
+    extra: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "sourceId": self.source_id,
+            "title": self.title,
+            "chapterUrl": self.chapter_url,
+            "content": self.content,
+            "format": self.format,
+            "authRequired": self.auth_required,
+            "isPaid": self.is_paid,
+            "extra": self.extra,
+        }
+
+
+@dataclass
+class PluginFailure:
+    source_id: str
+    code: str
+    stage: str
+    url: str = ""
+    message: str = ""
+    proxy_used: bool = False
+    extra: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "sourceId": self.source_id,
+            "code": self.code,
+            "stage": self.stage,
+            "url": self.url,
+            "message": self.message,
+            "proxyUsed": self.proxy_used,
+            "extra": self.extra,
+        }

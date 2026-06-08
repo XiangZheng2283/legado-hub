@@ -15,11 +15,38 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 echo Installing dependencies...
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 if errorlevel 1 (
     echo Failed to install dependencies.
     pause
     exit /b 1
+)
+
+if exist "frontend\package.json" (
+    echo.
+    echo Building console frontend...
+    pushd frontend
+    if not exist "node_modules" (
+        if exist "package-lock.json" (
+            call npm ci
+        ) else (
+            call npm install
+        )
+        if errorlevel 1 (
+            popd
+            echo Failed to install frontend dependencies.
+            pause
+            exit /b 1
+        )
+    )
+    call npm run build
+    if errorlevel 1 (
+        popd
+        echo Failed to build console frontend.
+        pause
+        exit /b 1
+    )
+    popd
 )
 
 echo.
@@ -27,13 +54,13 @@ echo LegadoHub source import URL:
 echo   Local: http://127.0.0.1:8765/api/legado/source
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ips = @(); try { $ips = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } | Select-Object -ExpandProperty IPAddress -Unique } catch { $ips = @() }; foreach ($ip in $ips) { Write-Host ('  LAN:   http://' + $ip + ':8765/api/legado/source') }; if (-not $ips) { Write-Host '  LAN:   No active LAN IPv4 address detected.' }"
 echo.
-echo LegadoHub web admin URL:
-echo   Local: http://127.0.0.1:8765/admin
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ips = @(); try { $ips = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } | Select-Object -ExpandProperty IPAddress -Unique } catch { $ips = @() }; foreach ($ip in $ips) { Write-Host ('  LAN:   http://' + $ip + ':8765/admin') }; if (-not $ips) { Write-Host '  LAN:   No active LAN IPv4 address detected.' }"
+echo LegadoHub console URL:
+echo   Local: http://127.0.0.1:8765/console
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ips = @(); try { $ips = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } | Select-Object -ExpandProperty IPAddress -Unique } catch { $ips = @() }; foreach ($ip in $ips) { Write-Host ('  LAN:   http://' + $ip + ':8765/console') }; if (-not $ips) { Write-Host '  LAN:   No active LAN IPv4 address detected.' }"
 echo.
 echo Import one of the URLs above in Legado after the server starts.
 echo If Legado runs on a phone, use a LAN URL instead of 127.0.0.1.
-echo Open the web admin URL above to manage sources, settings, and rule engines.
+echo Open the console URL above to manage sources, settings, and plugins.
 echo.
 
 echo Checking for an existing LegadoHub server on port 8765...
@@ -45,8 +72,11 @@ if errorlevel 2 (
 )
 
 echo Starting LegadoHub...
-.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8765
-if errorlevel 1 (
+pushd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8765
+set SERVER_EXIT=%ERRORLEVEL%
+popd
+if not "%SERVER_EXIT%"=="0" (
     echo Server exited with error.
     pause
     exit /b 1

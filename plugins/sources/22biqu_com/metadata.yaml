@@ -1,0 +1,42 @@
+contractVersion: "1.0"
+id: 22biqu_com
+name: 笔趣阁22
+version: 0.1.0
+type: source
+domains:
+  - 22biqu.com
+baseUrls:
+  - https://www.22biqu.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+  - explore
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - so-novel-seed
+domainProfiles:
+  - id: desktop
+    baseUrl: https://www.22biqu.com
+    domains:
+      - www.22biqu.com
+    role: desktop
+    fallback: true
+  - id: mobile
+    baseUrl: https://m.22biqu.com
+    domains:
+      - m.22biqu.com
+    role: mobile
+    fallback: true
+sourceSeed:
+  type: so-novel
+  upstreamId: www_22biqu_com
+  upstreamFile: bundle/rules/main.json
+  upstreamCommit: bfb5fda1d6ea04ad7f30a761640e08ce2e5db0e0

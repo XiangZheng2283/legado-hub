@@ -4,7 +4,7 @@ Use this when generating a single source shell for LegadoHub or another aggregat
 
 ## Reference Shape
 
-The project sample `data/sources/reference/光遇聚合26.6.2.json` is a single-source JSON array with:
+The archived sample `docs/archive/legacy-reading-engine/2026-06-07/data/sources/reference/光遇聚合26.6.2.json` is a single-source JSON array with:
 
 - `bookSourceName`
 - `bookSourceUrl`
@@ -102,6 +102,6 @@ Recommended response shapes:
 7. `ruleToc.chapterUrl` encodes chapter id.
 8. `ruleContent.content` requests chapter content and returns text or HTML.
 
-## Future Migration to Native Rules
+## Future Generation From Plugin Metadata
 
-When LegadoHub native rules exist, generate the aggregate source from native rule metadata rather than hand-maintaining JS. Keep this skill focused on output compatibility until then.
+When LegadoHub source plugins exist, generate the aggregate source from plugin/API metadata rather than hand-maintaining JS. Keep this reference focused on Reading/Legado output compatibility.

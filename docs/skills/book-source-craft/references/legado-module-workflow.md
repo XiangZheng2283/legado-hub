@@ -1,6 +1,6 @@
 # Legado Module Workflow
 
-Use this workflow for one-site Legado book source creation.
+Legacy reference only. Use this workflow when inspecting or repairing one-site Reading/Legado book source JSON. For the active LegadoHub direction, create Python source plugins with `plugin-source-workflow.md`.
 
 ## 1. Website Check
 

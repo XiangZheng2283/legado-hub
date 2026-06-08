@@ -18,8 +18,14 @@ build/
 logs/
 *.log
 
-generated/
-data/*.db
-data/*.sqlite*
-data/upstreams/
-data/sources/raw/by-site/legado/sub-yiove_collections.json
+backend/generated/
+frontend/dist/
+frontend/node_modules/
+backend/data/*.db
+backend/data/*.sqlite*
+backend/data/cache/
+backend/data/browser_challenges/
+backend/data/browser_fetch/
+docs/archive/**/data/upstreams/
+plugins/sources/*/__pycache__/
+docs/archive/**/data/sources/raw/by-site/legado/sub-yiove_collections.json

@@ -3,11 +3,11 @@
 参考文件：
 
 - 原始文件：`C:/Users/moo/Desktop/光遇聚合26.6.2.json`
-- 项目副本：`data/sources/reference/光遇聚合26.6.2.json`
+- 归档副本：`docs/archive/legacy-reading-engine/2026-06-07/data/sources/reference/光遇聚合26.6.2.json`
 
 ## 样本定位
 
-该文件是后续 LegadoHub 生成“暴露给阅读端的聚合书源”的格式参考。它不是多个书源列表，而是一个单条阅读书源：
+该文件是后续 LegadoHub 生成“暴露给阅读端的聚合书源”的格式参考。它不是活跃运行时输入，也不是多个书源列表，而是一个单条阅读书源：
 
 - `bookSourceName`: `🔅光遇聚合(26.6.2)`
 - `bookSourceUrl`: `光遇聚合`
@@ -40,11 +40,18 @@ LegadoHub 后续也应生成一个“单书源聚合壳”，让阅读端只导�
 - 聚合 API 地址应集中写入 `jsLib` 或变量，不要散落在每个规则里。
 - 服务端返回结构要尽量稳定，避免频繁修改阅读端规则。
 - 大量业务逻辑应放在 LegadoHub 服务端，书源 JS 只做请求、编码、解析和必要兼容。
+- 搜索、排行、详情、目录和正文响应可能返回 `debug.browserChallenges`。
+  阅读端或外部客户端可使用
+  `/api/legado/browser-challenges/{session_id}/browser/open` 启动浏览器助手，
+  或使用 `/api/legado/browser-challenges/{session_id}/cookies`
+  提交验证 Cookie，并使用
+  `/api/legado/browser-challenges/{session_id}/retry-live-check` 重试排行榜阅读闭环；
+  后台控制台仍可作为人工验证入口。
 
 ## 后续待办
 
 1. 从样本中抽取最小聚合书源模板。
 2. 将固定域名/路径替换为 LegadoHub 本地服务地址。
 3. 设计 LegadoHub 服务端返回结构。
-4. 生成第一版 `generated/legadohub-source.json`。
+4. 生成第一版 `backend/generated/legadohub-source.json`。
 5. 用阅读端导入验证搜索、详情、目录、正文四段链路。
