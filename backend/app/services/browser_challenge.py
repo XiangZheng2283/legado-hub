@@ -54,8 +54,14 @@ class BrowserChallengeService:
             "createdAt": _now(),
             "updatedAt": _now(),
             "actions": {
-                "submitCookies": f"/api/console/browser-challenges/{session_id}/cookies",
-                "status": f"/api/console/browser-challenges/{session_id}",
+                "open": f"/api/browser/challenges/{session_id}/open",
+                "callback": f"/api/browser/challenges/{session_id}/callback",
+                "status": f"/api/browser/challenges/{session_id}",
+                "submitCookies": f"/api/browser/challenges/{session_id}/cookies",
+                "consoleOpen": f"/api/browser/challenges/{session_id}/open",
+                "legadoOpen": f"/api/browser/challenges/{session_id}/open",
+                "consoleSubmitCookies": f"/api/console/browser-challenges/{session_id}/cookies",
+                "consoleStatus": f"/api/console/browser-challenges/{session_id}",
                 "retryLiveCheck": f"/api/console/browser-challenges/{session_id}/retry-live-check",
                 "openBrowser": f"/api/console/browser-challenges/{session_id}/browser/open",
                 "browserStatus": f"/api/console/browser-challenges/{session_id}/browser/status",
@@ -125,6 +131,16 @@ class BrowserChallengeService:
         session["status"] = "retry_passed" if result.get("passed") else "retry_failed"
         session["updatedAt"] = _now()
         session["retryResult"] = result
+        return dict(session)
+
+    def mark_verified(self, session_id: str, payload: dict | None = None) -> dict:
+        session = _SESSIONS.get(session_id)
+        if not session:
+            return {"verified": False, "error": "验证会话不存在", "sessionId": session_id}
+        session["status"] = "verified"
+        session["updatedAt"] = _now()
+        if payload:
+            session["callbackResult"] = payload
         return dict(session)
 
     def record_browser_helper(self, session_id: str, helper_result: dict) -> dict:

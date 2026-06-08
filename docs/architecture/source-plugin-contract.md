@@ -118,6 +118,18 @@ proxy:
 browser:
   mode: manual
   reason: login_or_verification
+accessStrategy:
+  search: search_engine
+  detail: stealth_http
+  toc: stealth_http
+  chapter: stealth_http
+searchEngine:
+  providerOrder:
+    - duckduckgo_html
+    - bing_html
+  targetDomain: www.example.com
+  urlPatterns:
+    - /book/\d+\.htm
 domainProfiles:
   - id: mobile
     baseUrl: https://m.example.com
@@ -137,6 +149,15 @@ sourceSeed:
   upstreamFile: bundle/rules/main.json
   upstreamCommit: ""
 ```
+
+`accessStrategy` is the optional final runtime route for each source lifecycle
+stage. Valid routes are `http`, `stealth_http`, `search_engine`, `browser`, and
+`cf_challenge`. A finished source should declare the intended route instead of
+keeping hidden permanent fallback chains.
+
+`searchEngine` is optional Browser Bridge search-engine configuration. Browser
+Bridge owns Bing/DuckDuckGo/other search-engine parsing; individual source
+plugins should only map returned hits into source result objects.
 
 ## source.py Class
 

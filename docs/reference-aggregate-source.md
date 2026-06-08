@@ -41,10 +41,13 @@ LegadoHub 后续也应生成一个“单书源聚合壳”，让阅读端只导�
 - 服务端返回结构要尽量稳定，避免频繁修改阅读端规则。
 - 大量业务逻辑应放在 LegadoHub 服务端，书源 JS 只做请求、编码、解析和必要兼容。
 - 搜索、排行、详情、目录和正文响应可能返回 `debug.browserChallenges`。
-  阅读端或外部客户端可使用
-  `/api/legado/browser-challenges/{session_id}/browser/open` 启动浏览器助手，
-  或使用 `/api/legado/browser-challenges/{session_id}/cookies`
-  提交验证 Cookie，并使用
+  阅读端或外部客户端应优先使用
+  `/api/browser/challenges/{session_id}/open` 打开统一验证入口。
+  验证完成后 Browser Bridge 可通过
+  `/api/browser/challenges/{session_id}/callback` 回调同一个会话；
+  手动场景仍可使用 `/api/browser/challenges/{session_id}/cookies`
+  提交验证 Cookie。旧的 Console 和 `/api/legado/browser-challenges/*`
+  端点可作为兼容别名，并可使用
   `/api/legado/browser-challenges/{session_id}/retry-live-check` 重试排行榜阅读闭环；
   后台控制台仍可作为人工验证入口。
 

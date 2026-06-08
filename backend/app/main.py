@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app import config
-from app.api import health, legado, console
+from app.api import health, legado, console, browser
 from app.storage.db import initialize_database
 
 FRONTEND_DIST = config.FRONTEND_DIST_DIR
@@ -24,6 +24,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(legado.router)
     app.include_router(console.console_router)
+    app.include_router(browser.router)
     # Serve React console frontend.
     if FRONTEND_DIST.exists():
         app.mount("/console-static", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="console-static")

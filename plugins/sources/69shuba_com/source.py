@@ -8,7 +8,7 @@ is returned.
 
 import re
 import asyncio
-from urllib.parse import quote_plus, unquote, urljoin, urlparse, urlunparse, parse_qs
+from urllib.parse import urljoin, urlparse, urlunparse
 
 from bs4 import BeautifulSoup
 
@@ -170,62 +170,27 @@ class Source:
         return False
 
     async def _search_engine_fallback(self, ctx, keyword: str):
-        query = quote_plus(f"site:www.69shuba.com/book {keyword}")
-        engines = [
-            f"https://html.duckduckgo.com/html/?q={query}",
-            f"https://lite.duckduckgo.com/lite/?q={query}",
-            f"https://www.bing.com/search?q={query}",
-            f"https://cn.bing.com/search?q={query}",
-        ]
-        for engine_url in engines:
-            try:
-                html = await ctx.fetch_text(
-                    engine_url,
-                    headers={
-                        "accept-language": "zh-CN,zh;q=0.9",
-                        "User-Agent": (
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                            "AppleWebKit/537.36 (KHTML, like Gecko) "
-                            "Chrome/124.0.0.0 Safari/537.36"
-                        ),
-                    },
-                    timeout=5,
-                    proxy=False,
-                )
-            except Exception as exc:
-                ctx.trace("search_engine_fallback_error", url=engine_url, message=str(exc))
-                continue
-            items = self._parse_search_engine_results(ctx, html, keyword, engine_url)
-            if items:
-                return items
-        return []
-
-    def _parse_search_engine_results(self, ctx, html: str, keyword: str, engine_url: str):
-        candidates: list[tuple[str, str]] = []
-        for a in ctx.select(html, "a"):
-            href = a.get("href", "")
-            text = ctx.clean_text(a.text_content())
-            normalized = self._normalize_search_engine_url(href)
-            if not normalized:
-                continue
-            candidates.append((normalized, text))
-        decoded_html = unquote(html or "")
-        for url in re.findall(r"https?://(?:www\.)?69shuba\.com/(?:book|txt)/\d+\.htm", decoded_html):
-            normalized = self._normalize_search_engine_url(url)
-            if normalized:
-                candidates.append((normalized, keyword))
+        try:
+            hits = await ctx.browser.search_engine(
+                keyword,
+                target_domain="www.69shuba.com",
+                url_patterns=[r"/(?:book|txt)/\d+\.htm"],
+                provider_order=["duckduckgo_html", "duckduckgo_lite", "bing_html", "bing_cn"],
+                query_site_path="/book",
+                timeout=5,
+                proxy=False,
+            )
+        except Exception as exc:
+            ctx.trace("search_engine_fallback_error", message=str(exc))
+            return []
         items = []
-        seen = set()
-        for url, text in candidates:
-            if url in seen:
-                continue
-            seen.add(url)
-            title = self._clean_search_engine_title(text, keyword)
+        for hit in hits:
+            title = self._clean_search_engine_title(hit.title, keyword)
             items.append({
                 "sourceId": self.id,
                 "name": title,
                 "author": "",
-                "bookUrl": url,
+                "bookUrl": hit.url,
                 "coverUrl": "",
                 "intro": "搜索引擎 fallback 命中，详情和章节仍需目标站验证通过后读取。",
                 "kind": "搜索引擎",
@@ -233,36 +198,13 @@ class Source:
                 "groupId": "search",
                 "groupTitle": "搜索",
                 "rank": len(items) + 1,
-                "extra": {"fallback": "search_engine", "engineUrl": engine_url},
+                "extra": {
+                    "fallback": "search_engine",
+                    "provider": hit.provider,
+                    "matchedPattern": hit.matched_pattern,
+                },
             })
         return items
-
-    def _normalize_search_engine_url(self, href: str) -> str:
-        if not href:
-            return ""
-        if href.startswith("/url?") or href.startswith("https://www.google.com/url?"):
-            parsed = urlparse(urljoin("https://www.google.com", href))
-            href = parse_qs(parsed.query).get("q", [""])[0]
-        if "duckduckgo.com/l/?" in href or href.startswith("//duckduckgo.com/l/?") or href.startswith("/l/?"):
-            parsed = urlparse(urljoin("https://duckduckgo.com", href))
-            href = parse_qs(parsed.query).get("uddg", [""])[0]
-        if href.startswith("/ck/a") or "bing.com/ck/a" in href:
-            parsed = urlparse(urljoin("https://www.bing.com", href))
-            encoded = parse_qs(parsed.query).get("u", [""])[0]
-            if encoded.startswith("a1"):
-                try:
-                    import base64
-
-                    padded = encoded[2:] + "=" * (-len(encoded[2:]) % 4)
-                    href = base64.urlsafe_b64decode(padded).decode("utf-8", errors="ignore")
-                except Exception:
-                    href = encoded
-        href = unquote(href)
-        match = re.search(r"https?://(?:www\.)?69shuba\.com/(?:book|txt)/\d+\.htm", href)
-        if not match:
-            return ""
-        parsed = urlparse(match.group(0))
-        return urlunparse(parsed._replace(scheme="https", netloc="www.69shuba.com"))
 
     def _clean_search_engine_title(self, text: str, keyword: str) -> str:
         title = re.sub(r"\s*[-_].*$", "", text or "").strip()

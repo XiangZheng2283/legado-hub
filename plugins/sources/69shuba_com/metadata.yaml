@@ -30,9 +30,30 @@ proxy:
   required: true
 browser:
   mode: required
+  provider: browserless
+  profileScope: plugin_domain_proxy
   reason: cloudflare_verification
   verificationUrl: https://www.69shuba.com/newhot_0_1_1.htm
   searchFallback: search_engine
+  challenge:
+    mode: attempt_then_manual
+    verificationUrl: https://www.69shuba.com/newhot_0_1_1.htm
+    callback: local
+accessStrategy:
+  search: search_engine
+  detail: stealth_http
+  toc: stealth_http
+  chapter: stealth_http
+searchEngine:
+  providerOrder:
+    - duckduckgo_html
+    - duckduckgo_lite
+    - bing_html
+    - bing_cn
+  targetDomain: www.69shuba.com
+  querySitePath: /book
+  urlPatterns:
+    - /(?:book|txt)/\d+\.htm
 tags:
   - html
   - no-login

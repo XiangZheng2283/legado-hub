@@ -92,7 +92,8 @@ async def test_scheduler_returns_browser_challenge_for_cloudflare(tmp_path):
     challenge = result["debug"]["browserChallenges"][0]
     assert challenge["sourceId"] == plugin_id
     assert challenge["openUrl"] == "https://example.com/search"
-    assert challenge["actions"]["submitCookies"].startswith("/api/console/browser-challenges/")
+    assert challenge["actions"]["submitCookies"].startswith("/api/browser/challenges/")
+    assert challenge["actions"]["consoleSubmitCookies"].startswith("/api/console/browser-challenges/")
     assert challenge["actions"]["legadoSubmitCookies"].startswith("/api/legado/browser-challenges/")
 
 

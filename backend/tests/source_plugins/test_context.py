@@ -2,6 +2,8 @@
 
 import pytest
 
+from app.services.browser_bridge.models import BrowserFetchRequest, BrowserFetchResult
+from app.services.plugin_auth_repository import PluginAuthRepository
 from app.source_plugins.context import PluginContext
 from app.source_plugins.fetcher import Fetcher
 
@@ -81,3 +83,42 @@ def test_trace(ctx):
     traces = ctx.get_traces()
     assert len(traces) == 1
     assert traces[0]["stage"] == "search"
+
+
+class FakeBrowserBridge:
+    def __init__(self):
+        self.requests: list[BrowserFetchRequest] = []
+
+    async def fetch(self, request: BrowserFetchRequest) -> BrowserFetchResult:
+        self.requests.append(request)
+        return BrowserFetchResult(
+            ok=True,
+            final_url=request.url,
+            html="<html><body>browser ok</body></html>",
+            cookies=[{"domain": "example.com", "name": "sid", "value": "1"}],
+            profile_id=request.profile_id,
+        )
+
+
+@pytest.mark.asyncio
+async def test_context_browser_fetch_text_persists_cookies(tmp_path):
+    bridge = FakeBrowserBridge()
+    repo = PluginAuthRepository(tmp_path / "auth.db")
+    ctx = PluginContext(
+        fetcher=Fetcher(),
+        plugin_id="example",
+        auth_repository=repo,
+        browser_bridge=bridge,
+    )
+
+    text = await ctx.browser.fetch_text(
+        "https://example.com/book/1.htm",
+        stage="detail",
+        profile_id="example-default",
+    )
+
+    assert "browser ok" in text
+    assert bridge.requests[0].plugin_id == "example"
+    assert bridge.requests[0].stage == "detail"
+    assert repo.get_cookies("example")["example.com"]["sid"] == "1"
+    assert ctx.get_traces()[-1]["stage"] == "browser_bridge"

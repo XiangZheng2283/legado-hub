@@ -9,6 +9,7 @@ from app.source_plugins.context import PluginContext
 from app.source_plugins.errors import CloudflareRequired
 from app.source_plugins.errors import BrowserRequired
 from app.source_plugins.smoke import FixtureFetcher
+from app.services.browser_bridge.search_engine import normalize_search_engine_url
 
 
 class BrowserChallengeFetcher:
@@ -84,10 +85,10 @@ async def test_69shuba_search_engine_fallback_extracts_book_urls():
 
 
 def test_69shuba_search_engine_normalizes_bing_encoded_urls():
-    source = _load_source()
-
-    url = source._normalize_search_engine_url(
-        "/ck/a?u=a1aHR0cHM6Ly93d3cuNjlzaHViYS5jb20vYm9vay8xMjM0NS5odG0"
+    url = normalize_search_engine_url(
+        "/ck/a?u=a1aHR0cHM6Ly93d3cuNjlzaHViYS5jb20vYm9vay8xMjM0NS5odG0",
+        target_domain="www.69shuba.com",
+        url_patterns=[r"/book/\d+\.htm"],
     )
 
     assert url == "https://www.69shuba.com/book/12345.htm"
