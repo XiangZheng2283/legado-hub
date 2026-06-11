@@ -51,3 +51,4 @@ rg -n "LegadoEngineRunner|app\.legado_engine|app\.engine|engine-jvm|AnalyzeRule|
 ```
 
 Expected: no active-path matches. Historical matches may exist under `docs/archive/legacy-reading-engine/2026-06-07/`.
+

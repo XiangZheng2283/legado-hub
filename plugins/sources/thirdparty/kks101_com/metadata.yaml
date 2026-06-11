@@ -1,0 +1,38 @@
+contractVersion: "1.0"
+id: kks101_com
+name: 101看书网
+version: 0.1.1
+type: source
+domains:
+  - 101kks.com
+baseUrls:
+  - https://101kks.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+  cookieDomains:
+    - 101kks.com
+content:
+  access: free
+proxy:
+  mode: always
+  required: true
+browser:
+  mode: optional
+  reason: cloudflare_challenge
+tags:
+  - html
+  - ajax-api
+  - no-login
+  - cloudflare
+  - browser-bypass
+enabled: true
+sourceSeed:
+  type: manual
+  upstreamId: 101kks.com
+  upstreamFile: ""
+  upstreamCommit: ""

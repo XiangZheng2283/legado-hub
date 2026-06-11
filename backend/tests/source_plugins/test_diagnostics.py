@@ -122,3 +122,9 @@ async def test_fixture_smoke_normalizes_stage_failures(tmp_path, behavior, code)
     result = await run_fixture_smoke(plugin, plugin_dir, stage_timeout=0.01 if behavior == "timeout" else 15.0)
 
     assert any(error["code"] == code and error["hint"] for error in result["errors"]), result
+
+
+
+
+
+

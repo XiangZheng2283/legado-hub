@@ -28,11 +28,11 @@ def _build_source(base_api: str = BASE_API) -> dict:
         "bookSourceType": 0,
         "enabled": True,
         "enabledCookieJar": True,
-        "enabledExplore": True,
+        "enabledExplore": bool(explore_url),
         "header": "",
         "loginUrl": f"{base_api}/console",
-        "bookSourceComment": "聚合搜索会先返回当前已完成书源的快照，并在后台继续搜索；搜索、排行、详情、目录或正文响应的 debug.browserChallenges 里会返回需要浏览器验证的书源；可打开 LegadoHub 控制台完成验证，也可调用 /api/legado/browser-challenges/{session_id}/browser/open 启动浏览器助手，或用 /api/legado/browser-challenges/{session_id}/cookies 提交 Cookie，再调用 /api/legado/browser-challenges/{session_id}/retry-live-check 重试排行榜阅读闭环。",
-        "searchUrl": f"{base_api}/api/legado/search?keyword={{{{key}}}}&page={{{{page}}}}&waitMs=1200",
+        "bookSourceComment": "聚合搜索会先返回当前已完成书源的快照，并在后台继续搜索；排行榜、分类、聚合书籍章节元信息后续仅从正版书源获取，普通书源不再暴露排行榜/分类；遇到 Cloudflare 或浏览器挑战的书源会被标记为需要绕过并跳过，不再提供手动验证、验证页或 Cookie 回传链路。",
+        "searchUrl": f"{base_api}/api/legado/search?keyword={{{{key}}}}&page={{{{page}}}}&waitMs=180000",
         "exploreUrl": explore_url,
         "ruleSearch": {
             "bookList": "$.items",
@@ -41,7 +41,7 @@ def _build_source(base_api: str = BASE_API) -> dict:
             "coverUrl": "$.coverUrl",
             "intro": "$.intro",
             "kind": "$.kind",
-            "lastChapter": "$.lastChapter",
+            "lastChapter": "$.readingLastChapter",
             "wordCount": "$.wordCount",
             "bookUrl": "$.bookUrl",
             "checkKeyWord": "",
@@ -58,7 +58,7 @@ def _build_source(base_api: str = BASE_API) -> dict:
             "bookUrl": "$.bookUrl",
         },
         "ruleBookInfo": {
-            "init": f"<js>\njava.ajax(result);\n</js>$.data",
+            "init": "$.data",
             "name": "$.name",
             "author": "$.author",
             "coverUrl": "$.coverUrl",
@@ -66,7 +66,9 @@ def _build_source(base_api: str = BASE_API) -> dict:
             "kind": "$.kind",
             "lastChapter": "$.lastChapter",
             "wordCount": "$.wordCount",
+            "updateTime": "$.updateTime",
             "tocUrl": "$.tocUrl",
+            "canReName": "1",
         },
         "ruleToc": {
             "chapterList": "$.chapters",
@@ -75,7 +77,14 @@ def _build_source(base_api: str = BASE_API) -> dict:
             "updateTime": "$.updateTime",
         },
         "ruleContent": {
-            "content": "$.content",
+            "content": '@js:\n'
+            'var text = result;\n'
+            'try {\n'
+            '  var obj = JSON.parse(result);\n'
+            '  text = obj.content || "";\n'
+            '} catch (e) {}\n'
+            'text = String(text || "").replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n");\n'
+            'result = text.replace(/\\n\\n+/g, "<br><br>").replace(/\\n/g, "<br>");',
             "title": "$.title",
         },
         "jsLib": f"function baseUrl() {{ return '{base_api}'; }}",
@@ -83,13 +92,15 @@ def _build_source(base_api: str = BASE_API) -> dict:
 
 
 def _build_explore_url(base_api: str) -> str:
-    lines = [f"聚合推荐::{base_api}/api/legado/explore?page={{{{page}}}}"]
+    lines = []
     try:
         plugins = PluginLoader().load_all()
     except Exception:
         plugins = {}
     for plugin in plugins.values():
         if not plugin.metadata.enabled or "explore" not in plugin.capabilities:
+            continue
+        if not plugin.metadata.is_official_source():
             continue
         lines.append(
             f"{plugin.metadata.name}::{base_api}/api/legado/explore?sourceId={plugin.metadata.id}&page={{{{page}}}}"
@@ -122,3 +133,4 @@ def _sync_progress() -> None:
             "unsupported_sources": stats.get("unsupported", 0),
         }
     )
+

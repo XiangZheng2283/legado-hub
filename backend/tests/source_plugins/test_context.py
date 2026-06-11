@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.services.browser_bridge.models import BrowserFetchRequest, BrowserFetchResult
+from app.services.access_bridge.models import AccessFetchRequest, AccessFetchResult
 from app.services.plugin_auth_repository import PluginAuthRepository
 from app.source_plugins.context import PluginContext
 from app.source_plugins.fetcher import Fetcher
@@ -85,33 +85,53 @@ def test_trace(ctx):
     assert traces[0]["stage"] == "search"
 
 
-class FakeBrowserBridge:
+class FakeAccessBridge:
     def __init__(self):
-        self.requests: list[BrowserFetchRequest] = []
+        self.requests: list[AccessFetchRequest] = []
+        self.html = "<html><body>browser ok</body></html>"
 
-    async def fetch(self, request: BrowserFetchRequest) -> BrowserFetchResult:
+    async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
         self.requests.append(request)
-        return BrowserFetchResult(
+        return AccessFetchResult(
             ok=True,
             final_url=request.url,
-            html="<html><body>browser ok</body></html>",
+            html=self.html,
             cookies=[{"domain": "example.com", "name": "sid", "value": "1"}],
             profile_id=request.profile_id,
         )
 
 
+class FakeHttpFetcher:
+    def __init__(self):
+        self.calls = []
+        self.html = "<html><body>http ok</body></html>"
+
+    async def fetch_text(self, url, **kwargs):
+        self.calls.append({"url": url, **kwargs})
+        return self.html
+
+    def cookies_for_domain(self, domain):
+        return {}
+
+    def set_cookie(self, domain, name, value):
+        return None
+
+    def get_traces(self):
+        return []
+
+
 @pytest.mark.asyncio
 async def test_context_browser_fetch_text_persists_cookies(tmp_path):
-    bridge = FakeBrowserBridge()
+    bridge = FakeAccessBridge()
     repo = PluginAuthRepository(tmp_path / "auth.db")
     ctx = PluginContext(
         fetcher=Fetcher(),
         plugin_id="example",
         auth_repository=repo,
-        browser_bridge=bridge,
+        access_bridge=bridge,
     )
 
-    text = await ctx.browser.fetch_text(
+    text = await ctx.access.browser.fetch_text(
         "https://example.com/book/1.htm",
         stage="detail",
         profile_id="example-default",
@@ -121,4 +141,62 @@ async def test_context_browser_fetch_text_persists_cookies(tmp_path):
     assert bridge.requests[0].plugin_id == "example"
     assert bridge.requests[0].stage == "detail"
     assert repo.get_cookies("example")["example.com"]["sid"] == "1"
-    assert ctx.get_traces()[-1]["stage"] == "browser_bridge"
+    assert ctx.get_traces()[-1]["stage"] == "access_browser"
+
+
+@pytest.mark.asyncio
+async def test_context_browser_http_fetch_text_uses_core_fetcher():
+    fetcher = FakeHttpFetcher()
+    ctx = PluginContext(fetcher=fetcher, plugin_id="example")
+
+    text = await ctx.access.http.fetch_text(
+        "https://example.com/search",
+        headers={"X-Test": "1"},
+        timeout=3.0,
+        proxy=False,
+    )
+
+    assert "http ok" in text
+    assert fetcher.calls[0]["url"] == "https://example.com/search"
+    assert fetcher.calls[0]["headers"] == {"X-Test": "1"}
+    assert fetcher.calls[0]["timeout"] == 3.0
+    assert fetcher.calls[0]["proxy"] is False
+    assert ctx.get_traces()[-1]["stage"] == "access_http"
+
+
+@pytest.mark.asyncio
+async def test_context_browser_stealth_fetch_text_adds_browser_headers():
+    fetcher = FakeHttpFetcher()
+    ctx = PluginContext(fetcher=fetcher, plugin_id="example")
+
+    text = await ctx.access.stealth.fetch_text("https://example.com/book/1.htm")
+
+    assert "http ok" in text
+    assert "User-Agent" in fetcher.calls[0]["headers"]
+    assert fetcher.calls[0]["impersonate"] == "chrome120"
+
+
+@pytest.mark.asyncio
+async def test_context_search_provider_uses_http_by_default():
+    bridge = FakeAccessBridge()
+    fetcher = FakeHttpFetcher()
+    fetcher.html = """
+    <html><body>
+      <a href="/ck/a?u=a1aHR0cHM6Ly93d3cuNjlzaHViYS5jb20vYm9vay84OTc0NS5odG0">剑宗外门</a>
+    </body></html>
+    """
+    ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com", access_bridge=bridge)
+
+    hits = await ctx.access.search_provider(
+        "剑宗外门",
+        target_domain="www.69shuba.com",
+        url_patterns=[r"/book/\d+\.htm"],
+        provider_order=["bing_html"],
+        query_site_path="/book",
+    )
+
+    assert hits[0].url == "https://www.69shuba.com/book/89745.htm"
+    assert bridge.requests == []
+    assert fetcher.calls[0]["url"].startswith("https://www.bing.com/search?")
+
+

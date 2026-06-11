@@ -125,3 +125,5 @@ class UpdateScheduler:
                 )
                 conn.commit()
             return {"bookId": book_id, "success": False, "error": str(e)}
+
+

@@ -29,10 +29,11 @@ class PluginMetadata:
     rate_limit: dict = field(default_factory=dict)
     proxy: dict = field(default_factory=dict)
     browser: dict = field(default_factory=dict)
+    access_bridge: dict = field(default_factory=dict)
     domain_profiles: list[dict] = field(default_factory=list)
     source_seed: dict = field(default_factory=dict)
     access_strategy: dict = field(default_factory=dict)
-    search_engine: dict = field(default_factory=dict)
+    search_provider: dict = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: dict) -> PluginMetadata:
@@ -54,10 +55,11 @@ class PluginMetadata:
             rate_limit=data.get("rateLimit", {}),
             proxy=data.get("proxy", {}),
             browser=data.get("browser", {}),
+            access_bridge=data.get("accessBridge", {}),
             domain_profiles=data.get("domainProfiles", []),
             source_seed=data.get("sourceSeed", {}),
             access_strategy=data.get("accessStrategy", {}),
-            search_engine=data.get("searchEngine", {}),
+            search_provider=data.get("searchProvider", {}),
         )
 
     def validate(self) -> list[str]:
@@ -70,10 +72,12 @@ class PluginMetadata:
             errors.append("name is required")
         if self.type != "source":
             errors.append(f"type must be 'source', got {self.type}")
-        valid_caps = {"search", "detail", "toc", "chapter", "explore", "auth"}
+        valid_caps = {"search", "detail", "toc", "chapter", "chapter_reviews", "explore", "auth"}
         for cap in self.capabilities:
             if cap not in valid_caps:
                 errors.append(f"invalid capability: {cap}")
+        if "explore" in self.capabilities and not self.is_official_source():
+            errors.append("explore capability is only allowed for official sources")
         auth_mode = self.auth.get("mode", "none")
         if auth_mode not in {"none", "optional", "required", "manual"}:
             errors.append(f"invalid auth.mode: {auth_mode}")
@@ -83,7 +87,17 @@ class PluginMetadata:
         proxy_mode = self.proxy.get("mode", "auto")
         if proxy_mode not in {"auto", "always", "never"}:
             errors.append(f"invalid proxy.mode: {proxy_mode}")
-        valid_strategy = {"http", "stealth_http", "search_engine", "browser", "cf_challenge"}
+        valid_strategy = {
+            "http",
+            "stealth_http",
+            "tls_impersonate",
+            "search_provider",
+            "headless_browser",
+            "remote_browser",
+            "api",
+            "feed",
+            "local_file",
+        }
         for stage, mode in self.access_strategy.items():
             if stage not in {"search", "detail", "toc", "chapter", "explore"}:
                 errors.append(f"invalid accessStrategy stage: {stage}")
@@ -104,6 +118,20 @@ class PluginMetadata:
             if role not in {"mirror", "mobile", "desktop", "api", "legacy"}:
                 errors.append(f"invalid domainProfiles[].role: {role}")
         return errors
+
+    def access_mode(self, stage: str) -> str:
+        """Return the configured runtime access strategy for a lifecycle stage."""
+        return str(self.access_strategy.get(stage, "") or "")
+
+    def uses_search_provider(self, stage: str = "search") -> bool:
+        """Whether this stage is explicitly routed through access-provider search."""
+        return self.access_mode(stage) == "search_provider"
+
+    def is_official_source(self) -> bool:
+        """Whether this plugin represents an official/licensed content source."""
+        tags = {str(tag).strip().lower() for tag in self.tags}
+        source_role = str(self.content.get("sourceRole", "") or "").strip().lower()
+        return "official" in tags or source_role == "official"
 
 
 @dataclass
@@ -255,3 +283,7 @@ class PluginFailure:
             "proxyUsed": self.proxy_used,
             "extra": self.extra,
         }
+
+
+
+

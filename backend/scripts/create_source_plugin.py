@@ -79,22 +79,38 @@ class Source:
     base_url = "{base_url.rstrip("/")}"
 
     async def search(self, ctx, keyword: str, page: int):
-        html = await ctx.fetch_text(f"{{self.base_url}}/search")
+        html = await ctx.access.http.fetch_text(f"{{self.base_url}}/search")
         ctx.trace("parse", message="TODO: implement search parser")
         return []
 
     async def detail(self, ctx, book_url: str):
-        html = await ctx.fetch_text(book_url)
+        html = await ctx.access.http.fetch_text(book_url)
         ctx.trace("parse", message="TODO: implement detail parser")
-        return {{"sourceId": self.id, "bookUrl": book_url, "tocUrl": book_url}}
+        return {{
+            "sourceId": self.id,
+            "name": ctx.text(html, "h1"),
+            "author": ctx.text(html, ".author"),
+            "bookUrl": book_url,
+            "coverUrl": ctx.urljoin(book_url, ctx.attr(html, ".cover img", "src")),
+            "intro": ctx.text(html, ".intro"),
+            "kind": ctx.text(html, ".kind"),
+            "lastChapter": ctx.text(html, ".latest"),
+            "wordCount": ctx.text(html, ".word-count"),
+            "tocUrl": book_url,
+            "authRequired": False,
+            "extra": {{
+                "status": ctx.text(html, ".status"),
+                "updateTime": ctx.text(html, ".update-time"),
+            }},
+        }}
 
     async def toc(self, ctx, toc_url: str):
-        html = await ctx.fetch_text(toc_url)
+        html = await ctx.access.http.fetch_text(toc_url)
         ctx.trace("parse", message="TODO: implement toc parser")
         return []
 
     async def chapter(self, ctx, chapter_url: str):
-        html = await ctx.fetch_text(chapter_url)
+        html = await ctx.access.http.fetch_text(chapter_url)
         ctx.trace("parse", message="TODO: implement chapter parser")
         return {{"sourceId": self.id, "chapterUrl": chapter_url, "title": "", "content": ""}}
 '''
@@ -150,6 +166,14 @@ Replace `tests/fixtures/*.html` with captured search/detail/toc/chapter pages, t
 cd backend
 python scripts/validate_source_plugin.py --plugin ../plugins/sources/{plugin_id}
 ```
+
+Detail output should fill Reading-compatible fields whenever the page exposes
+them: `name`, `author`, `bookUrl`, `coverUrl`, `intro`, `kind`, `lastChapter`,
+`wordCount`, `tocUrl`, `authRequired`, and useful extras such as `status` or
+`updateTime`.
+
+Ordinary mirror/scraper sources must not declare `explore`; ranking and category
+capabilities are reserved for official/licensed sources.
 """
 
 

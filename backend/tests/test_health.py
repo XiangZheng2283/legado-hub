@@ -22,3 +22,9 @@ def test_api_info() -> None:
     assert data["phase"] == "plugin-runtime-stage-3"
     assert "paths" in data
     assert "project_root" in data["paths"]
+
+
+
+
+
+

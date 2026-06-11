@@ -23,20 +23,20 @@ class PluginLoader:
         self._plugins = {}
         if not self.plugins_dir.exists():
             return self._plugins
-        for entry in sorted(self.plugins_dir.iterdir()):
-            if not entry.is_dir():
-                continue
-            metadata_path = entry / "metadata.yaml"
-            source_path = entry / "source.py"
-            if not metadata_path.exists():
+        # Recursively scan for plugin directories (supports official/ thirdparty/ etc.)
+        for metadata_path in sorted(self.plugins_dir.rglob("metadata.yaml")):
+            plugin_dir = metadata_path.parent
+            source_path = plugin_dir / "source.py"
+            # Skip template scaffolding
+            if plugin_dir.name == "source_plugin" and "templates" in str(plugin_dir):
                 continue
             try:
-                plugin = self._load_one(entry.name, metadata_path, source_path)
+                plugin = self._load_one(plugin_dir.name, metadata_path, source_path)
             except PluginValidationError:
                 raise
             except Exception as exc:
                 raise PluginValidationError(
-                    f"Failed to load plugin {entry.name}: {exc}"
+                    f"Failed to load plugin from {plugin_dir}: {exc}"
                 ) from exc
             if plugin.metadata.id in self._plugins:
                 raise PluginValidationError(
@@ -109,3 +109,7 @@ class PluginLoader:
 
     def list_plugins(self) -> list[LoadedPlugin]:
         return list(self._plugins.values())
+
+
+
+

@@ -7,10 +7,13 @@ from app.source_plugins.scheduler import PluginScheduler
 from app.source_plugins.loader import PluginLoader
 
 
-def _make_fake_plugin(tmp_path: Path, plugin_id: str):
+def _make_fake_plugin(tmp_path: Path, plugin_id: str, official: bool = False):
     d = tmp_path / plugin_id
     d.mkdir(parents=True, exist_ok=True)
     import yaml
+    capabilities = ["search", "detail", "toc", "chapter"]
+    if official:
+        capabilities.append("explore")
     meta = {
         "contractVersion": "1.0",
         "id": plugin_id,
@@ -19,10 +22,10 @@ def _make_fake_plugin(tmp_path: Path, plugin_id: str):
         "type": "source",
         "domains": ["example.com"],
         "baseUrls": ["https://example.com"],
-        "capabilities": ["search", "detail", "toc", "chapter", "explore"],
+        "capabilities": capabilities,
         "auth": {"mode": "none"},
         "content": {"access": "free"},
-        "tags": ["html"],
+        "tags": ["html", "official"] if official else ["html"],
     }
     (d / "metadata.yaml").write_text(yaml.dump(meta), encoding="utf-8")
     source_py = f'''
@@ -96,11 +99,11 @@ class Source:
 
 @pytest.fixture
 def scheduler(tmp_path):
-    _make_fake_plugin(tmp_path, "fake_a")
+    _make_fake_plugin(tmp_path, "fake_a", official=True)
     _make_fake_plugin(tmp_path, "fake_b")
     loader = PluginLoader(plugins_dir=tmp_path)
     return PluginScheduler(loader=loader, config={
-        "max_concurrency": 6,
+        "max_concurrency": 3,
         "source_timeout_seconds": 8.0,
         "overall_search_timeout_seconds": 30.0,
         "source_batch_size": 20,
@@ -111,8 +114,24 @@ def scheduler(tmp_path):
 async def test_search_concurrent_success(scheduler):
     result = await scheduler.search("test", page=1)
     assert result["implemented"] is True
-    assert len(result["items"]) >= 1
+    source_ids = [item["sourceId"] for item in result["items"]]
+    assert source_ids == ["fake_a", "fake_b"]
+    assert all("[来源:" not in item.get("intro", "") for item in result["items"])
     assert result["debug"]["successCount"] >= 1
+
+
+def test_search_priority_plugins_places_official_sources_first(scheduler):
+    ordered = scheduler._search_priority_plugins(scheduler._enabled_plugins())
+
+    assert [plugin.metadata.id for plugin in ordered] == ["fake_a", "fake_b"]
+
+
+@pytest.mark.asyncio
+async def test_search_returns_official_items_before_ordinary_items(scheduler):
+    result = await scheduler.search("test", page=1)
+    assert result["implemented"] is True
+    source_ids = [item["sourceId"] for item in result["items"]]
+    assert source_ids.index("fake_a") < source_ids.index("fake_b")
 
 
 @pytest.mark.asyncio
@@ -161,8 +180,51 @@ async def test_explore_items_success(scheduler):
 
 
 @pytest.mark.asyncio
+async def test_ordinary_source_explore_is_disabled(scheduler):
+    result = await scheduler.explore("fake_b", "rank_all", 1)
+    assert result["items"] == []
+    assert "no explore capability" in result["debug"]["error"]
+
+
+@pytest.mark.asyncio
 async def test_detail_missing_plugin():
     sched = PluginScheduler(loader=PluginLoader(plugins_dir=Path("/nonexistent")), config={})
     result = await sched.detail("missing", "https://example.com")
     assert result["data"] is None
     assert "not found" in str(result["debug"].get("error", "")).lower()
+
+
+def test_scheduler_injects_access_bridge_client(scheduler, monkeypatch):
+    class FakeAccessBridgeClient:
+        pass
+
+    monkeypatch.setattr(
+        "app.services.access_bridge.client.AccessBridgeClient",
+        FakeAccessBridgeClient,
+    )
+
+    ctx = scheduler._make_ctx("fake_a")
+
+    assert isinstance(ctx._access_bridge, FakeAccessBridgeClient)
+
+
+def test_scheduler_enables_search_provider_from_access_strategy(tmp_path):
+    plugin_dir = _make_fake_plugin(tmp_path, "fake_search_provider")
+    metadata_path = plugin_dir / "metadata.yaml"
+    text = metadata_path.read_text(encoding="utf-8")
+    text += "\naccessStrategy:\n  search: search_provider\n"
+    metadata_path.write_text(text, encoding="utf-8")
+    sched = PluginScheduler(
+        loader=PluginLoader(plugins_dir=tmp_path),
+        config={"source_timeout_seconds": 8.0},
+    )
+
+    ctx = sched._make_ctx("fake_search_provider")
+
+    assert ctx.allow_search_provider is True
+
+
+
+
+
+

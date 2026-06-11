@@ -7,13 +7,20 @@ import hashlib
 import time
 from typing import Any
 
-from app.services.browser_challenge import BrowserChallengeService
 from app.services.live_check_repository import LiveCheckRepository
 from app.source_plugins.scheduler import PluginScheduler
+from app.source_plugins.loader import PluginLoader
 
 
 def normalize_text(value: str) -> str:
     return "".join((value or "").lower().split())
+
+
+def normalize_author_key(value: str) -> str:
+    author = normalize_text(value)
+    if author in {"", "佚名", "未知", "未知作者", "匿名", "作者", "不详"}:
+        return ""
+    return author
 
 
 def candidate_id_for(item: dict[str, Any]) -> str:
@@ -54,23 +61,59 @@ def score_candidate(item: dict[str, Any], keyword: str) -> tuple[int, list[str]]
 
 
 def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str, Any]]:
+    try:
+        plugins = PluginLoader().load_all()
+    except Exception:
+        plugins = {}
+
+    def is_official(source_id: str) -> bool:
+        plugin = plugins.get(source_id)
+        return bool(plugin and plugin.metadata.is_official_source())
+
     groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    unresolved_by_name: dict[str, list[dict[str, Any]]] = {}
     for raw in items:
         item = dict(raw)
         item.setdefault("candidateId", candidate_id_for(item))
         score, reasons = score_candidate(item, keyword)
         item["score"] = max(int(item.get("score", 0) or 0), score)
         item["scoreReasons"] = reasons
-        key = (normalize_text(item.get("name", "")), normalize_text(item.get("author", "")))
-        if not key[0]:
-            key = (item["candidateId"], "")
-        groups.setdefault(key, []).append(item)
+        name_key = normalize_text(item.get("name", ""))
+        author_key = normalize_author_key(item.get("author", ""))
+        if not name_key:
+            groups.setdefault((item["candidateId"], ""), []).append(item)
+            continue
+        if not author_key:
+            unresolved_by_name.setdefault(name_key, []).append(item)
+            continue
+        groups.setdefault((name_key, author_key), []).append(item)
+
+    for name_key, unresolved_items in unresolved_by_name.items():
+        matching_keys = [key for key in groups if key[0] == name_key]
+        if not matching_keys:
+            groups[(name_key, "")] = list(unresolved_items)
+            continue
+        if len(matching_keys) == 1:
+            groups[matching_keys[0]].extend(unresolved_items)
+            continue
+        best_key = max(
+            matching_keys,
+            key=lambda key: max(item.get("score", 0) for item in groups[key]),
+        )
+        groups[best_key].extend(unresolved_items)
 
     result: list[dict[str, Any]] = []
     for index, ((name_key, author_key), group_items) in enumerate(groups.items(), start=1):
-        best = max(group_items, key=lambda candidate: candidate.get("score", 0))
+        best = max(
+            group_items,
+            key=lambda candidate: (
+                1 if is_official(candidate.get("sourceId", "")) else 0,
+                candidate.get("score", 0),
+            ),
+        )
         source_items = sorted(group_items, key=lambda candidate: -candidate.get("score", 0))
         source_ids = sorted({item.get("sourceId", "") for item in group_items if item.get("sourceId")})
+        official_items = [item for item in group_items if is_official(item.get("sourceId", ""))]
         group_id = hashlib.sha256(
             f"{name_key}|{author_key}|{'|'.join(source_ids)}".encode("utf-8")
         ).hexdigest()[:24]
@@ -87,6 +130,10 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
                 "scoreReasons": best.get("scoreReasons", []),
                 "sourceCount": len(source_ids),
                 "bestSourceId": best.get("sourceId", ""),
+                "hasOfficialSource": bool(official_items),
+                "officialSourceIds": sorted({item.get("sourceId", "") for item in official_items if item.get("sourceId")}),
+                "primaryOfficialSourceId": official_items[0].get("sourceId", "") if official_items else "",
+                "isPrimarySourceOfficial": is_official(best.get("sourceId", "")),
                 "items": source_items,
             }
         )
@@ -187,15 +234,14 @@ class LiveAcceptanceService:
                         return self.repository.record(result) if persist else result
                     effective_keyword = explore_selected.get("name", keyword)
                 except Exception as exc:
-                    if (plugin.metadata.browser or {}).get("searchFallback") != "search_engine":
+                    if not plugin.metadata.uses_search_provider("search"):
                         raise
-                    browser_challenges = self._browser_challenges_for_exception(plugin, "explore", exc)
                     diagnostics.append(self._diag(
                         plugin_id,
                         "explore",
                         getattr(exc, "code", "explore_unavailable"),
                         f"排行榜入口不可用，降级到搜索链路: {exc}",
-                        extra={"browserChallenge": browser_challenges[0]} if browser_challenges else {},
+                        extra=self._bypass_extra_for_exception(exc),
                     ))
 
             search_items = await asyncio.wait_for(
@@ -249,35 +295,31 @@ class LiveAcceptanceService:
             )
             return self.repository.record(result) if persist else result
         except asyncio.TimeoutError:
-            browser_challenges = self._browser_challenges_for_timeout(plugin, "runtime")
             diagnostics.append(self._diag(
                 plugin_id,
                 "runtime",
-                "BROWSER_REQUIRED" if browser_challenges else "timeout",
-                "书源调用超时，可能需要浏览器验证" if browser_challenges else "书源调用超时",
-                extra={"browserChallenge": browser_challenges[0]} if browser_challenges else {},
+                "BROWSER_REQUIRED" if self._timeout_requires_bypass(plugin) else "timeout",
+                "书源调用超时，后续应走绕过策略" if self._timeout_requires_bypass(plugin) else "书源调用超时",
+                extra={"bypassRequired": True, "bypassStrategy": "skip_source_until_bypass_available"} if self._timeout_requires_bypass(plugin) else {},
             ))
             result = self._result(
                 plugin_id, keyword, "timeout", search_items, selected, detail, toc_items, chapter, started, diagnostics,
                 explore_groups=explore_groups, explore_items=explore_items, explore_selected=explore_selected,
                 explore_detail=explore_detail, explore_toc_items=explore_toc_items, explore_chapter=explore_chapter,
-                browser_challenges=browser_challenges,
             )
             return self.repository.record(result) if persist else result
         except Exception as exc:
-            browser_challenges = self._browser_challenges_for_exception(plugin, "runtime", exc)
             diagnostics.append(self._diag(
                 plugin_id,
                 "runtime",
                 getattr(exc, "code", "plugin_exception"),
                 str(exc),
-                extra={"browserChallenge": browser_challenges[0]} if browser_challenges else {},
+                extra=self._bypass_extra_for_exception(exc),
             ))
             result = self._result(
                 plugin_id, keyword, "failed", search_items, selected, detail, toc_items, chapter, started, diagnostics,
                 explore_groups=explore_groups, explore_items=explore_items, explore_selected=explore_selected,
                 explore_detail=explore_detail, explore_toc_items=explore_toc_items, explore_chapter=explore_chapter,
-                browser_challenges=browser_challenges,
             )
             return self.repository.record(result) if persist else result
         finally:
@@ -324,11 +366,29 @@ class LiveAcceptanceService:
         started = time.perf_counter()
         if not plugin:
             return self._failed(plugin_id, keyword, "plugin_not_found", "插件不存在", started, diagnostics)
+
+        # For interactive console preview we prefer fresh chapter rendering so
+        #正文清洗/分段调整能立即反映，不被旧 chapter_cache 长时间遮住。
+        from app.services.catalog import Catalog
+        from app.source_plugins.id_codec import encode_book_id
+        catalog = Catalog()
+        book_id = candidate.get("bookId") or encode_book_id(plugin_id, candidate.get("bookUrl", ""))
+        cached_detail = catalog.cache.get_book(book_id)
+        if cached_detail and cached_detail.get("data"):
+            detail = dict(cached_detail["data"])
+            toc_result = catalog.cache.get_toc(book_id)
+            if toc_result:
+                toc_items = toc_result.get("chapters") or toc_result.get("items") or []
+                toc_items = [dict(item) for item in toc_items if isinstance(item, dict)]
+                if detail and toc_items:
+                    diagnostics.append(self._diag(plugin_id, "cache", "chapter_cache_bypassed", "控制台预览跳过旧章节缓存，强制重新拉取正文"))
+
         ctx = self.scheduler._make_ctx(plugin_id)
         timeout = self._timeout_for_plugin(plugin)
         detail: dict[str, Any] = {}
         toc_items: list[dict[str, Any]] = []
         chapter: dict[str, Any] = {}
+        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "summary": {}}
         try:
             if "detail" in plugin.capabilities:
                 detail = await asyncio.wait_for(
@@ -348,21 +408,47 @@ class LiveAcceptanceService:
                 )
                 if not isinstance(chapter, dict):
                     chapter = {}
+                if "chapter_reviews" in plugin.capabilities:
+                    try:
+                        review_source_url = chapter.get("chapterUrl") or chapter_item.get("chapterUrl", "")
+                        if review_source_url:
+                            fetched_reviews = await asyncio.wait_for(
+                                plugin.source.chapter_reviews(ctx, review_source_url),
+                                timeout=timeout,
+                            )
+                            if isinstance(fetched_reviews, dict):
+                                reviews = {
+                                    "paragraphs": fetched_reviews.get("paragraphs", {}),
+                                    "chapterEnd": fetched_reviews.get("chapterEnd", []),
+                                    "summary": fetched_reviews.get("summary", {}),
+                                    "debug": fetched_reviews.get("debug", {}),
+                                }
+                    except Exception as exc:
+                        diagnostics.append(self._diag(
+                            plugin_id,
+                            "reviews",
+                            getattr(exc, "code", "reviews_unavailable"),
+                            f"本章说获取失败: {exc}",
+                            extra=self._bypass_extra_for_exception(exc),
+                        ))
             else:
                 diagnostics.append(self._diag(plugin_id, "toc", "toc_empty", "目录为空"))
             status = "passed" if len(chapter.get("content", "") or "") > 500 else "failed"
-            return self._result(plugin_id, keyword, status, [candidate], candidate, detail, toc_items, chapter, started, diagnostics)
+            result = self._result(plugin_id, keyword, status, [candidate], candidate, detail, toc_items, chapter, started, diagnostics, reviews=reviews)
+            # Write to cache for subsequent fast reads
+            if detail and toc_items:
+                self._write_verify_cache(book_id, plugin_id, candidate, detail, toc_items, chapter)
+            return result
         except asyncio.TimeoutError:
             diagnostics.append(self._diag(plugin_id, "runtime", "timeout", "候选验证超时"))
-            return self._result(plugin_id, keyword, "timeout", [candidate], candidate, detail, toc_items, chapter, started, diagnostics)
+            return self._result(plugin_id, keyword, "timeout", [candidate], candidate, detail, toc_items, chapter, started, diagnostics, reviews=reviews)
         except Exception as exc:
-            browser_challenges = self._browser_challenges_for_exception(plugin, "runtime", exc)
             diagnostics.append(self._diag(
                 plugin_id,
                 "runtime",
                 getattr(exc, "code", "plugin_exception"),
                 str(exc),
-                extra={"browserChallenge": browser_challenges[0]} if browser_challenges else {},
+                extra=self._bypass_extra_for_exception(exc),
             ))
             return self._result(
                 plugin_id,
@@ -375,10 +461,53 @@ class LiveAcceptanceService:
                 chapter,
                 started,
                 diagnostics,
-                browser_challenges=browser_challenges,
+                reviews=reviews,
             )
         finally:
             await ctx._fetcher.close()
+
+    def _write_verify_cache(
+        self,
+        book_id: str,
+        plugin_id: str,
+        candidate: dict[str, Any],
+        detail: dict[str, Any],
+        toc_items: list[dict[str, Any]],
+        chapter: dict[str, Any],
+    ) -> None:
+        from app.services.catalog import Catalog
+        from app.config import HOST, PORT
+        from app.source_plugins.id_codec import encode_chapter_id
+        catalog = Catalog()
+        base_api = f"http://{HOST}:{PORT}"
+        book_url = candidate.get("bookUrl", "")
+        # Cache book detail
+        detail_response = {
+            "implemented": True,
+            "data": detail,
+            "debug": {},
+        }
+        catalog.cache.set_book(book_id, plugin_id, book_url, detail_response)
+        # Cache toc
+        toc_response = {
+            "implemented": True,
+            "bookId": book_id,
+            "chapters": toc_items,
+            "debug": {},
+        }
+        catalog.cache.set_toc(book_id, toc_response)
+        # Cache chapter
+        chapter_url = chapter.get("chapterUrl", "")
+        if chapter_url:
+            chapter_id = encode_chapter_id(plugin_id, chapter_url)
+            chapter_response = {
+                "implemented": True,
+                "chapterId": chapter_id,
+                "title": chapter.get("title", ""),
+                "content": chapter.get("content", ""),
+                "debug": {},
+            }
+            catalog.cache.set_chapter(chapter_id, plugin_id, chapter_url, chapter_response)
 
     def _result(
         self,
@@ -392,13 +521,13 @@ class LiveAcceptanceService:
         chapter: dict[str, Any],
         started: float,
         diagnostics: list[dict[str, Any]],
+        reviews: dict[str, Any] | None = None,
         explore_groups: list[dict[str, Any]] | None = None,
         explore_items: list[dict[str, Any]] | None = None,
         explore_selected: dict[str, Any] | None = None,
         explore_detail: dict[str, Any] | None = None,
         explore_toc_items: list[dict[str, Any]] | None = None,
         explore_chapter: dict[str, Any] | None = None,
-        browser_challenges: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         content = chapter.get("content", "") or ""
         explore_groups = explore_groups or []
@@ -407,7 +536,7 @@ class LiveAcceptanceService:
         explore_detail = explore_detail or {}
         explore_toc_items = explore_toc_items or []
         explore_chapter = explore_chapter or {}
-        browser_challenges = browser_challenges or []
+        reviews = reviews or {"paragraphs": {}, "chapterEnd": [], "summary": {}}
         explore_content = explore_chapter.get("content", "") or ""
         return {
             "pluginId": plugin_id,
@@ -475,8 +604,18 @@ class LiveAcceptanceService:
                 "content": content,
                 "passed": len(content) > 500,
             },
+            "reviews": {
+                "paragraphs": reviews.get("paragraphs", {}) if isinstance(reviews, dict) else {},
+                "chapterEnd": reviews.get("chapterEnd", []) if isinstance(reviews, dict) else [],
+                "summary": reviews.get("summary", {}) if isinstance(reviews, dict) else {},
+                "debug": reviews.get("debug", {}) if isinstance(reviews, dict) else {},
+                "passed": bool(
+                    (reviews.get("paragraphs") if isinstance(reviews, dict) else {})
+                    or (reviews.get("chapterEnd") if isinstance(reviews, dict) else [])
+                    or (reviews.get("summary") if isinstance(reviews, dict) else {})
+                ),
+            },
             "diagnostics": diagnostics,
-            "browserChallenges": browser_challenges,
             "timings": {"elapsedMs": int((time.perf_counter() - started) * 1000)},
         }
 
@@ -501,27 +640,14 @@ class LiveAcceptanceService:
     def _diag(self, plugin_id: str, stage: str, code: str, message: str, extra: dict | None = None) -> dict[str, Any]:
         return {"sourceId": plugin_id, "stage": stage, "code": code, "message": message, "extra": extra or {}}
 
-    def _browser_challenges_for_exception(self, plugin, stage: str, exc: Exception) -> list[dict[str, Any]]:
+    def _bypass_extra_for_exception(self, exc: Exception) -> dict[str, Any]:
         code = getattr(exc, "code", "")
         if code not in {"CLOUDFLARE_REQUIRED", "BROWSER_REQUIRED"}:
-            return []
-        challenge = BrowserChallengeService().create_for_plugin(
-            plugin,
-            stage=stage,
-            url=getattr(exc, "url", "") or "",
-            reason=code,
-            message=str(exc),
-        )
-        return [challenge]
+            return {}
+        return {"bypassRequired": True, "bypassStrategy": "skip_source_until_bypass_available"}
 
-    def _browser_challenges_for_timeout(self, plugin, stage: str) -> list[dict[str, Any]]:
+    def _timeout_requires_bypass(self, plugin) -> bool:
         browser_mode = (plugin.metadata.browser or {}).get("mode", "")
-        if browser_mode not in {"required", "optional"}:
-            return []
-        challenge = BrowserChallengeService().create_for_plugin(
-            plugin,
-            stage=stage,
-            reason="BROWSER_REQUIRED",
-            message="书源调用超时，可能停在浏览器验证或需要重新完成浏览器态访问。",
-        )
-        return [challenge]
+        return browser_mode in {"required", "optional"}
+
+

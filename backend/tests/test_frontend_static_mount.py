@@ -51,3 +51,9 @@ def test_console_favicon_served():
 def test_legacy_admin_spa_entry_not_exposed():
     res = client.get("/admin")
     assert res.status_code == 404
+
+
+
+
+
+

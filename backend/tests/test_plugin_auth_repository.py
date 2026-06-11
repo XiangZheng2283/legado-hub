@@ -3,6 +3,7 @@
 import pytest
 import httpx
 
+from app.services.access_bridge.models import AccessFetchResult
 from app.services.plugin_auth_repository import PluginAuthRepository
 from app.source_plugins.context import PluginContext
 from app.source_plugins.fetcher import Fetcher
@@ -57,20 +58,23 @@ def test_context_cookie_set_persists_to_repository(tmp_path):
 async def test_context_browser_fetch_cookies_are_persisted(tmp_path):
     repo = PluginAuthRepository(tmp_path / "auth.db")
 
-    class FakeBrowserFetcher:
-        last_cookies = [{"domain": ".69shuba.com", "name": "cf_clearance", "value": "ok"}]
-
-        async def fetch_text(self, *args, **kwargs):
-            return "<html>ok</html>"
+    class FakeAccessBridge:
+        async def fetch(self, request):
+            return AccessFetchResult(
+                ok=True,
+                final_url=request.url,
+                html="<html>ok</html>",
+                cookies=[{"domain": ".69shuba.com", "name": "cf_clearance", "value": "ok"}],
+            )
 
     ctx = PluginContext(
         fetcher=Fetcher(),
         plugin_id="69shuba_com",
         auth_repository=repo,
-        browser_fetcher=FakeBrowserFetcher(),
+        access_bridge=FakeAccessBridge(),
     )
 
-    text = await ctx.fetch_text("https://www.69shuba.com/", browser=True)
+    text = await ctx.access.browser.fetch_text("https://www.69shuba.com/")
 
     assert text == "<html>ok</html>"
     assert repo.get_cookies("69shuba_com") == {"69shuba.com": {"cf_clearance": "ok"}}
@@ -92,7 +96,13 @@ async def test_context_http_set_cookie_domain_is_persisted(tmp_path, monkeypatch
     monkeypatch.setattr("httpx.AsyncClient.request", fake_request)
     ctx = PluginContext(fetcher=Fetcher(), plugin_id="69shuba_com", auth_repository=repo)
 
-    text = await ctx.fetch_text("https://www.69shuba.com/newhot_0_1_1.htm")
+    text = await ctx.access.http.fetch_text("https://www.69shuba.com/newhot_0_1_1.htm")
 
     assert text == "<html>ok</html>"
     assert repo.get_cookies("69shuba_com") == {"69shuba.com": {"cf_clearance": "ok"}}
+
+
+
+
+
+

@@ -5,11 +5,11 @@
   "enabled": true,
   "base_url_mode": "request_host",
   "generated_path": "backend/generated/legadohub-source.json",
-  "last_generated_at": "2026-06-08T02:24:36.643322+00:00",
+  "last_generated_at": "2026-06-11T17:58:06.251942+00:00",
   "parser_progress": {
-    "configured_sources": 12,
-    "enabled_sources": 12,
-    "healthy_sources": 10,
+    "configured_sources": 24,
+    "enabled_sources": 24,
+    "healthy_sources": 23,
     "proxy_sources": 0,
     "unsupported_sources": 0
   }

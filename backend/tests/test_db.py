@@ -23,6 +23,8 @@ def test_initialize_database(tmp_path: Path) -> None:
         "books",
         "chapters",
         "update_tasks",
+        "aggregate_book_tasks",
+        "aggregate_chapter_tasks",
     }
     assert expected.issubset(tables)
 
@@ -32,3 +34,9 @@ def test_initialize_database_idempotent(tmp_path: Path) -> None:
     initialize_database(db_path)
     initialize_database(db_path)
     assert db_path.exists()
+
+
+
+
+
+

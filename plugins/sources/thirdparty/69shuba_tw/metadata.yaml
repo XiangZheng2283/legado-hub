@@ -1,0 +1,45 @@
+contractVersion: "1.0"
+id: 69shuba_tw
+name: 69書吧繁體
+version: 0.1.0
+type: source
+enabled: true
+language: zh-TW
+domains:
+  - 69shuba.tw
+baseUrls:
+  - https://69shuba.tw
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: always
+  required: true
+browser:
+  mode: required
+  reason: aegis_browser_context
+tags:
+  - html
+  - no-login
+  - proxy
+  - browser-fetch
+  - traditional-chinese
+domainProfiles:
+  - id: mobile
+    baseUrl: https://69shuba.tw
+    domains:
+      - 69shuba.tw
+    role: mobile
+    fallback: false
+sourceSeed:
+  type: live
+  upstreamId: 69shuba_tw
+  upstreamFile: ""
+  upstreamCommit: ""

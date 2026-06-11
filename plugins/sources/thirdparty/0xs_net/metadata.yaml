@@ -1,0 +1,30 @@
+contractVersion: "1.0"
+id: 0xs_net
+name: 零点小说
+version: 0.1.0
+type: source
+domains:
+  - 0xs.net
+baseUrls:
+  - https://www.0xs.net
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+  reason: ""
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - rate_limit

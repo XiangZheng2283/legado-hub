@@ -31,3 +31,7 @@ def decode_chapter_id(chapter_id: str) -> tuple[str, str]:
         encoded += "=" * padding
     chapter_url = base64.urlsafe_b64decode(encoded).decode("utf-8")
     return source_id, chapter_url
+
+
+
+

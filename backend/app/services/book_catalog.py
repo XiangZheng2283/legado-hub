@@ -136,3 +136,5 @@ class BookCatalog:
                     "nextTitle": next_ch.get("title") if next_ch else None,
                 }
         return {"prev": None, "next": None}
+
+

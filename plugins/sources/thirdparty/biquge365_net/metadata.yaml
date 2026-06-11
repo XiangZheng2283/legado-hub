@@ -1,0 +1,46 @@
+contractVersion: "1.0"
+id: biquge365_net
+name: 笔趣阁365
+version: 0.1.1
+type: source
+domains:
+  - m.biquge365.net
+  - biquge365.net
+baseUrls:
+  - https://m.biquge365.net
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+enabled: true
+tags:
+  - html
+  - no-login
+  - so-novel-seed
+domainProfiles:
+  - id: mobile
+    baseUrl: https://m.biquge365.net
+    domains:
+      - m.biquge365.net
+    role: mobile
+    fallback: true
+  - id: desktop
+    baseUrl: https://www.biquge365.net
+    domains:
+      - www.biquge365.net
+    role: desktop
+    fallback: true
+sourceSeed:
+  type: so-novel
+  upstreamId: www_biquge365_net
+  upstreamFile: bundle/rules/main.json
+  upstreamCommit: bfb5fda1d6ea04ad7f30a761640e08ce2e5db0e0

@@ -7,13 +7,15 @@ import {
   Settings,
   FileJson,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
 const navItems = [
   { to: "/console", label: "仪表盘", icon: LayoutDashboard, end: true },
-  { to: "/console/plugins", label: "插件", icon: Puzzle },
+  { to: "/console/plugins", label: "书源", icon: Puzzle },
   { to: "/console/search", label: "搜索", icon: Search },
+  { to: "/console/official-sources", label: "官方源", icon: KeyRound },
   { to: "/console/cache", label: "缓存", icon: HardDrive },
   { to: "/console/settings", label: "设置", icon: Settings },
   { to: "/console/aggregate-source", label: "聚合书源", icon: FileJson },

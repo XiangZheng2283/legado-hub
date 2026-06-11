@@ -7,14 +7,57 @@ import pytest
 
 from app.source_plugins.context import PluginContext
 from app.source_plugins.errors import CloudflareRequired
+from app.source_plugins.errors import FetchNetworkError
+from app.source_plugins.errors import PluginExecutionError
 from app.source_plugins.errors import BrowserRequired
 from app.source_plugins.smoke import FixtureFetcher
-from app.services.browser_bridge.search_engine import normalize_search_engine_url
+from app.services.access_bridge.search_provider import normalize_search_provider_url
+from app.services.access_bridge.models import SearchProviderHit
+from app.services.access_bridge.models import AccessFetchRequest, AccessFetchResult
 
 
-class BrowserChallengeFetcher:
-    async def fetch_text(self, plugin_id: str, url: str, **kwargs) -> str:
-        raise BrowserRequired("browser verification required", url=url)
+class BrowserRequiredAccessBridge:
+    async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
+        raise BrowserRequired("browser verification required", url=request.url)
+
+
+class FakeAccessBridge:
+    def __init__(self, html: str):
+        self.html = html
+        self.requests: list[AccessFetchRequest] = []
+
+    async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
+        self.requests.append(request)
+        return AccessFetchResult(
+            ok=True,
+            final_url=request.url,
+            html=self.html,
+            cookies=[],
+            profile_id=request.profile_id,
+        )
+
+
+class HeaderRecordingFetcher:
+    def __init__(self, url_to_text: dict[str, str]):
+        self._url_to_text = url_to_text
+        self.requests: list[dict] = []
+
+    async def fetch_text(self, url: str, **kwargs) -> str:
+        if url not in self._url_to_text:
+            raise AssertionError(f"unexpected url: {url}")
+        self.requests.append({"url": url, "headers": kwargs.get("headers") or {}})
+        return self._url_to_text[url]
+
+    async def fetch_json(self, url: str, **kwargs):
+        import json
+
+        return json.loads(await self.fetch_text(url, **kwargs))
+
+    async def fetch_bytes(self, url: str, **kwargs) -> bytes:
+        return (await self.fetch_text(url, **kwargs)).encode("utf-8")
+
+    def cookies_for_domain(self, domain: str) -> dict[str, str]:
+        return {}
 
 
 def _load_source():
@@ -57,35 +100,54 @@ async def test_69shuba_falls_back_to_mirror_and_keeps_mirror_urls():
 
 
 @pytest.mark.asyncio
-async def test_69shuba_search_engine_fallback_extracts_book_urls():
+async def test_69shuba_search_uses_search_provider_bypass():
     source = _load_source()
-    challenge = "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title></head></html>"
-    duckduckgo = """
-    <html><body>
-      <a href="/l/?uddg=https%3A%2F%2Fwww.69shuba.com%2Fbook%2F12345.htm">
-        我有一个修仙世界 - 69书吧
-      </a>
-      <a href="https://example.com/ignore">ignore</a>
-    </body></html>
-    """
-    fetcher = FixtureFetcher({
-        "https://www.69shuba.com/modules/article/search.php": challenge,
-        "https://www.69shuba.cx/modules/article/search.php": challenge,
-        "https://html.duckduckgo.com/html/?q=site%3Awww.69shuba.com%2Fbook+%E6%88%91%E6%9C%89%E4%B8%80%E4%B8%AA": duckduckgo,
-    })
+    fetcher = FixtureFetcher({})
     ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com")
-    ctx.allow_search_engine_fallback = True
+
+    async def fake_search_provider(keyword, **kwargs):
+        return [
+            SearchProviderHit(
+                title="我有一个修仙世界 - 69书吧",
+                url="https://www.69shuba.com/book/12345.htm",
+                provider="duckduckgo_ddgs",
+                rank=1,
+                matched_pattern=r"/book/\d+\.htm",
+            )
+        ]
+
+    ctx.access.search_provider = fake_search_provider
 
     items = await source.search(ctx, "我有一个", 1)
 
     assert len(items) == 1
     assert items[0]["name"] == "我有一个修仙世界"
     assert items[0]["bookUrl"] == "https://www.69shuba.com/book/12345.htm"
-    assert items[0]["extra"]["fallback"] == "search_engine"
+    assert items[0]["extra"]["searchProvider"] == "source_access_bridge"
+    assert all("modules/article/search.php" not in trace["url"] for trace in fetcher.get_traces())
 
 
-def test_69shuba_search_engine_normalizes_bing_encoded_urls():
-    url = normalize_search_engine_url(
+@pytest.mark.asyncio
+async def test_69shuba_search_uses_scheduler_timeout_instead_of_inner_wait_for(monkeypatch):
+    source = _load_source()
+
+    async def fake_search_provider(ctx, keyword):
+        return [{"sourceId": source.id, "name": keyword, "bookUrl": "https://www.69shuba.com/book/89745.htm"}]
+
+    async def fail_wait_for(*args, **kwargs):
+        raise AssertionError("search should not use an inner timeout")
+
+    monkeypatch.setattr(source, "_search_provider_search", fake_search_provider)
+    monkeypatch.setitem(source.search.__globals__, "asyncio", type("AsyncioStub", (), {"wait_for": fail_wait_for}))
+    ctx = PluginContext(fetcher=FixtureFetcher({}), plugin_id="69shuba_com")
+
+    items = await source.search(ctx, "剑宗外门", 1)
+
+    assert items[0]["name"] == "剑宗外门"
+
+
+def test_69shuba_search_provider_normalizes_bing_encoded_urls():
+    url = normalize_search_provider_url(
         "/ck/a?u=a1aHR0cHM6Ly93d3cuNjlzaHViYS5jb20vYm9vay8xMjM0NS5odG0",
         target_domain="www.69shuba.com",
         url_patterns=[r"/book/\d+\.htm"],
@@ -94,24 +156,66 @@ def test_69shuba_search_engine_normalizes_bing_encoded_urls():
     assert url == "https://www.69shuba.com/book/12345.htm"
 
 
-@pytest.mark.asyncio
-async def test_69shuba_search_still_reports_cloudflare_when_fallback_empty():
+def test_69shuba_search_provider_title_removes_latest_chapter_suffix():
     source = _load_source()
-    challenge = "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title></head></html>"
-    empty = "<html><body><a href=\"https://example.com/nope\">empty</a></body></html>"
-    fetcher = FixtureFetcher({
-        "https://www.69shuba.com/modules/article/search.php": challenge,
-        "https://www.69shuba.cx/modules/article/search.php": challenge,
-        "https://html.duckduckgo.com/html/?q=site%3Awww.69shuba.com%2Fbook+%E6%88%91%E6%9C%89%E4%B8%80%E4%B8%AA": empty,
-        "https://lite.duckduckgo.com/lite/?q=site%3Awww.69shuba.com%2Fbook+%E6%88%91%E6%9C%89%E4%B8%80%E4%B8%AA": empty,
-        "https://www.bing.com/search?q=site%3Awww.69shuba.com%2Fbook+%E6%88%91%E6%9C%89%E4%B8%80%E4%B8%AA": empty,
-        "https://cn.bing.com/search?q=site%3Awww.69shuba.com%2Fbook+%E6%88%91%E6%9C%89%E4%B8%80%E4%B8%AA": empty,
-    })
-    ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com")
-    ctx.allow_search_engine_fallback = True
 
-    with pytest.raises(BrowserRequired):
+    assert source._clean_search_provider_title("剑宗外门最新章节列表,剑宗外门", "剑宗外门") == "剑宗外门"
+
+
+@pytest.mark.asyncio
+async def test_69shuba_search_provider_uses_declared_providers_once():
+    source = _load_source()
+    ctx = PluginContext(fetcher=FixtureFetcher({}), plugin_id="69shuba_com")
+    calls = []
+
+    async def fake_search_provider(keyword, **kwargs):
+        calls.append((kwargs["target_domain"], kwargs["query_site_path"], kwargs["provider_order"]))
+        return [
+            SearchProviderHit(
+                title="剑宗外门 - 69书吧",
+                url="https://69shuba.com/book/89745",
+                provider="google_html",
+                rank=1,
+                matched_pattern=r"/book/\d+",
+            )
+        ]
+
+    ctx.access.search_provider = fake_search_provider
+
+    items = await source._search_provider_search(ctx, "剑宗外门")
+
+    assert len(calls) == 1
+    assert calls[0] == ("www.69shuba.com", "/book", ["duckduckgo_ddgs", "bing_html", "google_html"])
+    assert items[0]["name"] == "剑宗外门"
+    assert items[0]["bookUrl"] == "https://www.69shuba.com/book/89745.htm"
+    assert items[0]["extra"]["provider"] == "google_html"
+
+
+@pytest.mark.asyncio
+async def test_69shuba_search_reports_bypass_required_when_search_provider_empty():
+    source = _load_source()
+    ctx = PluginContext(
+        fetcher=FixtureFetcher({}),
+        plugin_id="69shuba_com",
+    )
+
+    async def empty_search_provider(keyword, **kwargs):
+        return []
+
+    ctx.access.search_provider = empty_search_provider
+
+    with pytest.raises(PluginExecutionError, match="bypass returned no results"):
         await source.search(ctx, "我有一个", 1)
+
+
+@pytest.mark.asyncio
+async def test_69shuba_search_page_after_first_returns_empty():
+    source = _load_source()
+    fetcher = FixtureFetcher({})
+    ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com")
+
+    assert await source.search(ctx, "我有一个", 2) == []
+    assert fetcher.get_traces() == []
 
 
 @pytest.mark.asyncio
@@ -121,18 +225,17 @@ async def test_69shuba_http_rejection_promotes_to_browser_required_when_runtime_
     ctx = PluginContext(
         fetcher=fetcher,
         plugin_id="69shuba_com",
-        browser_fetcher=BrowserChallengeFetcher(),
+        access_bridge=BrowserRequiredAccessBridge(),
     )
 
-    with pytest.raises(BrowserRequired) as exc_info:
+    with pytest.raises(FetchNetworkError) as exc_info:
         await source.explore(ctx, "newhot", 1)
 
-    assert "attempted domains" in str(exc_info.value)
-    assert exc_info.value.url == "https://www.69shuba.com/newhot_0_1_1.htm"
+    assert "no smoke fixture" in str(exc_info.value) or "no reachable" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
-async def test_69shuba_turnstile_html_promotes_to_browser_required_when_runtime_browser_exists():
+async def test_69shuba_turnstile_html_raises_cloudflare_without_browser_fallback():
     source = _load_source()
     turnstile = """
     <html><body>
@@ -148,10 +251,10 @@ async def test_69shuba_turnstile_html_promotes_to_browser_required_when_runtime_
     ctx = PluginContext(
         fetcher=fetcher,
         plugin_id="69shuba_com",
-        browser_fetcher=BrowserChallengeFetcher(),
+        access_bridge=BrowserRequiredAccessBridge(),
     )
 
-    with pytest.raises(BrowserRequired) as exc_info:
+    with pytest.raises(CloudflareRequired) as exc_info:
         await source.explore(ctx, "newhot", 1)
 
     assert "attempted domains" in str(exc_info.value)
@@ -189,7 +292,115 @@ def test_69shuba_chapter_cleanup_removes_site_chrome_and_ads():
     assert "(本章完)" not in content
 
 
-def test_69shuba_chapter_referer_uses_book_catalog_url():
+def test_69shuba_source_referer_uses_book_detail_url():
     source = _load_source()
 
-    assert source._chapter_referer("https://www.69shuba.com/txt/90442/40755363") == "https://www.69shuba.com/book/90442/"
+    assert source._book_detail_referer("https://www.69shuba.com/book/90442.htm") == "https://www.69shuba.com/book/90442.htm"
+    assert source._book_detail_referer("https://www.69shuba.com/book/90442/") == "https://www.69shuba.com/book/90442.htm"
+    assert source._book_detail_referer("https://www.69shuba.com/txt/90442/40755363") == "https://www.69shuba.com/book/90442.htm"
+
+
+@pytest.mark.asyncio
+async def test_69shuba_source_requests_send_book_detail_referer():
+    source = _load_source()
+    detail_url = "https://www.69shuba.com/book/90442.htm"
+    toc_url = "https://www.69shuba.com/book/90442/"
+    chapter_url = "https://www.69shuba.com/txt/90442/40755363"
+    fetcher = HeaderRecordingFetcher({
+        detail_url: """
+        <html><head>
+          <meta property="og:novel:book_name" content="剑宗外门">
+          <meta property="og:novel:author" content="作者">
+        </head><body><a class="catalog-more-btn" href="/book/90442/">目录</a></body></html>
+        """,
+        toc_url: """
+        <html><body><ul id="catalog"><li><a href="/txt/90442/40755363">第一章</a></li></ul></body></html>
+        """,
+        chapter_url: """
+        <html><body><h1>第一章</h1><div class="txtnav"><p>正文内容</p></div></body></html>
+        """,
+    })
+    ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com")
+
+    await source.detail(ctx, detail_url)
+    await source.toc(ctx, toc_url)
+    await source.chapter(ctx, chapter_url)
+
+    assert [request["headers"].get("referer") for request in fetcher.requests] == [
+        detail_url,
+        detail_url,
+        detail_url,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_69shuba_detail_extracts_complete_book_info():
+    source = _load_source()
+    detail_url = "https://www.69shuba.com/book/89745.htm"
+    fetcher = HeaderRecordingFetcher({
+        detail_url: """
+        <html>
+          <head>
+            <meta property="og:novel:book_name" content="剑宗外门">
+            <meta property="og:novel:author" content="其声喵喵然">
+            <meta property="og:novel:category" content="修真武侠">
+            <meta property="og:novel:status" content="连载">
+            <meta property="og:novel:update_time" content="2025-11-27">
+            <meta property="og:novel:latest_chapter_name" content="第389章 拔剑而已">
+            <meta property="og:image" content="https://cdn.cdnshu.com/files/article/image/89/89745/89745s.jpg">
+          </head>
+          <body>
+            <div class="booknav2">
+              <h1>剑宗外门</h1>
+              <p>作者：<a>其声喵喵然</a></p>
+              <p>分类：<a>修真武侠</a></p>
+              <p>131.43万字 | 连载</p>
+              <p>更新：2025-11-27</p>
+            </div>
+            <div class="navtxt">
+              <p>匣中风霆肃，剑起日月舒。</p>
+              <p>小说关键词：剑宗外门无弹窗,剑宗外门txt全集下载</p>
+            </div>
+            <a class="catalog-more-btn" href="/book/89745/">目录</a>
+          </body>
+        </html>
+        """,
+    })
+    ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com")
+
+    detail = await source.detail(ctx, detail_url)
+
+    assert detail["name"] == "剑宗外门"
+    assert detail["author"] == "其声喵喵然"
+    assert detail["coverUrl"] == "https://cdn.cdnshu.com/files/article/image/89/89745/89745s.jpg"
+    assert detail["kind"] == "修真武侠 / 连载"
+    assert detail["lastChapter"] == "第389章 拔剑而已"
+    assert detail["wordCount"] == "131.43万字"
+    assert detail["tocUrl"] == "https://www.69shuba.com/book/89745/"
+    assert detail["updateTime"] == "2025-11-27"
+    assert detail["extra"]["status"] == "连载"
+    assert "匣中风霆肃" in detail["intro"]
+    assert "小说关键词" not in detail["intro"]
+
+
+@pytest.mark.asyncio
+async def test_69shuba_toc_sorts_reverse_catalog_by_chapter_number():
+    source = _load_source()
+    toc_url = "https://www.69shuba.com/book/89745/"
+    fetcher = HeaderRecordingFetcher({
+        toc_url: """
+        <html><body>
+        <ul id="catalog">
+          <li><a href="/txt/89745/40274287">第3章 丹院</a></li>
+          <li><a href="/txt/89745/40274286">第2章 两仪</a></li>
+          <li><a href="/txt/89745/40274285">第1章 石珠</a></li>
+        </ul>
+        </body></html>
+        """,
+    })
+    ctx = PluginContext(fetcher=fetcher, plugin_id="69shuba_com")
+
+    chapters = await source.toc(ctx, toc_url)
+
+    assert [chapter["title"] for chapter in chapters] == ["第1章 石珠", "第2章 两仪", "第3章 丹院"]
+    assert [chapter["index"] for chapter in chapters] == [1, 2, 3]

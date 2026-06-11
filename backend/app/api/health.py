@@ -15,3 +15,5 @@ def health() -> dict:
 @router.get("/api/info")
 def api_info() -> dict:
     return get_app_info()
+
+

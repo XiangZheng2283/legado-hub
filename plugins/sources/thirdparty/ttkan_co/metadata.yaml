@@ -1,0 +1,35 @@
+contractVersion: "1.0"
+id: ttkan_co
+name: 天天看书网
+version: 0.1.0
+type: source
+domains:
+  - ttkan.co
+  - static.ttkan.co
+baseUrls:
+  - https://www.ttkan.co
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+  cookieDomains:
+    - ttkan.co
+content:
+  access: free
+enabled: true
+proxy:
+  mode: auto
+  required: false
+tags:
+  - html
+  - no-login
+  - amp
+enabled: true
+sourceSeed:
+  type: manual
+  upstreamId: ttkan.co
+  upstreamFile: ""
+  upstreamCommit: ""

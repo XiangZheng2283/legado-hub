@@ -59,6 +59,7 @@ def test_record_attempt(repo):
         proxy_used=False,
         latency_ms=123,
         error="",
+        result="",
     )
     attempts = repo.get_attempts("fixture_source")
     assert len(attempts) == 1
@@ -129,3 +130,9 @@ def test_no_old_table_references_in_active_code():
     assert "source_health" not in source
     assert "source_attempts" not in source
     assert "source_repository" not in source
+
+
+
+
+
+

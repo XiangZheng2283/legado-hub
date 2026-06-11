@@ -1,0 +1,25 @@
+{
+  "keyword": "剑宗外门",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "items": [
+    {
+      "pluginId": "69shuba_com",
+      "status": "passed",
+      "passed": true,
+      "exploreName": "",
+      "exploreContentLength": 0,
+      "searchCount": 8,
+      "selectedName": "剑宗外门",
+      "tocCount": 392,
+      "chapterContentLength": 3589,
+      "diagnostics": []
+    }
+  ],
+  "cookieClear": {
+    "clearedPlugins": [
+      "69shuba_com"
+    ]
+  }
+}

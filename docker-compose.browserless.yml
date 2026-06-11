@@ -1,0 +1,13 @@
+services:
+  browserless:
+    image: ghcr.io/browserless/chromium
+    container_name: legadohub-browserless
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      CONCURRENT: "2"
+      TIMEOUT: "90000"
+      TOKEN: "${LEGADOHUB_BROWSERLESS_TOKEN:-legadohub-local}"
+    volumes:
+      - ./backend/data/browser_profiles:/data/browser_profiles

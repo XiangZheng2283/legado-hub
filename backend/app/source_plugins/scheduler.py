@@ -25,7 +25,6 @@ from app.source_plugins.errors import (
     normalize_failure,
 )
 from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
-from app.services.browser_challenge import BrowserChallengeService
 
 
 class PluginScheduler:
@@ -55,12 +54,41 @@ class PluginScheduler:
             self._plugins = self.loader.load_all()
         except Exception:
             self._plugins = {}
+        # Sync enabled state from DB so all scheduler instances stay consistent
+        try:
+            from app.services.plugin_health_repository import PluginHealthRepository
+
+            repo = PluginHealthRepository()
+            for plugin_id, plugin in self._plugins.items():
+                health = repo.get_plugin(plugin_id)
+                if health is not None:
+                    plugin.metadata.enabled = health.get("enabled", plugin.metadata.enabled)
+        except Exception:
+            pass
 
     def reload(self) -> None:
         self._load_plugins()
 
     def _enabled_plugins(self) -> list[LoadedPlugin]:
         return [p for p in self._plugins.values() if p.metadata.enabled]
+
+    def _search_priority_plugins(self, plugins: list[LoadedPlugin]) -> list[LoadedPlugin]:
+        """Official sources are always searched first."""
+        return sorted(
+            plugins,
+            key=lambda plugin: (
+                0 if plugin.metadata.is_official_source() else 1,
+                plugin.metadata.name,
+                plugin.metadata.id,
+            ),
+        )
+
+    def _official_explore_plugins(self) -> list[LoadedPlugin]:
+        return [
+            p
+            for p in self._enabled_plugins()
+            if "explore" in p.capabilities and p.metadata.is_official_source()
+        ]
 
     def _make_fetcher(self, plugin: LoadedPlugin | None = None) -> Fetcher:
         proxy_url = ""
@@ -70,37 +98,25 @@ class PluginScheduler:
             proxy_url = proxy_cfg.get("url", "")
         return Fetcher(
             user_agent=self.config.get("default_user_agent", ""),
-            timeout=self.config.get("source_timeout_seconds", 8.0),
+            timeout=self.config.get("source_timeout_seconds", 20.0),
             proxy_url=proxy_url,
         )
 
     def _make_ctx(self, plugin_id: str) -> PluginContext:
         from app.services.plugin_auth_repository import PluginAuthRepository
-        from app.services.browser_fetch import BrowserFetchService
+        from app.services.access_bridge.client import AccessBridgeClient
 
         auth_repository = PluginAuthRepository()
         plugin = self._plugins.get(plugin_id)
-        proxy_url = self._proxy_url_for_plugin(plugin)
         ctx = PluginContext(
             fetcher=self._make_fetcher_with_cookies(plugin_id, auth_repository),
             plugin_id=plugin_id,
             auth_repository=auth_repository,
-            browser_fetcher=BrowserFetchService(
-                proxy_url=proxy_url,
-                user_agent=self.config.get("default_user_agent", ""),
-                cookies=auth_repository.get_cookies(plugin_id),
-            ),
+            access_bridge=AccessBridgeClient(),
         )
-        if plugin and (plugin.metadata.browser or {}).get("searchFallback") == "search_engine":
-            ctx.allow_search_engine_fallback = True
+        if plugin and plugin.metadata.uses_search_provider("search"):
+            ctx.allow_search_provider = True
         return ctx
-
-    def _proxy_url_for_plugin(self, plugin: LoadedPlugin | None = None) -> str:
-        try:
-            fetcher = self._make_fetcher(plugin)
-        except TypeError:
-            fetcher = self._make_fetcher()
-        return str(getattr(fetcher, "proxy_url", "") or "")
 
     def _make_fetcher_with_cookies(self, plugin_id: str, auth_repository) -> Fetcher:
         try:
@@ -113,21 +129,45 @@ class PluginScheduler:
                     fetcher.set_cookie(domain, name, value)
         return fetcher
 
+    def _positive_int(self, value: Any, default: int) -> int:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return default
+        return parsed if parsed > 0 else default
+
     def timeout_for_plugin(self, plugin: LoadedPlugin | None = None) -> float:
         if plugin and (plugin.metadata.browser or {}).get("mode") in {"required", "optional"}:
-            return float(self.config.get("browser_source_timeout_seconds", 90.0))
-        return float(self.config.get("source_timeout_seconds", 8.0))
+            return float(self.config.get("browser_source_timeout_seconds", 120.0))
+        return float(self.config.get("source_timeout_seconds", 20.0))
 
     def search_timeout_for_plugin(self, plugin: LoadedPlugin | None = None) -> float:
+        if plugin and plugin.metadata.uses_search_provider("search"):
+            return float(self.config.get("browser_search_timeout_seconds", 60.0))
         if plugin and (plugin.metadata.browser or {}).get("mode") in {"required", "optional"}:
-            return float(self.config.get("browser_search_timeout_seconds", 30.0))
-        return float(self.config.get("source_timeout_seconds", 8.0))
+            return float(self.config.get("browser_search_timeout_seconds", 60.0))
+        return float(self.config.get("source_timeout_seconds", 20.0))
 
     async def search(self, keyword: str, page: int = 1) -> dict:
-        plugins = self._enabled_plugins()
-        max_concurrency = self.config.get("max_concurrency", 6)
-        overall_timeout = self.config.get("overall_search_timeout_seconds", 30.0)
-        source_batch_size = self.config.get("source_batch_size", 20)
+        all_enabled = self._enabled_plugins()
+
+        # Filter out unreachable sources based on last ping
+        try:
+            from app.services.plugin_health_repository import PluginHealthRepository
+            repo = PluginHealthRepository()
+            enabled_ids = [p.metadata.id for p in all_enabled]
+            reachable_ids = set(repo.get_reachable_plugin_ids(enabled_ids))
+            plugins = [p for p in all_enabled if p.metadata.id in reachable_ids]
+            skipped_unreachable = len(all_enabled) - len(plugins)
+        except Exception:
+            plugins = all_enabled
+            skipped_unreachable = 0
+
+        plugins = self._search_priority_plugins(plugins)
+
+        max_concurrency = self._positive_int(self.config.get("max_concurrency"), 3)
+        overall_timeout = self.config.get("overall_search_timeout_seconds", 60.0)
+        source_batch_size = self._positive_int(self.config.get("source_batch_size"), 20)
 
         if not plugins:
             return {
@@ -136,7 +176,9 @@ class PluginScheduler:
                 "page": page,
                 "items": [],
                 "debug": {
-                    "sourceCount": 0,
+                    "sourceCount": len(all_enabled),
+                    "reachableCount": len(plugins),
+                    "skippedUnreachable": skipped_unreachable,
                     "attemptedCount": 0,
                     "successCount": 0,
                     "errorCount": 0,
@@ -150,7 +192,6 @@ class PluginScheduler:
 
         all_items: list[dict] = []
         errors: list[dict] = []
-        browser_challenges: list[dict] = []
         start_time = time.perf_counter()
         success_count = 0
         attempted_count = 0
@@ -175,6 +216,7 @@ class PluginScheduler:
                 for item in raw_items or []:
                     if isinstance(item, dict):
                         item.setdefault("sourceId", plugin.metadata.id)
+                        item.setdefault("sourceName", plugin.metadata.name)
                         items.append(item)
                 self._trace_success(ctx, plugin.metadata.id, "search", latency_ms)
                 return items, None
@@ -184,23 +226,16 @@ class PluginScheduler:
                 code = "PLUGIN_TIMEOUT"
                 message = "timeout"
                 if (plugin.metadata.browser or {}).get("mode") in {"required", "optional"}:
-                    challenge = BrowserChallengeService().create_for_plugin(
-                        plugin,
-                        stage="search",
-                        reason="BROWSER_REQUIRED",
-                        message="source timed out and may require browser verification",
-                    )
-                    extra["browserChallenge"] = challenge
-                    extra["requiresBrowserVerification"] = True
                     code = "BROWSER_REQUIRED"
-                    message = "timeout; browser verification may be required"
+                    message = "timeout; browser bypass required"
+                    extra["bypassRequired"] = True
                 err = {
                     **normalize_failure(
                         source_id=plugin.metadata.id,
                         stage="search",
                         code=code,
                         message=message,
-                        url=extra.get("browserChallenge", {}).get("openUrl", ""),
+                        url="",
                         extra=extra,
                     )
                 }
@@ -219,27 +254,38 @@ class PluginScheduler:
                 errors.append({"sourceId": "", "code": "PLUGIN_TIMEOUT", "stage": "search", "message": "overall timeout"})
                 break
 
-            tasks = [asyncio.create_task(_search_one(p)) for p in batch]
             attempted_count += len(batch)
+            pending_plugins = list(batch)
+            pending_tasks: set[asyncio.Task] = set()
+
+            def start_next_plugins() -> None:
+                while pending_plugins and len(pending_tasks) < max_concurrency:
+                    pending_tasks.add(asyncio.create_task(_search_one(pending_plugins.pop(0))))
+
+            start_next_plugins()
             try:
-                results = await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=max(0.1, overall_timeout - (time.perf_counter() - start_time)),
-                )
-            except asyncio.TimeoutError:
-                for task in tasks:
-                    if not task.done():
-                        task.cancel()
-                await asyncio.gather(*tasks, return_exceptions=True)
                 results = []
-                for task in tasks:
-                    if task.done() and not task.cancelled():
+                while pending_tasks:
+                    remaining_timeout = max(0.1, overall_timeout - (time.perf_counter() - start_time))
+                    done, pending_tasks = await asyncio.wait(
+                        pending_tasks,
+                        timeout=remaining_timeout,
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    if not done:
+                        raise asyncio.TimeoutError
+                    for task in done:
                         try:
                             results.append(task.result())
                         except Exception as e:
                             results.append(([], {"sourceId": "", "code": "PLUGIN_RUNTIME_ERROR", "stage": "search", "message": str(e)}))
-                    else:
-                        results.append(([], {"sourceId": "", "code": "PLUGIN_TIMEOUT", "stage": "search", "message": "overall timeout"}))
+                    start_next_plugins()
+            except asyncio.TimeoutError:
+                for task in pending_tasks:
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(*pending_tasks, return_exceptions=True)
+                results.append(([], {"sourceId": "", "code": "PLUGIN_TIMEOUT", "stage": "search", "message": "overall timeout"}))
 
             for result in results:
                 if isinstance(result, Exception):
@@ -251,36 +297,30 @@ class PluginScheduler:
                     continue
                 if err:
                     errors.append(err)
-                    challenge = err.get("extra", {}).get("browserChallenge")
-                    if challenge:
-                        browser_challenges.append(challenge)
                     if err.get("code") == "PLUGIN_TIMEOUT":
                         timeout_count += 1
                 if items:
                     success_count += 1
+                    for item in items:
+                        self._score_search_item(item, keyword)
                     all_items.extend(items)
 
-        # Merge by name+author, score, rewrite bookUrl
-        merged = self._merge_search_results(all_items)
-        from app.config import HOST, PORT
-        base_api = f"http://{HOST}:{PORT}"
-        for item in merged:
-            source_id = item.get("sourceId", "")
-            book_url = item.get("bookUrl", "")
-            if book_url:
-                book_id = encode_book_id(source_id, book_url)
-                item["bookUrl"] = f"{base_api}/api/legado/book/{book_id}"
+        items = self._source_result_items(all_items)
 
         elapsed_ms = int((time.perf_counter() - start_time) * 1000)
         partial_success = success_count > 0 and len(errors) > 0
 
+        total_enabled = len(all_enabled) if 'all_enabled' in locals() else len(plugins)
+        skipped = skipped_unreachable if 'skipped_unreachable' in locals() else 0
         return {
             "implemented": True,
             "keyword": keyword,
             "page": page,
-            "items": merged,
+            "items": items,
             "debug": {
-                "sourceCount": len(plugins),
+                "sourceCount": total_enabled,
+                "reachableCount": len(plugins),
+                "skippedUnreachable": skipped,
                 "batchSize": source_batch_size,
                 "batchCount": len(batches),
                 "attemptedCount": attempted_count,
@@ -290,7 +330,6 @@ class PluginScheduler:
                 "timeoutCount": timeout_count,
                 "elapsedMs": elapsed_ms,
                 "errors": errors,
-                "browserChallenges": browser_challenges,
                 "partialSuccess": partial_success,
             },
         }
@@ -312,7 +351,7 @@ class PluginScheduler:
             return {"implemented": True, "data": raw, "debug": {}}
         except Exception as exc:
             err = self._failure_for_exception(plugin, "detail", exc)
-            return {"implemented": True, "data": None, "debug": {"error": err, "browserChallenges": self._challenges_from_error(err)}}
+            return {"implemented": True, "data": None, "debug": {"error": err}}
         finally:
             await ctx._fetcher.close()
 
@@ -342,7 +381,7 @@ class PluginScheduler:
             return {"implemented": True, "bookId": "", "chapters": chapters, "debug": {}}
         except Exception as exc:
             err = self._failure_for_exception(plugin, "toc", exc)
-            return {"implemented": True, "bookId": "", "chapters": [], "debug": {"error": err, "browserChallenges": self._challenges_from_error(err)}}
+            return {"implemented": True, "bookId": "", "chapters": [], "debug": {"error": err}}
         finally:
             await ctx._fetcher.close()
 
@@ -358,19 +397,70 @@ class PluginScheduler:
             )
             if isinstance(raw, dict):
                 raw.setdefault("sourceId", source_id)
-                return {"implemented": True, "chapterId": "", "title": raw.get("title", ""), "content": raw.get("content", ""), "debug": {}}
+                debug = raw.get("debug", {}) if isinstance(raw.get("debug", {}), dict) else {}
+                return {
+                    "implemented": True,
+                    "chapterId": raw.get("chapterId", ""),
+                    "title": raw.get("title", ""),
+                    "content": raw.get("content", ""),
+                    "debug": debug,
+                }
             return {"implemented": True, "chapterId": "", "title": "", "content": "", "debug": {}}
         except Exception as exc:
             err = self._failure_for_exception(plugin, "chapter", exc)
-            return {"implemented": True, "chapterId": "", "title": "", "content": "", "debug": {"error": err, "browserChallenges": self._challenges_from_error(err)}}
+            return {"implemented": True, "chapterId": "", "title": "", "content": "", "debug": {"error": err}}
+        finally:
+            await ctx._fetcher.close()
+
+    async def chapter_reviews(self, source_id: str, chapter_url: str) -> dict:
+        plugin = self._plugins.get(source_id)
+        if not plugin or "chapter_reviews" not in plugin.capabilities:
+            return {
+                "implemented": True,
+                "paragraphs": {},
+                "chapterEnd": [],
+                "summary": {},
+                "debug": {"error": f"plugin not found or no chapter_reviews capability: {source_id}"},
+            }
+        ctx = self._make_ctx(source_id)
+        try:
+            raw = await asyncio.wait_for(
+                plugin.source.chapter_reviews(ctx, chapter_url),
+                timeout=self.timeout_for_plugin(plugin),
+            )
+            if not isinstance(raw, dict):
+                raw = {}
+            debug = raw.get("debug", {}) if isinstance(raw.get("debug", {}), dict) else {}
+            return {
+                "implemented": True,
+                "paragraphs": raw.get("paragraphs", {}),
+                "chapterEnd": raw.get("chapterEnd", []),
+                "summary": raw.get("summary", {}),
+                "debug": debug,
+            }
+        except Exception as exc:
+            err = self._failure_for_exception(plugin, "chapter_reviews", exc)
+            return {
+                "implemented": True,
+                "paragraphs": {},
+                "chapterEnd": [],
+                "summary": {},
+                "debug": {"error": err},
+            }
         finally:
             await ctx._fetcher.close()
 
     async def explore_groups(self, source_id: str | None = None) -> dict:
-        plugins = self._enabled_plugins()
+        unsupported_reason = ""
+        plugins = self._official_explore_plugins()
         if source_id:
             plugin = self._plugins.get(source_id)
-            plugins = [plugin] if plugin and plugin.metadata.enabled else []
+            if plugin and plugin.metadata.enabled and "explore" in plugin.capabilities and plugin.metadata.is_official_source():
+                plugins = [plugin]
+            else:
+                plugins = []
+                if plugin and "explore" in plugin.capabilities and not plugin.metadata.is_official_source():
+                    unsupported_reason = "普通书源不提供排行榜/分类，聚合源排行榜后续仅使用正版书源。"
         groups: list[dict] = []
         errors: list[dict] = []
         start_time = time.perf_counter()
@@ -405,11 +495,29 @@ class PluginScheduler:
                 "errorCount": len(errors),
                 "elapsedMs": int((time.perf_counter() - start_time) * 1000),
                 "errors": errors,
+                "unsupportedReason": unsupported_reason,
             },
         }
 
     async def explore(self, source_id: str, group_id: str | None = None, page: int = 1) -> dict:
         plugin = self._plugins.get(source_id)
+        if plugin and "explore" in plugin.capabilities and not plugin.metadata.is_official_source():
+            return {
+                "implemented": True,
+                "sourceId": source_id,
+                "groupId": group_id or "",
+                "page": page,
+                "items": [],
+                "debug": {
+                    "error": {
+                        "sourceId": source_id,
+                        "stage": "explore",
+                        "code": "EXPLORE_OFFICIAL_SOURCE_REQUIRED",
+                        "message": "普通书源不提供排行榜/分类，聚合源排行榜后续仅使用正版书源。",
+                    },
+                    "errors": [],
+                },
+            }
         if not plugin or "explore" not in plugin.capabilities:
             return {
                 "implemented": True,
@@ -448,7 +556,7 @@ class PluginScheduler:
             return {"implemented": True, "sourceId": source_id, "groupId": group_id or "", "page": page, "items": [], "debug": {"error": err, "errors": [err]}}
         except Exception as exc:
             err = self._failure_for_exception(plugin, "explore", exc)
-            return {"implemented": True, "sourceId": source_id, "groupId": group_id or "", "page": page, "items": [], "debug": {"error": err, "errors": [err], "browserChallenges": self._challenges_from_error(err)}}
+            return {"implemented": True, "sourceId": source_id, "groupId": group_id or "", "page": page, "items": [], "debug": {"error": err, "errors": [err]}}
         finally:
             await ctx._fetcher.close()
 
@@ -477,25 +585,55 @@ class PluginScheduler:
             repo.record_failure(plugin_id, first_error.get("stage", "smoke"), first_error.get("message", "smoke failed"))
         return result
 
-    def _merge_search_results(self, items: list[dict]) -> list[dict]:
-        groups: dict[tuple[str, str], list[dict]] = {}
-        for item in items:
-            key = (item.get("name", "").strip(), item.get("author", "").strip())
-            groups.setdefault(key, []).append(item)
-        merged: list[dict] = []
-        for key, group_items in groups.items():
-            if len(group_items) == 1:
-                merged.append(group_items[0])
-                continue
-            best = max(group_items, key=lambda x: x.get("score", 0))
-            sources_info = ", ".join(
-                f"{g.get('sourceId','')}" for g in group_items
+    def _score_search_item(self, item: dict, keyword: str) -> dict:
+        score = 0
+        name = item.get("name", "")
+        kw = keyword.lower()
+        name_lower = name.lower()
+        # Title match
+        if kw == name_lower:
+            score += 200
+        elif kw in name_lower:
+            score += 100
+        # Field completeness bonus
+        if item.get("author"):
+            score += 10
+        if item.get("lastChapter"):
+            score += 5
+        if item.get("intro"):
+            score += 3
+        if item.get("coverUrl"):
+            score += 3
+        if item.get("kind"):
+            score += 2
+        if item.get("wordCount"):
+            score += 2
+        if item.get("updateTime"):
+            score += 1
+        item["score"] = score
+        return item
+
+    def _source_result_items(self, items: list[dict]) -> list[dict]:
+        from app.config import HOST, PORT
+
+        base_api = f"http://{HOST}:{PORT}"
+        source_items = [dict(item) for item in items if isinstance(item, dict)]
+        source_items.sort(
+            key=lambda item: (
+                -item.get("score", 0),
+                item.get("name", ""),
+                item.get("sourceName", "") or item.get("sourceId", ""),
             )
-            best = dict(best)
-            intro = best.get("intro", "")
-            best["intro"] = f"{intro} [来源: {sources_info}]" if intro else f"[来源: {sources_info}]"
-            merged.append(best)
-        return merged
+        )
+        for item in source_items:
+            source_id = item.get("sourceId", "")
+            raw_book_url = item.get("rawBookUrl") or item.get("bookUrl", "")
+            if raw_book_url and "/api/legado/book/" not in raw_book_url:
+                book_id = encode_book_id(source_id, raw_book_url)
+                item["bookId"] = book_id
+                item["rawBookUrl"] = raw_book_url
+                item["bookUrl"] = f"{base_api}/api/legado/book/{book_id}"
+        return source_items
 
     def _trace_success(self, ctx: PluginContext, plugin_id: str, stage: str, latency_ms: int) -> None:
         ctx.trace(stage, message=f"success {latency_ms}ms")
@@ -508,15 +646,8 @@ class PluginScheduler:
         url = getattr(exc, "url", "") or ""
         extra: dict[str, Any] = {}
         if code in {"CLOUDFLARE_REQUIRED", "BROWSER_REQUIRED"}:
-            challenge = BrowserChallengeService().create_for_plugin(
-                plugin,
-                stage=stage,
-                url=url,
-                reason=code,
-                message=str(exc),
-            )
-            extra["browserChallenge"] = challenge
-            extra["requiresBrowserVerification"] = True
+            extra["bypassRequired"] = True
+            extra["bypassStrategy"] = "skip_source_until_bypass_available"
         if getattr(exc, "status_code", None):
             extra["statusCode"] = getattr(exc, "status_code")
         return normalize_failure(
@@ -527,7 +658,3 @@ class PluginScheduler:
             url=url,
             extra=extra,
         )
-
-    def _challenges_from_error(self, err: dict) -> list[dict]:
-        challenge = err.get("extra", {}).get("browserChallenge") if isinstance(err, dict) else None
-        return [challenge] if challenge else []

@@ -8,11 +8,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from app.config import DB_PATH
+from app.services.novel_file_cache import NovelFileCache
 
 
 class Cache:
     def __init__(self, db_path: Path | None = None):
         self.db_path = db_path or DB_PATH
+        self.file_cache = NovelFileCache(root=self.db_path.parent / "novels")
 
     def _conn(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
@@ -36,6 +38,9 @@ class Cache:
         if row and self._is_fresh(row[1], 600):
             data = json.loads(row[0])
             if not data.get("items") and data.get("debug", {}).get("errorCount", 0):
+                return None
+            # Skip job-filtered results so they do not interfere with Catalog.search
+            if data.get("debug", {}).get("scoreFilter") is not None:
                 return None
             return data
         return None
@@ -89,15 +94,39 @@ class Cache:
             row = conn.execute(
                 "SELECT response_json, created_at FROM chapter_cache WHERE chapter_id=?", (chapter_id,)
             ).fetchone()
-        if row and self._is_fresh(row[1], 604800):
+        if row and self._is_fresh(row[1], 86400):
             return json.loads(row[0])
         return None
 
     def set_chapter(self, chapter_id: str, source_id: str, chapter_url: str, data: dict) -> None:
         with self._conn() as conn:
+            file_result = self.file_cache.write_chapter(
+                conn=conn,
+                chapter_id=chapter_id,
+                source_id=source_id,
+                chapter_url=chapter_url,
+                title=data.get("title", ""),
+                content=data.get("content", ""),
+            )
             conn.execute(
-                "INSERT OR REPLACE INTO chapter_cache (chapter_id, source_id, chapter_url, response_json, created_at) VALUES (?, ?, ?, ?, ?)",
-                (chapter_id, source_id, chapter_url, json.dumps(data, ensure_ascii=False), self._now()),
+                """
+                INSERT OR REPLACE INTO chapter_cache
+                (chapter_id, source_id, chapter_url, response_json, book_id, book_name,
+                 chapter_title, file_path, content_hash, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    chapter_id,
+                    source_id,
+                    chapter_url,
+                    json.dumps(data, ensure_ascii=False),
+                    file_result.get("bookId", ""),
+                    file_result.get("bookName", ""),
+                    file_result.get("chapterTitle", data.get("title", "")),
+                    file_result.get("filePath", ""),
+                    file_result.get("contentHash", ""),
+                    self._now(),
+                ),
             )
             conn.commit()
 
@@ -135,3 +164,5 @@ class Cache:
                 (plugin_id, proxy_mode, proxy_status, last_direct_error, last_proxy_error, int(last_success_via_proxy), self._now()),
             )
             conn.commit()
+
+

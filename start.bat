@@ -22,6 +22,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo Installing Playwright Chromium runtime...
+.venv\Scripts\python.exe -m playwright install chromium
+if errorlevel 1 (
+    echo Failed to install Playwright Chromium.
+    pause
+    exit /b 1
+)
+
 if exist "frontend\package.json" (
     echo.
     echo Building console frontend...
@@ -57,6 +65,9 @@ echo.
 echo LegadoHub console URL:
 echo   Local: http://127.0.0.1:8765/console
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ips = @(); try { $ips = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } | Select-Object -ExpandProperty IPAddress -Unique } catch { $ips = @() }; foreach ($ip in $ips) { Write-Host ('  LAN:   http://' + $ip + ':8765/console') }; if (-not $ips) { Write-Host '  LAN:   No active LAN IPv4 address detected.' }"
+echo.
+echo Source Access Bridge:
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$provider = $env:LEGADOHUB_BROWSER_PROVIDER; if ([string]::IsNullOrWhiteSpace($provider)) { $provider = 'chromium' }; $enabled = $env:LEGADOHUB_BROWSER_ENABLED; if ($enabled -match '^(0|false|no|off)$') { Write-Host '  Source Access Bridge: disabled' } elseif ($provider -eq 'browserless') { $ws = $env:LEGADOHUB_BROWSERLESS_WS; if ([string]::IsNullOrWhiteSpace($ws)) { Write-Host '  Source Access Bridge: browserless selected but endpoint is empty' } else { Write-Host '  Source Access Bridge: browserless'; try { $uri = [Uri]$ws; $hostName = $uri.Host; $port = if ($uri.Port -gt 0) { $uri.Port } elseif ($uri.Scheme -eq 'wss') { 443 } else { 80 }; $ok = Test-NetConnection -ComputerName $hostName -Port $port -InformationLevel Quiet -WarningAction SilentlyContinue; if ($ok) { Write-Host ('  Browserless: reachable ' + $hostName + ':' + $port) } else { Write-Host ('  Browserless: not reachable ' + $hostName + ':' + $port) } } catch { Write-Host '  Browserless: configured but URL could not be parsed' } } } else { Write-Host '  Source Access Bridge: embedded Chromium' }; $base = $env:LEGADOHUB_BROWSER_PUBLIC_BASE_URL; if ([string]::IsNullOrWhiteSpace($base)) { Write-Host '  Public base URL: request host / relative actions' } else { Write-Host ('  Public base URL: ' + $base.TrimEnd('/')) }"
 echo.
 echo Import one of the URLs above in Legado after the server starts.
 echo If Legado runs on a phone, use a LAN URL instead of 127.0.0.1.

@@ -75,6 +75,33 @@ CREATE TABLE IF NOT EXISTS search_cache (
     PRIMARY KEY (keyword, page)
 );
 
+CREATE TABLE IF NOT EXISTS search_jobs (
+    job_id TEXT PRIMARY KEY,
+    keyword TEXT NOT NULL,
+    page INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    created_at REAL,
+    sources_json TEXT,
+    result_json TEXT,
+    candidate_groups_json TEXT,
+    error_count INTEGER DEFAULT 0,
+    success_count INTEGER DEFAULT 0,
+    completed_count INTEGER DEFAULT 0,
+    timeout_count INTEGER DEFAULT 0,
+    elapsed_ms INTEGER DEFAULT 0,
+    cancel_requested INTEGER DEFAULT 0,
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS search_job_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id TEXT NOT NULL,
+    event_index INTEGER NOT NULL,
+    event_json TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(job_id, event_index)
+);
+
 CREATE TABLE IF NOT EXISTS book_cache (
     book_id TEXT PRIMARY KEY,
     source_id TEXT,
@@ -94,6 +121,11 @@ CREATE TABLE IF NOT EXISTS chapter_cache (
     source_id TEXT,
     chapter_url TEXT,
     response_json TEXT,
+    book_id TEXT,
+    book_name TEXT,
+    chapter_title TEXT,
+    file_path TEXT,
+    content_hash TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -138,6 +170,7 @@ CREATE TABLE IF NOT EXISTS plugin_attempts (
     proxy_used INTEGER DEFAULT 0,
     latency_ms INTEGER,
     error TEXT,
+    result TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -190,6 +223,37 @@ CREATE TABLE IF NOT EXISTS plugin_live_checks (
     error_json TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS aggregate_book_tasks (
+    aggregate_book_id TEXT PRIMARY KEY,
+    name TEXT,
+    author TEXT,
+    aggregate_payload_json TEXT,
+    primary_book_id TEXT,
+    status TEXT DEFAULT 'active',
+    interval_minutes INTEGER DEFAULT 30,
+    last_check_time TEXT,
+    next_check_time TEXT,
+    error_count INTEGER DEFAULT 0,
+    last_error TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
+    chapter_id TEXT PRIMARY KEY,
+    aggregate_book_id TEXT NOT NULL,
+    source_chapter_id TEXT,
+    chapter_index INTEGER,
+    title TEXT,
+    status TEXT DEFAULT 'pending',
+    content_length INTEGER DEFAULT 0,
+    processed_content TEXT,
+    last_processed_at TEXT,
+    error TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 CURRENT_PLUGIN_HEALTH_COLUMNS = {
@@ -208,7 +272,27 @@ CURRENT_PLUGIN_HEALTH_COLUMNS = {
     "proxy_mode": "TEXT DEFAULT 'auto'",
     "proxy_status": "TEXT",
     "last_test_result_json": "TEXT",
+    "ping_status": "TEXT DEFAULT 'unknown'",
+    "ping_latency_ms": "INTEGER",
+    "last_ping_at": "TEXT",
     "updated_at": "TEXT DEFAULT (datetime('now'))",
+}
+
+CURRENT_AGGREGATE_CHAPTER_TASK_COLUMNS = {
+    "processed_content": "TEXT",
+    "chapter_index": "INTEGER",
+}
+
+CURRENT_CHAPTER_CACHE_COLUMNS = {
+    "book_id": "TEXT",
+    "book_name": "TEXT",
+    "chapter_title": "TEXT",
+    "file_path": "TEXT",
+    "content_hash": "TEXT",
+}
+
+CURRENT_PLUGIN_ATTEMPTS_COLUMNS = {
+    "result": "TEXT",
 }
 
 
@@ -224,6 +308,27 @@ def ensure_current_schema(conn: sqlite3.Connection) -> None:
         if column_name in existing_columns:
             continue
         conn.execute(f"ALTER TABLE plugin_health ADD COLUMN {column_name} {column_sql}")
+
+    rows = conn.execute("PRAGMA table_info(aggregate_chapter_tasks)").fetchall()
+    existing_columns = {row[1] for row in rows}
+    for column_name, column_sql in CURRENT_AGGREGATE_CHAPTER_TASK_COLUMNS.items():
+        if column_name in existing_columns:
+            continue
+        conn.execute(f"ALTER TABLE aggregate_chapter_tasks ADD COLUMN {column_name} {column_sql}")
+
+    rows = conn.execute("PRAGMA table_info(chapter_cache)").fetchall()
+    existing_columns = {row[1] for row in rows}
+    for column_name, column_sql in CURRENT_CHAPTER_CACHE_COLUMNS.items():
+        if column_name in existing_columns:
+            continue
+        conn.execute(f"ALTER TABLE chapter_cache ADD COLUMN {column_name} {column_sql}")
+
+    rows = conn.execute("PRAGMA table_info(plugin_attempts)").fetchall()
+    existing_columns = {row[1] for row in rows}
+    for column_name, column_sql in CURRENT_PLUGIN_ATTEMPTS_COLUMNS.items():
+        if column_name in existing_columns:
+            continue
+        conn.execute(f"ALTER TABLE plugin_attempts ADD COLUMN {column_name} {column_sql}")
 
 
 def initialize_database(db_path: Path | None = None) -> str:

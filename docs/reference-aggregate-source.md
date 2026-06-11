@@ -40,16 +40,35 @@ LegadoHub 后续也应生成一个“单书源聚合壳”，让阅读端只导�
 - 聚合 API 地址应集中写入 `jsLib` 或变量，不要散落在每个规则里。
 - 服务端返回结构要尽量稳定，避免频繁修改阅读端规则。
 - 大量业务逻辑应放在 LegadoHub 服务端，书源 JS 只做请求、编码、解析和必要兼容。
-- 搜索、排行、详情、目录和正文响应可能返回 `debug.browserChallenges`。
-  阅读端或外部客户端应优先使用
-  `/api/browser/challenges/{session_id}/open` 打开统一验证入口。
-  验证完成后 Browser Bridge 可通过
-  `/api/browser/challenges/{session_id}/callback` 回调同一个会话；
-  手动场景仍可使用 `/api/browser/challenges/{session_id}/cookies`
-  提交验证 Cookie。旧的 Console 和 `/api/legado/browser-challenges/*`
-  端点可作为兼容别名，并可使用
-  `/api/legado/browser-challenges/{session_id}/retry-live-check` 重试排行榜阅读闭环；
-  后台控制台仍可作为人工验证入口。
+- 搜索 URL 的等待时间应与后端整体搜索窗口平齐。当前聚合源使用
+  `waitMs=180000`，后端 `/api/legado/search` 也允许最多等待 180000ms。若
+  命中整词缓存，阅读端应直接返回缓存结果，并在后台异步刷新缓存；若没有缓存，
+  再进入实时搜索等待窗口。
+- 阅读端导入书源时使用的 `base_api` 必须贯穿搜索、详情、目录和章节返回。
+  如果用户从局域网地址导入，后续 `bookUrl`、`tocUrl`、`chapterUrl` 也必须
+  使用同一个可访问的局域网地址，不能回落到 `127.0.0.1`。
+- 完整搜索页和换源页的展示字段要分开：`kind` 保留分类、状态、标签等书籍
+  元数据；换源页需要的来源展示通过 `readingSourceName` 与
+  `readingLastChapter` 承载。`readingLastChapter` 推荐格式为
+  `书源 · 最新章节`，作者继续走标准 `author` 字段，避免阅读端把作者误拼到
+  最新章节列中。
+- 搜索、排行、详情、目录和正文遇到 Cloudflare 或浏览器挑战时，不再向阅读端返回手动验证入口。
+  服务端会在 `debug.errors[]` 或诊断信息中标记 `bypassRequired`，当前请求跳过该源；
+  后续应通过后端绕过策略、浏览器模拟能力或其他可维护方案恢复，而不是让用户逐源验证。
+
+## 付费聚合源经验
+
+- 参考源通常不会把真实站点 URL 直接暴露给阅读端，而是用
+  `data:...;base64,...` 包装搜索、详情、目录、正文阶段的内部 payload。
+  下一阶段规则再解包 payload 并请求服务端接口。
+- 搜索结果直接映射真实书籍字段：`name` 是书名，`author` 是作者，
+  `lastChapter` 拼接来源和最新章节，`kind`/`intro` 承载分类、状态、简介等
+  信息，避免阅读端把聚合源名或搜索提供器名误当成书名。
+- 搜索页拿不到的最新章节、分类、字数、连载状态，应在详情阶段补齐；
+  对 LegadoHub 的 Python 书源插件来说，这个补齐必须发生在插件自己的
+  `search()` 中，通常通过同源 `detail()` 解析器完成。
+- 风控降级顺序应是普通 HTTP 搜索、浏览器能力、站内排行榜/分类兜底。
+  降级仍必须返回可验证的真实字段，不能伪造缺失信息。
 
 ## 后续待办
 

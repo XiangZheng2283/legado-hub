@@ -67,20 +67,24 @@ def test_plugin_auth():
     items = list_res.json().get("items", [])
     if not items:
         pytest.skip("No plugins installed")
-    plugin_id = items[0]["pluginId"]
+    candidate = next(
+        (item for item in items if item.get("auth", {}).get("mode") == "none" and item.get("official") is False),
+        None,
+    )
+    if candidate is None:
+        pytest.skip("No ordinary no-auth plugin found")
+    plugin_id = candidate["pluginId"]
     res = client.get(f"/api/console/plugins/{plugin_id}/auth")
     assert res.status_code == 200
     assert "authenticated" in res.json()
     assert res.json()["mode"] == "none"
 
 
-def test_browser_required_plugin_auth_returns_verification_challenge(monkeypatch, tmp_path):
+def test_browser_required_plugin_auth_returns_bypass_required(monkeypatch, tmp_path):
     import app.api.console as console_api
-    from app.services.browser_challenge import BrowserChallengeService
     from app.services.plugin_auth_repository import PluginAuthRepository
 
     repo = PluginAuthRepository(tmp_path / "auth.db")
-    monkeypatch.setattr(console_api, "_browser_challenge_service", BrowserChallengeService(auth_repository=repo))
     monkeypatch.setattr(console_api, "PluginAuthRepository", lambda: repo)
 
     res = client.get("/api/console/plugins/69shuba_com/auth")
@@ -88,37 +92,29 @@ def test_browser_required_plugin_auth_returns_verification_challenge(monkeypatch
     assert res.status_code == 200
     data = res.json()
     assert data["sourceId"] == "69shuba_com"
-    assert data["mode"] == "browser_verification"
-    assert data["verificationStatus"] == "required"
-    assert data["requiredActions"] == ["browser_verification"]
-    assert data["browserChallenges"][0]["openUrl"] == "https://www.69shuba.com/newhot_0_1_1.htm"
-    assert data["browserChallenges"][0]["cookieDomains"] == [
-        "69shuba.com",
-        "69shuba.cx",
-        "www.69shuba.com",
-        "www.69shuba.cx",
-    ]
+    assert data["mode"] == "none"
+    assert data["message"] == "该插件无需登录"
+    assert data["requiredActions"] == []
+    assert "browserChallenges" not in data
 
 
-def test_browser_required_plugin_auth_reports_saved_cookies(monkeypatch, tmp_path):
+def test_plugin_auth_reports_saved_cookies_for_no_auth_plugin(monkeypatch, tmp_path):
     import app.api.console as console_api
-    from app.services.browser_challenge import BrowserChallengeService
     from app.services.plugin_auth_repository import PluginAuthRepository
 
     repo = PluginAuthRepository(tmp_path / "auth.db")
     repo.set_cookies("69shuba_com", {"69shuba.com": {"cf_clearance": "ok"}})
-    monkeypatch.setattr(console_api, "_browser_challenge_service", BrowserChallengeService(auth_repository=repo))
     monkeypatch.setattr(console_api, "PluginAuthRepository", lambda: repo)
 
     res = client.post("/api/console/plugins/69shuba_com/auth/check")
 
     assert res.status_code == 200
     data = res.json()
-    assert data["mode"] == "browser_verification"
-    assert data["verificationStatus"] == "cookies_saved"
+    assert data["mode"] == "none"
+    assert data["message"] == "该插件无需登录"
     assert data["hasCookies"] is True
-    assert data["requiredActions"] == ["retry_live_check"]
-    assert data["browserChallenges"] == []
+    assert data["requiredActions"] == []
+    assert "browserChallenges" not in data
 
 
 def test_plugin_login_and_cookie_clear():
@@ -137,7 +133,18 @@ def test_plugin_login_and_cookie_clear():
     assert clear_res.json()["cleared"] is True
 
 
-def test_plugin_live_check_preserves_browser_challenges(monkeypatch):
+def test_official_sources_endpoint_lists_qidian():
+    res = client.get("/api/console/official-sources")
+    assert res.status_code == 200
+    data = res.json()
+    assert "items" in data
+    qidian = next((item for item in data["items"] if item["pluginId"] == "qidian_com"), None)
+    assert qidian is not None
+    assert qidian["official"] is True
+    assert qidian["auth"]["mode"] == "optional"
+
+
+def test_plugin_live_check_preserves_bypass_diagnostics(monkeypatch):
     import app.api.console as console_api
 
     class FakeLiveAcceptance:
@@ -146,14 +153,12 @@ def test_plugin_live_check_preserves_browser_challenges(monkeypatch):
                 "pluginId": kwargs["plugin_id"],
                 "status": "failed",
                 "passed": False,
-                "diagnostics": [{"stage": "runtime", "code": "BROWSER_REQUIRED", "message": "browser verification required"}],
-                "browserChallenges": [
-                    {
-                        "stage": "runtime",
-                        "reason": "BROWSER_REQUIRED",
-                        "openUrl": "https://www.69shuba.com/newhot_0_1_1.htm",
-                    }
-                ],
+                "diagnostics": [{
+                    "stage": "runtime",
+                    "code": "BROWSER_REQUIRED",
+                    "message": "browser bypass required",
+                    "extra": {"bypassRequired": True},
+                }],
             }
 
     monkeypatch.setattr(console_api, "_live_acceptance_service", FakeLiveAcceptance())
@@ -163,7 +168,8 @@ def test_plugin_live_check_preserves_browser_challenges(monkeypatch):
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "failed"
-    assert data["browserChallenges"][0]["openUrl"] == "https://www.69shuba.com/newhot_0_1_1.htm"
+    assert data["diagnostics"][0]["extra"]["bypassRequired"] is True
+    assert "browserChallenges" not in data
 
 
 def test_status_endpoint():
@@ -187,9 +193,59 @@ def test_cache_endpoint():
     assert "searchCache" in data
 
 
+def test_cache_items_endpoint():
+    res = client.get("/api/console/cache/items")
+    assert res.status_code == 200
+    data = res.json()
+    assert "books" in data
+    assert "tocs" in data
+    assert "chapters" in data
+    assert "searches" in data
+
+
 def test_settings_endpoint():
     res = client.get("/api/console/settings")
     assert res.status_code == 200
+    assert "contentWorkflow" in res.json()
+
+
+def test_update_settings_persists_source_pool_and_refreshes_runtime(monkeypatch, tmp_path):
+    import json
+    from types import SimpleNamespace
+    import app.api.console as console_api
+
+    source_pool_path = tmp_path / "source_pool.json"
+    source_pool_path.write_text(
+        json.dumps({"max_concurrency": 3, "source_timeout_seconds": 15.0}),
+        encoding="utf-8",
+    )
+    plugin_scheduler = SimpleNamespace(config={})
+    search_service = SimpleNamespace(scheduler=SimpleNamespace(config={}))
+    monkeypatch.setattr(console_api, "SOURCE_POOL_CONFIG_PATH", source_pool_path)
+    monkeypatch.setattr(console_api, "_plugin_scheduler", plugin_scheduler)
+    monkeypatch.setattr(console_api, "_search_service", search_service)
+
+    payload = {
+        "sourcePool": {
+            "source_timeout_seconds": 18.0,
+            "overall_search_timeout_seconds": 60.0,
+            "browser_search_timeout_seconds": 55.0,
+            "browser_source_timeout_seconds": 150.0,
+        }
+    }
+
+    res = client.post("/api/console/settings", json=payload)
+
+    assert res.status_code == 200
+    assert res.json()["saved"] is True
+    saved = json.loads(source_pool_path.read_text(encoding="utf-8"))
+    assert saved["max_concurrency"] == 3
+    assert saved["source_timeout_seconds"] == 18.0
+    assert saved["overall_search_timeout_seconds"] == 60.0
+    assert saved["browser_search_timeout_seconds"] == 55.0
+    assert saved["browser_source_timeout_seconds"] == 150.0
+    assert plugin_scheduler.config["source_timeout_seconds"] == 18.0
+    assert search_service.scheduler.config["browser_source_timeout_seconds"] == 150.0
 
 
 def test_aggregate_source_endpoint():
@@ -197,3 +253,268 @@ def test_aggregate_source_endpoint():
     assert res.status_code == 200
     data = res.json()
     assert "generated_path" in data
+
+
+# ------------------------------------------------------------------
+# Official Source Login API tests (mocked, no real private package)
+# ------------------------------------------------------------------
+
+class TestOfficialSourceLoginCapabilities:
+    """GET /api/console/official-sources/{plugin_id}/login-capabilities"""
+
+    def test_no_private_package(self, monkeypatch):
+        import app.api.console as console_api
+
+        monkeypatch.setattr(
+            console_api.official_auth_manager,
+            "capabilities",
+            lambda _pid: {
+                "pluginId": "qidian_com",
+                "methods": ["cookie"],
+                "defaultMethod": "cookie",
+                "privateFeatures": {
+                    "phoneAuth": False,
+                    "cookieAuth": False,
+                    "reviews": False,
+                },
+                "hasPrivatePackage": False,
+            },
+        )
+
+        res = client.get("/api/console/official-sources/qidian_com/login-capabilities")
+        assert res.status_code == 200
+        data = res.json()
+        assert "cookie" in data["methods"]
+        assert data["defaultMethod"] == "cookie"
+        assert data["privateFeatures"]["phoneAuth"] is False
+        assert data["privateFeatures"]["cookieAuth"] is False
+        assert data["hasPrivatePackage"] is False
+
+    def test_with_phone_auth(self, monkeypatch):
+        import app.api.console as console_api
+
+        monkeypatch.setattr(
+            console_api.official_auth_manager,
+            "capabilities",
+            lambda _pid: {
+                "pluginId": "qidian_com",
+                "methods": ["phone", "cookie"],
+                "defaultMethod": "phone",
+                "privateFeatures": {
+                    "phoneAuth": True,
+                    "cookieAuth": False,
+                    "reviews": False,
+                },
+                "hasPrivatePackage": True,
+            },
+        )
+
+        res = client.get("/api/console/official-sources/qidian_com/login-capabilities")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["methods"][0] == "phone"
+        assert "cookie" in data["methods"]
+        assert data["defaultMethod"] == "phone"
+        assert data["privateFeatures"]["phoneAuth"] is True
+
+    def test_qidian_public_fallback_capability_shape(self, monkeypatch):
+        """Phone can be exposed via public fallback while privateFeatures.phoneAuth stays false."""
+        import app.api.console as console_api
+
+        monkeypatch.setattr(
+            console_api.official_auth_manager,
+            "capabilities",
+            lambda _pid: {
+                "pluginId": "qidian_com",
+                "methods": ["phone", "cookie"],
+                "defaultMethod": "phone",
+                "privateFeatures": {
+                    "phoneAuth": False,
+                    "cookieAuth": False,
+                    "reviews": False,
+                },
+                "hasPrivatePackage": False,
+            },
+        )
+
+        res = client.get("/api/console/official-sources/qidian_com/login-capabilities")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["methods"][0] == "phone"
+        assert "cookie" in data["methods"]
+        assert data["defaultMethod"] == "phone"
+        assert data["privateFeatures"]["phoneAuth"] is False
+        assert data["hasPrivatePackage"] is False
+
+
+class TestOfficialSourceCookieVerify:
+    """POST /api/console/official-sources/{plugin_id}/login/cookie/verify"""
+
+    def test_missing_cookie_text(self):
+        res = client.post("/api/console/official-sources/qidian_com/login/cookie/verify", json={})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is False
+        assert "缺少 Cookie 文本" in data["error"]
+
+    def test_verify_cookie_calls_manager(self, monkeypatch):
+        import app.api.console as console_api
+
+        calls = []
+
+        async def mock_verify_cookie(plugin_id: str, cookie_text: str):
+            calls.append({"plugin_id": plugin_id, "cookie_text": cookie_text})
+            return {
+                "ok": True,
+                "authenticated": True,
+                "accountName": "test_user",
+                "message": "Cookie 有效",
+                "hasCookies": True,
+                "cookieDomains": ["qidian.com"],
+            }
+
+        monkeypatch.setattr(console_api.official_auth_manager, "verify_cookie", mock_verify_cookie)
+
+        res = client.post(
+            "/api/console/official-sources/qidian_com/login/cookie/verify",
+            json={"cookieText": "ywguid=abc; ywkey=def"},
+        )
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is True
+        assert data["authenticated"] is True
+        assert data["accountName"] == "test_user"
+        assert data["message"] == "Cookie 有效"
+        assert len(calls) == 1
+        assert calls[0]["plugin_id"] == "qidian_com"
+
+
+class TestOfficialSourcePhoneRequestCode:
+    """POST /api/console/official-sources/{plugin_id}/login/phone/request-code"""
+
+    def test_missing_phone(self):
+        res = client.post(
+            "/api/console/official-sources/qidian_com/login/phone/request-code",
+            json={},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is False
+        assert "缺少手机号" in data["error"]
+
+    def test_full_payload_forwarded(self, monkeypatch):
+        import app.api.console as console_api
+
+        captured = []
+
+        def mock_request_phone_code(plugin_id: str, payload: dict):
+            captured.append(payload)
+            return {"ok": True, "sessionId": "sess_123", "nextAction": "verify_code"}
+
+        monkeypatch.setattr(
+            console_api.official_auth_manager, "request_phone_code", mock_request_phone_code
+        )
+
+        res = client.post(
+            "/api/console/official-sources/qidian_com/login/phone/request-code",
+            json={
+                "phone": "13800138000",
+                "sessionId": "abc",
+                "challengeToken": "ticket123",
+                "challengeRandstr": "@rand",
+            },
+        )
+
+        assert res.status_code == 200
+        assert res.json()["ok"] is True
+        assert len(captured) == 1
+        payload = captured[0]
+        assert payload["phone"] == "13800138000"
+        assert payload["sessionId"] == "abc"
+        assert payload["challengeToken"] == "ticket123"
+        assert payload["challengeRandstr"] == "@rand"
+
+    def test_challenge_response_passed_through(self, monkeypatch):
+        import app.api.console as console_api
+
+        monkeypatch.setattr(
+            console_api.official_auth_manager,
+            "request_phone_code",
+            lambda _pid, _payload: {
+                "ok": False,
+                "sessionId": "abc",
+                "nextAction": "complete_challenge",
+                "challenge": {"type": "official_webview"},
+            },
+        )
+
+        res = client.post(
+            "/api/console/official-sources/qidian_com/login/phone/request-code",
+            json={"phone": "13800138000"},
+        )
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is False
+        assert data["nextAction"] == "complete_challenge"
+        assert data["challenge"]["type"] == "official_webview"
+
+
+class TestOfficialSourcePhoneVerify:
+    """POST /api/console/official-sources/{plugin_id}/login/phone/verify"""
+
+    def test_verify_phone(self, monkeypatch):
+        import app.api.console as console_api
+
+        calls = []
+
+        def mock_verify_phone_code(plugin_id: str, payload: dict):
+            calls.append(payload)
+            return {
+                "ok": True,
+                "authenticated": True,
+                "accountName": "foo",
+                "message": "登录成功",
+                "hasCookies": True,
+            }
+
+        monkeypatch.setattr(
+            console_api.official_auth_manager, "verify_phone_code", mock_verify_phone_code
+        )
+
+        res = client.post(
+            "/api/console/official-sources/qidian_com/login/phone/verify",
+            json={"sessionId": "sess_123", "phone": "13800138000", "code": "123456"},
+        )
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is True
+        assert data["authenticated"] is True
+        assert data["accountName"] == "foo"
+        assert data["message"] == "登录成功"
+        assert len(calls) == 1
+
+
+class TestOfficialSourceLogout:
+    """POST /api/console/official-sources/{plugin_id}/login/logout"""
+
+    def test_logout(self, monkeypatch):
+        import app.api.console as console_api
+
+        calls = []
+
+        def mock_logout(plugin_id: str):
+            calls.append(plugin_id)
+            return {"ok": True, "message": "登录状态已清除"}
+
+        monkeypatch.setattr(console_api.official_auth_manager, "logout", mock_logout)
+
+        res = client.post("/api/console/official-sources/qidian_com/login/logout")
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is True
+        assert data["message"] == "登录状态已清除"
+        assert calls == ["qidian_com"]

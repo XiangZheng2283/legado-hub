@@ -94,7 +94,7 @@ Required field rules:
 - `contractVersion`: must be `"1.0"` for Stage 1.
 - `id`: stable ASCII identifier, unique across all plugins.
 - `name`: Chinese display name when available.
-- `version`: plugin version.
+- `version`: plugin version in SemVer-like form (e.g. `0.1.0`). Bumped whenever parsing rules, domain profiles, or access strategy change.
 - `type`: must be `source`.
 - `domains`: domains this plugin is allowed or expected to access.
 - `baseUrls`: starting URLs for this site or site family.
@@ -102,6 +102,13 @@ Required field rules:
 - `auth.mode`: one of `none`, `optional`, `required`, `manual`.
 - `content.access`: one of `free`, `paid`, `mixed`, `unknown`.
 - `tags`: operational hints.
+
+`explore` covers ranking, category, hot-list, completed-list, and other discovery
+surfaces. It is only allowed for official/licensed sources. A source is treated
+as official when it has the `official` tag or `content.sourceRole: official`.
+Ordinary mirror/scraper sources must expose only `search`, `detail`, `toc`, and
+`chapter`; they must not declare ranking or category capabilities even if the
+site has those pages.
 
 Optional fields:
 
@@ -113,20 +120,21 @@ rateLimit:
   perHostConcurrency: 1
   minIntervalMs: 800
 proxy:
-  mode: auto
-  required: false
+  mode: auto        # never / auto / always
+  required: false   # true / false
 browser:
-  mode: manual
-  reason: login_or_verification
+  mode: optional    # none / optional / required
+  reason: cloudflare
 accessStrategy:
-  search: search_engine
+  search: search_provider
   detail: stealth_http
   toc: stealth_http
   chapter: stealth_http
-searchEngine:
+searchProvider:
   providerOrder:
-    - duckduckgo_html
+    - duckduckgo_ddgs
     - bing_html
+    - google_html
   targetDomain: www.example.com
   urlPatterns:
     - /book/\d+\.htm
@@ -150,14 +158,33 @@ sourceSeed:
   upstreamCommit: ""
 ```
 
+`enabled`: whether the source is enabled by default after loading. The console can toggle this per-source.
+
+`proxy.mode`:
+- `never`: never use the configured runtime proxy.
+- `auto`: try direct first, fallback to proxy on failure.
+- `always`: always route through the configured proxy.
+
+`proxy.required`: if `true`, the source is expected to fail without a working proxy.
+
+`browser.mode`:
+- `none`: no browser rendering.
+- `optional`: try HTTP/stealth first, fallback to `ctx.access.browser` on challenge/JS-rendered pages.
+- `required`: always use `ctx.access.browser.fetch_*`.
+
+`browser.reason`: short diagnostic label such as `cloudflare`, `js_rendered`, or `login`.
+
 `accessStrategy` is the optional final runtime route for each source lifecycle
-stage. Valid routes are `http`, `stealth_http`, `search_engine`, `browser`, and
-`cf_challenge`. A finished source should declare the intended route instead of
+stage. Valid routes are `http`, `stealth_http`, `tls_impersonate`,
+`search_provider`, `headless_browser`, `remote_browser`, `api`, `feed`, and
+`local_file`. A finished source should declare the intended route instead of
 keeping hidden permanent fallback chains.
 
-`searchEngine` is optional Browser Bridge search-engine configuration. Browser
-Bridge owns Bing/DuckDuckGo/other search-engine parsing; individual source
-plugins should only map returned hits into source result objects.
+`searchProvider` is optional Source Access Bridge search-provider configuration.
+DuckDuckGo uses the DDGS library provider. Bing and Google use HTTP result-page
+providers. Declared providers are executed in parallel; the runtime does not add
+implicit fallback providers. Individual source plugins should only map returned
+hits into source result objects.
 
 ## source.py Class
 
@@ -170,7 +197,13 @@ class Source:
     id = "qidian"
     name = "起点中文网"
     contract_version = "1.0"
+    last_modified = "2026-06-09"
 ```
+
+- `id`: stable ASCII identifier, must match the directory name and `metadata.yaml`.
+- `name`: Chinese display name.
+- `contract_version`: must be `"1.0"` for Stage 1.
+- `last_modified`: ISO-8601 date (`YYYY-MM-DD`) indicating the last time the plugin logic was verified or updated. The console UI displays this for operators to spot stale sources.
 
 Lifecycle methods must be async when declared in metadata capabilities:
 
@@ -250,7 +283,7 @@ expect:
     titleContains: 第
 ```
 
-Fixture files live under `tests/fixtures/` inside the plugin directory. URLs in `fixtures.*.url` must match the URLs requested by the plugin parser exactly. The fixture runner replaces network fetch with fixture fetch, but the plugin still calls only `ctx.fetch_text`, `ctx.fetch_json`, or `ctx.fetch_bytes`.
+Fixture files live under `tests/fixtures/` inside the plugin directory. URLs in `fixtures.*.url` must match the URLs requested by the plugin parser exactly. The fixture runner replaces network fetch with fixture fetch, but the plugin still calls only `ctx.access.http.fetch_text`, `ctx.access.http.fetch_json`, or `ctx.access.http.fetch_bytes`.
 
 Smoke result shape:
 
@@ -287,13 +320,69 @@ Search result:
     "bookUrl": "https://...",
     "coverUrl": "https://...",
     "intro": "简介",
-    "kind": "分类/状态/来源",
+    "kind": "分类/状态/标签",
     "lastChapter": "最新章节",
     "wordCount": "123万字",
     "score": 0.0,
     "extra": {},
 }
 ```
+
+Search result completeness is a source-plugin responsibility, not a scheduler
+responsibility. A plugin should parse standard fields directly from the search
+page whenever possible. If the search page does not expose `lastChapter`,
+`author`, `coverUrl`, `intro`, `kind`, `wordCount`, or `updateTime`, the
+plugin's own `search()` method must use the same source's `detail()` parser to
+fill the missing fields for the returned candidates, usually the first few exact
+or high-confidence matches. The runtime scheduler must not silently complete
+business fields because single-source tests need to reveal source-specific
+parser defects.
+
+`kind` is reserved for book metadata that Reading can render as badges on the
+full search page: category, status, tags, audience, rating, or other stable book
+attributes. Do not put the source display name in `kind`, and do not return
+generic provider labels such as `搜索提供器` as `kind`. LegadoHub's aggregate
+source exposes source display through Reading-facing fields such as
+`readingSourceName` and `readingLastChapter`, while preserving `kind` for
+category/status/word-count style metadata.
+
+When the aggregate source returns results, the runtime may write the original
+`sourceName` into `kind` (for example `"笔趣阁22 / 玄幻"`) so Reading can show
+the origin source for each result. Source plugins should not pre-populate `kind`
+with the source name; leave that to the runtime or use it for real category/status
+metadata.
+
+The Reading search page should receive enough data to look useful without first
+opening detail: `name`, `author`, `coverUrl`, `intro`, `kind`, `lastChapter`,
+and `wordCount` should be populated whenever the source exposes them. If the
+search page omits latest chapter, category, word count, or serial/completion
+status but the detail page contains them, the plugin must enrich the returned
+search candidates by calling its own `detail()` parser. This enrichment belongs
+to the source plugin, not to the scheduler.
+
+When detail enrichment is needed, keep it source-local and bounded:
+
+- Enrich only candidates that already have a stable `bookUrl`.
+- Prefer exact title matches before broad search results.
+- Use a short timeout or catch failures so a detail-page failure does not erase
+  a valid search result.
+- Only fill fields that are empty; do not overwrite better search-page values
+  unless the source has a clear reason.
+- Mark source-local enrichment in `extra.detailEnriched = true` when useful for
+  diagnostics.
+
+For unstable searches, source plugins should degrade in this order: normal HTTP
+search first, then browser-backed fetching when configured and available, then a
+site-local ranking/category fallback that can still locate the requested title.
+If all stable routes fail, return an empty list with diagnostics rather than
+fabricated metadata.
+
+A common implementation pattern is a private `_search_from_explore(ctx, keyword)`
+method that scans the site's ranking, category, or recent-update pages for books
+whose title contains the keyword. The main `search()` method tries the primary
+search endpoint first and falls back to this helper when the primary endpoint
+returns no results or fails. This fallback is local to the plugin and does not
+require external search providers.
 
 Explore group:
 
@@ -345,14 +434,24 @@ Book detail:
     "bookUrl": "https://...",
     "coverUrl": "https://...",
     "intro": "简介",
-    "kind": "分类/状态/来源",
+    "kind": "分类/状态/标签",
     "lastChapter": "最新章节",
     "wordCount": "123万字",
+    "updateTime": "2026-06-08",
     "tocUrl": "https://...",
     "authRequired": False,
     "extra": {},
 }
 ```
+
+Book detail should be as complete as the page allows because Reading/Legado maps
+these fields directly through `ruleBookInfo`. `name`, `author`, `bookUrl`, and
+`tocUrl` are the baseline. `coverUrl`, `intro`, `kind`, `lastChapter`,
+`wordCount`, and `updateTime` should be populated whenever visible in HTML/JSON
+or stable meta tags. Source-specific useful values such as `status`, raw tags, or
+rating should go under `extra` instead of replacing the standard fields.
+Plugins should clean SEO keyword tails, duplicate labels, and site chrome from
+`intro`.
 
 TOC item:
 
@@ -369,6 +468,26 @@ TOC item:
 }
 ```
 
+`toc()` must return chapters in **normal reading order** (chapter 1 first, latest
+chapter last). If a site lists chapters in reverse order (latest first), the
+plugin is responsible for reversing the list before returning. The runtime and
+reading client do not attempt to auto-detect or fix chapter ordering.
+
+`toc()` must return the complete readable catalog that the site exposes. Many
+novel sites render a short static catalog containing only early chapters plus
+recent chapters, then load the complete catalog through an AJAX/API endpoint,
+pagination, or a "load more" script. Plugins must prefer the complete catalog
+endpoint when present and treat the static head/tail preview as a fallback only.
+If no complete catalog is available, the plugin should return the best available
+list and trace the limitation. Do not report a preview list as a successful full
+catalog.
+
+Catalog parsers should deduplicate by chapter URL, remove `#` and navigation
+links, and sort by explicit chapter number when the site can toggle between
+normal and reverse order. A valid parser should preserve preface/extra chapters
+when they are part of the actual reading order, but should exclude separate
+"latest updates", recommendations, and related-book blocks.
+
 Chapter content:
 
 ```python
@@ -383,6 +502,20 @@ Chapter content:
     "extra": {},
 }
 ```
+
+`format` is `"text"` for plain-text paragraphs separated by `\n\n`.
+Plugins should pass raw chapter HTML through `ctx.clean_html()` to remove
+scripts, ads, and site chrome before returning. Do not return raw HTML
+with `format: "html"` unless the downstream consumer explicitly requires it.
+
+Chapter content best practices:
+
+1. **Preserve paragraphs** — convert `<br>` to `\n` and extract `<p>` tags as paragraphs joined by `\n\n`. If the site uses bare text nodes with `<br>`, split on blank lines after replacing `<br>`.
+2. **Merge pagination** — many chapter pages are split into `_1.html`, `_2.html`, etc. Follow `下一章` / `下一页` / `#next_url` only while the URL stem matches the original chapter; stop when it points to the next chapter.
+3. **Remove page markers** — strip `(1/3)`, `(2/3)`, `（第2页）` from the title.
+4. **Clean ads aggressively** — remove `script/style/iframe/ins/nav/header/footer`, ad containers (`.contentadv`, `.bottom-ad`, `#txtright`), and short text nodes containing slogans such as "最新网址", "加入书签", "返回目录", "本章结束", or site names.
+5. **Treat empty/polluted content as invalid** — do not return or cache obviously broken chapters. Return an empty string and trace the failure instead.
+6. **Prefer API/AJAX/get endpoints** when available. Common signals are script variables, network paths containing `api`, `ajax`, `chapterlist`, `chapters`, `content`, `reader`, or mobile/AMP endpoints. Document any successful or failed probe in `ctx.trace()` so the next adapter pass does not repeat blind guesswork.
 
 Auth status:
 
@@ -411,26 +544,42 @@ Login preparation:
 
 ## Runtime Context API
 
-Network:
+Network (all access goes through ``ctx.access`` sub-facades):
 
 ```python
-await ctx.fetch_text(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, browser=False, wait_ms=2500)
-await ctx.fetch_json(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None)
-await ctx.fetch_bytes(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None)
-await ctx.fetch_many(requests, limit=None)
+# Direct HTTP (httpx / curl_cffi)
+await ctx.access.http.fetch_text(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, proxy=True)
+await ctx.access.http.fetch_json(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, proxy=True)
+await ctx.access.http.fetch_bytes(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, proxy=True)
+
+# Stealth HTTP — browser-like headers + TLS impersonation (default chrome120)
+await ctx.access.stealth.fetch_text(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, proxy=True)
+await ctx.access.stealth.fetch_json(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, proxy=True)
+await ctx.access.stealth.fetch_bytes(url, method="GET", params=None, data=None, json=None, headers=None, timeout=None, impersonate=None, proxy=True)
+
+# Browser rendering — Playwright-backed headless Chromium
+await ctx.access.browser.fetch_text(url, method="GET", headers=None, data=None, wait_ms=2500, timeout_ms=90000)
+await ctx.access.browser.fetch_json(url, method="GET", headers=None, data=None, wait_ms=2500, timeout_ms=90000)
+await ctx.access.browser.fetch_bytes(url, method="GET", headers=None, data=None, wait_ms=2500, timeout_ms=90000)
+
+# Search provider — DDGS / Bing / Google
+await ctx.access.search_provider(keyword, target_domain=..., url_patterns=..., provider_order=...)
 ```
 
-`impersonate` is an optional runtime-controlled browser fingerprint hint for
-special sites. It currently uses the backend Fetcher implementation and may
-require `curl_cffi`. Plugins may request it, but they still must not create
-their own HTTP/proxy sessions.
+`ctx.access.http` is the default path for ordinary requests.
 
-`browser=True` requests a runtime-owned headless browser fetch. This is for
-sites where cookies alone are insufficient and the response depends on a real
-browser context, such as Aegis-style verification. Runtime owns Playwright
-process creation, proxy, timeout, temporary browser profile cleanup, and
-challenge classification. Plugins may request browser fetching but must not
-launch Playwright, store browser profiles, or override concurrency/retry policy.
+`ctx.access.stealth` adds browser fingerprint headers and TLS impersonation
+(uses `curl_cffi`). Plugins should use this for sites that block bare HTTP
+clients.
+
+`ctx.access.browser` uses Playwright Chromium for full browser rendering.
+Use this only when JavaScript execution or complex challenge handling is
+required. Runtime owns process lifecycle, proxy, timeout, profile cleanup,
+and challenge classification. Plugins must not launch their own Playwright
+instances.
+
+There is **no automatic fallback** between layers. Plugins must explicitly
+choose the access layer that matches their need.
 
 Parsing:
 
@@ -454,6 +603,40 @@ ctx.trace(stage, url="", message="", data=None)
 ctx.cache_get(key)
 ctx.cache_set(key, value, ttl_seconds)
 ```
+
+Text conversion (Traditional ↔ Simplified Chinese):
+
+```python
+ctx.to_simplified(value)
+ctx.to_traditional(value)
+```
+
+For sites that serve Traditional Chinese (e.g. `69shuba.tw`, `twkan.com`),
+plugins **must** apply bidirectional conversion:
+
+1. **Input side** — convert the user keyword to Traditional before searching:
+   ```python
+   search_keyword = ctx.to_traditional(keyword)
+   html = await ctx.access.http.fetch_text(
+       f"{self.base_url}/search?kw={search_keyword}"
+   )
+   ```
+2. **Output side** — convert every text field returned by the site to Simplified:
+   ```python
+   return {
+       "name": ctx.to_simplified(name),
+       "author": ctx.to_simplified(author),
+       "intro": ctx.to_simplified(intro),
+       "kind": ctx.to_simplified(kind),
+       "lastChapter": ctx.to_simplified(last),
+       # ...
+   }
+   ```
+
+All user-facing string fields (`name`, `author`, `intro`, `kind`,
+`lastChapter`, `title`, `content`, `groupTitle`, etc.) must go through
+`ctx.to_simplified()`.  Internal values such as URLs, IDs, and timestamps
+should not be converted.
 
 Auth/session:
 
@@ -504,71 +687,45 @@ The plugin contract supports them through:
 - `authRequired`, `isVip`, `isLocked`, and `isPaid` output fields.
 - console UI actions for "打开登录", "检测登录状态", "清除 Cookie", "重试章节".
 
-### Browser Challenge Sessions
+### Browser Challenge Bypass
 
-Cloudflare and similar browser challenges are recoverable runtime states, not
-ordinary parser failures. When `ctx.fetch_text/json/bytes` or plugin code raises
-`CLOUDFLARE_REQUIRED` / `BROWSER_REQUIRED`, the scheduler must create a browser
-challenge session and expose it in:
+Cloudflare and similar browser challenges are treated as bypass-required source
+failures. When `ctx.access.http.fetch_text/json/bytes` or plugin code raises
+`CLOUDFLARE_REQUIRED` / `BROWSER_REQUIRED`, the scheduler records a normalized
+failure with `extra.bypassRequired = true` and skips that source for the current
+request.
 
-- `debug.errors[].extra.browserChallenge`
-- `debug.browserChallenges[]`
-- console search job `source_done` / `source_error` events
-- Reading-compatible aggregate API responses under `/api/legado/*`
-
-The standard challenge shape is:
-
-```json
-{
-  "sessionId": "uuid",
-  "sourceId": "69shuba_com",
-  "sourceName": "69书吧",
-  "type": "cloudflare",
-  "reason": "CLOUDFLARE_REQUIRED",
-  "stage": "search",
-  "status": "pending",
-  "openUrl": "https://www.69shuba.com",
-  "cookieDomains": ["69shuba.com", "www.69shuba.com"],
-  "actions": {
-    "submitCookies": "/api/console/browser-challenges/{sessionId}/cookies",
-    "status": "/api/console/browser-challenges/{sessionId}",
-    "openBrowser": "/api/console/browser-challenges/{sessionId}/browser/open",
-    "browserStatus": "/api/console/browser-challenges/{sessionId}/browser/status",
-    "importBrowserCookies": "/api/console/browser-challenges/{sessionId}/browser/import-cookies",
-    "retryLiveCheck": "/api/console/browser-challenges/{sessionId}/retry-live-check",
-    "retryHint": "完成验证并提交 Cookie 后，重新发起搜索、详情、目录或正文请求。"
-  }
-}
-```
-
-Runtime owns the browser challenge lifecycle. A plugin may declare
+Runtime no longer creates browser challenge sessions, verification pages,
+Reading callback URLs, or Cookie round-trip APIs. A plugin may declare
 `browser.mode: required` and may raise the structured error, but it must not own
 browser process control, retry scheduling, concurrency, timeout, proxy, cache, or
-cookie persistence policy. After a user completes verification in a real
-browser, the console or compatible client submits browser cookies to
-`POST /api/console/browser-challenges/{sessionId}/cookies`. Runtime stores those
-cookies in `PluginAuthRepository`; subsequent calls for that plugin receive the
-stored cookies automatically.
+cookie persistence policy.
 
-For local console usage, runtime may also launch a controlled visible browser
-helper through `POST /api/console/browser-challenges/{sessionId}/browser/open`.
-The helper is outside the plugin sandbox: it opens the challenge URL in a real
-browser, periodically writes browser cookies to a local challenge file, and the
-console imports those cookies through
-`POST /api/console/browser-challenges/{sessionId}/browser/import-cookies`. This
-keeps browser control, cookie persistence, and post-verification retry owned by
-LegadoHub core rather than by source plugins.
+Browser simulation remains a backend-owned capability for maintainable bypass
+strategies, stealth HTTP, search-provider access, and controlled rendering. It
+is not a user-facing manual verification environment.
 
-When the runtime source pool proxy is enabled, the helper browser must use the
-same proxy server. This keeps proxy policy centralized in runtime and avoids
-special sites such as `twkan.com` or `69shuba.com` silently switching between
-different network paths during browser verification.
+Some sites require browser context for normal reads. For these, metadata may
+declare `browser.mode: required`, and plugin code may use
+`ctx.access.browser.fetch_text(...)`. Runtime gives these sources a separate
+`browser_source_timeout_seconds` budget while ordinary HTTP sources keep the
+normal `source_timeout_seconds` budget.
 
-Some sites require browser context for normal reads, not only for manual
-challenge recovery. For these, metadata may declare `browser.mode: required`,
-and plugin code may use `ctx.fetch_text(..., browser=True)`. Runtime gives these
-sources a separate `browser_source_timeout_seconds` budget while ordinary HTTP
-sources keep the normal `source_timeout_seconds` budget.
+For search specifically, source plugins that encounter challenge pages or
+unstable direct HTML should degrade in this order unless a source documents a
+better site-specific route:
+
+1. Normal source search through the declared access layer.
+2. Browser-rendered search for the same site search URL when a challenge or
+   JavaScript-rendered result page is detected.
+3. Source-local discovery fallback such as the site's own ranking, category,
+   recent-update, or complete-book pages.
+4. External search provider fallback only as a final source-owned bypass, and
+   only when the plugin declares and maps that provider explicitly.
+
+HTTP 200 responses can still be challenge pages. Plugins should check returned
+HTML for Cloudflare/Turnstile/browser-challenge markers before treating a parse
+miss as an empty result.
 
 Stage 1 requirement:
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { Puzzle, BookOpen, Activity, AlertTriangle } from "lucide-react"
+import { Puzzle, Power, PowerOff } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -40,7 +40,6 @@ export function Dashboard() {
 
   const stats = data || {}
   const pluginStats = stats.pluginStats || stats.plugins || {}
-  const sourceStats = stats.sourceStats || {}
 
   return (
     <div className="space-y-4">
@@ -49,11 +48,10 @@ export function Dashboard() {
         <Badge variant="outline">{stats.phase || "plugin-runtime-stage-3"}</Badge>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="插件总数" value={pluginStats.total || 0} icon={Puzzle} />
-        <StatCard label="已启用插件" value={pluginStats.enabled || 0} icon={BookOpen} />
-        <StatCard label="健康插件" value={pluginStats.healthy || 0} icon={Activity} />
-        <StatCard label="需要代理" value={pluginStats.proxyNeeded || 0} icon={AlertTriangle} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="书源总数" value={pluginStats.total || 0} icon={Puzzle} />
+        <StatCard label="已启用" value={pluginStats.enabled || 0} icon={Power} />
+        <StatCard label="禁用" value={pluginStats.disabled || 0} icon={PowerOff} />
       </div>
 
       <Card>
@@ -64,7 +62,6 @@ export function Dashboard() {
           <div className="text-sm text-muted-foreground space-y-1">
             <p>版本: {stats.version || "0.1.0"}</p>
             <p>阶段: {stats.phase || "plugin-runtime-stage-3"}</p>
-            <p>书源总数 (兼容): {sourceStats.total ?? "-"}</p>
           </div>
         </CardContent>
       </Card>

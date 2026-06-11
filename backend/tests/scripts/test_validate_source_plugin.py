@@ -45,3 +45,9 @@ def test_validate_source_plugin_rejects_missing_fixture(tmp_path):
     errors = validate_plugin(plugin_dir)
 
     assert any("chapter.html" in error for error in errors)
+
+
+
+
+
+

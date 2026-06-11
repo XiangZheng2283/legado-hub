@@ -49,3 +49,5 @@ def _default_config() -> dict:
 def _now() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat()
+
+

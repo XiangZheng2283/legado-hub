@@ -625,3 +625,4 @@ Stage 3 should focus on:
 4. Add candidate verification drawer.
 5. Repair live plugins until at least 3 real sources pass content validation.
 6. Make live acceptance part of final verification reports.
+

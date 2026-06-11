@@ -113,3 +113,9 @@ async def test_smoke_fail_chapter_too_short(failing_chapter_plugin):
     result = await run_smoke(failing_chapter_plugin, ctx, keyword="test")
     assert result["pass"] is False
     assert any("short" in (e.get("message", "")).lower() for e in result["errors"])
+
+
+
+
+
+

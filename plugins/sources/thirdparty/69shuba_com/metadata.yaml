@@ -1,0 +1,78 @@
+contractVersion: "1.0"
+id: 69shuba_com
+name: 69书吧
+version: 0.1.0
+type: source
+enabled: true
+domains:
+  - 69shuba.com
+  - 69shuba.cx
+baseUrls:
+  - https://www.69shuba.com
+  - https://www.69shuba.cx
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+  cookieDomains:
+    - 69shuba.com
+    - www.69shuba.com
+    - 69shuba.cx
+    - www.69shuba.cx
+content:
+  access: free
+proxy:
+  mode: always
+  required: true
+accessBridge:
+  search:
+    providers:
+      - duckduckgo_ddgs
+      - bing_html
+      - google_html
+accessStrategy:
+  search: search_provider
+  detail: stealth_http
+  toc: stealth_http
+  chapter: stealth_http
+searchProvider:
+  providerOrder:
+    - duckduckgo_ddgs
+    - bing_html
+    - google_html
+  targetDomain: www.69shuba.com
+  querySitePath: /book
+  urlPatterns:
+    - /(?:book|txt)/\d+\.htm
+    - /book/\d+
+tags:
+  - html
+  - no-login
+  - proxy
+  - cloudflare
+  - impersonate
+domainProfiles:
+  - id: primary
+    baseUrl: https://www.69shuba.com
+    domains:
+      - www.69shuba.com
+      - 69shuba.com
+    role: desktop
+    fallback: true
+  - id: mirror_cx
+    baseUrl: https://www.69shuba.cx
+    domains:
+      - www.69shuba.cx
+      - 69shuba.cx
+    role: mirror
+    fallback: true
+sourceSeed:
+  type: legado
+  upstreamId: 69shuba_com
+  upstreamFile: by-site/legado/69shuba.com.json
+  upstreamCommit: ""
+
+

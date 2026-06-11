@@ -1,5 +1,6 @@
 """FastAPI app factory and route registration."""
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,7 +8,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app import config
-from app.api import health, legado, console, browser
+from app.api import health, legado, console
+from app.services.aggregate_processor import AggregateProcessor
+from app.services.source_ping_scheduler import SourcePingScheduler
 from app.storage.db import initialize_database
 
 FRONTEND_DIST = config.FRONTEND_DIST_DIR
@@ -16,7 +19,23 @@ FRONTEND_DIST = config.FRONTEND_DIST_DIR
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_database()
-    yield
+    stop_event = asyncio.Event()
+    aggregate_task = asyncio.create_task(AggregateProcessor().run_forever(stop_event))
+    ping_task = asyncio.create_task(SourcePingScheduler().run_forever(stop_event))
+    try:
+        yield
+    finally:
+        stop_event.set()
+        aggregate_task.cancel()
+        ping_task.cancel()
+        try:
+            await aggregate_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await ping_task
+        except asyncio.CancelledError:
+            pass
 
 
 def create_app() -> FastAPI:
@@ -24,7 +43,6 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(legado.router)
     app.include_router(console.console_router)
-    app.include_router(browser.router)
     # Serve React console frontend.
     if FRONTEND_DIST.exists():
         app.mount("/console-static", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="console-static")
@@ -52,3 +70,5 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+

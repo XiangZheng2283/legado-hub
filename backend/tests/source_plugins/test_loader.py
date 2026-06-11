@@ -98,7 +98,7 @@ def test_declared_capability_without_method_fails(tmp_path):
 
 
 def test_explore_requires_groups_and_items_methods(tmp_path):
-    _write_plugin(tmp_path, "bad_explore", ["explore"])
+    _write_plugin(tmp_path, "bad_explore", ["explore"], extra_meta={"tags": ["official"]})
     (tmp_path / "bad_explore" / "source.py").write_text(
         'class Source:\n'
         '    id = "bad_explore"\n'
@@ -164,3 +164,9 @@ def test_duplicate_plugin_id_fails(tmp_path):
     with pytest.raises(PluginValidationError) as exc_info:
         loader.load_all()
     assert "Duplicate" in str(exc_info.value)
+
+
+
+
+
+

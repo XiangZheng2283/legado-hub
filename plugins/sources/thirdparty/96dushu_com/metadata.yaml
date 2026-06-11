@@ -1,0 +1,31 @@
+contractVersion: "1.0"
+id: 96dushu_com
+name: 96读书
+version: 0.1.0
+type: source
+domains:
+  - 96dushu.com
+baseUrls:
+  - https://www.96dushu.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+  reason: ""
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - cloudflare
+  - js_encrypted

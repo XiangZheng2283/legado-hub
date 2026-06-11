@@ -8,6 +8,7 @@ import { CachePage } from "@/routes/CachePage"
 import { SettingsPage } from "@/routes/SettingsPage"
 import { AggregateSourcePage } from "@/routes/AggregateSourcePage"
 import { VerificationPage } from "@/routes/VerificationPage"
+import { OfficialSourcesPage } from "@/routes/OfficialSourcesPage"
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="plugins" element={<Plugins />} />
           <Route path="plugins/:pluginId" element={<PluginDetail />} />
           <Route path="search" element={<SearchJobs />} />
+          <Route path="official-sources" element={<OfficialSourcesPage />} />
           <Route path="cache" element={<CachePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="aggregate-source" element={<AggregateSourcePage />} />

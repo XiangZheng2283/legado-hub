@@ -45,3 +45,9 @@ def test_chapter_fallback():
     assert response.status_code == 200
     data = response.json()
     assert "fallbackUsed" in data
+
+
+
+
+
+

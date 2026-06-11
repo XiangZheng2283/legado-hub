@@ -48,7 +48,7 @@ class PluginHealthRepository:
                 """
                 SELECT plugin_id, plugin_name, enabled, health_status, failure_reason,
                        proxy_mode, proxy_status, last_error, last_test_result_json,
-                       success_count, failure_count
+                       success_count, failure_count, ping_status, ping_latency_ms, last_ping_at
                 FROM plugin_health
                 WHERE plugin_id = ?
                 """,
@@ -68,7 +68,7 @@ class PluginHealthRepository:
         query = """
             SELECT plugin_id, plugin_name, enabled, health_status, failure_reason,
                    proxy_mode, proxy_status, last_error, last_test_result_json,
-                   success_count, failure_count
+                   success_count, failure_count, ping_status, ping_latency_ms, last_ping_at
             FROM plugin_health
             WHERE 1=1
         """
@@ -100,6 +100,9 @@ class PluginHealthRepository:
             "lastTestResult": json.loads(row[8]) if row[8] else None,
             "successCount": row[9] or 0,
             "failureCount": row[10] or 0,
+            "pingStatus": row[11] or "unknown",
+            "pingLatencyMs": row[12] or 0,
+            "lastPingAt": row[13] or "",
         }
 
     def set_enabled(self, plugin_id: str, enabled: bool) -> None:
@@ -130,16 +133,17 @@ class PluginHealthRepository:
         proxy_used: bool,
         latency_ms: int,
         error: str = "",
+        result: str = "",
     ) -> None:
         self.ensure_plugin(source_id)
         with self._conn() as conn:
             conn.execute(
                 """
                 INSERT INTO plugin_attempts
-                (plugin_id, stage, url, direct_status, proxy_status, proxy_used, latency_ms, error)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (plugin_id, stage, url, direct_status, proxy_status, proxy_used, latency_ms, error, result)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (source_id, stage, url, direct_status, proxy_status, 1 if proxy_used else 0, latency_ms, error),
+                (source_id, stage, url, direct_status, proxy_status, 1 if proxy_used else 0, latency_ms, error, result),
             )
             conn.commit()
 
@@ -192,11 +196,50 @@ class PluginHealthRepository:
             )
             conn.commit()
 
+    def record_ping(self, source_id: str, status: str, latency_ms: int, error: str = "") -> None:
+        self.ensure_plugin(source_id)
+        with self._conn() as conn:
+            conn.execute(
+                """
+                UPDATE plugin_health
+                SET ping_status = ?,
+                    ping_latency_ms = ?,
+                    last_ping_at = datetime('now'),
+                    updated_at = datetime('now')
+                WHERE plugin_id = ?
+                """,
+                (status, latency_ms, source_id),
+            )
+            if error:
+                conn.execute(
+                    "UPDATE plugin_health SET last_error = ? WHERE plugin_id = ?",
+                    (error, source_id),
+                )
+            conn.commit()
+
+    def get_reachable_plugin_ids(self, plugin_ids: list[str] | None = None) -> list[str]:
+        """Return plugin IDs that are NOT explicitly marked unreachable.
+        Plugins with unknown ping status (not in DB) are assumed reachable.
+        """
+        if not plugin_ids:
+            query = "SELECT plugin_id FROM plugin_health WHERE ping_status != 'unreachable' OR ping_status IS NULL OR ping_status = ''"
+            with self._conn() as conn:
+                rows = conn.execute(query).fetchall()
+            return [row[0] for row in rows]
+
+        # Query DB for explicitly unreachable ones among the given IDs
+        placeholders = ",".join("?" for _ in plugin_ids)
+        query = f"SELECT plugin_id FROM plugin_health WHERE plugin_id IN ({placeholders}) AND ping_status = 'unreachable'"
+        with self._conn() as conn:
+            rows = conn.execute(query, plugin_ids).fetchall()
+        unreachable = {row[0] for row in rows}
+        return [pid for pid in plugin_ids if pid not in unreachable]
+
     def get_attempts(self, source_id: str, limit: int = 20) -> list[dict]:
         with self._conn() as conn:
             rows = conn.execute(
                 """
-                SELECT stage, url, direct_status, proxy_status, proxy_used, latency_ms, error, created_at
+                SELECT stage, url, direct_status, proxy_status, proxy_used, latency_ms, error, result, created_at
                 FROM plugin_attempts
                 WHERE plugin_id = ?
                 ORDER BY created_at DESC
@@ -213,7 +256,8 @@ class PluginHealthRepository:
                 "proxyUsed": bool(row[4]),
                 "latencyMs": row[5],
                 "error": row[6] or "",
-                "createdAt": row[7],
+                "result": row[7] or "",
+                "createdAt": row[8],
             }
             for row in rows
         ]
@@ -230,6 +274,9 @@ class PluginHealthRepository:
             ).fetchone()[0]
             disabled = conn.execute("SELECT COUNT(*) FROM plugin_health WHERE enabled = 0").fetchone()[0]
             unsupported = conn.execute("SELECT COUNT(*) FROM plugin_health WHERE health_status = 'unsupported'").fetchone()[0]
+            error = conn.execute(
+                "SELECT COUNT(*) FROM plugin_health WHERE enabled = 1 AND health_status NOT IN ('healthy', 'unknown')"
+            ).fetchone()[0]
         return {
             "total": total,
             "enabled": enabled,
@@ -237,6 +284,7 @@ class PluginHealthRepository:
             "proxyNeeded": proxy_needed,
             "disabled": disabled,
             "unsupported": unsupported,
+            "error": error,
         }
 
     def update_test_result(self, source_id: str, result: dict) -> None:
@@ -252,3 +300,5 @@ class PluginHealthRepository:
                 (json.dumps(result, ensure_ascii=False), source_id),
             )
             conn.commit()
+
+

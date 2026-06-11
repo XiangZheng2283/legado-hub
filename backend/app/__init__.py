@@ -1,1 +1,3 @@
 """LegadoHub FastAPI application package."""
+
+

@@ -1,0 +1,46 @@
+{
+  "keyword": "剑宗外门",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "items": [
+    {
+      "pluginId": "69shuba_com",
+      "status": "failed",
+      "passed": false,
+      "exploreName": "",
+      "exploreContentLength": 0,
+      "searchCount": 0,
+      "selectedName": "",
+      "tocCount": 0,
+      "chapterContentLength": 0,
+      "diagnostics": [
+        {
+          "stage": "explore",
+          "code": "BROWSER_REQUIRED",
+          "message": "排行榜入口不可用，降级到搜索链路: browser verification required; attempted domains: https://www.69shuba.com/newhot_0_1_1.htm, https://www.69shuba.cx/newhot_0_1_1.htm"
+        },
+        {
+          "stage": "runtime",
+          "code": "CLOUDFLARE_REQUIRED",
+          "message": "69shuba returned Cloudflare verification page; attempted domains: https://www.69shuba.com/modules/article/search.php, https://www.69shuba.cx/modules/article/search.php"
+        }
+      ],
+      "browserChallenges": [
+        {
+          "sessionId": "081b421b-edd5-4a7d-8637-c641c1d905e9",
+          "stage": "runtime",
+          "reason": "CLOUDFLARE_REQUIRED",
+          "openUrl": "https://www.69shuba.com/modules/article/search.php",
+          "actions": {
+            "open": "/api/browser/challenges/081b421b-edd5-4a7d-8637-c641c1d905e9/open",
+            "callback": "/api/browser/challenges/081b421b-edd5-4a7d-8637-c641c1d905e9/callback",
+            "status": "/api/browser/challenges/081b421b-edd5-4a7d-8637-c641c1d905e9",
+            "submitCookies": "/api/browser/challenges/081b421b-edd5-4a7d-8637-c641c1d905e9/cookies",
+            "attempt": "/api/browser/challenges/081b421b-edd5-4a7d-8637-c641c1d905e9/attempt"
+          }
+        }
+      ]
+    }
+  ]
+}

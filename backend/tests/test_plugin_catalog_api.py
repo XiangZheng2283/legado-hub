@@ -91,12 +91,13 @@ def client_with_plugin(monkeypatch, tmp_path):
     monkeypatch.setattr(PluginScheduler, "__init__", patched_scheduler_init)
 
     # Also patch catalog and search job service to use our plugin dir
-    def patched_catalog_init(self, repo=None, cache=None):
+    def patched_catalog_init(self, repo=None, cache=None, base_api=None):
         from app.services.plugin_health_repository import PluginHealthRepository
         from app.services.cache import Cache
         self.repo = repo or PluginHealthRepository()
         self.cache = cache or Cache()
         self.scheduler = PluginScheduler(loader=PluginLoader(plugins_dir=tmp_path), config=self._get_search_config())
+        self.base_api = base_api or "http://localhost"
 
     monkeypatch.setattr(Catalog, "__init__", patched_catalog_init)
 
@@ -152,6 +153,55 @@ def test_chapter(client_with_plugin):
     assert len(data["content"]) > 0
 
 
+def test_chapter_uses_cache_only_when_live_fetch_hits_bypass_error(monkeypatch, client_with_plugin):
+    from app.services.catalog import Catalog
+    from app.source_plugins.id_codec import encode_chapter_id
+    from app.source_plugins.scheduler import PluginScheduler
+
+    chapter_id = encode_chapter_id("fake_api", "https://example.com/chapter/1")
+
+    original_scheduler_init = PluginScheduler.__init__
+
+    def patched_scheduler_init(self, loader=None, config=None):
+        original_scheduler_init(self, loader=loader, config=config)
+        plugin = self._plugins.get("fake_api")
+        if plugin is not None:
+            async def failing_plugin_chapter(ctx, chapter_url: str):
+                from app.source_plugins.errors import CloudflareRequired
+                raise CloudflareRequired("Cloudflare verification required", url=chapter_url)
+
+            plugin.source.chapter = failing_plugin_chapter
+
+    monkeypatch.setattr(PluginScheduler, "__init__", patched_scheduler_init)
+
+    original_catalog_init = Catalog.__init__
+
+    def patched_catalog_init(self, repo=None, cache=None, base_api=None):
+        original_catalog_init(self, repo=repo, cache=cache, base_api=base_api)
+        self.cache.set_chapter(
+            chapter_id,
+            "fake_api",
+            "https://example.com/chapter/1",
+            {
+                "implemented": True,
+                "chapterId": chapter_id,
+                "title": "缓存章节",
+                "content": "缓存正文\n\n第二段",
+                "debug": {},
+            },
+        )
+
+    monkeypatch.setattr(Catalog, "__init__", patched_catalog_init)
+
+    res = client_with_plugin.get(f"/api/legado/chapter/{chapter_id}")
+
+    assert res.status_code == 200
+    data = res.json()
+    assert data["title"] == "缓存章节"
+    assert data["debug"]["cacheHit"] is True
+    assert data["debug"]["cacheReason"] == "cloudflare_required"
+
+
 def test_empty_plugin_pool():
     from app.source_plugins.scheduler import PluginScheduler
     sched = PluginScheduler(loader=PluginLoader(plugins_dir=Path("/nonexistent")), config={})
@@ -159,3 +209,9 @@ def test_empty_plugin_pool():
     result = asyncio.run(sched.search("test"))
     assert result["items"] == []
     assert result["debug"]["sourceCount"] == 0
+
+
+
+
+
+

@@ -58,3 +58,5 @@ def decide_proxy_mode(proxy_mode: str, proxy_config: ProxyConfig) -> tuple[bool,
     if proxy_mode == "always":
         return False, proxy_config.enabled and bool(proxy_config.url)
     return True, proxy_config.enabled and bool(proxy_config.url)
+
+

@@ -410,3 +410,4 @@ The restart is successful when:
 - The old JVM engine has been moved to `docs/archive/legacy-reading-engine/2026-06-07/engine-jvm/` and must not receive new feature work on this branch.
 - Direct Python plugin execution is acceptable for this private project, but the runtime should still keep timeout and cancellation controls.
 - AI-generated plugins will need strong smoke tests; otherwise generated scripts can look plausible while silently returning bad data.
+

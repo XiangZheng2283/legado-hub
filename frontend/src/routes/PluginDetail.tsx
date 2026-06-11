@@ -1,8 +1,7 @@
-import { useState } from "react"
 import { useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { ArrowLeft, Play, Power, Shield, Cookie, ExternalLink, Activity } from "lucide-react"
+import { ArrowLeft, Play, Power, Shield } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,47 +16,32 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-function parseCookieDraft(value: string, challenge: any) {
-  let trimmed = value.trim()
-  if (!trimmed) return null
-  try {
-    return JSON.parse(trimmed)
-  } catch {
-    const cookieLines = trimmed
-      .replace(/\r\n/g, "\n")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .flatMap((line) => {
-        const lower = line.toLowerCase()
-        if (lower.startsWith("cookie:")) return [line.slice(line.indexOf(":") + 1).trim()]
-        if (lower.startsWith("set-cookie:")) return [line.slice(line.indexOf(":") + 1).split(";", 1)[0].trim()]
-        return []
-      })
-    if (cookieLines.length) trimmed = cookieLines.join("; ")
-    const domain = challenge.cookieDomains?.[0] || challenge.sourceId || ""
-    const jar: Record<string, string> = {}
-    trimmed.split(";").forEach((part) => {
-      const index = part.indexOf("=")
-      if (index <= 0) return
-      const name = part.slice(0, index).trim()
-      const cookieValue = part.slice(index + 1).trim()
-      if (name) jar[name] = cookieValue
-    })
-    return Object.keys(jar).length ? { [domain]: jar } : null
-  }
+const CAPABILITY_MAP: Record<string, string> = {
+  search: "搜索",
+  detail: "详情",
+  toc: "目录",
+  chapter: "正文",
+  explore: "发现",
+  auth: "认证",
+}
+
+function formatCapability(c: string): string {
+  return CAPABILITY_MAP[c] || c
 }
 
 export function PluginDetail() {
   const { pluginId } = useParams<{ pluginId: string }>()
   const queryClient = useQueryClient()
-  const [challengeActionResults, setChallengeActionResults] = useState<Record<string, string>>({})
-  const [challengeRetryResults, setChallengeRetryResults] = useState<Record<string, any>>({})
-  const [cookieDrafts, setCookieDrafts] = useState<Record<string, string>>({})
 
   const { data, isLoading } = useQuery({
     queryKey: ["plugin", pluginId],
     queryFn: () => api.plugin(pluginId!),
+    enabled: !!pluginId,
+  })
+
+  const { data: attemptsData } = useQuery({
+    queryKey: ["plugin-attempts", pluginId],
+    queryFn: () => api.pluginAttempts(pluginId!),
     enabled: !!pluginId,
   })
 
@@ -71,184 +55,17 @@ export function PluginDetail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] }),
   })
 
-  const authMutation = useMutation({
-    mutationFn: () => api.pluginAuth(pluginId!),
-  })
-
   const loginMutation = useMutation({
     mutationFn: () => api.pluginLogin(pluginId!),
   })
 
-  const clearCookiesMutation = useMutation({
-    mutationFn: () => api.pluginCookiesClear(pluginId!),
-  })
-
-  const liveCheckMutation = useMutation({
-    mutationFn: () => api.liveCheckPlugin(pluginId!, "剑宗外门"),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] }),
-  })
-
-  const openBrowserMutation = useMutation({
-    mutationFn: (challenge: any) => api.openBrowserChallengeBrowser(challenge.sessionId),
-    onSuccess: (data, challenge) => {
-      setChallengeActionResults((state) => ({
-        ...state,
-        [challenge.sessionId]: data.started ? data.message || "浏览器助手已启动" : data.error || "启动失败",
-      }))
-    },
-  })
-
-  const importCookiesMutation = useMutation({
-    mutationFn: (challenge: any) => api.importBrowserChallengeCookies(challenge.sessionId),
-    onSuccess: (data, challenge) => {
-      const clearance = data.clearanceDomains?.length
-        ? `cf_clearance: ${data.clearanceDomains.join(", ")}`
-        : "未检测到 cf_clearance"
-      setChallengeActionResults((state) => ({
-        ...state,
-        [challenge.sessionId]: data.saved ? `已导入浏览器 Cookie，可以重试验收。${clearance}` : data.error || "导入失败",
-      }))
-      queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] })
-    },
-  })
-
-  const saveCookiesMutation = useMutation({
-    mutationFn: ({ challenge, value }: { challenge: any; value: string }) => {
-      const parsed = parseCookieDraft(value, challenge)
-      if (!parsed) throw new Error("未识别到有效 Cookie")
-      return api.submitBrowserChallengeCookies(challenge.sessionId, parsed)
-    },
-    onSuccess: (data, variables) => {
-      const clearance = data.clearanceDomains?.length
-        ? `cf_clearance: ${data.clearanceDomains.join(", ")}`
-        : "未检测到 cf_clearance"
-      setChallengeActionResults((state) => ({
-        ...state,
-        [variables.challenge.sessionId]: data.saved ? `Cookie 已保存，可以重试验收。${clearance}` : data.error || "保存失败",
-      }))
-      queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] })
-    },
-    onError: (error: any, variables) => {
-      setChallengeActionResults((state) => ({
-        ...state,
-        [variables.challenge.sessionId]: error?.message || "保存失败",
-      }))
-    },
-  })
-
-  const retryChallengeMutation = useMutation({
-    mutationFn: (challenge: any) => api.retryBrowserChallengeLiveCheck(challenge.sessionId, "剑宗外门"),
-    onSuccess: (data, challenge) => {
-      const result = data.retryResult || data
-      setChallengeRetryResults((state) => ({ ...state, [challenge.sessionId]: result }))
-      queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] })
-    },
-  })
-
   if (isLoading) return <div className="text-muted-foreground">加载中...</div>
-  if (!data || data.error) return <div className="text-destructive">插件不存在</div>
+  if (!data || data.error) return <div className="text-destructive">书源不存在</div>
 
   const p = data
   const smokeResult = smokeMutation.data || p.health?.lastTestResult
-  const authResult = authMutation.data
-  const authChallenges = authResult?.browserChallenges || []
-  const renderChallengePanel = (challenges: any[]) => (
-    <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-      {challenges.map((challenge: any, index: number) => (
-        <div key={challenge.sessionId || `${challenge.openUrl}-${index}`} className="space-y-2 rounded border border-amber-200 bg-background p-2">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div className="min-w-0">
-              <div className="font-medium">{challenge.sourceName || challenge.reason || challenge.sourceId || "浏览器验证"}</div>
-              <div className="truncate text-xs text-muted-foreground">{challenge.openUrl}</div>
-              {challenge.sessionId && <div className="text-xs text-muted-foreground">会话 {challenge.sessionId}</div>}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(challenge.openUrl, "_blank", "noopener,noreferrer")}
-              >
-                <ExternalLink className="h-4 w-4" />
-                打开验证页
-              </Button>
-              {challenge.sessionId && (
-                <>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={openBrowserMutation.isPending}
-                    onClick={() => openBrowserMutation.mutate(challenge)}
-                  >
-                    启动浏览器助手
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={importCookiesMutation.isPending}
-                    onClick={() => importCookiesMutation.mutate(challenge)}
-                  >
-                    导入 Cookie
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={saveCookiesMutation.isPending}
-                    onClick={() =>
-                      saveCookiesMutation.mutate({
-                        challenge,
-                        value: cookieDrafts[challenge.sessionId] || "",
-                      })
-                    }
-                  >
-                    保存 Cookie
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={retryChallengeMutation.isPending}
-                    onClick={() => retryChallengeMutation.mutate(challenge)}
-                  >
-                    重试验收
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-          {challenge.sessionId && (
-            <textarea
-              value={cookieDrafts[challenge.sessionId] || ""}
-              onChange={(event) =>
-                setCookieDrafts((state) => ({
-                  ...state,
-                  [challenge.sessionId]: event.target.value,
-                }))
-              }
-              placeholder="粘贴 cookies JSON，或 cf_clearance=...; key=value"
-              className="min-h-16 w-full rounded-md border bg-background px-3 py-2 text-xs outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          )}
-          {challengeActionResults[challenge.sessionId] && (
-            <div className="text-xs text-muted-foreground">{challengeActionResults[challenge.sessionId]}</div>
-          )}
-          {challengeRetryResults[challenge.sessionId] && (
-            <div className="rounded border bg-muted/40 p-2 text-xs">
-              <div className="font-medium">验收状态: {challengeRetryResults[challenge.sessionId].status || "unknown"}</div>
-              <div className="text-muted-foreground">
-                排行榜正文 {challengeRetryResults[challenge.sessionId].explore?.contentLength || 0} 字；
-                搜索结果 {challengeRetryResults[challenge.sessionId].search?.count || 0}；
-                目录 {challengeRetryResults[challenge.sessionId].toc?.count || 0} 章；
-                正文 {challengeRetryResults[challenge.sessionId].chapter?.contentLength || 0} 字
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
+  const hasAuth = p.auth?.mode && p.auth.mode !== "none"
+  const attempts = attemptsData?.attempts || []
 
   return (
     <div className="space-y-4">
@@ -260,6 +77,14 @@ export function PluginDetail() {
         <Badge variant={p.enabled ? "success" : "outline"}>
           {p.enabled ? "启用" : "禁用"}
         </Badge>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {p.capabilities?.map((c: string) => (
+          <Badge key={c} variant="secondary" className="text-xs">
+            {formatCapability(c)}
+          </Badge>
+        ))}
       </div>
 
       <div className="flex items-center gap-2">
@@ -278,46 +103,24 @@ export function PluginDetail() {
           <Play className="w-4 h-4 mr-1" />
           冒烟测试
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => authMutation.mutate()}
-        >
-          <Shield className="w-4 h-4 mr-1" />
-          认证状态
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loginMutation.mutate()}
-        >
-          登录
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => clearCookiesMutation.mutate()}
-        >
-          <Cookie className="w-4 h-4 mr-1" />
-          清除 Cookie
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => liveCheckMutation.mutate()}
-          disabled={liveCheckMutation.isPending}
-        >
-          <Activity className="w-4 h-4 mr-1" />
-          实时验收
-        </Button>
+        {hasAuth && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loginMutation.mutate()}
+          >
+            <Shield className="w-4 h-4 mr-1" />
+            登录
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="metadata">
         <TabsList>
           <TabsTrigger value="metadata">元数据</TabsTrigger>
-          <TabsTrigger value="capabilities">能力</TabsTrigger>
           <TabsTrigger value="auth">认证</TabsTrigger>
           <TabsTrigger value="results">测试结果</TabsTrigger>
+          <TabsTrigger value="logs">日志</TabsTrigger>
         </TabsList>
 
         <TabsContent value="metadata">
@@ -325,6 +128,7 @@ export function PluginDetail() {
             <CardContent className="p-4 space-y-2 text-sm">
               <p><span className="text-muted-foreground">ID:</span> {p.pluginId}</p>
               <p><span className="text-muted-foreground">版本:</span> {p.version}</p>
+              <p><span className="text-muted-foreground">修改时间:</span> {p.lastModified || "-"}</p>
               <p><span className="text-muted-foreground">域名:</span> {p.domains?.join(", ") || "-"}</p>
               <p><span className="text-muted-foreground">基础URL:</span> {p.baseUrls?.join(", ") || "-"}</p>
               <p><span className="text-muted-foreground">书源类型:</span> {p.accessType || p.sourceType || "HTTP"}</p>
@@ -337,44 +141,25 @@ export function PluginDetail() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="capabilities">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-2">
-                {p.capabilities?.map((c: string) => (
-                  <Badge key={c} variant="secondary">{c}</Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="auth">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">认证状态</CardTitle>
+              <CardTitle className="text-sm">认证配置</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="grid gap-2 md:grid-cols-2">
-                <p><span className="text-muted-foreground">模式:</span> {authResult?.mode || p.auth?.mode || "none"}</p>
-                <p><span className="text-muted-foreground">已登录:</span> {authResult?.authenticated ? "是" : "否"}</p>
-                <p><span className="text-muted-foreground">账号:</span> {authResult?.accountName || "-"}</p>
-                <p><span className="text-muted-foreground">Cookie:</span> {authResult?.hasCookies ? "已保存" : "无"}</p>
-                <p><span className="text-muted-foreground">验证:</span> {authResult?.verificationStatus || "-"}</p>
+                <p><span className="text-muted-foreground">模式:</span> {p.auth?.mode || "none"}</p>
+                <p><span className="text-muted-foreground">登录URL:</span> {p.auth?.loginUrl || "-"}</p>
+                <p><span className="text-muted-foreground">Cookie域:</span> {p.auth?.cookieDomains?.join(", ") || "-"}</p>
+                <p><span className="text-muted-foreground">验证URL:</span> {p.auth?.verificationUrl || "-"}</p>
               </div>
-              {authResult?.message && (
-                <div className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
-                  {authResult.message}
+              {loginMutation.data && (
+                <div className="mt-2 rounded-md border bg-muted/40 p-2">
+                  <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                    {JSON.stringify(loginMutation.data, null, 2)}
+                  </pre>
                 </div>
               )}
-              {authResult?.requiredActions?.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {authResult.requiredActions.map((action: string) => (
-                    <Badge key={action} variant="secondary">{action}</Badge>
-                  ))}
-                </div>
-              )}
-              {authChallenges.length > 0 && renderChallengePanel(authChallenges)}
             </CardContent>
           </Card>
         </TabsContent>
@@ -425,64 +210,59 @@ export function PluginDetail() {
               </CardContent>
             </Card>
           )}
-          {liveCheckMutation.data && (
-            <Card className="mt-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">
-                  实时验收结果
-                  <Badge className="ml-2" variant={liveCheckMutation.data.passed ? "success" : "destructive"}>
-                    {liveCheckMutation.data.status || (liveCheckMutation.data.passed ? "passed" : "failed")}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="grid gap-2 md:grid-cols-2">
-                  <p><span className="text-muted-foreground">排行榜书:</span> {liveCheckMutation.data.explore?.selected?.name || "-"}</p>
-                  <p><span className="text-muted-foreground">搜索结果:</span> {liveCheckMutation.data.search?.count ?? 0}</p>
-                  <p><span className="text-muted-foreground">目录:</span> {liveCheckMutation.data.toc?.count ?? 0} 章</p>
-                  <p><span className="text-muted-foreground">正文:</span> {liveCheckMutation.data.chapter?.contentLength ?? 0} 字</p>
-                </div>
-                {(liveCheckMutation.data.browserChallenges || []).length > 0 &&
-                  renderChallengePanel(liveCheckMutation.data.browserChallenges || [])}
-                {(liveCheckMutation.data.diagnostics || []).length > 0 && (
-                  <div className="space-y-2">
-                    {(liveCheckMutation.data.diagnostics || []).slice(0, 3).map((item: any, index: number) => (
-                      <div key={`${item.stage}-${index}`} className="rounded border border-destructive/30 p-2 text-xs">
-                        <div className="font-medium">{item.stage || "runtime"} / {item.code || "error"}</div>
-                        <div className="text-muted-foreground">{item.message}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-          {loginMutation.data && (
-            <Card className="mt-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">登录准备</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="text-xs bg-muted p-2 rounded overflow-auto">
-                  {JSON.stringify(loginMutation.data, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
-          )}
-          {clearCookiesMutation.data && (
-            <Card className="mt-2">
-              <CardContent className="p-4">
-                <p className="text-sm">Cookie 已清除</p>
-              </CardContent>
-            </Card>
-          )}
-          {!smokeResult && !liveCheckMutation.data && !loginMutation.data && !clearCookiesMutation.data && (
+          {!smokeResult && (
             <Card>
               <CardContent className="p-8 text-center text-muted-foreground text-sm">
                 点击上方按钮运行测试
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">活动日志</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attempts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">暂无活动记录</p>
+              ) : (
+                <div className="space-y-3">
+                  {attempts.map((a: any, i: number) => (
+                    <div key={i} className="rounded border p-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{a.createdAt || "-"}</span>
+                        <Badge variant="secondary" className="text-xs">{a.stage}</Badge>
+                        {a.proxyUsed ? (
+                          <Badge variant="outline" className="text-xs">代理</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">直连</Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground">{a.directStatus}</span>
+                        <span className="text-xs text-muted-foreground">{a.latencyMs}ms</span>
+                        {a.error && <span className="text-xs text-destructive">{a.error}</span>}
+                      </div>
+                      {a.result ? (
+                        <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-[200px]">
+                          {(() => {
+                            try {
+                              const parsed = JSON.parse(a.result)
+                              return JSON.stringify(parsed, null, 2)
+                            } catch {
+                              return a.result
+                            }
+                          })()}
+                        </pre>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">无返回内容</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

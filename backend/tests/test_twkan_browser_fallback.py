@@ -1,4 +1,4 @@
-"""twkan browser fallback behavior."""
+"""twkan stealth-only fetch behavior."""
 
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from app.source_plugins.context import PluginContext
-from app.source_plugins.errors import BrowserRequired, FetchNetworkError
+from app.source_plugins.errors import FetchNetworkError
 
 
 class NetworkFailFetcher:
@@ -20,11 +20,6 @@ class NetworkFailFetcher:
         return []
 
 
-class BrowserChallengeFetcher:
-    async def fetch_text(self, plugin_id: str, url: str, **kwargs) -> str:
-        raise BrowserRequired("browser verification required", url=url)
-
-
 def _load_source():
     root = Path(__file__).resolve().parents[2]
     source_path = root / "plugins" / "sources" / "twkan_com" / "source.py"
@@ -36,15 +31,13 @@ def _load_source():
 
 
 @pytest.mark.asyncio
-async def test_twkan_network_error_uses_browser_fallback_and_reports_challenge():
+async def test_twkan_network_error_raises_directly():
+    """twkan_com uses stealth directly without browser fallback."""
     source = _load_source()
     ctx = PluginContext(
         fetcher=NetworkFailFetcher(),
         plugin_id="twkan_com",
-        browser_fetcher=BrowserChallengeFetcher(),
     )
 
-    with pytest.raises(BrowserRequired) as exc_info:
+    with pytest.raises(FetchNetworkError):
         await source.explore(ctx, "hot", 1)
-
-    assert exc_info.value.url == "https://twkan.com/novels/hot"

@@ -35,14 +35,14 @@ class Source:
     contract_version = "1.0"
 
     async def search(self, ctx, keyword: str, page: int):
-        html = await ctx.fetch_text("https://example.com/search")
+        html = await ctx.access.http.fetch_text("https://example.com/search")
         name = ctx.text(html, ".name")
         author = ctx.text(html, ".author")
         href = ctx.attr(html, ".name", "href")
         return [{{"sourceId": self.id, "name": name, "author": author, "bookUrl": ctx.urljoin("https://example.com", href)}}]
 
     async def detail(self, ctx, book_url: str):
-        html = await ctx.fetch_text(book_url)
+        html = await ctx.access.http.fetch_text(book_url)
         return {{
             "sourceId": self.id,
             "name": ctx.text(html, "h1"),
@@ -52,14 +52,14 @@ class Source:
         }}
 
     async def toc(self, ctx, toc_url: str):
-        html = await ctx.fetch_text(toc_url)
+        html = await ctx.access.http.fetch_text(toc_url)
         return [
             {{"sourceId": self.id, "index": index, "title": a.text_content().strip(), "chapterUrl": ctx.urljoin(toc_url, a.get("href", ""))}}
             for index, a in enumerate(ctx.select(html, ".chapters a"), start=1)
         ]
 
     async def chapter(self, ctx, chapter_url: str):
-        html = await ctx.fetch_text(chapter_url)
+        html = await ctx.access.http.fetch_text(chapter_url)
         return {{"sourceId": self.id, "title": ctx.text(html, "h1"), "chapterUrl": chapter_url, "content": ctx.html(html, "#content")}}
 ''',
         encoding="utf-8",
@@ -137,3 +137,9 @@ async def test_fixture_smoke_reports_missing_file(tmp_path):
 
     assert result["pass"] is False
     assert result["errors"][0]["code"] == "SMOKE_FIXTURE_MISSING"
+
+
+
+
+
+

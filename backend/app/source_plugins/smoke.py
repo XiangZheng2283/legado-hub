@@ -197,12 +197,14 @@ def load_smoke_spec(plugin_dir: Path) -> dict:
     return raw
 
 
-def _fixture_map(plugin_dir: Path, spec: dict) -> dict[str, str]:
+def _fixture_map(plugin_dir: Path, spec: dict, capabilities: list[str] | None = None) -> dict[str, str]:
     fixtures = spec.get("fixtures") or {}
     url_to_text: dict[str, str] = {}
     for stage in ("search", "detail", "toc", "chapter"):
         fixture = fixtures.get(stage)
         if not isinstance(fixture, dict):
+            if capabilities and stage not in capabilities:
+                continue
             raise ValueError(f"missing fixture for stage: {stage}")
         url = fixture.get("url")
         file_name = fixture.get("file")
@@ -259,7 +261,7 @@ async def run_fixture_smoke(
     }
 
     try:
-        fetcher = FixtureFetcher(_fixture_map(plugin_dir, spec))
+        fetcher = FixtureFetcher(_fixture_map(plugin_dir, spec, plugin.capabilities))
     except Exception as exc:
         result["errors"].append(_error(plugin.metadata.id, "setup", "SMOKE_FIXTURE_MISSING", str(exc)))
         return result
@@ -283,23 +285,30 @@ async def run_fixture_smoke(
             err = _error(plugin.metadata.id, stage, code, str(exc))
             return None, {"status": "error", "elapsedMs": elapsed_ms, "code": code, "message": str(exc)}, err
 
-    search_items, stage_data, err = await run_stage("search", plugin.source.search, ctx, smoke_keyword, 1)
-    search_items = search_items or []
+    if "search" in plugin.capabilities:
+        search_items, stage_data, err = await run_stage("search", plugin.source.search, ctx, smoke_keyword, 1)
+        search_items = search_items or []
+    else:
+        search_items = []
+        stage_data = {"status": "skipped", "count": 0}
+        err = None
     stage_data["count"] = len(search_items)
     result["stages"]["search"] = stage_data
     if err:
         result["errors"].append(err)
     min_results = _expect(spec, "search.minResults", _legacy_expect(spec, "search_min_items", 1))
     first_name = _expect(spec, "search.firstName")
-    if len(search_items) < min_results:
+    if "search" in plugin.capabilities and len(search_items) < min_results:
         result["errors"].append(_error(plugin.metadata.id, "search", "PARSE_EMPTY", f"expected at least {min_results} results"))
     if first_name and search_items and _dict_value(search_items[0], "name", "name") != first_name:
         result["errors"].append(_error(plugin.metadata.id, "search", "SMOKE_CONTRACT_ERROR", f"first result name mismatch: {first_name}"))
     if not search_items:
-        result["diagnostics"] = ctx.get_traces() + fetcher.get_traces()
-        return result
-
-    book_url = _dict_value(search_items[0], "bookUrl", "book_url") or ""
+        book_url = spec.get("bookUrl", "")
+        if not book_url:
+            result["diagnostics"] = ctx.get_traces() + fetcher.get_traces()
+            return result
+    else:
+        book_url = _dict_value(search_items[0], "bookUrl", "book_url") or ""
     detail_data, stage_data, err = await run_stage("detail", plugin.source.detail, ctx, book_url)
     result["stages"]["detail"] = stage_data
     if err:
@@ -382,3 +391,7 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
+

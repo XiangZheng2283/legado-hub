@@ -24,8 +24,6 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.config import SOURCE_POOL_CONFIG_PATH
-from app.services.browser_challenge import BrowserChallengeService
-from app.services.browser_helper import BrowserHelperService
 from app.services.live_acceptance import LiveAcceptanceService
 from app.services.plugin_auth_repository import PluginAuthRepository
 from app.source_plugins.scheduler import PluginScheduler
@@ -55,14 +53,6 @@ def _summary(result: dict[str, Any]) -> dict[str, Any]:
                 "message": item.get("message", ""),
             }
             for item in result.get("diagnostics", [])
-        ],
-        "browserChallenges": [
-            {
-                "stage": item.get("stage", ""),
-                "reason": item.get("reason", ""),
-                "openUrl": item.get("openUrl", ""),
-            }
-            for item in result.get("browserChallenges", [])
         ],
     }
 
@@ -207,52 +197,13 @@ def apply_cookie_header(
     return {"cookieNames": sorted(jar.keys()), "appliedDomains": applied}
 
 
-def open_browser_challenges(
-    *,
-    scheduler: PluginScheduler,
-    plugin_ids: list[str],
-    stage: str = "runtime",
-    challenge_service: BrowserChallengeService | None = None,
-    helper_service: BrowserHelperService | None = None,
-) -> list[dict[str, Any]]:
-    """Create challenge sessions and open visible browser helpers."""
-    if not plugin_ids:
-        raise ValueError("--open-browser-challenge requires at least one --plugin")
-    challenge_service = challenge_service or BrowserChallengeService()
-    helper_service = helper_service or BrowserHelperService()
-    results = []
-    for plugin_id in plugin_ids:
-        plugin = scheduler._plugins.get(plugin_id)
-        if not plugin:
-            raise ValueError(f"plugin not found: {plugin_id}")
-        session = challenge_service.create_for_plugin(plugin, stage=stage, reason="BROWSER_REQUIRED")
-        helper = helper_service.start(session)
-        if helper.get("started"):
-            challenge_service.record_browser_helper(session["sessionId"], helper)
-        results.append({
-            "pluginId": plugin_id,
-            "sessionId": session["sessionId"],
-            "openUrl": session["openUrl"],
-            "cookieDomains": session["cookieDomains"],
-            "helper": helper,
-        })
-    return results
-
-
 async def _run(args: argparse.Namespace) -> dict[str, Any]:
     scheduler = PluginScheduler(config=_load_config())
     service = LiveAcceptanceService(scheduler=scheduler)
     plugin_ids = args.plugin or sorted(scheduler._plugins)
-    opened_challenges = None
     cookie_clear = None
     cookie_injection = None
     browser_cookie_import = None
-    if args.open_browser_challenge:
-        opened_challenges = open_browser_challenges(
-            scheduler=scheduler,
-            plugin_ids=args.plugin or [],
-            stage=args.challenge_stage,
-        )
     if args.clear_cookies:
         cookie_clear = clear_plugin_cookies(args.plugin or [])
     cookie_header = resolve_cookie_header(
@@ -295,8 +246,6 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         payload["cookieInjection"] = cookie_injection
     if browser_cookie_import:
         payload["browserCookieImport"] = browser_cookie_import
-    if opened_challenges:
-        payload["openedBrowserChallenges"] = opened_challenges
     if args.json_out:
         out_path = Path(args.json_out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -316,8 +265,6 @@ def main() -> None:
     parser.add_argument("--cookie-domain", action="append", help="Cookie domain to use with --cookie-header. Can be supplied multiple times.")
     parser.add_argument("--browser-cookie-json", default="", help="Playwright/browser-helper cookie JSON file to import before checks.")
     parser.add_argument("--clear-cookies", action="store_true", help="Clear persisted cookies for selected plugins before running checks.")
-    parser.add_argument("--open-browser-challenge", action="store_true", help="Open a visible browser helper for selected plugins before checks.")
-    parser.add_argument("--challenge-stage", default="runtime", help="Stage label used when creating browser helper sessions.")
     args = parser.parse_args()
     payload = asyncio.run(_run(args))
     print("SUMMARY")

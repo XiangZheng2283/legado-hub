@@ -38,3 +38,7 @@ def looks_like_browser_challenge(html: str) -> bool:
 def looks_like_any_challenge(html: str) -> bool:
     """Return true when a response requires browser/manual verification."""
     return looks_like_cloudflare_challenge(html) or looks_like_browser_challenge(html)
+
+
+
+

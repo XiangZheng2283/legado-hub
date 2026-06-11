@@ -75,7 +75,10 @@ def validate_plugin(plugin_dir: Path) -> list[str]:
     try:
         spec = load_smoke_spec(plugin_dir)
         fixtures = spec.get("fixtures") or {}
-        for stage in ("search", "detail", "toc", "chapter"):
+        required_stages = ["detail", "toc", "chapter"]
+        if "search" in metadata.capabilities:
+            required_stages.insert(0, "search")
+        for stage in required_stages:
             fixture = fixtures.get(stage)
             if not isinstance(fixture, dict):
                 errors.append(f"smoke fixture missing stage: {stage}")

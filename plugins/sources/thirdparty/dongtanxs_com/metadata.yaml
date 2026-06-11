@@ -1,0 +1,30 @@
+contractVersion: "1.0"
+id: dongtanxs_com
+name: 东滩小说
+version: 0.1.0
+type: source
+domains:
+  - dongtanxs.com
+baseUrls:
+  - https://www.dongtanxs.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+  reason: ""
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - cloudflare

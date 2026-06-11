@@ -11,7 +11,6 @@ from scripts.run_live_acceptance_matrix import (
     clear_plugin_cookies,
     cookie_domains_for_plugin,
     normalize_playwright_cookie_file,
-    open_browser_challenges,
     parse_cookie_header,
     resolve_cookie_header,
 )
@@ -24,7 +23,7 @@ def _scheduler_with_plugin() -> SimpleNamespace:
         auth={"cookieDomains": ["69shuba.com", "www.69shuba.com"]},
         domains=["69shuba.cx"],
         base_urls=["https://www.69shuba.com"],
-        browser={"verificationUrl": "https://www.69shuba.com/newhot_0_1_1.htm"},
+        browser={"mode": "required"},
         domain_profiles=[
             {"domains": ["www.69shuba.cx"]},
         ],
@@ -122,33 +121,6 @@ def test_apply_browser_cookie_json_saves_domains_from_file(tmp_path):
     }
 
 
-def test_open_browser_challenges_starts_helper():
-    class FakeChallengeService:
-        def create_for_plugin(self, plugin, **kwargs):
-            return {
-                "sessionId": "s1",
-                "openUrl": "https://www.69shuba.com/newhot_0_1_1.htm",
-                "cookieDomains": ["69shuba.com"],
-            }
-
-        def record_browser_helper(self, session_id, helper):
-            self.recorded = (session_id, helper)
-
-    class FakeHelperService:
-        def start(self, session):
-            return {"started": True, "cookieFile": "cookies.json", "openUrl": session["openUrl"]}
-
-    result = open_browser_challenges(
-        scheduler=_scheduler_with_plugin(),
-        plugin_ids=["69shuba_com"],
-        challenge_service=FakeChallengeService(),
-        helper_service=FakeHelperService(),
-    )
-
-    assert result[0]["sessionId"] == "s1"
-    assert result[0]["helper"]["started"] is True
-
-
 def test_clear_plugin_cookies_requires_selected_plugins(tmp_path):
     repo = PluginAuthRepository(tmp_path / "auth.db")
 
@@ -176,3 +148,9 @@ def test_apply_cookie_header_requires_selected_plugins(tmp_path):
             cookie_header="cf_clearance=ok",
             repository=repo,
         )
+
+
+
+
+
+

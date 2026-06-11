@@ -11,15 +11,53 @@ from app.config import HOST, PORT, SOURCE_POOL_CONFIG_PATH
 from app.core.proxy import ProxyConfig
 from app.source_plugins.id_codec import decode_book_id, decode_chapter_id, encode_book_id, encode_chapter_id
 from app.services.cache import Cache
+from app.services.bookshelf import record_bookshelf_items
+from app.services.aggregate_virtual_source import (
+    VIRTUAL_SOURCE_ID,
+    VIRTUAL_SOURCE_NAME,
+    make_aggregate_chapter_url,
+    primary_book_id_from_payload,
+    unpack_aggregate_chapter_url,
+    unpack_aggregate_book_url,
+)
 from app.source_plugins.scheduler import PluginScheduler
 from app.services.plugin_health_repository import PluginHealthRepository
 
 
+def _aggregate_official_debug(payload: dict[str, Any], primary_book_id: str) -> dict[str, Any]:
+    try:
+        from app.source_plugins.loader import PluginLoader
+        plugins = PluginLoader().load_all()
+    except Exception:
+        plugins = {}
+    sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+    official_ids = sorted({
+        s.get("sourceId", "")
+        for s in sources
+        if isinstance(s, dict) and s.get("sourceId") and plugins.get(s.get("sourceId")) and plugins[s.get("sourceId")].metadata.is_official_source()
+    })
+    primary_source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
+    primary_is_official = bool(
+        primary_source_id and plugins.get(primary_source_id) and plugins[primary_source_id].metadata.is_official_source()
+    )
+    return {
+        "hasOfficialSource": bool(official_ids),
+        "officialSourceIds": official_ids,
+        "primarySourceIsOfficial": primary_is_official,
+    }
+
+
 class Catalog:
-    def __init__(self, repo: PluginHealthRepository | None = None, cache: Cache | None = None):
+    def __init__(
+        self,
+        repo: PluginHealthRepository | None = None,
+        cache: Cache | None = None,
+        base_api: str | None = None,
+    ):
         self.repo = repo or PluginHealthRepository()
         self.cache = cache or Cache()
         self.scheduler = PluginScheduler(config=self._get_search_config())
+        self.base_api = base_api or f"http://{HOST}:{PORT}"
 
     def _get_proxy_config(self) -> ProxyConfig:
         import json as _json
@@ -36,6 +74,49 @@ class Catalog:
             return _json.loads(pool_path.read_text(encoding="utf-8"))
         return {}
 
+    @staticmethod
+    def _positive_int(value: Any, default: int) -> int:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return default
+        return parsed if parsed > 0 else default
+
+    def _book_api_url(self, book_id: str) -> str:
+        return f"{self.base_api}/api/legado/book/{book_id}"
+
+    def _toc_api_url(self, book_id: str) -> str:
+        return f"{self.base_api}/api/legado/book/{book_id}/toc"
+
+    def _chapter_api_url(self, chapter_id: str) -> str:
+        return f"{self.base_api}/api/legado/chapter/{chapter_id}"
+
+    def _rewrite_book_response_urls(self, response: dict, book_id: str) -> dict:
+        copied = dict(response)
+        data = copied.get("data")
+        if isinstance(data, dict):
+            data = dict(data)
+            data["bookUrl"] = self._book_api_url(book_id)
+            data["tocUrl"] = self._toc_api_url(book_id)
+            copied["data"] = data
+        return copied
+
+    def _rewrite_toc_response_urls(self, response: dict) -> dict:
+        copied = dict(response)
+        chapters = []
+        for chapter in copied.get("chapters", []) or []:
+            if not isinstance(chapter, dict):
+                continue
+            out = dict(chapter)
+            chapter_url = out.get("chapterUrl", "")
+            if chapter_url and "/api/legado/chapter/" in chapter_url:
+                chapter_id = chapter_url.rsplit("/", 1)[-1]
+                out["chapterId"] = out.get("chapterId") or chapter_id
+                out["chapterUrl"] = self._chapter_api_url(chapter_id)
+            chapters.append(out)
+        copied["chapters"] = chapters
+        return copied
+
     def _record_attempt(
         self,
         source_id: str,
@@ -45,6 +126,7 @@ class Catalog:
         success: bool,
         latency_ms: int,
         error: str = "",
+        result: str = "",
     ) -> None:
         self.repo.record_attempt(
             source_id=source_id,
@@ -55,6 +137,7 @@ class Catalog:
             proxy_used=proxy_used,
             latency_ms=latency_ms,
             error=error,
+            result=result,
         )
 
     async def search(
@@ -62,24 +145,23 @@ class Catalog:
         keyword: str,
         page: int = 1,
     ) -> dict:
-        cached = self.cache.get_search(keyword, page)
-        if cached is not None:
-            return cached
-
         result = await self.scheduler.search(keyword, page)
+        result = self._merge_search_cache_fallback(result, keyword, page)
 
         # Convert plugin result dicts to SearchResultItem shape for cache consistency
         # and ensure bookId / sourceName are present
         items = result.get("items", [])
         for item in items:
+            if not isinstance(item, dict):
+                continue
+            source_id = item.get("sourceId", "")
+            plugin = self.scheduler._plugins.get(source_id)
             if "bookId" not in item and item.get("bookUrl"):
                 # extract original url from bookUrl if it's a local api url
                 # otherwise use bookUrl directly
                 book_url = item.get("bookUrl", "")
-                source_id = item.get("sourceId", "")
                 item["bookId"] = encode_book_id(source_id, book_url)
             if "sourceName" not in item:
-                plugin = self.scheduler._plugins.get(item.get("sourceId", ""))
                 item["sourceName"] = plugin.metadata.name if plugin else item.get("sourceId", "")
 
         # Ensure debug fields exist for old clients
@@ -94,6 +176,7 @@ class Catalog:
             "debug": debug,
         }
 
+        record_bookshelf_items(items)
         self.cache.set_search(keyword, page, response)
         return response
 
@@ -120,6 +203,7 @@ class Catalog:
             items.extend(self._normalize_explore_items(result.get("items", [])))
             errors.extend(result.get("debug", {}).get("errors", []))
 
+        record_bookshelf_items(items)
         return {
             "implemented": True,
             "sourceId": "",
@@ -130,11 +214,6 @@ class Catalog:
                 "sourceCount": len(seen_sources),
                 "itemCount": len(items),
                 "errors": errors,
-                "browserChallenges": [
-                    err.get("extra", {}).get("browserChallenge")
-                    for err in errors
-                    if err.get("extra", {}).get("browserChallenge")
-                ],
             },
         }
 
@@ -146,12 +225,10 @@ class Catalog:
             actual_group_id = first.get("groupId", "")
         result = await self.scheduler.explore(source_id, actual_group_id, page)
         result["items"] = self._normalize_explore_items(result.get("items", []))
+        record_bookshelf_items(result["items"])
         return result
 
     def _normalize_explore_items(self, items: list[dict]) -> list[dict]:
-        from app.config import HOST, PORT
-
-        base_api = f"http://{HOST}:{PORT}"
         normalized: list[dict] = []
         for item in items:
             if not isinstance(item, dict):
@@ -161,26 +238,29 @@ class Catalog:
             raw_book_url = out.get("bookUrl", "")
             if raw_book_url and "/api/legado/book/" not in raw_book_url:
                 book_id = encode_book_id(source_id, raw_book_url)
+                out["bookId"] = book_id
                 out["rawBookUrl"] = raw_book_url
-                out["bookUrl"] = f"{base_api}/api/legado/book/{book_id}"
+                out["bookUrl"] = f"{self.base_api}/api/legado/book/{book_id}"
+            elif raw_book_url and "/api/legado/book/" in raw_book_url:
+                book_id = raw_book_url.rsplit("/", 1)[-1]
+                out["bookId"] = out.get("bookId") or book_id
+                out["bookUrl"] = f"{self.base_api}/api/legado/book/{book_id}"
             normalized.append(out)
         return normalized
 
     async def stream_search(self, keyword: str, page: int = 1, max_sources_override: int | None = None):
         """Yield console search progress events as dictionaries."""
         config = self._get_search_config()
-        max_concurrency = config.get("max_concurrency", 6)
+        max_concurrency = self._positive_int(config.get("max_concurrency"), 3)
         source_batch_size = config.get("source_batch_size", 20)
-        overall_timeout = config.get("overall_search_timeout_seconds", 30.0)
+        overall_timeout = config.get("overall_search_timeout_seconds", 60.0)
         max_sources = max_sources_override if max_sources_override is not None else config.get("max_sources_per_search", 200)
         proxy_config = self._get_proxy_config()
         plugins = self.scheduler._enabled_plugins()
         if max_sources is not None:
             plugins = plugins[:max_sources]
 
-        source_batch_size = int(source_batch_size) if source_batch_size else 20
-        if source_batch_size <= 0:
-            source_batch_size = 20
+        source_batch_size = self._positive_int(source_batch_size, 20)
         batches = [plugins[i : i + source_batch_size] for i in range(0, len(plugins), source_batch_size)]
         start_time = time.perf_counter()
         all_items: list[dict] = []
@@ -218,8 +298,11 @@ class Catalog:
 
         async def _search_one(plugin) -> dict:
             sid = plugin.metadata.id
+            plugin_proxy_mode = (plugin.metadata.proxy or {}).get("mode", "auto")
+            proxy_used = proxy_config.enabled and plugin_proxy_mode != "never"
             if "search" not in plugin.capabilities:
-                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": [], "error": None, "latencyMs": 0, "proxyUsed": False}
+                self._record_attempt(sid, "search", "", proxy_used, False, 0, "no search capability")
+                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": [], "error": None, "latencyMs": 0, "proxyUsed": proxy_used}
             ctx = self.scheduler._make_ctx(sid)
             source_timeout = self.scheduler.search_timeout_for_plugin(plugin)
             t0 = time.perf_counter()
@@ -237,19 +320,20 @@ class Catalog:
                         if "bookId" not in item and item.get("bookUrl"):
                             item["bookId"] = encode_book_id(sid, item["bookUrl"])
                         items.append(item)
-                self._record_attempt(sid, "search", "", False, True, latency_ms)
+                result = json.dumps([{"name": i.get("name"), "author": i.get("author"), "bookUrl": i.get("bookUrl")} for i in items[:5]], ensure_ascii=False) if items else ""
+                self._record_attempt(sid, "search", "", proxy_used, True, latency_ms, result=result)
                 self.repo.record_success(sid, latency_ms)
-                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": items, "error": None, "latencyMs": latency_ms, "proxyUsed": False}
+                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": items, "error": None, "latencyMs": latency_ms, "proxyUsed": proxy_used}
             except asyncio.TimeoutError:
                 latency_ms = int((time.perf_counter() - t0) * 1000)
-                self._record_attempt(sid, "search", "", False, False, latency_ms, "timeout")
-                err = {"sourceId": sid, "stage": "search", "url": "", "proxyUsed": False, "error": "timeout"}
-                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": [], "error": err, "latencyMs": latency_ms, "proxyUsed": False}
+                self._record_attempt(sid, "search", "", proxy_used, False, latency_ms, "timeout")
+                err = {"sourceId": sid, "stage": "search", "url": "", "proxyUsed": proxy_used, "error": "timeout"}
+                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": [], "error": err, "latencyMs": latency_ms, "proxyUsed": proxy_used}
             except Exception as exc:
                 latency_ms = int((time.perf_counter() - t0) * 1000)
-                self._record_attempt(sid, "search", "", False, False, latency_ms, str(exc))
-                err = {"sourceId": sid, "stage": "search", "url": "", "proxyUsed": False, "error": str(exc)}
-                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": [], "error": err, "latencyMs": latency_ms, "proxyUsed": False}
+                self._record_attempt(sid, "search", "", proxy_used, False, latency_ms, str(exc))
+                err = {"sourceId": sid, "stage": "search", "url": "", "proxyUsed": proxy_used, "error": str(exc)}
+                return {"source": {"sourceId": sid, "bookSourceName": plugin.metadata.name}, "items": [], "error": err, "latencyMs": latency_ms, "proxyUsed": proxy_used}
             finally:
                 await ctx._fetcher.close()
 
@@ -269,8 +353,14 @@ class Catalog:
                     "proxyMode": "auto",
                 }
 
-            tasks = [asyncio.create_task(_search_one(p)) for p in batch]
-            pending = set(tasks)
+            remaining_plugins = list(batch)
+            pending: set[asyncio.Task] = set()
+
+            def start_next_plugins() -> None:
+                while remaining_plugins and len(pending) < max_concurrency:
+                    pending.add(asyncio.create_task(_search_one(remaining_plugins.pop(0))))
+
+            start_next_plugins()
             while pending:
                 remaining_timeout = max(0.1, overall_timeout - (time.perf_counter() - start_time))
                 done, pending = await asyncio.wait(pending, timeout=remaining_timeout, return_when=asyncio.FIRST_COMPLETED)
@@ -297,16 +387,7 @@ class Catalog:
                     if items:
                         success_count += 1
                         for item in items:
-                            score = 0
-                            if keyword.lower() in item.get("name", "").lower():
-                                score += 100
-                            if item.get("author"):
-                                score += 10
-                            if item.get("lastChapter"):
-                                score += 5
-                            if item.get("intro"):
-                                score += 3
-                            item["score"] = score
+                            self.scheduler._score_search_item(item, keyword)
                         all_items.extend(items)
 
                     yield {
@@ -328,6 +409,7 @@ class Catalog:
                             "sourceId": src["sourceId"],
                             "sourceName": src.get("bookSourceName") or src["sourceId"],
                         }
+                start_next_plugins()
 
             yield {
                 "type": "batch_done",
@@ -336,19 +418,14 @@ class Catalog:
                 "sourceCount": len(plugins),
             }
 
-        merged = self._merge_results(all_items)
-        merged.sort(key=lambda x: (-x.get("score", 0), x.get("name", "")))
-        base_api = f"http://{HOST}:{PORT}"
-        for item in merged:
-            if item.get("bookUrl"):
-                item["bookUrl"] = f"{base_api}/api/legado/book/{item['bookId']}"
+        items = self._normalize_source_search_items(all_items)
 
         elapsed_ms = int((time.perf_counter() - start_time) * 1000)
         response = {
             "implemented": True,
             "keyword": keyword,
             "page": page,
-            "items": merged,
+            "items": items,
             "debug": {
                 "sourceCount": len(plugins),
                 "batchSize": source_batch_size,
@@ -364,52 +441,63 @@ class Catalog:
             },
         }
         self.cache.set_search(keyword, page, response)
+        record_bookshelf_items(response["items"])
         yield {
             "type": "done",
             "items": response["items"],
             "debug": response["debug"],
         }
 
-    def _merge_results(self, items: list[dict]) -> list[dict]:
-        """Merge results with same name and author."""
-        groups: dict[tuple[str, str], list[dict]] = {}
-        for item in items:
-            key = (item.get("name", "").strip(), item.get("author", "").strip())
-            groups.setdefault(key, []).append(item)
-
-        merged: list[dict] = []
-        for key, group_items in groups.items():
-            if len(group_items) == 1:
-                merged.append(group_items[0])
-                continue
-            best = max(group_items, key=lambda x: x.get("score", 0))
-            best = dict(best)
-            sources_info = ", ".join(
-                f"{g.get('sourceName','')}({g.get('sourceId','')})" for g in group_items
+    def _normalize_source_search_items(self, items: list[dict]) -> list[dict]:
+        """Return one Reading search item per source result."""
+        source_items = [dict(item) for item in items if isinstance(item, dict)]
+        source_items.sort(
+            key=lambda item: (
+                -item.get("score", 0),
+                item.get("name", ""),
+                item.get("sourceName", "") or item.get("sourceId", ""),
             )
-            intro = best.get("intro", "")
-            best["intro"] = f"{intro} [来源: {sources_info}]" if intro else f"[来源: {sources_info}]"
-            merged.append(best)
-        return merged
+        )
+        for item in source_items:
+            source_id = item.get("sourceId", "")
+            raw_book_url = item.get("rawBookUrl") or item.get("bookUrl", "")
+            if raw_book_url and "/api/legado/book/" not in raw_book_url:
+                book_id = item.get("bookId") or encode_book_id(source_id, raw_book_url)
+                item["bookId"] = book_id
+                item["rawBookUrl"] = raw_book_url
+                item["bookUrl"] = self._book_api_url(book_id)
+            elif raw_book_url and "/api/legado/book/" in raw_book_url:
+                book_id = raw_book_url.rsplit("/", 1)[-1]
+                item["bookId"] = item.get("bookId") or book_id
+                item["bookUrl"] = self._book_api_url(book_id)
+        return source_items
 
     async def book_detail(self, book_id: str, user_agent: str = "") -> dict:
-        cached = self.cache.get_book(book_id)
-        if cached is not None:
-            return cached
-
         try:
             source_id, book_url = decode_book_id(book_id)
         except Exception:
             return {"implemented": True, "data": None, "debug": {"error": "invalid book_id format"}}
 
+        if source_id == VIRTUAL_SOURCE_ID:
+            return await self._aggregate_book_detail(book_id, book_url)
+
+        cached = self.cache.get_book(book_id)
         result = await self.scheduler.detail(source_id, book_url)
         data = result.get("data")
+        error_info = result.get("debug", {}).get("error")
+        if data is None and cached is not None and self._should_fallback_to_cache(error_info):
+            cached_response = self._rewrite_book_response_urls(cached, book_id)
+            cached_debug = dict(cached_response.get("debug") or {})
+            cached_debug["cacheHit"] = True
+            cached_debug["cacheReason"] = self._cache_reason(error_info)
+            cached_debug["liveError"] = error_info
+            cached_response["debug"] = cached_debug
+            return cached_response
         if data is None:
             return {"implemented": True, "data": None, "debug": result.get("debug", {})}
 
-        base_api = f"http://{HOST}:{PORT}"
-        data["bookUrl"] = f"{base_api}/api/legado/book/{book_id}"
-        data["tocUrl"] = f"{base_api}/api/legado/book/{book_id}/toc"
+        data["bookUrl"] = self._book_api_url(book_id)
+        data["tocUrl"] = self._toc_api_url(book_id)
 
         self._ensure_book_record(book_id, data)
 
@@ -431,19 +519,79 @@ class Catalog:
             )
             conn.commit()
 
-    async def toc(self, book_id: str, user_agent: str = "") -> dict:
-        cached = self.cache.get_toc(book_id)
-        if cached is not None:
-            return cached
+    async def _aggregate_book_detail(self, book_id: str, book_url: str) -> dict:
+        try:
+            payload = unpack_aggregate_book_url(book_url)
+            primary_book_id = primary_book_id_from_payload(payload)
+        except Exception as exc:
+            return {"implemented": True, "data": None, "debug": {"error": str(exc), "aggregate": True}}
+        if not primary_book_id:
+            return {"implemented": True, "data": None, "debug": {"error": "aggregate source has no candidates", "aggregate": True}}
 
+        from app.services.aggregate_processor import AggregateProcessor
+
+        enqueue_result = AggregateProcessor().enqueue_book(book_id, payload)
+        detail = await self.book_detail(primary_book_id)
+        data = dict(detail.get("data") or {})
+        official_debug = _aggregate_official_debug(payload, primary_book_id)
+        if not data:
+            return {
+                **detail,
+                "debug": {
+                    **detail.get("debug", {}),
+                    "aggregate": True,
+                    "primaryBookId": primary_book_id,
+                    **official_debug,
+                },
+            }
+
+        data["sourceId"] = VIRTUAL_SOURCE_ID
+        data["sourceName"] = VIRTUAL_SOURCE_NAME
+        data["name"] = payload.get("name") or data.get("name", "")
+        data["author"] = payload.get("author") or data.get("author", "")
+        data["bookUrl"] = self._book_api_url(book_id)
+        data["tocUrl"] = self._toc_api_url(book_id)
+        data["intro"] = (
+            f"【{VIRTUAL_SOURCE_NAME}】{data.get('intro', '')}".strip()
+            or f"{VIRTUAL_SOURCE_NAME} 聚合详情"
+        )
+        return {
+            "implemented": True,
+            "data": data,
+            "debug": {
+                **detail.get("debug", {}),
+                "aggregate": True,
+                "primaryBookId": primary_book_id,
+                "sourceCount": len(payload.get("sources", []) or []),
+                "workflow": "ai_aggregate_purify",
+                "aggregateTask": enqueue_result,
+                **official_debug,
+            },
+        }
+
+    async def toc(self, book_id: str, user_agent: str = "") -> dict:
         try:
             source_id, book_url = decode_book_id(book_id)
         except Exception:
             return {"implemented": True, "bookId": book_id, "chapters": [], "debug": {"error": "invalid book_id format"}}
 
+        if source_id == VIRTUAL_SOURCE_ID:
+            return await self._aggregate_toc(book_id, book_url)
+
+        cached = self.cache.get_toc(book_id)
         result = await self.scheduler.toc(source_id, book_url)
         chapters = result.get("chapters", [])
         debug = result.get("debug", {})
+        error_info = debug.get("error")
+
+        if error_info and cached is not None and self._should_fallback_to_cache(error_info):
+            cached_response = self._rewrite_toc_response_urls(cached)
+            cached_debug = dict(cached_response.get("debug") or {})
+            cached_debug["cacheHit"] = True
+            cached_debug["cacheReason"] = self._cache_reason(error_info)
+            cached_debug["liveError"] = error_info
+            cached_response["debug"] = cached_debug
+            return cached_response
 
         response = {
             "implemented": True,
@@ -451,24 +599,84 @@ class Catalog:
             "chapters": chapters,
             "debug": debug,
         }
+        response = self._rewrite_toc_response_urls(response)
         if not debug.get("error"):
             self.cache.set_toc(book_id, response)
         return response
 
-    async def chapter(self, chapter_id: str, user_agent: str = "") -> dict:
-        cached = self.cache.get_chapter(chapter_id)
-        if cached is not None:
-            return cached
+    async def _aggregate_toc(self, book_id: str, book_url: str) -> dict:
+        try:
+            payload = unpack_aggregate_book_url(book_url)
+            primary_book_id = primary_book_id_from_payload(payload)
+        except Exception as exc:
+            return {"implemented": True, "bookId": book_id, "chapters": [], "debug": {"error": str(exc), "aggregate": True}}
+        if not primary_book_id:
+            return {"implemented": True, "bookId": book_id, "chapters": [], "debug": {"error": "aggregate source has no candidates", "aggregate": True}}
 
+        toc = await self.toc(primary_book_id)
+        chapters = [dict(chapter) for chapter in toc.get("chapters", []) if isinstance(chapter, dict)]
+        from app.services.aggregate_processor import AggregateProcessor
+
+        register_result = AggregateProcessor().register_toc(book_id, payload, chapters)
+        source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
+        for index, chapter in enumerate(chapters, start=1):
+            raw_url = chapter.get("chapterUrl", "")
+            source_chapter_id = chapter.get("chapterId") or (
+                encode_chapter_id(source_id, raw_url) if source_id and raw_url else f"{book_id}:{index}"
+            )
+            aggregate_chapter_url = make_aggregate_chapter_url(
+                aggregate_book_id=book_id,
+                source_chapter_id=source_chapter_id,
+                title=chapter.get("title", ""),
+                index=index,
+            )
+            aggregate_chapter_id = encode_chapter_id(VIRTUAL_SOURCE_ID, aggregate_chapter_url)
+            chapter["sourceId"] = VIRTUAL_SOURCE_ID
+            chapter["sourceChapterId"] = source_chapter_id
+            chapter["chapterId"] = aggregate_chapter_id
+            chapter["chapterUrl"] = self._chapter_api_url(aggregate_chapter_id)
+        official_debug = _aggregate_official_debug(payload, primary_book_id)
+        return {
+            "implemented": True,
+            "bookId": book_id,
+            "chapters": chapters,
+            "debug": {
+                **toc.get("debug", {}),
+                "aggregate": True,
+                "primaryBookId": primary_book_id,
+                "sourceCount": len(payload.get("sources", []) or []),
+                "workflow": "ai_aggregate_purify",
+                "aggregateTask": register_result,
+                **official_debug,
+            },
+        }
+
+    async def chapter(self, chapter_id: str, user_agent: str = "") -> dict:
         try:
             source_id, chapter_url = decode_chapter_id(chapter_id)
         except Exception:
             return {"implemented": True, "chapterId": chapter_id, "title": "", "content": "", "debug": {"error": "invalid chapter_id format"}}
 
+        if source_id == VIRTUAL_SOURCE_ID:
+            from app.services.aggregate_processor import AggregateProcessor
+
+            return AggregateProcessor().aggregate_chapter_response(chapter_url, chapter_id=chapter_id)
+
+        cached = self.cache.get_chapter(chapter_id)
         result = await self.scheduler.chapter(source_id, chapter_url)
         title = result.get("title", "")
         content = result.get("content", "")
         debug = result.get("debug", {})
+
+        error_info = debug.get("error")
+        if error_info and cached is not None and self._should_fallback_to_cache(error_info):
+            cached_response = dict(cached)
+            cached_debug = dict(cached_response.get("debug") or {})
+            cached_debug["cacheHit"] = True
+            cached_debug["cacheReason"] = self._cache_reason(error_info)
+            cached_debug["liveError"] = error_info
+            cached_response["debug"] = cached_debug
+            return cached_response
 
         response = {
             "implemented": True,
@@ -477,9 +685,151 @@ class Catalog:
             "content": content,
             "debug": debug,
         }
-        if not debug.get("error"):
+        # Only cache if content is non-empty and no error
+        if not debug.get("error") and content and len(content.strip()) > 0:
             self.cache.set_chapter(chapter_id, source_id, chapter_url, response)
         return response
+
+    async def chapter_reviews(self, chapter_id: str, user_agent: str = "") -> dict:
+        try:
+            source_id, chapter_url = decode_chapter_id(chapter_id)
+        except Exception:
+            return {
+                "implemented": True,
+                "chapterId": chapter_id,
+                "paragraphs": {},
+                "chapterEnd": [],
+                "summary": {},
+                "debug": {"error": "invalid chapter_id format"},
+            }
+
+        if source_id == VIRTUAL_SOURCE_ID:
+            try:
+                payload = unpack_aggregate_chapter_url(chapter_url)
+                source_chapter_id = payload.get("sourceChapterId", "")
+            except Exception as exc:
+                return {
+                    "implemented": True,
+                    "chapterId": chapter_id,
+                    "paragraphs": {},
+                    "chapterEnd": [],
+                    "summary": {},
+                    "debug": {"error": str(exc), "aggregate": True},
+                }
+            if not source_chapter_id:
+                return {
+                    "implemented": True,
+                    "chapterId": chapter_id,
+                    "paragraphs": {},
+                    "chapterEnd": [],
+                    "summary": {},
+                    "debug": {"error": "aggregate source has no source chapter", "aggregate": True},
+                }
+            return await self.chapter_reviews(source_chapter_id)
+
+        result = await self.scheduler.chapter_reviews(source_id, chapter_url)
+        return {
+            "implemented": True,
+            "chapterId": chapter_id,
+            "paragraphs": result.get("paragraphs", {}),
+            "chapterEnd": result.get("chapterEnd", []),
+            "summary": result.get("summary", {}),
+            "debug": result.get("debug", {}),
+        }
+
+    def _should_fallback_to_cache(self, error: Any) -> bool:
+        if not error:
+            return False
+        if isinstance(error, dict):
+            code = str(error.get("code", "") or "")
+            message = str(error.get("message", "") or error.get("error", "") or "")
+        else:
+            code = ""
+            message = str(error)
+        message_lower = message.lower()
+        if code in {"PLUGIN_TIMEOUT", "BROWSER_REQUIRED", "CLOUDFLARE_REQUIRED", "FETCH_NETWORK_ERROR", "FETCH_HTTP_5XX"}:
+            return True
+        if "timeout" in message_lower or "cloudflare" in message_lower or "browser" in message_lower:
+            return True
+        if "captcha" in message_lower or "验证码" in message or "风控" in message:
+            return True
+        if "network" in message_lower:
+            return True
+        return False
+
+    def _cache_reason(self, error: Any) -> str:
+        if isinstance(error, dict):
+            code = str(error.get("code", "") or "")
+        else:
+            code = ""
+        mapping = {
+            "PLUGIN_TIMEOUT": "timeout",
+            "BROWSER_REQUIRED": "browser_required",
+            "CLOUDFLARE_REQUIRED": "cloudflare_required",
+            "FETCH_NETWORK_ERROR": "network_error",
+            "FETCH_HTTP_5XX": "server_error",
+        }
+        return mapping.get(code, "live_failure")
+
+    def _merge_search_cache_fallback(self, result: dict, keyword: str, page: int) -> dict:
+        cached = self.cache.get_search(keyword, page)
+        if not cached:
+            return result
+        debug = dict(result.get("debug") or {})
+        errors = debug.get("errors") or []
+        live_items = [dict(item) for item in result.get("items", []) if isinstance(item, dict)]
+        cached_items = [dict(item) for item in cached.get("items", []) if isinstance(item, dict)]
+        if not errors or not cached_items:
+            result["items"] = live_items
+            result["debug"] = debug
+            return result
+
+        fallback_source_ids: set[str] = set()
+        fallback_reasons: dict[str, str] = {}
+        for err in errors:
+            if not isinstance(err, dict):
+                continue
+            source_id = err.get("sourceId", "")
+            if not source_id or not self._should_fallback_to_cache(err):
+                continue
+            fallback_source_ids.add(source_id)
+            fallback_reasons[source_id] = self._cache_reason(err)
+
+        if not fallback_source_ids:
+            result["items"] = live_items
+            result["debug"] = debug
+            return result
+
+        existing_keys = {
+            (item.get("sourceId", ""), item.get("rawBookUrl") or item.get("bookUrl", ""), item.get("name", ""))
+            for item in live_items
+        }
+        merged_items = list(live_items)
+        recovered = 0
+        for item in cached_items:
+            source_id = item.get("sourceId", "")
+            if source_id not in fallback_source_ids:
+                continue
+            key = (source_id, item.get("rawBookUrl") or item.get("bookUrl", ""), item.get("name", ""))
+            if key in existing_keys:
+                continue
+            item.setdefault("debug", {})
+            if isinstance(item["debug"], dict):
+                item["debug"]["cacheHit"] = True
+                item["debug"]["cacheReason"] = fallback_reasons.get(source_id, "live_failure")
+            item["cacheHit"] = True
+            item["cacheReason"] = fallback_reasons.get(source_id, "live_failure")
+            merged_items.append(item)
+            existing_keys.add(key)
+            recovered += 1
+
+        if recovered:
+            debug["cacheFallbackCount"] = recovered
+            debug["cacheHit"] = True
+
+        result["items"] = merged_items
+        result["debug"] = debug
+        return result
 
     async def test_source(
         self,
@@ -504,12 +854,14 @@ class Catalog:
 
         ctx = self.scheduler._make_ctx(source_id)
         t0 = time.perf_counter()
+        search_timeout = self.scheduler.search_timeout_for_plugin(plugin)
+        source_timeout = self.scheduler.timeout_for_plugin(plugin)
         try:
             if stage == "search":
                 if "search" not in plugin.capabilities:
                     result["error"] = "插件不支持搜索"
                 else:
-                    items = await asyncio.wait_for(plugin.source.search(ctx, keyword, page), timeout=15.0)
+                    items = await asyncio.wait_for(plugin.source.search(ctx, keyword, page), timeout=search_timeout)
                     latency_ms = int((time.perf_counter() - t0) * 1000)
                     result["pass"] = True
                     result["itemsCount"] = len(items or [])
@@ -521,7 +873,7 @@ class Catalog:
                     result["error"] = "插件不支持详情"
                 else:
                     book_url = plugin.metadata.base_urls[0] if plugin.metadata.base_urls else ""
-                    detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=15.0)
+                    detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=source_timeout)
                     latency_ms = int((time.perf_counter() - t0) * 1000)
                     result["pass"] = True
                     result["data"] = dict(detail) if hasattr(detail, "items") else detail
@@ -533,10 +885,10 @@ class Catalog:
                 else:
                     book_url = plugin.metadata.base_urls[0] if plugin.metadata.base_urls else ""
                     if "detail" in plugin.capabilities:
-                        detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=15.0)
+                        detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=source_timeout)
                         if hasattr(detail, "get"):
                             book_url = detail.get("tocUrl", book_url)
-                    chapters = await asyncio.wait_for(plugin.source.toc(ctx, book_url), timeout=15.0)
+                    chapters = await asyncio.wait_for(plugin.source.toc(ctx, book_url), timeout=source_timeout)
                     latency_ms = int((time.perf_counter() - t0) * 1000)
                     result["pass"] = True
                     result["chaptersCount"] = len(chapters or [])
@@ -548,15 +900,15 @@ class Catalog:
                 else:
                     book_url = plugin.metadata.base_urls[0] if plugin.metadata.base_urls else ""
                     if "detail" in plugin.capabilities:
-                        detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=15.0)
+                        detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=source_timeout)
                         if hasattr(detail, "get"):
                             book_url = detail.get("tocUrl", book_url)
                     if "toc" in plugin.capabilities:
-                        chapters = await asyncio.wait_for(plugin.source.toc(ctx, book_url), timeout=15.0)
+                        chapters = await asyncio.wait_for(plugin.source.toc(ctx, book_url), timeout=source_timeout)
                         if chapters:
                             first_ch = chapters[0]
                             ch_url = first_ch.get("chapterUrl", "") if hasattr(first_ch, "get") else getattr(first_ch, "chapter_url", "")
-                            content = await asyncio.wait_for(plugin.source.chapter(ctx, ch_url), timeout=15.0)
+                            content = await asyncio.wait_for(plugin.source.chapter(ctx, ch_url), timeout=source_timeout)
                             latency_ms = int((time.perf_counter() - t0) * 1000)
                             result["pass"] = True
                             content_text = content.get("content", "") if hasattr(content, "get") else getattr(content, "content", "")

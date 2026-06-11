@@ -13,8 +13,7 @@ from urllib.parse import urljoin
 from lxml import html as lh
 from bs4 import BeautifulSoup
 
-from app.services.browser_bridge.models import BrowserFetchRequest
-from app.services.browser_bridge.search_engine import DEFAULT_HEADERS, search_site
+from app.services.access_bridge.facade import SourceAccessBridge
 from app.services.text_convert import to_simplified, to_traditional
 from app.source_plugins.fetcher import Fetcher
 from app.source_plugins.errors import ParseEmpty, ParseError
@@ -88,202 +87,20 @@ class CookieJar:
         self._auth_repository.set_cookies(self._plugin_id, cookies)
 
 
-class BrowserContextBridge:
-    """Controlled Browser Bridge facade exposed to source plugins."""
-
-    def __init__(self, ctx: PluginContext):
-        self._ctx = ctx
-
-    async def fetch(self, url: str, **kwargs: Any):
-        if self._ctx._browser_bridge is None:
-            from app.source_plugins.errors import BrowserRequired
-
-            raise BrowserRequired("browser bridge is not configured", url=url)
-        request = BrowserFetchRequest(
-            plugin_id=self._ctx.plugin_id,
-            url=url,
-            stage=str(kwargs.get("stage", "")),
-            method=str(kwargs.get("method", "GET")).upper(),
-            headers=kwargs.get("headers") or {},
-            data=kwargs.get("data"),
-            profile_id=str(kwargs.get("profile_id", "")),
-            proxy_profile=str(kwargs.get("proxy_profile", "")),
-            wait_ms=int(kwargs.get("wait_ms", 2500)),
-            timeout_ms=int(kwargs.get("timeout_ms", 90000)),
-            capture_network=bool(kwargs.get("capture_network", False)),
-            dom_snapshot=bool(kwargs.get("dom_snapshot", False)),
-        )
-        result = await self._ctx._browser_bridge.fetch(request)
-        self._ctx.cookies.set_browser_cookies(self._normalize_cookies(result.cookies))
-        self._ctx.trace(
-            "browser_bridge",
-            url=url,
-            message=f"{request.method} {len(result.html or '')} chars",
-            data={"profileId": result.profile_id},
-        )
-        return result
-
-    async def fetch_text(self, url: str, **kwargs: Any) -> str:
-        result = await self.fetch(url, **kwargs)
-        return result.html or ""
-
-    async def search_engine(
-        self,
-        keyword: str,
-        *,
-        target_domain: str,
-        url_patterns: list[str],
-        provider_order: list[str],
-        query_site_path: str = "",
-        timeout: float = 5.0,
-        proxy: bool = False,
-        limit: int = 10,
-    ):
-        async def _fetch_engine(engine_url: str) -> str:
-            return await self._ctx.fetch_text(
-                engine_url,
-                headers=DEFAULT_HEADERS,
-                timeout=timeout,
-                proxy=proxy,
-            )
-
-        hits = await search_site(
-            keyword,
-            target_domain=target_domain,
-            url_patterns=url_patterns,
-            provider_order=provider_order,
-            fetch_text=_fetch_engine,
-            query_site_path=query_site_path,
-            limit=limit,
-        )
-        self._ctx.trace(
-            "browser_bridge_search_engine",
-            message=f"{target_domain} {len(hits)} hits",
-            data={"targetDomain": target_domain, "providerOrder": provider_order},
-        )
-        return hits
-
-    def _normalize_cookies(self, cookies: list[Any]) -> list[dict[str, Any]]:
-        normalized: list[dict[str, Any]] = []
-        for cookie in cookies:
-            if isinstance(cookie, dict):
-                normalized.append(cookie)
-                continue
-            domain = getattr(cookie, "domain", "")
-            name = getattr(cookie, "name", "")
-            value = getattr(cookie, "value", "")
-            if domain and name:
-                normalized.append({"domain": domain, "name": name, "value": value})
-        return normalized
-
-
 class PluginContext:
     def __init__(
         self,
         fetcher: Fetcher,
         plugin_id: str,
         auth_repository: Any = None,
-        browser_fetcher: Any = None,
-        browser_bridge: Any = None,
+        access_bridge: Any = None,
     ):
         self._fetcher = fetcher
         self.plugin_id = plugin_id
         self.cookies = CookieJar(fetcher, plugin_id, auth_repository)
-        self._browser_fetcher = browser_fetcher
-        self._browser_bridge = browser_bridge
-        self.browser = BrowserContextBridge(self)
+        self._access_bridge = access_bridge
+        self.access = SourceAccessBridge(self)
         self._traces: list[dict] = []
-
-    # -- Network --
-
-    async def fetch_text(
-        self,
-        url: str,
-        *,
-        method: str = "GET",
-        params: dict | None = None,
-        data: dict | None = None,
-        json: dict | None = None,
-        headers: dict | None = None,
-        timeout: float | None = None,
-        impersonate: str | None = None,
-        proxy: bool = True,
-        browser: bool = False,
-        wait_ms: int = 2500,
-    ) -> str:
-        if browser:
-            if self._browser_fetcher is None:
-                from app.source_plugins.errors import BrowserRequired
-
-                raise BrowserRequired("browser fetch is not configured", url=url)
-            text = await self._browser_fetcher.fetch_text(
-                self.plugin_id,
-                url,
-                method=method,
-                data=data,
-                timeout=timeout or 90.0,
-                wait_ms=wait_ms,
-            )
-            self.cookies.set_browser_cookies(getattr(self._browser_fetcher, "last_cookies", []) or [])
-            self.trace("browser_fetch", url=url, message=f"{method} {len(text)} chars")
-            return text
-        text = await self._fetcher.fetch_text(
-            url, method=method, params=params, data=data, json=json, headers=headers, timeout=timeout, impersonate=impersonate, proxy=proxy
-        )
-        self.cookies._persist()
-        self.trace("fetch", url=url, message=f"{method} {len(text)} chars")
-        return text
-
-    async def fetch_json(
-        self,
-        url: str,
-        *,
-        method: str = "GET",
-        params: dict | None = None,
-        data: dict | None = None,
-        json: dict | None = None,
-        headers: dict | None = None,
-        timeout: float | None = None,
-        impersonate: str | None = None,
-        proxy: bool = True,
-    ) -> Any:
-        data_out = await self._fetcher.fetch_json(
-            url, method=method, params=params, data=data, json=json, headers=headers, timeout=timeout, impersonate=impersonate, proxy=proxy
-        )
-        self.cookies._persist()
-        self.trace("fetch_json", url=url, message=f"{method} json")
-        return data_out
-
-    async def fetch_bytes(
-        self,
-        url: str,
-        *,
-        method: str = "GET",
-        params: dict | None = None,
-        data: dict | None = None,
-        json: dict | None = None,
-        headers: dict | None = None,
-        timeout: float | None = None,
-        impersonate: str | None = None,
-        proxy: bool = True,
-    ) -> bytes:
-        bs = await self._fetcher.fetch_bytes(
-            url, method=method, params=params, data=data, json=json, headers=headers, timeout=timeout, impersonate=impersonate, proxy=proxy
-        )
-        self.cookies._persist()
-        self.trace("fetch_bytes", url=url, message=f"{method} {len(bs)} bytes")
-        return bs
-
-    async def fetch_many(
-        self,
-        urls: list[str],
-        *,
-        limit: int | None = None,
-    ) -> list[str]:
-        texts = await self._fetcher.fetch_many(urls, limit=limit)
-        self.cookies._persist()
-        self.trace("fetch_many", url=urls[0] if urls else "", message=f"{len(urls)} urls")
-        return texts
 
     # -- Parsing --
 
@@ -459,3 +276,7 @@ class PluginContext:
             "instructions": message or "在打开的浏览器中完成登录，然后回到后台点击检测登录状态。",
             "cookieDomains": cookie_domains,
         }
+
+
+
+

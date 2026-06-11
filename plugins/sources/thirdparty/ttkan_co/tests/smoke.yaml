@@ -1,0 +1,27 @@
+keyword: 慶餘年
+fixtures:
+  search:
+    url: https://www.ttkan.co/novel/search
+    file: search.html
+  detail:
+    url: https://www.ttkan.co/novel/chapters/qingyunian-maoni
+    file: detail.html
+  toc:
+    url: https://www.ttkan.co/novel/chapters/qingyunian-maoni
+    file: toc.html
+  chapter:
+    url: https://www.ttkan.co/novel/pagea/qingyunian-maoni_1.html
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+  detail:
+    name: 庆余年
+    author: 猫腻
+    hasTocUrl: true
+  toc:
+    minChapters: 1
+    firstTitleContains: 楔子
+  chapter:
+    minContentLength: 200
+    titleContains: 楔子

@@ -41,3 +41,5 @@ def get_app_info() -> dict:
             "frontend_dist_dir": str(FRONTEND_DIST_DIR),
         },
     }
+
+

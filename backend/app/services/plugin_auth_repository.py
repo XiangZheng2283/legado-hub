@@ -121,3 +121,5 @@ class PluginAuthRepository:
             "hasCookies": bool(cookies),
             "cookieDomains": sorted(cookies.keys()),
         }
+
+

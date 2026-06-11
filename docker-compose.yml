@@ -1,0 +1,14 @@
+services:
+  legadohub:
+    build:
+      context: .
+    container_name: legadohub
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      LEGADOHUB_BROWSER_PROVIDER: chromium
+      LEGADOHUB_BROWSER_ENABLED: "1"
+      LEGADOHUB_BROWSER_PROFILE_ROOT: /app/backend/data/browser_profiles
+    volumes:
+      - ./backend/data:/app/backend/data

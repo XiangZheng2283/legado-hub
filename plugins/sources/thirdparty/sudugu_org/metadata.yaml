@@ -1,0 +1,31 @@
+contractVersion: "1.0"
+id: sudugu_org
+name: 速读谷
+version: 0.1.0
+type: source
+domains:
+  - sudugu.org
+baseUrls:
+  - https://www.sudugu.org
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+proxy:
+  mode: always
+  required: true
+browser:
+  mode: none
+  reason: ""
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - proxy
+  - rate_limit
