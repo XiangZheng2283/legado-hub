@@ -511,8 +511,9 @@ class SearchJobService:
             score += 2
         if item.get("updateTime"):
             score += 1
+        # Official source priority is handled at the sort/aggregate layer;
+        # do not inflate the filterable score here.
         if _is_official_source_id(item.get("sourceId", ""), self.scheduler):
-            score += 1000
             item.setdefault("extra", {})
             if isinstance(item["extra"], dict):
                 item["extra"]["officialSourcePriority"] = True

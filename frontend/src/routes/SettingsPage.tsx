@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { Bot, Save, ShieldCheck, Wand2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,14 +28,22 @@ export function SettingsPage() {
   })
 
   const [editedSettings, setEditedSettings] = useState<Record<string, any> | null>(null)
+  const [saved, setSaved] = useState(false)
 
   const saveMutation = useMutation({
     mutationFn: api.updateSettings,
     onSuccess: () => {
       setEditedSettings(null)
+      setSaved(true)
       queryClient.invalidateQueries({ queryKey: ["settings"] })
     },
   })
+
+  useEffect(() => {
+    if (!saved) return
+    const timer = setTimeout(() => setSaved(false), 2000)
+    return () => clearTimeout(timer)
+  }, [saved])
 
   const handleSave = () => {
     saveMutation.mutate(localSettings)
@@ -57,9 +65,9 @@ export function SettingsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">设置</h1>
-        <Button size="sm" onClick={handleSave}>
+        <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || saved}>
           <Save className="w-4 h-4 mr-1" />
-          保存
+          {saved ? "已保存" : saveMutation.isPending ? "保存中..." : "保存"}
         </Button>
       </div>
 
@@ -162,6 +170,21 @@ export function SettingsPage() {
                 }
               />
               <p className="text-xs text-muted-foreground">评分低于此值的结果将被过滤（0 表示不过滤）</p>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label>默认 User-Agent</Label>
+              <Input
+                type="text"
+                value={sourcePool.default_user_agent || ""}
+                placeholder="留空使用系统默认"
+                onChange={(e) =>
+                  setEditedSettings({
+                    ...localSettings,
+                    sourcePool: { ...sourcePool, default_user_agent: e.target.value },
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground">书源请求时使用的 UA，修改后需重新加载书源或重启生效</p>
             </div>
           </div>
         </CardContent>
