@@ -469,7 +469,7 @@ class TestOfficialSourcePhoneVerify:
 
         calls = []
 
-        def mock_verify_phone_code(plugin_id: str, payload: dict):
+        async def mock_verify_phone_code(plugin_id: str, payload: dict):
             calls.append(payload)
             return {
                 "ok": True,

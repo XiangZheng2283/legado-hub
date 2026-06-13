@@ -120,7 +120,7 @@ describe("OfficialSourceLoginDialog", () => {
         ok: false,
         sessionId: "sess_abc",
         nextAction: "complete_challenge",
-        challenge: { appId: "1600000770" },
+        challenge: { type: "tencent_captcha", appId: "1600000770" },
       })
       // Second call (after captcha) succeeds
       .mockResolvedValueOnce({

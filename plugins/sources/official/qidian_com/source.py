@@ -27,103 +27,119 @@ class Source:
         """Check Qidian login state from stored cookies.
 
         Strategy:
-        1. Collect cookies from all qidian.com subdomains.
-        2. Verify presence of key login markers (ywguid, ywkey, cmfuToken, etc.).
-        3. Attempt a lightweight mobile-site page probe to confirm cookies work.
+        1. Collect cookies from all qidian.com / yuewen.com subdomains.
+        2. Verify presence of BOTH key login markers (ywguid AND ywkey).
+        3. Probe a mobile page and look for explicit user-state fields.
+
+        State model:
+        - authenticated: True  -> confirmed logged in (nickname or explicit user id)
+        - authStatus: "pending" -> cookies saved but not yet confirmed active
+        - authStatus: "unknown" / no cookies -> not logged in
         """
         all_cookies: dict[str, str] = {}
-        for domain in ("qidian.com", "www.qidian.com", "m.qidian.com"):
+        # Web login markers may live on qidian.com or yuewen.com domains.
+        for domain in ("qidian.com", "www.qidian.com", "m.qidian.com", "yuewen.com"):
             jar = ctx.cookies.get(domain)
             if isinstance(jar, dict):
                 all_cookies.update(jar)
 
+        metadata = getattr(self, "metadata", None) or {}
+        base_status = {
+            "sourceId": self.id,
+            "mode": (metadata.get("auth") or {}).get("mode", "optional"),
+            "hasCookies": bool(all_cookies),
+            "cookieDomains": sorted({d for d in ("qidian.com", "www.qidian.com", "m.qidian.com", "yuewen.com") if ctx.cookies.get(d)}),
+        }
+
         if not all_cookies:
             return {
-                "sourceId": self.id,
+                **base_status,
                 "authenticated": False,
+                "authStatus": "anonymous",
                 "accountName": "",
                 "expiresAt": "",
                 "message": "未检测到起点登录 Cookie",
                 "requiredActions": ["manual_login"],
             }
 
-        # Key login markers observed from Web login (passport.qidian.com / passport.yuewen.com)
-        # Note: cmfuToken / usertoken are App-only; Web login gives ywguid + ywkey + ywopenid.
-        login_markers = {
-            "ywguid": "用户 GUID",
-            "ywkey": "登录密钥",
-            "ywopenid": "阅文 OpenID",
-            "_csrfToken": "CSRF Token",
-            "QDInfo": "设备信息",
-        }
-        found = {k: login_markers[k] for k in login_markers if all_cookies.get(k)}
-
-        # Critical fields for Web login: ywguid + ywkey are the bare minimum.
-        critical = ("ywguid", "ywkey")
-        has_critical = any(all_cookies.get(k) for k in critical)
-
-        if not has_critical:
+        # Critical fields for Web login: ywguid + ywkey must BOTH be present.
+        has_ywguid = bool(all_cookies.get("ywguid"))
+        has_ywkey = bool(all_cookies.get("ywkey"))
+        if not (has_ywguid and has_ywkey):
+            missing = []
+            if not has_ywguid:
+                missing.append("ywguid")
+            if not has_ywkey:
+                missing.append("ywkey")
             return {
-                "sourceId": self.id,
+                **base_status,
                 "authenticated": False,
+                "authStatus": "unknown",
                 "accountName": "",
                 "expiresAt": "",
-                "message": "Cookie 不完整，缺少关键登录态字段（ywguid / ywkey）",
+                "message": f"Cookie 不完整，缺少关键登录态字段（{', '.join(missing)}）",
                 "requiredActions": ["manual_login"],
             }
 
-        # Lightweight probe: use cookies to fetch mobile homepage and see if
-        # pageContext is returned (WAF/login-page would not give stable JSON).
+        # Probe the mobile user center page: it exposes explicit login state
+        # (isLogin / nickName / guid) and is more reliable than the homepage.
         try:
             html = await ctx.access.http.fetch_text(
-                f"{self.mobile_base_url}/",
-                headers={"Referer": self.mobile_base_url},
+                f"{self.mobile_base_url}/user/",
+                headers=self._headers(),
             )
             page_data = self._page_data(html)
         except Exception as exc:
             return {
-                "sourceId": self.id,
+                **base_status,
                 "authenticated": False,
+                "authStatus": "pending",
                 "accountName": "",
                 "expiresAt": "",
                 "message": f"Cookie 存在但页面探测异常：{exc}",
                 "requiredActions": ["check_auth_status"],
             }
 
-        # If pageContext exists, cookies are at least accepted by the server.
-        if page_data:
-            # Try to extract nickname if mobile homepage exposes userInfo.
-            user_info = page_data.get("userInfo") or {}
-            nick = user_info.get("nickName") if isinstance(user_info, dict) else None
-            if nick:
-                return {
-                    "sourceId": self.id,
-                    "authenticated": True,
-                    "accountName": str(nick),
-                    "expiresAt": "",
-                    "message": f"已登录：{nick}",
-                    "requiredActions": [],
-                }
-
-            # Page works but no explicit user info surfaced yet.
-            marker_names = ", ".join(found.keys())
+        if not page_data:
             return {
-                "sourceId": self.id,
+                **base_status,
                 "authenticated": False,
+                "authStatus": "pending",
                 "accountName": "",
                 "expiresAt": "",
-                "message": f"Cookie 有效（{marker_names}），页面访问正常，建议刷新状态确认完整登录态",
+                "message": "Cookie 存在但页面未返回有效数据，可能已失效",
                 "requiredActions": ["check_auth_status"],
             }
 
-        # No pageContext means either WAF or login page → cookies likely invalid.
+        user_info = page_data.get("user") or page_data.get("userInfo") or {}
+        if not isinstance(user_info, dict):
+            user_info = {}
+
+        is_login = bool(user_info.get("isLogin") or user_info.get("isIsLogin"))
+        nick = user_info.get("nickName")
+        user_id = user_info.get("guid") or user_info.get("userId") or user_info.get("id")
+
+        if is_login and (nick or user_id):
+            account_name = str(nick) if nick else str(user_id)
+            return {
+                **base_status,
+                "authenticated": True,
+                "authStatus": "authenticated",
+                "accountName": account_name,
+                "expiresAt": "",
+                "message": f"已登录：{account_name}" if nick else f"已登录（用户 {user_id}）",
+                "requiredActions": [],
+            }
+
+        # Cookies were accepted but the user center says not logged in.
         return {
-            "sourceId": self.id,
+            **base_status,
             "authenticated": False,
+            "authStatus": "pending",
             "accountName": "",
             "expiresAt": "",
-            "message": "Cookie 存在但页面未返回有效数据，可能已失效",
-            "requiredActions": ["manual_login"],
+            "message": "Cookie 已保存，但用户中心未识别登录态",
+            "requiredActions": ["check_auth_status"],
         }
 
     async def prepare_login(self, ctx):
@@ -184,7 +200,7 @@ class Source:
                     "chapterId": chapter_id,
                     "_csrfToken": csrf_token,
                 },
-                headers=headers,
+                headers=self._headers({"Referer": headers.get("Referer", self.mobile_base_url)}),
             )
         except Exception as exc:
             if ctx:
@@ -271,7 +287,7 @@ class Source:
             try:
                 await ctx.access.http.fetch_text(
                     bootstrap_url,
-                    headers={"Referer": self.mobile_base_url},
+                    headers=self._headers(),
                 )
             except Exception:
                 continue
@@ -301,7 +317,7 @@ class Source:
                     "page": 1,
                     "_csrfToken": csrf_token,
                 },
-                headers=headers,
+                headers=self._headers({"Referer": headers.get("Referer", self.mobile_base_url)}),
             )
         except Exception as exc:
             ctx.trace(
@@ -444,10 +460,19 @@ class Source:
         page_data = page_props.get("pageData") if isinstance(page_props, dict) else {}
         return page_data if isinstance(page_data, dict) else {}
 
+    def _headers(self, extra: dict | None = None) -> dict:
+        headers = {"Referer": self.mobile_base_url}
+        if extra:
+            headers.update(extra)
+        return headers
+
     def _text(self, value: str) -> str:
         text = unescape(str(value or ""))
         text = re.sub(r"<br\s*/?>", "\n", text, flags=re.I)
-        text = re.sub(r"</p>\s*<p>", "\n\n", text, flags=re.I)
+        # Qidian mobile chapter content often uses bare <p> tags without closing </p>.
+        # Treat each <p> as a paragraph boundary.
+        text = re.sub(r"<p[^>]*>", "\n\n", text, flags=re.I)
+        text = re.sub(r"</p>", "", text, flags=re.I)
         text = re.sub(r"<[^>]+>", "", text)
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         text = "\n".join(line.strip() for line in text.splitlines())
@@ -606,26 +631,26 @@ class Source:
         url = f"{self.mobile_base_url}/soushu/{quote(keyword)}.html"
         if page > 1:
             url += f"?pageNum={page}"
-        html = await ctx.access.http.fetch_text(url, headers={"Referer": self.mobile_base_url})
+        html = await ctx.access.http.fetch_text(url, headers=self._headers())
         page_data = self._page_data(html)
         ctx.trace("qidian.search.mobile", url=url, message=f"records={len(((page_data.get('bookInfo') or {}).get('records')) or [])}")
         return self._search_items_from_page_data(ctx, page_data)
 
     async def detail(self, ctx, book_url: str):
-        html = await ctx.access.http.fetch_text(book_url, headers={"Referer": self.mobile_base_url})
+        html = await ctx.access.http.fetch_text(book_url, headers=self._headers())
         page_data = self._page_data(html)
         ctx.trace("qidian.detail.mobile", url=book_url, message=f"bookId={(page_data.get('bookInfo') or {}).get('bookId', '')}")
         return self._book_detail_from_page_data(ctx, book_url, page_data)
 
     async def toc(self, ctx, toc_url: str):
-        html = await ctx.access.http.fetch_text(toc_url, headers={"Referer": self.mobile_base_url})
+        html = await ctx.access.http.fetch_text(toc_url, headers=self._headers())
         page_data = self._page_data(html)
         chapters = self._toc_from_page_data(page_data)
         ctx.trace("qidian.toc.mobile", url=toc_url, message=f"chapters={len(chapters)}")
         return chapters
 
     async def chapter(self, ctx, chapter_url: str):
-        html = await ctx.access.http.fetch_text(chapter_url, headers={"Referer": self.mobile_base_url})
+        html = await ctx.access.http.fetch_text(chapter_url, headers=self._headers())
         page_data = self._page_data(html)
         result = self._chapter_from_page_data(ctx, chapter_url, page_data)
         ctx.trace("qidian.chapter.mobile", url=chapter_url, message=f"contentLength={len(result.get('content', ''))}")
@@ -714,7 +739,7 @@ class Source:
         url = target["url"]
         if page > 1:
             url = f"{url.rstrip('/')}/page{page}/"
-        html = await ctx.access.http.fetch_text(url, headers={"Referer": self.mobile_base_url})
+        html = await ctx.access.http.fetch_text(url, headers=self._headers())
         items = self._explore_items_from_html(ctx, url, html)
         ctx.trace("qidian.explore.mobile", url=url, message=f"group={target['groupId']} items={len(items)}")
         return items

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ShieldCheck, RefreshCw, LogIn, Trash2, Monitor, XCircle, CheckCircle, Clock, AlertCircle } from "lucide-react"
+import { ShieldCheck, RefreshCw, LogIn, LogOut, Monitor, XCircle, CheckCircle, Clock, AlertCircle } from "lucide-react"
 
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,63 @@ interface LoginSession {
   polling: boolean
 }
 
+function translateLoginMode(mode: string): string {
+  switch (mode) {
+    case "none":
+      return "无需登录"
+    case "optional":
+      return "可选登录"
+    case "required":
+      return "必须登录"
+    case "manual":
+      return "手动登录"
+    default:
+      return mode || "未知"
+  }
+}
+
+function translateContentAccess(access: string): string {
+  switch (access) {
+    case "free":
+      return "免费"
+    case "paid":
+      return "付费"
+    case "mixed":
+      return "混合"
+    case "unknown":
+    default:
+      return access || "未知"
+  }
+}
+
+function translateAccountStatus(auth: any): { label: string; variant: "success" | "outline" | "destructive" | "secondary" } {
+  if (auth.authenticated) {
+    return { label: "已登录", variant: "success" }
+  }
+
+  const status = auth.authStatus
+  const hasCookies = Boolean(auth.hasCookies)
+  const accountName = auth.accountName
+  const requiresCheck = Array.isArray(auth.requiredActions) && auth.requiredActions.includes("check_auth_status")
+
+  // Has cookies but still needs server-side verification.
+  if (hasCookies && (requiresCheck || status === "pending")) {
+    return { label: accountName ? "登录态待确认" : "待校验", variant: "outline" }
+  }
+
+  // Cookies saved but auth state not yet verified.
+  if (hasCookies && (!status || status === "unknown")) {
+    return { label: "已保存 Cookie", variant: "secondary" }
+  }
+
+  // Explicit anonymous / no-cookie state.
+  if (!hasCookies || status === "anonymous") {
+    return { label: "未登录", variant: "outline" }
+  }
+
+  return { label: "未登录", variant: "outline" }
+}
+
 export function OfficialSourcesPage() {
   const queryClient = useQueryClient()
   const { data, isLoading, refetch } = useQuery({
@@ -41,9 +98,8 @@ export function OfficialSourcesPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["official-sources"] }),
   })
 
-  const enableMutation = useMutation({
-    mutationFn: ({ pluginId, enabled }: { pluginId: string; enabled: boolean }) =>
-      api.enablePlugin(pluginId, enabled),
+  const logoutMutation = useMutation({
+    mutationFn: (pluginId: string) => api.loginLogout(pluginId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["official-sources"] }),
   })
 
@@ -215,12 +271,12 @@ export function OfficialSourcesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>名称</TableHead>
-                  <TableHead>启用</TableHead>
-                  <TableHead>认证模式</TableHead>
+                  <TableHead>版本</TableHead>
+                  <TableHead>修改时间</TableHead>
+                  <TableHead>登录模式</TableHead>
+                  <TableHead>账号状态</TableHead>
+                  <TableHead>账号名称</TableHead>
                   <TableHead>内容访问</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>账号</TableHead>
-                  <TableHead>Cookie域</TableHead>
                   <TableHead>最后检查</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
@@ -229,72 +285,70 @@ export function OfficialSourcesPage() {
                 {items.map((item: any) => {
                   const auth = item.authStatus || {}
                   const isCurrentSession = loginSession?.pluginId === item.pluginId
+                  const accountStatus = translateAccountStatus(auth)
                   return (
                     <TableRow key={item.pluginId}>
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <div className="font-medium flex items-center gap-2">
-                            {item.name}
-                            <Badge variant="secondary" className="text-xs">
-                              <ShieldCheck className="w-3 h-3 mr-1" />
-                              官方
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground">{item.pluginId}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={item.enabled ? "success" : "outline"}>
-                          {item.enabled ? "启用" : "禁用"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{item.auth?.mode || "none"}</TableCell>
-                      <TableCell>{item.content?.access || "unknown"}</TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <Badge variant={auth.authenticated ? "success" : "outline"}>
-                            {auth.authenticated ? "已登录" : auth.authStatus || "unknown"}
+                        <div className="font-medium flex items-center gap-2">
+                          {item.name}
+                          <Badge variant="secondary" className="text-xs">
+                            <ShieldCheck className="w-3 h-3 mr-1" />
+                            官方
                           </Badge>
-                          <div className="text-xs text-muted-foreground">{auth.message || "-"}</div>
                         </div>
                       </TableCell>
-                      <TableCell>{auth.accountName || "-"}</TableCell>
-                      <TableCell className="max-w-56 truncate">
-                        {(item.auth?.cookieDomains || auth.cookieDomains || []).join(", ") || "-"}
+                      <TableCell>{item.version || "-"}</TableCell>
+                      <TableCell>{item.lastModified || "-"}</TableCell>
+                      <TableCell>{translateLoginMode(item.auth?.mode)}</TableCell>
+                      <TableCell>
+                        <Badge variant={accountStatus.variant}>{accountStatus.label}</Badge>
                       </TableCell>
+                      <TableCell>{auth.accountName || ""}</TableCell>
+                      <TableCell>{translateContentAccess(item.content?.access)}</TableCell>
                       <TableCell>{auth.lastCheckedAt || "-"}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant={isCurrentSession && loginSession?.polling ? "default" : "outline"}
-                            disabled={isCurrentSession && loginSession?.polling}
-                            onClick={() => handleOpenLoginDialog(item.pluginId, item.name)}
-                          >
-                            {isCurrentSession && loginSession?.polling ? (
-                              <>
-                                <Monitor className="w-3 h-3 mr-1 animate-pulse" />
-                                登录中...
-                              </>
-                            ) : (
-                              <>
-                              <LogIn className="w-3 h-3 mr-1" />
-                              登录
-                            </>
+                          {auth.authenticated ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => logoutMutation.mutate(item.pluginId)}
+                              disabled={logoutMutation.isPending}
+                            >
+                              <LogOut className="w-3 h-3 mr-1" />
+                              注销
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant={isCurrentSession && loginSession?.polling ? "default" : "outline"}
+                              disabled={isCurrentSession && loginSession?.polling}
+                              onClick={() => handleOpenLoginDialog(item.pluginId, item.name)}
+                            >
+                              {isCurrentSession && loginSession?.polling ? (
+                                <>
+                                  <Monitor className="w-3 h-3 mr-1 animate-pulse" />
+                                  登录中...
+                                </>
+                              ) : (
+                                <>
+                                  <LogIn className="w-3 h-3 mr-1" />
+                                  登录
+                                </>
+                              )}
+                            </Button>
                           )}
-                        </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              enableMutation.mutate({
-                                pluginId: item.pluginId,
-                                enabled: !item.enabled,
-                              })
-                            }
-                          >
-                            {item.enabled ? "禁用书源" : "启用书源"}
-                          </Button>
+                          {!auth.authenticated && auth.hasCookies && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => clearCookiesMutation.mutate(item.pluginId)}
+                              disabled={clearCookiesMutation.isPending}
+                            >
+                              <XCircle className="w-3 h-3 mr-1" />
+                              清除
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
@@ -302,14 +356,6 @@ export function OfficialSourcesPage() {
                           >
                             <RefreshCw className="w-3 h-3 mr-1" />
                             刷新状态
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => clearCookiesMutation.mutate(item.pluginId)}
-                          >
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            清 Cookie
                           </Button>
                         </div>
                       </TableCell>

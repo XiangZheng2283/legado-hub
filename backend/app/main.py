@@ -19,6 +19,15 @@ FRONTEND_DIST = config.FRONTEND_DIST_DIR
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_database()
+    from app.services.official_auth.manager import official_auth_manager
+
+    # On startup, probe qidian_com auth state directly from Cookie.json.
+    try:
+        await official_auth_manager.probe_saved_cookie_file("qidian_com")
+    except Exception:
+        # Startup should stay resilient even if the probe fails.
+        pass
+
     stop_event = asyncio.Event()
     aggregate_task = asyncio.create_task(AggregateProcessor().run_forever(stop_event))
     ping_task = asyncio.create_task(SourcePingScheduler().run_forever(stop_event))

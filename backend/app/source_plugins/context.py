@@ -56,6 +56,21 @@ class CookieJar:
         self._fetcher.clear_cookies(domain)
         if self._auth_repository is None:
             return
+        if self._plugin_id == "qidian_com":
+            from app.services import plugin_cookie_file_store
+
+            if domain is None:
+                plugin_cookie_file_store.clear(self._plugin_id)
+                self._auth_repository.clear_cookie_cache(self._plugin_id)
+                return
+            current = plugin_cookie_file_store.load(self._plugin_id)
+            current.pop(domain, None)
+            if current:
+                plugin_cookie_file_store.save(self._plugin_id, current)
+            else:
+                plugin_cookie_file_store.clear(self._plugin_id)
+            self._auth_repository.clear_cookie_cache(self._plugin_id)
+            return
         if domain is None:
             self._auth_repository.clear_cookies(self._plugin_id)
             return
@@ -84,6 +99,12 @@ class CookieJar:
                 if isinstance(jar, dict) and jar:
                     cookies[domain] = jar
         cookies = {domain: jar for domain, jar in cookies.items() if jar}
+        if self._plugin_id == "qidian_com":
+            from app.services import plugin_cookie_file_store
+
+            plugin_cookie_file_store.save(self._plugin_id, cookies)
+            self._auth_repository.clear_cookie_cache(self._plugin_id)
+            return
         self._auth_repository.set_cookies(self._plugin_id, cookies)
 
 

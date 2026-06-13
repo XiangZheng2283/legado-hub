@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Smartphone, Cookie, CheckCircle, AlertCircle, ShieldCheck } from "lucide-react"
 import { api } from "@/lib/api"
+
+function formatLoginError(message?: string, code?: number | string): string {
+  if (message && code != null) return `${code}: ${message}`
+  if (message) return message
+  if (code != null) return `错误码 ${code}`
+  return "登录请求失败"
+}
 
 // Types from backend login-capabilities response
 interface LoginCapabilities {
@@ -57,7 +64,6 @@ export function OfficialSourceLoginDialog({
   // Shared state
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  const captchaRef = useRef<HTMLDivElement>(null)
 
   // Load capabilities when dialog opens
   useEffect(() => {
@@ -95,34 +101,62 @@ export function OfficialSourceLoginDialog({
   const showTencentCaptcha = useCallback(
     (appId: string, callback: (ticket: string, randstr: string) => void) => {
       const win = window as any
-      if (win.TencentCaptcha) {
-        const captcha = new win.TencentCaptcha(captchaRef.current, appId, (res: any) => {
-          if (res.ret === 0) {
-            callback(res.ticket, res.randstr)
-          } else {
-            setError("滑块验证未完成")
-          }
-        })
-        captcha.show()
-      } else {
-        // Fallback: load Tencent Captcha JS dynamically
-        const script = document.createElement("script")
-        script.src = "https://turing.captcha.qcloud.com/TCaptcha.js"
-        script.onload = () => {
-          if (win.TencentCaptcha) {
-            const captcha = new win.TencentCaptcha(captchaRef.current, appId, (res: any) => {
-              if (res.ret === 0) {
-                callback(res.ticket, res.randstr)
-              } else {
-                setError("滑块验证未完成")
-              }
-            })
-            captcha.show()
-          }
-        }
-        script.onerror = () => setError("滑块验证组件加载失败")
-        document.body.appendChild(script)
+      console.log("[captcha] existing TencentCaptcha:", !!win.TencentCaptcha)
+
+      // Use a hidden body anchor so the popup is not tied to the dialog DOM.
+      let container = document.getElementById("tencent-captcha-anchor")
+      if (!container) {
+        container = document.createElement("div")
+        container.id = "tencent-captcha-anchor"
+        container.style.position = "fixed"
+        container.style.left = "-9999px"
+        container.style.top = "-9999px"
+        container.style.width = "0"
+        container.style.height = "0"
+        document.body.appendChild(container)
       }
+
+      const createCaptcha = () => {
+        try {
+          const captcha = new win.TencentCaptcha(container, appId, (res: any) => {
+            console.log("[captcha] result:", res)
+            if (res.ret === 0) {
+              callback(res.ticket, res.randstr)
+            } else {
+              setError("滑块验证未完成")
+            }
+          })
+          console.log("[captcha] calling show()")
+          captcha.show()
+        } catch (err: any) {
+          console.error("[captcha] constructor/show failed:", err)
+          setError(`滑块验证初始化失败: ${err.message || "未知错误"}`)
+        }
+      }
+
+      if (win.TencentCaptcha) {
+        createCaptcha()
+        return
+      }
+
+      // Fallback: load Tencent Captcha JS dynamically
+      console.log("[captcha] loading script...")
+      const script = document.createElement("script")
+      script.src = "https://turing.captcha.qcloud.com/TCaptcha.js"
+      script.async = true
+      script.onload = () => {
+        console.log("[captcha] script loaded, TencentCaptcha:", !!win.TencentCaptcha)
+        if (win.TencentCaptcha) {
+          createCaptcha()
+        } else {
+          setError("滑块验证组件加载后未找到构造函数")
+        }
+      }
+      script.onerror = (err) => {
+        console.error("[captcha] script load error:", err)
+        setError("滑块验证组件加载失败，请检查网络或改用浏览器/Cookie 登录")
+      }
+      document.body.appendChild(script)
     },
     []
   )
@@ -138,13 +172,31 @@ export function OfficialSourceLoginDialog({
 
     try {
       const result = await api.loginPhoneRequestCode(pluginId, { phone })
+      console.log("[login] request-code result:", result)
 
       if (!result.ok) {
         // Check if challenge required
         if (result.nextAction === "complete_challenge" && result.challenge) {
-          setChallengeData(result.challenge)
-          const appId = result.challenge.appId || "1600000770"
+          const challenge = result.challenge
+          console.log("[login] challenge:", challenge)
+          // Reject challenges without usable captcha data
+          const captchaUrl = challenge.captchaUrl || challenge.url || ""
+          const isTencentCaptcha =
+            challenge.type === "tencent_captcha" ||
+            challenge.captchaType === 1 ||
+            captchaUrl.includes("TCaptcha.js")
+          if (!captchaUrl && !isTencentCaptcha) {
+            const msg = result.error || "无法加载滑块验证，请稍后重试或使用其他登录方式"
+            console.warn("[login] challenge has no usable captcha data")
+            setError(msg)
+            setSendingSms(false)
+            return
+          }
+          setChallengeData(challenge)
+          const appId = challenge.appId || "1600000770"
+          console.log("[login] showing tencent captcha, appId:", appId)
           showTencentCaptcha(appId, async (ticket, randstr) => {
+            console.log("[login] captcha completed, retrying request-code")
             // After captcha, retry request with challenge token
             try {
               const retryResult = await api.loginPhoneRequestCode(pluginId, {
@@ -153,19 +205,22 @@ export function OfficialSourceLoginDialog({
                 challengeRandstr: randstr,
                 sessionId: result.sessionId,
               })
+              console.log("[login] retry request-code result:", retryResult)
               if (retryResult.ok) {
                 setSessionId(retryResult.sessionId)
                 setCountdown(60)
                 setSuccess("验证码已发送")
               } else {
-                setError(retryResult.error || "发送失败")
+                setError(formatLoginError(retryResult.error, retryResult.errorCode))
               }
             } catch (err: any) {
+              console.error("[login] retry request-code failed:", err)
               setError(`发送失败: ${err.message}`)
             }
           })
         } else {
-          setError(result.error || "发送验证码失败")
+          console.warn("[login] request-code failed:", result.error)
+          setError(formatLoginError(result.error, result.errorCode))
         }
         return
       }
@@ -174,6 +229,7 @@ export function OfficialSourceLoginDialog({
       setCountdown(60)
       setSuccess("验证码已发送")
     } catch (err: any) {
+      console.error("[login] request-code exception:", err)
       setError(`发送失败: ${err.message}`)
     } finally {
       setSendingSms(false)
@@ -246,7 +302,7 @@ export function OfficialSourceLoginDialog({
   const hasBrowser = methods.includes("browser")
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -276,9 +332,6 @@ export function OfficialSourceLoginDialog({
 
         {caps && (
           <>
-            {/* Hidden div for Tencent Captcha */}
-            <div ref={captchaRef} className="hidden" />
-
             {error && (
               <Alert variant="destructive" className="text-sm">
                 <AlertCircle className="w-4 h-4" />

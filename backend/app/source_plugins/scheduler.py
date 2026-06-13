@@ -119,11 +119,21 @@ class PluginScheduler:
         return ctx
 
     def _make_fetcher_with_cookies(self, plugin_id: str, auth_repository) -> Fetcher:
+        from app.services import plugin_cookie_file_store
+
         try:
             fetcher = self._make_fetcher(self._plugins.get(plugin_id))
         except TypeError:
             fetcher = self._make_fetcher()
-        for domain, cookies in auth_repository.get_cookies(plugin_id).items():
+
+        # Cookie.json truth source is scoped to qidian_com only.
+        # All other plugins continue to use the DB cookie cache.
+        if plugin_id == "qidian_com":
+            cookie_jar = plugin_cookie_file_store.load(plugin_id)
+        else:
+            cookie_jar = auth_repository.get_cookies(plugin_id)
+
+        for domain, cookies in cookie_jar.items():
             if isinstance(cookies, dict):
                 for name, value in cookies.items():
                     fetcher.set_cookie(domain, name, value)
@@ -435,6 +445,8 @@ class PluginScheduler:
                 "implemented": True,
                 "paragraphs": raw.get("paragraphs", {}),
                 "chapterEnd": raw.get("chapterEnd", []),
+                "chapterEndHot": raw.get("chapterEndHot", []),
+                "authorReviews": raw.get("authorReviews", []),
                 "summary": raw.get("summary", {}),
                 "debug": debug,
             }

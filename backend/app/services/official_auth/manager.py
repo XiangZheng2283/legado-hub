@@ -19,6 +19,7 @@ from app.services.official_auth.contracts import PrivatePluginManifest
 from app.services.official_auth.loader import private_plugin_loader
 from app.services.official_auth.sessions import OfficialLoginSession, session_store
 from app.services.plugin_auth_repository import PluginAuthRepository
+from app.services import plugin_cookie_file_store
 from app.services.qidian_login_service import QidianLoginSession, qidian_login_service
 
 
@@ -118,7 +119,7 @@ class PublicCookieTools:
         marker_names = ", ".join(found.keys())
         return {
             "authenticated": True,
-            "accountName": all_cookies.get("ywguid", "")[:16],
+            "accountName": "",
             "message": f"Cookie 格式正确（{marker_names}）",
         }
 
@@ -195,7 +196,7 @@ class OfficialAuthManager:
             "message": "未检测到私有登录插件，无法使用手机号验证码登录",
         }
 
-    def verify_phone_code(self, plugin_id: str, payload: dict) -> dict:
+    async def verify_phone_code(self, plugin_id: str, payload: dict) -> dict:
         """Step 2 of phone login: verify SMS code."""
         session_id = payload.get("sessionId", "")
         session = session_store.get(session_id)
@@ -206,10 +207,10 @@ class OfficialAuthManager:
         auth_api = private.get("authApi")
 
         if auth_api:
-            return self._verify_phone_code_private(plugin_id, payload, session, auth_api)
+            return await self._verify_phone_code_private(plugin_id, payload, session, auth_api)
 
         if self._has_public_phone_fallback(plugin_id):
-            return self._verify_phone_code_qidian_fallback(plugin_id, payload, session)
+            return await self._verify_phone_code_qidian_fallback(plugin_id, payload, session)
 
         return {"ok": False, "error": "手机号登录能力未安装"}
 
@@ -218,56 +219,34 @@ class OfficialAuthManager:
 
         Steps:
         1. Public parse -> normalize
-        2. Public basic verify (check format, critical fields)
-        3. Persist cookies
-        4. Try plugin auth_status for deep validation (if plugin supports it)
-        5. Optionally use private cookie_auth for enhanced validation
+        2. Write Cookie.json
+        3. Run real auth_status probe with the saved cookies
+        4. Return probe result
         """
-        # Step 1-2: Public parse + verify
         cookie_jar = PublicCookieTools.parse_cookie_text(cookie_text)
-        result = PublicCookieTools.basic_verify(cookie_jar)
+        if not cookie_jar:
+            return {
+                "ok": False,
+                "authenticated": False,
+                "accountName": "",
+                "message": "未检测到 Cookie",
+                "hasCookies": False,
+                "cookieDomains": [],
+            }
 
-        # Step 3: Persist immediately (even before deep validation)
-        self._persist_cookie_jar(plugin_id, cookie_jar, result)
-
-        # Step 4: Deep validation via plugin auth_status (if available)
-        deep_result = await self._deep_verify_via_plugin(plugin_id, cookie_jar)
-        if deep_result:
-            # Merge results
-            result.update(deep_result)
-            # Re-persist with updated status
-            self._persist_cookie_jar(plugin_id, cookie_jar, result)
-
-        # Step 5: Optional private enhancement
-        private = private_plugin_loader.load(plugin_id)
-        cookie_auth = private.get("cookieAuth")
-        if cookie_auth:
-            try:
-                enhanced = cookie_auth.verify_cookies(cookie_jar)
-                # Controlled merge: private enhancement can override auth state
-                if "authenticated" in enhanced:
-                    result["authenticated"] = bool(enhanced["authenticated"])
-                if enhanced.get("accountName"):
-                    result["accountName"] = enhanced["accountName"]
-                if enhanced.get("message"):
-                    result["message"] = enhanced["message"]
-                self._persist_cookie_jar(plugin_id, cookie_jar, result)
-            except Exception:
-                pass
-
+        probe = await self._save_cookie_jar_and_probe(plugin_id, cookie_jar)
         return {
-            "ok": result.get("authenticated", False),
-            "authenticated": result.get("authenticated", False),
-            "accountName": result.get("accountName", ""),
-            "message": result.get("message", ""),
+            "ok": probe["authenticated"],
+            "authenticated": probe["authenticated"],
+            "accountName": probe["accountName"],
+            "message": probe["message"],
             "hasCookies": bool(cookie_jar),
             "cookieDomains": sorted(cookie_jar.keys()),
         }
 
     def logout(self, plugin_id: str) -> dict:
         """Clear auth state for a plugin."""
-        repo = PluginAuthRepository()
-        repo.clear_cookies(plugin_id)
+        self._clear_plugin_auth(plugin_id)
         return {"ok": True, "message": "登录状态已清除"}
 
     # ------------------------------------------------------------------
@@ -293,16 +272,20 @@ class OfficialAuthManager:
         try:
             # Build a minimal context with the cookies
             ctx = scheduler._make_ctx(plugin_id)
-            # Inject cookies into context
+            # Inject cookies into the fetcher directly so qidian_com does not
+            # re-persist Cookie.json-backed cookies into the DB cache.
             for domain, cookies in cookie_jar.items():
                 if isinstance(cookies, dict):
-                    ctx.cookies.set(domain, cookies)
+                    for name, value in cookies.items():
+                        ctx._fetcher.set_cookie(domain, name, value)
 
             result = await plugin.source.auth_status(ctx)
             return {
                 "authenticated": result.get("authenticated", False),
                 "accountName": result.get("accountName", ""),
                 "message": result.get("message", ""),
+                "authStatus": result.get("authStatus", ""),
+                "requiredActions": result.get("requiredActions", []),
             }
         except Exception:
             return None
@@ -326,6 +309,91 @@ class OfficialAuthManager:
                 "requiredActions": ["check_auth_status"] if result.get("authenticated") else [],
             },
         )
+
+    async def save_cookies_and_probe(self, plugin_id: str, cookie_jar: dict) -> dict:
+        """Public entry to persist a cookie jar and immediately probe auth status."""
+        return await self._save_cookie_jar_and_probe(plugin_id, cookie_jar)
+
+    async def probe_saved_cookie_file(self, plugin_id: str) -> dict:
+        """Probe auth state directly from Cookie.json without reading DB cookies."""
+        repo = PluginAuthRepository()
+        cookie_jar = plugin_cookie_file_store.load(plugin_id)
+        repo.clear_cookie_cache(plugin_id)
+
+        if not cookie_jar:
+            repo.update_status(
+                plugin_id,
+                {
+                    "authenticated": False,
+                    "authStatus": "anonymous",
+                    "accountName": "",
+                    "expiresAt": "",
+                    "message": "未检测到 Cookie",
+                    "requiredActions": ["manual_login"],
+                },
+            )
+            return {
+                "authenticated": False,
+                "accountName": "",
+                "message": "未检测到 Cookie",
+                "authStatus": "anonymous",
+            }
+
+        return await self._probe_cookie_jar_and_cache_status(plugin_id, cookie_jar)
+
+    async def _save_cookie_jar_and_probe(self, plugin_id: str, cookie_jar: dict) -> dict:
+        """Persist cookie jar to Cookie.json, then run a real auth_status probe.
+
+        Returns the probe result dict with at least:
+          { authenticated, accountName, message, authStatus }
+        """
+        plugin_cookie_file_store.save(plugin_id, cookie_jar)
+        return await self._probe_cookie_jar_and_cache_status(plugin_id, cookie_jar)
+
+    async def _probe_cookie_jar_and_cache_status(self, plugin_id: str, cookie_jar: dict) -> dict:
+        """Probe auth status using the provided cookie jar and cache only state fields."""
+        probe = await self._deep_verify_via_plugin(plugin_id, cookie_jar)
+        if probe is None:
+            probe = {
+                "authenticated": False,
+                "accountName": "",
+                "message": "插件不支持登录态探测",
+            }
+
+        auth_status = "anonymous"
+        if probe.get("authenticated"):
+            auth_status = "authenticated"
+        elif probe.get("authStatus") in ("authenticated", "pending", "anonymous"):
+            auth_status = probe.get("authStatus")
+        elif cookie_jar:
+            auth_status = "pending"
+
+        repo = PluginAuthRepository()
+        repo.update_status(
+            plugin_id,
+            {
+                "authenticated": probe.get("authenticated", False),
+                "accountName": probe.get("accountName", ""),
+                "expiresAt": "",
+                "message": probe.get("message", ""),
+                "authStatus": auth_status,
+                "requiredActions": probe.get("requiredActions", []),
+            },
+        )
+        repo.clear_cookie_cache(plugin_id)
+
+        return {
+            "authenticated": probe.get("authenticated", False),
+            "accountName": probe.get("accountName", ""),
+            "message": probe.get("message", ""),
+            "authStatus": auth_status,
+        }
+
+    def _clear_plugin_auth(self, plugin_id: str) -> None:
+        """Delete Cookie.json and clear DB auth cache."""
+        plugin_cookie_file_store.clear(plugin_id)
+        repo = PluginAuthRepository()
+        repo.clear_cookies(plugin_id)
 
     # ------------------------------------------------------------------
     # Phone fallback helpers
@@ -353,19 +421,27 @@ class OfficialAuthManager:
         session_id: str,
         phone: str,
     ) -> dict:
-        """Private auth_api path for phone code request."""
+        """Private auth_api path for phone code request.
+
+        The private auth_api maintains its own session store, so we must map
+        the manager's sessionId to the private plugin's sessionId.
+        """
         if not session_id:
+            # Fresh attempt: create manager session and let auth_api create its own.
             session = session_store.create(plugin_id, method="phone")
             session.phone_masked = self._mask_phone(phone)
             session_id = session.session_id
+            private_payload = {}
         else:
             session = session_store.get(session_id)
             if not session:
                 return {"ok": False, "error": "会话已过期或不存在"}
+            private_payload = session.private_payload or {}
 
+        # Use the private plugin's session id for auth_api calls.
+        private_session_id = private_payload.get("sessionId", "")
         try:
-            # Forward FULL payload to private auth_api
-            result = auth_api.request_code({**payload, "sessionId": session_id})
+            result = auth_api.request_code({**payload, "sessionId": private_session_id})
         except Exception as exc:
             session.status = "failed"
             session.last_error = str(exc)
@@ -375,7 +451,8 @@ class OfficialAuthManager:
                 "error": str(exc),
             }
 
-        session.private_payload = result
+        # Preserve manager-level session id while updating the private payload.
+        session.private_payload = {**result, "_managerSessionId": session_id}
         next_action = result.get("nextAction", "verify_code")
         session.status = "challenge" if next_action == "complete_challenge" else "sms_sent"
         session.last_step = "request_code"
@@ -385,6 +462,11 @@ class OfficialAuthManager:
             "sessionId": session_id,
             "nextAction": next_action,
         }
+
+        if result.get("error"):
+            response["error"] = result.get("error")
+        if result.get("errorCode") is not None:
+            response["errorCode"] = result.get("errorCode")
 
         if next_action == "complete_challenge":
             response["challenge"] = result.get("challenge", {})
@@ -404,11 +486,20 @@ class OfficialAuthManager:
             session = session_store.create(plugin_id, method="phone")
             session.phone_masked = self._mask_phone(phone)
             try:
-                qidian_session = qidian_login_service.init()
+                qidian_session = qidian_login_service.init(phone)
             except Exception as exc:
                 session.status = "failed"
                 session.last_error = str(exc)
                 return {"ok": False, "error": str(exc)}
+
+            if qidian_session.status == "failed":
+                session.status = "failed"
+                session.last_error = qidian_session.message
+                return {
+                    "ok": False,
+                    "sessionId": session.session_id,
+                    "error": qidian_session.message or "初始化登录失败",
+                }
 
             session.private_payload = {"qidian_session_id": qidian_session.session_id}
             session.status = "challenge"
@@ -448,13 +539,16 @@ class OfficialAuthManager:
         if qidian_session.status == "failed":
             session.status = "challenge"
             session.last_error = qidian_session.message
-            return {
+            response = {
                 "ok": False,
                 "sessionId": session_id,
                 "nextAction": "complete_challenge",
                 "challenge": self._build_qidian_challenge(qidian_session),
                 "error": qidian_session.message,
             }
+            if qidian_session.error_code is not None:
+                response["errorCode"] = qidian_session.error_code
+            return response
 
         session.status = "sms_sent"
         session.last_step = "send_sms"
@@ -464,7 +558,7 @@ class OfficialAuthManager:
             "nextAction": "verify_code",
         }
 
-    def _verify_phone_code_private(
+    async def _verify_phone_code_private(
         self,
         plugin_id: str,
         payload: dict,
@@ -483,23 +577,30 @@ class OfficialAuthManager:
             return {"ok": False, "error": str(exc)}
 
         if result.get("ok") and result.get("authenticated"):
+            cookie_jar = result.get("cookies", {})
+            probe = await self._save_cookie_jar_and_probe(plugin_id, cookie_jar)
             session.status = "success"
-            session.cookies = result.get("cookies", {})
-            self._persist_cookies(plugin_id, session)
+            session.cookies = cookie_jar
             session_store.remove(session.session_id)
-        else:
-            session.status = "failed"
-            session.last_error = result.get("message", "登录失败")
+            return {
+                "ok": True,
+                "authenticated": probe["authenticated"],
+                "accountName": probe["accountName"],
+                "message": probe["message"],
+                "hasCookies": bool(cookie_jar),
+            }
 
+        session.status = "failed"
+        session.last_error = result.get("message", "登录失败")
         return {
-            "ok": result.get("ok", False),
-            "authenticated": result.get("authenticated", False),
-            "accountName": result.get("accountName", ""),
-            "message": result.get("message", ""),
+            "ok": False,
+            "authenticated": False,
+            "accountName": "",
+            "message": result.get("message", "登录失败"),
             "hasCookies": bool(session.cookies),
         }
 
-    def _verify_phone_code_qidian_fallback(
+    async def _verify_phone_code_qidian_fallback(
         self,
         plugin_id: str,
         payload: dict,
@@ -526,31 +627,18 @@ class OfficialAuthManager:
             session.last_error = qidian_session.message
             return {"ok": False, "error": qidian_session.message}
 
+        cookie_jar = qidian_session.cookies or {}
+        probe = await self._save_cookie_jar_and_probe(plugin_id, cookie_jar)
         session.status = "success"
-        session.cookies = qidian_session.cookies or {}
-        self._persist_cookies(plugin_id, session)
-
-        account_name = qidian_session.phone or session.phone_masked
-        message = qidian_session.message or "登录成功"
-        repo = PluginAuthRepository()
-        repo.update_status(
-            plugin_id,
-            {
-                "authenticated": True,
-                "accountName": account_name,
-                "expiresAt": "",
-                "message": message,
-                "requiredActions": [],
-            },
-        )
+        session.cookies = cookie_jar
         session_store.remove(session.session_id)
 
         return {
             "ok": True,
-            "authenticated": True,
-            "accountName": account_name,
-            "message": message,
-            "hasCookies": bool(session.cookies),
+            "authenticated": probe["authenticated"],
+            "accountName": probe["accountName"],
+            "message": probe["message"],
+            "hasCookies": bool(cookie_jar),
         }
 
 

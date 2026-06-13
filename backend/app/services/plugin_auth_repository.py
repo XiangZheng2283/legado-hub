@@ -60,13 +60,32 @@ class PluginAuthRepository:
             return {}
         return data if isinstance(data, dict) else {}
 
+    def clear_cookie_cache(self, plugin_id: str) -> None:
+        """Clear only persisted cookie_json while leaving status fields intact."""
+        self.ensure_plugin(plugin_id)
+        with self._conn() as conn:
+            conn.execute(
+                """
+                UPDATE plugin_auth_state
+                SET cookie_json = NULL, updated_at = datetime('now')
+                WHERE plugin_id = ?
+                """,
+                (plugin_id,),
+            )
+            conn.commit()
+
     def clear_cookies(self, plugin_id: str) -> None:
         self.ensure_plugin(plugin_id)
         with self._conn() as conn:
             conn.execute(
                 """
                 UPDATE plugin_auth_state
-                SET cookie_json = NULL, auth_status = 'unknown', updated_at = datetime('now')
+                SET cookie_json = NULL,
+                    auth_status = 'unknown',
+                    account_name = '',
+                    expires_at = '',
+                    last_error = '',
+                    updated_at = datetime('now')
                 WHERE plugin_id = ?
                 """,
                 (plugin_id,),
@@ -98,6 +117,8 @@ class PluginAuthRepository:
             conn.commit()
 
     def get_status(self, plugin_id: str) -> dict:
+        from app.services import plugin_cookie_file_store
+
         self.ensure_plugin(plugin_id)
         with self._conn() as conn:
             row = conn.execute(
@@ -108,7 +129,10 @@ class PluginAuthRepository:
                 """,
                 (plugin_id,),
             ).fetchone()
-        cookies = self.get_cookies(plugin_id)
+        if plugin_id == "qidian_com":
+            cookies = plugin_cookie_file_store.load(plugin_id)
+        else:
+            cookies = self.get_cookies(plugin_id)
         auth_status = row[0] if row else "unknown"
         return {
             "sourceId": plugin_id,

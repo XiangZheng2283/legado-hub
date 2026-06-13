@@ -108,12 +108,14 @@ def list_plugins():
 def list_official_sources():
     plugins = _plugin_scheduler._plugins
     auth_repo = PluginAuthRepository()
+    health_repo = PluginHealthRepository()
     items = []
     for plugin in plugins.values():
         auth_mode = (plugin.metadata.auth or {}).get("mode", "none")
         if not plugin.metadata.is_official_source() and auth_mode == "none":
             continue
         status = auth_repo.get_status(plugin.metadata.id)
+        health = health_repo.get_plugin(plugin.metadata.id) or {}
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
@@ -128,6 +130,9 @@ def list_official_sources():
             "browser": plugin.metadata.browser,
             "official": plugin.metadata.is_official_source(),
             "authStatus": status,
+            "pingStatus": health.get("pingStatus", "unknown"),
+            "pingLatencyMs": health.get("pingLatencyMs", 0),
+            "lastPingAt": health.get("lastPingAt", ""),
         })
     items.sort(key=lambda item: (not item["official"], item["name"], item["pluginId"]))
     return {"items": items, "total": len(items)}
@@ -301,19 +306,31 @@ async def get_plugin_auth(plugin_id: str):
         })
         return stored
     ctx = _plugin_scheduler._make_ctx(plugin_id)
+    stored = auth_repo.get_status(plugin_id)
     try:
         result = await plugin.source.auth_status(ctx)
         result.setdefault("mode", auth_meta.get("mode", "optional"))
+        # Preserve a previously known account name when the probe only confirms
+        # login without returning a nickname, or when cookies are still present
+        # but the remote probe transiently fails.
+        if not result.get("accountName") and stored.get("accountName"):
+            result["accountName"] = stored["accountName"]
+        # If the probe says not logged in but we still have saved cookies,
+        # surface a clear action instead of silently showing "未登录".
+        if not result.get("authenticated") and stored.get("hasCookies"):
+            result.setdefault("requiredActions", ["check_auth_status"])
+            if not result.get("message"):
+                result["message"] = "Cookie 已保存，但远程登录态校验未通过"
         auth_repo.update_status(plugin_id, result)
     except Exception as exc:
         result = {
             "sourceId": plugin_id,
             "mode": auth_meta.get("mode", "optional"),
             "authenticated": False,
-            "accountName": "",
+            "accountName": stored.get("accountName", ""),
             "expiresAt": "",
             "message": str(exc),
-            "requiredActions": [],
+            "requiredActions": ["check_auth_status"] if stored.get("hasCookies") else [],
         }
     finally:
         await ctx._fetcher.close()
@@ -350,12 +367,16 @@ async def check_plugin_auth(plugin_id: str):
 
 @console_route("post", "/plugins/{plugin_id}/cookies/clear")
 def clear_plugin_cookies(plugin_id: str):
+    from app.services import plugin_cookie_file_store
+
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
     ctx = _plugin_scheduler._make_ctx(plugin_id)
     ctx.cookies.clear()
     PluginAuthRepository().clear_cookies(plugin_id)
+    # For qidian_com, Cookie.json is the truth source and must also be removed.
+    plugin_cookie_file_store.clear(plugin_id)
     return {"cleared": True, "pluginId": plugin_id}
 
 
@@ -408,19 +429,7 @@ async def get_login_browser_status(plugin_id: str):
     # If completed, persist cookies and clean up
     if session.status in ("success", "failed", "timeout", "cancelled"):
         if session.status == "success" and session.cookies:
-            auth_repo = PluginAuthRepository()
-            auth_repo.set_cookies(plugin_id, session.cookies)
-            # Also update auth status so the next /auth check reflects the new cookies
-            auth_repo.update_status(
-                plugin_id,
-                {
-                    "authenticated": False,  # will be verified by real auth_status check
-                    "accountName": "",
-                    "expiresAt": "",
-                    "message": "Cookie 已通过浏览器登录获取，等待状态校验",
-                    "requiredActions": ["check_auth_status"],
-                },
-            )
+            await official_auth_manager.save_cookies_and_probe(plugin_id, session.cookies)
         await login_browser_service.cleanup(plugin_id)
 
     return result
@@ -460,7 +469,7 @@ async def official_login_phone_verify(plugin_id: str, payload: dict):
 
     Payload: {"sessionId": "xxx", "phone": "13800138000", "code": "123456", "challengeToken": ""}
     """
-    return official_auth_manager.verify_phone_code(plugin_id, payload)
+    return await official_auth_manager.verify_phone_code(plugin_id, payload)
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/cookie/verify")
@@ -674,11 +683,43 @@ async def verify_search_job_candidate(job_id: str, candidate_id: str, payload: d
     if not candidate:
         return {"error": "候选不存在", "jobId": job_id, "candidateId": candidate_id}
     job = _search_service.get_job(job_id)
-    chapter_index = (payload or {}).get("chapterIndex", 0)
+    payload = payload or {}
+    chapter_index = payload.get("chapterIndex", 0)
+    include_reviews = payload.get("includeReviews", True)
     result = await _live_acceptance_service.verify_candidate(
         candidate,
         keyword=job.keyword if job else "",
         chapter_index=chapter_index,
+        include_reviews=bool(include_reviews),
+    )
+    return {"jobId": job_id, "candidateId": candidate_id, "result": result}
+
+
+@console_route("post", "/search-jobs/{job_id}/candidates/{candidate_id}/reviews")
+async def fetch_search_job_candidate_reviews(job_id: str, candidate_id: str, payload: dict | None = None):
+    """Fetch chapter reviews independently of chapter content.
+
+    Useful for VIP chapters where the main text is only a preview but reviews
+    are still available. This endpoint intentionally allows a longer timeout
+    so it can retrieve all review pages asynchronously from the frontend.
+    """
+    candidate = _search_service.find_candidate(job_id, candidate_id)
+    if not candidate:
+        return {"error": "候选不存在", "jobId": job_id, "candidateId": candidate_id}
+    payload = payload or {}
+    chapter_index = payload.get("chapterIndex", 0)
+    # Allow the caller to cap the backend timeout; default to a generous limit
+    # so review pagination can complete without blocking chapter content.
+    timeout = payload.get("timeout")
+    if timeout is not None:
+        try:
+            timeout = float(timeout)
+        except (TypeError, ValueError):
+            timeout = None
+    result = await _live_acceptance_service.fetch_reviews(
+        candidate,
+        chapter_index=chapter_index,
+        timeout=timeout,
     )
     return {"jobId": job_id, "candidateId": candidate_id, "result": result}
 
@@ -1024,6 +1065,12 @@ def get_settings():
         rows = conn.execute("SELECT key, value_json FROM admin_settings").fetchall()
     settings = {r[0]: r[1] for r in rows}
     settings["sourcePool"] = _read_json(SOURCE_POOL_CONFIG_PATH, {})
+    settings["sourcePool"].setdefault(
+        "default_user_agent",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 26_4_2 like Mac OS X) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+        "FxiOS/121.0 Mobile/15E148 Safari/605.1.15",
+    )
     if isinstance(settings.get("contentWorkflow"), str):
         settings["contentWorkflow"] = _json_payload(settings.get("contentWorkflow"))
     settings.setdefault("searchScoreFilter", 100)

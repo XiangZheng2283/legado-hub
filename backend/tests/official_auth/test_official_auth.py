@@ -88,16 +88,26 @@ def test_capabilities_without_private_package():
 
 
 # ------------------------------------------------------------------
-# Cookie verify — async public path
+# Cookie verify — async public path with qidian_com Cookie.json
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_cookie_verify_public_path():
-    """CK login works via public parse+verify when deep plugin validation is unavailable."""
+async def test_cookie_verify_public_path_saves_cookie_json():
+    """CK login parses cookies, writes Cookie.json, and returns the auth_status probe result."""
     from app.services.official_auth.manager import official_auth_manager
+    from app.services import plugin_cookie_file_store
+
+    plugin_cookie_file_store.clear("qidian_com")
 
     with patch.object(
-        official_auth_manager, "_deep_verify_via_plugin", return_value=None
+        official_auth_manager,
+        "_deep_verify_via_plugin",
+        new=AsyncMock(return_value={
+            "authenticated": True,
+            "accountName": "reader_1",
+            "message": "已登录",
+            "authStatus": "authenticated",
+        }),
     ):
         result = await official_auth_manager.verify_cookie(
             "qidian_com",
@@ -109,61 +119,66 @@ async def test_cookie_verify_public_path():
     assert result["hasCookies"] is True
     assert "qidian.com" in result["cookieDomains"]
 
+    saved = plugin_cookie_file_store.load("qidian_com")
+    assert saved["qidian.com"]["ywguid"] == "test_guid"
+    assert saved["qidian.com"]["_csrfToken"] == "test_csrf"
+
 
 @pytest.mark.asyncio
-async def test_cookie_verify_deep_merge():
-    """Deep verify result should be merged into the final response."""
-    from app.services.official_auth.manager import OfficialAuthManager
+async def test_cookie_verify_auth_status_anonymous():
+    """When the plugin auth_status probe says anonymous, verify_cookie reports not authenticated."""
+    from app.services.official_auth.manager import official_auth_manager
+    from app.services import plugin_cookie_file_store
 
-    deep = {"authenticated": False, "accountName": "", "message": "deep says no"}
-    manager = OfficialAuthManager()
-    manager._deep_verify_via_plugin = AsyncMock(return_value=deep)
+    plugin_cookie_file_store.clear("qidian_com")
 
-    with patch(
-        "app.services.official_auth.manager.private_plugin_loader.load",
-        return_value={"cookieAuth": None},
+    with patch.object(
+        official_auth_manager,
+        "_deep_verify_via_plugin",
+        new=AsyncMock(return_value={
+            "authenticated": False,
+            "accountName": "",
+            "message": "未登录",
+            "authStatus": "anonymous",
+        }),
     ):
-        result = await manager.verify_cookie(
+        result = await official_auth_manager.verify_cookie(
             "qidian_com",
             "ywguid=test_guid; ywkey=test_key; _csrfToken=test_csrf",
         )
 
     assert result["ok"] is False
     assert result["authenticated"] is False
-    assert "deep says no" in result["message"]
+    assert result["hasCookies"] is True
+    assert plugin_cookie_file_store.exists("qidian_com")
 
 
 @pytest.mark.asyncio
-async def test_cookie_verify_private_enhancement_overrides_auth():
-    """Private cookie_auth.verify_cookies() can override the final authenticated state.
+async def test_cookie_verify_auth_status_pending():
+    """When auth_status cannot decide, cookies are still saved and status stays pending."""
+    from app.services.official_auth.manager import official_auth_manager
+    from app.services import plugin_cookie_file_store
 
-    Public basic verify says True, but private enhancement says False.
-    The private result must win.
-    """
-    from app.services.official_auth.manager import OfficialAuthManager
+    plugin_cookie_file_store.clear("qidian_com")
 
-    manager = OfficialAuthManager()
-    manager._deep_verify_via_plugin = AsyncMock(return_value=None)
-
-    mock_cookie_auth = MagicMock()
-    mock_cookie_auth.verify_cookies.return_value = {
-        "authenticated": False,
-        "message": "private says invalid",
-    }
-
-    with patch(
-        "app.services.official_auth.manager.private_plugin_loader.load",
-        return_value={"cookieAuth": mock_cookie_auth},
+    with patch.object(
+        official_auth_manager,
+        "_deep_verify_via_plugin",
+        new=AsyncMock(return_value={
+            "authenticated": False,
+            "accountName": "",
+            "message": "探测失败",
+            "authStatus": "pending",
+        }),
     ):
-        result = await manager.verify_cookie(
+        result = await official_auth_manager.verify_cookie(
             "qidian_com",
             "ywguid=test_guid; ywkey=test_key; _csrfToken=test_csrf",
         )
 
-    assert result["authenticated"] is False
     assert result["ok"] is False
-    assert result["message"] == "private says invalid"
-    mock_cookie_auth.verify_cookies.assert_called_once()
+    assert result["hasCookies"] is True
+    assert plugin_cookie_file_store.exists("qidian_com")
 
 
 # ------------------------------------------------------------------
@@ -230,7 +245,7 @@ def test_qidian_fallback_request_code_init_returns_challenge(monkeypatch):
     fake_session = _fake_qidian_session(status="captcha")
     monkeypatch.setattr(
         "app.services.official_auth.manager.qidian_login_service.init",
-        lambda: fake_session,
+        lambda _phone: fake_session,
     )
 
     with patch(
@@ -265,7 +280,7 @@ def test_qidian_fallback_request_code_retry_sends_sms(monkeypatch):
 
     monkeypatch.setattr(
         "app.services.official_auth.manager.qidian_login_service.init",
-        lambda: fake_init,
+        lambda _phone: fake_init,
     )
     monkeypatch.setattr(
         "app.services.official_auth.manager.qidian_login_service.send_sms",
@@ -294,11 +309,15 @@ def test_qidian_fallback_request_code_retry_sends_sms(monkeypatch):
     session_store.remove(init_result["sessionId"])
 
 
-def test_qidian_fallback_verify_phone_code_persists_cookies(monkeypatch, tmp_path):
-    """Successful qidian fallback verify persists cookies and auth status."""
+@pytest.mark.asyncio
+async def test_qidian_fallback_verify_phone_code_saves_cookie_json(monkeypatch, tmp_path):
+    """Successful qidian fallback verify writes Cookie.json and caches probe status."""
     from app.services.official_auth.manager import official_auth_manager
     from app.services.official_auth.sessions import session_store
     from app.services.plugin_auth_repository import PluginAuthRepository
+    from app.services import plugin_cookie_file_store
+
+    plugin_cookie_file_store.clear("qidian_com")
 
     fake_init = _fake_qidian_session(status="captcha")
     fake_submit = _fake_qidian_session(status="success")
@@ -306,7 +325,7 @@ def test_qidian_fallback_verify_phone_code_persists_cookies(monkeypatch, tmp_pat
 
     monkeypatch.setattr(
         "app.services.official_auth.manager.qidian_login_service.init",
-        lambda: fake_init,
+        lambda _phone: fake_init,
     )
     monkeypatch.setattr(
         "app.services.official_auth.manager.qidian_login_service.send_sms",
@@ -327,27 +346,37 @@ def test_qidian_fallback_verify_phone_code_persists_cookies(monkeypatch, tmp_pat
         "app.services.official_auth.manager.private_plugin_loader.load",
         return_value={"authApi": None, "cookieAuth": None, "manifest": None, "available": False},
     ):
-        init_result = official_auth_manager.request_phone_code("qidian_com", {"phone": "13800138000"})
-        sms_result = official_auth_manager.request_phone_code("qidian_com", {
-            "phone": "13800138000",
-            "sessionId": init_result["sessionId"],
-            "challengeToken": "ticket_123",
-            "challengeRandstr": "@rand",
-        })
-        verify_result = official_auth_manager.verify_phone_code("qidian_com", {
-            "sessionId": sms_result["sessionId"],
-            "phone": "13800138000",
-            "code": "123456",
-        })
+        with patch.object(
+            official_auth_manager,
+            "_deep_verify_via_plugin",
+            new=AsyncMock(return_value={
+                "authenticated": True,
+                "accountName": "13800138000",
+                "message": "登录成功",
+                "authStatus": "authenticated",
+            }),
+        ):
+            init_result = official_auth_manager.request_phone_code("qidian_com", {"phone": "13800138000"})
+            sms_result = official_auth_manager.request_phone_code("qidian_com", {
+                "phone": "13800138000",
+                "sessionId": init_result["sessionId"],
+                "challengeToken": "ticket_123",
+                "challengeRandstr": "@rand",
+            })
+            verify_result = await official_auth_manager.verify_phone_code("qidian_com", {
+                "sessionId": sms_result["sessionId"],
+                "phone": "13800138000",
+                "code": "123456",
+            })
 
     assert verify_result["ok"] is True
     assert verify_result["authenticated"] is True
     assert verify_result["hasCookies"] is True
 
-    # Verify persistence
-    cookies = repo.get_cookies("qidian_com")
-    assert "qidian.com" in cookies
-    assert cookies["qidian.com"]["ywguid"] == "guid_123"
+    # Cookie truth source is Cookie.json, not DB cookie_json.
+    saved = plugin_cookie_file_store.load("qidian_com")
+    assert "qidian.com" in saved
+    assert saved["qidian.com"]["ywguid"] == "guid_123"
 
     status = repo.get_status("qidian_com")
     assert status["authenticated"] is True
@@ -357,6 +386,74 @@ def test_qidian_fallback_verify_phone_code_persists_cookies(monkeypatch, tmp_pat
 
     # Session should be cleaned up
     assert session_store.get(sms_result["sessionId"]) is None
+
+
+@pytest.mark.asyncio
+async def test_probe_saved_cookie_file_refreshes_status_from_cookie_json(monkeypatch, tmp_path):
+    from app.services.official_auth.manager import official_auth_manager
+    from app.services.plugin_auth_repository import PluginAuthRepository
+    from app.services import plugin_cookie_file_store
+
+    plugin_cookie_file_store.clear("qidian_com")
+    plugin_cookie_file_store.save("qidian_com", {"qidian.com": {"ywguid": "1", "ywkey": "2"}})
+
+    repo = PluginAuthRepository(tmp_path / "auth.db")
+    monkeypatch.setattr(
+        "app.services.official_auth.manager.PluginAuthRepository",
+        lambda: repo,
+    )
+
+    with patch.object(
+        official_auth_manager,
+        "_deep_verify_via_plugin",
+        new=AsyncMock(return_value={
+            "authenticated": True,
+            "accountName": "reader_1",
+            "message": "已登录",
+            "authStatus": "authenticated",
+            "requiredActions": [],
+        }),
+    ):
+        result = await official_auth_manager.probe_saved_cookie_file("qidian_com")
+
+    assert result["authenticated"] is True
+    status = repo.get_status("qidian_com")
+    assert status["authenticated"] is True
+    assert status["accountName"] == "reader_1"
+    assert status["hasCookies"] is True
+
+
+@pytest.mark.asyncio
+async def test_probe_saved_cookie_file_without_file_marks_anonymous_and_clears_db_cookie(monkeypatch, tmp_path):
+    from app.services.official_auth.manager import official_auth_manager
+    from app.services.plugin_auth_repository import PluginAuthRepository
+    from app.services import plugin_cookie_file_store
+
+    plugin_cookie_file_store.clear("qidian_com")
+
+    repo = PluginAuthRepository(tmp_path / "auth.db")
+    repo.set_cookies("qidian_com", {"qidian.com": {"legacy": "cookie"}})
+    repo.update_status(
+        "qidian_com",
+        {
+            "authenticated": True,
+            "accountName": "reader_1",
+            "message": "旧状态",
+        },
+    )
+    monkeypatch.setattr(
+        "app.services.official_auth.manager.PluginAuthRepository",
+        lambda: repo,
+    )
+
+    result = await official_auth_manager.probe_saved_cookie_file("qidian_com")
+
+    assert result["authStatus"] == "anonymous"
+    assert repo.get_cookies("qidian_com") == {}
+    status = repo.get_status("qidian_com")
+    assert status["authenticated"] is False
+    assert status["authStatus"] == "anonymous"
+    assert status["hasCookies"] is False
 
 
 # ------------------------------------------------------------------
@@ -583,3 +680,42 @@ def test_private_loader_with_injected_package(tmp_path, monkeypatch):
     assert result["authApi"] is not None
     assert result["cookieAuth"] is not None
     assert result["reviews"] is not None
+
+
+@pytest.mark.asyncio
+async def test_get_plugin_auth_preserves_account_name_on_probe_failure(monkeypatch):
+    """If auth_status probe fails but cookies exist, don't wipe stored accountName."""
+    from app.api.console import get_plugin_auth, _plugin_scheduler
+    from app.services.plugin_auth_repository import PluginAuthRepository
+    from app.services import plugin_cookie_file_store
+
+    repo = PluginAuthRepository()
+    plugin_cookie_file_store.save("qidian_com", {"qidian.com": {"_csrfToken": "test", "ywguid": "g", "ywkey": "k"}})
+    repo.update_status(
+        "qidian_com",
+        {
+            "authenticated": True,
+            "accountName": "158****1035",
+            "message": "登录成功",
+        },
+    )
+
+    async def failing_auth_status(ctx):
+        return {
+            "sourceId": "qidian_com",
+            "authenticated": False,
+            "accountName": "",
+            "message": "probe failed",
+        }
+
+    fake_plugin = MagicMock()
+    fake_plugin.metadata.auth = {"mode": "optional"}
+    fake_plugin.capabilities = ["auth"]
+    fake_plugin.source.auth_status = failing_auth_status
+    monkeypatch.setitem(_plugin_scheduler._plugins, "qidian_com", fake_plugin)
+
+    result = await get_plugin_auth("qidian_com")
+    assert result["authenticated"] is False
+    assert result["accountName"] == "158****1035"
+    # DB should still know cookies exist even though probe failed.
+    assert repo.get_status("qidian_com")["hasCookies"] is True

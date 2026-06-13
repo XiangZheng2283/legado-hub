@@ -17,6 +17,28 @@ from typing import Any
 
 import requests
 
+from app.config import SOURCE_POOL_CONFIG_PATH
+
+
+DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 26_4_2 like Mac OS X) "
+    "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+    "FxiOS/121.0 Mobile/15E148 Safari/605.1.15"
+)
+
+
+def _default_user_agent() -> str:
+    """Read default UA from scheduler config; fall back to built-in default."""
+    try:
+        if SOURCE_POOL_CONFIG_PATH.exists():
+            data = json.loads(SOURCE_POOL_CONFIG_PATH.read_text(encoding="utf-8"))
+            ua = data.get("default_user_agent", "")
+            if isinstance(ua, str) and ua.strip():
+                return ua.strip()
+    except Exception:
+        pass
+    return DEFAULT_USER_AGENT
+
 
 class QidianLoginSession:
     """One login session for qidian_com (phone + captcha + SMS)."""
@@ -24,6 +46,7 @@ class QidianLoginSession:
     def __init__(self):
         self.session_id = uuid.uuid4().hex[:16]
         self.created_at = time.time()
+        self.http = self._new_http_session()
         self.config: dict[str, Any] = {}
         self.base_data: dict[str, Any] = {}
         self.code_key = ""          # from getvalidatecodenew
@@ -34,7 +57,19 @@ class QidianLoginSession:
         self.phone = ""
         self.status = "init"        # init | captcha | sms_sent | success | failed
         self.message = ""
+        self.error_code: int | None = None
         self.cookies: dict[str, dict[str, str]] = {}
+
+    @staticmethod
+    def _new_http_session() -> requests.Session:
+        s = requests.Session()
+        s.headers.update({
+            "User-Agent": _default_user_agent(),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "Referer": "https://passport.qidian.com/",
+        })
+        return s
 
     def expired(self) -> bool:
         return time.time() - self.created_at > 600  # 10 min
@@ -53,19 +88,34 @@ class QidianLoginService:
     # Public flow
     # ------------------------------------------------------------------
 
-    def init(self) -> QidianLoginSession:
-        """Step 1: fetch page params + getvalidatecodenew."""
+    def init(self, phone: str = "") -> QidianLoginSession:
+        """Step 1: fetch page params + getvalidatecodenew + prime sendmsgnew.
+
+        We must call sendmsgnew once without a ticket to exchange the temporary
+        codeKey for the real sessionKey and confirm the actual server-required
+        flow before sending the SMS code.
+
+        If the server returns `needValidateCode=false`, we still do NOT return
+        early. We must prime `sendmsgnew` once and inspect `nextAction`:
+        - `0`  -> SMS already sent, no slide captcha required
+        - `11` -> Tencent slide captcha still required
+        """
         session = QidianLoginSession()
 
         # 1a. Load passport page to extract init params
-        page_cfg = self._fetch_page_config()
+        page_cfg = self._fetch_page_config(session.http)
         session.config = page_cfg
         session.base_data = self._build_base_data(page_cfg)
 
         # 1b. Call getvalidatecodenew to get codeKey & captcha info
-        result = self._api_getvalidatecodenew(session.base_data)
+        result = self._api_getvalidatecodenew(session.http, session.base_data)
         data = result.get("data", {})
         session.code_key = data.get("sessionKey", "")
+
+        if result.get("code") != 0:
+            session.status = "failed"
+            session.message = result.get("message", "初始化登录失败")
+            return session
 
         img_src = data.get("imgSrc", "")
         if img_src.startswith("tencentCode;"):
@@ -75,47 +125,82 @@ class QidianLoginService:
             session.captcha_url = img_src
             session.captcha_type = 0
 
-        need_validate = data.get("needValidateCode", True)
-        if not need_validate and not img_src:
-            # Rare: no captcha needed
-            session.status = "captcha"
-            session.message = "无需滑块验证，可直接发送短信"
-        else:
-            session.status = "captcha"
-            session.message = "需要完成滑块验证"
+        # 1c. Prime sendmsgnew to obtain the real sessionKey and determine
+        # whether the server will allow SMS directly or still requires the
+        # Tencent slide captcha challenge.
+        # The frontend phone number may not be known yet; use a placeholder if needed.
+        prime_phone = phone or "13800138000"
+        prime_result = self._api_sendmsgnew(
+            session.http, session.base_data, session.code_key, prime_phone, "", ""
+        )
+        prime_data = prime_result.get("data", {})
+        if prime_result.get("code") != 0:
+            session.status = "failed"
+            session.message = prime_result.get("message", "请求验证码失败")
+            return session
+
+        next_action = prime_data.get("nextAction")
+        real_session_key = prime_data.get("sessionKey", "")
+        # If the server explicitly allows direct SMS sending, transition
+        # straight to sms_sent. This keeps the no-slide path available without
+        # assuming it before sendmsgnew confirms it.
+        if next_action == 0 and real_session_key:
+            session.session_key = real_session_key
+            session.status = "sms_sent"
+            session.message = "短信验证码已发送"
+            self._sessions[session.session_id] = session
+            return session
+
+        # Otherwise store the real sessionKey to be used after the user
+        # completes the slide challenge.
+        session.session_key = real_session_key
+        session.status = "captcha"
+        session.message = "需要完成滑块验证"
 
         self._sessions[session.session_id] = session
         return session
 
     def send_sms(self, session_id: str, phone: str, ticket: str, randstr: str) -> QidianLoginSession:
-        """Step 2: call sendmsgnew with captcha ticket."""
+        """Step 2: call sendmsgnew with captcha ticket using the real sessionKey."""
         session = self._get_session(session_id)
         session.phone = phone
 
+        if not session.session_key:
+            session.status = "failed"
+            session.message = "会话未准备好，请重新获取验证码"
+            return session
+
         result = self._api_sendmsgnew(
+            session.http,
             session.base_data,
-            session.code_key,
+            session.session_key,
             phone,
             ticket=ticket,
             randstr=randstr,
         )
-        data = result.get("data", {})
+        data = result.get("data") or {}
         next_action = data.get("nextAction", 0)
+        real_session_key = data.get("sessionKey", "")
+
+        # Qidian sometimes returns a non-zero code while still sending the SMS.
+        # Treat it as success if we got a real sessionKey and the server is no
+        # longer asking for a captcha (nextAction != 11).
+        if real_session_key and next_action != 11:
+            session.session_key = real_session_key
+            session.status = "sms_sent"
+            session.message = "短信验证码已发送"
+            return session
 
         if next_action == 11:
             # Still asking for slide captcha -> ticket invalid / not provided
             session.status = "failed"
             session.message = "滑块验证未通过，请重新完成滑块"
+            session.error_code = result.get("code")
             return session
 
-        if result.get("code") != 0:
-            session.status = "failed"
-            session.message = result.get("message", "发送短信失败")
-            return session
-
-        session.session_key = data.get("sessionKey", "")
-        session.status = "sms_sent"
-        session.message = "短信验证码已发送"
+        session.status = "failed"
+        session.message = result.get("message") or "发送短信失败"
+        session.error_code = result.get("code")
         return session
 
     def submit(self, session_id: str, sms_code: str) -> QidianLoginSession:
@@ -123,6 +208,7 @@ class QidianLoginService:
         session = self._get_session(session_id)
 
         result = self._api_phonecodelogin(
+            session.http,
             session.base_data,
             session.session_key,
             session.phone,
@@ -135,8 +221,9 @@ class QidianLoginService:
             session.message = result.get("message", "登录失败")
             return session
 
-        # Extract cookies from response headers
-        session.cookies = self._extract_cookies_from_response(result)
+        # Extract cookies from response body and from the session cookie jar
+        # (login markers may be returned via Set-Cookie headers).
+        session.cookies = self._extract_cookies_from_response(result, session.http)
         session.status = "success"
         session.message = "登录成功"
         return session
@@ -162,18 +249,6 @@ class QidianLoginService:
 
     # -- HTTP helpers --
 
-    def _http(self) -> requests.Session:
-        s = requests.Session()
-        s.headers.update({
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            ),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "zh-CN,zh;q=0.9",
-        })
-        return s
-
     def _jsonp_parse(self, text: str) -> dict:
         m = re.search(r"\((.*)\)\s*$", text, re.S)
         if not m:
@@ -188,9 +263,8 @@ class QidianLoginService:
 
     # -- Step 1a: page config --
 
-    def _fetch_page_config(self) -> dict:
-        s = self._http()
-        r = s.get(self.PASSPORT_URL, timeout=15)
+    def _fetch_page_config(self, http: requests.Session) -> dict:
+        r = http.get(self.PASSPORT_URL, timeout=15)
         html = r.text
 
         m = re.search(r"LoginV1\.init\s*\(\s*(\{[\s\S]*?\})\s*\)", html)
@@ -226,57 +300,70 @@ class QidianLoginService:
 
     # -- Step 1b: getvalidatecodenew --
 
-    def _api_getvalidatecodenew(self, base_data: dict) -> dict:
-        s = self._http()
+    def _api_getvalidatecodenew(self, http: requests.Session, base_data: dict) -> dict:
         params = {
             **base_data,
             "force": 1,
             "method": "LoginV1.getCaptchaCallback",
             "format": "jsonp",
         }
-        r = s.get(f"{self.BASE_API_URL}/userSdk/getvalidatecodenew", params=params, timeout=15)
+        r = http.get(f"{self.BASE_API_URL}/userSdk/getvalidatecodenew", params=params, timeout=15)
         return self._jsonp_parse(r.text)
 
     # -- Step 2: sendmsgnew --
 
     def _api_sendmsgnew(
         self,
+        http: requests.Session,
         base_data: dict,
         code_key: str,
         phone: str,
         ticket: str = "",
         randstr: str = "",
     ) -> dict:
-        s = self._http()
-        params = {
-            **base_data,
-            "phoneIsAbroad": 0,
-            "inputUserId": f"+86{phone}",
-            "sessionKey": code_key,
-            "type": 1,
-            "validateCode": "",
-            "needRegister": 0,
-            "method": "LoginV1.phoneSendMsgCallback",
-            "format": "jsonp",
-        }
-        if ticket:
-            params["sig"] = ticket
-        if randstr:
-            params["code"] = randstr
+        # Tencent slide-captcha flow: combine randstr + ticket into validateCode
+        # and use the slide-specific callback, matching Qidian's login.js.
+        if ticket and randstr:
+            params = {
+                **base_data,
+                "phoneIsAbroad": 0,
+                "inputUserId": f"+86{phone}",
+                "mobilePhone": phone,
+                "sessionKey": code_key,
+                "type": 1,
+                "validateCode": f"{randstr};{ticket}",
+                "needRegister": 0,
+                "method": "LoginV1.slidePhoneSendMsgByCodeLoginCallback",
+                "format": "jsonp",
+            }
+        else:
+            # First attempt without captcha ticket; server replies with nextAction=11
+            params = {
+                **base_data,
+                "phoneIsAbroad": 0,
+                "inputUserId": f"+86{phone}",
+                "mobilePhone": phone,
+                "sessionKey": code_key,
+                "type": 1,
+                "validateCode": "",
+                "needRegister": 0,
+                "method": "LoginV1.phoneSendMsgCallback",
+                "format": "jsonp",
+            }
 
-        r = s.get(f"{self.BASE_API_URL}/userSdk/sendmsgnew", params=params, timeout=15)
+        r = http.get(f"{self.BASE_API_URL}/userSdk/sendmsgnew", params=params, timeout=15)
         return self._jsonp_parse(r.text)
 
     # -- Step 3: phonecodelogin --
 
     def _api_phonecodelogin(
         self,
+        http: requests.Session,
         base_data: dict,
         session_key: str,
         phone: str,
         sms_code: str,
     ) -> dict:
-        s = self._http()
         params = {
             **base_data,
             "inputUserId": phone,
@@ -285,13 +372,19 @@ class QidianLoginService:
             "method": "LoginV1.phoneCodeLoginCallback",
             "format": "jsonp",
         }
-        r = s.get(f"{self.BASE_API_URL}/userSdk/phonecodelogin", params=params, timeout=15)
+        r = http.get(f"{self.BASE_API_URL}/userSdk/phonecodelogin", params=params, timeout=15)
         return self._jsonp_parse(r.text)
 
     # -- Cookie extraction --
 
-    def _extract_cookies_from_response(self, result: dict) -> dict:
-        """Login API returns cookie-like fields in data; we normalize them."""
+    def _extract_cookies_from_response(
+        self, result: dict, http: requests.Session | None = None
+    ) -> dict:
+        """Login API returns cookie-like fields in data; we normalize them.
+
+        Also copies login markers from the session cookie jar, because some
+        responses set ywguid/ywkey via Set-Cookie headers rather than the JSON body.
+        """
         data = result.get("data", {})
         cookies: dict[str, dict[str, str]] = {}
 
@@ -303,6 +396,10 @@ class QidianLoginService:
             "ticket": "ticket",
             "autoLoginSessionKey": "autoLoginSessionKey",
             "contextId": "contextId",
+            # Some responses use lower-cased field names.
+            "ywguid": "ywguid",
+            "ywkey": "ywkey",
+            "ywopenid": "ywopenid",
         }
 
         for api_name, cookie_name in fields.items():
@@ -312,8 +409,22 @@ class QidianLoginService:
                 for domain in ("qidian.com", "yuewen.com"):
                     cookies.setdefault(domain, {})[cookie_name] = str(value)
 
-        # Also try to extract from the HTTP response if available
-        # (JSONP doesn't expose Set-Cookie headers, so we rely on data fields)
+        # Copy all cookies from the requests session jar so we don't miss any
+        # login markers Qidian may set under different names or domains.
+        if http is not None:
+            target_domains = ("qidian.com", "m.qidian.com", "www.qidian.com", "yuewen.com", "ptlogin.yuewen.com", "ptlogin.qidian.com")
+            for cookie in http.cookies:
+                domain = cookie.domain.lstrip(".") if cookie.domain else ""
+                matched_domain = next(
+                    (d for d in target_domains if domain == d or domain.endswith("." + d)), ""
+                )
+                if matched_domain:
+                    cookies.setdefault(matched_domain, {})[cookie.name] = cookie.value
+                # Also normalize shared login markers under the canonical domains.
+                if cookie.name in ("ywguid", "ywkey", "ywopenid", "_csrfToken"):
+                    for canonical in ("qidian.com", "yuewen.com"):
+                        cookies.setdefault(canonical, {})[cookie.name] = cookie.value
+
         return cookies
 
 
