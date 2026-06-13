@@ -186,113 +186,103 @@ async def test_cookie_verify_auth_status_pending():
 # ------------------------------------------------------------------
 
 def test_request_code_forwards_full_payload():
-    """Challenge params (sessionId, challengeToken, challengeRandstr) must be forwarded."""
+    """Challenge params (challengeToken, challengeRandstr) must be forwarded to private auth_api."""
     from app.services.official_auth.manager import official_auth_manager
 
-    result = official_auth_manager.request_phone_code("qidian_com", {
-        "phone": "13800138000",
-        "sessionId": "test_session",
-        "challengeToken": "test_ticket",
-        "challengeRandstr": "@test_rand",
+    mock_auth_api = MagicMock()
+    mock_auth_api.request_code = MagicMock(return_value={
+        "ok": False,
+        "sessionId": "private_session_123",
+        "nextAction": "complete_challenge",
+        "challenge": {"type": "tencent_captcha"},
     })
 
-    assert "error" in result or result.get("ok") is True
+    with patch(
+        "app.services.official_auth.manager.private_plugin_loader.load",
+        return_value={"authApi": mock_auth_api, "cookieAuth": None, "manifest": None, "available": True},
+    ):
+        result = official_auth_manager.request_phone_code("fake_phone_plugin", {
+            "phone": "13800138000",
+            "challengeToken": "test_ticket",
+            "challengeRandstr": "@test_rand",
+        })
+
+    assert result["nextAction"] == "complete_challenge"
+    mock_auth_api.request_code.assert_called_once()
+    call_args = mock_auth_api.request_code.call_args[0][0]
+    assert call_args["challengeToken"] == "test_ticket"
+    assert call_args["challengeRandstr"] == "@test_rand"
 
 
 # ------------------------------------------------------------------
-# Qidian public phone fallback (no private authApi)
+# Private phone auth path
 # ------------------------------------------------------------------
 
-def _fake_qidian_session(session_id: str = "qd_123", status: str = "captcha"):
-    """Build a minimal fake QidianLoginSession for monkeypatching."""
-    session = MagicMock()
-    session.session_id = session_id
-    session.status = status
-    session.captcha_app_id = "1600000770"
-    session.captcha_type = 1
-    session.captcha_url = "https://turing.captcha.qcloud.com/TCaptcha.js"
-    session.phone = "13800138000"
-    session.message = "mock"
-    session.cookies = {
-        "qidian.com": {"ywguid": "guid_123", "ywkey": "key_123"},
-        "yuewen.com": {"ywguid": "guid_123", "ywkey": "key_123"},
-    }
-    return session
-
-
-def test_qidian_fallback_capabilities_exposes_phone_without_private_auth():
-    """qidian_com should advertise phone login even when private authApi is absent."""
+def test_capabilities_exposes_phone_when_private_auth_exists():
+    """Phone login is advertised only when the plugin provides a private auth_api."""
     from app.services.official_auth.manager import official_auth_manager
 
     with patch(
         "app.services.official_auth.manager.private_plugin_loader.load",
-        return_value={"authApi": None, "cookieAuth": None, "manifest": None, "available": False},
+        return_value={"authApi": MagicMock(), "cookieAuth": None, "manifest": None, "available": True},
     ):
-        caps = official_auth_manager.capabilities("qidian_com")
+        caps = official_auth_manager.capabilities("fake_phone_plugin")
 
     assert "phone" in caps["methods"]
     assert "cookie" in caps["methods"]
     assert caps["defaultMethod"] == "phone"
-    assert caps["privateFeatures"]["phoneAuth"] is False
-    assert caps["hasPrivatePackage"] is False
+    assert caps["privateFeatures"]["phoneAuth"] is True
+    assert caps["hasPrivatePackage"] is True
 
 
-def test_qidian_fallback_request_code_init_returns_challenge(monkeypatch):
-    """Fresh request-code for qidian_com fallback returns a captcha challenge."""
+def test_request_code_private_returns_challenge():
+    """Fresh request-code with a private auth_api returns a captcha challenge."""
     from app.services.official_auth.manager import official_auth_manager
     from app.services.official_auth.sessions import session_store
 
-    fake_session = _fake_qidian_session(status="captcha")
-    monkeypatch.setattr(
-        "app.services.official_auth.manager.qidian_login_service.init",
-        lambda _phone: fake_session,
-    )
+    mock_auth_api = MagicMock()
+    mock_auth_api.request_code = MagicMock(return_value={
+        "ok": False,
+        "sessionId": "private_session_123",
+        "nextAction": "complete_challenge",
+        "challenge": {"appId": "1600000770", "type": "tencent_captcha"},
+    })
 
     with patch(
         "app.services.official_auth.manager.private_plugin_loader.load",
-        return_value={"authApi": None, "cookieAuth": None, "manifest": None, "available": False},
+        return_value={"authApi": mock_auth_api, "cookieAuth": None, "manifest": None, "available": True},
     ):
-        result = official_auth_manager.request_phone_code("qidian_com", {"phone": "13800138000"})
+        result = official_auth_manager.request_phone_code("fake_phone_plugin", {"phone": "13800138000"})
 
     assert result["ok"] is False
     assert result["nextAction"] == "complete_challenge"
     assert result["challenge"]["appId"] == "1600000770"
     assert result["challenge"]["type"] == "tencent_captcha"
 
-    # Official session should be created and hold qidian internal session id
+    # Official session should be created and hold the private session id
     official_session = session_store.get(result["sessionId"])
     assert official_session is not None
-    assert official_session.private_payload["qidian_session_id"] == "qd_123"
+    assert official_session.private_payload["sessionId"] == "private_session_123"
     session_store.remove(result["sessionId"])
 
 
-def test_qidian_fallback_request_code_retry_sends_sms(monkeypatch):
-    """Retry with challenge token should call send_sms and return verify_code."""
+def test_request_code_retry_sends_sms():
+    """Retry with challenge token should call private auth_api again and return verify_code."""
     from app.services.official_auth.manager import official_auth_manager
     from app.services.official_auth.sessions import session_store
 
-    fake_init = _fake_qidian_session(status="captcha")
-    calls = []
-
-    def fake_send_sms(session_id, phone, ticket, randstr):
-        calls.append({"session_id": session_id, "phone": phone, "ticket": ticket, "randstr": randstr})
-        return _fake_qidian_session(session_id=session_id, status="sms_sent")
-
-    monkeypatch.setattr(
-        "app.services.official_auth.manager.qidian_login_service.init",
-        lambda _phone: fake_init,
-    )
-    monkeypatch.setattr(
-        "app.services.official_auth.manager.qidian_login_service.send_sms",
-        fake_send_sms,
-    )
+    mock_auth_api = MagicMock()
+    mock_auth_api.request_code = MagicMock(side_effect=[
+        {"ok": False, "sessionId": "private_session_123", "nextAction": "complete_challenge", "challenge": {}},
+        {"ok": True, "sessionId": "private_session_123", "nextAction": "verify_code"},
+    ])
 
     with patch(
         "app.services.official_auth.manager.private_plugin_loader.load",
-        return_value={"authApi": None, "cookieAuth": None, "manifest": None, "available": False},
+        return_value={"authApi": mock_auth_api, "cookieAuth": None, "manifest": None, "available": True},
     ):
-        init_result = official_auth_manager.request_phone_code("qidian_com", {"phone": "13800138000"})
-        retry_result = official_auth_manager.request_phone_code("qidian_com", {
+        init_result = official_auth_manager.request_phone_code("fake_phone_plugin", {"phone": "13800138000"})
+        retry_result = official_auth_manager.request_phone_code("fake_phone_plugin", {
             "phone": "13800138000",
             "sessionId": init_result["sessionId"],
             "challengeToken": "ticket_123",
@@ -301,40 +291,42 @@ def test_qidian_fallback_request_code_retry_sends_sms(monkeypatch):
 
     assert retry_result["ok"] is True
     assert retry_result["nextAction"] == "verify_code"
-    assert len(calls) == 1
-    assert calls[0]["session_id"] == "qd_123"
-    assert calls[0]["ticket"] == "ticket_123"
-    assert calls[0]["randstr"] == "@rand"
+    assert mock_auth_api.request_code.call_count == 2
+    second_call = mock_auth_api.request_code.call_args_list[1][0][0]
+    assert second_call["sessionId"] == "private_session_123"
+    assert second_call["challengeToken"] == "ticket_123"
+    assert second_call["challengeRandstr"] == "@rand"
 
     session_store.remove(init_result["sessionId"])
 
 
 @pytest.mark.asyncio
-async def test_qidian_fallback_verify_phone_code_saves_cookie_json(monkeypatch, tmp_path):
-    """Successful qidian fallback verify writes Cookie.json and caches probe status."""
+async def test_verify_phone_code_private_saves_cookie_json(monkeypatch, tmp_path):
+    """Successful private verify writes Cookie.json and caches probe status."""
     from app.services.official_auth.manager import official_auth_manager
     from app.services.official_auth.sessions import session_store
     from app.services.plugin_auth_repository import PluginAuthRepository
     from app.services import plugin_cookie_file_store
 
-    plugin_cookie_file_store.clear("qidian_com")
+    plugin_id = "qidian_com"
+    plugin_cookie_file_store.clear(plugin_id)
 
-    fake_init = _fake_qidian_session(status="captcha")
-    fake_submit = _fake_qidian_session(status="success")
-    fake_submit.message = "登录成功"
-
-    monkeypatch.setattr(
-        "app.services.official_auth.manager.qidian_login_service.init",
-        lambda _phone: fake_init,
-    )
-    monkeypatch.setattr(
-        "app.services.official_auth.manager.qidian_login_service.send_sms",
-        lambda _sid, _phone, _ticket, _randstr: _fake_qidian_session(status="sms_sent"),
-    )
-    monkeypatch.setattr(
-        "app.services.official_auth.manager.qidian_login_service.submit",
-        lambda _sid, _code: fake_submit,
-    )
+    mock_auth_api = MagicMock()
+    mock_auth_api.request_code = MagicMock(return_value={
+        "ok": True,
+        "sessionId": "private_session_123",
+        "nextAction": "verify_code",
+    })
+    mock_auth_api.verify_code = MagicMock(return_value={
+        "ok": True,
+        "authenticated": True,
+        "accountName": "13800138000",
+        "cookies": {
+            "qidian.com": {"ywguid": "guid_123", "ywkey": "key_123"},
+            "yuewen.com": {"ywguid": "guid_123", "ywkey": "key_123"},
+        },
+        "message": "登录成功",
+    })
 
     repo = PluginAuthRepository(tmp_path / "auth.db")
     monkeypatch.setattr(
@@ -344,7 +336,7 @@ async def test_qidian_fallback_verify_phone_code_saves_cookie_json(monkeypatch, 
 
     with patch(
         "app.services.official_auth.manager.private_plugin_loader.load",
-        return_value={"authApi": None, "cookieAuth": None, "manifest": None, "available": False},
+        return_value={"authApi": mock_auth_api, "cookieAuth": None, "manifest": None, "available": True},
     ):
         with patch.object(
             official_auth_manager,
@@ -356,14 +348,8 @@ async def test_qidian_fallback_verify_phone_code_saves_cookie_json(monkeypatch, 
                 "authStatus": "authenticated",
             }),
         ):
-            init_result = official_auth_manager.request_phone_code("qidian_com", {"phone": "13800138000"})
-            sms_result = official_auth_manager.request_phone_code("qidian_com", {
-                "phone": "13800138000",
-                "sessionId": init_result["sessionId"],
-                "challengeToken": "ticket_123",
-                "challengeRandstr": "@rand",
-            })
-            verify_result = await official_auth_manager.verify_phone_code("qidian_com", {
+            sms_result = official_auth_manager.request_phone_code(plugin_id, {"phone": "13800138000"})
+            verify_result = await official_auth_manager.verify_phone_code(plugin_id, {
                 "sessionId": sms_result["sessionId"],
                 "phone": "13800138000",
                 "code": "123456",
@@ -374,11 +360,11 @@ async def test_qidian_fallback_verify_phone_code_saves_cookie_json(monkeypatch, 
     assert verify_result["hasCookies"] is True
 
     # Cookie truth source is Cookie.json, not DB cookie_json.
-    saved = plugin_cookie_file_store.load("qidian_com")
+    saved = plugin_cookie_file_store.load(plugin_id)
     assert "qidian.com" in saved
     assert saved["qidian.com"]["ywguid"] == "guid_123"
 
-    status = repo.get_status("qidian_com")
+    status = repo.get_status(plugin_id)
     assert status["authenticated"] is True
     assert status["authStatus"] == "authenticated"
     assert status["accountName"] == "13800138000"

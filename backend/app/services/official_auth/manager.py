@@ -1,12 +1,14 @@
 """Official source login manager.
 
-Routes login requests to private plugin implementations or public fallbacks.
+Routes login requests to private plugin implementations.
 
 Design principles:
 - CK login is a PUBLIC capability (always available, no private dependency)
 - Phone login is a PRIVATE capability (requires auth_api.py in private package)
 - Reviews is a PRIVATE capability (requires reviews.py in private package)
 - Private cookie_auth.py is OPTIONAL enhancement for CK login (deep validation)
+- Source-specific login implementations (e.g. qidian_com) live inside their
+  plugin's private package; the manager remains generic.
 """
 
 from __future__ import annotations
@@ -20,7 +22,6 @@ from app.services.official_auth.loader import private_plugin_loader
 from app.services.official_auth.sessions import OfficialLoginSession, session_store
 from app.services.plugin_auth_repository import PluginAuthRepository
 from app.services import plugin_cookie_file_store
-from app.services.qidian_login_service import QidianLoginSession, qidian_login_service
 
 
 # ------------------------------------------------------------------
@@ -132,18 +133,15 @@ class OfficialAuthManager:
 
         Rules:
         - cookie is ALWAYS available (public capability)
-        - phone is available when private auth_api.py exists OR a public
-          fallback is implemented for this plugin (e.g. qidian_com)
+        - phone is available only when private auth_api.py exists
         - browser is a fallback when no phone auth exists
         """
         private = private_plugin_loader.load(plugin_id)
         has_private_phone = private.get("authApi") is not None
-        has_public_phone = self._has_public_phone_fallback(plugin_id)
-        has_phone = has_private_phone or has_public_phone
         has_private_cookie = private.get("cookieAuth") is not None
 
         methods: list[str] = ["cookie"]  # always available
-        if has_phone:
+        if has_private_phone:
             methods.insert(0, "phone")  # phone first if available
 
         # Browser fallback (legacy, can be removed later)
@@ -152,7 +150,7 @@ class OfficialAuthManager:
         plugin = scheduler._plugins.get(plugin_id)
         if plugin:
             auth = plugin.metadata.auth or {}
-            if auth.get("loginUrl") and not has_phone:
+            if auth.get("loginUrl") and not has_private_phone:
                 methods.append("browser")
 
         manifest: PrivatePluginManifest | None = private.get("manifest")
@@ -187,9 +185,6 @@ class OfficialAuthManager:
         if auth_api:
             return self._request_phone_code_private(plugin_id, payload, auth_api, session_id, phone)
 
-        if self._has_public_phone_fallback(plugin_id):
-            return self._request_phone_code_qidian_fallback(plugin_id, payload, session_id, phone)
-
         return {
             "ok": False,
             "error": "手机号登录能力未安装",
@@ -208,9 +203,6 @@ class OfficialAuthManager:
 
         if auth_api:
             return await self._verify_phone_code_private(plugin_id, payload, session, auth_api)
-
-        if self._has_public_phone_fallback(plugin_id):
-            return await self._verify_phone_code_qidian_fallback(plugin_id, payload, session)
 
         return {"ok": False, "error": "手机号登录能力未安装"}
 
@@ -396,22 +388,8 @@ class OfficialAuthManager:
         repo.clear_cookies(plugin_id)
 
     # ------------------------------------------------------------------
-    # Phone fallback helpers
+    # Phone auth helpers
     # ------------------------------------------------------------------
-
-    @staticmethod
-    def _has_public_phone_fallback(plugin_id: str) -> bool:
-        """Public phone login fallback is currently implemented for qidian_com."""
-        return plugin_id == "qidian_com"
-
-    @staticmethod
-    def _build_qidian_challenge(qidian_session: QidianLoginSession) -> dict:
-        return {
-            "appId": qidian_session.captcha_app_id or "1600000770",
-            "type": "tencent_captcha",
-            "captchaUrl": qidian_session.captcha_url,
-            "captchaType": qidian_session.captcha_type,
-        }
 
     def _request_phone_code_private(
         self,
@@ -473,91 +451,6 @@ class OfficialAuthManager:
 
         return response
 
-    def _request_phone_code_qidian_fallback(
-        self,
-        plugin_id: str,
-        payload: dict,
-        session_id: str,
-        phone: str,
-    ) -> dict:
-        """Public qidian_login_service path for phone code request."""
-        if not session_id:
-            # Fresh attempt: initialize qidian session and return captcha challenge
-            session = session_store.create(plugin_id, method="phone")
-            session.phone_masked = self._mask_phone(phone)
-            try:
-                qidian_session = qidian_login_service.init(phone)
-            except Exception as exc:
-                session.status = "failed"
-                session.last_error = str(exc)
-                return {"ok": False, "error": str(exc)}
-
-            if qidian_session.status == "failed":
-                session.status = "failed"
-                session.last_error = qidian_session.message
-                return {
-                    "ok": False,
-                    "sessionId": session.session_id,
-                    "error": qidian_session.message or "初始化登录失败",
-                }
-
-            session.private_payload = {"qidian_session_id": qidian_session.session_id}
-            session.status = "challenge"
-            session.last_step = "init"
-            return {
-                "ok": False,
-                "sessionId": session.session_id,
-                "nextAction": "complete_challenge",
-                "challenge": self._build_qidian_challenge(qidian_session),
-            }
-
-        # Retry after captcha: send SMS
-        session = session_store.get(session_id)
-        if not session:
-            return {"ok": False, "error": "会话已过期或不存在"}
-
-        qidian_session_id = session.private_payload.get("qidian_session_id")
-        if not qidian_session_id:
-            return {"ok": False, "error": "会话状态异常"}
-
-        try:
-            qidian_session = qidian_login_service.send_sms(
-                qidian_session_id,
-                phone,
-                payload.get("challengeToken", ""),
-                payload.get("challengeRandstr", ""),
-            )
-        except Exception as exc:
-            session.status = "failed"
-            session.last_error = str(exc)
-            return {
-                "ok": False,
-                "sessionId": session_id,
-                "error": str(exc),
-            }
-
-        if qidian_session.status == "failed":
-            session.status = "challenge"
-            session.last_error = qidian_session.message
-            response = {
-                "ok": False,
-                "sessionId": session_id,
-                "nextAction": "complete_challenge",
-                "challenge": self._build_qidian_challenge(qidian_session),
-                "error": qidian_session.message,
-            }
-            if qidian_session.error_code is not None:
-                response["errorCode"] = qidian_session.error_code
-            return response
-
-        session.status = "sms_sent"
-        session.last_step = "send_sms"
-        return {
-            "ok": True,
-            "sessionId": session_id,
-            "nextAction": "verify_code",
-        }
-
     async def _verify_phone_code_private(
         self,
         plugin_id: str,
@@ -599,48 +492,6 @@ class OfficialAuthManager:
             "message": result.get("message", "登录失败"),
             "hasCookies": bool(session.cookies),
         }
-
-    async def _verify_phone_code_qidian_fallback(
-        self,
-        plugin_id: str,
-        payload: dict,
-        session: OfficialLoginSession,
-    ) -> dict:
-        """Public qidian_login_service path for phone code verification."""
-        qidian_session_id = session.private_payload.get("qidian_session_id")
-        if not qidian_session_id:
-            return {"ok": False, "error": "会话状态异常"}
-
-        sms_code = payload.get("code", "")
-        if not sms_code:
-            return {"ok": False, "error": "缺少验证码"}
-
-        try:
-            qidian_session = qidian_login_service.submit(qidian_session_id, sms_code)
-        except Exception as exc:
-            session.status = "failed"
-            session.last_error = str(exc)
-            return {"ok": False, "error": str(exc)}
-
-        if qidian_session.status == "failed":
-            session.status = "failed"
-            session.last_error = qidian_session.message
-            return {"ok": False, "error": qidian_session.message}
-
-        cookie_jar = qidian_session.cookies or {}
-        probe = await self._save_cookie_jar_and_probe(plugin_id, cookie_jar)
-        session.status = "success"
-        session.cookies = cookie_jar
-        session_store.remove(session.session_id)
-
-        return {
-            "ok": True,
-            "authenticated": probe["authenticated"],
-            "accountName": probe["accountName"],
-            "message": probe["message"],
-            "hasCookies": bool(cookie_jar),
-        }
-
 
 # Global singleton
 official_auth_manager = OfficialAuthManager()

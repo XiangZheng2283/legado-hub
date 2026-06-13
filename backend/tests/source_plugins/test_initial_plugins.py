@@ -877,22 +877,6 @@ async def test_qidian_com_auth_status_requires_login_when_no_cookies(loader):
 
 
 @pytest.mark.asyncio
-async def test_qidian_com_chapter_preview_from_mobile_fixture(loader):
-    plugin = loader.load_all().get("qidian_com")
-    assert plugin is not None
-    responses = {
-        "https://m.qidian.com/chapter/1036370336/745302300/": (_plugin_dir("qidian_com") / "tests" / "fixtures" / "chapter.html").read_text(encoding="utf-8"),
-    }
-    ctx = _mock_ctx("qidian_com", responses)
-
-    result = await plugin.source.chapter(ctx, "https://m.qidian.com/chapter/1036370336/745302300/")
-
-    assert result["title"] == "欢迎收藏"
-    assert "作者大大正努力存稿中" in result["content"]
-    assert result["extra"]["previewOnly"] is True
-
-
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "plugin_id",
     [
@@ -912,7 +896,6 @@ async def test_qidian_com_chapter_preview_from_mobile_fixture(loader):
         "ttkan_co",
         "xhytd_com",
         "xiaoshuohu_com",
-        "qidian_com",
     ],
 )
 async def test_initial_plugins_fixture_smoke(loader, plugin_id):
