@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { BookOpen, Loader2, Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { AlertCircle, BookOpen, Loader2, Search, Filter, ChevronDown, ChevronUp, ChevronRight, MessageSquare, ThumbsUp, MessageCircle, X } from "lucide-react"
 
 import { api } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
@@ -10,9 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 function cacheReasonText(reason?: string) {
   if (reason === "timeout") return "命中（超时）"
@@ -115,7 +117,8 @@ function paragraphsFromContent(content?: string, title?: string) {
 function paragraphReviews(reviews: any, index: number) {
   const paragraphs = reviews?.paragraphs
   if (!paragraphs || typeof paragraphs !== "object") return []
-  const oneBased = paragraphs[String(index + 1)]
+  const pid = paragraphDisplayNumber(index + 1)
+  const oneBased = paragraphs[String(pid)]
   if (Array.isArray(oneBased)) return oneBased
   const zeroBased = paragraphs[String(index)]
   return Array.isArray(zeroBased) ? zeroBased : []
@@ -125,25 +128,422 @@ function chapterEndReviews(reviews: any) {
   return Array.isArray(reviews?.chapterEnd) ? reviews.chapterEnd : []
 }
 
+function chapterEndHotReviews(reviews: any) {
+  return Array.isArray(reviews?.chapterEndHot) ? reviews.chapterEndHot : []
+}
+
+function authorReviews(reviews: any) {
+  return Array.isArray(reviews?.authorReviews) ? reviews.authorReviews : []
+}
+
 function hasReviewContent(reviews: any) {
   const summary = reviews?.summary || {}
   const paragraphs = reviews?.paragraphs || {}
   return Boolean(
     Object.keys(paragraphs).length ||
     chapterEndReviews(reviews).length ||
+    chapterEndHotReviews(reviews).length ||
+    authorReviews(reviews).length ||
     summary.totalReviews ||
     summary.totalParagraphs
   )
 }
 
-function reviewMetaLine(review: any) {
-  const parts = [
-    review?.userName || "匿名读者",
-    review?.reviewTime || "",
-    typeof review?.likeNum === "number" ? `赞 ${review.likeNum}` : "",
-    typeof review?.replyCount === "number" ? `回复 ${review.replyCount}` : "",
-  ].filter(Boolean)
-  return parts.join(" · ")
+function formatReviewCount(count?: number) {
+  if (typeof count !== "number" || count <= 0) return "0"
+  if (count > 9999) return "9999+"
+  if (count > 99) return "99+"
+  return String(count)
+}
+
+function UserBadges({ review }: { review: any }) {
+  const level = typeof review?.level === "number" ? review.level : 0
+  const badges: string[] = Array.isArray(review?.badges) ? review.badges : []
+  if (!level && !badges.length) return null
+  return (
+    <span className="inline-flex items-center gap-1 flex-wrap">
+      {level > 0 && (
+        <span className="rounded px-1 py-0 text-[10px] leading-tight bg-amber-100 text-amber-700">
+          Lv.{level}
+        </span>
+      )}
+      {badges.map((badge: string, idx: number) => (
+        <span
+          key={idx}
+          className="rounded px-1 py-0 text-[10px] leading-tight bg-orange-100 text-orange-700"
+        >
+          {badge}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function ReviewMeta({ review }: { review: any }) {
+  return (
+    <div className="flex items-center gap-2 text-xs text-amber-900/80 flex-wrap">
+      <span className="font-medium text-amber-900">{review?.userName || "匿名读者"}</span>
+      <UserBadges review={review} />
+      {review?.reviewTime && <span className="text-amber-700/70">{review.reviewTime}</span>}
+      {review?.ipAddress && <span className="text-amber-700/70">{review.ipAddress}</span>}
+    </div>
+  )
+}
+
+function ReviewActions({ review }: { review: any }) {
+  return (
+    <div className="flex items-center gap-4 text-xs text-amber-700/80">
+      <span className="inline-flex items-center gap-1">
+        <ThumbsUp className="w-3 h-3" />
+        {formatReviewCount(review?.likeNum)}
+      </span>
+      {typeof review?.replyCount === "number" && review.replyCount > 0 && (
+        <span className="inline-flex items-center gap-1">
+          <MessageSquare className="w-3 h-3" />
+          {formatReviewCount(review.replyCount)}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function ReviewCard({ review }: { review: any }) {
+  return (
+    <div className="space-y-1.5 border-b border-amber-100/70 pb-3 last:border-b-0 last:pb-0">
+      <ReviewMeta review={review} />
+      <div className="whitespace-pre-wrap text-sm leading-6 text-[#5a4331]">
+        {review?.content || "暂无评论内容"}
+      </div>
+      <ReviewActions review={review} />
+      {Array.isArray(review?.replies) && review.replies.length > 0 && (
+        <div className="mt-2 space-y-2 rounded-md bg-amber-50/60 px-3 py-2">
+          {review.replies.slice(0, 3).map((reply: any, idx: number) => (
+            <div key={reply?.id || `reply-${idx}`} className="text-xs text-[#5a4331]">
+              <span className="font-medium text-amber-800">{reply?.userName || "匿名读者"}：</span>
+              <span>{reply?.content || ""}</span>
+            </div>
+          ))}
+          {review.replies.length > 3 && (
+            <div className="text-xs text-amber-700">查看更多 {review.replies.length - 3} 条回复</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function ReviewList({
+  reviews,
+  limit = 10,
+  step = 10,
+}: {
+  reviews: any[]
+  limit?: number
+  step?: number
+}) {
+  const [visibleCount, setVisibleCount] = useState(limit)
+  const display = reviews.slice(0, visibleCount)
+  const hasMore = reviews.length > visibleCount
+  const remaining = Math.max(0, reviews.length - visibleCount)
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-3">
+        {display.map((review: any, idx: number) => (
+          <ReviewCard key={review?.id || `review-${idx}`} review={review} />
+        ))}
+      </div>
+      {reviews.length > limit && (
+        <div className="pt-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-amber-700 hover:text-amber-900"
+            onClick={() =>
+              setVisibleCount((prev) => (hasMore ? Math.min(prev + step, reviews.length) : limit))
+            }
+          >
+            {hasMore ? `展开更多 ${Math.min(step, remaining)} 条` : "收起"}
+            {hasMore ? <ChevronDown className="ml-1 w-3 h-3" /> : <ChevronUp className="ml-1 w-3 h-3" />}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ParagraphReviewBubble({
+  reviews,
+  paragraphIndex,
+}: {
+  reviews: any[]
+  paragraphIndex: number
+}) {
+  const [open, setOpen] = useState(false)
+  if (!reviews.length) return null
+  return (
+    <>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-white/90 px-2.5 py-0.5 text-xs text-amber-700 shadow-sm hover:bg-amber-50 transition-colors"
+            >
+              <MessageSquare className="w-3 h-3" />
+              {formatReviewCount(reviews.length)}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <div className="text-xs">点击展开第 {paragraphDisplayNumber(paragraphIndex + 1)} 段评论（{reviews.length} 条）</div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-base">第 {paragraphDisplayNumber(paragraphIndex + 1)} 段 · {reviews.length} 条评论</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-2">
+            <ReviewList reviews={reviews} limit={10} />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+function paragraphDisplayNumber(pid: number): number {
+  // Backend paragraph IDs are 1-based and aligned with the in-text paragraph order.
+  return pid
+}
+
+export function ChapterReviewDialog({
+  reviews,
+  loading,
+  error,
+  open,
+  onOpenChange,
+}: {
+  reviews: any
+  loading?: boolean
+  error?: any
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [tab, setTab] = useState("chapter")
+  const summary = reviews?.summary || {}
+  const total = summary.totalReviews || 0
+  const chapterEnd = Array.isArray(reviews?.chapterEnd) ? reviews.chapterEnd : []
+  const chapterEndHot = Array.isArray(reviews?.chapterEndHot) ? reviews.chapterEndHot : []
+  const authorList = Array.isArray(reviews?.authorReviews) ? reviews.authorReviews : []
+  const paragraphs = reviews?.paragraphs || {}
+  const paragraphStats = summary.paragraphStats || {}
+
+  const paragraphGroups = Object.entries(paragraphs)
+    .filter(([, list]) => Array.isArray(list) && list.length > 0)
+    .map(([pid, list]) => ({
+      pid: Number(pid),
+      count: (list as any[]).length,
+      statCount: paragraphStats[pid] || 0,
+      reviews: list as any[],
+    }))
+    .sort((a, b) => b.pid - a.pid)
+
+  const chapterTabCount = chapterEnd.length + chapterEndHot.length
+  const paragraphTabCount = paragraphGroups.length
+
+  // Pick the first non-empty tab when the dialog opens.
+  useEffect(() => {
+    if (!open) return
+    if (chapterEnd.length > 0 || chapterEndHot.length > 0) {
+      setTab("chapter")
+    } else if (paragraphGroups.length > 0) {
+      setTab("paragraph")
+    } else if (authorList.length > 0) {
+      setTab("author")
+    } else {
+      setTab("chapter")
+    }
+  }, [open])
+
+  // If the active tab becomes empty after reviews load, fall back to a non-empty tab.
+  useEffect(() => {
+    if (!open) return
+    const empty = {
+      chapter: chapterEnd.length === 0 && chapterEndHot.length === 0,
+      paragraph: paragraphGroups.length === 0,
+      author: authorList.length === 0,
+    }
+    if (!empty[tab as keyof typeof empty]) return
+    if (chapterEnd.length > 0 || chapterEndHot.length > 0) setTab("chapter")
+    else if (paragraphGroups.length > 0) setTab("paragraph")
+    else if (authorList.length > 0) setTab("author")
+  }, [chapterEnd, chapterEndHot, paragraphGroups, authorList, open, tab])
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+          <DialogTitle className="text-base">本章说 · 共 {formatReviewCount(total)} 条</DialogTitle>
+        </DialogHeader>
+
+        {error && (
+          <div className="shrink-0 mx-6 mb-2 text-xs text-destructive">
+            评论加载失败：{error.message || String(error)}
+          </div>
+        )}
+
+        {summary.vipHint && (
+          <div className="shrink-0 mx-6 mb-2 flex items-start gap-1.5 rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
+            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>{summary.vipHint}</span>
+          </div>
+        )}
+
+        <Tabs value={tab} onValueChange={setTab} className="flex flex-col min-h-0 flex-1 px-6 pb-6">
+          <TabsList className="shrink-0 grid w-full grid-cols-3">
+            <TabsTrigger value="author" className="text-xs">
+              作家说{authorList.length > 0 ? ` (${formatReviewCount(authorList.length)})` : ""}
+            </TabsTrigger>
+            <TabsTrigger value="chapter" className="text-xs">
+              本章说{chapterTabCount > 0 ? ` (${formatReviewCount(chapterTabCount)})` : ""}
+            </TabsTrigger>
+            <TabsTrigger value="paragraph" className="text-xs">
+              段评说{paragraphTabCount > 0 ? ` (${formatReviewCount(paragraphTabCount)})` : ""}
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-2" data-testid="review-scroll-container">
+            <TabsContent value="author" className="mt-0">
+                {authorList.length > 0 ? (
+                  <ReviewList reviews={authorList} limit={10} />
+                ) : (
+                  <div className="py-8 text-center text-sm text-muted-foreground">暂无作家说</div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="chapter" className="mt-0 space-y-6">
+                {chapterEndHot.length > 0 && (
+                  <div>
+                    <div className="mb-2 text-xs font-semibold text-amber-900">章末热评</div>
+                    <ReviewList reviews={chapterEndHot} limit={10} />
+                  </div>
+                )}
+                {chapterEnd.length > 0 && (
+                  <div>
+                    <div className="mb-2 text-xs font-semibold text-amber-900">
+                      全部章评
+                      <span className="ml-1 text-amber-700/70">{formatReviewCount(chapterEnd.length)} 条</span>
+                    </div>
+                    <ReviewList reviews={chapterEnd} limit={10} />
+                  </div>
+                )}
+                {chapterEndHot.length === 0 && chapterEnd.length === 0 && (
+                  <div className="py-8 text-center text-sm text-muted-foreground">暂无本章说</div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="paragraph" className="mt-0 space-y-6">
+                {paragraphGroups.length > 0 ? (
+                  paragraphGroups.map((group) => (
+                    <div key={group.pid}>
+                      <div className="mb-2 text-xs font-semibold text-amber-900">
+                        第 {paragraphDisplayNumber(group.pid)} 段
+                        <span className="ml-2 text-amber-700/70">{formatReviewCount(group.statCount || group.count)} 条</span>
+                      </div>
+                      <ReviewList reviews={group.reviews} limit={10} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-sm text-muted-foreground">暂无段评说</div>
+                )}
+              </TabsContent>
+          </div>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ChapterReviewPanel({ reviews, loading, error }: { reviews: any; loading?: boolean; error?: any }) {
+  const [open, setOpen] = useState(false)
+  const summary = reviews?.summary || {}
+  const total = summary.totalReviews || 0
+  const chapterEndCount = summary.chapterEndCount || 0
+  const paragraphCount = summary.totalParagraphs || 0
+  const authorCount = summary.authorReviewCount || 0
+  const chapterEndHot = Array.isArray(reviews?.chapterEndHot) ? reviews.chapterEndHot : []
+  const hotPreview = chapterEndHot.slice(0, 3)
+
+  if (!loading && !error && !total && !chapterEndCount && !paragraphCount && !authorCount) return null
+
+  return (
+    <>
+      <div className="mb-5 rounded-xl border border-amber-200/80 bg-white/90 px-4 py-3 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-amber-900">
+            <MessageCircle className="w-4 h-4" />
+            <span>本章说</span>
+            {loading ? (
+              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                加载中
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">{formatReviewCount(total)}</Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-amber-700">
+            查看评论
+            <ChevronRight className="w-3 h-3" />
+          </div>
+        </button>
+
+        {error && (
+          <div className="mt-2 text-xs text-destructive">
+            评论加载失败：{error.message || String(error)}
+          </div>
+        )}
+
+        {!loading && !error && summary.vipHint && (
+          <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-700">
+            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>{summary.vipHint}</span>
+          </div>
+        )}
+
+        {!loading && !error && hotPreview.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {hotPreview.map((review: any, idx: number) => (
+              <div key={review?.id || `hot-${idx}`} className="flex items-start gap-2 text-xs text-[#5a4331]">
+                <ThumbsUp className="mt-0.5 w-3 h-3 text-amber-600 shrink-0" />
+                <div className="line-clamp-2">
+                  <span className="font-medium text-amber-800">{review?.userName || "匿名读者"}：</span>
+                  {review?.content || "暂无评论内容"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ChapterReviewDialog
+        reviews={reviews}
+        loading={loading}
+        error={error}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  )
 }
 
 function sourceResultsFromEvents(events: any[]) {
@@ -236,6 +636,12 @@ export function SearchJobs() {
   const [selectedSourceIds, setSelectedSourceIds] = useState<Set<string>>(new Set())
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<any>(null)
+  // Reviews are fetched asynchronously so VIP chapter previews don't block.
+  const [asyncReviews, setAsyncReviews] = useState<any>(null)
+  const [asyncReviewsLoading, setAsyncReviewsLoading] = useState(false)
+  const [asyncReviewsError, setAsyncReviewsError] = useState<any>(null)
+  // Used to ignore stale review responses when the user switches chapters quickly.
+  const latestReviewRequestKey = useRef<string>("")
 
   const { data: pluginsData } = useQuery({
     queryKey: ["plugins"],
@@ -268,12 +674,44 @@ export function SearchJobs() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["search-job", jobId] }),
   })
 
+  const fetchReviewsMutation = useMutation({
+    mutationFn: ({ candidateId, chapterIndex }: { candidateId: string; chapterIndex: number }) => {
+      latestReviewRequestKey.current = `${candidateId}:${chapterIndex}`
+      return api.fetchCandidateReviews(jobId!, candidateId, chapterIndex)
+    },
+    onMutate: () => {
+      setAsyncReviewsLoading(true)
+      setAsyncReviewsError(null)
+    },
+    onSuccess: (data, variables) => {
+      const key = `${variables.candidateId}:${variables.chapterIndex}`
+      if (key !== latestReviewRequestKey.current) return
+      setAsyncReviews(data.result?.reviews || null)
+      setAsyncReviewsLoading(false)
+    },
+    onError: (error, variables) => {
+      const key = `${variables.candidateId}:${variables.chapterIndex}`
+      if (key !== latestReviewRequestKey.current) return
+      setAsyncReviewsError(error)
+      setAsyncReviewsLoading(false)
+    },
+  })
+
   const verifyMutation = useMutation({
     mutationFn: ({ candidateId, chapterIndex }: { candidateId: string; chapterIndex?: number }) =>
-      api.verifySearchCandidate(jobId!, candidateId, chapterIndex || 0),
+      api.verifySearchCandidate(jobId!, candidateId, chapterIndex || 0, false),
+    onMutate: () => {
+      // Clear stale async reviews while new chapter content loads.
+      setAsyncReviews(null)
+      setAsyncReviewsError(null)
+    },
     onSuccess: (data, variables) => {
       setActiveChapterIndex(variables.chapterIndex || 0)
       setBookDetail(data.result)
+      fetchReviewsMutation.mutate({
+        candidateId: variables.candidateId,
+        chapterIndex: variables.chapterIndex || 0,
+      })
     },
   })
 
@@ -339,6 +777,8 @@ export function SearchJobs() {
     setIsDetailOpen(false)
     setDetailTarget(null)
     setActiveChapterIndex(0)
+    setAsyncReviews(null)
+    setAsyncReviewsError(null)
     setPendingJob({
       status: "starting",
       keyword: value,
@@ -369,6 +809,8 @@ export function SearchJobs() {
     setIsDetailOpen(false)
     setDetailTarget(null)
     setActiveChapterIndex(0)
+    setAsyncReviews(null)
+    setAsyncReviewsError(null)
     setKeyword(job.keyword || "")
     setJobId(job.jobId)
   }
@@ -394,10 +836,11 @@ export function SearchJobs() {
   }
 
   const displayDetail = bookDetail || detailTarget
-  const detailReviews = displayDetail?.reviews || {}
+  // Async reviews overlay the verify response so chapter content renders first.
+  const detailReviews = asyncReviews || displayDetail?.reviews || {}
   const detailReviewSummary = detailReviews?.summary || {}
   const detailChapterEndReviews = chapterEndReviews(detailReviews)
-  const showReviewSummary = hasReviewContent(detailReviews) || Boolean(detailReviews?.debug?.error)
+  const showReviewSummary = hasReviewContent(detailReviews) || Boolean(detailReviews?.debug?.error) || asyncReviewsLoading || asyncReviewsError
 
   return (
     <div className="space-y-4">
@@ -638,7 +1081,7 @@ export function SearchJobs() {
         </div>
       )}
 
-      <Dialog open={isDetailOpen} onOpenChange={(open) => { setIsDetailOpen(open); if (!open) { setBookDetail(null); setDetailTarget(null) } }}>
+      <Dialog open={isDetailOpen} onOpenChange={(open) => { setIsDetailOpen(open); if (!open) { setBookDetail(null); setDetailTarget(null); setAsyncReviews(null); setAsyncReviewsError(null) } }}>
         <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
           <DialogHeader>
             <DialogTitle className="px-6 pt-6">小说详情</DialogTitle>
@@ -739,6 +1182,16 @@ export function SearchJobs() {
                                 已预取段落: {detailReviewSummary.fetchedParagraphs.join(", ")}
                               </div>
                             )}
+                            {detailReviewSummary.paragraphsWithReviews?.length > 0 && (
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                有评论的段落ID: {detailReviewSummary.paragraphsWithReviews.join(", ")}
+                              </div>
+                            )}
+                            {detailReviews?.debug?.rawSummarySnippet && (
+                              <div className="mt-2 text-xs text-muted-foreground break-all">
+                                summary: {detailReviews.debug.rawSummarySnippet}
+                              </div>
+                            )}
                             {detailReviews?.debug?.error && (
                               <div className="mt-2 text-xs text-amber-700">
                                 评论接口提示: {detailReviews.debug.error}
@@ -765,47 +1218,32 @@ export function SearchJobs() {
                     <div className="mb-6 text-center text-xl font-semibold">
                       {displayDetail?.chapter?.title || "请选择章节"}
                     </div>
+
+                    <ChapterReviewPanel
+                      reviews={detailReviews}
+                      loading={asyncReviewsLoading}
+                      error={asyncReviewsError}
+                    />
+
                     <div className="space-y-5 text-lg leading-9">
                       {paragraphsFromContent(displayDetail?.chapter?.content, displayDetail?.chapter?.title).length > 0 ? (
                         paragraphsFromContent(displayDetail?.chapter?.content, displayDetail?.chapter?.title).map((paragraph, index) => (
-                          <div key={index} className="space-y-3">
+                          <div key={index} className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <ParagraphReviewBubble
+                                reviews={paragraphReviews(detailReviews, index)}
+                                paragraphIndex={index}
+                              />
+                            </div>
                             <p className="whitespace-pre-wrap indent-8">
                               {paragraph}
                             </p>
-                            {paragraphReviews(detailReviews, index).length > 0 && (
-                              <div className="ml-8 rounded-md border border-amber-300/70 bg-white/80 px-4 py-3 text-sm leading-6 text-[#5a4331]">
-                                <div className="mb-2 text-xs font-medium text-amber-800">
-                                  段评 · 第 {index + 1} 段 · {paragraphReviews(detailReviews, index).length} 条
-                                </div>
-                                <div className="space-y-3">
-                                  {paragraphReviews(detailReviews, index).map((review: any, reviewIndex: number) => (
-                                    <div key={review?.id || `${index}-${reviewIndex}`} className="space-y-1 border-b border-amber-100/70 pb-2 last:border-b-0 last:pb-0">
-                                      <div className="text-xs text-amber-900">{reviewMetaLine(review)}</div>
-                                      <div className="whitespace-pre-wrap text-sm leading-6">{review?.content || "暂无评论内容"}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         ))
                       ) : (
                         <p className="text-center text-sm text-muted-foreground">暂无正文</p>
                       )}
                     </div>
-                    {detailChapterEndReviews.length > 0 && (
-                      <div className="mt-8 rounded-md border border-amber-400/70 bg-white/85 px-5 py-4 text-sm text-[#5a4331]">
-                        <div className="mb-3 text-sm font-semibold text-amber-900">章末评论</div>
-                        <div className="space-y-3">
-                          {detailChapterEndReviews.map((review: any, reviewIndex: number) => (
-                            <div key={review?.id || `chapter-end-${reviewIndex}`} className="space-y-1 border-b border-amber-100/70 pb-2 last:border-b-0 last:pb-0">
-                              <div className="text-xs text-amber-900">{reviewMetaLine(review)}</div>
-                              <div className="whitespace-pre-wrap leading-6">{review?.content || "暂无评论内容"}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 

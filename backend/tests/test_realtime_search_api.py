@@ -855,7 +855,7 @@ def test_verify_search_job_candidate_returns_reviews(monkeypatch):
     import asyncio
     from app.api.console import _live_acceptance_service
 
-    async def mock_verify(candidate, keyword="", chapter_index=0):
+    async def mock_verify(candidate, keyword="", chapter_index=0, include_reviews=True):
         return {
             "pluginId": candidate.get("sourceId", ""),
             "keyword": keyword,
@@ -918,3 +918,89 @@ def test_verify_search_job_candidate_returns_reviews(monkeypatch):
     assert result["reviews"]["chapterEnd"][0]["content"] == "章末评论样例"
     assert result["reviews"]["summary"]["totalReviews"] == 2
     assert result["reviews"]["passed"] is True
+
+
+def test_verify_search_job_candidate_can_skip_reviews(monkeypatch):
+    from app.api.console import _live_acceptance_service
+
+    captured: dict = {}
+
+    async def mock_verify(candidate, keyword="", chapter_index=0, include_reviews=True):
+        captured["include_reviews"] = include_reviews
+        return {"reviews": {"paragraphs": {}, "chapterEnd": [], "summary": {}}}
+
+    monkeypatch.setattr(_live_acceptance_service, "verify_candidate", mock_verify)
+
+    service = SearchJobService()
+    job = service.create_job("凡人修仙传", page=1, limit=1)
+    job.status = "completed"
+    job.candidate_groups = [{
+        "candidateId": "abc123",
+        "name": "凡人修仙传",
+        "author": "忘语",
+        "items": [{
+            "candidateId": "abc123",
+            "sourceId": "qidian_com",
+            "sourceName": "起点中文网",
+            "name": "凡人修仙传",
+            "author": "忘语",
+            "bookUrl": "https://m.qidian.com/book/1/",
+            "score": 1200,
+        }],
+    }]
+    service.persist_job(job)
+
+    response = client.post(
+        f"/api/console/search-jobs/{job.job_id}/candidates/abc123/verify",
+        json={"chapterIndex": 0, "includeReviews": False},
+    )
+    assert response.status_code == 200
+    assert captured.get("include_reviews") is False
+
+
+def test_fetch_search_job_candidate_reviews_endpoint(monkeypatch):
+    from app.api.console import _live_acceptance_service
+
+    async def mock_fetch_reviews(candidate, chapter_index=0, timeout=None):
+        return {
+            "ok": True,
+            "pluginId": candidate.get("sourceId", ""),
+            "candidateId": "abc123",
+            "chapterIndex": chapter_index,
+            "reviews": {
+                "paragraphs": {},
+                "chapterEnd": [{"id": "r3", "content": "异步章评", "userName": "读者丙"}],
+                "summary": {"totalReviews": 1, "chapterEndCount": 1},
+            },
+        }
+
+    monkeypatch.setattr(_live_acceptance_service, "fetch_reviews", mock_fetch_reviews)
+
+    service = SearchJobService()
+    job = service.create_job("凡人修仙传", page=1, limit=1)
+    job.status = "completed"
+    job.candidate_groups = [{
+        "candidateId": "abc123",
+        "name": "凡人修仙传",
+        "author": "忘语",
+        "items": [{
+            "candidateId": "abc123",
+            "sourceId": "qidian_com",
+            "sourceName": "起点中文网",
+            "name": "凡人修仙传",
+            "author": "忘语",
+            "bookUrl": "https://m.qidian.com/book/1/",
+            "score": 1200,
+        }],
+    }]
+    service.persist_job(job)
+
+    response = client.post(
+        f"/api/console/search-jobs/{job.job_id}/candidates/abc123/reviews",
+        json={"chapterIndex": 2, "timeout": 60},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["jobId"] == job.job_id
+    assert data["candidateId"] == "abc123"
+    assert data["result"]["reviews"]["chapterEnd"][0]["content"] == "异步章评"

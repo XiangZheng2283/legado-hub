@@ -86,10 +86,20 @@ export const api = {
   searchJobEvents: (id: string, after?: number): Promise<any> =>
     fetchJson(`/search-jobs/${id}/events?after=${after || 0}`),
   searchJobCandidates: (id: string): Promise<any> => fetchJson(`/search-jobs/${id}/candidates`),
-  verifySearchCandidate: (jobId: string, candidateId: string, chapterIndex?: number): Promise<any> =>
+  verifySearchCandidate: (
+    jobId: string,
+    candidateId: string,
+    chapterIndex?: number,
+    includeReviews: boolean = true
+  ): Promise<any> =>
     fetchJson(`/search-jobs/${jobId}/candidates/${candidateId}/verify`, {
       method: "POST",
-      body: JSON.stringify({ chapterIndex: chapterIndex || 0 }),
+      body: JSON.stringify({ chapterIndex: chapterIndex || 0, includeReviews }),
+    }),
+  fetchCandidateReviews: (jobId: string, candidateId: string, chapterIndex?: number): Promise<any> =>
+    fetchJson(`/search-jobs/${jobId}/candidates/${candidateId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({ chapterIndex: chapterIndex || 0, timeout: 120 }),
     }),
   cancelSearchJob: (id: string): Promise<any> =>
     fetchJson(`/search-jobs/${id}/cancel`, { method: "POST" }),

@@ -359,6 +359,7 @@ class LiveAcceptanceService:
         candidate: dict[str, Any],
         keyword: str = "",
         chapter_index: int = 0,
+        include_reviews: bool = True,
     ) -> dict[str, Any]:
         plugin_id = candidate.get("sourceId", "")
         plugin = self.scheduler._plugins.get(plugin_id)
@@ -388,7 +389,7 @@ class LiveAcceptanceService:
         detail: dict[str, Any] = {}
         toc_items: list[dict[str, Any]] = []
         chapter: dict[str, Any] = {}
-        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "summary": {}}
+        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "summary": {}}
         try:
             if "detail" in plugin.capabilities:
                 detail = await asyncio.wait_for(
@@ -408,7 +409,7 @@ class LiveAcceptanceService:
                 )
                 if not isinstance(chapter, dict):
                     chapter = {}
-                if "chapter_reviews" in plugin.capabilities:
+                if include_reviews and "chapter_reviews" in plugin.capabilities:
                     try:
                         review_source_url = chapter.get("chapterUrl") or chapter_item.get("chapterUrl", "")
                         if review_source_url:
@@ -463,6 +464,164 @@ class LiveAcceptanceService:
                 diagnostics,
                 reviews=reviews,
             )
+        finally:
+            await ctx._fetcher.close()
+
+    async def fetch_reviews(
+        self,
+        candidate: dict[str, Any],
+        chapter_index: int = 0,
+        timeout: float | None = None,
+    ) -> dict[str, Any]:
+        """Fetch chapter reviews independently of chapter content.
+
+        This is intended for VIP chapters where the main text may only be a
+        preview, but reviews are still publicly available. Reviews are fetched
+        directly from the source's chapter_reviews capability using cached
+        detail/toc when available.
+        """
+        plugin_id = candidate.get("sourceId", "")
+        plugin = self.scheduler._plugins.get(plugin_id)
+        diagnostics: list[dict[str, Any]] = []
+        started = time.perf_counter()
+        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "summary": {}}
+
+        if not plugin:
+            return {
+                "ok": False,
+                "error": "插件不存在",
+                "pluginId": plugin_id,
+                "reviews": reviews,
+                "diagnostics": diagnostics,
+                "elapsedMs": round((time.perf_counter() - started) * 1000),
+            }
+
+        from app.services.catalog import Catalog
+        from app.source_plugins.id_codec import encode_book_id
+        catalog = Catalog()
+        book_url = candidate.get("bookUrl", "")
+        book_id = candidate.get("bookId") or encode_book_id(plugin_id, book_url)
+
+        ctx = self.scheduler._make_ctx(plugin_id)
+        effective_timeout = timeout if timeout is not None else self._timeout_for_plugin(plugin)
+        detail: dict[str, Any] = {}
+        toc_items: list[dict[str, Any]] = []
+        chapter_item: dict[str, Any] = {}
+
+        try:
+            # Prefer cached detail/toc to avoid redundant work.
+            cached_detail = catalog.cache.get_book(book_id)
+            if isinstance(cached_detail, dict) and cached_detail.get("data"):
+                detail = dict(cached_detail["data"])
+                diagnostics.append(self._diag(plugin_id, "cache", "book_cache_hit", "书评请求命中书籍详情缓存"))
+
+            cached_toc = catalog.cache.get_toc(book_id)
+            if isinstance(cached_toc, dict):
+                toc_items = cached_toc.get("chapters") or cached_toc.get("items") or []
+                toc_items = [dict(item) for item in toc_items if isinstance(item, dict)]
+                if toc_items:
+                    diagnostics.append(self._diag(plugin_id, "cache", "toc_cache_hit", "书评请求命中目录缓存"))
+
+            if not detail and "detail" in plugin.capabilities:
+                detail = await asyncio.wait_for(
+                    plugin.source.detail(ctx, book_url),
+                    timeout=effective_timeout,
+                )
+                if not isinstance(detail, dict):
+                    detail = {}
+
+            if not toc_items and "toc" in plugin.capabilities:
+                toc_url = detail.get("tocUrl") or book_url
+                toc_items = await asyncio.wait_for(
+                    plugin.source.toc(ctx, toc_url),
+                    timeout=effective_timeout,
+                )
+                toc_items = [dict(item) for item in toc_items or [] if isinstance(item, dict)]
+
+            if not toc_items:
+                diagnostics.append(self._diag(plugin_id, "toc", "toc_empty", "目录为空"))
+                return {
+                    "ok": False,
+                    "error": "目录为空",
+                    "pluginId": plugin_id,
+                    "reviews": reviews,
+                    "diagnostics": diagnostics,
+                    "elapsedMs": round((time.perf_counter() - started) * 1000),
+                }
+
+            chapter_item = toc_items[min(max(chapter_index, 0), len(toc_items) - 1)]
+            chapter_url = chapter_item.get("chapterUrl", "")
+
+            if "chapter_reviews" not in plugin.capabilities:
+                diagnostics.append(self._diag(plugin_id, "reviews", "capability_missing", "书源未实现 chapter_reviews"))
+                return {
+                    "ok": False,
+                    "error": "书源未实现本章说",
+                    "pluginId": plugin_id,
+                    "chapterIndex": chapter_index,
+                    "chapterUrl": chapter_url,
+                    "reviews": reviews,
+                    "diagnostics": diagnostics,
+                    "elapsedMs": round((time.perf_counter() - started) * 1000),
+                }
+
+            if chapter_url:
+                fetched_reviews = await asyncio.wait_for(
+                    plugin.source.chapter_reviews(ctx, chapter_url),
+                    timeout=effective_timeout,
+                )
+                if isinstance(fetched_reviews, dict):
+                    reviews = {
+                        "paragraphs": fetched_reviews.get("paragraphs", {}),
+                        "chapterEnd": fetched_reviews.get("chapterEnd", []),
+                        "chapterEndHot": fetched_reviews.get("chapterEndHot", []),
+                        "authorReviews": fetched_reviews.get("authorReviews", []),
+                        "summary": fetched_reviews.get("summary", {}),
+                        "debug": fetched_reviews.get("debug", {}),
+                    }
+            else:
+                diagnostics.append(self._diag(plugin_id, "reviews", "chapter_url_missing", "章节 URL 为空"))
+
+            return {
+                "ok": True,
+                "pluginId": plugin_id,
+                "candidateId": candidate.get("candidateId") or candidate_id_for(candidate),
+                "chapterIndex": chapter_index,
+                "chapterUrl": chapter_url,
+                "reviews": reviews,
+                "diagnostics": diagnostics,
+                "elapsedMs": round((time.perf_counter() - started) * 1000),
+            }
+        except asyncio.TimeoutError:
+            diagnostics.append(self._diag(plugin_id, "runtime", "timeout", "本章说获取超时"))
+            return {
+                "ok": False,
+                "error": "timeout",
+                "pluginId": plugin_id,
+                "chapterIndex": chapter_index,
+                "chapterUrl": chapter_item.get("chapterUrl", ""),
+                "reviews": reviews,
+                "diagnostics": diagnostics,
+                "elapsedMs": round((time.perf_counter() - started) * 1000),
+            }
+        except Exception as exc:
+            diagnostics.append(self._diag(
+                plugin_id,
+                "runtime",
+                getattr(exc, "code", "plugin_exception"),
+                f"本章说获取失败: {exc}",
+                extra=self._bypass_extra_for_exception(exc),
+            ))
+            return {
+                "ok": False,
+                "error": str(exc),
+                "pluginId": plugin_id,
+                "chapterIndex": chapter_index,
+                "chapterUrl": chapter_item.get("chapterUrl", ""),
+                "reviews": reviews,
+                "diagnostics": diagnostics,
+                "elapsedMs": round((time.perf_counter() - started) * 1000),
+            }
         finally:
             await ctx._fetcher.close()
 
