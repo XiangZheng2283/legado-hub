@@ -1,8 +1,26 @@
-# 书源插件模板
+# 书源插件模板（中文）
 
-作为 LegadoHub 原生 Python 书源插件的起点。
+这份文档是给你**直接开工**用的。
 
-## 目录结构
+如果你只想先把一个插件跑起来，不想先读一堆架构说明，那就先看这份。
+
+一句话总结：
+
+**一个最小可用的 LegadoHub 插件，核心只要 `metadata.yaml` 和 `source.py`。**
+
+---
+
+## 1. 最小目录长什么样
+
+最小版本：
+
+```text
+plugins/sources/example_plugin/
+  metadata.yaml
+  source.py
+```
+
+更适合长期维护的版本：
 
 ```text
 plugins/sources/example_plugin/
@@ -13,7 +31,26 @@ plugins/sources/example_plugin/
     smoke.yaml
 ```
 
-## metadata.yaml
+可以这样理解：
+
+- `metadata.yaml`：告诉运行时“我是谁、我支持什么”
+- `source.py`：真正的站点适配代码
+- `README.md`：写给人看
+- `tests/`：写给验证流程看
+
+注意：
+
+- `README.md`
+- `tests/`
+- `smoke.yaml`
+
+都不是插件运行硬依赖，它们只是维护和验证辅助。
+
+---
+
+## 2. `metadata.yaml` 先怎么写
+
+先上一个最常用、最保守的骨架：
 
 ```yaml
 contractVersion: "1.0"
@@ -32,10 +69,10 @@ capabilities:
   - chapter
 enabled: true
 proxy:
-  mode: auto        # never / auto / always
+  mode: auto
   required: false
 browser:
-  mode: none        # none / optional / required
+  mode: none
   reason: ""
 auth:
   mode: none
@@ -47,24 +84,52 @@ tags:
   - no-login
 ```
 
-字段规则：
+### 关键字段怎么理解
 
-- `id`：稳定的 ASCII 标识符，在所有插件中唯一。
-- `name`：控制台中显示的显示名。
-- `version`：插件版本，行为变更时递增。
-- `contractVersion`：第一阶段必须为 `"1.0"`。
-- `domains`：插件预期访问的域名。
-- `baseUrls`：站点规范入口 URL。
-- `capabilities`：支持的生命周期方法。
-- `auth.mode`：`none`、`optional`、`required` 或 `manual`。
-- `content.access`：`free`、`paid`、`mixed` 或 `unknown`。
-- `tags`：运营提示，如 `html`、`json-api`、`proxy`、`cloudflare`、`login`、`special`。
-- `explore` 保留给官方/授权书源，如起点、七猫、番茄、QQ 阅读。普通镜像或爬虫书源不得声明排行榜/分类发现能力。
+`id`
+: 插件唯一标识。尽量稳定，不要频繁改名。
 
-## source.py
+`name`
+: 控制台里给人看的显示名。
+
+`domains`
+: 这个插件预期访问的域名。
+
+`baseUrls`
+: 站点主入口。
+
+`capabilities`
+: 这个插件实现了哪些能力。普通小说站点最常见的是：
+- `search`
+- `detail`
+- `toc`
+- `chapter`
+
+`auth.mode`
+: 如果站点不需要登录，就先写 `none`。不要一上来就把登录复杂度加进去。
+
+`content.access`
+: 表示内容是免费、付费还是混合。
+
+### 一个重要约束
+
+普通镜像站、抓取站，不要随便声明 `explore`。  
+排行榜 / 分类发现这类能力，尽量留给官方或授权书源。
+
+---
+
+## 3. `source.py` 最少要实现什么
+
+最基础的四个方法：
+
+1. `search`
+2. `detail`
+3. `toc`
+4. `chapter`
+
+下面是一份可直接改的骨架：
 
 ```python
-from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 
@@ -72,7 +137,6 @@ class Source:
     id = "example_plugin"
     name = "示例书源"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
     base_url = "https://example.com"
 
     async def search(self, ctx, keyword: str, page: int):
@@ -107,86 +171,39 @@ class Source:
             "wordCount": ctx.text(html, ".word-count"),
             "tocUrl": book_url,
             "authRequired": False,
-            "extra": {
-                "status": ctx.text(html, ".status"),
-                "updateTime": ctx.text(html, ".update-time"),
-            },
         }
 
     async def toc(self, ctx, book_url: str):
         chapters = []
-        seen = set()
-        page_url = book_url
-        for _ in range(200):
-            html = await ctx.fetch_text(page_url)
-            links = ctx.select(html, "#list dd a")
-            new_count = 0
-            for node in links:
-                href = ctx.attr(node, "href", "")
-                title = ctx.text(node).strip()
-                if not href or not title or href in seen:
-                    continue
-                seen.add(href)
-                chapters.append({
-                    "sourceId": self.id,
-                    "index": len(chapters) + 1,
-                    "title": title,
-                    "chapterUrl": ctx.urljoin(page_url, href),
-                    "isVip": False,
-                    "isLocked": False,
-                })
-                new_count += 1
-            next_href = ctx.attr(html, "a:contains('下一页')", "href")
-            if not next_href or new_count == 0:
-                break
-            next_url = ctx.urljoin(page_url, next_href)
-            if next_url == page_url:
-                break
-            page_url = next_url
+        html = await ctx.fetch_text(book_url)
+        for index, node in enumerate(ctx.select(html, "#list dd a"), start=1):
+            chapters.append({
+                "sourceId": self.id,
+                "index": index,
+                "title": ctx.text(node),
+                "chapterUrl": ctx.urljoin(book_url, ctx.attr(node, "href")),
+                "isVip": False,
+                "isLocked": False,
+            })
         return chapters
 
     async def chapter(self, ctx, chapter_url: str):
-        parts = []
-        current_url = chapter_url
-        title = ""
-        original_stem = self._chapter_stem(chapter_url)
-        while current_url and len(parts) < 10:
-            html = await ctx.fetch_text(current_url)
-            if not title:
-                title = ctx.text(html, "h1")
-            content_html = ctx.html(html, "#content")
-            content = self._clean_chapter_content(content_html)
-            if content:
-                parts.append(content)
-            # 合并同一章节分页；跳到下一章前停止
-            next_href = ctx.attr(html, "#next_url", "href")
-            if not next_href or self._chapter_stem(next_href) != original_stem:
-                break
-            current_url = ctx.urljoin(chapter_url, next_href)
+        html = await ctx.fetch_text(chapter_url)
+        content_html = ctx.html(html, "#content")
         return {
             "sourceId": self.id,
-            "title": title,
-            "content": "\n\n".join(parts),
+            "title": ctx.text(html, "h1"),
+            "content": self._clean_chapter_content(content_html),
             "chapterUrl": chapter_url,
             "format": "text",
             "authRequired": False,
             "isPaid": False,
         }
 
-    def _chapter_stem(self, url: str) -> str:
-        path = url.split("?")[0].split("#")[0]
-        if "_" in path:
-            return path.rsplit("_", 1)[0]
-        return path.rsplit(".", 1)[0] if "." in path else path
-
     def _clean_chapter_content(self, html: str) -> str:
         soup = BeautifulSoup(html or "", "html.parser")
         for tag in soup.find_all(["script", "style", "nav", "header", "footer", "iframe", "ins", "center"]):
             tag.decompose()
-        for div in soup.find_all("div"):
-            text = div.get_text(strip=True)
-            if len(text) < 80 and any(kw in text for kw in ["广告", "声明", "本章结束", "返回目录", "加入书签", "推荐", "最新网址", "章节内容缺失", "章节不存在"]):
-                div.decompose()
         for br in soup.find_all("br"):
             br.replace_with("\n")
         paragraphs = []
@@ -201,110 +218,115 @@ class Source:
         return "\n\n".join(lines)
 ```
 
-## tests/smoke.yaml
+---
 
-```yaml
-keyword: 凡人修仙传
-expect:
-  search_min_items: 1
-  detail_has:
-    - name
-    - author
-    - tocUrl
-  toc_min_chapters: 1
-  chapter_min_chars: 200
-```
+## 4. 最推荐的开发顺序
 
-## 书籍信息字段标准
+不要一开始就把所有事情堆进去。
 
-`detail()` 应返回 Reading/Legado 通过 `ruleBookInfo` 消费的相同元数据表面。填充书源页面暴露的每个字段：
+推荐顺序：
 
-- 必填基线：`sourceId`、`name`、`author`、`bookUrl`、`tocUrl`。
-- 强烈推荐：`coverUrl`、`intro`、`kind`、`lastChapter`、`wordCount`。
-- 将站点特定但有用的元数据（如 `status`、`updateTime`、`lastUpdateTime`、`rating` 或原始标签）放在 `extra` 下。
-- 返回 `intro` 前清理 SEO 尾巴、重复标签和站点导航杂项。
-- 搜索结果在可能的情况下应使用相同的字段名，以便 Reading 在用户进入详情页之前渲染有用的列表。
-- 如果搜索页不暴露 `lastChapter`、`author`、`coverUrl`、`intro`、`kind`、`wordCount` 或 `updateTime` 等标准字段，书源插件必须在其自身的 `search()` 方法内调用自身的 `detail()` 解析器为前几个稳定候选补全这些字段。不要依赖调度器来填充这些字段。
-- 书源本地详情丰富应有界且无破坏：仅针对有稳定 `bookUrl` 的候选，短超时，失败被跟踪但不致命，仅填充空字段。在有用时标记 `extra.detailEnriched = true`。
+1. 先把 `search()` 跑通
+2. 再补 `detail()`
+3. 再补 `toc()`
+4. 最后补 `chapter()`
 
-推荐辅助：
+先把**阅读主链路**打通，再决定是否继续加：
 
-```python
-from app.source_plugins.search_enrichment import enrich_search_items_from_detail
+- 登录
+- 评论
+- 解密
+- 反爬
+- 浏览器绕过
 
-async def search(self, ctx, keyword: str, page: int):
-    ...
-    return await enrich_search_items_from_detail(self, ctx, items)
-```
+---
 
-## 目录完整性标准
+## 5. 各方法最好返回什么
 
-`toc()` 必须按正常阅读顺序返回完整目录。许多镜像小说站点只渲染一个静态预览（包含开头几章和最新几章），而完整目录通过 AJAX/API、分页或"加载更多"脚本加载。这种情况下：
+### `search()`
+尽量补齐这些字段：
 
-- 优先使用完整 AJAX/API/分页目录端点。
-- 如果完整目录端点可以从书籍 URL 推导，在获取静态目录页之前先尝试它。某些站点会对 `/book/...` 页面挑战，但 `/ajax_novels/chapterlist/...` 仍可用。
-- 仅当完整端点失败时，才将静态目录作为 fallback。
-- 按章节 URL 去重。
-- 丢弃 `#`、排序按钮、相关书籍链接和最近更新块。
-- 站点可在正常/倒序之间切换时，按显式章号排序。
-- 如果站点仅暴露部分目录，跟踪已知限制。
+- `name`
+- `author`
+- `bookUrl`
+- `coverUrl`
+- `intro`
+- `kind`
+- `lastChapter`
 
-在编写 `toc()` 或 `chapter()` 的选择器之前，主动检查页面是否有 JSON/AJAX/get 端点。常见信号包括脚本变量、包含 `api`、`ajax`、`chapterlist`、`chapters`、`content`、`reader` 的网络路径，或移动/AMP 端点。优先使用稳定的 API/AJAX 响应而不是 HTML 解析获取完整目录和正文内容；HTML 选择器仅作为文档化的 fallback。如果端点探测返回 404/500/挑战页面，将探测结果保留在验证笔记或 `ctx.trace()` 中，以便下一次适配迭代不会重复盲目猜测。
+### `detail()`
+至少保证：
 
-重复镜像框架常出现相同陷阱：
+- `sourceId`
+- `name`
+- `author`
+- `bookUrl`
+- `tocUrl`
 
-- "最新章节"预览出现在真实目录之前。按区块边界解析，而不是仅使用宽泛选择器如 `#list a`。
-- 某些 HTML 结构为 `<a><dd>title</dd></a>` 而不是 `<dd><a>title</a></dd>`。在假设框架形状之前，针对实时 DOM 验证。
-- 分页目录可能使用兄弟 URL 如 `/book/123-2.html`，而不是子 URL 如 `/book/123/123-2.html`。跟随实际的 `下一页` 链接。
-- 不要仅按章号去重。`番外`、`完结感言` 等无编号章节必须保留。
-- 章节页面可能包含短的广告 `<p>` 加真实文本节点。不要让"第一个 `<p>` 获胜"的逻辑丢弃正文。
-- 如果来源页面本身返回缺失、串章、混章正文，插件应跟踪或为该章节返回空，而不是将明显被污染的内容缓存为有效文本。解析器不得伪造缺失正文。
+最好还能给：
 
-## 章节内容标准
+- `coverUrl`
+- `intro`
+- `kind`
+- `lastChapter`
+- `wordCount`
 
-`chapter()` 必须返回干净、可读的纯文本：
+### `toc()`
+核心要求是：
 
-- 通过 `<br>`、`<p>` 或块文本提取保留段落边界。
-- 合并同一章节分页，并在到达下一章前停止。
-- 移除标题页码标记，如 `(1/2)`、`(2/3)`、`（第2页）`。
-- 剥离 script/style/nav/header/footer、广告容器、下载提示、推荐块、缺章提示和站点口号。
-- 将短的仅广告内容视为无效；不要将其作为成功章节缓存或返回。
-- 正文优先使用 API/AJAX/get 端点；HTML 选择器作为 fallback。
+**返回完整目录，不要把预览目录误当成完整目录。**
 
-## Fallback 策略标准
+很多站点会有这个坑：
 
-当站点搜索被阻止或不稳定时，保持降级书源本地化和可预测：
+- 页面上只显示最前面几章和最新几章
+- 真正完整目录在 AJAX / API / 分页里
 
-1. 通过声明的访问层进行正常书源搜索。
-2. 如果检测到挑战或 JavaScript 渲染的结果页，对同一站点搜索 URL 进行浏览器渲染搜索。
-3. 书源拥有的排行榜/分类/最近更新 fallback。
-4. 仅作为最终声明 bypass 使用外部搜索引擎代理。
+所以写 `toc()` 时一定要先判断：
 
-HTTP 200 仍然可能是挑战页面。在将解析失败视为空结果之前，检查返回的 HTML 中是否有挑战标记。
+- 这是完整目录页？
+- 还是只是一个预览页？
 
-搜索页也需要误报防护：如果响应只包含通用推荐、热门书籍或 fallback 导航，且不包含查询关键词的显式标题命中，返回空或继续到声明的 fallback。不要将推荐页视为成功搜索。
+### `chapter()`
+目标就一句话：
 
-## 特殊站点覆盖
+**返回干净、可读、段落正常的纯文本正文。**
 
-对于特殊站点，将自定义逻辑保留在生命周期方法内，但通过网络访问保持在 `ctx` 内。
+至少要处理：
 
-```python
-async def chapter(self, ctx, chapter_url: str):
-    html = await ctx.fetch_text(chapter_url)
-    token = self._extract_token(html)
-    payload = self._decrypt_payload(html, token)
-    return {
-        "title": ctx.text(html, "h1"),
-        "content": ctx.clean_text(payload),
-        "chapterUrl": chapter_url,
-    }
-```
+- `<br>` / `<p>` 段落
+- 广告
+- 推荐块
+- 上下页导航残留
+- 同章分页
 
-不要在插件中启动不受管理的线程、创建全局 HTTP 客户端或实现书源级并发。
+---
 
-## 登录/认证钩子
+## 6. 常见坑
 
-对于官方或基于登录的书源，在 `metadata.yaml` 中声明认证并实现可选钩子。
+### 目录页是假目录
+看起来像目录，实际上只是“最新章节列表”。
+
+### 搜索页字段不全
+可能只有书名，没有作者、简介、封面。  
+这时要么接受字段不完整，要么自己做 detail enrichment。
+
+### 正文页第一页是假正文
+有的站点第一页是广告、下载提示、推荐块，真正正文在后面。
+
+### 章节分页不是下一章
+有些“下一页”其实还是同一章，要合并；有些则已经跳到下一章，要停止。
+
+### 不要太早上登录
+站点不需要登录时，先别做登录。  
+登录、Cookie、验证码、浏览器绕过都会明显提高复杂度。
+
+---
+
+## 7. 什么时候再加登录能力
+
+如果站点确实要登录，再扩 `metadata.yaml` 和 `source.py`。
+
+例如：
 
 ```yaml
 auth:
@@ -323,26 +345,72 @@ tags:
   - paid
 ```
 
+同时可以补：
+
 ```python
 async def auth_status(self, ctx):
-    cookie = ctx.cookies.get("qidian.com")
-    return {
-        "sourceId": self.id,
-        "authenticated": bool(cookie),
-        "accountName": "",
-        "expiresAt": "",
-        "message": "已检测到 Cookie" if cookie else "未登录",
-        "requiredActions": [] if cookie else ["manual_login"],
-    }
+    ...
 
 async def prepare_login(self, ctx):
-    return {
-        "sourceId": self.id,
-        "mode": "manual_browser",
-        "loginUrl": "https://www.qidian.com",
-        "instructions": "在打开的浏览器中完成登录，然后回到后台点击检测登录状态。",
-        "cookieDomains": ["qidian.com"],
-    }
+    ...
 ```
 
-锁定章节应返回结构化认证/付费字段，而不是假装解析失败。
+但这应该是**后加项**，不是默认项。
+
+---
+
+## 8. 什么时候需要 `README.md`
+
+不是运行必需，但推荐在下面场景补：
+
+- 这个插件要长期维护
+- 这个站有已知限制
+- 这个插件需要额外说明（比如登录、Cookie、代理、浏览器）
+
+如果只是快速验证一个站点，`README.md` 可以后补。
+
+---
+
+## 9. 什么时候需要 `tests/smoke.yaml`
+
+也不是运行必需，但如果插件要稳定维护，建议加。
+
+最小 smoke 例子：
+
+```yaml
+keyword: 凡人修仙传
+expect:
+  search_min_items: 1
+  detail_has:
+    - name
+    - author
+    - tocUrl
+  toc_min_chapters: 1
+  chapter_min_chars: 200
+```
+
+它的好处很直接：
+
+- 你后面改了解析逻辑
+- 可以快速验证插件有没有被改坏
+
+---
+
+## 10. 这份模板最适合怎么用
+
+最推荐的方式不是整份复制，而是：
+
+1. 先复制最小骨架
+2. 把站点自己的：
+   - 搜索结构
+   - 详情结构
+   - 目录结构
+   - 正文结构
+   替换进去
+3. 一步一步跑通
+
+如果你下一步想看“适配一个真实站点时该怎么推进”，建议继续看：
+
+- `plugin-source-workflow.md`
+
+这份更偏流程，而这份更偏模板。
