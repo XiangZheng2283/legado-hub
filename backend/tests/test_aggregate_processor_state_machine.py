@@ -106,10 +106,11 @@ class _FakeCatalog:
 class _FakeAIService:
     """Records calls and returns canned results."""
 
-    def __init__(self, *, content="AI 聚合正文", fail=False, error=None):
+    def __init__(self, *, content="AI 聚合正文", fail=False, error=None, self_score=1.0):
         self._content = content
         self._fail = fail
         self._error = error
+        self._self_score = self_score
         self.calls: list[dict] = []
 
     async def process_official_full(self, **kwargs):
@@ -123,6 +124,7 @@ class _FakeAIService:
         if self._fail:
             raise self._error or RuntimeError("AI aggregation failed")
         return {"status": "processed", "content": self._content,
+                "selfScore": self._self_score,
                 "aiModel": "fake-model", "promptTokens": 100, "completionTokens": 50,
                 "totalTokens": 150, "latencyMs": 200, "plannedAnalysis": False}
 
@@ -130,10 +132,12 @@ class _FakeAIService:
         self.calls.append({"method": "third_party_primary", **kwargs})
         if self._fail:
             return {"status": "fallback", "content": kwargs.get("content", ""),
+                    "selfScore": 0.0,
                     "aiModel": "", "error": str(self._error or "AI failed"),
                     "promptTokens": 0, "completionTokens": 0,
                     "totalTokens": 0, "latencyMs": 0, "plannedAnalysis": False}
         return {"status": "processed", "content": self._content,
+                "selfScore": self._self_score,
                 "aiModel": "fake-model", "promptTokens": 100, "completionTokens": 50,
                 "totalTokens": 150, "latencyMs": 200, "plannedAnalysis": False}
 

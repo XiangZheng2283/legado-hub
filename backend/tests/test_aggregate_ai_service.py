@@ -12,19 +12,30 @@ from app.services.aggregate_ai_service import AggregateAIService
 class FakeAIClient:
     """Minimal fake that returns canned responses."""
 
-    def __init__(self, content: str = "AI 整理后的正文", *, fail: bool = False, error: Exception | None = None):
+    def __init__(
+        self,
+        content: str = "AI 整理后的正文",
+        *,
+        fail: bool = False,
+        error: Exception | None = None,
+        self_score: float | None = None,
+    ):
         self._content = content
         self._fail = fail
         self._error = error
+        self._self_score = self_score
         self.calls: list[list[dict]] = []
 
     async def chat(self, messages):
         self.calls.append(messages)
         if self._fail:
             raise self._error or RuntimeError("AI provider failed")
+        content = self._content
+        if self._self_score is not None:
+            content = f"{content}\n<self_rating>{self._self_score}</self_rating>"
         from app.ai.client import AIProviderResult
         return AIProviderResult(
-            content=self._content,
+            content=content,
             model="fake-model",
             prompt_tokens=100,
             completion_tokens=50,
@@ -239,3 +250,69 @@ async def test_previous_context_included_in_prompt():
     prompt_text = json.dumps(client.calls, ensure_ascii=False)
     assert "前文参考" in prompt_text
     assert "前文参考内容" in prompt_text
+
+
+@pytest.mark.asyncio
+async def test_self_rating_instruction_in_prompt():
+    """Prompts must ask the model to output a self-rating tag."""
+    client = FakeAIClient()
+    service = AggregateAIService(client=client)
+
+    await service.process_with_candidates(
+        book_name="测试书", author="作者", title="第一章",
+        official_preview="这是一段预览正文用于测试目的。",
+        candidate_content="候选源正文 " * 20,
+        alignment={"alignmentPassed": True},
+    )
+
+    all_text = json.dumps(client.calls, ensure_ascii=False)
+    assert "<self_rating>" in all_text
+    assert "0.XX" in all_text
+
+
+@pytest.mark.asyncio
+async def test_self_rating_extracted_and_content_cleaned():
+    """If the model returns a self-rating tag, it should be parsed and removed."""
+    client = FakeAIClient(content="整理后的正文", self_score=0.95)
+    service = AggregateAIService(client=client)
+
+    result = await service.process_with_candidates(
+        book_name="测试书", author="作者", title="第一章",
+        official_preview="这是一段预览正文用于测试目的。",
+        candidate_content="候选源正文 " * 20,
+        alignment={"alignmentPassed": True},
+    )
+
+    assert result["content"] == "整理后的正文"
+    assert result["selfScore"] == 0.95
+
+
+@pytest.mark.asyncio
+async def test_self_rating_defaults_to_zero_when_missing():
+    """If the model omits the self-rating tag, selfScore should default to 0.0."""
+    client = FakeAIClient(content="整理后的正文")
+    service = AggregateAIService(client=client)
+
+    result = await service.process_with_candidates(
+        book_name="测试书", author="作者", title="第一章",
+        official_preview="这是一段预览正文用于测试目的。",
+        candidate_content="候选源正文 " * 20,
+        alignment={"alignmentPassed": True},
+    )
+
+    assert result["content"] == "整理后的正文"
+    assert result["selfScore"] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_third_party_primary_returns_self_score():
+    client = FakeAIClient(content="归属校验后的正文", self_score=0.88)
+    service = AggregateAIService(client=client)
+
+    result = await service.process_third_party_primary(
+        book_name="测试书", author="作者", title="第一章",
+        content="第三方源正文 " * 20, source_id="example_com",
+    )
+
+    assert result["content"] == "归属校验后的正文"
+    assert result["selfScore"] == 0.88

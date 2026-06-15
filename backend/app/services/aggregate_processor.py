@@ -597,7 +597,9 @@ class AggregateProcessor:
             )
             if result["status"] == "processed":
                 from app.services.aggregate_alignment import compute_deviation_score
-                deviation = compute_deviation_score(content, result["content"])
+                deviation = compute_deviation_score(
+                    content, result["content"], ai_self_score=result.get("selfScore")
+                )
                 threshold = self._workflow_settings().get("deviationThreshold", 0.90)
                 if deviation < threshold:
                     # Deviation too high — fall through to fallback.
@@ -616,6 +618,7 @@ class AggregateProcessor:
                         status="processed", content=result["content"], alignment_json=alignment_json,
                         ai_model=result.get("aiModel", ""),
                         deviation_score=deviation,
+                        ai_self_score=result.get("selfScore", 0.0),
                         ai_prompt_tokens=result.get("promptTokens", 0),
                         ai_completion_tokens=result.get("completionTokens", 0),
                         ai_total_tokens=result.get("totalTokens", 0),
@@ -723,7 +726,11 @@ class AggregateProcessor:
                     )
                     # Compute deviation score: how much did AI change the content?
                     from app.services.aggregate_alignment import compute_deviation_score
-                    deviation = compute_deviation_score(best_candidate_content, ai_result["content"])
+                    deviation = compute_deviation_score(
+                        best_candidate_content,
+                        ai_result["content"],
+                        ai_self_score=ai_result.get("selfScore"),
+                    )
                     threshold = self._workflow_settings().get("deviationThreshold", 0.90)
                     if deviation < threshold:
                         # AI output deviated too much — treat as failure.
@@ -748,6 +755,7 @@ class AggregateProcessor:
                         alignment_json=alignment_json,
                         ai_model=ai_result.get("aiModel", ""),
                         deviation_score=deviation,
+                        ai_self_score=ai_result.get("selfScore", 0.0),
                         ai_prompt_tokens=ai_result.get("promptTokens", 0),
                         ai_completion_tokens=ai_result.get("completionTokens", 0),
                         ai_total_tokens=ai_result.get("totalTokens", 0),
@@ -846,6 +854,7 @@ class AggregateProcessor:
         chapter_index: int | None, status: str, content: str,
         alignment_json: dict, fallback_source_id: str = "",
         ai_model: str = "", deviation_score: float = 0.0,
+        ai_self_score: float = 0.0,
         ai_prompt_tokens: int = 0, ai_completion_tokens: int = 0,
         ai_total_tokens: int = 0, ai_latency_ms: int = 0,
     ) -> None:
@@ -856,14 +865,14 @@ class AggregateProcessor:
                    SET status = ?, content_length = ?, processed_content = ?, last_processed_at = ?,
                        error = '', last_error_code = '', retry_count = 0, next_retry_time = NULL,
                        source_alignment_json = ?, fallback_source_id = ?, ai_model = ?,
-                       deviation_score = ?, ai_prompt_tokens = ?, ai_completion_tokens = ?,
+                       deviation_score = ?, ai_self_score = ?, ai_prompt_tokens = ?, ai_completion_tokens = ?,
                        ai_total_tokens = ?, ai_latency_ms = ?,
                        updated_at = ?
                    WHERE chapter_id = ?""",
                 (status, len(content), content, now,
                  json.dumps(alignment_json, ensure_ascii=False),
                  fallback_source_id, ai_model,
-                 deviation_score, ai_prompt_tokens, ai_completion_tokens,
+                 deviation_score, ai_self_score, ai_prompt_tokens, ai_completion_tokens,
                  ai_total_tokens, ai_latency_ms,
                  now, chapter_id),
             )

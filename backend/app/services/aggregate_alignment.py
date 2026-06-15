@@ -221,18 +221,24 @@ def build_source_alignment_json(
 # ── deviation score (plan §10) ───────────────────────────────────────────────
 
 
-def compute_deviation_score(original: str, ai_output: str) -> float:
+def compute_deviation_score(original: str, ai_output: str, ai_self_score: float | None = None) -> float:
     """Compute deviation score between original content and AI output.
 
     Score range: 0.0 (completely different) to 1.0 (identical).
-    Uses character-level LCS similarity after normalization.
+    Uses character-level LCS similarity after normalization, blended with
+    the AI self-rating when available.
 
-    Per plan §10.1.1: code_similarity * 0.7 + placeholder for AI self-rating * 0.3.
-    Since AI self-rating requires an extra API call, first version uses
-    code_similarity only (weight 1.0) and reserves self-rating for later.
+    Per plan §10.1.1: code_similarity * 0.7 + AI self-rating * 0.3.
+    When ai_self_score is None, fall back to code_similarity only for
+    backwards compatibility.
     """
     norm_orig = _normalize_for_compare(original)
     norm_out = _normalize_for_compare(ai_output)
     if not norm_orig or not norm_out:
-        return 0.0
-    return SequenceMatcher(None, norm_orig, norm_out, autojunk=False).ratio()
+        code_similarity = 0.0
+    else:
+        code_similarity = SequenceMatcher(None, norm_orig, norm_out, autojunk=False).ratio()
+
+    if ai_self_score is None:
+        return code_similarity
+    return code_similarity * 0.7 + ai_self_score * 0.3

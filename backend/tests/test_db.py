@@ -30,6 +30,12 @@ def test_initialize_database(tmp_path: Path) -> None:
     }
     assert expected.issubset(tables)
 
+    with sqlite3.connect(db_path) as conn:
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(aggregate_chapter_tasks)")}
+        assert "ai_self_score" in columns
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(aggregate_ai_usage)")}
+        assert "ai_self_score" in columns
+
 
 def test_initialize_database_idempotent(tmp_path: Path) -> None:
     db_path = tmp_path / "test.db"

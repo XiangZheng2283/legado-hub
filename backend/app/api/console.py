@@ -1396,7 +1396,7 @@ def list_aggregate_chapters(book_id: str, page: int = 1, pageSize: int = 50, sta
         rows = conn.execute(
             f"""
             SELECT chapter_id, chapter_index, title, status, content_length, ai_model,
-                   ai_total_tokens, deviation_score, fallback_source_id, retry_count,
+                   ai_total_tokens, deviation_score, ai_self_score, fallback_source_id, retry_count,
                    last_processed_at, error
             FROM aggregate_chapter_tasks
             {where_sql}
@@ -1415,10 +1415,11 @@ def list_aggregate_chapters(book_id: str, page: int = 1, pageSize: int = 50, sta
             "aiModel": row[5] or "",
             "aiTotalTokens": int(row[6] or 0),
             "deviationScore": float(row[7] or 0.0),
-            "fallbackSourceId": row[8] or "",
-            "retryCount": int(row[9] or 0),
-            "lastProcessedAt": row[10] or "",
-            "error": row[11] or "",
+            "aiSelfScore": float(row[8] or 0.0),
+            "fallbackSourceId": row[9] or "",
+            "retryCount": int(row[10] or 0),
+            "lastProcessedAt": row[11] or "",
+            "error": row[12] or "",
         }
         for row in rows
     ]
@@ -1437,7 +1438,8 @@ def get_aggregate_chapter(book_id: str, chapter_id: str):
             """
             SELECT act.chapter_id, act.chapter_index, act.title, act.status, act.processed_content, abt.primary_source_id,
                    act.fallback_source_id, act.source_alignment_json, act.ai_model, act.ai_prompt_tokens,
-                   act.ai_completion_tokens, act.ai_total_tokens, act.ai_latency_ms, act.deviation_score, act.error
+                   act.ai_completion_tokens, act.ai_total_tokens, act.ai_latency_ms, act.deviation_score,
+                   act.ai_self_score, act.error
             FROM aggregate_chapter_tasks act
             LEFT JOIN aggregate_book_tasks abt ON act.aggregate_book_id = abt.aggregate_book_id
             WHERE act.aggregate_book_id = ? AND act.chapter_id = ?
@@ -1458,8 +1460,9 @@ def get_aggregate_chapter(book_id: str, chapter_id: str):
     ai_total = int(row[11] or 0)
     ai_latency = int(row[12] or 0)
     deviation = float(row[13] or 0.0)
+    ai_self_score = float(row[14] or 0.0)
     fallback_source_id = row[6] or ""
-    error = row[14] or ""
+    error = row[15] or ""
     return {
         "chapterId": row[0],
         "chapterIndex": row[1] or 0,
@@ -1486,6 +1489,7 @@ def get_aggregate_chapter(book_id: str, chapter_id: str):
             "totalTokens": ai_total,
             "latencyMs": ai_latency,
             "deviationScore": deviation,
+            "aiSelfScore": ai_self_score,
         },
         "aiInfo": {
             "enabled": ai_enabled,
@@ -1495,10 +1499,12 @@ def get_aggregate_chapter(book_id: str, chapter_id: str):
             "totalTokens": ai_total,
             "latencyMs": ai_latency,
             "deviationScore": deviation,
+            "aiSelfScore": ai_self_score,
         },
         "aiModel": ai_model,
         "tokens": ai_total,
         "deviationScore": deviation,
+        "aiSelfScore": ai_self_score,
         "fallbackSourceId": fallback_source_id,
         "errorMessage": error,
         "error": error,

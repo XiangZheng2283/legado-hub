@@ -271,6 +271,7 @@ CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     ai_total_tokens INTEGER DEFAULT 0,
     ai_latency_ms INTEGER DEFAULT 0,
     deviation_score REAL DEFAULT 0.0,
+    ai_self_score REAL DEFAULT 0.0,
     fallback_source_id TEXT,
     source_alignment_json TEXT,
     retry_count INTEGER DEFAULT 0,
@@ -293,6 +294,7 @@ CREATE TABLE IF NOT EXISTS aggregate_ai_usage (
     status TEXT,
     error TEXT,
     deviation_score REAL DEFAULT 0.0,
+    ai_self_score REAL DEFAULT 0.0,
     created_at TEXT DEFAULT (datetime('now'))
 );
 """
@@ -328,6 +330,7 @@ CURRENT_AGGREGATE_CHAPTER_TASK_COLUMNS = {
     "ai_total_tokens": "INTEGER DEFAULT 0",
     "ai_latency_ms": "INTEGER DEFAULT 0",
     "deviation_score": "REAL DEFAULT 0.0",
+    "ai_self_score": "REAL DEFAULT 0.0",
     "fallback_source_id": "TEXT",
     "source_alignment_json": "TEXT",
     "retry_count": "INTEGER DEFAULT 0",

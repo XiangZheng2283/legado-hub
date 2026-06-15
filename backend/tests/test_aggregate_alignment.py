@@ -224,3 +224,20 @@ def test_deviation_score_empty_input():
     from app.services.aggregate_alignment import compute_deviation_score
     assert compute_deviation_score("", "abc") == 0.0
     assert compute_deviation_score("abc", "") == 0.0
+
+
+def test_deviation_score_with_self_rating():
+    from app.services.aggregate_alignment import compute_deviation_score
+    original = "少年站在山巅望着远方的云海心中涌起一股莫名的悸动"
+    output = "少年站在山巅望着远方云海心中涌起莫名的悸动"
+    code_only = compute_deviation_score(original, output)
+    blended = compute_deviation_score(original, output, ai_self_score=1.0)
+    assert blended > code_only
+    assert abs(blended - (code_only * 0.7 + 1.0 * 0.3)) < 1e-9
+
+
+def test_deviation_score_without_self_rating_falls_back():
+    from app.services.aggregate_alignment import compute_deviation_score
+    text = "少年站在山巅望着远方的云海"
+    assert compute_deviation_score(text, text) == compute_deviation_score(text, text, ai_self_score=None)
+

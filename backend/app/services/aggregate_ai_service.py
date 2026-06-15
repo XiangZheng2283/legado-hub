@@ -10,11 +10,18 @@ from app.ai.client import AIProviderNotConfiguredError, AIProviderResult
 
 # ── prompt fragments ─────────────────────────────────────────────────────────
 
+_SELF_RATING_INSTRUCTION = (
+    "\n\n整理完成后，请在正文最后单独输出一行：<self_rating>0.XX</self_rating>。"
+    "0.00 表示完全偏离原文/新增大量无依据内容，1.00 表示完全保留原文语义且仅做格式整理。"
+    "不要输出解释。"
+)
+
 _SYSTEM_PROMPT_AGGREGATE = (
     "你是一个小说正文整理助手。你的任务是对输入的章节正文进行去广告、纠错、敏感词恢复和格式整理。\n"
     "严格规则：只基于输入正文整理，不新增无依据的剧情、角色、场景或对话。"
     "未在输入正文中出现或无法从上下文确定的内容不得新增。"
     "输出整理后的纯正文，不要输出解释或元信息。"
+    f"{_SELF_RATING_INSTRUCTION}"
 )
 
 _SYSTEM_PROMPT_ATTRIBUTION = (
@@ -24,12 +31,29 @@ _SYSTEM_PROMPT_ATTRIBUTION = (
 )
 
 
+_SELF_RATING_RE = re.compile(r"<self_rating>\s*([0-9]*\.?[0-9]+)\s*</self_rating>", re.IGNORECASE)
+
+
 def _purify_lightweight(content: str) -> str:
     """Lightweight cleanup: whitespace normalization, blank-line compression."""
     text = content.replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
+
+
+def _extract_self_rating(content: str) -> tuple[str, float | None]:
+    """Extract AI self-rating tag and return cleaned content + score."""
+    match = _SELF_RATING_RE.search(content)
+    if not match:
+        return content, None
+    try:
+        score = float(match.group(1))
+    except ValueError:
+        return content, None
+    score = max(0.0, min(1.0, score))
+    cleaned = _SELF_RATING_RE.sub("", content).strip()
+    return cleaned, score
 
 
 class AggregateAIService:
@@ -105,15 +129,17 @@ class AggregateAIService:
             "请基于以上内容整理出完整的章节正文。"
             "只保留小说正文，去除广告、站点提示和重复内容。"
             "不新增无依据的剧情，只做格式整理、敏感词恢复和错字修正。"
+            f"{_SELF_RATING_INSTRUCTION}"
         )
         blocked = self._scan_blocked_words(official_preview, candidate_content)
         if blocked:
             user_prompt += "\n\n" + blocked
 
-        result = await self._call_ai(user_prompt)
+        result, self_score = await self._call_ai(user_prompt)
         return {
             "status": "processed",
             "content": result.content,
+            "selfScore": self_score if self_score is not None else 0.0,
             "aiModel": result.model,
             "promptTokens": result.prompt_tokens,
             "completionTokens": result.completion_tokens,
@@ -152,16 +178,18 @@ class AggregateAIService:
             "请先判断这段正文是否属于上述小说（检查主角名、设定、叙事连贯性），"
             "然后整理出最终章节正文。"
             "不新增无依据的剧情，只做格式整理、敏感词恢复和错字修正。"
+            f"{_SELF_RATING_INSTRUCTION}"
         )
         blocked = self._scan_blocked_words(content)
         if blocked:
             user_prompt += "\n\n" + blocked
 
         try:
-            result = await self._call_ai(user_prompt)
+            result, self_score = await self._call_ai(user_prompt)
             return {
                 "status": "processed",
                 "content": result.content,
+                "selfScore": self_score if self_score is not None else 0.0,
                 "aiModel": result.model,
                 "promptTokens": result.prompt_tokens,
                 "completionTokens": result.completion_tokens,
@@ -173,6 +201,7 @@ class AggregateAIService:
             return {
                 "status": "fallback",
                 "content": content,
+                "selfScore": 0.0,
                 "aiModel": "",
                 "promptTokens": 0,
                 "completionTokens": 0,
@@ -202,9 +231,19 @@ class AggregateAIService:
             )
         return "\n".join(lines)
 
-    async def _call_ai(self, user_prompt: str) -> AIProviderResult:
+    async def _call_ai(self, user_prompt: str) -> tuple[AIProviderResult, float | None]:
         messages = [
             {"role": "system", "content": _SYSTEM_PROMPT_AGGREGATE},
             {"role": "user", "content": user_prompt},
         ]
-        return await self._client.chat(messages)
+        result = await self._client.chat(messages)
+        cleaned_content, self_score = _extract_self_rating(result.content)
+        cleaned_result = AIProviderResult(
+            content=cleaned_content,
+            model=result.model,
+            prompt_tokens=result.prompt_tokens,
+            completion_tokens=result.completion_tokens,
+            total_tokens=result.total_tokens,
+            latency_ms=result.latency_ms,
+        )
+        return cleaned_result, self_score
