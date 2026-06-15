@@ -16,6 +16,55 @@ PROCESSING_PLACEHOLDER = "聚合处理中……请先查看其他源或稍后刷
 WINDOW_CHAPTER_LIMIT = 5
 RETRY_DELAYS_MINUTES = [5, 15, 30, 60, 120]
 
+# Default lexicon path relative to backend/ (e.g. backend/data/lexicons/Sensitive-lexicon).
+# The resolve_sensitive_lexicon_path() function handles CWD differences at runtime.
+DEFAULT_LEXICON_PATH = "data/lexicons/Sensitive-lexicon"
+
+# Legacy path that older configs may still carry.
+_LEGACY_LEXICON_PATH = "backend/data/lexicons/Sensitive-lexicon"
+
+
+def resolve_sensitive_lexicon_path(raw_path: str | Path | None) -> Path:
+    """Resolve a user-configured lexicon path to an absolute ``Path``.
+
+    Resolution order:
+    1. If *raw_path* is already absolute, return it directly.
+    2. If the path exists relative to the current working directory, use it.
+    3. If the path starts with ``backend/`` and stripping that prefix gives an
+       existing path relative to ``BACKEND_ROOT``, use the stripped path.
+       (This handles the legacy default ``backend/data/lexicons/Sensitive-lexicon``
+       when the runtime CWD is the repo root or ``backend/``.)
+    4. Otherwise resolve against ``BACKEND_ROOT``.
+    """
+    from app.config import BACKEND_ROOT
+
+    if not raw_path:
+        return (BACKEND_ROOT / DEFAULT_LEXICON_PATH).resolve()
+
+    p = Path(raw_path)
+
+    # Absolute path — use as-is.
+    if p.is_absolute():
+        return p
+
+    # Relative to CWD (works from repo root for old default, and from backend/ for new default).
+    cwd_resolved = (Path.cwd() / p).resolve()
+    if cwd_resolved.exists():
+        return cwd_resolved
+
+    # Legacy path: "backend/data/lexicons/..." — strip "backend/" prefix and resolve against BACKEND_ROOT.
+    p_str = str(p).replace("\\", "/")
+    if p_str.startswith("backend/"):
+        stripped = p_str[len("backend/"):]
+        stripped_resolved = (BACKEND_ROOT / stripped).resolve()
+        if stripped_resolved.exists():
+            return stripped_resolved
+        # If stripped path doesn't exist yet, still return it (path may be created later).
+        return stripped_resolved
+
+    # Default: resolve relative to BACKEND_ROOT (handles "data/lexicons/..." from any CWD).
+    return (BACKEND_ROOT / p).resolve()
+
 
 DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "aggregationMode": "balanced",
@@ -31,7 +80,7 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "aiEnabled": False,
     "blockedWordRepair": True,
     "sensitiveLexiconEnabled": True,
-    "sensitiveLexiconPath": "backend/data/lexicons/Sensitive-lexicon",
+    "sensitiveLexiconPath": DEFAULT_LEXICON_PATH,
     "includePreviousChapters": 3,
     "deviationThreshold": 0.90,
     "promptTemplate": "",

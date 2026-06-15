@@ -554,6 +554,85 @@ def test_default_processor_builds_ai_service_when_provider_configured(tmp_path, 
     assert processor._get_ai_service() is service
 
 
+def test_default_processor_builds_ai_service_with_lexicon(tmp_path, monkeypatch):
+    """When sensitiveLexiconEnabled=True and a valid lexicon path is set, the default
+    AggregateAIService built by _get_ai_service() must hold a non-None lexicon."""
+    import logging
+
+    db_path = _setup_db(tmp_path)
+    _patch_ai_provider_config(monkeypatch, {
+        "baseUrl": "https://api.example.com/v1",
+        "apiKey": "sk-test",
+        "model": "mimo-v2.5",
+    })
+
+    lex_dir = tmp_path / "lexicon"
+    lex_dir.mkdir()
+    (lex_dir / "words.txt").write_text("血腥\n暴力\n杀意\n", encoding="utf-8")
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO admin_settings (key, value_json) VALUES (?, ?)",
+            ("contentWorkflow", json.dumps({
+                "aiEnabled": True,
+                "autoAggregate": True,
+                "processAggregateOnRead": True,
+                "aggregateCheckIntervalMinutes": 10,
+                "purifyMode": "conservative",
+                "sensitiveLexiconEnabled": True,
+                "sensitiveLexiconPath": str(lex_dir),
+            }, ensure_ascii=False)),
+        )
+        conn.commit()
+
+    processor = AggregateProcessor(db_path)
+    service = processor._get_ai_service()
+
+    assert service is not None
+    assert type(service).__name__ == "AggregateAIService"
+    assert service._lexicon is not None, "AggregateAIService should hold a loaded lexicon"
+    assert service._lexicon.word_count >= 2
+
+
+def test_default_processor_builds_ai_service_when_lexicon_path_missing(tmp_path, monkeypatch, caplog):
+    """A missing/broken lexicon path must NOT block AI service creation, but it should
+    be logged so the failure is diagnosable."""
+    import logging
+
+    db_path = _setup_db(tmp_path)
+    _patch_ai_provider_config(monkeypatch, {
+        "baseUrl": "https://api.example.com/v1",
+        "apiKey": "sk-test",
+        "model": "mimo-v2.5",
+    })
+
+    missing_path = tmp_path / "does_not_exist" / "lexicon.txt"
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO admin_settings (key, value_json) VALUES (?, ?)",
+            ("contentWorkflow", json.dumps({
+                "aiEnabled": True,
+                "autoAggregate": True,
+                "processAggregateOnRead": True,
+                "aggregateCheckIntervalMinutes": 10,
+                "purifyMode": "conservative",
+                "sensitiveLexiconEnabled": True,
+                "sensitiveLexiconPath": str(missing_path),
+            }, ensure_ascii=False)),
+        )
+        conn.commit()
+
+    processor = AggregateProcessor(db_path)
+    with caplog.at_level(logging.WARNING, logger="app.services.aggregate_processor"):
+        service = processor._get_ai_service()
+
+    assert service is not None, "AI service should still be created when lexicon load fails"
+    assert service._lexicon is None, "Lexicon should be None after load failure"
+    assert any("lexicon" in rec.message.lower() for rec in caplog.records), \
+        "Expected a warning message mentioning the lexicon failure"
+
+
 def test_default_processor_without_ai_config_falls_back_readably(tmp_path, monkeypatch):
     """AI config incomplete → _get_ai_service() returns None; preview fallback still works."""
     db_path = _setup_db(tmp_path)  # no ai_provider inserted

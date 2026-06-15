@@ -35,7 +35,7 @@ def test_aggregate_settings_migrates_legacy_content_workflow(tmp_path):
     assert settings["contentWorkflow"]["aiEnabled"] is True
     assert settings["contentWorkflow"]["aggregateCheckIntervalMinutes"] == 15
     assert settings["contentWorkflow"]["sensitiveLexiconEnabled"] is True
-    assert settings["contentWorkflow"]["sensitiveLexiconPath"] == "backend/data/lexicons/Sensitive-lexicon"
+    assert settings["contentWorkflow"]["sensitiveLexiconPath"] == "data/lexicons/Sensitive-lexicon"
     assert settings["runtime"]["windowChapterLimit"] == WINDOW_CHAPTER_LIMIT == 5
     assert settings["runtime"]["processingPlaceholder"] == PROCESSING_PLACEHOLDER
     assert settings["runtime"]["retryDelaysMinutes"] == RETRY_DELAYS_MINUTES

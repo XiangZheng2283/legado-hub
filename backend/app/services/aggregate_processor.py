@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import re
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
 from app.services.aggregate_virtual_source import (
@@ -321,11 +324,22 @@ class AggregateProcessor:
 
     async def run_due_once(self, limit: int = 10) -> dict:
         if not self.ai_aggregate_enabled():
-            return {"enabled": False, "processedBooks": 0}
+            settings = self._workflow_settings()
+            reasons = []
+            if not bool(settings.get("aiEnabled")):
+                reasons.append("aiEnabled=false")
+            if not bool(settings.get("autoAggregate", True)):
+                reasons.append("autoAggregate=false")
+            if not bool(settings.get("processAggregateOnRead", True)):
+                reasons.append("processAggregateOnRead=false")
+            return {"enabled": False, "processedBooks": 0, "dueBooks": 0,
+                    "reason": "aggregate disabled: " + ", ".join(reasons)}
+        due_books = self.list_due_books(limit=limit)
         processed = []
-        for item in self.list_due_books(limit=limit):
+        for item in due_books:
             processed.append(await self.run_book_task(item["aggregateBookId"]))
-        return {"enabled": True, "processedBooks": len(processed), "items": processed}
+        return {"enabled": True, "dueBooks": len(due_books),
+                "processedBooks": len(processed), "items": processed}
 
     async def run_book_task(self, aggregate_book_id: str) -> dict:
         from app.services.book_catalog import BookCatalog
@@ -496,13 +510,34 @@ class AggregateProcessor:
 
             lexicon = None
             if bool(workflow.get("sensitiveLexiconEnabled", True)):
-                lex_path = workflow.get("sensitiveLexiconPath")
-                if lex_path:
-                    try:
-                        from app.services.lexicon import SensitiveLexiconScanner
-                        lexicon = SensitiveLexiconScanner.from_path(lex_path)
-                    except Exception:
-                        pass
+                raw_lex_path = workflow.get("sensitiveLexiconPath")
+                if raw_lex_path:
+                    from app.services.aggregate_settings import resolve_sensitive_lexicon_path
+
+                    lex_path = resolve_sensitive_lexicon_path(raw_lex_path)
+                    if not lex_path.exists():
+                        logger.warning(
+                            "Sensitive lexicon path does not exist: %s (resolved to %s)",
+                            raw_lex_path,
+                            lex_path,
+                        )
+                    else:
+                        try:
+                            from app.ai.lexicon import SensitiveLexiconScanner
+
+                            lexicon = SensitiveLexiconScanner.from_path(lex_path)
+                            logger.debug(
+                                "Loaded sensitive lexicon from %s: %d words",
+                                lex_path,
+                                lexicon.word_count,
+                            )
+                        except Exception as exc:
+                            logger.warning(
+                                "Failed to load sensitive lexicon from %s: %s",
+                                lex_path,
+                                exc,
+                            )
+                            logger.debug("Lexicon load traceback", exc_info=True)
 
             client = OpenAICompatibleClient(provider_config)
             self._ai_service = AggregateAIService(client=client, lexicon=lexicon)
@@ -1020,6 +1055,19 @@ class AggregateProcessor:
         text = re.sub(r"\n{3,}", "\n\n", text)
         if mode == "aggressive":
             text = re.sub(r"(?im)^.*(最新网址|最新地址|本章未完|请收藏|手机用户请浏览).*$", "", text)
+            # Drop duplicated chapter-title lines (a common ad/watermark pattern).
+            _CHAPTER_TITLE_RE = re.compile(r"^(#\s*)?第[一二三四五六七八九十百零\d]+章.*$")
+            seen_titles: set[str] = set()
+            kept_lines: list[str] = []
+            for line in text.splitlines():
+                stripped = line.strip()
+                title_key = stripped.lstrip("#").strip()
+                if _CHAPTER_TITLE_RE.match(stripped) and title_key in seen_titles:
+                    continue
+                if _CHAPTER_TITLE_RE.match(stripped):
+                    seen_titles.add(title_key)
+                kept_lines.append(line)
+            text = "\n".join(kept_lines)
             text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip()
 
@@ -1093,13 +1141,21 @@ class AggregateProcessor:
         return row[0] if row and row[0] else ""
 
     async def run_forever(self, stop_event: asyncio.Event, poll_seconds: int = 60) -> None:
+        logger.info("Aggregate processor started, pollSeconds=%d", poll_seconds)
         while not stop_event.is_set():
             try:
-                await self.run_due_once(limit=5)
+                result = await self.run_due_once(limit=5)
+                if result.get("processedBooks", 0) > 0:
+                    logger.info(
+                        "Aggregate run completed: processedBooks=%d, dueBooks=%d",
+                        result.get("processedBooks", 0),
+                        result.get("dueBooks", 0),
+                    )
             except Exception:
-                pass
+                logger.warning("Aggregate run_due_once failed", exc_info=True)
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=poll_seconds)
             except asyncio.TimeoutError:
                 continue
+        logger.info("Aggregate processor stopped")
 
