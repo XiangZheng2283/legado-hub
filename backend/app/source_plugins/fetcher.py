@@ -30,6 +30,8 @@ class Fetcher:
         timeout: float = 8.0,
         proxy_url: str = "",
         cookies: dict[str, dict[str, str]] | None = None,
+        proxy_mode: str = "auto",
+        proxy_config: dict | None = None,
     ):
         self.user_agent = user_agent or (
             "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
@@ -37,6 +39,8 @@ class Fetcher:
         )
         self.timeout = timeout
         self.proxy_url = proxy_url
+        self.proxy_mode = proxy_mode
+        self.proxy_config = proxy_config or {}
         self._cookies = cookies or {}
         self._client: httpx.AsyncClient | None = None
         self._traces: list[dict] = []
@@ -140,8 +144,40 @@ class Fetcher:
         impersonate: str | None,
         proxy: bool,
     ) -> tuple[str, httpx.Response]:
-        text, resp = await self._fetch_raw(url, method, params, data, json, headers, timeout, impersonate, proxy)
-        return text, resp
+        from app.core.proxy import ProxyConfig, decide_proxy_mode, should_retry_with_proxy
+
+        proxy_cfg = ProxyConfig.from_dict(self.proxy_config)
+        try_direct, try_proxy = decide_proxy_mode(self.proxy_mode, proxy_cfg)
+
+        # Caller override wins over plugin proxy.mode
+        if proxy is False:
+            try_direct = True
+            try_proxy = False
+        elif proxy is True and self.proxy_mode == "always":
+            try_direct = False
+            try_proxy = True
+
+        last_error: Exception | None = None
+
+        if try_direct:
+            try:
+                return await self._fetch_raw(url, method, params, data, json, headers, timeout, impersonate, proxy=False)
+            except Exception as exc:
+                last_error = exc
+                if not (try_proxy and should_retry_with_proxy(exc, proxy_cfg)):
+                    raise
+
+        if try_proxy:
+            try:
+                return await self._fetch_raw(url, method, params, data, json, headers, timeout, impersonate, proxy=True)
+            except Exception as exc:
+                if last_error is not None:
+                    raise last_error from exc
+                raise
+
+        if last_error is not None:
+            raise last_error
+        raise FetchNetworkError("proxy disabled for this request")
 
     async def _fetch_raw(
         self,
@@ -219,6 +255,7 @@ class Fetcher:
             "url": str(resp.url),
             "status": resp.status_code,
             "method": method,
+            "proxy_used": proxy is not False and bool(self.proxy_url),
         })
         return text, resp
 
@@ -299,6 +336,7 @@ class Fetcher:
             "status": resp.status_code,
             "method": method,
             "impersonate": impersonate,
+            "proxy_used": proxy is not False and bool(self.proxy_url),
         })
         return text, wrapped
 

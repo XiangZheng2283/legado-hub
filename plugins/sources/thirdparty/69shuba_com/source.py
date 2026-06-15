@@ -127,7 +127,6 @@ class Source:
                     provider_order=provider_order,
                     query_site_path=query_site_path,
                     timeout=15,
-                    proxy=False,
                 )
             except AccessBridgeUnavailable:
                 raise

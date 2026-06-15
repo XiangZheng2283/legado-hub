@@ -210,6 +210,8 @@ class _BrowserAccessBridge:
         stage: str = "",
         profile_id: str = "",
         proxy_profile: str = "",
+        use_proxy: bool | None = None,
+        proxy_url: str = "",
         wait_ms: int = 2500,
         timeout_ms: int = 90000,
         capture_network: bool = False,
@@ -219,6 +221,19 @@ class _BrowserAccessBridge:
             from app.source_plugins.errors import BrowserRequired
 
             raise BrowserRequired("source access bridge browser runtime is not configured", url=url)
+
+        # Honour plugin proxy.mode when the caller does not explicitly override
+        if use_proxy is None:
+            mode = self._ctx.proxy_mode
+            if mode == "always":
+                use_proxy = True
+            elif mode == "never":
+                use_proxy = False
+            else:
+                use_proxy = False
+        if use_proxy and not proxy_url:
+            proxy_url = self._ctx.proxy_url
+
         request = AccessFetchRequest(
             plugin_id=self._ctx.plugin_id,
             url=url,
@@ -228,6 +243,8 @@ class _BrowserAccessBridge:
             data=data,
             profile_id=profile_id,
             proxy_profile=proxy_profile,
+            proxy_url=proxy_url,
+            use_proxy=use_proxy,
             wait_ms=wait_ms,
             timeout_ms=timeout_ms,
             capture_network=capture_network,
@@ -250,7 +267,8 @@ class _BrowserAccessBridge:
             out["timeout_ms"] = int(out.pop("timeout") * 1000)
         allowed = {
             "method", "headers", "data", "stage", "profile_id",
-            "proxy_profile", "wait_ms", "timeout_ms", "capture_network", "dom_snapshot",
+            "proxy_profile", "use_proxy", "proxy_url",
+            "wait_ms", "timeout_ms", "capture_network", "dom_snapshot",
         }
         return {k: v for k, v in out.items() if k in allowed}
 
@@ -310,9 +328,14 @@ class SourceAccessBridge:
         provider_order: list[str],
         query_site_path: str = "",
         timeout: float = 5.0,
-        proxy: bool = False,
+        proxy: bool | None = None,
         limit: int = 10,
     ):
+        # Derive default from plugin proxy.mode; caller may still override
+        if proxy is None:
+            mode = self._ctx.proxy_mode
+            proxy = mode == "always"
+
         async def _fetch_provider_page(provider_url: str) -> str:
             return await self._ctx.access.http.fetch_text(
                 provider_url,

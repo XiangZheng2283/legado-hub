@@ -118,11 +118,15 @@ class PluginContext:
         plugin_id: str,
         auth_repository: Any = None,
         access_bridge: Any = None,
+        proxy_mode: str = "auto",
+        proxy_url: str = "",
     ):
         self._fetcher = fetcher
         self.plugin_id = plugin_id
         self.cookies = CookieJar(fetcher, plugin_id, auth_repository)
         self._access_bridge = access_bridge
+        self.proxy_mode = proxy_mode
+        self.proxy_url = proxy_url
         self.access = SourceAccessBridge(self)
         self._traces: list[dict] = []
 

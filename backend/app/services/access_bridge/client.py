@@ -76,10 +76,13 @@ class PlaywrightAdapterBase:
             network_events: list[dict[str, Any]] = []
             try:
                 storage_state = self._read_storage_state(request)
-                context = await browser.new_context(
-                    storage_state=storage_state,
-                    extra_http_headers=request.headers or None,
-                )
+                context_kwargs: dict[str, Any] = {
+                    "storage_state": storage_state,
+                    "extra_http_headers": request.headers or None,
+                }
+                if request.use_proxy and request.proxy_url:
+                    context_kwargs["proxy"] = {"server": request.proxy_url}
+                context = await browser.new_context(**context_kwargs)
                 page = await context.new_page()
                 if request.capture_network:
                     self._attach_network_capture(page, network_events)
@@ -108,7 +111,7 @@ class PlaywrightAdapterBase:
                     dom_snapshot=(
                         snapshot_from_html(html, url=final_url) if request.dom_snapshot else None
                     ),
-                    proxy_used=bool(request.proxy_profile),
+                    proxy_used=request.use_proxy and bool(request.proxy_url),
                     profile_id=request.profile_id,
                     elapsed_ms=elapsed_ms,
                     error="" if response is None else "",

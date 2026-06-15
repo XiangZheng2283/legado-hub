@@ -171,7 +171,93 @@ def test_decode_response_text_prefers_html_meta_charset_over_header():
     assert "剑宗外门" in fetcher._decode_response_text(response)
 
 
+@pytest.mark.asyncio
+async def test_auto_proxy_retries_direct_then_proxy(monkeypatch):
+    fetcher = Fetcher(
+        proxy_mode="auto",
+        proxy_url="http://proxy.example:7890",
+        proxy_config={"enabled": True, "url": "http://proxy.example:7890"},
+    )
+    calls: list[tuple[str, bool]] = []
 
+    def _proxy_used(self) -> bool:
+        return bool(getattr(self, "_mounts", {}))
+
+    async def fake_request(self, method, url, **kwargs):
+        used = bool(getattr(self, "_mounts", {}))
+        calls.append((url, used))
+        request = httpx.Request(method, url)
+        if not used:
+            # direct attempt fails with 403
+            return httpx.Response(403, text="forbidden", request=request)
+        return httpx.Response(200, text="ok", request=request)
+
+    monkeypatch.setattr("httpx.AsyncClient.request", fake_request)
+    text = await fetcher.fetch_text("https://example.com")
+    assert text == "ok"
+    assert len(calls) == 2
+    assert calls[0][1] is False
+    assert calls[1][1] is True
+
+
+@pytest.mark.asyncio
+async def test_always_proxy_skips_direct(monkeypatch):
+    fetcher = Fetcher(
+        proxy_mode="always",
+        proxy_url="http://proxy.example:7890",
+        proxy_config={"enabled": True, "url": "http://proxy.example:7890"},
+    )
+    calls: list[bool] = []
+
+    async def fake_request(self, method, url, **kwargs):
+        calls.append(bool(getattr(self, "_mounts", {})))
+        request = httpx.Request(method, url)
+        return httpx.Response(200, text="ok", request=request)
+
+    monkeypatch.setattr("httpx.AsyncClient.request", fake_request)
+    await fetcher.fetch_text("https://example.com")
+    assert len(calls) == 1
+    assert calls[0] is True
+
+
+@pytest.mark.asyncio
+async def test_never_proxy_does_not_use_proxy(monkeypatch):
+    fetcher = Fetcher(
+        proxy_mode="never",
+        proxy_url="http://proxy.example:7890",
+        proxy_config={"enabled": True, "url": "http://proxy.example:7890"},
+    )
+    calls: list[bool] = []
+
+    async def fake_request(self, method, url, **kwargs):
+        calls.append(bool(getattr(self, "_mounts", {})))
+        request = httpx.Request(method, url)
+        return httpx.Response(200, text="ok", request=request)
+
+    monkeypatch.setattr("httpx.AsyncClient.request", fake_request)
+    await fetcher.fetch_text("https://example.com")
+    assert len(calls) == 1
+    assert calls[0] is False
+
+
+@pytest.mark.asyncio
+async def test_auto_proxy_direct_success_no_retry(monkeypatch):
+    fetcher = Fetcher(
+        proxy_mode="auto",
+        proxy_url="http://proxy.example:7890",
+        proxy_config={"enabled": True, "url": "http://proxy.example:7890"},
+    )
+    calls: list[bool] = []
+
+    async def fake_request(self, method, url, **kwargs):
+        calls.append(bool(getattr(self, "_mounts", {})))
+        request = httpx.Request(method, url)
+        return httpx.Response(200, text="ok", request=request)
+
+    monkeypatch.setattr("httpx.AsyncClient.request", fake_request)
+    await fetcher.fetch_text("https://example.com")
+    assert len(calls) == 1
+    assert calls[0] is False
 
 
 

@@ -56,6 +56,8 @@ class AccessFetchRequest:
     data: dict[str, Any] | None = None
     profile_id: str = ""
     proxy_profile: str = ""
+    proxy_url: str = ""
+    use_proxy: bool = False
     wait_ms: int = 2500
     timeout_ms: int = 90000
     capture_network: bool = False

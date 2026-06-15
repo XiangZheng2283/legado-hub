@@ -100,6 +100,8 @@ class PluginScheduler:
             user_agent=self.config.get("default_user_agent", ""),
             timeout=self.config.get("source_timeout_seconds", 20.0),
             proxy_url=proxy_url,
+            proxy_mode=proxy_mode,
+            proxy_config=proxy_cfg,
         )
 
     def _make_ctx(self, plugin_id: str) -> PluginContext:
@@ -108,11 +110,16 @@ class PluginScheduler:
 
         auth_repository = PluginAuthRepository()
         plugin = self._plugins.get(plugin_id)
+        proxy_cfg = self.config.get("proxy", {})
+        proxy_mode = (plugin.metadata.proxy or {}).get("mode", "auto") if plugin else "auto"
+        proxy_url = proxy_cfg.get("url", "") if proxy_mode != "never" and proxy_cfg.get("enabled") else ""
         ctx = PluginContext(
             fetcher=self._make_fetcher_with_cookies(plugin_id, auth_repository),
             plugin_id=plugin_id,
             auth_repository=auth_repository,
             access_bridge=AccessBridgeClient(),
+            proxy_mode=proxy_mode,
+            proxy_url=proxy_url,
         )
         if plugin and plugin.metadata.uses_search_provider("search"):
             ctx.allow_search_provider = True

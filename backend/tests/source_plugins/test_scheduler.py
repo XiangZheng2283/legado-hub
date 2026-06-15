@@ -224,7 +224,24 @@ def test_scheduler_enables_search_provider_from_access_strategy(tmp_path):
     assert ctx.allow_search_provider is True
 
 
+def test_scheduler_passes_proxy_config_to_context(tmp_path):
+    plugin_dir = _make_fake_plugin(tmp_path, "fake_proxy")
+    metadata_path = plugin_dir / "metadata.yaml"
+    text = metadata_path.read_text(encoding="utf-8")
+    text += "\nproxy:\n  mode: always\n"
+    metadata_path.write_text(text, encoding="utf-8")
+    sched = PluginScheduler(
+        loader=PluginLoader(plugins_dir=tmp_path),
+        config={
+            "source_timeout_seconds": 8.0,
+            "proxy": {"enabled": True, "url": "http://proxy.example:7890"},
+        },
+    )
 
+    ctx = sched._make_ctx("fake_proxy")
+
+    assert ctx.proxy_mode == "always"
+    assert ctx.proxy_url == "http://proxy.example:7890"
 
 
 
