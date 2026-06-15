@@ -201,7 +201,9 @@ class AggregateSettingsRepository:
         raw = _read_json_file(self._ai_config_path)
         if not raw:
             raw = self._migrate_ai_config_from_db()
-        return _merge_defaults(DEFAULT_AI_PROVIDER_CONFIG, raw)
+        config = _merge_defaults(DEFAULT_AI_PROVIDER_CONFIG, raw)
+        config["hasApiKey"] = bool(config.get("apiKey"))
+        return config
 
     def _save_ai_provider_config(self, incoming: dict[str, Any]) -> None:
         """Save AI provider config to JSON file, preserving existing API key if masked."""

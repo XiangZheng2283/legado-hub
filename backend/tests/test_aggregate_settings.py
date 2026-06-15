@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+from pathlib import Path
 
 from app.services.aggregate_settings import (
     PROCESSING_PLACEHOLDER,
@@ -45,10 +46,12 @@ def test_aggregate_settings_migrates_legacy_content_workflow(tmp_path):
     assert row is not None
 
 
-def test_aggregate_settings_masks_api_key_and_reports_presence(tmp_path):
+def test_aggregate_settings_reports_api_key_presence(tmp_path):
     db_path = tmp_path / "test.db"
+    ai_config_path = tmp_path / "ai_provider.json"
     initialize_database(db_path)
     repo = AggregateSettingsRepository(db_path)
+    repo._ai_config_path = ai_config_path
 
     repo.save_settings(
         {
@@ -64,59 +67,66 @@ def test_aggregate_settings_masks_api_key_and_reports_presence(tmp_path):
     settings = repo.get_settings()
 
     assert settings["aiProviderConfig"]["hasApiKey"] is True
-    assert settings["aiProviderConfig"]["apiKey"].startswith("sk-")
-    assert settings["aiProviderConfig"]["apiKey"].endswith("3456")
-    assert "abcdefghijklmnopqrstuvwxyz" not in settings["aiProviderConfig"]["apiKey"]
+    # Plaintext storage: key is returned as-is.
+    assert settings["aiProviderConfig"]["apiKey"] == "sk-abcdefghijklmnopqrstuvwxyz123456"
 
 
-def test_api_key_encrypted_at_rest(tmp_path):
-    """API key should be encrypted in DB, not stored as plaintext."""
-    from app.ai.encryption import is_encrypted
+def test_api_key_stored_plaintext_in_json_file(tmp_path):
+    """API key is stored as plaintext in the data directory JSON file."""
     db_path = tmp_path / "test.db"
+    ai_config_path = tmp_path / "ai_provider.json"
     initialize_database(db_path)
     repo = AggregateSettingsRepository(db_path)
+    repo._ai_config_path = ai_config_path
 
     real_key = "sk-supersecret123456789"
     repo.save_settings({"aiProviderConfig": {"apiKey": real_key, "baseUrl": "https://x.example/v1"}})
 
-    # Read raw DB value.
-    import sqlite3, json
-    with sqlite3.connect(db_path) as conn:
-        row = conn.execute(
-            "SELECT value_json FROM aggregate_settings WHERE key='aiProviderConfig'"
-        ).fetchone()
-    raw = json.loads(row[0])
-    # The stored key should be encrypted, not plaintext.
-    assert raw["apiKey"] != real_key
-    assert is_encrypted(raw["apiKey"])
+    # Read raw JSON file value.
+    raw = json.loads(ai_config_path.read_text(encoding="utf-8"))
+    # The stored key should be plaintext.
+    assert raw["apiKey"] == real_key
 
-    # But reading through the repo should return the decrypted key.
-    config = repo.ai_provider_config(masked=False)
+    # Reading through the repo should return the same plaintext key.
+    config = repo.ai_provider_config()
     assert config["apiKey"] == real_key
 
 
-def test_legacy_plaintext_key_still_readable(tmp_path):
-    """A key stored as plaintext before encryption was added should still be readable."""
-    import sqlite3, json
+def test_legacy_encrypted_key_migrated_to_plaintext_json(tmp_path):
+    """A key stored encrypted in the legacy DB should be decrypted and migrated to the JSON file."""
+    from app.ai.encryption import encrypt_api_key
+    import sqlite3
+
     db_path = tmp_path / "test.db"
+    ai_config_path = tmp_path / "ai_provider.json"
     initialize_database(db_path)
-    # Write plaintext directly to DB.
+    real_key = "sk-migratedkey"
+    encrypted = encrypt_api_key(real_key)
+    # Write encrypted key directly to legacy DB.
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             "INSERT OR REPLACE INTO aggregate_settings (key, value_json) VALUES (?, ?)",
-            ("aiProviderConfig", json.dumps({"apiKey": "sk-plaintextkey", "baseUrl": "https://x.example/v1"})),
+            ("aiProviderConfig", json.dumps({"apiKey": encrypted, "baseUrl": "https://x.example/v1"})),
         )
         conn.commit()
+
     repo = AggregateSettingsRepository(db_path)
-    config = repo.ai_provider_config(masked=False)
-    assert config["apiKey"] == "sk-plaintextkey"
+    repo._ai_config_path = ai_config_path
+    config = repo.ai_provider_config()
+    assert config["apiKey"] == real_key
+    # JSON file should have been created with the decrypted key.
+    assert ai_config_path.exists()
+    raw = json.loads(ai_config_path.read_text(encoding="utf-8"))
+    assert raw["apiKey"] == real_key
 
 
 def test_save_settings_preserves_real_api_key_when_masked_key_posted(tmp_path):
-    """POST with a masked/apiKey should NOT overwrite the real key in DB."""
+    """POST with a masked apiKey should NOT overwrite the real key."""
     db_path = tmp_path / "test.db"
+    ai_config_path = tmp_path / "ai_provider.json"
     initialize_database(db_path)
     repo = AggregateSettingsRepository(db_path)
+    repo._ai_config_path = ai_config_path
 
     real_key = "sk-abcdefghijklmnopqrstuvwxyz123456"
     repo.save_settings({
@@ -127,18 +137,15 @@ def test_save_settings_preserves_real_api_key_when_masked_key_posted(tmp_path):
         }
     })
 
-    # Simulate what the frontend does: GET (gets masked), then POST it back.
-    masked = repo.get_settings()["aiProviderConfig"]["apiKey"]
-    assert masked != real_key  # confirm it's masked
-
+    # Simulate what the frontend might do: re-post a masked value.
     repo.save_settings({
         "aiProviderConfig": {
             "baseUrl": "https://api.deepseek.com/v1",
             "model": "deepseek-chat",
-            "apiKey": masked,  # frontend re-posts the masked value
+            "apiKey": "sk-...3456",
         }
     })
 
-    # The raw DB should still hold the real key.
-    raw = repo.ai_provider_config(masked=False)
+    # The JSON file should still hold the real key.
+    raw = repo.ai_provider_config()
     assert raw["apiKey"] == real_key

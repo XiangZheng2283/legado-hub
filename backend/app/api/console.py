@@ -1267,6 +1267,7 @@ def list_aggregate_books(page: int = 1, pageSize: int = 20, status: str = "all",
         processed_chapters = int(row[7] or 0)
         items.append(
             {
+                "id": row[0],
                 "bookId": row[0],
                 "name": row[1] or "",
                 "author": row[2] or "",
@@ -1309,6 +1310,7 @@ def get_aggregate_book(book_id: str):
     total_chapters = int(row[6] or 0)
     processed_chapters = int(row[7] or 0)
     return {
+        "id": row[0],
         "bookId": row[0],
         "name": row[1] or "",
         "author": row[2] or "",
@@ -1451,27 +1453,58 @@ def get_aggregate_chapter(book_id: str, chapter_id: str):
         alignment = json.loads(row[7] or "{}")
     except Exception:
         alignment = {}
+    content = row[4] or ""
+    ai_enabled = bool(row[8])
+    ai_model = row[8] or ""
+    ai_prompt = int(row[9] or 0)
+    ai_completion = int(row[10] or 0)
+    ai_total = int(row[11] or 0)
+    ai_latency = int(row[12] or 0)
+    deviation = float(row[13] or 0.0)
+    fallback_source_id = row[6] or ""
+    error = row[14] or ""
     return {
         "chapterId": row[0],
         "chapterIndex": row[1] or 0,
         "title": row[2] or "",
         "status": row[3] or "pending",
-        "content": row[4] or "",
+        "content": content,
+        "contentLength": len(content),
+        "contentPreview": content[:500],
         "source": {
             "primarySourceId": row[5] or "",
-            "fallbackSourceId": row[6] or "",
+            "fallbackSourceId": fallback_source_id,
             "alignment": alignment,
         },
-        "ai": {
-            "enabled": bool(row[8]),
-            "model": row[8] or "",
-            "promptTokens": int(row[9] or 0),
-            "completionTokens": int(row[10] or 0),
-            "totalTokens": int(row[11] or 0),
-            "latencyMs": int(row[12] or 0),
-            "deviationScore": float(row[13] or 0.0),
+        "sourceAlignment": alignment,
+        "fallbackInfo": {
+            "fallbackSourceId": fallback_source_id,
+            "error": error,
         },
-        "error": row[14] or "",
+        "ai": {
+            "enabled": ai_enabled,
+            "model": ai_model,
+            "promptTokens": ai_prompt,
+            "completionTokens": ai_completion,
+            "totalTokens": ai_total,
+            "latencyMs": ai_latency,
+            "deviationScore": deviation,
+        },
+        "aiInfo": {
+            "enabled": ai_enabled,
+            "model": ai_model,
+            "promptTokens": ai_prompt,
+            "completionTokens": ai_completion,
+            "totalTokens": ai_total,
+            "latencyMs": ai_latency,
+            "deviationScore": deviation,
+        },
+        "aiModel": ai_model,
+        "tokens": ai_total,
+        "deviationScore": deviation,
+        "fallbackSourceId": fallback_source_id,
+        "errorMessage": error,
+        "error": error,
     }
 
 

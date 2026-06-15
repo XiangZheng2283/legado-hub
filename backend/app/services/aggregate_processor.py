@@ -363,10 +363,19 @@ class AggregateProcessor:
                     """
                     UPDATE aggregate_book_tasks
                     SET status = 'active', last_check_time = ?, next_check_time = ?,
+                        total_chapters = ?,
+                        processed_chapters = (
+                            SELECT COUNT(*) FROM aggregate_chapter_tasks
+                            WHERE aggregate_book_id = ? AND status = 'processed'
+                        ),
+                        failed_chapters = (
+                            SELECT COUNT(*) FROM aggregate_chapter_tasks
+                            WHERE aggregate_book_id = ? AND status = 'error'
+                        ),
                         error_count = 0, last_error = '', updated_at = ?
                     WHERE aggregate_book_id = ?
                     """,
-                    (now, next_check, now, aggregate_book_id),
+                    (now, next_check, len(chapters), aggregate_book_id, aggregate_book_id, now, aggregate_book_id),
                 )
                 conn.execute(
                     """
