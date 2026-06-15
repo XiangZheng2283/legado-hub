@@ -15,7 +15,7 @@ class Source:
     last_modified = "2026-06-10"
     base_url = "https://m.shuhaige.tw"
     explore_url = "https://m.shuhaige.net"
-    headers = {"User-Agent": "Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36"}
+    headers = {}
     explore_defs = [
         {"groupId": "allvisit", "title": "总点击榜", "url": "/allvisit/{page}.html", "kind": "rank"},
         {"groupId": "monthvisit", "title": "月点击榜", "url": "/monthvisit/{page}.html", "kind": "rank"},

@@ -15,13 +15,12 @@ from app.services.access_bridge.client import AccessBridgeUnavailable
 from app.services.access_bridge.models import SearchProviderHit
 
 
+from app.config import get_default_user_agent
+
+
 DEFAULT_HEADERS = {
     "accept-language": "zh-CN,zh;q=0.9",
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    ),
+    "User-Agent": get_default_user_agent(),
 }
 
 DUCKDUCKGO_LIBRARY_PROVIDER = "duckduckgo_ddgs"

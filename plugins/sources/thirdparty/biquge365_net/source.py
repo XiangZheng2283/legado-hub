@@ -14,7 +14,7 @@ class Source:
     contract_version = "1.0"
     last_modified = "2026-06-10"
     base_url = "https://m.biquge365.net"
-    headers = {"User-Agent": "Mozilla/5.0 (Linux; Android 9) Mobile Safari/537.36"}
+    headers = {}
     explore_defs = [
         {"groupId": "top_xuanhuan", "title": "玄幻魔法排行", "url": "/top/1_{page}/", "kind": "rank"},
         {"groupId": "top_xianxia", "title": "仙侠修真排行", "url": "/top/2_{page}/", "kind": "rank"},

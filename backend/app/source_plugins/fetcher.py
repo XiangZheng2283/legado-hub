@@ -12,6 +12,7 @@ from types import SimpleNamespace
 
 import httpx
 
+from app.config import get_default_user_agent
 from app.source_plugins.errors import (
     FetchNetworkError,
     FetchHttp4xx,
@@ -33,10 +34,7 @@ class Fetcher:
         proxy_mode: str = "auto",
         proxy_config: dict | None = None,
     ):
-        self.user_agent = user_agent or (
-            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-        )
+        self.user_agent = user_agent or get_default_user_agent()
         self.timeout = timeout
         self.proxy_url = proxy_url
         self.proxy_mode = proxy_mode

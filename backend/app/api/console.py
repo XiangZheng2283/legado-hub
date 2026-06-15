@@ -1096,13 +1096,10 @@ def get_settings():
     with sqlite3.connect(DB_PATH) as conn:
         rows = conn.execute("SELECT key, value_json FROM admin_settings").fetchall()
     settings = {r[0]: r[1] for r in rows}
+    from app.config import get_default_user_agent
+
     settings["sourcePool"] = _read_json(SOURCE_POOL_CONFIG_PATH, {})
-    settings["sourcePool"].setdefault(
-        "default_user_agent",
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 26_4_2 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) "
-        "FxiOS/121.0 Mobile/15E148 Safari/605.1.15",
-    )
+    settings["sourcePool"].setdefault("default_user_agent", get_default_user_agent())
     if isinstance(settings.get("contentWorkflow"), str):
         settings["contentWorkflow"] = _json_payload(settings.get("contentWorkflow"))
     settings.setdefault("searchScoreFilter", 100)

@@ -21,6 +21,8 @@ from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import async_playwright
 
+from app.config import get_default_user_agent
+
 
 DEFAULT_HINTS = [
     "api",
@@ -327,10 +329,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--headful", action="store_true", help="Show browser window")
     parser.add_argument(
         "--user-agent",
-        default=(
-            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-        ),
+        default=get_default_user_agent(),
         help="User-Agent used by the browser context",
     )
     return parser.parse_args(argv)

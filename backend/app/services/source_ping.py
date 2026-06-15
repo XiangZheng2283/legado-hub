@@ -8,6 +8,7 @@ from typing import Any
 
 import httpx
 
+from app.config import get_default_user_agent
 from app.services.plugin_health_repository import PluginHealthRepository
 from app.source_plugins.scheduler import PluginScheduler
 
@@ -73,7 +74,7 @@ class SourcePingService:
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(self.PING_TIMEOUT_SECONDS),
                 mounts=mounts,
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"},
+                headers={"User-Agent": get_default_user_agent()},
                 follow_redirects=True,
             ) as client:
                 resp = await client.head(url)
