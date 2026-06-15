@@ -19,7 +19,11 @@ from typing import Any
 
 from app.services.official_auth.contracts import PrivatePluginManifest
 from app.services.official_auth.loader import private_plugin_loader
-from app.services.official_auth.sessions import OfficialLoginSession, session_store
+from app.services.official_auth.sessions import (
+    OfficialLoginSession,
+    login_trace_store,
+    session_store,
+)
 from app.services.plugin_auth_repository import PluginAuthRepository
 from app.services import plugin_cookie_file_store
 
@@ -418,11 +422,20 @@ class OfficialAuthManager:
 
         # Use the private plugin's session id for auth_api calls.
         private_session_id = private_payload.get("sessionId", "")
+        auth_payload = {**payload, "sessionId": private_session_id}
         try:
-            result = auth_api.request_code({**payload, "sessionId": private_session_id})
+            result = auth_api.request_code(auth_payload)
         except Exception as exc:
             session.status = "failed"
             session.last_error = str(exc)
+            login_trace_store.record(
+                plugin_id=plugin_id,
+                step="request_code",
+                payload=auth_payload,
+                result={},
+                session_id=session_id,
+                error=str(exc),
+            )
             return {
                 "ok": False,
                 "sessionId": session_id,
@@ -449,6 +462,13 @@ class OfficialAuthManager:
         if next_action == "complete_challenge":
             response["challenge"] = result.get("challenge", {})
 
+        login_trace_store.record(
+            plugin_id=plugin_id,
+            step="request_code",
+            payload=auth_payload,
+            result=result,
+            session_id=session_id,
+        )
         return response
 
     async def _verify_phone_code_private(
@@ -459,14 +479,23 @@ class OfficialAuthManager:
         auth_api: Any,
     ) -> dict:
         """Private auth_api path for phone code verification."""
+        auth_payload = {
+            **payload,
+            **session.private_payload,
+        }
         try:
-            result = auth_api.verify_code({
-                **payload,
-                **session.private_payload,
-            })
+            result = auth_api.verify_code(auth_payload)
         except Exception as exc:
             session.status = "failed"
             session.last_error = str(exc)
+            login_trace_store.record(
+                plugin_id=plugin_id,
+                step="verify_code",
+                payload=auth_payload,
+                result={},
+                session_id=session.session_id,
+                error=str(exc),
+            )
             return {"ok": False, "error": str(exc)}
 
         if result.get("ok") and result.get("authenticated"):
@@ -475,23 +504,39 @@ class OfficialAuthManager:
             session.status = "success"
             session.cookies = cookie_jar
             session_store.remove(session.session_id)
-            return {
+            response = {
                 "ok": True,
                 "authenticated": probe["authenticated"],
                 "accountName": probe["accountName"],
                 "message": probe["message"],
                 "hasCookies": bool(cookie_jar),
             }
+            login_trace_store.record(
+                plugin_id=plugin_id,
+                step="verify_code",
+                payload=auth_payload,
+                result={"pluginResult": result, "probeResult": probe},
+                session_id=session.session_id,
+            )
+            return response
 
         session.status = "failed"
         session.last_error = result.get("message", "登录失败")
-        return {
+        failed_response = {
             "ok": False,
             "authenticated": False,
             "accountName": "",
             "message": result.get("message", "登录失败"),
             "hasCookies": bool(session.cookies),
         }
+        login_trace_store.record(
+            plugin_id=plugin_id,
+            step="verify_code",
+            payload=auth_payload,
+            result=result,
+            session_id=session.session_id,
+        )
+        return failed_response
 
 # Global singleton
 official_auth_manager = OfficialAuthManager()

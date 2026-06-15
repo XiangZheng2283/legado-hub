@@ -153,8 +153,28 @@ def aggregate_items_for_groups(groups: list[dict[str, Any]], base_api: str | Non
     return aggregate_items
 
 
-def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any] | None = None) -> str:
+def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any] | None = None,
+                                 source_priority: list[str] | None = None) -> str:
+    """Select the best primary book ID from aggregate payload sources.
+
+    Selection order:
+    1. If *source_priority* is provided, find the first source whose sourceId
+       appears in the priority list (respecting list order).
+    2. Otherwise, fall back to official-first + highest-score logic.
+    """
     sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+    valid_sources = [s for s in sources if isinstance(s, dict) and s.get("bookId")]
+    if not valid_sources:
+        return ""
+
+    # Path 1: user-configured priority list.
+    if source_priority:
+        for preferred_id in source_priority:
+            for source in valid_sources:
+                if source.get("sourceId") == preferred_id:
+                    return source["bookId"]
+
+    # Path 2: official-first + score-based fallback.
     if plugins is None:
         try:
             plugins = PluginLoader().load_all()
@@ -167,7 +187,7 @@ def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any
         return 1 if plugin and plugin.metadata.is_official_source() else 0
 
     ranked = sorted(
-        [source for source in sources if isinstance(source, dict) and source.get("bookId")],
+        valid_sources,
         key=lambda source: (_official_priority(source), source.get("score", 0)),
         reverse=True,
     )

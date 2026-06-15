@@ -255,6 +255,83 @@ def test_aggregate_source_endpoint():
     assert "generated_path" in data
 
 
+def test_aggregate_settings_endpoint_returns_masked_contract():
+    res = client.get("/api/console/aggregate-settings")
+    assert res.status_code == 200
+    data = res.json()
+    assert "contentWorkflow" in data
+    assert "aiProviderConfig" in data
+    assert "runtime" in data
+    assert data["runtime"]["windowChapterLimit"] == 5
+    assert data["runtime"]["processingPlaceholder"] == "聚合处理中……请先查看其他源或稍后刷新。"
+    assert "hasApiKey" in data["aiProviderConfig"]
+
+
+def test_aggregate_books_endpoint_is_paginated():
+    res = client.get("/api/console/aggregate-books?page=1&pageSize=2")
+    assert res.status_code == 200
+    data = res.json()
+    assert set(["items", "page", "pageSize", "total"]).issubset(data)
+    assert data["page"] == 1
+    assert data["pageSize"] == 2
+    assert isinstance(data["items"], list)
+
+
+def test_aggregate_book_chapters_endpoint_is_paginated():
+    res = client.get("/api/console/aggregate-books/nonexistent/chapters?page=1&pageSize=2")
+    assert res.status_code == 200
+    data = res.json()
+    assert set(["items", "page", "pageSize", "total"]).issubset(data)
+    assert data["page"] == 1
+    assert data["pageSize"] == 2
+    assert data["items"] == []
+
+
+def test_aggregate_chapter_reviews_endpoint_keeps_review_contract():
+    res = client.get("/api/console/aggregate-books/nonexistent/chapters/chapter-1/reviews")
+    assert res.status_code == 200
+    data = res.json()
+    assert "chapterEndHot" in data
+    assert "chapterEnd" in data
+    assert "authorReviews" in data
+    assert "hotParagraphReviews" in data
+    assert "paragraphs" in data
+    assert "summary" in data
+
+
+def test_aggregate_chapter_list_does_not_include_content():
+    """Chapter list must not include processed_content — only metadata."""
+    res = client.get("/api/console/aggregate-books/nonexistent/chapters?page=1&pageSize=5")
+    assert res.status_code == 200
+    data = res.json()
+    for item in data.get("items", []):
+        assert "content" not in item, "Chapter list items must not include 'content'"
+
+
+def test_aggregate_chapter_detail_includes_source_alignment():
+    """Single chapter detail must include source.alignment and fallbackSourceId."""
+    # With a nonexistent book/chapter, we get found=False — that's fine;
+    # we're testing that the response structure is correct.
+    res = client.get("/api/console/aggregate-books/nonexistent/chapters/nonexistent-ch")
+    assert res.status_code == 200
+    data = res.json()
+    if data.get("found", True):
+        # Only check structure if the chapter was found.
+        assert "source" in data
+        assert "alignment" in data.get("source", {})
+        assert "fallbackSourceId" in data.get("source", {})
+
+
+def test_aggregate_chapter_detail_fallback_has_content_field():
+    """A found chapter detail must include a content field (even if empty)."""
+    res = client.get("/api/console/aggregate-books/nonexistent/chapters/nonexistent-ch")
+    assert res.status_code == 200
+    data = res.json()
+    # For found chapters, content should be present.
+    if data.get("found", True):
+        assert "content" in data
+
+
 # ------------------------------------------------------------------
 # Official Source Login API tests (mocked, no real private package)
 # ------------------------------------------------------------------

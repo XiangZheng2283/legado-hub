@@ -56,27 +56,29 @@ class CookieJar:
         self._fetcher.clear_cookies(domain)
         if self._auth_repository is None:
             return
-        if self._plugin_id == "qidian_com":
-            from app.services import plugin_cookie_file_store
+        from app.services import plugin_cookie_file_store
 
+        if not plugin_cookie_file_store.has_plugin_dir(self._plugin_id):
+            # Unknown plugin: keep using DB cookie cache.
             if domain is None:
-                plugin_cookie_file_store.clear(self._plugin_id)
-                self._auth_repository.clear_cookie_cache(self._plugin_id)
+                self._auth_repository.clear_cookies(self._plugin_id)
                 return
-            current = plugin_cookie_file_store.load(self._plugin_id)
+            current = self._auth_repository.get_cookies(self._plugin_id)
             current.pop(domain, None)
-            if current:
-                plugin_cookie_file_store.save(self._plugin_id, current)
-            else:
-                plugin_cookie_file_store.clear(self._plugin_id)
+            self._auth_repository.set_cookies(self._plugin_id, current)
+            return
+
+        if domain is None:
+            plugin_cookie_file_store.clear(self._plugin_id)
             self._auth_repository.clear_cookie_cache(self._plugin_id)
             return
-        if domain is None:
-            self._auth_repository.clear_cookies(self._plugin_id)
-            return
-        current = self._auth_repository.get_cookies(self._plugin_id)
+        current = plugin_cookie_file_store.load(self._plugin_id)
         current.pop(domain, None)
-        self._auth_repository.set_cookies(self._plugin_id, current)
+        if current:
+            plugin_cookie_file_store.save(self._plugin_id, current)
+        else:
+            plugin_cookie_file_store.clear(self._plugin_id)
+        self._auth_repository.clear_cookie_cache(self._plugin_id)
 
     def _persist(self) -> None:
         if self._auth_repository is None:
@@ -99,12 +101,13 @@ class CookieJar:
                 if isinstance(jar, dict) and jar:
                     cookies[domain] = jar
         cookies = {domain: jar for domain, jar in cookies.items() if jar}
-        if self._plugin_id == "qidian_com":
-            from app.services import plugin_cookie_file_store
+        from app.services import plugin_cookie_file_store
 
+        if plugin_cookie_file_store.has_plugin_dir(self._plugin_id):
             plugin_cookie_file_store.save(self._plugin_id, cookies)
             self._auth_repository.clear_cookie_cache(self._plugin_id)
             return
+        # Unknown plugin: keep using DB cookie cache.
         self._auth_repository.set_cookies(self._plugin_id, cookies)
 
 

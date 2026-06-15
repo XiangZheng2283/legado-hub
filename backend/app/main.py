@@ -21,9 +21,25 @@ async def lifespan(app: FastAPI):
     initialize_database()
     from app.services.official_auth.manager import official_auth_manager
 
-    # On startup, probe qidian_com auth state directly from Cookie.json.
+    # On startup, probe any official plugin that has a saved Cookie.json.
     try:
-        await official_auth_manager.probe_saved_cookie_file("qidian_com")
+        from app.services import plugin_cookie_file_store
+
+        official_dir = plugin_cookie_file_store.PLUGINS_DIR / "official"
+        if official_dir.exists():
+            for cookie_path in official_dir.rglob("Cookie.json"):
+                # Resolve plugin id from metadata.yaml in the same directory.
+                metadata_path = cookie_path.parent / "metadata.yaml"
+                if not metadata_path.exists():
+                    continue
+                try:
+                    import yaml
+                    meta = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
+                    plugin_id = meta.get("id") if isinstance(meta, dict) else None
+                    if plugin_id:
+                        await official_auth_manager.probe_saved_cookie_file(plugin_id)
+                except Exception:
+                    continue
     except Exception:
         # Startup should stay resilient even if the probe fails.
         pass

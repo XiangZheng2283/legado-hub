@@ -77,5 +77,50 @@ class OfficialSessionStore:
             self._sessions.pop(sid, None)
 
 
-# Global singleton
+class LoginTraceStore:
+    """In-memory store for recent login step traces.
+
+    Each entry captures the method, payload, and result of a login step so
+    that debugging the official-source login flow does not require tailing
+    server logs.
+    """
+
+    MAX_ENTRIES_PER_PLUGIN = 20
+
+    def __init__(self):
+        self._traces: dict[str, list[dict[str, Any]]] = {}
+
+    def record(
+        self,
+        plugin_id: str,
+        step: str,
+        payload: dict[str, Any],
+        result: dict[str, Any],
+        session_id: str = "",
+        error: str = "",
+    ) -> None:
+        self._traces.setdefault(plugin_id, [])
+        self._traces[plugin_id].append(
+            {
+                "timestamp": time.time(),
+                "pluginId": plugin_id,
+                "sessionId": session_id,
+                "step": step,
+                "payload": payload,
+                "result": result,
+                "error": error,
+            }
+        )
+        # Keep only the most recent entries.
+        self._traces[plugin_id] = self._traces[plugin_id][-self.MAX_ENTRIES_PER_PLUGIN :]
+
+    def get(self, plugin_id: str) -> list[dict[str, Any]]:
+        return list(self._traces.get(plugin_id, []))
+
+    def clear(self, plugin_id: str) -> None:
+        self._traces.pop(plugin_id, None)
+
+
+# Global singletons
 session_store = OfficialSessionStore()
+login_trace_store = LoginTraceStore()

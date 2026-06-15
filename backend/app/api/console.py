@@ -25,6 +25,8 @@ from app.services.cache import Cache
 from app.services.source_ping import SourcePingService
 from app.services.login_browser_service import login_browser_service
 from app.services.official_auth.manager import official_auth_manager
+from app.services.aggregate_reviews import empty_aggregate_reviews
+from app.services.aggregate_settings import AggregateSettingsRepository
 from app.source_plugins.loader import PluginLoader
 from app.source_plugins.scheduler import PluginScheduler
 
@@ -488,6 +490,36 @@ async def official_login_cookie_verify(plugin_id: str, payload: dict):
 async def official_login_logout(plugin_id: str):
     """Clear auth state for an official source."""
     return official_auth_manager.logout(plugin_id)
+
+
+@console_route("get", "/official-sources/{plugin_id}/login/debug-trace")
+def official_login_debug_trace(plugin_id: str):
+    """Return recent login step traces for an official source.
+
+    Traces include the payload sent to the private auth_api and the raw result
+    returned by it, which is useful when comparing Web vs App identity params.
+    """
+    from app.services.official_auth.sessions import login_trace_store
+    from app.services.official_auth.manager import official_auth_manager
+
+    return {
+        "pluginId": plugin_id,
+        "traces": login_trace_store.get(plugin_id),
+        "session": _get_active_login_session(plugin_id),
+    }
+
+
+def _get_active_login_session(plugin_id: str) -> dict | None:
+    """Best-effort snapshot of the most recent active login session."""
+    from app.services.official_auth.sessions import session_store
+
+    # Find the most recent non-expired session for this plugin.
+    candidate = None
+    for session in list(session_store._sessions.values()):
+        if session.plugin_id == plugin_id and not session.expired():
+            if candidate is None or session.created_at > candidate.created_at:
+                candidate = session
+    return candidate.to_dict() if candidate else None
 
 
 # ---- Plugin Health ----
@@ -1130,6 +1162,434 @@ def regenerate_aggregate_source():
     config["last_generated_at"] = _now()
     save_aggregate_config(config)
     return {"path": path, "config": config}
+
+
+# ---- Aggregate Settings ----
+
+@console_route("get", "/aggregate-settings")
+def get_aggregate_settings():
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    return AggregateSettingsRepository(DB_PATH).get_settings()
+
+
+@console_route("post", "/aggregate-settings")
+def update_aggregate_settings(payload: dict):
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    settings = AggregateSettingsRepository(DB_PATH).save_settings(payload)
+    return {"saved": True, **settings}
+
+
+@console_route("post", "/aggregate-settings/test-provider")
+async def test_aggregate_provider(payload: dict):
+    from app.ai.client import OpenAICompatibleClient
+
+    config = payload.get("aiProviderConfig") if isinstance(payload.get("aiProviderConfig"), dict) else payload
+    if not config or not config.get("baseUrl") or not config.get("apiKey"):
+        return {"ok": False, "status": "not_configured", "message": "baseUrl and apiKey are required"}
+
+    client = OpenAICompatibleClient(config)
+    return await client.test_connectivity()
+
+
+@console_route("post", "/aggregate-settings/fetch-models")
+async def fetch_aggregate_models(payload: dict):
+    from app.ai.client import OpenAICompatibleClient
+
+    config = payload.get("aiProviderConfig") if isinstance(payload.get("aiProviderConfig"), dict) else payload
+    if not config or not config.get("baseUrl") or not config.get("apiKey"):
+        return {"ok": False, "status": "not_configured", "models": [], "message": "baseUrl and apiKey are required"}
+
+    client = OpenAICompatibleClient(config)
+    try:
+        models = await client.list_models()
+        return {"ok": True, "models": models, "count": len(models)}
+    except Exception as exc:
+        return {"ok": False, "models": [], "status": "error", "message": str(exc)}
+
+
+# ---- Aggregate Books ----
+
+def _bounded_page(value: int | str | None, default: int, maximum: int) -> int:
+    try:
+        parsed = int(value) if value is not None else default
+    except (TypeError, ValueError):
+        parsed = default
+    return min(max(parsed, 1), maximum)
+
+
+@console_route("get", "/aggregate-books")
+def list_aggregate_books(page: int = 1, pageSize: int = 20, status: str = "all", keyword: str = "", sort: str = "updated_desc"):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    page = _bounded_page(page, 1, 1000000)
+    page_size = _bounded_page(pageSize, 20, 100)
+    where = []
+    params: list = []
+    if status and status != "all":
+        where.append("status = ?")
+        params.append(status)
+    if keyword:
+        where.append("(name LIKE ? OR author LIKE ?)")
+        params.extend([f"%{keyword}%", f"%{keyword}%"])
+    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+    sort_sql = {
+        "created_desc": "created_at DESC",
+        "progress_desc": "processed_chapters DESC",
+        "tokens_desc": "total_tokens DESC",
+    }.get(sort, "updated_at DESC")
+    offset = (page - 1) * page_size
+    with sqlite3.connect(DB_PATH) as conn:
+        total = conn.execute(f"SELECT COUNT(*) FROM aggregate_book_tasks {where_sql}", params).fetchone()[0]
+        rows = conn.execute(
+            f"""
+            SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
+                   total_chapters, processed_chapters, failed_chapters, total_tokens,
+                   last_processed_at, next_check_time, last_error
+            FROM aggregate_book_tasks
+            {where_sql}
+            ORDER BY {sort_sql}
+            LIMIT ? OFFSET ?
+            """,
+            [*params, page_size, offset],
+        ).fetchall()
+    items = []
+    for row in rows:
+        total_chapters = int(row[6] or 0)
+        processed_chapters = int(row[7] or 0)
+        items.append(
+            {
+                "bookId": row[0],
+                "name": row[1] or "",
+                "author": row[2] or "",
+                "status": row[3] or "active",
+                "bookStatus": row[4] or "unknown",
+                "primarySourceId": row[5] or "",
+                "totalChapters": total_chapters,
+                "processedChapters": processed_chapters,
+                "failedChapters": int(row[8] or 0),
+                "progress": processed_chapters / total_chapters if total_chapters else 0,
+                "totalTokens": int(row[9] or 0),
+                "lastProcessedAt": row[10] or "",
+                "nextCheckTime": row[11] or "",
+                "lastError": row[12] or "",
+            }
+        )
+    return {"items": items, "page": page, "pageSize": page_size, "total": total}
+
+
+@console_route("get", "/aggregate-books/{book_id}")
+def get_aggregate_book(book_id: str):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            """
+            SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
+                   total_chapters, processed_chapters, failed_chapters, total_tokens,
+                   last_processed_at, next_check_time, last_error
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        ).fetchone()
+    if not row:
+        return {"bookId": book_id, "found": False}
+    total_chapters = int(row[6] or 0)
+    processed_chapters = int(row[7] or 0)
+    return {
+        "bookId": row[0],
+        "name": row[1] or "",
+        "author": row[2] or "",
+        "status": row[3] or "active",
+        "bookStatus": row[4] or "unknown",
+        "primarySourceId": row[5] or "",
+        "totalChapters": total_chapters,
+        "processedChapters": processed_chapters,
+        "failedChapters": int(row[8] or 0),
+        "progress": processed_chapters / total_chapters if total_chapters else 0,
+        "totalTokens": int(row[9] or 0),
+        "lastProcessedAt": row[10] or "",
+        "nextCheckTime": row[11] or "",
+        "lastError": row[12] or "",
+        "found": True,
+    }
+
+
+@console_route("post", "/aggregate-books/{book_id}/run")
+async def run_aggregate_book(book_id: str):
+    from app.services.aggregate_processor import AggregateProcessor
+
+    return await AggregateProcessor().run_book_task(book_id)
+
+
+@console_route("post", "/aggregate-books/{book_id}/pause")
+def pause_aggregate_book(book_id: str):
+    return _update_aggregate_book_status(book_id, "paused")
+
+
+@console_route("post", "/aggregate-books/{book_id}/resume")
+def resume_aggregate_book(book_id: str):
+    return _update_aggregate_book_status(book_id, "active")
+
+
+def _update_aggregate_book_status(book_id: str, status: str):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute(
+            "UPDATE aggregate_book_tasks SET status = ?, updated_at = datetime('now') WHERE aggregate_book_id = ?",
+            (status, book_id),
+        )
+        conn.commit()
+    return {"bookId": book_id, "status": status, "updated": cursor.rowcount > 0}
+
+
+@console_route("delete", "/aggregate-books/{book_id}")
+def delete_aggregate_book(book_id: str):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
+        cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
+        conn.commit()
+    return {"bookId": book_id, "deleted": cursor.rowcount > 0}
+
+
+@console_route("get", "/aggregate-books/{book_id}/chapters")
+def list_aggregate_chapters(book_id: str, page: int = 1, pageSize: int = 50, status: str = "all", keyword: str = ""):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    page = _bounded_page(page, 1, 1000000)
+    page_size = _bounded_page(pageSize, 50, 200)
+    where = ["aggregate_book_id = ?"]
+    params: list = [book_id]
+    if status and status != "all":
+        where.append("status = ?")
+        params.append(status)
+    if keyword:
+        where.append("title LIKE ?")
+        params.append(f"%{keyword}%")
+    where_sql = "WHERE " + " AND ".join(where)
+    offset = (page - 1) * page_size
+    with sqlite3.connect(DB_PATH) as conn:
+        total = conn.execute(f"SELECT COUNT(*) FROM aggregate_chapter_tasks {where_sql}", params).fetchone()[0]
+        rows = conn.execute(
+            f"""
+            SELECT chapter_id, chapter_index, title, status, content_length, ai_model,
+                   ai_total_tokens, deviation_score, fallback_source_id, retry_count,
+                   last_processed_at, error
+            FROM aggregate_chapter_tasks
+            {where_sql}
+            ORDER BY COALESCE(chapter_index, 999999), created_at
+            LIMIT ? OFFSET ?
+            """,
+            [*params, page_size, offset],
+        ).fetchall()
+    items = [
+        {
+            "chapterId": row[0],
+            "chapterIndex": row[1] or 0,
+            "title": row[2] or "",
+            "status": row[3] or "pending",
+            "contentLength": int(row[4] or 0),
+            "aiModel": row[5] or "",
+            "aiTotalTokens": int(row[6] or 0),
+            "deviationScore": float(row[7] or 0.0),
+            "fallbackSourceId": row[8] or "",
+            "retryCount": int(row[9] or 0),
+            "lastProcessedAt": row[10] or "",
+            "error": row[11] or "",
+        }
+        for row in rows
+    ]
+    return {"items": items, "page": page, "pageSize": page_size, "total": total}
+
+
+@console_route("get", "/aggregate-books/{book_id}/chapters/{chapter_id}")
+def get_aggregate_chapter(book_id: str, chapter_id: str):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            """
+            SELECT act.chapter_id, act.chapter_index, act.title, act.status, act.processed_content, abt.primary_source_id,
+                   act.fallback_source_id, act.source_alignment_json, act.ai_model, act.ai_prompt_tokens,
+                   act.ai_completion_tokens, act.ai_total_tokens, act.ai_latency_ms, act.deviation_score, act.error
+            FROM aggregate_chapter_tasks act
+            LEFT JOIN aggregate_book_tasks abt ON act.aggregate_book_id = abt.aggregate_book_id
+            WHERE act.aggregate_book_id = ? AND act.chapter_id = ?
+            """,
+            (book_id, chapter_id),
+        ).fetchone()
+    if not row:
+        return {"chapterId": chapter_id, "bookId": book_id, "found": False}
+    try:
+        alignment = json.loads(row[7] or "{}")
+    except Exception:
+        alignment = {}
+    return {
+        "chapterId": row[0],
+        "chapterIndex": row[1] or 0,
+        "title": row[2] or "",
+        "status": row[3] or "pending",
+        "content": row[4] or "",
+        "source": {
+            "primarySourceId": row[5] or "",
+            "fallbackSourceId": row[6] or "",
+            "alignment": alignment,
+        },
+        "ai": {
+            "enabled": bool(row[8]),
+            "model": row[8] or "",
+            "promptTokens": int(row[9] or 0),
+            "completionTokens": int(row[10] or 0),
+            "totalTokens": int(row[11] or 0),
+            "latencyMs": int(row[12] or 0),
+            "deviationScore": float(row[13] or 0.0),
+        },
+        "error": row[14] or "",
+    }
+
+
+@console_route("post", "/aggregate-books/{book_id}/chapters/{chapter_id}/retry")
+def retry_aggregate_chapter(book_id: str, chapter_id: str):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute(
+            """
+            UPDATE aggregate_chapter_tasks
+            SET status = 'pending', error = '', next_retry_time = NULL, updated_at = datetime('now')
+            WHERE aggregate_book_id = ? AND chapter_id = ?
+            """,
+            (book_id, chapter_id),
+        )
+        conn.commit()
+    return {"bookId": book_id, "chapterId": chapter_id, "queued": cursor.rowcount > 0}
+
+
+@console_route("get", "/aggregate-books/{book_id}/chapters/{chapter_id}/reviews")
+async def get_aggregate_chapter_reviews(book_id: str, chapter_id: str):
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+    from app.services.aggregate_reviews import (
+        empty_aggregate_reviews, summarize_reviews, hot_review_bubble_label,
+    )
+
+    initialize_database(DB_PATH)
+    mapped_chapter_id = ""
+    mapped_source_id = ""
+    reason = "not_mapped"
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            """
+            SELECT act.source_chapter_id, abt.primary_source_id
+            FROM aggregate_chapter_tasks act
+            LEFT JOIN aggregate_book_tasks abt ON act.aggregate_book_id = abt.aggregate_book_id
+            WHERE act.aggregate_book_id = ? AND act.chapter_id = ?
+            """,
+            (book_id, chapter_id),
+        ).fetchone()
+    if row:
+        mapped_chapter_id = row[0] or ""
+        mapped_source_id = row[1] or ""
+        reason = "primary_source" if mapped_chapter_id else "not_mapped"
+
+    if not mapped_chapter_id or not mapped_source_id:
+        return empty_aggregate_reviews(
+            chapter_id=chapter_id,
+            mapped_chapter_id=mapped_chapter_id,
+            mapped_source_id=mapped_source_id,
+            mapping_reason=reason,
+        )
+
+    # Try to fetch real reviews from the source plugin.
+    try:
+        from app.source_plugins.id_codec import decode_chapter_id
+        _, chapter_url = decode_chapter_id(mapped_chapter_id)
+        if not chapter_url:
+            raise ValueError("could not decode chapter URL")
+
+        has_capability = False
+        plugin = _plugin_scheduler._plugins.get(mapped_source_id)
+        if plugin:
+            caps = plugin.capabilities if isinstance(plugin.capabilities, (list, set)) else []
+            has_capability = "chapter_reviews" in caps
+
+        if not has_capability:
+            return empty_aggregate_reviews(
+                chapter_id=chapter_id,
+                mapped_chapter_id=mapped_chapter_id,
+                mapped_source_id=mapped_source_id,
+                mapping_reason="source_no_review_capability",
+            )
+
+        raw_reviews = await _plugin_scheduler.chapter_reviews(mapped_source_id, chapter_url)
+
+        # Normalize into aggregate contract.
+        paragraphs = raw_reviews.get("paragraphs") or {}
+        chapter_end = raw_reviews.get("chapterEnd") or []
+        chapter_end_hot = raw_reviews.get("chapterEndHot") or []
+        author_reviews = raw_reviews.get("authorReviews") or []
+
+        # Add hot_review_bubble_label to hot reviews.
+        for i, review in enumerate(chapter_end_hot):
+            if isinstance(review, dict) and "bubbleLabel" not in review:
+                review["bubbleLabel"] = hot_review_bubble_label(i + 1)
+
+        payload = {
+            "chapterId": chapter_id,
+            "mappedChapterId": mapped_chapter_id,
+            "mappedSourceId": mapped_source_id,
+            "mappingReason": reason,
+            "chapterEndHot": chapter_end_hot,
+            "chapterEnd": chapter_end,
+            "authorReviews": author_reviews,
+            "hotParagraphReviews": raw_reviews.get("hotParagraphReviews") or [],
+            "paragraphs": paragraphs,
+            "summary": {},
+            "debug": raw_reviews.get("debug") or {"aggregate": True, "reviewSource": reason},
+        }
+        payload["summary"] = summarize_reviews(payload)
+        return payload
+
+    except Exception as exc:
+        result = empty_aggregate_reviews(
+            chapter_id=chapter_id,
+            mapped_chapter_id=mapped_chapter_id,
+            mapped_source_id=mapped_source_id,
+            mapping_reason=f"fetch_error: {exc}",
+        )
+        result["debug"]["error"] = str(exc)
+        return result
 
 
 # ---- Progress ----

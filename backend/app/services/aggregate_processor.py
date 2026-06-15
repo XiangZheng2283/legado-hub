@@ -17,26 +17,91 @@ from app.services.aggregate_virtual_source import (
     primary_book_id_from_payload,
     unpack_aggregate_chapter_url,
 )
+from app.services.aggregate_settings import (
+    DEFAULT_CONTENT_WORKFLOW,
+    PROCESSING_PLACEHOLDER,
+    RETRY_DELAYS_MINUTES,
+    WINDOW_CHAPTER_LIMIT,
+    AggregateSettingsRepository,
+)
 from app.services.novel_file_cache import NovelFileCache
 
-PROCESSING_PLACEHOLDER = "正在聚合处理……请稍后刷新。"
+DEFAULT_WORKFLOW = DEFAULT_CONTENT_WORKFLOW
+
+# Error codes for chapter processing failures (plan §8.3.1).
+ERROR_CODES_NO_RETRY = frozenset({"AI_BAD_REQUEST"})
 
 
-DEFAULT_WORKFLOW = {
-    "aiEnabled": False,
-    "autoAggregate": True,
-    "processAggregateOnRead": True,
-    "aggregateCheckIntervalMinutes": 30,
-    "returnOnlyAggregateSource": False,
-    "purifyMode": "conservative",
-}
+def classify_error(exc: Exception) -> str:
+    """Map an exception to a structured error code for retry decisions."""
+    from app.ai.client import AIProviderHTTPError, AIProviderNotConfiguredError
+
+    msg = str(exc).lower()
+
+    # Empty content from source
+    if isinstance(exc, ValueError) and "empty" in msg:
+        return "SOURCE_EMPTY_CONTENT"
+
+    # Timeout variants
+    if isinstance(exc, (TimeoutError,)):
+        return "SOURCE_TIMEOUT"
+    try:
+        import httpx
+        if isinstance(exc, httpx.TimeoutException):
+            return "SOURCE_TIMEOUT"
+    except ImportError:
+        pass
+
+    # AI provider HTTP errors
+    if isinstance(exc, AIProviderHTTPError):
+        code = exc.status_code
+        if code == 401:
+            return "SOURCE_AUTH_REQUIRED"
+        if code == 429:
+            return "AI_RATE_LIMITED"
+        if code == 400:
+            return "AI_BAD_REQUEST"
+        if code >= 500:
+            return "AI_TIMEOUT"
+        return "AI_TIMEOUT"
+
+    if isinstance(exc, AIProviderNotConfiguredError):
+        return "AI_BAD_REQUEST"
+
+    # Timeout in message
+    if "timeout" in msg or "timed out" in msg:
+        return "SOURCE_TIMEOUT"
+
+    if "ai_output_deviation" in msg:
+        return "AI_OUTPUT_DEVIATION"
+
+    return "AI_TIMEOUT"
+
+
+def compute_next_retry_time(retry_count: int) -> str | None:
+    """Return an ISO UTC timestamp for the next retry, or None if exhausted."""
+    from app.services.aggregate_settings import RETRY_DELAYS_MINUTES
+
+    if retry_count >= len(RETRY_DELAYS_MINUTES):
+        return None
+    delay = RETRY_DELAYS_MINUTES[retry_count]
+    return (datetime.now(timezone.utc) + timedelta(minutes=delay)).isoformat()
+
+
+def max_retries_reached(retry_count: int) -> bool:
+    """True when the chapter has exhausted all automatic retries."""
+    from app.services.aggregate_settings import RETRY_DELAYS_MINUTES
+
+    return retry_count >= len(RETRY_DELAYS_MINUTES)
 
 
 class AggregateProcessor:
-    def __init__(self, db_path: str | Path | None = None):
+    def __init__(self, db_path: str | Path | None = None, *, ai_service: Any = None):
         from app.config import DB_PATH
 
         self.db_path = Path(db_path or DB_PATH)
+        self._ai_service = ai_service
+        self._toc_cache: dict[str, dict] = {}
 
     def _conn(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
@@ -45,20 +110,7 @@ class AggregateProcessor:
         return datetime.now(timezone.utc).isoformat()
 
     def _workflow_settings(self) -> dict:
-        with self._conn() as conn:
-            row = conn.execute(
-                "SELECT value_json FROM admin_settings WHERE key = 'contentWorkflow'"
-            ).fetchone()
-        settings = dict(DEFAULT_WORKFLOW)
-        if not row:
-            return settings
-        try:
-            parsed = json.loads(row[0])
-            if isinstance(parsed, dict):
-                settings.update(parsed)
-        except Exception:
-            pass
-        return settings
+        return AggregateSettingsRepository(self.db_path).content_workflow()
 
     def ai_aggregate_enabled(self) -> bool:
         settings = self._workflow_settings()
@@ -80,9 +132,12 @@ class AggregateProcessor:
         if not self.ai_aggregate_enabled():
             return {"queued": False, "reason": "ai aggregate disabled", "bookId": aggregate_book_id}
 
-        primary_book_id = primary_book_id_from_payload(payload)
+        settings = self._workflow_settings()
+        source_priority = settings.get("primarySourcePriority") or []
+        primary_book_id = primary_book_id_from_payload(payload, source_priority=source_priority)
         if not primary_book_id:
             return {"queued": False, "reason": "aggregate source has no candidates", "bookId": aggregate_book_id}
+        primary_source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
 
         now = self._now()
         interval = self.check_interval_minutes()
@@ -90,14 +145,16 @@ class AggregateProcessor:
             conn.execute(
                 """
                 INSERT OR REPLACE INTO aggregate_book_tasks
-                (aggregate_book_id, name, author, aggregate_payload_json, primary_book_id, status,
-                 interval_minutes, last_check_time, next_check_time, error_count, last_error, created_at, updated_at)
+                (aggregate_book_id, name, author, aggregate_payload_json, primary_book_id, primary_source_id,
+                 status, interval_minutes, last_check_time, next_check_time, error_count, last_error,
+                 ai_enabled, created_at, updated_at)
                 VALUES (
-                  ?, ?, ?, ?, ?, 'active', ?, 
+                  ?, ?, ?, ?, ?, ?, 'active', ?,
                   COALESCE((SELECT last_check_time FROM aggregate_book_tasks WHERE aggregate_book_id = ?), NULL),
                   ?,
                   COALESCE((SELECT error_count FROM aggregate_book_tasks WHERE aggregate_book_id = ?), 0),
                   COALESCE((SELECT last_error FROM aggregate_book_tasks WHERE aggregate_book_id = ?), ''),
+                  ?,
                   COALESCE((SELECT created_at FROM aggregate_book_tasks WHERE aggregate_book_id = ?), ?),
                   ?
                 )
@@ -108,11 +165,13 @@ class AggregateProcessor:
                     payload.get("author", ""),
                     json.dumps(payload, ensure_ascii=False),
                     primary_book_id,
+                    primary_source_id,
                     interval,
                     aggregate_book_id,
                     now,
                     aggregate_book_id,
                     aggregate_book_id,
+                    int(bool(self._workflow_settings().get("aiEnabled"))),
                     aggregate_book_id,
                     now,
                     now,
@@ -135,12 +194,31 @@ class AggregateProcessor:
         source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
         now = self._now()
         registered = 0
+        new_count = 0
+        updated_count = 0
+
         with self._conn() as conn:
+            # ── build current chapter map from DB ──────────────────────
+            existing_rows = conn.execute(
+                "SELECT chapter_id, source_chapter_id, chapter_index, title FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchall()
+            existing_by_source: dict[str, dict] = {}
+            for row in existing_rows:
+                existing_by_source[row[1]] = {
+                    "chapterId": row[0], "sourceChapterId": row[1],
+                    "chapterIndex": row[2], "title": row[3],
+                }
+
+            incoming_source_ids: set[str] = set()
+
             for index, chapter in enumerate(chapters, start=1):
                 raw_url = chapter.get("chapterUrl", "")
                 source_chapter_id = chapter.get("chapterId") or (
                     encode_chapter_id(source_id, raw_url) if source_id and raw_url else f"{aggregate_book_id}:{index}"
                 )
+                incoming_source_ids.add(source_chapter_id)
+
                 aggregate_chapter_url = make_aggregate_chapter_url(
                     aggregate_book_id=aggregate_book_id,
                     source_chapter_id=source_chapter_id,
@@ -148,33 +226,71 @@ class AggregateProcessor:
                     index=index,
                 )
                 chapter_id = encode_chapter_id(VIRTUAL_SOURCE_ID, aggregate_chapter_url)
-                conn.execute(
-                    """
-                    INSERT OR IGNORE INTO aggregate_chapter_tasks
-                    (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
-                    """,
-                    (
-                        chapter_id,
-                        aggregate_book_id,
-                        source_chapter_id,
-                        index,
-                        chapter.get("title", ""),
-                        now,
-                        now,
-                    ),
-                )
-                conn.execute(
-                    """
-                    UPDATE aggregate_chapter_tasks
-                    SET title = ?, source_chapter_id = ?, chapter_index = ?, updated_at = ?
-                    WHERE chapter_id = ? AND status != 'processed'
-                    """,
-                    (chapter.get("title", ""), source_chapter_id, index, now, chapter_id),
-                )
+
+                existing = existing_by_source.get(source_chapter_id)
+                if existing:
+                    # Chapter exists — update title/index if changed.
+                    needs_update = (
+                        existing["title"] != chapter.get("title", "")
+                        or existing["chapterIndex"] != index
+                    )
+                    if needs_update:
+                        conn.execute(
+                            """UPDATE aggregate_chapter_tasks
+                               SET title = ?, chapter_index = ?, updated_at = ?
+                               WHERE chapter_id = ? AND status NOT IN ('processed', 'fallback')""",
+                            (chapter.get("title", ""), index, now, existing["chapterId"]),
+                        )
+                        updated_count += 1
+                else:
+                    # New chapter.
+                    conn.execute(
+                        """INSERT OR IGNORE INTO aggregate_chapter_tasks
+                           (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status, created_at, updated_at)
+                           VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)""",
+                        (chapter_id, aggregate_book_id, source_chapter_id, index, chapter.get("title", ""), now, now),
+                    )
+                    new_count += 1
                 registered += 1
+
+            # ── handle removed chapters ───────────────────────────────
+            removed_count = 0
+            for src_id, info in existing_by_source.items():
+                if src_id not in incoming_source_ids:
+                    # Chapter no longer in primary source TOC.
+                    status_row = conn.execute(
+                        "SELECT status FROM aggregate_chapter_tasks WHERE chapter_id = ?",
+                        (info["chapterId"],),
+                    ).fetchone()
+                    if status_row and status_row[0] not in ("processed", "fallback"):
+                        conn.execute(
+                            "DELETE FROM aggregate_chapter_tasks WHERE chapter_id = ?",
+                            (info["chapterId"],),
+                        )
+                        removed_count += 1
+
+            # ── update book task stats ────────────────────────────────
+            conn.execute(
+                """UPDATE aggregate_book_tasks
+                   SET total_chapters = ?,
+                       processed_chapters = (
+                           SELECT COUNT(*) FROM aggregate_chapter_tasks
+                           WHERE aggregate_book_id = ? AND status = 'processed'
+                       ),
+                       failed_chapters = (
+                           SELECT COUNT(*) FROM aggregate_chapter_tasks
+                           WHERE aggregate_book_id = ? AND status = 'error'
+                       ),
+                       updated_at = ?
+                   WHERE aggregate_book_id = ?""",
+                (registered, aggregate_book_id, aggregate_book_id, now, aggregate_book_id),
+            )
             conn.commit()
-        return {"registered": True, "chapterCount": registered}
+        return {
+            "registered": True, "chapterCount": registered,
+            "newChapters": new_count, "updatedChapters": updated_count,
+            "removedChapters": removed_count,
+        }
 
     def list_due_books(self, limit: int = 10) -> list[dict]:
         now = self._now()
@@ -233,6 +349,7 @@ class AggregateProcessor:
 
         try:
             catalog = BookCatalog()
+            self._clear_toc_cache()
             toc = await catalog.toc(primary_book_id)
             chapters = [dict(item) for item in toc.get("chapters", []) if isinstance(item, dict)]
             self.register_toc(aggregate_book_id, payload, chapters)
@@ -281,16 +398,29 @@ class AggregateProcessor:
                 conn.commit()
             return {"bookId": aggregate_book_id, "success": False, "error": str(exc), "nextCheckTime": next_check}
 
-    def _chapters_for_processing(self, aggregate_book_id: str) -> list[dict]:
+    def _chapters_for_processing(self, aggregate_book_id: str, limit: int = WINDOW_CHAPTER_LIMIT) -> list[dict]:
+        terminal_codes = tuple(sorted(ERROR_CODES_NO_RETRY))
+        placeholders = ",".join("?" for _ in terminal_codes) if terminal_codes else "''"
+        now = self._now()
         with self._conn() as conn:
             rows = conn.execute(
-                """
+                f"""
                 SELECT chapter_id, source_chapter_id, title, status, chapter_index, aggregate_book_id
                 FROM aggregate_chapter_tasks
-                WHERE aggregate_book_id = ? AND status IN ('pending', 'error')
+                WHERE aggregate_book_id = ?
+                  AND (
+                    status = 'pending'
+                    OR (
+                      status = 'error'
+                      AND (next_retry_time IS NULL OR next_retry_time <= ?)
+                      AND (last_error_code IS NULL OR last_error_code NOT IN ({placeholders}))
+                      AND (retry_count IS NULL OR retry_count < ?)
+                    )
+                  )
                 ORDER BY COALESCE(chapter_index, 999999), created_at
+                LIMIT ?
                 """,
-                (aggregate_book_id,),
+                (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), max(0, int(limit))),
             ).fetchall()
         return [
             {
@@ -304,48 +434,439 @@ class AggregateProcessor:
             for row in rows
         ]
 
+    # ── helpers for _process_chapter ──────────────────────────────────────
+
+    def _load_aggregate_payload(self, aggregate_book_id: str) -> dict[str, Any]:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT aggregate_payload_json FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()
+        if not row:
+            return {}
+        try:
+            return json.loads(row[0] or "{}")
+        except Exception:
+            return {}
+
+    def _is_official_source(self, source_id: str) -> bool:
+        from app.source_plugins.loader import PluginLoader
+        try:
+            plugins = PluginLoader().load_all()
+        except Exception:
+            return False
+        plugin = plugins.get(source_id)
+        return bool(plugin and plugin.metadata.is_official_source())
+
+    def _candidate_sources_from_payload(self, payload: dict, primary_source_id: str) -> list[dict]:
+        sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+        return [
+            s for s in sources
+            if isinstance(s, dict) and s.get("sourceId") and s.get("sourceId") != primary_source_id
+        ]
+
+    def _get_ai_service(self):
+        return self._ai_service
+
+    async def _cached_toc(self, catalog, book_id: str) -> dict:
+        if book_id in self._toc_cache:
+            return self._toc_cache[book_id]
+        toc = await catalog.toc(book_id)
+        self._toc_cache[book_id] = toc
+        return toc
+
+    def _clear_toc_cache(self) -> None:
+        self._toc_cache.clear()
+
+    # ── previous chapter context ─────────────────────────────────────────
+
+    def _load_previous_chapters_context(self, aggregate_book_id: str, before_index: int, count: int = 3) -> str:
+        """Load the last *count* processed chapters' content (truncated) for context."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT title, processed_content FROM aggregate_chapter_tasks
+                   WHERE aggregate_book_id = ? AND status IN ('processed', 'fallback')
+                     AND chapter_index < ? AND processed_content IS NOT NULL AND processed_content != ''
+                   ORDER BY chapter_index DESC LIMIT ?""",
+                (aggregate_book_id, before_index, count),
+            ).fetchall()
+        parts = []
+        for title, content in rows:
+            # Take last ~500 chars of each chapter for continuity context.
+            excerpt = (content or "")[-500:]
+            parts.append(f"【{title}】\n{excerpt}")
+        return "\n\n".join(reversed(parts))
+
+    # ── core chapter processing state machine ────────────────────────────
+
     async def _process_chapter(self, catalog, chapter: dict) -> dict:
+        from app.services.aggregate_alignment import (
+            align_candidate_chapter,
+            build_source_alignment_json,
+            classify_source_content,
+        )
+
         now = self._now()
         chapter_id = chapter["chapterId"]
         source_chapter_id = chapter.get("sourceChapterId") or chapter_id
+        aggregate_book_id = chapter.get("aggregateBookId", "")
+        title = chapter.get("title", "")
+        chapter_index = chapter.get("chapterIndex")
+
+        payload = self._load_aggregate_payload(aggregate_book_id)
+        primary_source_id = payload.get("primarySourceId", "")
+        if not primary_source_id:
+            primary_source_id = source_chapter_id.split(":")[0] if ":" in source_chapter_id else ""
+        is_official = self._is_official_source(primary_source_id)
+
         try:
             result = await catalog.chapter(source_chapter_id)
             content = result.get("content", "")
             if not content:
                 raise ValueError("empty chapter content")
-            purified = self._purify_content(content)
-            with self._conn() as conn:
-                conn.execute(
-                    """
-                    UPDATE aggregate_chapter_tasks
-                    SET status = 'processed', content_length = ?, processed_content = ?, last_processed_at = ?,
-                        error = '', updated_at = ?
-                    WHERE chapter_id = ?
-                    """,
-                    (len(purified), purified, now, now, chapter_id),
+
+            classification = classify_source_content(content, source_id=primary_source_id, is_official=is_official)
+
+            # ── path 1: official full ────────────────────────────────────
+            if classification["classification"] == "full" and is_official:
+                purified = self._purify_content(content)
+                alignment_json = build_source_alignment_json(
+                    selected_content_source="official",
+                    official_content_length=classification["contentLength"],
+                    alignment_passed=True,
+                    alignment_reason="official_full_content",
+                    primary_source_id=primary_source_id,
                 )
-                self._write_aggregate_chapter_file(
-                    conn,
-                    chapter_id=chapter_id,
-                    aggregate_book_id=chapter.get("aggregateBookId", ""),
-                    title=chapter.get("title", ""),
-                    content=purified,
-                    chapter_index=chapter.get("chapterIndex"),
+                self._write_chapter_result(
+                    chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+                    title=title, chapter_index=chapter_index,
+                    status="processed", content=purified, alignment_json=alignment_json,
                 )
-                conn.commit()
-            return {"chapterId": chapter_id, "success": True, "contentLength": len(purified)}
+                return {"chapterId": chapter_id, "success": True, "contentLength": len(purified)}
+
+            # ── path 2: third-party primary ──────────────────────────────
+            if classification["classification"] == "full" and not is_official:
+                return await self._process_third_party_primary(
+                    catalog=catalog, chapter=chapter,
+                    content=content, classification=classification,
+                    primary_source_id=primary_source_id,
+                )
+
+            # ── path 3: preview → try candidates then AI ────────────────
+            if classification["classification"] == "preview":
+                return await self._process_preview_chapter(
+                    catalog=catalog, chapter=chapter,
+                    content=content, classification=classification,
+                    primary_source_id=primary_source_id,
+                    payload=payload,
+                )
+
+            # ── path 4: empty ───────────────────────────────────────────
+            raise ValueError("empty chapter content")
+
         except Exception as exc:
-            with self._conn() as conn:
-                conn.execute(
-                    """
-                    UPDATE aggregate_chapter_tasks
-                    SET status = 'error', error = ?, updated_at = ?
-                    WHERE chapter_id = ?
-                    """,
-                    (str(exc), now, chapter_id),
+            return self._handle_processing_error(exc, chapter, source_chapter_id)
+
+    async def _process_third_party_primary(
+        self, *, catalog, chapter: dict, content: str,
+        classification: dict, primary_source_id: str,
+    ) -> dict:
+        from app.services.aggregate_alignment import build_source_alignment_json
+
+        chapter_id = chapter["chapterId"]
+        aggregate_book_id = chapter.get("aggregateBookId", "")
+        ai_service = self._get_ai_service()
+
+        if ai_service:
+            prev_ctx = self._load_previous_chapters_context(
+                aggregate_book_id, chapter.get("chapterIndex", 999))
+            result = await ai_service.process_third_party_primary(
+                book_name=self._aggregate_book_name_from_cache(aggregate_book_id),
+                author="", title=chapter.get("title", ""),
+                content=content, source_id=primary_source_id,
+                previous_context=prev_ctx,
+            )
+            if result["status"] == "processed":
+                from app.services.aggregate_alignment import compute_deviation_score
+                deviation = compute_deviation_score(content, result["content"])
+                threshold = self._workflow_settings().get("deviationThreshold", 0.90)
+                if deviation < threshold:
+                    # Deviation too high — fall through to fallback.
+                    pass
+                else:
+                    alignment_json = build_source_alignment_json(
+                        selected_content_source="third_party_primary_ai",
+                        official_content_length=classification["contentLength"],
+                        alignment_passed=True,
+                        alignment_reason="third_party_ai_processed",
+                        primary_source_id=primary_source_id,
+                    )
+                    self._write_chapter_result(
+                        chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+                        title=chapter.get("title", ""), chapter_index=chapter.get("chapterIndex"),
+                        status="processed", content=result["content"], alignment_json=alignment_json,
+                        ai_model=result.get("aiModel", ""),
+                        deviation_score=deviation,
+                        ai_prompt_tokens=result.get("promptTokens", 0),
+                        ai_completion_tokens=result.get("completionTokens", 0),
+                        ai_total_tokens=result.get("totalTokens", 0),
+                        ai_latency_ms=result.get("latencyMs", 0),
+                    )
+                    return {"chapterId": chapter_id, "success": True, "contentLength": len(result["content"])}
+
+        # Fallback: AI unavailable → original content + degradation marker.
+        fallback = self._purify_content(content)
+        fallback += "\n\n> 聚合提示：AI 处理失败，当前为原始正文回退版本。"
+        alignment_json = build_source_alignment_json(
+            selected_content_source="third_party_primary_fallback",
+            official_content_length=classification["contentLength"],
+            alignment_passed=False,
+            alignment_reason="ai_unavailable_for_third_party",
+            primary_source_id=primary_source_id,
+        )
+        self._write_chapter_result(
+            chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+            title=chapter.get("title", ""), chapter_index=chapter.get("chapterIndex"),
+            status="fallback", content=fallback, alignment_json=alignment_json,
+            fallback_source_id=primary_source_id,
+        )
+        return {"chapterId": chapter_id, "success": True, "contentLength": len(fallback),
+                "fallback": True}
+
+    async def _process_preview_chapter(
+        self, *, catalog, chapter: dict, content: str,
+        classification: dict, primary_source_id: str, payload: dict,
+    ) -> dict:
+        from app.services.aggregate_alignment import (
+            align_candidate_chapter,
+            build_source_alignment_json,
+        )
+
+        chapter_id = chapter["chapterId"]
+        aggregate_book_id = chapter.get("aggregateBookId", "")
+        title = chapter.get("title", "")
+        preview_text = classification.get("previewText", content)
+
+        # Try candidate sources.
+        candidates = self._candidate_sources_from_payload(payload, primary_source_id)
+        best_alignment = None
+        best_candidate_content = ""
+        best_candidate_source_id = ""
+
+        for cand in candidates[:3]:  # Don't try too many at once.
+            cand_source_id = cand.get("sourceId", "")
+            cand_book_id = cand.get("bookId", "")
+            if not cand_source_id or not cand_book_id:
+                continue
+            # Look up candidate's real TOC to find the matching chapter.
+            try:
+                cand_toc = await self._cached_toc(catalog, cand_book_id)
+                cand_chapters = [c for c in cand_toc.get("chapters", []) if isinstance(c, dict)]
+            except Exception:
+                continue
+            # Find chapter at matching index (1-based).
+            target_index = chapter.get("chapterIndex", 1)
+            matched_ch = None
+            for ch in cand_chapters:
+                if ch.get("index") == target_index:
+                    matched_ch = ch
+                    break
+            if not matched_ch and target_index - 1 < len(cand_chapters):
+                matched_ch = cand_chapters[target_index - 1]
+            if not matched_ch:
+                continue
+            cand_chapter_id = matched_ch.get("chapterId", "")
+            if not cand_chapter_id:
+                continue
+            try:
+                cand_result = await catalog.chapter(cand_chapter_id)
+                cand_content = cand_result.get("content", "")
+                if not cand_content or len(cand_content.strip()) < 200:
+                    continue
+                alignment = align_candidate_chapter(
+                    official_preview=preview_text,
+                    candidate_title=cand_result.get("title", ""),
+                    candidate_content=cand_content,
+                    expected_title=title,
                 )
-                conn.commit()
-            return {"chapterId": chapter_id, "success": False, "error": str(exc)}
+                if alignment.get("alignmentPassed"):
+                    best_alignment = alignment
+                    best_candidate_content = cand_content
+                    best_candidate_source_id = cand_source_id
+                    break
+            except Exception:
+                continue
+
+        if best_alignment and best_candidate_content:
+            # Try AI aggregation.
+            ai_service = self._get_ai_service()
+            if ai_service:
+                try:
+                    prev_ctx = self._load_previous_chapters_context(
+                        aggregate_book_id, chapter.get("chapterIndex", 999))
+                    ai_result = await ai_service.process_with_candidates(
+                        book_name=self._aggregate_book_name_from_cache(aggregate_book_id),
+                        author="", title=title,
+                        official_preview=preview_text,
+                        candidate_content=best_candidate_content,
+                        alignment=best_alignment,
+                        previous_context=prev_ctx,
+                    )
+                    # Compute deviation score: how much did AI change the content?
+                    from app.services.aggregate_alignment import compute_deviation_score
+                    deviation = compute_deviation_score(best_candidate_content, ai_result["content"])
+                    threshold = self._workflow_settings().get("deviationThreshold", 0.90)
+                    if deviation < threshold:
+                        # AI output deviated too much — treat as failure.
+                        raise ValueError(
+                            f"AI_OUTPUT_DEVIATION: score {deviation:.4f} < threshold {threshold}"
+                        )
+                    alignment_json = build_source_alignment_json(
+                        selected_content_source="ai_aggregate_candidate",
+                        official_content_length=classification["contentLength"],
+                        candidate_content_length=len(best_candidate_content),
+                        title_similarity=best_alignment.get("titleSimilarity", 0),
+                        preview_similarity=best_alignment.get("previewSimilarity", 0),
+                        alignment_passed=True,
+                        alignment_reason=best_alignment.get("alignmentReason", ""),
+                        candidate_source_id=best_candidate_source_id,
+                        primary_source_id=primary_source_id,
+                    )
+                    self._write_chapter_result(
+                        chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+                        title=title, chapter_index=chapter.get("chapterIndex"),
+                        status="processed", content=ai_result["content"],
+                        alignment_json=alignment_json,
+                        ai_model=ai_result.get("aiModel", ""),
+                        deviation_score=deviation,
+                        ai_prompt_tokens=ai_result.get("promptTokens", 0),
+                        ai_completion_tokens=ai_result.get("completionTokens", 0),
+                        ai_total_tokens=ai_result.get("totalTokens", 0),
+                        ai_latency_ms=ai_result.get("latencyMs", 0),
+                    )
+                    return {"chapterId": chapter_id, "success": True,
+                            "contentLength": len(ai_result["content"])}
+                except Exception:
+                    pass  # AI failed → fall through to candidate fallback.
+
+            # AI unavailable or failed → fallback to candidate content.
+            purified_cand = self._purify_content(best_candidate_content)
+            alignment_json = build_source_alignment_json(
+                selected_content_source="candidate",
+                official_content_length=classification["contentLength"],
+                candidate_content_length=len(best_candidate_content),
+                title_similarity=best_alignment.get("titleSimilarity", 0),
+                preview_similarity=best_alignment.get("previewSimilarity", 0),
+                alignment_passed=True,
+                alignment_reason=best_alignment.get("alignmentReason", ""),
+                candidate_source_id=best_candidate_source_id,
+                primary_source_id=primary_source_id,
+            )
+            self._write_chapter_result(
+                chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+                title=title, chapter_index=chapter.get("chapterIndex"),
+                status="fallback", content=purified_cand,
+                alignment_json=alignment_json,
+                fallback_source_id=best_candidate_source_id,
+            )
+            return {"chapterId": chapter_id, "success": True,
+                    "contentLength": len(purified_cand), "fallback": True}
+
+        # No candidate passed alignment → error/fallback with preview only.
+        alignment_json = build_source_alignment_json(
+            selected_content_source="official_preview_fallback",
+            official_content_length=classification["contentLength"],
+            alignment_passed=False,
+            alignment_reason="only_preview_no_candidate",
+            primary_source_id=primary_source_id,
+        )
+        purified = self._purify_content(content)
+        self._write_chapter_result(
+            chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+            title=title, chapter_index=chapter.get("chapterIndex"),
+            status="fallback", content=purified,
+            alignment_json=alignment_json,
+            fallback_source_id=primary_source_id,
+        )
+        return {"chapterId": chapter_id, "success": True,
+                "contentLength": len(purified), "fallback": True}
+
+    def _handle_processing_error(self, exc: Exception, chapter: dict, source_chapter_id: str) -> dict:
+        from app.services.aggregate_alignment import build_source_alignment_json
+
+        now = self._now()
+        chapter_id = chapter["chapterId"]
+        aggregate_book_id = chapter.get("aggregateBookId", "")
+        error_code = classify_error(exc)
+        alignment_json = build_source_alignment_json(
+            selected_content_source="none",
+            alignment_passed=False,
+            alignment_reason=error_code,
+        )
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT retry_count FROM aggregate_chapter_tasks WHERE chapter_id = ?",
+                (chapter_id,),
+            ).fetchone()
+            current_retry = (row[0] if row else 0) or 0
+
+            if error_code in ERROR_CODES_NO_RETRY or max_retries_reached(current_retry):
+                conn.execute(
+                    """UPDATE aggregate_chapter_tasks
+                       SET status = 'error', error = ?, last_error_code = ?,
+                           source_alignment_json = ?, next_retry_time = NULL, updated_at = ?
+                       WHERE chapter_id = ?""",
+                    (str(exc), error_code, json.dumps(alignment_json, ensure_ascii=False), now, chapter_id),
+                )
+            else:
+                next_time = compute_next_retry_time(current_retry)
+                conn.execute(
+                    """UPDATE aggregate_chapter_tasks
+                       SET status = 'error', error = ?, last_error_code = ?,
+                           retry_count = ?, next_retry_time = ?,
+                           source_alignment_json = ?, updated_at = ?
+                       WHERE chapter_id = ?""",
+                    (str(exc), error_code, current_retry + 1, next_time,
+                     json.dumps(alignment_json, ensure_ascii=False), now, chapter_id),
+                )
+            conn.commit()
+        return {"chapterId": chapter_id, "success": False, "error": str(exc), "errorCode": error_code}
+
+    def _write_chapter_result(
+        self, *, chapter_id: str, aggregate_book_id: str, title: str,
+        chapter_index: int | None, status: str, content: str,
+        alignment_json: dict, fallback_source_id: str = "",
+        ai_model: str = "", deviation_score: float = 0.0,
+        ai_prompt_tokens: int = 0, ai_completion_tokens: int = 0,
+        ai_total_tokens: int = 0, ai_latency_ms: int = 0,
+    ) -> None:
+        now = self._now()
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE aggregate_chapter_tasks
+                   SET status = ?, content_length = ?, processed_content = ?, last_processed_at = ?,
+                       error = '', last_error_code = '', retry_count = 0, next_retry_time = NULL,
+                       source_alignment_json = ?, fallback_source_id = ?, ai_model = ?,
+                       deviation_score = ?, ai_prompt_tokens = ?, ai_completion_tokens = ?,
+                       ai_total_tokens = ?, ai_latency_ms = ?,
+                       updated_at = ?
+                   WHERE chapter_id = ?""",
+                (status, len(content), content, now,
+                 json.dumps(alignment_json, ensure_ascii=False),
+                 fallback_source_id, ai_model,
+                 deviation_score, ai_prompt_tokens, ai_completion_tokens,
+                 ai_total_tokens, ai_latency_ms,
+                 now, chapter_id),
+            )
+            self._write_aggregate_chapter_file(
+                conn, chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
+                title=title, content=content, chapter_index=chapter_index,
+            )
+            conn.commit()
+
+    def _aggregate_book_name_from_cache(self, aggregate_book_id: str) -> str:
+        with self._conn() as conn:
+            return self._aggregate_book_name(conn, aggregate_book_id)
 
     def aggregate_chapter_response(self, chapter_url: str, chapter_id: str = "") -> dict:
         try:
@@ -370,7 +891,7 @@ class AggregateProcessor:
             ).fetchone()
         title = (row[0] if row else "") or payload.get("title", "")
         status = row[1] if row else "pending"
-        if row and status == "processed" and row[2]:
+        if row and status in ("processed", "fallback") and row[2]:
             self._write_processed_chapter_if_needed(
                 aggregate_chapter_id,
                 chapter_url,
@@ -382,7 +903,7 @@ class AggregateProcessor:
                 "chapterId": aggregate_chapter_id,
                 "title": title,
                 "content": row[2],
-                "debug": {"aggregate": True, "status": "processed"},
+                "debug": {"aggregate": True, "status": status},
             }
         return {
             "implemented": True,
@@ -489,5 +1010,4 @@ class AggregateProcessor:
                 await asyncio.wait_for(stop_event.wait(), timeout=poll_seconds)
             except asyncio.TimeoutError:
                 continue
-
 

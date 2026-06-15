@@ -1,4 +1,4 @@
-"""Tests for plugin_cookie_file_store — scoped to qidian_com only."""
+"""Tests for plugin_cookie_file_store — per-plugin Cookie.json in plugin root."""
 
 import json
 
@@ -8,11 +8,13 @@ from app.services import plugin_cookie_file_store
 
 
 @pytest.fixture(autouse=True)
-def _clear_qidian_cookies():
-    """Make sure qidian_com Cookie.json does not leak between tests."""
-    plugin_cookie_file_store.clear("qidian_com")
+def _clear_plugin_cookies():
+    """Make sure test Cookie.json files do not leak between tests."""
+    for plugin_id in ("qidian_com", "qidian_com_app"):
+        plugin_cookie_file_store.clear(plugin_id)
     yield
-    plugin_cookie_file_store.clear("qidian_com")
+    for plugin_id in ("qidian_com", "qidian_com_app"):
+        plugin_cookie_file_store.clear(plugin_id)
 
 
 def test_save_writes_normalized_cookie_json():
@@ -88,14 +90,25 @@ def test_save_drops_none_values_and_empty_domains():
     assert "empty.com" not in loaded
 
 
-def test_store_is_no_op_for_non_qidian_plugins(tmp_path):
-    """Cookie.json support is scoped to qidian_com; other plugins never touch the file."""
-    plugin_cookie_file_store.clear("qidian_com")
+def test_store_writes_to_plugin_specific_path():
+    """Each plugin gets its own Cookie.json under its plugin directory."""
+    plugin_cookie_file_store.clear("qidian_com_app")
     jar = {"example.com": {"session": "abc"}}
 
-    plugin_cookie_file_store.save("other_plugin", jar)
-    assert not plugin_cookie_file_store.exists("other_plugin")
-    assert plugin_cookie_file_store.load("other_plugin") == {}
+    plugin_cookie_file_store.save("qidian_com_app", jar)
+
+    path = plugin_cookie_file_store.path_for("qidian_com_app")
+    assert path.exists()
+    assert path == (
+        plugin_cookie_file_store.PLUGINS_DIR
+        / "official"
+        / "qidian_com_app"
+        / "Cookie.json"
+    )
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    assert raw["pluginId"] == "qidian_com_app"
+    assert raw["cookies"]["example.com"]["session"] == "abc"
 
     # qidian_com file should remain untouched.
     assert not plugin_cookie_file_store.exists("qidian_com")

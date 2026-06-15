@@ -12,6 +12,7 @@ PLUGINS_DIR = PROJECT_ROOT / "plugins" / "sources"
 SOURCE_SEEDS_DIR = PROJECT_ROOT / "plugins" / "seeds"
 AGGREGATE_CONFIG_PATH = CONFIG_DIR / "aggregate_source.json"
 SOURCE_POOL_CONFIG_PATH = CONFIG_DIR / "source_pool.json"
+AI_PROVIDER_CONFIG_PATH = DATA_DIR / "ai_provider.json"
 FRONTEND_DIST_DIR = PROJECT_ROOT / "frontend" / "dist"
 
 APP_NAME = "LegadoHub"

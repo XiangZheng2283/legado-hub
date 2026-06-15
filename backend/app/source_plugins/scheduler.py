@@ -126,10 +126,12 @@ class PluginScheduler:
         except TypeError:
             fetcher = self._make_fetcher()
 
-        # Cookie.json truth source is scoped to qidian_com only.
-        # All other plugins continue to use the DB cookie cache.
-        if plugin_id == "qidian_com":
+        # Cookie.json in the plugin directory is the truth source when present.
+        # Fall back to DB cookie cache for unknown plugins.
+        if plugin_cookie_file_store.has_plugin_dir(plugin_id):
             cookie_jar = plugin_cookie_file_store.load(plugin_id)
+            if not cookie_jar:
+                cookie_jar = auth_repository.get_cookies(plugin_id)
         else:
             cookie_jar = auth_repository.get_cookies(plugin_id)
 

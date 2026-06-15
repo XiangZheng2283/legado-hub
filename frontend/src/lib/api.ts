@@ -135,4 +135,36 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  // Aggregate AI source
+  aggregateSettings: (): Promise<any> => fetchJson("/aggregate-settings"),
+  updateAggregateSettings: (payload: Record<string, any>): Promise<any> =>
+    fetchJson("/aggregate-settings", { method: "POST", body: JSON.stringify(payload) }),
+  testAggregateProvider: (payload: Record<string, any>): Promise<any> =>
+    fetchJson("/aggregate-settings/test-provider", { method: "POST", body: JSON.stringify(payload) }),
+  fetchAggregateModels: (payload: Record<string, any>): Promise<any> =>
+    fetchJson("/aggregate-settings/fetch-models", { method: "POST", body: JSON.stringify(payload) }),
+  aggregateBooks: (params: Record<string, string>): Promise<any> => {
+    const qs = new URLSearchParams(params)
+    return fetchJson(`/aggregate-books?${qs}`)
+  },
+  aggregateBook: (bookId: string): Promise<any> => fetchJson(`/aggregate-books/${bookId}`),
+  aggregateBookChapters: (bookId: string, params: Record<string, string>): Promise<any> => {
+    const qs = new URLSearchParams(params)
+    return fetchJson(`/aggregate-books/${bookId}/chapters?${qs}`)
+  },
+  aggregateChapter: (bookId: string, chapterId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}/chapters/${chapterId}`),
+  aggregateChapterReviews: (bookId: string, chapterId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}/chapters/${chapterId}/reviews`),
+  retryAggregateChapter: (bookId: string, chapterId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}/chapters/${chapterId}/retry`, { method: "POST" }),
+  runAggregateBook: (bookId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}/run`, { method: "POST" }),
+  pauseAggregateBook: (bookId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}/pause`, { method: "POST" }),
+  resumeAggregateBook: (bookId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}/resume`, { method: "POST" }),
+  deleteAggregateBook: (bookId: string): Promise<any> =>
+    fetchJson(`/aggregate-books/${bookId}`, { method: "DELETE" }),
 }

@@ -7,6 +7,9 @@ import { SearchJobs } from "@/routes/SearchJobs"
 import { CachePage } from "@/routes/CachePage"
 import { SettingsPage } from "@/routes/SettingsPage"
 import { AggregateSourcePage } from "@/routes/AggregateSourcePage"
+import { AggregateBookshelfPage } from "@/routes/AggregateBookshelfPage"
+import { AggregateBookDetailPage } from "@/routes/AggregateBookDetailPage"
+import { AggregateChapterDetailPage } from "@/routes/AggregateChapterDetailPage"
 import { VerificationPage } from "@/routes/VerificationPage"
 import { OfficialSourcesPage } from "@/routes/OfficialSourcesPage"
 
@@ -23,6 +26,9 @@ function App() {
           <Route path="cache" element={<CachePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="aggregate-source" element={<AggregateSourcePage />} />
+          <Route path="aggregate-books" element={<AggregateBookshelfPage />} />
+          <Route path="aggregate-books/:bookId" element={<AggregateBookDetailPage />} />
+          <Route path="aggregate-books/:bookId/chapters/:chapterId" element={<AggregateChapterDetailPage />} />
           <Route path="verification" element={<VerificationPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/console" replace />} />

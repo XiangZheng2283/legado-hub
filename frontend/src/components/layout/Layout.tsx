@@ -8,6 +8,7 @@ import {
   FileJson,
   ShieldCheck,
   KeyRound,
+  BookOpen,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/console/cache", label: "缓存", icon: HardDrive },
   { to: "/console/settings", label: "设置", icon: Settings },
   { to: "/console/aggregate-source", label: "聚合书源", icon: FileJson },
+  { to: "/console/aggregate-books", label: "聚合书架", icon: BookOpen },
   { to: "/console/verification", label: "验证", icon: ShieldCheck },
 ]
 

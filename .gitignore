@@ -23,6 +23,8 @@ frontend/dist/
 frontend/node_modules/
 backend/data/*.db
 backend/data/*.sqlite*
+backend/data/ai_provider.json
+backend/data/.ai_encryption_key
 backend/data/cache/
 backend/data/browser_challenges/
 backend/data/browser_fetch/
@@ -35,5 +37,5 @@ backend/=0.1.7
 docs/archive/**/data/upstreams/
 plugins/sources/*/__pycache__/
 plugins/sources/official/qidian_com/private/
-plugins/sources/official/qidian_com/Cookie.json
+plugins/sources/**/Cookie.json
 docs/archive/**/data/sources/raw/by-site/legado/sub-yiove_collections.json

@@ -1,7 +1,12 @@
-"""File-based cookie store scoped to qidian_com only.
+"""File-based cookie store scoped per plugin directory.
 
-Only `qidian_com` reads/writes `plugins/sources/official/qidian_com/Cookie.json`.
-All other plugin IDs are no-ops: `load` returns `{}`, `save`/`clear` do nothing.
+Cookie.json is written to the plugin's own root directory, e.g.:
+  plugins/sources/official/qidian_com/Cookie.json
+  plugins/sources/official/qidian_com_app/Cookie.json
+
+Previously this module was hardcoded to qidian_com only. It is now generic:
+scan plugins/sources for a directory whose metadata.yaml id matches the
+plugin_id, and use that directory as the cookie home.
 """
 
 from __future__ import annotations
@@ -11,47 +16,92 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import yaml
 
-# Project root is the parent of the backend directory.
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-QIDIAN_COOKIE_PATH = PROJECT_ROOT / "plugins" / "sources" / "official" / "qidian_com" / "Cookie.json"
-
-
-_SUPPORTED_PLUGIN_ID = "qidian_com"
+from app.config import PLUGINS_DIR
 
 
-def _supported(plugin_id: str) -> bool:
-    return plugin_id == _SUPPORTED_PLUGIN_ID
+# ---------------------------------------------------------------------------
+# Plugin directory resolution
+# ---------------------------------------------------------------------------
+
+_plugin_dir_cache: dict[str, Path | None] = {}
+
+
+def _resolve_plugin_dir(plugin_id: str) -> Path | None:
+    """Locate plugin directory by scanning plugins/sources recursively."""
+    if plugin_id in _plugin_dir_cache:
+        return _plugin_dir_cache[plugin_id]
+
+    if not PLUGINS_DIR.exists():
+        _plugin_dir_cache[plugin_id] = None
+        return None
+
+    for metadata_path in PLUGINS_DIR.rglob("metadata.yaml"):
+        try:
+            raw = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
+            if isinstance(raw, dict) and raw.get("id") == plugin_id:
+                plugin_dir = metadata_path.parent
+                _plugin_dir_cache[plugin_id] = plugin_dir
+                return plugin_dir
+        except Exception:
+            continue
+
+    _plugin_dir_cache[plugin_id] = None
+    return None
+
+
+def invalidate_plugin_dir_cache(plugin_id: str | None = None) -> None:
+    """Clear the plugin directory cache.
+
+    Call with no argument to clear the entire cache, or pass a plugin_id
+    to remove a single entry (useful after plugin reloads).
+    """
+    global _plugin_dir_cache
+    if plugin_id is None:
+        _plugin_dir_cache = {}
+    else:
+        _plugin_dir_cache.pop(plugin_id, None)
+
+
+# ---------------------------------------------------------------------------
+# Cookie.json operations
+# ---------------------------------------------------------------------------
+
+def has_plugin_dir(plugin_id: str) -> bool:
+    """Return True if a plugin directory exists for the given plugin ID."""
+    return _resolve_plugin_dir(plugin_id) is not None
 
 
 def path_for(plugin_id: str) -> Path:
     """Return the Cookie.json path for a plugin.
 
-    Only qidian_com has a real path; everything else resolves to the same path
-    but will be guarded by `_supported` in mutating operations.
+    Falls back to the legacy qidian_com path if the plugin directory cannot be
+    resolved, so existing callers/tests keep working.
     """
-    return QIDIAN_COOKIE_PATH
+    plugin_dir = _resolve_plugin_dir(plugin_id)
+    if plugin_dir is None:
+        # Legacy fallback for unknown plugin IDs / tests.
+        return PLUGINS_DIR / "official" / "qidian_com" / "Cookie.json"
+    return plugin_dir / "Cookie.json"
 
 
 def exists(plugin_id: str) -> bool:
-    if not _supported(plugin_id):
-        return False
-    return QIDIAN_COOKIE_PATH.exists()
+    return path_for(plugin_id).exists()
 
 
 def load(plugin_id: str) -> dict[str, dict[str, str]]:
-    """Load cookie jar from Cookie.json for qidian_com.
+    """Load cookie jar from Cookie.json for a plugin.
 
-    Returns an empty dict for any other plugin or if the file is missing/unreadable.
+    Returns an empty dict if the file is missing/unreadable or the plugin
+    directory cannot be found.
     """
-    if not _supported(plugin_id):
-        return {}
-
-    if not QIDIAN_COOKIE_PATH.exists():
+    cookie_path = path_for(plugin_id)
+    if not cookie_path.exists():
         return {}
 
     try:
-        raw = json.loads(QIDIAN_COOKIE_PATH.read_text(encoding="utf-8"))
+        raw = json.loads(cookie_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return {}
 
@@ -78,11 +128,9 @@ def load(plugin_id: str) -> dict[str, dict[str, str]]:
 
 
 def save(plugin_id: str, cookie_jar: dict[str, dict[str, str]]) -> None:
-    """Write normalized cookie jar for qidian_com. No-op for other plugins."""
-    if not _supported(plugin_id):
-        return
-
-    QIDIAN_COOKIE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    """Write normalized cookie jar to the plugin's Cookie.json."""
+    cookie_path = path_for(plugin_id)
+    cookie_path.parent.mkdir(parents=True, exist_ok=True)
 
     normalized: dict[str, dict[str, str]] = {}
     for domain, jar in cookie_jar.items():
@@ -97,12 +145,11 @@ def save(plugin_id: str, cookie_jar: dict[str, dict[str, str]]) -> None:
         "updatedAt": datetime.now(timezone.utc).isoformat(),
         "cookies": normalized,
     }
-    QIDIAN_COOKIE_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    cookie_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def clear(plugin_id: str) -> None:
-    """Delete Cookie.json for qidian_com. No-op for other plugins."""
-    if not _supported(plugin_id):
-        return
-    if QIDIAN_COOKIE_PATH.exists():
-        QIDIAN_COOKIE_PATH.unlink()
+    """Delete Cookie.json for a plugin."""
+    cookie_path = path_for(plugin_id)
+    if cookie_path.exists():
+        cookie_path.unlink()

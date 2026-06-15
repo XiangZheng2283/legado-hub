@@ -197,6 +197,12 @@ CREATE TABLE IF NOT EXISTS admin_settings (
     updated_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS aggregate_settings (
+    key TEXT PRIMARY KEY,
+    value_json TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS plugin_auth_state (
     plugin_id TEXT PRIMARY KEY,
     auth_status TEXT DEFAULT 'unknown',
@@ -230,12 +236,20 @@ CREATE TABLE IF NOT EXISTS aggregate_book_tasks (
     author TEXT,
     aggregate_payload_json TEXT,
     primary_book_id TEXT,
+    primary_source_id TEXT,
+    book_status TEXT DEFAULT 'unknown',
+    total_chapters INTEGER DEFAULT 0,
+    processed_chapters INTEGER DEFAULT 0,
+    failed_chapters INTEGER DEFAULT 0,
+    total_tokens INTEGER DEFAULT 0,
     status TEXT DEFAULT 'active',
     interval_minutes INTEGER DEFAULT 30,
     last_check_time TEXT,
     next_check_time TEXT,
     error_count INTEGER DEFAULT 0,
     last_error TEXT,
+    ai_enabled INTEGER DEFAULT 0,
+    last_processed_at TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -251,8 +265,35 @@ CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     processed_content TEXT,
     last_processed_at TEXT,
     error TEXT,
+    ai_model TEXT,
+    ai_prompt_tokens INTEGER DEFAULT 0,
+    ai_completion_tokens INTEGER DEFAULT 0,
+    ai_total_tokens INTEGER DEFAULT 0,
+    ai_latency_ms INTEGER DEFAULT 0,
+    deviation_score REAL DEFAULT 0.0,
+    fallback_source_id TEXT,
+    source_alignment_json TEXT,
+    retry_count INTEGER DEFAULT 0,
+    next_retry_time TEXT,
+    last_error_code TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS aggregate_ai_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aggregate_book_id TEXT NOT NULL,
+    chapter_id TEXT NOT NULL,
+    provider TEXT,
+    model TEXT,
+    prompt_tokens INTEGER DEFAULT 0,
+    completion_tokens INTEGER DEFAULT 0,
+    total_tokens INTEGER DEFAULT 0,
+    latency_ms INTEGER DEFAULT 0,
+    status TEXT,
+    error TEXT,
+    deviation_score REAL DEFAULT 0.0,
+    created_at TEXT DEFAULT (datetime('now'))
 );
 """
 
@@ -281,6 +322,28 @@ CURRENT_PLUGIN_HEALTH_COLUMNS = {
 CURRENT_AGGREGATE_CHAPTER_TASK_COLUMNS = {
     "processed_content": "TEXT",
     "chapter_index": "INTEGER",
+    "ai_model": "TEXT",
+    "ai_prompt_tokens": "INTEGER DEFAULT 0",
+    "ai_completion_tokens": "INTEGER DEFAULT 0",
+    "ai_total_tokens": "INTEGER DEFAULT 0",
+    "ai_latency_ms": "INTEGER DEFAULT 0",
+    "deviation_score": "REAL DEFAULT 0.0",
+    "fallback_source_id": "TEXT",
+    "source_alignment_json": "TEXT",
+    "retry_count": "INTEGER DEFAULT 0",
+    "next_retry_time": "TEXT",
+    "last_error_code": "TEXT",
+}
+
+CURRENT_AGGREGATE_BOOK_TASK_COLUMNS = {
+    "primary_source_id": "TEXT",
+    "book_status": "TEXT DEFAULT 'unknown'",
+    "total_chapters": "INTEGER DEFAULT 0",
+    "processed_chapters": "INTEGER DEFAULT 0",
+    "failed_chapters": "INTEGER DEFAULT 0",
+    "total_tokens": "INTEGER DEFAULT 0",
+    "ai_enabled": "INTEGER DEFAULT 0",
+    "last_processed_at": "TEXT",
 }
 
 CURRENT_CHAPTER_CACHE_COLUMNS = {
@@ -315,6 +378,13 @@ def ensure_current_schema(conn: sqlite3.Connection) -> None:
         if column_name in existing_columns:
             continue
         conn.execute(f"ALTER TABLE aggregate_chapter_tasks ADD COLUMN {column_name} {column_sql}")
+
+    rows = conn.execute("PRAGMA table_info(aggregate_book_tasks)").fetchall()
+    existing_columns = {row[1] for row in rows}
+    for column_name, column_sql in CURRENT_AGGREGATE_BOOK_TASK_COLUMNS.items():
+        if column_name in existing_columns:
+            continue
+        conn.execute(f"ALTER TABLE aggregate_book_tasks ADD COLUMN {column_name} {column_sql}")
 
     rows = conn.execute("PRAGMA table_info(chapter_cache)").fetchall()
     existing_columns = {row[1] for row in rows}
