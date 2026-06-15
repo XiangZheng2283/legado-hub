@@ -475,6 +475,40 @@ class AggregateProcessor:
         ]
 
     def _get_ai_service(self):
+        if self._ai_service is not None:
+            return self._ai_service
+
+        # Build production AI service from settings only when enabled & configured.
+        workflow = self._workflow_settings()
+        if not bool(workflow.get("aiEnabled")):
+            return None
+
+        provider_config = AggregateSettingsRepository(self.db_path).ai_provider_config()
+        base_url = str(provider_config.get("baseUrl") or "").strip()
+        api_key = str(provider_config.get("apiKey") or "").strip()
+        model = str(provider_config.get("model") or "").strip()
+        if not base_url or not api_key or not model:
+            return None
+
+        try:
+            from app.ai.client import OpenAICompatibleClient
+            from app.services.aggregate_ai_service import AggregateAIService
+
+            lexicon = None
+            if bool(workflow.get("sensitiveLexiconEnabled", True)):
+                lex_path = workflow.get("sensitiveLexiconPath")
+                if lex_path:
+                    try:
+                        from app.services.lexicon import SensitiveLexiconScanner
+                        lexicon = SensitiveLexiconScanner.from_path(lex_path)
+                    except Exception:
+                        pass
+
+            client = OpenAICompatibleClient(provider_config)
+            self._ai_service = AggregateAIService(client=client, lexicon=lexicon)
+        except Exception:
+            return None
+
         return self._ai_service
 
     async def _cached_toc(self, catalog, book_id: str) -> dict:
@@ -538,7 +572,32 @@ class AggregateProcessor:
 
             # ── path 1: official full ────────────────────────────────────
             if classification["classification"] == "full" and is_official:
-                purified = self._purify_content(content)
+                ai_service = self._get_ai_service()
+                selected_content = content
+                ai_model = ""
+                ai_self_score = 0.0
+                ai_prompt_tokens = 0
+                ai_completion_tokens = 0
+                ai_total_tokens = 0
+                ai_latency_ms = 0
+                if ai_service:
+                    try:
+                        book_name = self._aggregate_book_name_from_cache(aggregate_book_id)
+                        ai_result = await ai_service.process_official_full(
+                            book_name=book_name, author="", title=title, content=content,
+                        )
+                        selected_content = ai_result.get("content", content)
+                        ai_model = ai_result.get("aiModel", "")
+                        ai_self_score = ai_result.get("selfScore", 0.0)
+                        ai_prompt_tokens = ai_result.get("promptTokens", 0)
+                        ai_completion_tokens = ai_result.get("completionTokens", 0)
+                        ai_total_tokens = ai_result.get("totalTokens", 0)
+                        ai_latency_ms = ai_result.get("latencyMs", 0)
+                    except Exception:
+                        selected_content = self._purify_content(content)
+                else:
+                    selected_content = self._purify_content(content)
+
                 alignment_json = build_source_alignment_json(
                     selected_content_source="official",
                     official_content_length=classification["contentLength"],
@@ -549,9 +608,16 @@ class AggregateProcessor:
                 self._write_chapter_result(
                     chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
                     title=title, chapter_index=chapter_index,
-                    status="processed", content=purified, alignment_json=alignment_json,
+                    status="processed", content=selected_content, alignment_json=alignment_json,
+                    ai_model=ai_model,
+                    deviation_score=ai_self_score if ai_model else 0.0,
+                    ai_self_score=ai_self_score,
+                    ai_prompt_tokens=ai_prompt_tokens,
+                    ai_completion_tokens=ai_completion_tokens,
+                    ai_total_tokens=ai_total_tokens,
+                    ai_latency_ms=ai_latency_ms,
                 )
-                return {"chapterId": chapter_id, "success": True, "contentLength": len(purified)}
+                return {"chapterId": chapter_id, "success": True, "contentLength": len(selected_content)}
 
             # ── path 2: third-party primary ──────────────────────────────
             if classification["classification"] == "full" and not is_official:
@@ -670,44 +736,52 @@ class AggregateProcessor:
             cand_book_id = cand.get("bookId", "")
             if not cand_source_id or not cand_book_id:
                 continue
-            # Look up candidate's real TOC to find the matching chapter.
+            # Look up candidate's real TOC and only check N-2..N+2 window.
             try:
                 cand_toc = await self._cached_toc(catalog, cand_book_id)
                 cand_chapters = [c for c in cand_toc.get("chapters", []) if isinstance(c, dict)]
             except Exception:
                 continue
-            # Find chapter at matching index (1-based).
             target_index = chapter.get("chapterIndex", 1)
-            matched_ch = None
+            window_chapters = []
             for ch in cand_chapters:
-                if ch.get("index") == target_index:
-                    matched_ch = ch
-                    break
-            if not matched_ch and target_index - 1 < len(cand_chapters):
-                matched_ch = cand_chapters[target_index - 1]
-            if not matched_ch:
-                continue
-            cand_chapter_id = matched_ch.get("chapterId", "")
-            if not cand_chapter_id:
-                continue
-            try:
-                cand_result = await catalog.chapter(cand_chapter_id)
-                cand_content = cand_result.get("content", "")
-                if not cand_content or len(cand_content.strip()) < 200:
+                idx = ch.get("index")
+                if idx is None:
                     continue
-                alignment = align_candidate_chapter(
-                    official_preview=preview_text,
-                    candidate_title=cand_result.get("title", ""),
-                    candidate_content=cand_content,
-                    expected_title=title,
-                )
-                if alignment.get("alignmentPassed"):
-                    best_alignment = alignment
-                    best_candidate_content = cand_content
-                    best_candidate_source_id = cand_source_id
-                    break
-            except Exception:
-                continue
+                if target_index - 2 <= idx <= target_index + 2:
+                    window_chapters.append(ch)
+            if not window_chapters and target_index - 1 < len(cand_chapters):
+                # Fallback: position-based window if index metadata is missing.
+                start = max(0, target_index - 3)
+                window_chapters = cand_chapters[start:target_index + 2]
+
+            for matched_ch in window_chapters:
+                cand_chapter_id = matched_ch.get("chapterId", "")
+                if not cand_chapter_id and matched_ch.get("chapterUrl"):
+                    cand_chapter_id = encode_chapter_id(cand_source_id, matched_ch["chapterUrl"])
+                if not cand_chapter_id:
+                    continue
+                try:
+                    cand_result = await catalog.chapter(cand_chapter_id)
+                    cand_content = cand_result.get("content", "")
+                    if not cand_content or len(cand_content.strip()) < 200:
+                        continue
+                    alignment = align_candidate_chapter(
+                        official_preview=preview_text,
+                        candidate_title=cand_result.get("title", ""),
+                        candidate_content=cand_content,
+                        expected_title=title,
+                    )
+                    score = float(alignment.get("previewSimilarity", 0)) + float(alignment.get("titleSimilarity", 0))
+                    if alignment.get("alignmentPassed"):
+                        if best_alignment is None or score > (
+                            float(best_alignment.get("previewSimilarity", 0)) + float(best_alignment.get("titleSimilarity", 0))
+                        ):
+                            best_alignment = alignment
+                            best_candidate_content = cand_content
+                            best_candidate_source_id = cand_source_id
+                except Exception:
+                    continue
 
         if best_alignment and best_candidate_content:
             # Try AI aggregation.

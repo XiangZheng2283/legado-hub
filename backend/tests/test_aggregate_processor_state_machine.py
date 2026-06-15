@@ -8,17 +8,18 @@ import pytest
 
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_settings import PROCESSING_PLACEHOLDER
+from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
 from app.storage.db import initialize_database
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 
-def _setup_db(tmp_path, *, ai_enabled=True, purify="conservative"):
+def _setup_db(tmp_path, *, ai_enabled=True, purify="conservative", ai_provider=None):
     db_path = tmp_path / "test.db"
     initialize_database(db_path)
-    if ai_enabled:
-        with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(db_path) as conn:
+        if ai_enabled:
             conn.execute(
                 "INSERT OR REPLACE INTO admin_settings (key, value_json) VALUES (?, ?)",
                 ("contentWorkflow", json.dumps({
@@ -26,7 +27,12 @@ def _setup_db(tmp_path, *, ai_enabled=True, purify="conservative"):
                     "aggregateCheckIntervalMinutes": 10, "purifyMode": purify,
                 }, ensure_ascii=False)),
             )
-            conn.commit()
+        if ai_provider is not None:
+            conn.execute(
+                "INSERT OR REPLACE INTO admin_settings (key, value_json) VALUES (?, ?)",
+                ("aiProvider", json.dumps(ai_provider, ensure_ascii=False)),
+            )
+        conn.commit()
     return db_path
 
 
@@ -115,9 +121,10 @@ class _FakeAIService:
 
     async def process_official_full(self, **kwargs):
         self.calls.append({"method": "official_full", **kwargs})
-        return {"status": "processed", "content": kwargs.get("content", self._content),
-                "aiModel": "", "promptTokens": 0, "completionTokens": 0,
-                "totalTokens": 0, "latencyMs": 0, "plannedAnalysis": True}
+        return {"status": "processed", "content": self._content,
+                "selfScore": self._self_score,
+                "aiModel": "official-fake-model", "promptTokens": 120, "completionTokens": 60,
+                "totalTokens": 180, "latencyMs": 250, "plannedAnalysis": True}
 
     async def process_with_candidates(self, **kwargs):
         self.calls.append({"method": "with_candidates", **kwargs})
@@ -511,3 +518,199 @@ def test_ai_output_deviation_error_code():
     from app.services.aggregate_processor import classify_error
     # The ValueError with "AI_OUTPUT_DEVIATION" message.
     assert classify_error(ValueError("AI_OUTPUT_DEVIATION: score 0.3 < threshold 0.9")) == "AI_OUTPUT_DEVIATION"
+
+
+# ── production default AI service ────────────────────────────────────────────
+
+
+def _patch_ai_provider_config(monkeypatch, config: dict | None):
+    """Monkeypatch AggregateSettingsRepository.ai_provider_config for tests."""
+    from app.services.aggregate_settings import AggregateSettingsRepository
+
+    def _fake(self):
+        from app.services.aggregate_settings import _merge_defaults, DEFAULT_AI_PROVIDER_CONFIG
+        if config is None:
+            return _merge_defaults(DEFAULT_AI_PROVIDER_CONFIG, {})
+        return _merge_defaults(DEFAULT_AI_PROVIDER_CONFIG, config)
+
+    monkeypatch.setattr(AggregateSettingsRepository, "ai_provider_config", _fake)
+
+
+def test_default_processor_builds_ai_service_when_provider_configured(tmp_path, monkeypatch):
+    """With complete aiProviderConfig and aiEnabled=True, _get_ai_service() should return AggregateAIService."""
+    db_path = _setup_db(tmp_path)
+    _patch_ai_provider_config(monkeypatch, {
+        "baseUrl": "https://api.example.com/v1",
+        "apiKey": "sk-test",
+        "model": "mimo-v2.5",
+    })
+    processor = AggregateProcessor(db_path)
+
+    service = processor._get_ai_service()
+
+    assert service is not None
+    assert type(service).__name__ == "AggregateAIService"
+    # Cached on second call.
+    assert processor._get_ai_service() is service
+
+
+def test_default_processor_without_ai_config_falls_back_readably(tmp_path, monkeypatch):
+    """AI config incomplete → _get_ai_service() returns None; preview fallback still works."""
+    db_path = _setup_db(tmp_path)  # no ai_provider inserted
+    _patch_ai_provider_config(monkeypatch, None)
+    preview = "少年站在山巅望着远方。" * 5
+    catalog = _FakeCatalog(official_content=preview)
+    processor = AggregateProcessor(db_path)
+
+    assert processor._get_ai_service() is None
+
+    book_id = "book:no_ai"
+    _insert_book(db_path, book_id)
+    ch_id = _insert_chapter(db_path, book_id)
+    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["status"] != "processed"
+
+
+def test_official_full_uses_ai_service_process_official_full(tmp_path, monkeypatch):
+    """Official full content path must call process_official_full and write AI fields."""
+    db_path = _setup_db(tmp_path)
+    _patch_ai_provider_config(monkeypatch, None)
+    book_id = "book:official_full_ai"
+    _insert_book(db_path, book_id)
+    ch_id = _insert_chapter(db_path, book_id)
+
+    full_content = "【起点正版】这是一段官方完整正文，字数足够长。" * 20
+    catalog = _FakeCatalog(official_content=full_content)
+    ai_service = _FakeAIService(content="AI 整理后的官方正文")
+    processor = AggregateProcessor(db_path, ai_service=ai_service)
+
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
+
+    assert len(ai_service.calls) == 1
+    assert ai_service.calls[0]["method"] == "official_full"
+
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            """SELECT status, processed_content, ai_model, ai_prompt_tokens, ai_completion_tokens,
+                      ai_total_tokens, ai_latency_ms, ai_self_score
+               FROM aggregate_chapter_tasks WHERE chapter_id = ?""",
+            (ch_id,),
+        ).fetchone()
+    assert row[0] == "processed"
+    assert row[1] == "AI 整理后的官方正文"
+    assert row[2] == "official-fake-model"
+    assert row[3] == 120
+    assert row[4] == 60
+    assert row[5] == 180
+    assert row[6] == 250
+    assert row[7] == 1.0
+
+
+# ── preview candidate TOC window alignment ───────────────────────────────────
+
+
+def test_candidate_chapter_uses_candidate_toc_url_not_guessed_book_url(tmp_path, monkeypatch):
+    """Preview candidate must fetch chapter via toc's chapterId/chapterUrl, not bookUrl/{index}.html."""
+    db_path = _setup_db(tmp_path)
+    _patch_ai_provider_config(monkeypatch, None)
+    book_id = "book:toc_url"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书", "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100, "bookUrl": "https://official.example/book/1"},
+            {"bookId": "candidate_src:1", "sourceId": "candidate_src", "score": 80, "bookUrl": "https://candidate.example/book/1"},
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=3)
+
+    preview = "少年站在山巅，望着远方的云海。" * 10
+    real_candidate_url = "https://candidate.example/read/3.html"
+    real_candidate_id = encode_chapter_id("candidate_src", real_candidate_url)
+    candidate = ("【小说网】" + preview + "后续正文内容扩充了很多。" * 30)
+
+    class TOCOnlyCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            if source_id == "candidate_src":
+                return {"chapters": [
+                    {"chapterId": encode_chapter_id("candidate_src", "https://candidate.example/read/1.html"), "title": "第1章", "index": 1},
+                    {"chapterId": encode_chapter_id("candidate_src", "https://candidate.example/read/2.html"), "title": "第2章", "index": 2},
+                    {"chapterId": real_candidate_id, "title": "第3章", "index": 3, "chapterUrl": real_candidate_url},
+                ]}
+            return await super().toc(book_id)
+
+        async def chapter(self, chapter_id: str) -> dict:
+            if chapter_id == real_candidate_id:
+                return {"content": candidate, "title": "第3章"}
+            return await super().chapter(chapter_id)
+
+    catalog = TOCOnlyCatalog(official_content=preview, candidate_content=candidate)
+    ai_service = _FakeAIService(content=candidate)
+    processor = AggregateProcessor(db_path, ai_service=ai_service)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id, index=3)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["status"] == "processed"
+    assert len(ai_service.calls) == 1
+
+
+def test_candidate_toc_search_uses_index_window(tmp_path, monkeypatch):
+    """For target index=N, only N-2..N+2 window chapters should be fetched and aligned."""
+    db_path = _setup_db(tmp_path)
+    _patch_ai_provider_config(monkeypatch, None)
+    book_id = "book:window"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书", "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100},
+            {"bookId": "candidate_src:1", "sourceId": "candidate_src", "score": 80},
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=5)
+
+    preview = "少年站在山巅，望着远方的云海。" * 10
+
+    fetched_chapter_ids: list[str] = []
+
+    class WindowCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            if source_id == "candidate_src":
+                return {"chapters": [
+                    {"chapterId": encode_chapter_id("candidate_src", f"https://c.example/{i}.html"), "title": f"第{i}章", "index": i}
+                    for i in range(1, 21)
+                ]}
+            return await super().toc(book_id)
+
+        async def chapter(self, chapter_id: str) -> dict:
+            # Only intercept candidate chapters; let official fall through to _FakeCatalog.
+            if not chapter_id.startswith("candidate_src"):
+                return await super().chapter(chapter_id)
+            _, url = decode_chapter_id(chapter_id)
+            fetched_chapter_ids.append(chapter_id)
+            # Make chapter 5 align, others mismatch.
+            if "5.html" in url:
+                return {"content": "【小说网】" + preview + "后续正文内容扩充了很多。" * 30, "title": "第5章"}
+            return {"content": "错误的章节内容，与预览完全不同。" * 50, "title": "其他章"}
+
+    catalog = WindowCatalog(official_content=preview)
+    ai_service = _FakeAIService(content=preview + "后续正文内容扩充了很多。" * 30)
+    processor = AggregateProcessor(db_path, ai_service=ai_service)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id, index=5)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    decoded_urls = [decode_chapter_id(cid)[1] for cid in fetched_chapter_ids]
+    assert row["status"] == "processed"
+    # Only window chapters 3..7 should be fetched (target index 5 -> 3,4,5,6,7).
+    assert len(fetched_chapter_ids) <= 5, f"Expected <=5 fetches, got {len(fetched_chapter_ids)}: {fetched_chapter_ids}"
+    assert any("5.html" in url for url in decoded_urls)
+    assert not any(f"{i}.html" in url for url in decoded_urls for i in [1, 2, 8, 9, 10, 20])
+
