@@ -25,6 +25,7 @@ import { ArrowLeft, RotateCcw, Search, Loader2, ChevronLeft, ChevronRight } from
 
 function statusBadge(status?: string) {
   const map: Record<string, { label: string; variant: "success" | "warning" | "info" | "destructive" | "outline" }> = {
+    processed: { label: "已完成", variant: "success" },
     completed: { label: "已完成", variant: "success" },
     success: { label: "成功", variant: "success" },
     fallback: { label: "回退", variant: "warning" },
@@ -64,6 +65,13 @@ export function AggregateBookDetailPage() {
     queryKey: ["aggregateBook", bookId],
     queryFn: () => api.aggregateBook(bookId!),
     enabled: !!bookId,
+    refetchInterval: 5000,
+  })
+
+  const { data: health } = useQuery({
+    queryKey: ["consoleStatus"],
+    queryFn: api.status,
+    refetchInterval: 5000,
   })
 
   const chapterParams: Record<string, string> = { page: String(page), limit: String(pageSize) }
@@ -74,6 +82,7 @@ export function AggregateBookDetailPage() {
     queryKey: ["aggregateBookChapters", bookId, statusFilter, keyword, page],
     queryFn: () => api.aggregateBookChapters(bookId!, chapterParams),
     enabled: !!bookId,
+    refetchInterval: 5000,
   })
 
   const retryMut = useMutation({
@@ -111,6 +120,17 @@ export function AggregateBookDetailPage() {
         </Button>
         <h1 className="text-xl font-semibold">{book.name}</h1>
         {bookStatusBadge(book.status)}
+        {health ? (
+          <Badge variant="outline" className="text-xs gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            后端在线
+          </Badge>
+        ) : (
+          <Badge variant="destructive" className="text-xs gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            后端离线
+          </Badge>
+        )}
       </div>
 
       {/* Book Info */}
@@ -169,7 +189,7 @@ export function AggregateBookDetailPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部</SelectItem>
-                  <SelectItem value="completed">已完成</SelectItem>
+                  <SelectItem value="processed">已完成</SelectItem>
                   <SelectItem value="fallback">回退</SelectItem>
                   <SelectItem value="error">错误</SelectItem>
                   <SelectItem value="pending">等待中</SelectItem>
@@ -199,6 +219,7 @@ export function AggregateBookDetailPage() {
                   <TableHead>AI 模型</TableHead>
                   <TableHead>Tokens</TableHead>
                   <TableHead>偏差分数</TableHead>
+                  <TableHead>AI 自评分</TableHead>
                   <TableHead>回退源</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -224,7 +245,7 @@ export function AggregateBookDetailPage() {
                       {ch.aiModel || "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {ch.tokens?.toLocaleString() ?? "-"}
+                      {ch.aiTotalTokens?.toLocaleString() ?? ch.tokens?.toLocaleString() ?? "-"}
                     </TableCell>
                     <TableCell>
                       {ch.deviationScore != null ? (
@@ -242,6 +263,9 @@ export function AggregateBookDetailPage() {
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {ch.aiSelfScore != null ? ch.aiSelfScore.toFixed(2) : "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {ch.fallbackSourceId || "-"}

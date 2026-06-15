@@ -17,6 +17,7 @@ import {
 
 function statusBadge(status?: string) {
   const map: Record<string, { label: string; variant: "success" | "warning" | "info" | "destructive" | "outline" }> = {
+    processed: { label: "已完成", variant: "success" },
     completed: { label: "已完成", variant: "success" },
     success: { label: "成功", variant: "success" },
     fallback: { label: "回退", variant: "warning" },
