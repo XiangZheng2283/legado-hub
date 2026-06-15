@@ -367,6 +367,87 @@ export function AggregateSettingsPage() {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+            <div className="space-y-2">
+              <Label>聚合模式</Label>
+              <Select
+                value={workflow.aggregationMode || "balanced"}
+                onValueChange={(v) => updateWorkflow({ aggregationMode: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fast">快速</SelectItem>
+                  <SelectItem value="balanced">均衡</SelectItem>
+                  <SelectItem value="quality">质量优先</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>候选书源数</Label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={workflow.sourceCandidateLimit ?? 3}
+                onChange={(e) => updateWorkflow({ sourceCandidateLimit: Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>最低源评分</Label>
+              <Input
+                type="number"
+                min={0}
+                max={1}
+                step={0.05}
+                value={workflow.minSourceScore ?? 0.6}
+                onChange={(e) => updateWorkflow({ minSourceScore: Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>前文参考章节数</Label>
+              <Input
+                type="number"
+                min={0}
+                max={10}
+                value={workflow.includePreviousChapters ?? 3}
+                onChange={(e) => updateWorkflow({ includePreviousChapters: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={workflow.autoAggregate ?? false}
+                onCheckedChange={(v) => updateWorkflow({ autoAggregate: v })}
+              />
+              <Label>自动聚合同名书籍</Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={workflow.processAggregateOnRead ?? false}
+                onCheckedChange={(v) => updateWorkflow({ processAggregateOnRead: v })}
+              />
+              <Label>阅读时自动处理</Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={workflow.returnOnlyAggregateSource ?? false}
+                onCheckedChange={(v) => updateWorkflow({ returnOnlyAggregateSource: v })}
+              />
+              <Label>只返回聚合源</Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={workflow.blockedWordRepair ?? true}
+                onCheckedChange={(v) => updateWorkflow({ blockedWordRepair: v })}
+              />
+              <Label>屏蔽词修复</Label>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

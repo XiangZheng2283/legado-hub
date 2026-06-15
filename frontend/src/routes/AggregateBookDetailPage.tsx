@@ -21,6 +21,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { ArrowLeft, RotateCcw, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 
 function statusBadge(status?: string) {
@@ -155,6 +161,20 @@ export function AggregateBookDetailPage() {
               <span className="text-muted-foreground">Tokens：</span>
               <span className="font-medium">{book.totalTokens?.toLocaleString() ?? "-"}</span>
             </div>
+            <div>
+              <span className="text-muted-foreground">下次检查：</span>
+              <span className="font-medium">
+                {book.nextCheckTime
+                  ? new Date(book.nextCheckTime).toLocaleString("zh-CN")
+                  : "-"}
+              </span>
+            </div>
+            {book.lastError && (
+              <div className="col-span-3">
+                <span className="text-muted-foreground">最后错误：</span>
+                <span className="text-destructive text-sm">{book.lastError}</span>
+              </div>
+            )}
           </div>
           <div className="mt-3">
             <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -220,6 +240,8 @@ export function AggregateBookDetailPage() {
                   <TableHead>Tokens</TableHead>
                   <TableHead>偏差分数</TableHead>
                   <TableHead>AI 自评分</TableHead>
+                  <TableHead>重试</TableHead>
+                  <TableHead>最后处理</TableHead>
                   <TableHead>回退源</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -267,8 +289,29 @@ export function AggregateBookDetailPage() {
                     <TableCell className="text-muted-foreground">
                       {ch.aiSelfScore != null ? ch.aiSelfScore.toFixed(2) : "-"}
                     </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {ch.retryCount ?? 0}
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {ch.fallbackSourceId || "-"}
+                      {ch.lastProcessedAt
+                        ? new Date(ch.lastProcessedAt).toLocaleString("zh-CN")
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={ch.error ? "text-destructive cursor-help" : ""}>
+                              {ch.fallbackSourceId || "-"}
+                            </span>
+                          </TooltipTrigger>
+                          {ch.error && (
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p>{ch.error}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-right">
                       {(ch.status === "error" || ch.status === "fallback") && (

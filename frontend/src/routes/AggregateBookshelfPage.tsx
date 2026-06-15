@@ -21,6 +21,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
   Play,
   Pause,
   RotateCcw,
@@ -114,6 +120,7 @@ export function AggregateBookshelfPage() {
                 <TableRow>
                   <TableHead>书名</TableHead>
                   <TableHead>作者</TableHead>
+                  <TableHead>主源</TableHead>
                   <TableHead>状态</TableHead>
                   <TableHead>进度</TableHead>
                   <TableHead>失败</TableHead>
@@ -129,8 +136,22 @@ export function AggregateBookshelfPage() {
                     className="cursor-pointer"
                     onClick={() => navigate(`/console/aggregate-books/${book.id}`)}
                   >
-                    <TableCell className="font-medium">{book.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={book.lastError ? "text-destructive" : ""}>{book.name}</span>
+                          </TooltipTrigger>
+                          {book.lastError && (
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p>{book.lastError}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{book.author}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{book.primarySourceId || "-"}</TableCell>
                     <TableCell>{statusBadge(book.status)}</TableCell>
                     <TableCell>
                       {book.processedChapters ?? 0}/{book.totalChapters ?? 0}

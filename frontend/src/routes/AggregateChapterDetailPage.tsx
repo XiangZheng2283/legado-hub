@@ -30,6 +30,50 @@ function statusBadge(status?: string) {
   return <Badge variant={entry.variant}>{entry.label}</Badge>
 }
 
+function ReviewItem({ review }: { review: any }) {
+  const badges = review.badges || []
+  return (
+    <div className="rounded-md border p-3 text-sm space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-medium truncate">{review.userName || "匿名"}</span>
+          {badges.map((b: string, i: number) => (
+            <Badge key={i} variant="secondary" className="text-xs shrink-0">{b}</Badge>
+          ))}
+          {review.authorReview && <Badge variant="outline" className="text-xs shrink-0">作者</Badge>}
+        </div>
+        <span className="text-muted-foreground text-xs shrink-0">{review.reviewTime || ""}</span>
+      </div>
+      <p className="text-muted-foreground">{review.content || "-"}</p>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {review.likeNum != null && review.likeNum > 0 && <span>赞 {review.likeNum}</span>}
+        {review.replyCount != null && review.replyCount > 0 && <span>回复 {review.replyCount}</span>}
+        {review.ipAddress && <span>{review.ipAddress}</span>}
+      </div>
+      {review.replies && review.replies.length > 0 && (
+        <div className="pl-3 mt-2 space-y-2 border-l-2 border-muted">
+          {review.replies.map((reply: any, idx: number) => (
+            <ReviewItem key={idx} review={reply} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ReviewSection({ title, reviews }: { title: string; reviews: any[] }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium">{title}</h4>
+      <div className="space-y-2">
+        {reviews.map((review: any, idx: number) => (
+          <ReviewItem key={review.id || idx} review={review} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function AggregateChapterDetailPage() {
   const { bookId, chapterId } = useParams<{ bookId: string; chapterId: string }>()
   const navigate = useNavigate()
@@ -76,7 +120,21 @@ export function AggregateChapterDetailPage() {
   const alignment = chapter.sourceAlignment || chapter.alignment || {}
   const ai = chapter.aiInfo || {}
   const fallback = chapter.fallbackInfo || {}
-  const reviews = reviewsData?.reviews || reviewsData?.items || []
+
+  // Reviews contract from backend:
+  // chapterEndHot / chapterEnd / authorReviews / hotParagraphReviews / paragraphs / summary
+  const summary = reviewsData?.summary || {}
+  const chapterEndHot = reviewsData?.chapterEndHot || []
+  const chapterEnd = reviewsData?.chapterEnd || []
+  const authorReviews = reviewsData?.authorReviews || []
+  const hotParagraphReviews = reviewsData?.hotParagraphReviews || []
+  const paragraphReviews = reviewsData?.paragraphs || {}
+  const hasAnyReviews =
+    chapterEndHot.length > 0 ||
+    chapterEnd.length > 0 ||
+    authorReviews.length > 0 ||
+    hotParagraphReviews.length > 0 ||
+    Object.keys(paragraphReviews).length > 0
 
   return (
     <div className="space-y-4">
@@ -166,6 +224,10 @@ export function AggregateChapterDetailPage() {
               <span className="font-medium">{alignment.candidateSourceId || "-"}</span>
             </div>
             <div>
+              <span className="text-muted-foreground">回退源：</span>
+              <span className="font-medium">{alignment.fallbackSourceId || chapter.fallbackSourceId || "-"}</span>
+            </div>
+            <div>
               <span className="text-muted-foreground">标题相似度：</span>
               <span className="font-medium">
                 {alignment.titleSimilarity != null
@@ -224,6 +286,18 @@ export function AggregateChapterDetailPage() {
               </span>
             </div>
             <div>
+              <span className="text-muted-foreground">Prompt Tokens：</span>
+              <span className="font-medium">
+                {ai.promptTokens?.toLocaleString() ?? "-"}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Completion Tokens：</span>
+              <span className="font-medium">
+                {ai.completionTokens?.toLocaleString() ?? "-"}
+              </span>
+            </div>
+            <div>
               <span className="text-muted-foreground">延迟：</span>
               <span className="font-medium">
                 {ai.latency != null ? `${ai.latency}ms` : "-"}
@@ -245,6 +319,12 @@ export function AggregateChapterDetailPage() {
                 {(ai.deviationScore || chapter.deviationScore) != null
                   ? (ai.deviationScore || chapter.deviationScore).toFixed(3)
                   : "-"}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">AI 自评分：</span>
+              <span className="font-medium">
+                {ai.aiSelfScore != null ? ai.aiSelfScore.toFixed(3) : chapter.aiSelfScore != null ? chapter.aiSelfScore.toFixed(3) : "-"}
               </span>
             </div>
           </div>
@@ -298,28 +378,49 @@ export function AggregateChapterDetailPage() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 加载评论中...
               </div>
-            ) : reviews.length === 0 ? (
-              <div className="text-muted-foreground text-sm py-4">暂无评论数据</div>
-            ) : (
-              <div className="space-y-3">
-                {reviews.map((review: any, idx: number) => (
-                  <div key={idx} className="rounded-md border p-3 text-sm">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">{review.user || "匿名"}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {review.date
-                          ? new Date(review.date).toLocaleString("zh-CN")
-                          : ""}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground">{review.content || review.text || "-"}</p>
-                    {review.rating != null && (
-                      <div className="mt-1">
-                        <Badge variant="outline">评分: {review.rating}</Badge>
-                      </div>
-                    )}
+            ) : !hasAnyReviews ? (
+              <div className="space-y-2 py-4 text-sm text-muted-foreground">
+                <div>暂无评论数据</div>
+                {reviewsData?.mappingReason && (
+                  <div className="text-xs">
+                    映射原因：{reviewsData.mappingReason}
+                    {reviewsData.mappedSourceId && ` / 源：${reviewsData.mappedSourceId}`}
+                    {reviewsData.mappedChapterId && ` / 章节：${reviewsData.mappedChapterId}`}
                   </div>
-                ))}
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {summary && (
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    {summary.chapterEndHot != null && <Badge variant="outline">章末热评 {summary.chapterEndHot}</Badge>}
+                    {summary.chapterEnd != null && <Badge variant="outline">本章说 {summary.chapterEnd}</Badge>}
+                    {summary.authorReviews != null && <Badge variant="outline">作家说 {summary.authorReviews}</Badge>}
+                    {summary.hotParagraphReviews != null && <Badge variant="outline">热段评 {summary.hotParagraphReviews}</Badge>}
+                    {summary.paragraphReviewCount != null && <Badge variant="outline">段评总数 {summary.paragraphReviewCount}</Badge>}
+                  </div>
+                )}
+
+                {authorReviews.length > 0 && (
+                  <ReviewSection title="作家说" reviews={authorReviews} />
+                )}
+                {chapterEndHot.length > 0 && (
+                  <ReviewSection title="章末热评" reviews={chapterEndHot} />
+                )}
+                {chapterEnd.length > 0 && (
+                  <ReviewSection title="本章说" reviews={chapterEnd} />
+                )}
+                {hotParagraphReviews.length > 0 && (
+                  <ReviewSection title="热段评" reviews={hotParagraphReviews} />
+                )}
+                {Object.keys(paragraphReviews).length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">段落评论</h4>
+                    {Object.entries(paragraphReviews).map(([pid, list]: [string, any]) => (
+                      <ReviewSection key={pid} title={`段落 #${pid}`} reviews={list as any[]} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
