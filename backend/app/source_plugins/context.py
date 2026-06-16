@@ -263,13 +263,23 @@ class PluginContext:
                 pass
         return content_bytes.decode("utf-8", errors="replace")
 
-    def trace(self, stage: str, url: str = "", message: str = "", data: Any = None) -> None:
-        self._traces.append({
+    def trace(
+        self,
+        stage: str,
+        url: str = "",
+        message: str = "",
+        data: Any = None,
+        **extra: Any,
+    ) -> None:
+        payload = {
             "stage": stage,
             "url": url,
             "message": message,
             "data": data,
-        })
+        }
+        if extra:
+            payload["extra"] = extra
+        self._traces.append(payload)
 
     def get_traces(self) -> list[dict]:
         return list(self._traces)
@@ -304,7 +314,6 @@ class PluginContext:
             "instructions": message or "在打开的浏览器中完成登录，然后回到后台点击检测登录状态。",
             "cookieDomains": cookie_domains,
         }
-
 
 
 

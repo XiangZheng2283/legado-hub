@@ -14,6 +14,18 @@ from app.source_plugins.models import LoadedPlugin
 from app.source_plugins.errors import normalize_failure
 
 
+def _smoke_dir(plugin_dir: Path) -> Path:
+    """Return the preferred smoke fixture directory for a plugin.
+
+    New plugins use ``smoke/``; older plugins may still carry ``tests/``.
+    """
+    preferred = plugin_dir / "smoke"
+    legacy = plugin_dir / "tests"
+    if preferred.exists():
+        return preferred
+    return legacy
+
+
 async def run_smoke(
     plugin: LoadedPlugin,
     ctx: PluginContext,
@@ -183,8 +195,11 @@ class FixtureFetcher:
 
 
 def load_smoke_spec(plugin_dir: Path) -> dict:
-    """Load and validate `tests/smoke.yaml` for a plugin."""
-    spec_path = plugin_dir / "tests" / "smoke.yaml"
+    """Load and validate `smoke/smoke.yaml` for a plugin.
+
+    Falls back to the legacy ``tests/smoke.yaml`` layout when needed.
+    """
+    spec_path = _smoke_dir(plugin_dir) / "smoke.yaml"
     if not spec_path.exists():
         raise FileNotFoundError(f"missing smoke spec: {spec_path}")
     raw = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
@@ -210,7 +225,7 @@ def _fixture_map(plugin_dir: Path, spec: dict, capabilities: list[str] | None = 
         file_name = fixture.get("file")
         if not url or not file_name:
             raise ValueError(f"fixture {stage} must include url and file")
-        fixture_path = plugin_dir / "tests" / "fixtures" / file_name
+        fixture_path = _smoke_dir(plugin_dir) / "fixtures" / file_name
         if not fixture_path.exists():
             raise FileNotFoundError(f"missing smoke fixture file: {fixture_path}")
         url_to_text[url] = fixture_path.read_text(encoding="utf-8")
@@ -380,7 +395,7 @@ async def main() -> None:
 
     from app.source_plugins.fetcher import Fetcher
     ctx = PluginContext(fetcher=Fetcher(), plugin_id=plugin.metadata.id)
-    if (plugin_dir / "tests" / "smoke.yaml").exists():
+    if (_smoke_dir(plugin_dir) / "smoke.yaml").exists():
         result = await run_fixture_smoke(plugin, plugin_dir, args.keyword)
     else:
         result = await run_smoke(plugin, ctx, args.keyword)
@@ -391,7 +406,6 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-
 
 
 

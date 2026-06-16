@@ -152,7 +152,7 @@ ERROR_HINTS: dict[str, str] = {
     "RATE_LIMITED": "目标站点限流，降低频率或等待后重试。",
     "PLUGIN_RUNTIME_ERROR": "检查插件代码异常和 traceback。",
     "SMOKE_CONTRACT_ERROR": "检查 smoke.yaml 期望值、fixture 内容和插件输出。",
-    "SMOKE_FIXTURE_MISSING": "检查 smoke.yaml URL/file 配置和 tests/fixtures 文件。",
+    "SMOKE_FIXTURE_MISSING": "检查 smoke.yaml URL/file 配置和 smoke/fixtures 文件。",
 }
 
 
@@ -175,7 +175,6 @@ def normalize_failure(
         "hint": ERROR_HINTS.get(normalized_code, ERROR_HINTS["PLUGIN_RUNTIME_ERROR"]),
         "extra": extra or {},
     }
-
 
 
 

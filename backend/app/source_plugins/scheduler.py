@@ -7,6 +7,8 @@ import json
 import time
 from typing import Any
 
+from pathlib import Path
+
 from app.source_plugins.loader import PluginLoader
 from app.source_plugins.context import PluginContext
 from app.source_plugins.fetcher import Fetcher
@@ -25,6 +27,14 @@ from app.source_plugins.errors import (
     normalize_failure,
 )
 from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
+
+
+def _smoke_dir(plugin_dir: Path) -> Path:
+    preferred = plugin_dir / "smoke"
+    legacy = plugin_dir / "tests"
+    if preferred.exists():
+        return preferred
+    return legacy
 
 
 class PluginScheduler:
@@ -588,7 +598,7 @@ class PluginScheduler:
         if not plugin:
             return {"pass": False, "error": f"plugin not found: {plugin_id}"}
         plugin_dir = self.loader.plugins_dir / plugin_id
-        if (plugin_dir / "tests" / "smoke.yaml").exists():
+        if (_smoke_dir(plugin_dir) / "smoke.yaml").exists():
             result = await run_fixture_smoke(plugin, plugin_dir, keyword)
         else:
             ctx = self._make_ctx(plugin_id)
