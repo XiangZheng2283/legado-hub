@@ -39,6 +39,5 @@ docs/archive/**/data/upstreams/
 plugins/sources/*/__pycache__/
 plugins/sources/official/qidian_com/private/
 plugins/sources/**/Cookie.json
-plugins/sources/**/smoke/
 docs/archive/**/data/sources/raw/by-site/legado/sub-yiove_collections.json
 dev-assets/
