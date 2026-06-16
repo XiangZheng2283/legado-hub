@@ -1419,21 +1419,21 @@ backend/data/novels/
 
 | 模块 | 测试内容 | 建议测试文件 |
 |------|----------|--------------|
-| 数据迁移 | 旧库启动后自动补齐 `aggregate_*` 新字段，旧任务仍可读取。 | `dev-assets/tests/test_db.py` |
-| 设置迁移 | `admin_settings.contentWorkflow` 能迁移到 `aggregate_settings.contentWorkflow`，后续读取只走新表。 | `dev-assets/tests/test_aggregate_settings.py` |
-| 队列并发 | 同一本书重复触发只返回同一进度，不创建重复任务；多本书按顺序处理。 | `dev-assets/tests/test_aggregate_processor.py` |
-| 已完成跳过 | `completed + processed` 的书不会被后台重复处理。 | `dev-assets/tests/test_aggregate_processor.py` |
-| 章节对齐 | 索引一致标题相似时可补充；标题差异大时拒绝跨源补充。 | `dev-assets/tests/test_aggregate_alignment.py` |
-| 处理窗口 | 首次加入、阅读触发、后台轮询都只处理限定窗口。 | `dev-assets/tests/test_aggregate_processor.py` |
-| 目录变更 | 新增章节被追加，已处理章节不因标题变更重跑。 | `dev-assets/tests/test_aggregate_processor.py` |
-| 敏感词词库 | 词库可加载，屏蔽符上下文能生成候选，候选不会被机械替换。 | `dev-assets/tests/test_sensitive_lexicon.py` |
-| AI 请求构造 | 不同 `compat` 与 `thinkingLevel` 生成正确请求体。 | `dev-assets/tests/test_ai_request_builder.py` |
-| 偏差校验 | 高相似文本通过，低相似文本触发重试或回退。 | `dev-assets/tests/test_aggregate_deviation.py` |
-| 失败退避 | timeout、rate limit、bad request 对应不同 retry 策略。 | `dev-assets/tests/test_aggregate_retry.py` |
-| 文件落盘 | 文件名清洗、重复写入、删除任务时同步清理本地 Markdown。 | `dev-assets/tests/test_novel_file_cache.py` |
-| 控制台 API | 列表分页、章节分页、详情响应、设置脱敏。 | `dev-assets/tests/test_plugin_console_api.py` |
-| 评论映射 | 聚合章节评论能映射回主源章节，并保留章评与热评结构。 | `dev-assets/tests/test_aggregate_reviews.py` |
-| 热评匹配 | 起点热评能从摘要接口提取，并通过模糊匹配关联到聚合正文片段。 | `dev-assets/tests/test_aggregate_reviews.py` |
+| 数据迁移 | 旧库启动后自动补齐 `aggregate_*` 新字段，旧任务仍可读取。 | `backend/tests/test_db.py` |
+| 设置迁移 | `admin_settings.contentWorkflow` 能迁移到 `aggregate_settings.contentWorkflow`，后续读取只走新表。 | `backend/tests/test_aggregate_settings.py` |
+| 队列并发 | 同一本书重复触发只返回同一进度，不创建重复任务；多本书按顺序处理。 | `backend/tests/test_aggregate_processor.py` |
+| 已完成跳过 | `completed + processed` 的书不会被后台重复处理。 | `backend/tests/test_aggregate_processor.py` |
+| 章节对齐 | 索引一致标题相似时可补充；标题差异大时拒绝跨源补充。 | `backend/tests/test_aggregate_alignment.py` |
+| 处理窗口 | 首次加入、阅读触发、后台轮询都只处理限定窗口。 | `backend/tests/test_aggregate_processor.py` |
+| 目录变更 | 新增章节被追加，已处理章节不因标题变更重跑。 | `backend/tests/test_aggregate_processor.py` |
+| 敏感词词库 | 词库可加载，屏蔽符上下文能生成候选，候选不会被机械替换。 | `backend/tests/test_sensitive_lexicon.py` |
+| AI 请求构造 | 不同 `compat` 与 `thinkingLevel` 生成正确请求体。 | `backend/tests/test_ai_request_builder.py` |
+| 偏差校验 | 高相似文本通过，低相似文本触发重试或回退。 | `backend/tests/test_aggregate_deviation.py` |
+| 失败退避 | timeout、rate limit、bad request 对应不同 retry 策略。 | `backend/tests/test_aggregate_retry.py` |
+| 文件落盘 | 文件名清洗、重复写入、删除任务时同步清理本地 Markdown。 | `backend/tests/test_novel_file_cache.py` |
+| 控制台 API | 列表分页、章节分页、详情响应、设置脱敏。 | `backend/tests/test_plugin_console_api.py` |
+| 评论映射 | 聚合章节评论能映射回主源章节，并保留章评与热评结构。 | `backend/tests/test_aggregate_reviews.py` |
+| 热评匹配 | 起点热评能从摘要接口提取，并通过模糊匹配关联到聚合正文片段。 | `backend/tests/test_aggregate_reviews.py` |
 | 前端构建 | 聚合书架、设置页、搜索按钮改造后能通过构建。 | `frontend` 的 `npm run build` |
 
 ---

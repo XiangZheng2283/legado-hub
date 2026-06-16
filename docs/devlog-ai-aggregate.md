@@ -18,12 +18,12 @@
 | `backend/app/ai/lexicon.py` | 敏感词 Trie 扫描器，支持 `*`/`□`/`x`/空格掩码检测 + `from_path()` 目录加载 |
 | `backend/app/services/aggregate_alignment.py` | 章节正文分类（full/preview/empty）+ 跨源对齐（标题相似 + 滑动窗口 preview 匹配）+ alignment JSON 构建 |
 | `backend/app/services/aggregate_ai_service.py` | AI 聚合服务骨架：`process_official_full` / `process_with_candidates` / `process_third_party_primary` |
-| `dev-assets/tests/test_ai_client.py` | 17 个 AI 客户端测试 |
-| `dev-assets/tests/test_lexicon.py` | 16 个敏感词扫描测试 |
-| `dev-assets/tests/test_retry_logic.py` | 19 个重试/退避/错误码测试 |
-| `dev-assets/tests/test_aggregate_alignment.py` | 17 个章节对齐测试 |
-| `dev-assets/tests/test_aggregate_ai_service.py` | 7 个 AI 服务测试 |
-| `dev-assets/tests/test_aggregate_processor_state_machine.py` | 5 个状态机测试 |
+| `backend/tests/test_ai_client.py` | 17 个 AI 客户端测试 |
+| `backend/tests/test_lexicon.py` | 16 个敏感词扫描测试 |
+| `backend/tests/test_retry_logic.py` | 19 个重试/退避/错误码测试 |
+| `backend/tests/test_aggregate_alignment.py` | 17 个章节对齐测试 |
+| `backend/tests/test_aggregate_ai_service.py` | 7 个 AI 服务测试 |
+| `backend/tests/test_aggregate_processor_state_machine.py` | 5 个状态机测试 |
 
 ### 修改文件（6 个）
 | 文件 | 改动 |
@@ -33,7 +33,7 @@
 | `backend/app/api/console.py` | `test_provider` / `fetch_models` 接入真实 AI 客户端；修复 `get_aggregate_chapter` JOIN 列歧义 |
 | `backend/app/services/aggregate_reviews.py` | 新增 `hot_review_bubble_label()` — 固定 "热评 N" |
 | `backend/app/ai/client.py` | 新增 `_require_auth_config()` — `list_models` 只需 baseUrl+apiKey |
-| `dev-assets/tests/test_aggregate_processor.py` | 新增 fallback / alignment JSON / 窗口测试 + monkeypatch 修复 |
+| `backend/tests/test_aggregate_processor.py` | 新增 fallback / alignment JSON / 窗口测试 + monkeypatch 修复 |
 
 ### 已修复的 Bug
 1. 终态章节无限重入队列（`AI_BAD_REQUEST` / `retry_count >= 5`）
@@ -91,9 +91,9 @@ _fetch chapter ─────┼─ preview → 候选对齐 → AI → process
 |------|------|
 | `backend/app/services/aggregate_ai_service.py` | `__init__` 增加 `lexicon` 可选参数；新增 `_scan_blocked_words()` 方法；`process_with_candidates` / `process_third_party_primary` prompt 中自动追加敏感词候选 |
 | `backend/app/services/aggregate_processor.py` | `_process_preview_chapter` 候选查找从 naive URL 拼接改为 `catalog.toc(cand_book_id)` + 按 index 匹配真实章节 |
-| `dev-assets/tests/test_aggregate_processor_state_machine.py` | `_FakeCatalog` 增加 `toc()` 方法；新增 2 个 `_is_official_source` 测试 |
-| `dev-assets/tests/test_aggregate_processor.py` | `FakeCatalog` 增加 `toc()` 方法 |
-| `dev-assets/tests/test_aggregate_ai_service.py` | 新增 2 个 lexicon 集成测试 |
+| `backend/tests/test_aggregate_processor_state_machine.py` | `_FakeCatalog` 增加 `toc()` 方法；新增 2 个 `_is_official_source` 测试 |
+| `backend/tests/test_aggregate_processor.py` | `FakeCatalog` 增加 `toc()` 方法 |
+| `backend/tests/test_aggregate_ai_service.py` | 新增 2 个 lexicon 集成测试 |
 
 ### 新增测试（4 个）
 | 测试 | 验证 |
@@ -115,9 +115,9 @@ _fetch chapter ─────┼─ preview → 候选对齐 → AI → process
 | `backend/app/services/aggregate_processor.py` | `__init__` 增加 `_toc_cache`；新增 `_cached_toc()` / `_clear_toc_cache()` / `_load_previous_chapters_context()`；`run_book_task` 开始时清缓存；`_process_preview_chapter` 用 `_cached_toc` 替代直接 `catalog.toc`；`_process_preview_chapter` / `_process_third_party_primary` 传入 `previous_context` |
 | `backend/app/services/aggregate_ai_service.py` | `process_with_candidates` / `process_third_party_primary` 新增 `previous_context` 参数；prompt 中插入 `--- 前文参考 ---` 段 |
 | `backend/app/services/aggregate_alignment.py` | 新增 `compute_deviation_score(original, ai_output)` — 基于 LCS 的字符级相似度 |
-| `dev-assets/tests/test_aggregate_alignment.py` | 新增 4 个偏差值测试 |
-| `dev-assets/tests/test_aggregate_ai_service.py` | 新增 1 个前文上下文 prompt 测试 |
-| `dev-assets/tests/test_aggregate_processor_state_machine.py` | 新增 4 个测试（TOC 缓存 / 前文上下文加载 / AI 服务接收前文上下文） |
+| `backend/tests/test_aggregate_alignment.py` | 新增 4 个偏差值测试 |
+| `backend/tests/test_aggregate_ai_service.py` | 新增 1 个前文上下文 prompt 测试 |
+| `backend/tests/test_aggregate_processor_state_machine.py` | 新增 4 个测试（TOC 缓存 / 前文上下文加载 / AI 服务接收前文上下文） |
 
 ### 新增测试（9 个）
 | 测试 | 验证 |
@@ -143,7 +143,7 @@ _fetch chapter ─────┼─ preview → 候选对齐 → AI → process
 |------|------|
 | `backend/app/services/aggregate_processor.py` | `_write_chapter_result` 新增 `deviation_score` / `ai_prompt_tokens` / `ai_completion_tokens` / `ai_total_tokens` / `ai_latency_ms` 参数；preview/第三方路径 AI 输出后计算偏差值，低于 `deviationThreshold` 时拒绝写 processed 并 fallback；`classify_error` 新增 `AI_OUTPUT_DEVIATION` |
 | `backend/app/services/aggregate_alignment.py` | 所有 `SequenceMatcher` 调用加入 `autojunk=False`，修复长中文文本重复字符导致 ratio=0.0 的严重 bug |
-| `dev-assets/tests/test_aggregate_processor_state_machine.py` | 新增 3 个偏差值测试 |
+| `backend/tests/test_aggregate_processor_state_machine.py` | 新增 3 个偏差值测试 |
 
 ### 新增测试（3 个）
 | 测试 | 验证 |
@@ -170,8 +170,8 @@ _fetch chapter ─────┼─ preview → 候选对齐 → AI → process
 | `backend/app/services/aggregate_processor.py` | `enqueue_book()` 从 settings 读取 `primarySourcePriority` 传入 `primary_book_id_from_payload` |
 | `backend/app/ai/encryption.py` | **新增** — Fernet 对称加密，`encrypt_api_key()` / `decrypt_api_key()` / `is_encrypted()`；密钥从 `LEGADOHUB_AI_ENCRYPTION_KEY` 环境变量或自动生成的 `data/.ai_encryption_key` 文件读取 |
 | `backend/app/ai/models_catalog.py` | 从 3 个模型扩充到 30+ 个，覆盖 DeepSeek / OpenAI / Anthropic / Moonshot / Qwen / GLM / MiniMax / Mistral / SiliconFlow |
-| `dev-assets/tests/test_aggregate_processor.py` | 新增 3 个主源优先级测试 |
-| `dev-assets/tests/test_aggregate_settings.py` | 新增 2 个加密测试（密文存储 + 旧明文可读） |
+| `backend/tests/test_aggregate_processor.py` | 新增 3 个主源优先级测试 |
+| `backend/tests/test_aggregate_settings.py` | 新增 2 个加密测试（密文存储 + 旧明文可读） |
 
 ### 新增测试（5 个）
 | 测试 | 验证 |

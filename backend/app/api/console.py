@@ -62,14 +62,6 @@ _plugin_loader = PluginLoader()
 _plugin_scheduler = PluginScheduler()
 
 
-def _smoke_dir(plugin_dir: Path) -> Path:
-    preferred = plugin_dir / "smoke"
-    legacy = plugin_dir / "tests"
-    if preferred.exists():
-        return preferred
-    return legacy
-
-
 def _plugin_access_type(plugin) -> str:
     browser_mode = (plugin.metadata.browser or {}).get("mode", "none")
     return "Browser" if browser_mode == "required" else "HTTP"
@@ -1742,7 +1734,7 @@ def get_verification():
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
-            "hasFixtureSmoke": (_smoke_dir(_plugin_scheduler.loader.plugins_dir / plugin.metadata.id) / "smoke.yaml").exists(),
+            "hasFixtureSmoke": (_plugin_scheduler.loader.plugins_dir / plugin.metadata.id / "tests" / "smoke.yaml").exists(),
             "lastSmokePass": result.get("pass") if isinstance(result, dict) else None,
             "lastError": health.get("lastError", ""),
             "authMode": (plugin.metadata.auth or {}).get("mode", "none"),

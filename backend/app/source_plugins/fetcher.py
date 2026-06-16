@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 import re
-import threading
 from typing import Any
 from types import SimpleNamespace
 
@@ -23,52 +22,6 @@ from app.source_plugins.errors import (
     BrowserRequired,
 )
 from app.source_plugins.challenges import looks_like_browser_challenge, looks_like_cloudflare_challenge
-
-
-_SHARED_CLIENTS: dict[tuple[int, int, str], httpx.AsyncClient] = {}
-
-
-def _shared_client_key(proxy_url: str) -> tuple[int, int, str]:
-    """Key shared HTTP clients by event loop, thread, and proxy URL.
-
-    AsyncClient instances are not guaranteed to be reusable across threads or
-    event loops, so we scope the pool to the current async loop and thread.
-    This still gives us connection reuse for the common request path handled
-    by the API worker, while avoiding cross-loop transport issues in tests or
-    background jobs.
-    """
-    try:
-        loop_id = id(asyncio.get_running_loop())
-    except RuntimeError:
-        loop_id = 0
-    return (threading.get_ident(), loop_id, proxy_url or "")
-
-
-def _build_async_client(proxy_url: str, timeout: float) -> httpx.AsyncClient:
-    mounts: dict[str, httpx.AsyncHTTPTransport] | None = None
-    if proxy_url:
-        mounts = {
-            "all://": httpx.AsyncHTTPTransport(proxy=proxy_url),
-        }
-    return httpx.AsyncClient(
-        timeout=httpx.Timeout(timeout),
-        mounts=mounts,
-        follow_redirects=True,
-        http2=True,
-        limits=httpx.Limits(
-            max_connections=100,
-            max_keepalive_connections=20,
-            keepalive_expiry=30.0,
-        ),
-    )
-
-
-def _clear_client_cookies(client: httpx.AsyncClient) -> None:
-    """Keep shared clients as connection pools, not shared cookie jars."""
-    try:
-        client.cookies.clear()
-    except Exception:
-        pass
 
 
 class Fetcher:
@@ -88,20 +41,22 @@ class Fetcher:
         self.proxy_config = proxy_config or {}
         self._cookies = cookies or {}
         self._client: httpx.AsyncClient | None = None
-        self._owns_client = False
         self._traces: list[dict] = []
 
-    async def _client_instance(self, proxy_url: str | None = None) -> httpx.AsyncClient:
-        actual_proxy_url = self.proxy_url if proxy_url is None else proxy_url
-        key = _shared_client_key(actual_proxy_url)
-        client = _SHARED_CLIENTS.get(key)
-        if client is None:
-            client = _build_async_client(actual_proxy_url, self.timeout)
-            _SHARED_CLIENTS[key] = client
-        if proxy_url is None or actual_proxy_url == self.proxy_url:
-            self._client = client
-            self._owns_client = False
-        return client
+    async def _client_instance(self) -> httpx.AsyncClient:
+        if self._client is None:
+            mounts: dict[str, httpx.AsyncHTTPTransport] | None = None
+            if self.proxy_url:
+                mounts = {
+                    "all://": httpx.AsyncHTTPTransport(proxy=self.proxy_url),
+                }
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(self.timeout),
+                mounts=mounts,
+                headers={"User-Agent": self.user_agent},
+                follow_redirects=True,
+            )
+        return self._client
 
     def _get_cookie_header(self, url: str) -> str:
         from urllib.parse import urlparse
@@ -236,16 +191,19 @@ class Fetcher:
     ) -> tuple[str, Any]:
         if impersonate:
             return await self._fetch_raw_impersonate(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        client = await self._client_instance()
+        temp_client: httpx.AsyncClient | None = None
         if proxy is False and self.proxy_url:
-            client = await self._client_instance(proxy_url="")
-        else:
-            client = await self._client_instance()
+            temp_client = httpx.AsyncClient(
+                timeout=httpx.Timeout(timeout if timeout is not None else self.timeout),
+                headers={"User-Agent": self.user_agent},
+                follow_redirects=True,
+            )
+            client = temp_client
         req_headers = dict(headers) if headers else {}
-        req_headers.setdefault("User-Agent", self.user_agent)
         cookie_hdr = self._get_cookie_header(url)
         if cookie_hdr:
             req_headers["Cookie"] = cookie_hdr
-        _clear_client_cookies(client)
         try:
             resp = await client.request(
                 method,
@@ -262,7 +220,8 @@ class Fetcher:
             from app.source_plugins.errors import PluginTimeout
             raise PluginTimeout(str(exc)) from exc
         finally:
-            _clear_client_cookies(client)
+            if temp_client is not None:
+                await temp_client.aclose()
 
         if resp.status_code == 429:
             raise RateLimited(f"HTTP {resp.status_code}")
@@ -316,7 +275,6 @@ class Fetcher:
             raise FetchNetworkError("curl_cffi is required for impersonated fetch") from exc
 
         req_headers = dict(headers) if headers else {}
-        req_headers.setdefault("User-Agent", self.user_agent)
         cookie_hdr = self._get_cookie_header(url)
         if cookie_hdr:
             req_headers["Cookie"] = cookie_hdr
@@ -426,9 +384,9 @@ class Fetcher:
         return list(self._traces)
 
     async def close(self) -> None:
-        if self._client is not None and self._owns_client:
+        if self._client is not None:
             await self._client.aclose()
-        self._client = None
+            self._client = None
 
     def cookies_for_domain(self, domain: str) -> dict[str, str]:
         return dict(self._cookies.get(domain, {}))
@@ -459,3 +417,7 @@ class Fetcher:
             if item.lower().startswith("domain="):
                 return item.split("=", 1)[1].strip()
         return ""
+
+
+
+

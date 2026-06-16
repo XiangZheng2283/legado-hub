@@ -359,7 +359,7 @@ Suggested files:
 - `plugins/sources/biquge_family_demo/`
 - `plugins/sources/special_demo/`
 - `plugins/seeds/so-novel/`
-- `dev-assets/probes/inspect_so_novel_rules.py`（本地探测脚本，不推送）
+- `scripts/inspect_so_novel_rules.py`
 - `tests/source_plugins/test_smoke_runner.py`
 
 ### Phase 5: Console Rewire
