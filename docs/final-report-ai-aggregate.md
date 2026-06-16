@@ -57,15 +57,15 @@
 | `backend/app/services/aggregate_ai_service.py` | 195 | AI 聚合服务骨架 |
 | `backend/app/services/aggregate_settings.py` | 190 | 设置仓库（加密 + 脱敏） |
 | `backend/app/services/aggregate_reviews.py` | 117 | 热评 normalize + bubble label |
-| `backend/tests/test_ai_client.py` | 251 | 17 个 AI 客户端测试 |
-| `backend/tests/test_lexicon.py` | 162 | 16 个敏感词扫描测试 |
-| `backend/tests/test_retry_logic.py` | 230 | 19 个重试/退避测试 |
-| `backend/tests/test_aggregate_alignment.py` | 176 | 21 个对齐 + 偏差值测试 |
-| `backend/tests/test_aggregate_ai_service.py` | 189 | 10 个 AI 服务测试 |
-| `backend/tests/test_aggregate_settings.py` | 105 | 5 个设置 + 加密测试 |
-| `backend/tests/test_aggregate_reviews.py` | 96 | 5 个热评测试 |
-| `backend/tests/test_aggregate_processor_state_machine.py` | 510 | 17 个状态机测试 |
-| `backend/tests/test_access_bridge_facade.py` | ~80 | search_provider 代理推导测试 |
+| `dev-assets/tests/test_ai_client.py` | 251 | 17 个 AI 客户端测试 |
+| `dev-assets/tests/test_lexicon.py` | 162 | 16 个敏感词扫描测试 |
+| `dev-assets/tests/test_retry_logic.py` | 230 | 19 个重试/退避测试 |
+| `dev-assets/tests/test_aggregate_alignment.py` | 176 | 21 个对齐 + 偏差值测试 |
+| `dev-assets/tests/test_aggregate_ai_service.py` | 189 | 10 个 AI 服务测试 |
+| `dev-assets/tests/test_aggregate_settings.py` | 105 | 5 个设置 + 加密测试 |
+| `dev-assets/tests/test_aggregate_reviews.py` | 96 | 5 个热评测试 |
+| `dev-assets/tests/test_aggregate_processor_state_machine.py` | 510 | 17 个状态机测试 |
+| `dev-assets/tests/test_access_bridge_facade.py` | ~80 | search_provider 代理推导测试 |
 | `frontend/src/routes/AggregateSettingsPage.tsx` | ~350 | 聚合设置页 |
 | `frontend/src/routes/AggregateBookshelfPage.tsx` | ~250 | 聚合书架页 |
 | `frontend/src/routes/AggregateBookDetailPage.tsx` | ~300 | 书详情页 |
@@ -92,12 +92,12 @@
 | `backend/app/services/access_bridge/search_provider.py` | `DEFAULT_HEADERS` 使用全局 UA |
 | `backend/app/services/login_browser_service.py` | 浏览器登录使用全局 UA |
 | `backend/app/services/source_ping.py` | ping 请求使用全局 UA |
-| `backend/scripts/probe_site_network.py` | 默认 UA 使用全局接口 |
+| `dev-assets/probes/probe_site_network.py` | 默认 UA 使用全局接口（本地抓包/探测脚本，不推送） |
 | `plugins/sources/official/qidian_com_web/private/web_keepalive.py` | 改走 `ctx.access.http`，移除 `requests` 直调和硬编码 UA |
 | `plugins/sources/official/qidian_com_web/source.py` | `_try_keepalive` 直接 await 异步 keepalive |
 | `plugins/sources/thirdparty/biquge365_net/source.py` | 移除硬编码 UA |
 | `plugins/sources/thirdparty/shuhaige_net/source.py` | 移除硬编码 UA |
-| `backend/tests/test_aggregate_processor.py` | +主源优先级测试 / monkeypatch 修复 |
+| `dev-assets/tests/test_aggregate_processor.py` | +主源优先级测试 / monkeypatch 修复 |
 | `frontend/src/App.tsx` | +4 条路由 |
 | `frontend/src/components/layout/Layout.tsx` | +2 个导航项 |
 | `frontend/src/lib/api.ts` | +14 个 API 方法 |

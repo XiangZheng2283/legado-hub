@@ -62,7 +62,7 @@ For public source inspection and examples, read `references/public-source-refere
 For existing source JSON files used as references, run:
 
 ```bash
-python backend/scripts/inspect_legado_source.py path/to/source.json
+python dev-assets/probes/inspect_legado_source.py path/to/source.json
 ```
 
 Use the output to understand top-level fields, module coverage, JS size, and likely complexity before editing.
