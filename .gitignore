@@ -37,7 +37,7 @@ backend/.tmp/
 backend/=0.1.7
 docs/archive/**/data/upstreams/
 plugins/sources/*/__pycache__/
-plugins/sources/official/qidian_com/private/
+plugins/sources/official/
 plugins/sources/**/Cookie.json
 docs/archive/**/data/sources/raw/by-site/legado/sub-yiove_collections.json
 dev-assets/
