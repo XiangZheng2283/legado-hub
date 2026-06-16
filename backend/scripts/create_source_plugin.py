@@ -36,7 +36,7 @@ def create_plugin(
             raise FileExistsError(f"plugin already exists: {plugin_dir}")
         shutil.rmtree(plugin_dir)
 
-    fixture_dir = plugin_dir / "tests" / "fixtures"
+    fixture_dir = plugin_dir / "smoke" / "fixtures"
     fixture_dir.mkdir(parents=True)
 
     metadata = {
@@ -62,7 +62,7 @@ def create_plugin(
     (plugin_dir / "metadata.yaml").write_text(yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False), encoding="utf-8")
     (plugin_dir / "source.py").write_text(_source_template(plugin_id, name, base_url), encoding="utf-8")
     (plugin_dir / "README.md").write_text(_readme_template(plugin_id, name, domain, base_url), encoding="utf-8")
-    (plugin_dir / "tests" / "smoke.yaml").write_text(_smoke_template(base_url), encoding="utf-8")
+    (plugin_dir / "smoke" / "smoke.yaml").write_text(_smoke_template(base_url), encoding="utf-8")
     for fixture_name in ("search.html", "detail.html", "toc.html", "chapter.html"):
         (fixture_dir / fixture_name).write_text("<!-- Replace with captured fixture HTML. -->\n", encoding="utf-8")
     return plugin_dir
@@ -160,7 +160,7 @@ def _readme_template(plugin_id: str, name: str, domain: str, base_url: str) -> s
 
 ## Fixture Smoke
 
-Replace `tests/fixtures/*.html` with captured search/detail/toc/chapter pages, then run:
+Replace `smoke/fixtures/*.html` with captured search/detail/toc/chapter pages, then run:
 
 ```powershell
 cd backend

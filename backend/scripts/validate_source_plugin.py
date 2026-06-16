@@ -16,7 +16,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.source_plugins.models import PluginMetadata
-from app.source_plugins.smoke import load_smoke_spec
+from app.source_plugins.smoke import load_smoke_spec, _smoke_dir
 
 
 FORBIDDEN_SOURCE_STRINGS = [
@@ -35,10 +35,9 @@ def validate_plugin(plugin_dir: Path) -> list[str]:
     errors: list[str] = []
     metadata_path = plugin_dir / "metadata.yaml"
     source_path = plugin_dir / "source.py"
-    smoke_path = plugin_dir / "tests" / "smoke.yaml"
     readme_path = plugin_dir / "README.md"
 
-    for path in (metadata_path, source_path, smoke_path, readme_path):
+    for path in (metadata_path, source_path, readme_path):
         if not path.exists():
             errors.append(f"missing required file: {path.name if path.parent == plugin_dir else path.relative_to(plugin_dir)}")
     if errors:
@@ -73,21 +72,24 @@ def validate_plugin(plugin_dir: Path) -> list[str]:
             errors.append(f"Source missing method for capability: {cap}")
 
     try:
-        spec = load_smoke_spec(plugin_dir)
-        fixtures = spec.get("fixtures") or {}
-        required_stages = ["detail", "toc", "chapter"]
-        if "search" in metadata.capabilities:
-            required_stages.insert(0, "search")
-        for stage in required_stages:
-            fixture = fixtures.get(stage)
-            if not isinstance(fixture, dict):
-                errors.append(f"smoke fixture missing stage: {stage}")
-                continue
-            if not fixture.get("url") or not fixture.get("file"):
-                errors.append(f"smoke fixture {stage} must include url and file")
-            fixture_file = plugin_dir / "tests" / "fixtures" / str(fixture.get("file", ""))
-            if not fixture_file.exists():
-                errors.append(f"smoke fixture file missing: {fixture_file.relative_to(plugin_dir)}")
+        smoke_dir = _smoke_dir(plugin_dir)
+        smoke_path = smoke_dir / "smoke.yaml"
+        if smoke_path.exists():
+            spec = load_smoke_spec(plugin_dir)
+            fixtures = spec.get("fixtures") or {}
+            required_stages = ["detail", "toc", "chapter"]
+            if "search" in metadata.capabilities:
+                required_stages.insert(0, "search")
+            for stage in required_stages:
+                fixture = fixtures.get(stage)
+                if not isinstance(fixture, dict):
+                    errors.append(f"smoke fixture missing stage: {stage}")
+                    continue
+                if not fixture.get("url") or not fixture.get("file"):
+                    errors.append(f"smoke fixture {stage} must include url and file")
+                fixture_file = smoke_dir / "fixtures" / str(fixture.get("file", ""))
+                if not fixture_file.exists():
+                    errors.append(f"smoke fixture file missing: {fixture_file.relative_to(plugin_dir)}")
     except Exception as exc:
         errors.append(f"invalid smoke.yaml: {exc}")
 

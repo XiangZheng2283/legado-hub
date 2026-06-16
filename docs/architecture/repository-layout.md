@@ -4,10 +4,11 @@
 
 ## Root Boundary
 
-The root directory is reserved for project-level control files and four active work areas:
+The root directory is reserved for project-level control files and active work areas. A `dev-assets/` directory may exist locally for captures, probes, benchmarks, samples, and transient outputs, but it is gitignored and not part of the pushed repository.
 
 ```text
-backend/
+backend/             # runtime code; tests moved to dev-assets/tests
+dev-assets/          # local only; gitignored
 docs/
 frontend/
 plugins/
@@ -28,8 +29,9 @@ Expected subpaths:
 - `backend/config/`: backend-owned JSON configuration.
 - `backend/data/`: runtime SQLite/cache data.
 - `backend/generated/`: generated Reading/Legado aggregate source output.
-- `backend/scripts/`: backend utility scripts.
-- `backend/tests/`: backend pytest suite.
+- `backend/scripts/`: backend utility scripts. Only maintenance scripts required for normal operation are kept here (currently `create_source_plugin.py` and `validate_source_plugin.py`). Other probes, benchmarks, and local debugging scripts live under `dev-assets/`.
+- `dev-assets/`: local development assets that are not pushed. Contains the full backend pytest suite (`dev-assets/tests/`), captures, probes, benchmarks, samples, and transient outputs. This directory is gitignored.
+- `backend/pytest.ini`: points `testpaths` to `../dev-assets/tests` so local test runs still work.
 - `backend/requirements.txt`: backend Python dependencies.
 - `backend/pytest.ini`: backend test configuration.
 

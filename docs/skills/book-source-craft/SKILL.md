@@ -62,10 +62,12 @@ For public source inspection and examples, read `references/public-source-refere
 For existing source JSON files used as references, run:
 
 ```bash
-python backend/scripts/inspect_legado_source.py path/to/source.json
+python dev-assets/probes/inspect_legado_source.py path/to/source.json
 ```
 
 Use the output to understand top-level fields, module coverage, JS size, and likely complexity before editing.
+
+> Note: `inspect_legado_source.py` is a local development probe kept in `dev-assets/`, which is gitignored and not pushed.
 
 For Python source plugins, create and validate with Stage 2 tooling:
 
