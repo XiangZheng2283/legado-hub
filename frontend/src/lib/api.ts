@@ -76,10 +76,35 @@ export const api = {
     fetchJson(`/official-sources/${pluginId}/login/logout`, { method: "POST" }),
 
   officialSources: (): Promise<any> => fetchJson("/official-sources"),
-  createSearchJob: (keyword: string, page?: number, limit?: number, sourceIds?: string[]): Promise<any> =>
+  createSearchJob: (payload: {
+    keyword: string
+    page?: number
+    limit?: number
+    sourceIds?: string[]
+  }): Promise<any> =>
     fetchJson("/search-jobs", {
       method: "POST",
-      body: JSON.stringify({ keyword, page: page || 1, limit, sourceIds }),
+      body: JSON.stringify({
+        keyword: payload.keyword,
+        page: payload.page || 1,
+        limit: payload.limit,
+        sourceIds: payload.sourceIds,
+      }),
+    }),
+  createAggregateSearch: (payload: {
+    keyword: string
+    page?: number
+    limit?: number
+    sourceIds?: string[]
+  }): Promise<any> =>
+    fetchJson("/search/aggregate", {
+      method: "POST",
+      body: JSON.stringify({
+        keyword: payload.keyword,
+        page: payload.page || 1,
+        limit: payload.limit,
+        sourceIds: payload.sourceIds,
+      }),
     }),
   searchJobs: (): Promise<any> => fetchJson("/search-jobs?limit=20"),
   searchJob: (id: string): Promise<any> => fetchJson(`/search-jobs/${id}`),
@@ -109,7 +134,7 @@ export const api = {
       body: JSON.stringify({ keyword: keyword || "凡人修仙传" }),
     }),
   pluginLiveChecks: (id: string): Promise<any> => fetchJson(`/plugins/${id}/live-checks`),
-  pluginAttempts: (id: string): Promise<any> => fetchJson(`/sources/${id}`),
+  pluginAttempts: (id: string): Promise<any> => fetchJson(`/plugins/${id}/attempts`),
   cache: (): Promise<any> => fetchJson("/cache"),
   cacheItems: (): Promise<any> => fetchJson("/cache/items?limit=100"),
   clearCache: (): Promise<any> => fetchJson("/cache", { method: "DELETE" }),

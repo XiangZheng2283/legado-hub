@@ -8,7 +8,7 @@ import time
 from typing import Any
 
 from app.services.live_check_repository import LiveCheckRepository
-from app.source_plugins.scheduler import PluginScheduler
+from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
 from app.source_plugins.loader import PluginLoader
 
 
@@ -151,7 +151,7 @@ class LiveAcceptanceService:
         scheduler: PluginScheduler | None = None,
         repository: LiveCheckRepository | None = None,
     ):
-        self.scheduler = scheduler or PluginScheduler()
+        self.scheduler = scheduler or get_plugin_scheduler()
         self.repository = repository or LiveCheckRepository()
 
     async def run_plugin_live_check(

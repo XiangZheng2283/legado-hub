@@ -1,4 +1,8 @@
-"""SQLite cache for search, book, toc, and chapter results."""
+"""SQLite cache for book, toc, and chapter results.
+
+Search snapshots are stored in ``book_search_cache`` (book-entity-based,
+7-day TTL), managed by ``SearchCoordinator``.
+"""
 
 from __future__ import annotations
 
@@ -28,32 +32,6 @@ class Cache:
             return datetime.now(timezone.utc) - dt < timedelta(seconds=ttl_seconds)
         except Exception:
             return False
-
-    def get_search(self, keyword: str, page: int) -> dict | None:
-        with self._conn() as conn:
-            row = conn.execute(
-                "SELECT response_json, created_at FROM search_cache WHERE keyword=? AND page=?",
-                (keyword, page),
-            ).fetchone()
-        if row and self._is_fresh(row[1], 600):
-            data = json.loads(row[0])
-            if not data.get("items") and data.get("debug", {}).get("errorCount", 0):
-                return None
-            # Skip job-filtered results so they do not interfere with Catalog.search
-            if data.get("debug", {}).get("scoreFilter") is not None:
-                return None
-            return data
-        return None
-
-    def set_search(self, keyword: str, page: int, data: dict) -> None:
-        if not data.get("items") and data.get("debug", {}).get("errorCount", 0):
-            return
-        with self._conn() as conn:
-            conn.execute(
-                "INSERT OR REPLACE INTO search_cache (keyword, page, response_json, created_at) VALUES (?, ?, ?, ?)",
-                (keyword, page, json.dumps(data, ensure_ascii=False), self._now()),
-            )
-            conn.commit()
 
     def get_book(self, book_id: str) -> dict | None:
         with self._conn() as conn:
@@ -130,39 +108,5 @@ class Cache:
             )
             conn.commit()
 
-    def get_plugin_runtime_state(self, plugin_id: str) -> dict | None:
-        with self._conn() as conn:
-            row = conn.execute(
-                "SELECT proxy_mode, proxy_status, last_direct_error, last_proxy_error, last_success_via_proxy, updated_at FROM plugin_runtime_state WHERE plugin_id=?",
-                (plugin_id,),
-            ).fetchone()
-        if row:
-            return {
-                "pluginId": plugin_id,
-                "sourceId": plugin_id,
-                "proxyMode": row[0],
-                "proxyStatus": row[1],
-                "lastDirectError": row[2],
-                "lastProxyError": row[3],
-                "lastSuccessViaProxy": bool(row[4]),
-                "updatedAt": row[5],
-            }
-        return None
-
-    def set_plugin_runtime_state(
-        self,
-        plugin_id: str,
-        proxy_mode: str,
-        proxy_status: str,
-        last_direct_error: str = "",
-        last_proxy_error: str = "",
-        last_success_via_proxy: bool = False,
-    ) -> None:
-        with self._conn() as conn:
-            conn.execute(
-                "INSERT OR REPLACE INTO plugin_runtime_state (plugin_id, proxy_mode, proxy_status, last_direct_error, last_proxy_error, last_success_via_proxy, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (plugin_id, proxy_mode, proxy_status, last_direct_error, last_proxy_error, int(last_success_via_proxy), self._now()),
-            )
-            conn.commit()
 
 

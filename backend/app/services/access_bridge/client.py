@@ -35,7 +35,13 @@ class AccessBridgeClient:
         adapter: Any = None,
     ):
         self.config = config or AccessBridgeConfig.from_env()
-        self.adapter = adapter or self._make_adapter(self.config)
+        self._adapter = adapter
+
+    @property
+    def adapter(self) -> Any:
+        if self._adapter is None:
+            self._adapter = self._make_adapter(self.config)
+        return self._adapter
 
     async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
         """Fetch a page through the configured Source Access Bridge adapter."""

@@ -42,3 +42,13 @@ or trace the limitation rather than caching obviously bad text as valid content.
 
 Ordinary mirror/scraper sources must not declare `explore`; ranking and category
 capabilities are reserved for official/licensed sources.
+
+## Host-layer boundaries
+
+Do not read or write `Cookie.json` inside the plugin directory. Use `ctx.cookies`
+for Cookie payload access; the host owns the file at
+`backend/config/cookies/<plugin_id>.json`. Proxy is direct by default; declare
+`proxy.mode` and `proxy.required` in `metadata.yaml` only if the source actually
+needs it. Do not rely on search events or health state being persisted: the host
+keeps search events in memory and writes process/debug logs to
+`backend/runtime/logs/`.

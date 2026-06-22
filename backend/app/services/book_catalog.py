@@ -3,34 +3,55 @@
 from __future__ import annotations
 
 import sqlite3
-from app.config import DB_PATH, HOST, PORT, SOURCE_POOL_CONFIG_PATH
+from typing import Any
+from app.config import DB_PATH, HOST, PORT
+from app.core.app_config import AppConfig
 from app.core.proxy import ProxyConfig
 from app.source_plugins.id_codec import decode_chapter_id
 from app.services.cache import Cache
-from app.source_plugins.scheduler import PluginScheduler
-from app.services.plugin_health_repository import PluginHealthRepository
+from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
+
+
+class _NoOpHealthRepo:
+    """Health persistence is being removed in Phase 1."""
+
+    def record_attempt(self, **kwargs: Any) -> None:
+        pass
+
+    def record_success(self, source_id: str, latency_ms: int) -> None:
+        pass
 
 
 class BookCatalog:
-    def __init__(self, repo: PluginHealthRepository | None = None, cache: Cache | None = None):
-        self.repo = repo or PluginHealthRepository()
+    def __init__(self, repo: Any | None = None, cache: Cache | None = None):
+        self.repo = repo or _NoOpHealthRepo()
         self.cache = cache or Cache()
-        self.scheduler = PluginScheduler()
+        self.scheduler = get_plugin_scheduler()
 
     def _get_proxy_config(self) -> ProxyConfig:
-        import json
-        pool_path = SOURCE_POOL_CONFIG_PATH
-        if pool_path.exists():
-            data = json.loads(pool_path.read_text(encoding="utf-8"))
-            return ProxyConfig.from_dict(data.get("proxy", {}))
-        return ProxyConfig()
+        cfg = AppConfig.get().proxy
+        return ProxyConfig(
+            enabled=cfg.enabled,
+            url=cfg.url,
+            allow_auto_retry=cfg.allow_auto_retry,
+        )
 
     def _get_search_config(self) -> dict:
-        import json
-        pool_path = SOURCE_POOL_CONFIG_PATH
-        if pool_path.exists():
-            return json.loads(pool_path.read_text(encoding="utf-8"))
-        return {}
+        cfg = AppConfig.get()
+        return {
+            "proxy": {
+                "enabled": cfg.proxy.enabled,
+                "url": cfg.proxy.url,
+                "allowAutoRetry": cfg.proxy.allow_auto_retry,
+            },
+            "max_concurrency": cfg.search.global_source_concurrency,
+            "source_timeout_seconds": cfg.search.source_timeout_seconds,
+            "overall_search_timeout_seconds": cfg.search.overall_timeout_seconds,
+            "source_batch_size": 20,
+            "browser_source_timeout_seconds": cfg.search.browser_source_timeout_seconds,
+            "browser_search_timeout_seconds": cfg.search.browser_search_timeout_seconds,
+            "default_user_agent": cfg.search.default_user_agent,
+        }
 
     async def book_detail(self, book_id: str) -> dict:
         from app.services.catalog import Catalog

@@ -133,6 +133,19 @@ class PluginMetadata:
         source_role = str(self.content.get("sourceRole", "") or "").strip().lower()
         return "official" in tags or source_role == "official"
 
+    @property
+    def cookie_domains(self) -> list[str]:
+        """Domains declared by the plugin for cookie persistence."""
+        domains = self.auth.get("cookieDomains")
+        if isinstance(domains, list):
+            return [str(d) for d in domains]
+        return []
+
+    @property
+    def declares_cookies(self) -> bool:
+        """Whether the plugin metadata explicitly declares cookie storage."""
+        return bool(self.cookie_domains)
+
 
 @dataclass
 class LoadedPlugin:

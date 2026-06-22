@@ -86,15 +86,28 @@ def make_aggregate_chapter_url(
     return f"legadohub://aggregate/chapter/{_pack_payload(payload)}"
 
 
-def make_aggregate_search_item(group: dict[str, Any], base_api: str | None = None) -> dict[str, Any] | None:
+def make_aggregate_search_item(
+    group: dict[str, Any],
+    base_api: str | None = None,
+    plugins: dict[str, Any] | None = None,
+    min_source_score: int = 0,
+) -> dict[str, Any] | None:
     items = [dict(item) for item in group.get("items", []) if isinstance(item, dict)]
     if not items:
         return None
+
     base_api = base_api or f"http://{HOST}:{PORT}"
+
+    # Filter items below min source score.
+    if min_source_score > 0:
+        items = [i for i in items if i.get("score", 0) >= min_source_score]
+    if not items:
+        return None
+
     best = max(items, key=lambda item: item.get("score", 0))
     aggregate_book_url = make_aggregate_book_url(group)
     book_id = encode_book_id(VIRTUAL_SOURCE_ID, aggregate_book_url)
-    source_count = len(items)
+    actual_source_count = len(items)
     latest = str(best.get("lastChapter", "") or "").strip()
     author = str(group.get("author") or best.get("author", "") or "").strip()
     reading_parts = [VIRTUAL_SOURCE_NAME]
@@ -102,13 +115,14 @@ def make_aggregate_search_item(group: dict[str, Any], base_api: str | None = Non
         reading_parts.append(latest)
 
     payload = unpack_aggregate_book_url(aggregate_book_url)
-    primary_book_id = primary_book_id_from_payload(payload)
+    primary_book_id = primary_book_id_from_payload(payload, plugins=plugins)
     primary_source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
 
-    try:
-        plugins = PluginLoader().load_all()
-    except Exception:
-        plugins = {}
+    if plugins is None:
+        try:
+            plugins = PluginLoader().load_all()
+        except Exception:
+            plugins = {}
 
     official_source_ids = sorted({
         item.get("sourceId", "")
@@ -119,13 +133,23 @@ def make_aggregate_search_item(group: dict[str, Any], base_api: str | None = Non
         primary_source_id and plugins.get(primary_source_id) and plugins[primary_source_id].metadata.is_official_source()
     )
 
+    # Weighted average score (not best+1).
+    avg_score = sum(i.get("score", 0) for i in items) / len(items) if items else 0
+    aggregate_score = int(avg_score) + 1  # +1 to beat any single source at the average
+
+    # Candidate summary for debugging/display.
+    candidate_summary = [
+        {"sourceId": i.get("sourceId", ""), "score": i.get("score", 0)}
+        for i in sorted(items, key=lambda x: -x.get("score", 0))
+    ]
+
     return {
         "sourceId": VIRTUAL_SOURCE_ID,
         "sourceName": VIRTUAL_SOURCE_NAME,
         "name": group.get("name") or best.get("name", ""),
         "author": author,
         "coverUrl": best.get("coverUrl", ""),
-        "intro": f"聚合源：基于 {source_count} 个候选书源，后续在此链路执行 AI 聚合、正文净化和屏蔽词修复。",
+        "intro": f"聚合源：基于 {actual_source_count} 个候选书源，后续在此链路执行 AI 聚合、正文净化和屏蔽词修复。",
         "kind": "AI聚合",
         "lastChapter": latest,
         "readingLastChapter": " · ".join(reading_parts),
@@ -135,8 +159,9 @@ def make_aggregate_search_item(group: dict[str, Any], base_api: str | None = Non
         "bookUrl": f"{base_api}/api/legado/book/{book_id}",
         "candidateId": group.get("candidateId", ""),
         "aggregate": True,
-        "sourceCount": source_count,
-        "score": best.get("score", 0) + 1,
+        "sourceCount": actual_source_count,
+        "score": aggregate_score,
+        "candidateSummary": candidate_summary,
         "hasOfficialSource": bool(official_source_ids),
         "officialSourceIds": official_source_ids,
         "primarySourceId": primary_source_id,
@@ -144,10 +169,23 @@ def make_aggregate_search_item(group: dict[str, Any], base_api: str | None = Non
     }
 
 
-def aggregate_items_for_groups(groups: list[dict[str, Any]], base_api: str | None = None) -> list[dict[str, Any]]:
+def aggregate_items_for_groups(
+    groups: list[dict[str, Any]],
+    base_api: str | None = None,
+    plugins: dict[str, Any] | None = None,
+    min_source_score: int = 0,
+) -> list[dict[str, Any]]:
+    if plugins is None:
+        try:
+            plugins = PluginLoader().load_all()
+        except Exception:
+            plugins = {}
     aggregate_items = []
     for group in groups:
-        item = make_aggregate_search_item(group, base_api=base_api)
+        item = make_aggregate_search_item(
+            group, base_api=base_api, plugins=plugins,
+            min_source_score=min_source_score,
+        )
         if item:
             aggregate_items.append(item)
     return aggregate_items

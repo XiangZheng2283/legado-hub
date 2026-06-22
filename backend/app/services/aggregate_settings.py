@@ -1,14 +1,20 @@
-"""Settings repository and runtime constants for AI aggregate processing."""
+"""Settings repository and runtime constants for AI aggregate processing.
+
+All persistent settings now live in backend/config/app_config.json.
+This module provides the same public API as before but reads/writes the
+unified config file instead of split SQLite/JSON files.
+"""
 
 from __future__ import annotations
 
 import json
 import logging
-import sqlite3
 from copy import deepcopy
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from app.config import BACKEND_ROOT
+from app.core.app_config import AppConfig
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +42,6 @@ def resolve_sensitive_lexicon_path(raw_path: str | Path | None) -> Path:
        when the runtime CWD is the repo root or ``backend/``.)
     4. Otherwise resolve against ``BACKEND_ROOT``.
     """
-    from app.config import BACKEND_ROOT
-
     if not raw_path:
         return (BACKEND_ROOT / DEFAULT_LEXICON_PATH).resolve()
 
@@ -123,25 +127,11 @@ def runtime_contract() -> dict[str, Any]:
     }
 
 
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 def _merge_defaults(defaults: dict[str, Any], value: Any) -> dict[str, Any]:
     merged = deepcopy(defaults)
     if isinstance(value, dict):
         merged.update(value)
     return merged
-
-
-def _loads_dict(value: str | None) -> dict[str, Any]:
-    if not value:
-        return {}
-    try:
-        parsed = json.loads(value)
-    except Exception:
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
 
 
 def mask_api_key(value: str) -> str:
@@ -159,112 +149,59 @@ def _looks_masked(value: str) -> bool:
     return "..." in value or value == "*" * len(value)
 
 
-# ── JSON file helpers ────────────────────────────────────────────────────────
+def _provider_to_dict(provider) -> dict[str, Any]:
+    """Serialize AppConfig AI provider dataclass to frontend-facing dict."""
+    config = _merge_defaults(DEFAULT_AI_PROVIDER_CONFIG, {
+        "provider": provider.provider,
+        "name": provider.name,
+        "baseUrl": provider.base_url,
+        "apiKey": provider.api_key,
+        "apiKeyField": provider.api_key_field,
+        "model": provider.model,
+        "modelContextLength": provider.model_context_length,
+        "maxContextUseRatio": provider.max_context_use_ratio,
+        "maxOutputTokens": provider.max_output_tokens,
+        "timeoutMs": provider.timeout_ms,
+        "aiMaxConcurrency": provider.ai_max_concurrency,
+        "bookDefaultConcurrency": provider.book_default_concurrency,
+        "temperature": provider.temperature,
+        "topP": provider.top_p,
+        "frequencyPenalty": provider.frequency_penalty,
+        "presencePenalty": provider.presence_penalty,
+        "seed": provider.seed,
+        "endpointCandidates": provider.endpoint_candidates,
+        "modelsUrl": provider.models_url,
+        "customHeaders": provider.custom_headers,
+        "customBodyParams": provider.custom_body_params,
+        "thinkingLevel": provider.thinking_level,
+        "compatOverrides": provider.compat_overrides,
+    })
+    config["hasApiKey"] = bool(config.get("apiKey"))
+    return config
 
 
-def _read_json_file(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
-
-
-def _write_json_file(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+def _provider_from_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Build a normalized AI provider dict ready to be stored under ai.provider."""
+    current = _provider_to_dict(AppConfig.get().ai_provider)
+    api_key = str(data.get("apiKey") or "")
+    if _looks_masked(api_key) or not api_key:
+        data = {k: v for k, v in data.items() if k != "apiKey"}
+    current.update(data)
+    return current
 
 
 class AggregateSettingsRepository:
-    """Read/write aggregate settings.
+    """Read/write aggregate settings from the unified app_config.json."""
 
-    - contentWorkflow: stored in SQLite aggregate_settings table (unchanged)
-    - aiProviderConfig: stored as plain-text JSON file at AI_PROVIDER_CONFIG_PATH
-    """
-
-    def __init__(self, db_path: str | Path | None = None):
-        from app.config import DB_PATH, AI_PROVIDER_CONFIG_PATH
-
-        self.db_path = Path(db_path or DB_PATH)
-        self._ai_config_path = AI_PROVIDER_CONFIG_PATH
-
-    # ── DB helpers (for contentWorkflow) ─────────────────────────────────────
-
-    def _conn(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.db_path)
-
-    def migrate_legacy_settings(self, conn: sqlite3.Connection) -> None:
-        """Migrate contentWorkflow from admin_settings to aggregate_settings if needed."""
-        row = conn.execute(
-            "SELECT value_json FROM aggregate_settings WHERE key = 'contentWorkflow'"
-        ).fetchone()
-        if row:
-            return
-        legacy = conn.execute(
-            "SELECT value_json FROM admin_settings WHERE key = 'contentWorkflow'"
-        ).fetchone()
-        if not legacy:
-            return
-        conn.execute(
-            "INSERT OR REPLACE INTO aggregate_settings (key, value_json, updated_at) VALUES (?, ?, ?)",
-            ("contentWorkflow", legacy[0], _now()),
-        )
-
-    def _db_get_raw(self, key: str) -> dict[str, Any]:
-        with self._conn() as conn:
-            self.migrate_legacy_settings(conn)
-            row = conn.execute(
-                "SELECT value_json FROM aggregate_settings WHERE key = ?",
-                (key,),
-            ).fetchone()
-            conn.commit()
-        return _loads_dict(row[0] if row else None)
+    def __init__(self, db_path: Any | None = None):
+        # db_path is kept for API compatibility but is no longer used.
+        self._cfg = AppConfig.get()
 
     def content_workflow(self) -> dict[str, Any]:
-        return _merge_defaults(DEFAULT_CONTENT_WORKFLOW, self._db_get_raw("contentWorkflow"))
-
-    # ── AI provider config (JSON file) ──────────────────────────────────────
-
-    def _migrate_ai_config_from_db(self) -> dict[str, Any]:
-        """One-time migration: read encrypted aiProviderConfig from DB,
-        decrypt the API key, and write to the JSON file."""
-        raw = self._db_get_raw("aiProviderConfig")
-        if not raw:
-            return {}
-        # Decrypt the API key if it was encrypted.
-        api_key = str(raw.get("apiKey") or "")
-        if api_key:
-            try:
-                from app.ai.encryption import decrypt_api_key
-                raw["apiKey"] = decrypt_api_key(api_key)
-            except Exception:
-                pass  # Keep as-is if decryption fails (already plaintext).
-        _write_json_file(self._ai_config_path, raw)
-        logger.info("Migrated aiProviderConfig from database to %s", self._ai_config_path)
-        return raw
+        return _merge_defaults(DEFAULT_CONTENT_WORKFLOW, self._cfg.aggregate.content_workflow)
 
     def ai_provider_config(self) -> dict[str, Any]:
-        """Read AI provider config from JSON file. Falls back to DB migration."""
-        raw = _read_json_file(self._ai_config_path)
-        if not raw:
-            raw = self._migrate_ai_config_from_db()
-        config = _merge_defaults(DEFAULT_AI_PROVIDER_CONFIG, raw)
-        config["hasApiKey"] = bool(config.get("apiKey"))
-        return config
-
-    def _save_ai_provider_config(self, incoming: dict[str, Any]) -> None:
-        """Save AI provider config to JSON file, preserving existing API key if masked."""
-        current = self.ai_provider_config()
-        api_key = str(incoming.get("apiKey") or "")
-        if _looks_masked(api_key) or not api_key:
-            # Preserve the existing real key.
-            incoming = {k: v for k, v in incoming.items() if k != "apiKey"}
-        current.update(incoming)
-        _write_json_file(self._ai_config_path, current)
-
-    # ── Public API ──────────────────────────────────────────────────────────
+        return _provider_to_dict(self._cfg.ai_provider)
 
     def get_settings(self) -> dict[str, Any]:
         return {
@@ -274,23 +211,17 @@ class AggregateSettingsRepository:
         }
 
     def save_settings(self, payload: dict[str, Any]) -> dict[str, Any]:
-        # ── contentWorkflow → database (unchanged) ──────────────────────────
         if "contentWorkflow" in payload:
-            current_wf = _merge_defaults(DEFAULT_CONTENT_WORKFLOW, self._db_get_raw("contentWorkflow"))
             value = payload.get("contentWorkflow")
             if isinstance(value, dict):
+                current_wf = _merge_defaults(DEFAULT_CONTENT_WORKFLOW, self._cfg.aggregate.content_workflow)
                 current_wf.update(value)
-            with self._conn() as conn:
-                conn.execute(
-                    "INSERT OR REPLACE INTO aggregate_settings (key, value_json, updated_at) VALUES (?, ?, ?)",
-                    ("contentWorkflow", json.dumps(current_wf, ensure_ascii=False), _now()),
-                )
-                conn.commit()
+                self._cfg.set("aggregate.contentWorkflow", current_wf)
 
-        # ── aiProviderConfig → JSON file ────────────────────────────────────
         if "aiProviderConfig" in payload:
             value = payload.get("aiProviderConfig")
             if isinstance(value, dict):
-                self._save_ai_provider_config(value)
+                self._cfg.set("ai.provider", _provider_from_dict(value))
 
+        self._cfg.save()
         return self.get_settings()

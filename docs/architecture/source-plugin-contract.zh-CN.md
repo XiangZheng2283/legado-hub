@@ -14,6 +14,17 @@
 
 书源插件描述一个站点或同族站点的适配方式，而不是控制引擎。
 
+## 宿主层边界
+
+重构后，以下职责明确归属宿主层，插件不得绕过或重复实现：
+
+1. **配置集中化**：运行时配置统一由宿主从 `backend/config/app_config.json` 加载。旧的 `backend/config/source_pool.json`、`backend/config/aggregate_source.json` 和 `backend/data/ai_provider.json` 已废弃。
+2. **Cookie 文件归属宿主**：Cookie 由宿主统一保存到 `backend/config/cookies/<plugin_id>.json`。插件不再读取或写入自身目录内的 `Cookie.json`。宿主只负责不透明的加载、保存和清除；JSON 载荷结构由插件自行定义。
+3. **认证状态实时探测**：登录/认证状态不持久化到数据库。`auth_status` 由插件实时探测。宿主可以缓存 Cookie 载荷文件，但是否有效由插件判定。
+4. **搜索事件/插件健康/运行时代理状态不持久化**：搜索过程事件由 `SearchCoordinator` 在内存中维护；进程日志与调试数据写入 `backend/runtime/logs/`，不进入数据库。
+5. **代理策略收紧**：默认直连。仅当插件声明 `proxy.mode: always`，或 `proxy.mode: auto` 且 `proxy.required: true` 且宿主配置 `proxy.allowAutoRetry: true` 时才使用代理。`auto` 不再表示“每个源都先尝试代理”。
+6. **搜索调度归属宿主**：插件不应假设搜索过程事件会被持久化，也不应自行调度搜索重试。
+
 插件可以：
 
 - 构造站点特定的 URL。
@@ -156,11 +167,11 @@ sourceSeed:
 `enabled`：加载后默认是否启用。控制台可以按书源单独开关。
 
 `proxy.mode`：
-- `never`：永不使用运行时配置的代理。
-- `auto`：先直连，失败后再走代理。
+- `never`：永不使用运行时配置的代理（默认行为）。
+- `auto`：仅当 `proxy.required: true` 且宿主配置 `proxy.allowAutoRetry: true` 时才允许代理；不满足条件时保持直连。
 - `always`：始终通过配置的代理路由。
 
-`proxy.required`：若为 `true`，表示没有可用代理时该书源预期会失败。
+`proxy.required`：若为 `true`，表示该书源通常需要代理，但是否启用仍由 `proxy.mode` 与宿主 `proxy.allowAutoRetry` 共同决定。
 
 `browser.mode`：
 - `none`：不使用浏览器渲染。
@@ -568,6 +579,10 @@ ctx.cookies.clear(domain=None)
 await ctx.auth_status()
 await ctx.request_manual_login(login_url, cookie_domains, message="")
 ```
+
+`ctx.cookies` 是宿主提供的 Cookie 载荷抽象，宿主负责将载荷持久化到 `backend/config/cookies/<plugin_id>.json`。插件不应直接读写插件目录内的 `Cookie.json`。
+
+`auth_status` 由插件实时探测；登录/认证状态不写入数据库。宿主可以缓存 Cookie 文件，但 Cookie 是否有效由插件自行判断。
 
 浏览器/手动登录支持是受控的运行时功能。插件可以请求它，但控制台/后端决定如何呈现和执行。
 

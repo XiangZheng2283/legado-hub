@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { Puzzle, Power, PowerOff } from "lucide-react"
+import { Puzzle, Power, PowerOff, HeartPulse, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -48,10 +48,12 @@ export function Dashboard() {
         <Badge variant="outline">{stats.phase || "plugin-runtime-stage-3"}</Badge>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
         <StatCard label="书源总数" value={pluginStats.total || 0} icon={Puzzle} />
         <StatCard label="已启用" value={pluginStats.enabled || 0} icon={Power} />
         <StatCard label="禁用" value={pluginStats.disabled || 0} icon={PowerOff} />
+        <StatCard label="健康" value={pluginStats.healthy || 0} icon={HeartPulse} />
+        <StatCard label="异常" value={pluginStats.unhealthy || 0} icon={AlertTriangle} />
       </div>
 
       <Card>

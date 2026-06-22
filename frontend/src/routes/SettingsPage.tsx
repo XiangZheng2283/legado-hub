@@ -259,6 +259,16 @@ export function SettingsPage() {
             <div className="space-y-1"><Label>代理 URL</Label><Input value={sp.proxy?.url || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), url: e.target.value } } })} /></div>
             <div className="flex items-end gap-2 pb-1"><Switch checked={sp.proxy?.enabled || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), enabled: c } } })} /><Label>启用代理</Label></div>
           </div>
+          <div className="mt-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={sp.officialSourceInNormalSearch || false}
+                onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, officialSourceInNormalSearch: c } })}
+              />
+              <Label>启用官方源参与普通搜索</Label>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">开启后普通搜索同时搜第三方源和官方源，官方源命中额外 +50 分</p>
+          </div>
         </CardContent>
       </Card>
 

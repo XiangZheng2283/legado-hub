@@ -14,6 +14,17 @@
 
 A source plugin describes how one site or site family is adapted. It does not control the engine.
 
+## Host-Layer Boundaries
+
+After the refactor, the following responsibilities belong to the host layer and must not be bypassed or duplicated by plugins:
+
+1. **Configuration is centralized**: Runtime configuration is loaded by the host from `backend/config/app_config.json`. Old files `backend/config/source_pool.json`, `backend/config/aggregate_source.json`, and `backend/data/ai_provider.json` are retired.
+2. **Cookie files are host-owned**: Cookies are stored by the host at `backend/config/cookies/<plugin_id>.json`. Plugins no longer read or write `Cookie.json` inside their own directories. The host provides an opaque load/save/clear interface; the JSON payload structure is defined by the plugin.
+3. **Auth state is probed in real time**: Login/auth state is not persisted in the database. `auth_status` is probed in real time by the plugin. The host may cache the Cookie payload file, but the plugin decides whether the Cookie is valid.
+4. **Search events / plugin health / runtime proxy state are not persisted**: Search events are kept in memory by the `SearchCoordinator`; process logs and debug data go to `backend/runtime/logs/` instead of the database.
+5. **Proxy policy is tightened**: Default direct. Proxy is used only when a plugin declares `proxy.mode: always`, or `proxy.mode: auto` **and** `proxy.required: true` **and** the host config `proxy.allowAutoRetry: true`. `auto` no longer means "try proxy on every source".
+6. **Search scheduling is host-owned**: Plugins must not assume search process events will be persisted, nor schedule search retries themselves.
+
 Plugins may:
 
 - Build site-specific URLs.
@@ -161,11 +172,11 @@ sourceSeed:
 `enabled`: whether the source is enabled by default after loading. The console can toggle this per-source.
 
 `proxy.mode`:
-- `never`: never use the configured runtime proxy.
-- `auto`: try direct first, fallback to proxy on failure.
+- `never`: never use the configured runtime proxy (default behavior).
+- `auto`: proxy is allowed only when `proxy.required: true` and the host config `proxy.allowAutoRetry: true` are both satisfied; otherwise stays direct.
 - `always`: always route through the configured proxy.
 
-`proxy.required`: if `true`, the source is expected to fail without a working proxy.
+`proxy.required`: if `true`, the source normally needs a proxy, but whether it is enabled is still decided by `proxy.mode` together with the host's `proxy.allowAutoRetry`.
 
 `browser.mode`:
 - `none`: no browser rendering.
@@ -647,6 +658,10 @@ ctx.cookies.clear(domain=None)
 await ctx.auth_status()
 await ctx.request_manual_login(login_url, cookie_domains, message="")
 ```
+
+`ctx.cookies` is a host-provided Cookie payload abstraction; the host persists the payload to `backend/config/cookies/<plugin_id>.json`. Plugins must not read or write `Cookie.json` inside the plugin directory.
+
+`auth_status` is probed in real time by the plugin; login/auth state is not written to the database. The host may cache the Cookie file, but the plugin decides whether the Cookie is valid.
 
 Browser/manual-login support is a controlled runtime feature. Plugins may request it, but the console/backend decides how to present and execute it.
 

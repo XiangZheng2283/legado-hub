@@ -4,19 +4,18 @@ from __future__ import annotations
 
 import asyncio
 import json
-import threading
 from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from app.config import APP_PHASE, SOURCE_POOL_CONFIG_PATH
+from app.config import APP_PHASE
+from app.core.app_config import AppConfig
 from app.core.aggregate_config import load_aggregate_config, save_aggregate_config, update_progress
 from app.core.source_generator import write_aggregate_source
 from app.services.catalog import Catalog
 from app.services.book_catalog import BookCatalog
-from app.services.plugin_health_repository import PluginHealthRepository
-from app.services.plugin_auth_repository import PluginAuthRepository
+from app.services.cookie_store import CookieStore
 from app.services.search_jobs import SearchJobService
 from app.services.live_acceptance import LiveAcceptanceService
 from app.services.live_check_repository import LiveCheckRepository
@@ -28,7 +27,7 @@ from app.services.official_auth.manager import official_auth_manager
 from app.services.aggregate_reviews import empty_aggregate_reviews
 from app.services.aggregate_settings import AggregateSettingsRepository
 from app.source_plugins.loader import PluginLoader
-from app.source_plugins.scheduler import PluginScheduler
+from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
 
 console_router = APIRouter(prefix="/api/console")
 
@@ -59,7 +58,7 @@ def _write_json(path: Path, data: dict) -> None:
 # ---- Plugins ----
 
 _plugin_loader = PluginLoader()
-_plugin_scheduler = PluginScheduler()
+_plugin_scheduler = get_plugin_scheduler()
 
 
 def _smoke_dir(plugin_dir: Path) -> Path:
@@ -83,10 +82,27 @@ def _plugin_last_modified(plugin) -> str:
     return getattr(plugin.source, "last_modified", "") if plugin.source else ""
 
 
+def _plugin_health(plugin_id: str) -> dict:
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    state = get_runtime_state().get_state(plugin_id)
+    last_ping = state.get("lastPing") or {}
+    last_smoke = state.get("lastSmoke") or {}
+    last_error = state.get("lastError") or {}
+    return {
+        "pingStatus": last_ping.get("status", "unknown"),
+        "pingLatencyMs": last_ping.get("latencyMs", 0),
+        "pingTimestamp": last_ping.get("timestamp"),
+        "lastTestResult": "pass" if last_smoke.get("pass") else "fail" if last_smoke else None,
+        "lastSmokeTimestamp": last_smoke.get("timestamp"),
+        "lastError": last_error.get("message", ""),
+        "lastErrorTimestamp": last_error.get("timestamp"),
+    }
+
+
 @console_route("get", "/plugins")
 def list_plugins():
     plugins = _plugin_scheduler._plugins
-    repo = PluginHealthRepository()
     return {
         "items": [
             {
@@ -106,7 +122,7 @@ def list_plugins():
                 "proxyMode": (p.metadata.proxy or {}).get("mode", "auto"),
                 "browser": p.metadata.browser,
                 "lastModified": _plugin_last_modified(p),
-                "health": repo.get_plugin(p.metadata.id),
+                "health": _plugin_health(p.metadata.id),
             }
             for p in plugins.values()
         ],
@@ -117,15 +133,16 @@ def list_plugins():
 @console_route("get", "/official-sources")
 def list_official_sources():
     plugins = _plugin_scheduler._plugins
-    auth_repo = PluginAuthRepository()
-    health_repo = PluginHealthRepository()
+    cookie_store = CookieStore()
     items = []
     for plugin in plugins.values():
         auth_mode = (plugin.metadata.auth or {}).get("mode", "none")
         if not plugin.metadata.is_official_source() and auth_mode == "none":
             continue
-        status = auth_repo.get_status(plugin.metadata.id)
-        health = health_repo.get_plugin(plugin.metadata.id) or {}
+        payload = cookie_store.load(plugin.metadata.id)
+        has_cookies = bool(payload) and (
+            bool(payload.get("cookies")) if isinstance(payload, dict) else True
+        )
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
@@ -139,10 +156,7 @@ def list_official_sources():
             "lastModified": _plugin_last_modified(plugin),
             "browser": plugin.metadata.browser,
             "official": plugin.metadata.is_official_source(),
-            "authStatus": status,
-            "pingStatus": health.get("pingStatus", "unknown"),
-            "pingLatencyMs": health.get("pingLatencyMs", 0),
-            "lastPingAt": health.get("lastPingAt", ""),
+            "hasCookies": has_cookies,
         })
     items.sort(key=lambda item: (not item["official"], item["name"], item["pluginId"]))
     return {"items": items, "total": len(items)}
@@ -153,7 +167,6 @@ def get_plugin(plugin_id: str):
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
-    repo = PluginHealthRepository()
     return {
         "pluginId": plugin.metadata.id,
         "name": plugin.metadata.name,
@@ -175,8 +188,19 @@ def get_plugin(plugin_id: str):
         "proxy": plugin.metadata.proxy,
         "sourceSeed": plugin.metadata.source_seed,
         "lastModified": _plugin_last_modified(plugin),
-        "health": repo.get_plugin(plugin.metadata.id),
+        "health": _plugin_health(plugin_id),
     }
+
+
+@console_route("get", "/plugins/{plugin_id}/attempts")
+def get_plugin_attempts(plugin_id: str, limit: int = 20):
+    plugin = _plugin_scheduler._plugins.get(plugin_id)
+    if not plugin:
+        return {"error": "插件不存在"}
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    attempts = get_runtime_state().get_attempts(plugin_id, limit=limit)
+    return {"pluginId": plugin_id, "attempts": attempts}
 
 
 @console_route("post", "/plugins/reload")
@@ -192,8 +216,7 @@ def enable_plugin(plugin_id: str, payload: dict):
         return {"error": "插件不存在"}
     enabled = payload.get("enabled", True)
     plugin.metadata.enabled = enabled
-    repo = PluginHealthRepository()
-    repo.set_enabled(plugin_id, enabled)
+    AppConfig.get().set_plugin_enabled(plugin_id, enabled)
     return {"pluginId": plugin_id, "enabled": enabled}
 
 
@@ -201,13 +224,13 @@ def enable_plugin(plugin_id: str, payload: dict):
 def batch_enable_plugins(payload: dict):
     plugin_ids = payload.get("pluginIds", [])
     enabled = payload.get("enabled", True)
-    repo = PluginHealthRepository()
+    cfg = AppConfig.get()
     results = []
     for plugin_id in plugin_ids:
         plugin = _plugin_scheduler._plugins.get(plugin_id)
         if plugin:
             plugin.metadata.enabled = enabled
-            repo.set_enabled(plugin_id, enabled)
+            cfg.set_plugin_enabled(plugin_id, enabled)
             results.append({"pluginId": plugin_id, "enabled": enabled})
         else:
             results.append({"pluginId": plugin_id, "error": "插件不存在"})
@@ -217,18 +240,13 @@ def batch_enable_plugins(payload: dict):
 @console_route("post", "/plugins/batch-delete")
 def batch_delete_plugins(payload: dict):
     plugin_ids = payload.get("pluginIds", [])
-    repo = PluginHealthRepository()
+    cfg = AppConfig.get()
     results = []
     for plugin_id in plugin_ids:
         plugin = _plugin_scheduler._plugins.get(plugin_id)
         if plugin:
             plugin.metadata.enabled = False
-        # Also remove from health repo
-        repo.set_enabled(plugin_id, False)
-        with repo._conn() as conn:
-            conn.execute("DELETE FROM plugin_health WHERE plugin_id = ?", (plugin_id,))
-            conn.execute("DELETE FROM plugin_attempts WHERE plugin_id = ?", (plugin_id,))
-            conn.commit()
+        cfg.set_plugin_enabled(plugin_id, False)
         # Remove from filesystem
         source_dir = Path("plugins/sources") / plugin_id
         if source_dir.exists():
@@ -265,6 +283,15 @@ async def ping_one_plugin(plugin_id: str):
 async def smoke_plugin(plugin_id: str, payload: dict | None = None):
     keyword = (payload or {}).get("keyword", "凡人修仙传")
     result = await _plugin_scheduler.smoke(plugin_id, keyword=keyword)
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    runtime_state = get_runtime_state()
+    runtime_state.record_smoke(
+        plugin_id,
+        passed=bool(result.get("pass")),
+        message=result.get("message", ""),
+        error=result.get("error"),
+    )
     return result
 
 
@@ -273,13 +300,21 @@ async def get_plugin_auth(plugin_id: str):
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
-    auth_repo = PluginAuthRepository()
+    cookie_store = CookieStore()
+    payload = cookie_store.load(plugin_id)
+    has_cookies = bool(payload) and (
+        bool(payload.get("cookies")) if isinstance(payload, dict) else True
+    )
+    cookie_domains: list[str] = []
+    if isinstance(payload, dict):
+        cookies = payload.get("cookies")
+        if isinstance(cookies, dict):
+            cookie_domains = sorted(cookies.keys())
+
     auth_meta = plugin.metadata.auth or {}
     if auth_meta.get("mode", "none") == "none":
-        stored = auth_repo.get_status(plugin_id)
         browser_meta = plugin.metadata.browser or {}
         if browser_meta.get("mode") == "required":
-            has_cookies = stored.get("hasCookies", False)
             return {
                 "sourceId": plugin_id,
                 "mode": "browser_bypass",
@@ -293,7 +328,7 @@ async def get_plugin_auth(plugin_id: str):
                 ),
                 "requiredActions": ["retry_live_check"] if has_cookies else ["bypass_required"],
                 "hasCookies": has_cookies,
-                "cookieDomains": stored.get("cookieDomains", []),
+                "cookieDomains": cookie_domains,
                 "verificationStatus": "cookies_saved" if has_cookies else "bypass_required",
             }
         return {
@@ -304,43 +339,40 @@ async def get_plugin_auth(plugin_id: str):
             "expiresAt": "",
             "message": "该插件无需登录",
             "requiredActions": [],
-            "hasCookies": stored.get("hasCookies", False),
-            "cookieDomains": stored.get("cookieDomains", []),
+            "hasCookies": has_cookies,
+            "cookieDomains": cookie_domains,
         }
     if "auth" not in plugin.capabilities:
-        stored = auth_repo.get_status(plugin_id)
-        stored.update({
+        return {
+            "sourceId": plugin_id,
             "mode": auth_meta.get("mode", "optional"),
+            "authenticated": False,
+            "accountName": "",
+            "expiresAt": "",
             "message": "该插件尚未实现登录检测方法",
             "requiredActions": ["manual_login"] if auth_meta.get("loginUrl") else [],
-        })
-        return stored
+            "hasCookies": has_cookies,
+            "cookieDomains": cookie_domains,
+        }
     ctx = _plugin_scheduler._make_ctx(plugin_id)
-    stored = auth_repo.get_status(plugin_id)
     try:
         result = await plugin.source.auth_status(ctx)
         result.setdefault("mode", auth_meta.get("mode", "optional"))
-        # Preserve a previously known account name when the probe only confirms
-        # login without returning a nickname, or when cookies are still present
-        # but the remote probe transiently fails.
-        if not result.get("accountName") and stored.get("accountName"):
-            result["accountName"] = stored["accountName"]
-        # If the probe says not logged in but we still have saved cookies,
-        # surface a clear action instead of silently showing "未登录".
-        if not result.get("authenticated") and stored.get("hasCookies"):
+        if not result.get("authenticated") and has_cookies:
             result.setdefault("requiredActions", ["check_auth_status"])
             if not result.get("message"):
                 result["message"] = "Cookie 已保存，但远程登录态校验未通过"
-        auth_repo.update_status(plugin_id, result)
     except Exception as exc:
         result = {
             "sourceId": plugin_id,
             "mode": auth_meta.get("mode", "optional"),
             "authenticated": False,
-            "accountName": stored.get("accountName", ""),
+            "accountName": "",
             "expiresAt": "",
             "message": str(exc),
-            "requiredActions": ["check_auth_status"] if stored.get("hasCookies") else [],
+            "requiredActions": ["check_auth_status"] if has_cookies else [],
+            "hasCookies": has_cookies,
+            "cookieDomains": cookie_domains,
         }
     finally:
         await ctx._fetcher.close()
@@ -377,16 +409,12 @@ async def check_plugin_auth(plugin_id: str):
 
 @console_route("post", "/plugins/{plugin_id}/cookies/clear")
 def clear_plugin_cookies(plugin_id: str):
-    from app.services import plugin_cookie_file_store
-
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
     ctx = _plugin_scheduler._make_ctx(plugin_id)
     ctx.cookies.clear()
-    PluginAuthRepository().clear_cookies(plugin_id)
-    # For qidian_com, Cookie.json is the truth source and must also be removed.
-    plugin_cookie_file_store.clear(plugin_id)
+    CookieStore().clear(plugin_id)
     return {"cleared": True, "pluginId": plugin_id}
 
 
@@ -530,35 +558,65 @@ def _get_active_login_session(plugin_id: str) -> dict | None:
     return candidate.to_dict() if candidate else None
 
 
-# ---- Plugin Health ----
+# ---- Sources ----
 
 @console_route("get", "/sources")
 def list_sources(
     enabled_only: bool = False,
-    health_status: str | None = None,
     limit: int = 100,
     offset: int = 0,
 ):
-    repo = PluginHealthRepository()
-    items = repo.get_plugins(enabled_only=enabled_only, health_status=health_status, limit=limit, offset=offset)
-    # Enrich with lastModified from loaded plugins
-    for item in items:
-        plugin_id = item.get("pluginId", "")
-        plugin = _plugin_scheduler._plugins.get(plugin_id)
-        if plugin:
-            item["lastModified"] = _plugin_last_modified(plugin)
-    stats = repo.get_stats()
-    return {"items": items, "stats": stats, "limit": limit, "offset": offset, "legacyAlias": True}
+    all_plugins = list(_plugin_scheduler._plugins.values())
+    if enabled_only:
+        all_plugins = [p for p in all_plugins if p.metadata.enabled]
+    total = len(all_plugins)
+    page_plugins = all_plugins[offset : offset + limit]
+    items = []
+    for plugin in page_plugins:
+        items.append({
+            "pluginId": plugin.metadata.id,
+            "name": plugin.metadata.name,
+            "version": plugin.metadata.version,
+            "enabled": plugin.metadata.enabled,
+            "official": plugin.metadata.is_official_source(),
+            "capabilities": plugin.capabilities,
+            "domains": plugin.metadata.domains,
+            "baseUrls": plugin.metadata.base_urls,
+            "tags": plugin.metadata.tags,
+            "auth": plugin.metadata.auth,
+            "content": plugin.metadata.content,
+            "proxyMode": (plugin.metadata.proxy or {}).get("mode", "auto"),
+            "proxyRequired": bool((plugin.metadata.proxy or {}).get("required")),
+            "browser": plugin.metadata.browser,
+            "lastModified": _plugin_last_modified(plugin),
+        })
+    return {"items": items, "limit": limit, "offset": offset, "total": total}
 
 
 @console_route("get", "/sources/{source_id}")
 def get_source(source_id: str):
-    repo = PluginHealthRepository()
-    src = repo.get_plugin(source_id)
-    if not src:
+    plugin = _plugin_scheduler._plugins.get(source_id)
+    if not plugin:
         return {"error": "书源不存在"}
-    attempts = repo.get_attempts(source_id, limit=20)
-    return {"source": src, "attempts": attempts}
+    return {
+        "source": {
+            "pluginId": plugin.metadata.id,
+            "name": plugin.metadata.name,
+            "version": plugin.metadata.version,
+            "enabled": plugin.metadata.enabled,
+            "official": plugin.metadata.is_official_source(),
+            "capabilities": plugin.capabilities,
+            "domains": plugin.metadata.domains,
+            "baseUrls": plugin.metadata.base_urls,
+            "tags": plugin.metadata.tags,
+            "auth": plugin.metadata.auth,
+            "content": plugin.metadata.content,
+            "proxyMode": (plugin.metadata.proxy or {}).get("mode", "auto"),
+            "proxyRequired": bool((plugin.metadata.proxy or {}).get("required")),
+            "browser": plugin.metadata.browser,
+            "lastModified": _plugin_last_modified(plugin),
+        }
+    }
 
 
 @console_route("post", "/sources/{source_id}/test")
@@ -591,18 +649,12 @@ async def stream_search(keyword: str = "", page: int = 1, limit: int | None = No
 
 @console_route("post", "/sources/{source_id}/enable")
 def enable_source(source_id: str, payload: dict):
-    repo = PluginHealthRepository()
+    plugin = _plugin_scheduler._plugins.get(source_id)
     enabled = payload.get("enabled", True)
-    repo.set_enabled(source_id, enabled)
+    if plugin:
+        plugin.metadata.enabled = enabled
+    AppConfig.get().set_plugin_enabled(source_id, enabled)
     return {"sourceId": source_id, "enabled": enabled}
-
-
-@console_route("post", "/sources/{source_id}/proxy-mode")
-def set_proxy_mode(source_id: str, payload: dict):
-    repo = PluginHealthRepository()
-    proxy_mode = payload.get("proxyMode", "auto")
-    repo.set_proxy_mode(source_id, proxy_mode)
-    return {"sourceId": source_id, "proxyMode": proxy_mode}
 
 
 # ---- Search Jobs ----
@@ -615,41 +667,76 @@ _live_acceptance_service = LiveAcceptanceService(
 )
 
 
-def _run_search_job_blocking(job_id: str) -> None:
-    asyncio.run(_search_service.run_job(job_id))
+def _schedule_console_search(job_id: str) -> None:
+    """Schedule a search job to run in the background event loop."""
+    _search_service.schedule_job(job_id)
 
 
 @console_route("post", "/search-jobs")
 async def create_search_job(payload: dict):
+    """Create a source search job.  Always starts a live search."""
     keyword = payload.get("keyword", "")
     page = payload.get("page", 1)
     limit = payload.get("limit")
     source_ids = payload.get("sourceIds")
-    job = _search_service.create_job(keyword=keyword, page=page, limit=limit, source_ids=source_ids)
-    job.status = "running"
-    queued_event = {
-        "type": "queued",
-        "keyword": keyword,
-        "page": page,
-        "sourceCount": len(job.sources),
-        "completedCount": 0,
-    }
-    job.events.append(queued_event)
-    _search_service.persist_job(job)
-    threading.Thread(target=_run_search_job_blocking, args=(job.job_id,), daemon=True).start()
+
+    job = _search_service.create_job(
+        keyword=keyword, page=page, limit=limit,
+        source_ids=source_ids, search_mode="source",
+    )
+
     return {
         "jobId": job.job_id,
-        "status": job.status,
-        "keyword": keyword,
-        "page": page,
+        "status": "running",
+        "keyword": job.keyword,
+        "page": job.page,
+        "searchMode": "source",
         "sourceCount": len(job.sources),
         "completedCount": 0,
         "successCount": 0,
         "errorCount": 0,
         "timeoutCount": 0,
         "elapsedMs": 0,
+        "result": {"items": [], "candidateGroups": []},
         "candidateGroups": [],
-        "events": [queued_event],
+        "events": [],
+        "liveSearchPending": True,
+    }
+
+
+@console_route("post", "/search/aggregate")
+async def create_aggregate_search(payload: dict):
+    """Create an aggregate search job.
+
+    Internally runs a source search first, then aggregates results.
+    Only aggregate items are returned in the result.
+    """
+    keyword = payload.get("keyword", "")
+    page = payload.get("page", 1)
+    limit = payload.get("limit")
+    source_ids = payload.get("sourceIds")
+
+    job = _search_service.create_job(
+        keyword=keyword, page=page, limit=limit,
+        source_ids=source_ids, search_mode="aggregate",
+    )
+
+    return {
+        "jobId": job.job_id,
+        "status": "running",
+        "keyword": job.keyword,
+        "page": job.page,
+        "searchMode": "aggregate",
+        "sourceCount": len(job.sources),
+        "completedCount": 0,
+        "successCount": 0,
+        "errorCount": 0,
+        "timeoutCount": 0,
+        "elapsedMs": 0,
+        "result": {"items": [], "candidateGroups": []},
+        "candidateGroups": [],
+        "events": [],
+        "liveSearchPending": True,
     }
 
 
@@ -660,6 +747,29 @@ def list_search_jobs(limit: int = 20):
 
 @console_route("get", "/search-jobs/{job_id}")
 def get_search_job(job_id: str):
+    """Get search job status and results using the session model."""
+    # Try session snapshot first (in-memory, includes merged items).
+    snapshot = _search_service.session_snapshot(
+        job_id, base_api=None, include_official_sources=True
+    )
+    if snapshot:
+        # Apply score filter to items.
+        items = snapshot.get("items", [])
+        if items:
+            filtered_items, score_filter, filtered_count = _search_service._apply_score_filter(items)
+            if filtered_count > 0:
+                snapshot["items"] = filtered_items
+                from app.services.live_acceptance import group_candidates
+                snapshot["candidateGroups"] = group_candidates(
+                    filtered_items, snapshot.get("keyword", "")
+                )
+            debug = dict(snapshot.get("debug") or {})
+            debug["scoreFilter"] = score_filter
+            debug["filteredCount"] = filtered_count
+            snapshot["debug"] = debug
+        return snapshot
+
+    # Fallback: try DB for historical job.
     job = _search_service.get_job(job_id)
     if not job:
         return {"error": "任务不存在"}
@@ -670,19 +780,25 @@ def get_search_job(job_id: str):
         filtered_items, score_filter, filtered_count = _search_service._apply_score_filter(items)
         if filtered_count > 0:
             items = filtered_items
-            # Rebuild candidate groups from filtered items
             from app.services.live_acceptance import group_candidates
             candidate_groups = group_candidates(items, job.keyword)
         debug = dict(result.get("debug", {}))
         debug["scoreFilter"] = score_filter
         debug["filteredCount"] = filtered_count
         result = {**result, "items": items, "debug": debug}
+    # When loaded from DB, job.sources is empty. Use source_count from the
+    # result debug or fall back to len(job.sources).
+    db_source_count = (
+        result.get("debug", {}).get("sourceCount")
+        or len(job.sources)
+        or 0
+    )
     return {
         "jobId": job.job_id,
         "status": job.status,
         "keyword": job.keyword,
         "page": job.page,
-        "sourceCount": len(job.sources),
+        "sourceCount": db_source_count,
         "completedCount": job.completed_count,
         "successCount": job.success_count,
         "errorCount": job.error_count,
@@ -690,6 +806,7 @@ def get_search_job(job_id: str):
         "elapsedMs": job.elapsed_ms,
         "result": result,
         "candidateGroups": candidate_groups,
+        "liveSearchPending": job.status in {"running", "pending"},
     }
 
 
@@ -937,7 +1054,7 @@ def get_cache():
     import sqlite3
     from app.config import DB_PATH
     with sqlite3.connect(DB_PATH) as conn:
-        search_count = conn.execute("SELECT COUNT(*) FROM search_cache").fetchone()[0]
+        search_count = conn.execute("SELECT COUNT(*) FROM book_search_cache").fetchone()[0]
         book_count = conn.execute("SELECT COUNT(*) FROM book_cache").fetchone()[0]
         toc_count = conn.execute("SELECT COUNT(*) FROM toc_cache").fetchone()[0]
         chapter_count = conn.execute("SELECT COUNT(*) FROM chapter_cache").fetchone()[0]
@@ -968,9 +1085,10 @@ def list_cache_items(limit: int = 50):
     with sqlite3.connect(DB_PATH) as conn:
         search_rows = conn.execute(
             """
-            SELECT keyword, page, response_json, created_at
-            FROM search_cache
-            ORDER BY created_at DESC
+            SELECT match_mode, normalized_name, source_id, source_name,
+                   raw_book_url, score, first_seen_at, last_seen_at, expires_at
+            FROM book_search_cache
+            ORDER BY last_seen_at DESC
             LIMIT ?
             """,
             (limit,),
@@ -1004,14 +1122,18 @@ def list_cache_items(limit: int = 50):
         ).fetchall()
 
     searches = []
-    for keyword, page, response_json, created_at in search_rows:
-        payload = _json_payload(response_json)
-        items = payload.get("items") if isinstance(payload.get("items"), list) else []
+    for (match_mode, norm_name, source_id, source_name,
+         raw_book_url, score, first_seen, last_seen, expires_at) in search_rows:
         searches.append({
-            "keyword": keyword,
-            "page": page,
-            "itemCount": len(items),
-            "createdAt": created_at,
+            "matchMode": match_mode,
+            "normalizedName": norm_name,
+            "sourceId": source_id,
+            "sourceName": source_name,
+            "rawBookUrl": raw_book_url,
+            "score": score,
+            "firstSeenAt": first_seen,
+            "lastSeenAt": last_seen,
+            "expiresAt": expires_at,
         })
 
     books = []
@@ -1069,7 +1191,7 @@ def clear_cache():
     import sqlite3
     from app.config import DB_PATH
     with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("DELETE FROM search_cache")
+        conn.execute("DELETE FROM book_search_cache")
         conn.execute("DELETE FROM book_cache")
         conn.execute("DELETE FROM toc_cache")
         conn.execute("DELETE FROM chapter_cache")
@@ -1084,7 +1206,7 @@ def clear_cache_post(payload: dict):
     from app.config import DB_PATH
     with sqlite3.connect(DB_PATH) as conn:
         if cache_type in ("all", "search"):
-            conn.execute("DELETE FROM search_cache")
+            conn.execute("DELETE FROM book_search_cache")
         if cache_type in ("all", "book"):
             conn.execute("DELETE FROM book_cache")
         if cache_type in ("all", "toc"):
@@ -1095,58 +1217,81 @@ def clear_cache_post(payload: dict):
     return {"cleared": True, "type": cache_type}
 
 
+def _source_pool_from_config(cfg: AppConfig) -> dict:
+    return {
+        "proxy": {
+            "enabled": cfg.proxy.enabled,
+            "url": cfg.proxy.url,
+            "allowAutoRetry": cfg.proxy.allow_auto_retry,
+        },
+        "max_concurrency": cfg.search.global_source_concurrency,
+        "source_batch_size": 20,
+        "source_timeout_seconds": cfg.search.source_timeout_seconds,
+        "overall_search_timeout_seconds": cfg.search.overall_timeout_seconds,
+        "browser_source_timeout_seconds": cfg.search.browser_source_timeout_seconds,
+        "browser_search_timeout_seconds": cfg.search.browser_search_timeout_seconds,
+        "default_user_agent": cfg.search.default_user_agent,
+        "officialSourceInNormalSearch": cfg.search.official_source_in_normal_search,
+    }
+
+
+def _apply_source_pool_to_config(cfg: AppConfig, sp: dict) -> None:
+    proxy = sp.get("proxy") or {}
+    cfg.set("proxy.enabled", bool(proxy.get("enabled", cfg.proxy.enabled)))
+    cfg.set("proxy.url", str(proxy.get("url", cfg.proxy.url)))
+    cfg.set(
+        "proxy.allowAutoRetry",
+        bool(proxy.get("allowAutoRetry", cfg.proxy.allow_auto_retry)),
+    )
+    cfg.set("search.globalSourceConcurrency", int(sp.get("max_concurrency", cfg.search.global_source_concurrency)))
+    cfg.set("search.sourceTimeoutSeconds", float(sp.get("source_timeout_seconds", cfg.search.source_timeout_seconds)))
+    cfg.set("search.overallTimeoutSeconds", float(sp.get("overall_search_timeout_seconds", cfg.search.overall_timeout_seconds)))
+    cfg.set("search.browserSourceTimeoutSeconds", float(sp.get("browser_source_timeout_seconds", cfg.search.browser_source_timeout_seconds)))
+    cfg.set("search.browserSearchTimeoutSeconds", float(sp.get("browser_search_timeout_seconds", cfg.search.browser_search_timeout_seconds)))
+    cfg.set("search.defaultUserAgent", str(sp.get("default_user_agent", cfg.search.default_user_agent)))
+    cfg.set("search.officialSourceInNormalSearch", bool(sp.get("officialSourceInNormalSearch", cfg.search.official_source_in_normal_search)))
+
+
 # ---- Settings ----
 
 @console_route("get", "/settings")
 def get_settings():
-    import sqlite3
-    from app.config import DB_PATH
-    with sqlite3.connect(DB_PATH) as conn:
-        rows = conn.execute("SELECT key, value_json FROM admin_settings").fetchall()
-    settings = {r[0]: r[1] for r in rows}
-    from app.config import get_default_user_agent
-
-    settings["sourcePool"] = _read_json(SOURCE_POOL_CONFIG_PATH, {})
-    settings["sourcePool"].setdefault("default_user_agent", get_default_user_agent())
-    if isinstance(settings.get("contentWorkflow"), str):
-        settings["contentWorkflow"] = _json_payload(settings.get("contentWorkflow"))
-    settings.setdefault("searchScoreFilter", 100)
-    settings.setdefault("contentWorkflow", {
-        "aggregationMode": "balanced",
-        "autoAggregate": True,
-        "processAggregateOnRead": True,
-        "aggregateCheckIntervalMinutes": 30,
-        "returnOnlyAggregateSource": False,
-        "sourceCandidateLimit": 6,
-        "purifyMode": "conservative",
-        "blockedWordRepair": False,
-        "aiProvider": "",
-        "model": "",
-    })
-    settings["legacy"] = {
-        "ruleEngines": _legacy_archived("rule_engines"),
-        "sourceSubscriptions": _legacy_archived("source_subscriptions"),
+    cfg = AppConfig.get()
+    settings = {
+        "sourcePool": _source_pool_from_config(cfg),
+        "searchScoreFilter": cfg.search.score_filter,
+        "searchConfig": {
+            "overallTimeoutSeconds": cfg.search.overall_timeout_seconds,
+            "firstResultTimeoutSeconds": cfg.search.first_result_timeout_seconds,
+            "sourceTimeoutSeconds": cfg.search.source_timeout_seconds,
+            "cacheTtlSeconds": cfg.search.cache_ttl_seconds,
+        },
+        "contentWorkflow": cfg.aggregate.content_workflow,
+        "legacy": {
+            "ruleEngines": _legacy_archived("rule_engines"),
+            "sourceSubscriptions": _legacy_archived("source_subscriptions"),
+        },
     }
     return settings
 
 
 @console_route("post", "/settings")
 def update_settings(payload: dict):
-    import sqlite3
-    from app.config import DB_PATH
-    with sqlite3.connect(DB_PATH) as conn:
-        for key, value in payload.items():
-            conn.execute(
-                "INSERT OR REPLACE INTO admin_settings (key, value_json, updated_at) VALUES (?, ?, datetime('now'))",
-                (key, value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)),
-            )
-        conn.commit()
+    cfg = AppConfig.get()
     if "sourcePool" in payload and isinstance(payload["sourcePool"], dict):
-        current = _read_json(SOURCE_POOL_CONFIG_PATH, {})
-        current.update(payload["sourcePool"])
-        _write_json(SOURCE_POOL_CONFIG_PATH, current)
-        _plugin_scheduler.config = current
-        _search_service.scheduler.config = current
+        _apply_source_pool_to_config(cfg, payload["sourcePool"])
+    if "searchScoreFilter" in payload:
+        try:
+            score = int(payload["searchScoreFilter"])
+            if score >= 0:
+                cfg.set("search.scoreFilter", score)
+        except (TypeError, ValueError):
+            pass
+    if "contentWorkflow" in payload and isinstance(payload["contentWorkflow"], dict):
+        cfg.set("aggregate.contentWorkflow", payload["contentWorkflow"])
+    cfg.save()
+    _plugin_scheduler.refresh_config()
+    _search_service.scheduler.refresh_config()
     return {"saved": True}
 
 
@@ -1640,36 +1785,49 @@ async def get_aggregate_chapter_reviews(book_id: str, chapter_id: str):
 
 @console_route("get", "/progress")
 def get_progress():
-    repo = PluginHealthRepository()
-    stats = repo.get_stats()
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    runtime_state = get_runtime_state()
     plugin_count = len(_plugin_scheduler._plugins)
     enabled_plugin_count = sum(1 for p in _plugin_scheduler._plugins.values() if p.metadata.enabled)
+    proxy_needed_count = sum(
+        1 for p in _plugin_scheduler._plugins.values()
+        if bool((p.metadata.proxy or {}).get("required"))
+    )
+    healthy_count = 0
+    for p in _plugin_scheduler._plugins.values():
+        state = runtime_state.get_state(p.metadata.id)
+        last_ping = state.get("lastPing") or {}
+        last_smoke = state.get("lastSmoke") or {}
+        if last_ping.get("status") == "reachable" or last_smoke.get("pass") is True:
+            healthy_count += 1
     plugin_stats = {
         "total": plugin_count,
         "enabled": enabled_plugin_count,
-        "healthy": stats.get("healthy", 0),
-        "disabled": stats.get("disabled", 0),
-        "proxyNeeded": stats.get("proxyNeeded", 0),
+        "healthy": healthy_count,
+        "disabled": plugin_count - enabled_plugin_count,
+        "proxyNeeded": proxy_needed_count,
     }
     progress = {
         "pluginStats": plugin_stats,
-        "configured_sources": stats.get("total", 0),  # compat alias
-        "enabled_sources": stats.get("enabled", 0),  # compat alias
-        "healthy_sources": stats.get("healthy", 0),  # compat alias
-        "proxy_sources": stats.get("proxyNeeded", 0),  # compat alias
-        "unsupported_sources": stats.get("unsupported", 0),  # compat alias
-        "plugin_count": plugin_count,  # compat alias
-        "enabled_plugin_count": enabled_plugin_count,  # compat alias
+        "configured_sources": plugin_count,
+        "enabled_sources": enabled_plugin_count,
+        "healthy_sources": healthy_count,
+        "proxy_sources": proxy_needed_count,
+        "unsupported_sources": 0,
+        "plugin_count": plugin_count,
+        "enabled_plugin_count": enabled_plugin_count,
     }
     update_progress(progress)
     config = load_aggregate_config()
     return {
         "aggregate": config.get("parser_progress", {}),
         "pluginStats": plugin_stats,
-        "sources": stats,  # compat alias
-        "plugins": {  # compat alias
+        "sources": plugin_stats,
+        "plugins": {
             "total": plugin_count,
             "enabled": enabled_plugin_count,
+            "healthy": healthy_count,
         },
     }
 
@@ -1734,23 +1892,33 @@ def audit_source_rule(source_id: str):
 
 @console_route("get", "/verification")
 def get_verification():
-    repo = PluginHealthRepository()
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    runtime_state = get_runtime_state()
     items = []
+    passed = 0
+    failed = 0
     for plugin in _plugin_scheduler._plugins.values():
-        health = repo.get_plugin(plugin.metadata.id) or {}
-        result = health.get("lastTestResult")
+        state = runtime_state.get_state(plugin.metadata.id)
+        last_smoke = state.get("lastSmoke") or {}
+        last_error = state.get("lastError") or {}
+        smoke_pass = last_smoke.get("pass")
+        if smoke_pass is True:
+            passed += 1
+        elif smoke_pass is False:
+            failed += 1
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
             "hasFixtureSmoke": (_smoke_dir(_plugin_scheduler.loader.plugins_dir / plugin.metadata.id) / "smoke.yaml").exists(),
-            "lastSmokePass": result.get("pass") if isinstance(result, dict) else None,
-            "lastError": health.get("lastError", ""),
+            "lastSmokePass": smoke_pass,
+            "lastSmokeTimestamp": last_smoke.get("timestamp"),
+            "lastError": last_error.get("message", ""),
+            "lastErrorTimestamp": last_error.get("timestamp"),
             "authMode": (plugin.metadata.auth or {}).get("mode", "none"),
             "capabilities": plugin.capabilities,
             "lastModified": _plugin_last_modified(plugin),
         })
-    passed = sum(1 for item in items if item["lastSmokePass"] is True)
-    failed = sum(1 for item in items if item["lastSmokePass"] is False)
     return {
         "summary": {"passed": passed, "failed": failed, "total": len(items)},
         "items": items,
@@ -1767,9 +1935,18 @@ def get_verification():
 
 @console_route("post", "/verification/run")
 async def run_verification(payload: dict | None = None):
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    runtime_state = get_runtime_state()
     items = []
     for plugin_id in sorted(_plugin_scheduler._plugins):
         result = await _plugin_scheduler.smoke(plugin_id)
+        runtime_state.record_smoke(
+            plugin_id,
+            passed=bool(result.get("pass")),
+            message=result.get("message", ""),
+            error=result.get("error"),
+        )
         items.append({
             "pluginId": plugin_id,
             "pass": result.get("pass", False),
@@ -1790,10 +1967,25 @@ def get_status():
     total = len(plugins)
     enabled = sum(1 for p in plugins.values() if p.metadata.enabled)
     disabled = total - enabled
+    from app.services.plugin_runtime_state import get_runtime_state
+
+    runtime_state = get_runtime_state()
+    healthy = 0
+    unhealthy = 0
+    for p in plugins.values():
+        state = runtime_state.get_state(p.metadata.id)
+        last_ping = state.get("lastPing") or {}
+        last_smoke = state.get("lastSmoke") or {}
+        if last_ping.get("status") == "reachable" or last_smoke.get("pass") is True:
+            healthy += 1
+        elif last_ping.get("status") in ("unreachable",) or last_smoke.get("pass") is False:
+            unhealthy += 1
     plugin_stats = {
         "total": total,
         "enabled": enabled,
         "disabled": disabled,
+        "healthy": healthy,
+        "unhealthy": unhealthy,
     }
     return {
         "pluginStats": plugin_stats,
@@ -1801,6 +1993,8 @@ def get_status():
         "plugins": {  # compatibility alias
             "total": total,
             "enabled": enabled,
+            "healthy": healthy,
+            "unhealthy": unhealthy,
         },
         "version": "0.1.0",
         "phase": APP_PHASE,

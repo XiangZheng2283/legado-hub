@@ -14,16 +14,32 @@ from lxml import html as lh
 from bs4 import BeautifulSoup
 
 from app.services.access_bridge.facade import SourceAccessBridge
+from app.services.cookie_store import CookieStore
 from app.services.text_convert import to_simplified, to_traditional
 from app.source_plugins.fetcher import Fetcher
 from app.source_plugins.errors import ParseEmpty, ParseError
 
 
 class CookieJar:
-    def __init__(self, fetcher: Fetcher, plugin_id: str, auth_repository: Any = None):
+    """Per-plugin cookie jar backed by the host CookieStore.
+
+    The host only stores/retrieves an opaque JSON payload. This class keeps the
+    existing convention of wrapping the domain-keyed jar as
+    ``{"cookies": {"domain": {"name": "value"}}}`` for backward compatibility
+    with current plugins, but the file path and persistence are owned by the host.
+    """
+
+    def __init__(
+        self,
+        fetcher: Fetcher,
+        plugin_id: str,
+        cookie_store: CookieStore | None = None,
+        allowed: bool = True,
+    ):
         self._fetcher = fetcher
         self._plugin_id = plugin_id
-        self._auth_repository = auth_repository
+        self._store = cookie_store or CookieStore()
+        self._allowed = allowed
         self._known_domains: set[str] = set()
 
     def get(self, domain: str, name: str | None = None) -> str | dict[str, str] | None:
@@ -33,13 +49,46 @@ class CookieJar:
             return jar if jar else None
         return jar.get(name)
 
+
+
+    def _guard(self) -> bool:
+        """Return True if this jar is allowed to read/write persisted cookies."""
+        return self._allowed
+
     def set(self, domain: str, cookie: dict[str, str]) -> None:
+        """Replace all cookies for ``domain`` with the provided dict.
+
+        This matches the documented contract: callers pass the full cookie dict
+        they want the domain to have.  Previously the implementation merged
+        keys, which made it easy for plugins to accidentally leave stale keys
+        or, conversely, drop unknown keys when they only passed a whitelist.
+        """
+        if not self._guard():
+            return
         self._known_domains.add(domain)
+        normalized = self._fetcher._normalize_cookie_domain(domain)
+        self._fetcher.clear_cookies(normalized)
         for k, v in cookie.items():
-            self._fetcher.set_cookie(domain, k, v)
+            self._fetcher.set_cookie(normalized, k, v)
+        self._persist()
+
+    def merge(self, domain: str, cookie: dict[str, str]) -> None:
+        """Merge ``cookie`` into the existing cookies for ``domain``.
+
+        Use this when you only want to update a few keys and keep everything
+        else intact.
+        """
+        if not self._guard():
+            return
+        normalized = self._fetcher._normalize_cookie_domain(domain)
+        self._known_domains.add(normalized)
+        for k, v in cookie.items():
+            self._fetcher.set_cookie(normalized, k, v)
         self._persist()
 
     def set_browser_cookies(self, cookies: list[dict[str, Any]]) -> None:
+        if not self._guard():
+            return
         for item in cookies:
             if not isinstance(item, dict):
                 continue
@@ -53,62 +102,76 @@ class CookieJar:
         self._persist()
 
     def clear(self, domain: str | None = None) -> None:
+        if not self._guard():
+            return
         self._fetcher.clear_cookies(domain)
-        if self._auth_repository is None:
-            return
-        from app.services import plugin_cookie_file_store
-
-        if not plugin_cookie_file_store.has_plugin_dir(self._plugin_id):
-            # Unknown plugin: keep using DB cookie cache.
-            if domain is None:
-                self._auth_repository.clear_cookies(self._plugin_id)
-                return
-            current = self._auth_repository.get_cookies(self._plugin_id)
-            current.pop(domain, None)
-            self._auth_repository.set_cookies(self._plugin_id, current)
-            return
-
         if domain is None:
-            plugin_cookie_file_store.clear(self._plugin_id)
-            self._auth_repository.clear_cookie_cache(self._plugin_id)
+            self._store.clear(self._plugin_id)
             return
-        current = plugin_cookie_file_store.load(self._plugin_id)
-        current.pop(domain, None)
-        if current:
-            plugin_cookie_file_store.save(self._plugin_id, current)
-        else:
-            plugin_cookie_file_store.clear(self._plugin_id)
-        self._auth_repository.clear_cookie_cache(self._plugin_id)
+        payload = self._load_cookie_payload()
+        jar = self._extract_jar(payload)
+        jar.pop(domain, None)
+        self._store.save(self._plugin_id, {"cookies": jar})
+
+    def _load_cookie_payload(self) -> dict:
+        payload = self._store.load(self._plugin_id)
+        return payload if isinstance(payload, dict) else {}
+
+    def _extract_jar(self, payload: dict) -> dict[str, dict[str, str]]:
+        """Extract domain-keyed jar from payload.
+
+        Supports both the wrapped ``{"cookies": {...}}`` form and the legacy
+        direct jar form.
+        """
+        cookies = payload.get("cookies")
+        if isinstance(cookies, dict):
+            return {
+                str(domain): {str(k): str(v) for k, v in jar.items() if v is not None}
+                for domain, jar in cookies.items()
+                if isinstance(jar, dict)
+            }
+        if all(isinstance(v, dict) for v in payload.values() if isinstance(v, dict)):
+            return {
+                str(domain): {str(k): str(v) for k, v in jar.items() if v is not None}
+                for domain, jar in payload.items()
+                if isinstance(jar, dict)
+            }
+        return {}
+
+    def load_into_fetcher(self) -> None:
+        """Load persisted cookies into the fetcher jar."""
+        if not self._guard():
+            return
+        for domain, cookies in self._extract_jar(self._load_cookie_payload()).items():
+            if isinstance(cookies, dict):
+                for name, value in cookies.items():
+                    self._fetcher.set_cookie(domain, name, value)
 
     def _persist(self) -> None:
-        if self._auth_repository is None:
+        if not self._guard():
             return
-        traces = self._fetcher.get_traces()
-        # Persist known cookie domains from the fetcher jar. Fetcher exposes
-        # domain reads only, so use trace URLs plus any existing stored domains.
         from urllib.parse import urlparse
 
-        domains = set(self._auth_repository.get_cookies(self._plugin_id).keys()) | self._known_domains
-        for trace in traces:
+        domains = set(self._extract_jar(self._load_cookie_payload()).keys()) | self._known_domains
+        for trace in self._fetcher.get_traces():
             url = trace.get("url", "")
             domain = urlparse(url).netloc
             if domain:
                 domains.add(domain)
-        cookies = {domain: self._fetcher.cookies_for_domain(domain) for domain in domains}
+        cookies: dict[str, dict[str, str]] = {}
+        for domain in domains:
+            jar = self._fetcher.cookies_for_domain(domain)
+            if jar:
+                cookies[domain] = jar
         cookie_snapshot = getattr(self._fetcher, "cookie_snapshot", lambda: {})()
         if isinstance(cookie_snapshot, dict):
             for domain, jar in cookie_snapshot.items():
                 if isinstance(jar, dict) and jar:
                     cookies[domain] = jar
         cookies = {domain: jar for domain, jar in cookies.items() if jar}
-        from app.services import plugin_cookie_file_store
-
-        if plugin_cookie_file_store.has_plugin_dir(self._plugin_id):
-            plugin_cookie_file_store.save(self._plugin_id, cookies)
-            self._auth_repository.clear_cookie_cache(self._plugin_id)
+        if not cookies:
             return
-        # Unknown plugin: keep using DB cookie cache.
-        self._auth_repository.set_cookies(self._plugin_id, cookies)
+        self._store.save(self._plugin_id, {"cookies": cookies})
 
 
 class PluginContext:
@@ -116,14 +179,15 @@ class PluginContext:
         self,
         fetcher: Fetcher,
         plugin_id: str,
-        auth_repository: Any = None,
+        cookie_store: CookieStore | None = None,
         access_bridge: Any = None,
         proxy_mode: str = "auto",
         proxy_url: str = "",
+        cookie_allowed: bool = True,
     ):
         self._fetcher = fetcher
         self.plugin_id = plugin_id
-        self.cookies = CookieJar(fetcher, plugin_id, auth_repository)
+        self.cookies = CookieJar(fetcher, plugin_id, cookie_store, allowed=cookie_allowed)
         self._access_bridge = access_bridge
         self.proxy_mode = proxy_mode
         self.proxy_url = proxy_url

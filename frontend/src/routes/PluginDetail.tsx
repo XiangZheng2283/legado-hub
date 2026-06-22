@@ -63,7 +63,7 @@ export function PluginDetail() {
   if (!data || data.error) return <div className="text-destructive">书源不存在</div>
 
   const p = data
-  const smokeResult = smokeMutation.data || p.health?.lastTestResult
+  const smokeResult = smokeMutation.data || (p.health?.lastTestResult === "pass" ? { pass: true } : p.health?.lastTestResult === "fail" ? { pass: false } : null)
   const hasAuth = p.auth?.mode && p.auth.mode !== "none"
   const attempts = attemptsData?.attempts || []
 
@@ -137,6 +137,41 @@ export function PluginDetail() {
               <p><span className="text-muted-foreground">标签:</span> {p.tags?.join(", ") || "-"}</p>
               <p><span className="text-muted-foreground">认证模式:</span> {p.auth?.mode || "none"}</p>
               <p><span className="text-muted-foreground">内容访问:</span> {p.content?.access || "unknown"}</p>
+            </CardContent>
+          </Card>
+          <Card className="mt-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">运行时状态</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-2 text-sm">
+              <p>
+                <span className="text-muted-foreground">最近Ping:</span>{" "}
+                {p.health?.pingStatus === "reachable" ? (
+                  <span className="text-green-600">可达 {p.health.pingLatencyMs}ms</span>
+                ) : p.health?.pingStatus === "unreachable" ? (
+                  <span className="text-destructive">不可达</span>
+                ) : (
+                  "-"
+                )}
+              </p>
+              <p>
+                <span className="text-muted-foreground">最近Smoke:</span>{" "}
+                {p.health?.lastTestResult === "pass" ? (
+                  <span className="text-green-600">通过</span>
+                ) : p.health?.lastTestResult === "fail" ? (
+                  <span className="text-destructive">失败</span>
+                ) : (
+                  "-"
+                )}
+              </p>
+              <p>
+                <span className="text-muted-foreground">最近错误:</span>{" "}
+                {p.health?.lastError ? (
+                  <span className="text-destructive">{p.health.lastError}</span>
+                ) : (
+                  "-"
+                )}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -232,31 +267,28 @@ export function PluginDetail() {
                   {attempts.map((a: any, i: number) => (
                     <div key={i} className="rounded border p-3 text-sm">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">{a.createdAt || "-"}</span>
-                        <Badge variant="secondary" className="text-xs">{a.stage}</Badge>
-                        {a.proxyUsed ? (
-                          <Badge variant="outline" className="text-xs">代理</Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-xs">直连</Badge>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {a.timestamp ? new Date(a.timestamp).toLocaleString() : "-"}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">{a.type}</Badge>
+                        {a.type === "ping" && (
+                          <Badge variant={a.status === "reachable" ? "success" : "destructive"} className="text-xs">
+                            {a.status}
+                          </Badge>
                         )}
-                        <span className="text-xs text-muted-foreground">{a.directStatus}</span>
-                        <span className="text-xs text-muted-foreground">{a.latencyMs}ms</span>
+                        {a.type === "smoke" && (
+                          <Badge variant={a.pass ? "success" : "destructive"} className="text-xs">
+                            {a.pass ? "通过" : "失败"}
+                          </Badge>
+                        )}
+                        {typeof a.latencyMs === "number" && a.latencyMs > 0 && (
+                          <span className="text-xs text-muted-foreground">{a.latencyMs}ms</span>
+                        )}
+                        {a.proxyUsed && <Badge variant="outline" className="text-xs">代理</Badge>}
                         {a.error && <span className="text-xs text-destructive">{a.error}</span>}
                       </div>
-                      {a.result ? (
-                        <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-[200px]">
-                          {(() => {
-                            try {
-                              const parsed = JSON.parse(a.result)
-                              return JSON.stringify(parsed, null, 2)
-                            } catch {
-                              return a.result
-                            }
-                          })()}
-                        </pre>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">无返回内容</p>
-                      )}
+                      {a.url && <div className="text-xs text-muted-foreground mb-1">{a.url}</div>}
+                      {a.message && <div className="text-xs text-muted-foreground mb-1">{a.message}</div>}
                     </div>
                   ))}
                 </div>

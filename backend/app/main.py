@@ -21,25 +21,34 @@ async def lifespan(app: FastAPI):
     initialize_database()
     from app.services.official_auth.manager import official_auth_manager
 
-    # On startup, probe any official plugin that has a saved Cookie.json.
+    # Clean up jobs that were left running from a previous server process.  Their
+    # workers/tasks are gone, so keeping them as "running" would make new requests
+    # wait forever on an orphan job.
     try:
-        from app.services import plugin_cookie_file_store
+        from app.services.search_jobs import SearchJobService
 
-        official_dir = plugin_cookie_file_store.PLUGINS_DIR / "official"
-        if official_dir.exists():
-            for cookie_path in official_dir.rglob("Cookie.json"):
-                # Resolve plugin id from metadata.yaml in the same directory.
-                metadata_path = cookie_path.parent / "metadata.yaml"
-                if not metadata_path.exists():
-                    continue
-                try:
-                    import yaml
-                    meta = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
-                    plugin_id = meta.get("id") if isinstance(meta, dict) else None
-                    if plugin_id:
-                        await official_auth_manager.probe_saved_cookie_file(plugin_id)
-                except Exception:
-                    continue
+        _job_service = SearchJobService()
+        for _job in _job_service.list_jobs(limit=500):
+            if _job["status"] in {"pending", "running"}:
+                _job_service.cancel_job(_job["jobId"])
+    except Exception:
+        pass
+
+    # Migrate legacy plugin-directory Cookie.json files to the host store once.
+    try:
+        from app.services.cookie_store import migrate_legacy_plugin_cookies
+
+        migrate_legacy_plugin_cookies()
+    except Exception:
+        pass
+
+    # On startup, probe any plugin that has a saved cookie in the host store.
+    try:
+        from app.services.cookie_store import CookieStore
+
+        cookie_store = CookieStore()
+        for plugin_id in cookie_store.list_plugin_ids():
+            await official_auth_manager.probe_saved_cookie_file(plugin_id)
     except Exception:
         # Startup should stay resilient even if the probe fails.
         pass

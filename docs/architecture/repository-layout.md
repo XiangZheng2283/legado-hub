@@ -26,8 +26,12 @@ FastAPI backend, backend tests, backend scripts, backend configuration, generate
 Expected subpaths:
 
 - `backend/app/`: Python application package.
-- `backend/config/`: backend-owned JSON configuration.
+- `backend/config/`: backend-owned JSON configuration. The unified runtime config is
+  `backend/config/app_config.json`; per-plugin Cookie payloads are stored under
+  `backend/config/cookies/<plugin_id>.json`. Old split config files
+  (`source_pool.json`, `aggregate_source.json`, `ai_provider.json`) are retired.
 - `backend/data/`: runtime SQLite/cache data.
+- `backend/runtime/logs/`: process logs and debug data (not persisted in the database).
 - `backend/generated/`: generated Reading/Legado aggregate source output.
 - `backend/scripts/`: backend utility scripts. Only maintenance scripts required for normal operation are kept here (currently `create_source_plugin.py` and `validate_source_plugin.py`). Other probes, benchmarks, and local debugging scripts live under `dev-assets/`.
 - `backend/requirements.txt`: backend Python dependencies.

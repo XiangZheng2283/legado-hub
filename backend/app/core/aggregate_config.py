@@ -1,30 +1,57 @@
-"""Aggregate source configuration management."""
+"""Aggregate source configuration management.
+
+Aggregate settings now live in backend/config/app_config.json under the
+``aggregate`` section. This module keeps the same public API but reads/writes
+that section instead of a separate aggregate_source.json file.
+"""
 
 from __future__ import annotations
 
-import json
+from typing import Any
 
-from app.config import AGGREGATE_CONFIG_PATH
-
-CONFIG_PATH = AGGREGATE_CONFIG_PATH
+from app.core.app_config import AppConfig
 
 
 def load_aggregate_config() -> dict:
-    if not CONFIG_PATH.exists():
-        return _default_config()
-    text = CONFIG_PATH.read_text(encoding="utf-8")
-    return json.loads(text)
+    cfg = AppConfig.get().aggregate
+    return {
+        "name": cfg.name,
+        "version": cfg.version,
+        "group": cfg.group,
+        "enabled": cfg.enabled,
+        "base_url_mode": cfg.base_url_mode,
+        "generated_path": cfg.generated_path,
+        "contentWorkflow": cfg.content_workflow,
+        "last_generated_at": AppConfig.get().get_value("aggregate.lastGeneratedAt", ""),
+        "parser_progress": AppConfig.get().get_value("aggregate.parserProgress", _default_progress()),
+    }
 
 
 def save_aggregate_config(config: dict) -> None:
-    CONFIG_PATH.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+    cfg = AppConfig.get()
+    if "contentWorkflow" in config:
+        cfg.set("aggregate.contentWorkflow", config["contentWorkflow"])
+    for key in ("name", "version", "group", "enabled", "base_url_mode", "generated_path"):
+        if key in config:
+            cfg.set(f"aggregate.{key}", config[key])
+    cfg.save()
 
 
 def update_progress(progress: dict) -> None:
-    config = load_aggregate_config()
-    config["parser_progress"] = progress
-    config["last_generated_at"] = _now()
-    save_aggregate_config(config)
+    cfg = AppConfig.get()
+    cfg.set("aggregate.parserProgress", {**_default_progress(), **progress})
+    cfg.set("aggregate.lastGeneratedAt", _now())
+    cfg.save()
+
+
+def _default_progress() -> dict[str, Any]:
+    return {
+        "configured_sources": 0,
+        "enabled_sources": 0,
+        "healthy_sources": 0,
+        "proxy_sources": 0,
+        "unsupported_sources": 0,
+    }
 
 
 def _default_config() -> dict:
@@ -36,18 +63,10 @@ def _default_config() -> dict:
         "base_url_mode": "request_host",
         "generated_path": "backend/generated/legadohub-source.json",
         "last_generated_at": "",
-        "parser_progress": {
-            "configured_sources": 0,
-            "enabled_sources": 0,
-            "healthy_sources": 0,
-            "proxy_sources": 0,
-            "unsupported_sources": 0,
-        },
+        "parser_progress": _default_progress(),
     }
 
 
 def _now() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat()
-
-

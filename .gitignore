@@ -32,7 +32,9 @@ backend/data/browser_profiles/
 backend/data/local_browser_profiles/
 backend/data/novels/
 backend/data/lexicons/
-backend/.tmp/
+backend/config/cookies/
+backend/config/app_config.json
+backend/runtime/
 .tmp/
 backend/=0.1.7
 docs/archive/**/data/upstreams/

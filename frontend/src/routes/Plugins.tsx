@@ -291,8 +291,8 @@ export function Plugins() {
                     </TableCell>
                     <TableCell>
                       {p.health?.lastTestResult ? (
-                        <Badge variant={p.health.lastTestResult.pass ? "success" : "destructive"} className="text-xs">
-                          {p.health.lastTestResult.pass ? "通过" : "失败"}
+                        <Badge variant={p.health.lastTestResult === "pass" ? "success" : "destructive"} className="text-xs">
+                          {p.health.lastTestResult === "pass" ? "通过" : "失败"}
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">-</span>

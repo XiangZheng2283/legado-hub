@@ -1,6 +1,6 @@
 """Generate the aggregate source JSON for LegadoHub.
 
-Reads metadata from backend/config/aggregate_source.json instead of hard-coding.
+Reads metadata from the ``aggregate`` section of backend/config/app_config.json.
 """
 
 import json
@@ -8,7 +8,6 @@ from pathlib import Path
 
 from app.config import GENERATED_DIR, HOST, PORT
 from app.core.aggregate_config import load_aggregate_config, update_progress
-from app.services.plugin_health_repository import PluginHealthRepository
 from app.source_plugins.loader import PluginLoader
 
 BASE_API = f"http://{HOST}:{PORT}"
@@ -122,15 +121,23 @@ def write_aggregate_source() -> str:
 
 
 def _sync_progress() -> None:
-    repo = PluginHealthRepository()
-    stats = repo.get_stats()
+    try:
+        plugins = PluginLoader().load_all()
+    except Exception:
+        plugins = {}
+    total = len(plugins)
+    enabled = sum(1 for p in plugins.values() if p.metadata.enabled)
+    proxy_needed = sum(
+        1 for p in plugins.values()
+        if bool((p.metadata.proxy or {}).get("required"))
+    )
     update_progress(
         {
-            "configured_sources": stats.get("total", 0),
-            "enabled_sources": stats.get("enabled", 0),
-            "healthy_sources": stats.get("healthy", 0),
-            "proxy_sources": stats.get("proxyNeeded", 0),
-            "unsupported_sources": stats.get("unsupported", 0),
+            "configured_sources": total,
+            "enabled_sources": enabled,
+            "healthy_sources": 0,
+            "proxy_sources": proxy_needed,
+            "unsupported_sources": 0,
         }
     )
 

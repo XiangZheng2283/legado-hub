@@ -281,7 +281,11 @@ async def run_fixture_smoke(
         result["errors"].append(_error(plugin.metadata.id, "setup", "SMOKE_FIXTURE_MISSING", str(exc)))
         return result
 
-    ctx = PluginContext(fetcher=fetcher, plugin_id=plugin.metadata.id)
+    ctx = PluginContext(
+        fetcher=fetcher,
+        plugin_id=plugin.metadata.id,
+        cookie_allowed=plugin.metadata.declares_cookies,
+    )
     smoke_keyword = keyword or spec.get("keyword", "凡人修仙传")
 
     async def run_stage(stage: str, func, *args) -> Any:
@@ -394,7 +398,11 @@ async def main() -> None:
         sys.exit(1)
 
     from app.source_plugins.fetcher import Fetcher
-    ctx = PluginContext(fetcher=Fetcher(), plugin_id=plugin.metadata.id)
+    ctx = PluginContext(
+        fetcher=Fetcher(),
+        plugin_id=plugin.metadata.id,
+        cookie_allowed=plugin.metadata.declares_cookies,
+    )
     if (_smoke_dir(plugin_dir) / "smoke.yaml").exists():
         result = await run_fixture_smoke(plugin, plugin_dir, args.keyword)
     else:

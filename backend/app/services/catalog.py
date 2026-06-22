@@ -7,11 +7,13 @@ import json
 import time
 from typing import Any
 
-from app.config import HOST, PORT, SOURCE_POOL_CONFIG_PATH
+from app.config import HOST, PORT
+from app.core.app_config import AppConfig
 from app.core.proxy import ProxyConfig
 from app.source_plugins.id_codec import decode_book_id, decode_chapter_id, encode_book_id, encode_chapter_id
 from app.services.cache import Cache
 from app.services.bookshelf import record_bookshelf_items
+from app.services.search_coordinator import SearchCoordinator
 from app.services.aggregate_virtual_source import (
     VIRTUAL_SOURCE_ID,
     VIRTUAL_SOURCE_NAME,
@@ -20,8 +22,7 @@ from app.services.aggregate_virtual_source import (
     unpack_aggregate_chapter_url,
     unpack_aggregate_book_url,
 )
-from app.source_plugins.scheduler import PluginScheduler
-from app.services.plugin_health_repository import PluginHealthRepository
+from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
 
 
 def _aggregate_official_debug(payload: dict[str, Any], primary_book_id: str) -> dict[str, Any]:
@@ -47,32 +48,53 @@ def _aggregate_official_debug(payload: dict[str, Any], primary_book_id: str) -> 
     }
 
 
+class _NoOpHealthRepo:
+    """Health persistence is being removed in Phase 1."""
+
+    def record_attempt(self, **kwargs: Any) -> None:
+        pass
+
+    def record_success(self, source_id: str, latency_ms: int) -> None:
+        pass
+
+
 class Catalog:
     def __init__(
         self,
-        repo: PluginHealthRepository | None = None,
+        repo: Any | None = None,
         cache: Cache | None = None,
         base_api: str | None = None,
     ):
-        self.repo = repo or PluginHealthRepository()
+        self.repo = repo or _NoOpHealthRepo()
         self.cache = cache or Cache()
-        self.scheduler = PluginScheduler(config=self._get_search_config())
+        self.scheduler = get_plugin_scheduler(config=self._get_search_config())
+        self._search_coordinator = SearchCoordinator()
         self.base_api = base_api or f"http://{HOST}:{PORT}"
 
     def _get_proxy_config(self) -> ProxyConfig:
-        import json as _json
-        pool_path = SOURCE_POOL_CONFIG_PATH
-        if pool_path.exists():
-            data = _json.loads(pool_path.read_text(encoding="utf-8"))
-            return ProxyConfig.from_dict(data.get("proxy", {}))
-        return ProxyConfig()
+        cfg = AppConfig.get().proxy
+        return ProxyConfig(
+            enabled=cfg.enabled,
+            url=cfg.url,
+            allow_auto_retry=cfg.allow_auto_retry,
+        )
 
     def _get_search_config(self) -> dict:
-        import json as _json
-        pool_path = SOURCE_POOL_CONFIG_PATH
-        if pool_path.exists():
-            return _json.loads(pool_path.read_text(encoding="utf-8"))
-        return {}
+        cfg = AppConfig.get()
+        return {
+            "proxy": {
+                "enabled": cfg.proxy.enabled,
+                "url": cfg.proxy.url,
+                "allowAutoRetry": cfg.proxy.allow_auto_retry,
+            },
+            "max_concurrency": cfg.search.global_source_concurrency,
+            "source_timeout_seconds": cfg.search.source_timeout_seconds,
+            "overall_search_timeout_seconds": cfg.search.overall_timeout_seconds,
+            "source_batch_size": 20,
+            "browser_source_timeout_seconds": cfg.search.browser_source_timeout_seconds,
+            "browser_search_timeout_seconds": cfg.search.browser_search_timeout_seconds,
+            "default_user_agent": cfg.search.default_user_agent,
+        }
 
     @staticmethod
     def _positive_int(value: Any, default: int) -> int:
@@ -144,9 +166,17 @@ class Catalog:
         self,
         keyword: str,
         page: int = 1,
+        source_ids: list[str] | None = None,
     ) -> dict:
+        """Run a catalog search.
+
+        ``source_ids`` determines the source scope used for cache fallback.
+        When omitted, the catalog operates in the default search scope
+        (``__default__``), which matches the default scope used by
+        ``SearchCoordinator``.
+        """
         result = await self.scheduler.search(keyword, page)
-        result = self._merge_search_cache_fallback(result, keyword, page)
+        result = self._merge_search_cache_fallback(result, keyword, page, source_ids)
 
         # Convert plugin result dicts to SearchResultItem shape for cache consistency
         # and ensure bookId / sourceName are present
@@ -177,7 +207,6 @@ class Catalog:
         }
 
         record_bookshelf_items(items)
-        self.cache.set_search(keyword, page, response)
         return response
 
     async def explore(self, source_id: str = "", group_id: str = "", page: int = 1) -> dict:
@@ -440,7 +469,6 @@ class Catalog:
                 "partialSuccess": success_count > 0 and len(errors) > 0,
             },
         }
-        self.cache.set_search(keyword, page, response)
         record_bookshelf_items(response["items"])
         yield {
             "type": "done",
@@ -771,14 +799,23 @@ class Catalog:
         }
         return mapping.get(code, "live_failure")
 
-    def _merge_search_cache_fallback(self, result: dict, keyword: str, page: int) -> dict:
-        cached = self.cache.get_search(keyword, page)
-        if not cached:
+    def _merge_search_cache_fallback(
+        self,
+        result: dict,
+        keyword: str,
+        page: int,
+        source_ids: list[str] | None = None,
+    ) -> dict:
+        # Explicit scope: if the caller did not specify source_ids, the catalog
+        # is operating in the default search scope just like SearchCoordinator.
+        scope = self._search_coordinator._scope_key(source_ids) if source_ids else "__default__"
+        cached_items_from_cache = self._search_coordinator._query_book_cache(keyword, "mixed")
+        if not cached_items_from_cache:
             return result
         debug = dict(result.get("debug") or {})
         errors = debug.get("errors") or []
         live_items = [dict(item) for item in result.get("items", []) if isinstance(item, dict)]
-        cached_items = [dict(item) for item in cached.get("items", []) if isinstance(item, dict)]
+        cached_items = [dict(item) for item in cached_items_from_cache if isinstance(item, dict)]
         if not errors or not cached_items:
             result["items"] = live_items
             result["debug"] = debug

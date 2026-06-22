@@ -9,8 +9,10 @@ from typing import Any
 
 from pathlib import Path
 
+from app.core.app_config import AppConfig
+from app.services.cookie_store import CookieStore
 from app.source_plugins.loader import PluginLoader
-from app.source_plugins.context import PluginContext
+from app.source_plugins.context import CookieJar, PluginContext
 from app.source_plugins.fetcher import Fetcher
 from app.source_plugins.models import (
     LoadedPlugin,
@@ -27,6 +29,8 @@ from app.source_plugins.errors import (
     normalize_failure,
 )
 from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
+
+import threading
 
 
 def _smoke_dir(plugin_dir: Path) -> Path:
@@ -46,52 +50,80 @@ class PluginScheduler:
         self.loader = loader or PluginLoader()
         self._plugins: dict[str, LoadedPlugin] = {}
         self.config = self._default_config() if config is None else config
+        self._cookie_store = CookieStore()
         self._load_plugins()
+        self._cleanup_stale_cookie_files()
+
+    def _cleanup_stale_cookie_files(self) -> None:
+        """Remove cookie files for plugins that do not declare cookie storage."""
+        for plugin_id in self._cookie_store.list_plugin_ids():
+            plugin = self._plugins.get(plugin_id)
+            if plugin is None:
+                continue
+            if not plugin.metadata.declares_cookies:
+                self._cookie_store.clear(plugin_id)
 
     def _default_config(self) -> dict:
-        from app.config import SOURCE_POOL_CONFIG_PATH
-
-        if not SOURCE_POOL_CONFIG_PATH.exists():
-            return {}
-        try:
-            data = json.loads(SOURCE_POOL_CONFIG_PATH.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            return {}
-        return data if isinstance(data, dict) else {}
+        cfg = AppConfig.get()
+        return {
+            "proxy": {
+                "enabled": cfg.proxy.enabled,
+                "url": cfg.proxy.url,
+                "allowAutoRetry": cfg.proxy.allow_auto_retry,
+            },
+            "max_concurrency": cfg.search.global_source_concurrency,
+            "source_timeout_seconds": cfg.search.source_timeout_seconds,
+            "overall_search_timeout_seconds": cfg.search.overall_timeout_seconds,
+            "source_batch_size": 20,
+            "browser_source_timeout_seconds": cfg.search.browser_source_timeout_seconds,
+            "browser_search_timeout_seconds": cfg.search.browser_search_timeout_seconds,
+            "default_user_agent": cfg.search.default_user_agent,
+        }
 
     def _load_plugins(self) -> None:
         try:
             self._plugins = self.loader.load_all()
         except Exception:
             self._plugins = {}
-        # Sync enabled state from DB so all scheduler instances stay consistent
+        # Apply runtime enabled overrides from app_config.json on top of metadata.
         try:
-            from app.services.plugin_health_repository import PluginHealthRepository
+            from app.core.app_config import AppConfig
 
-            repo = PluginHealthRepository()
+            cfg = AppConfig.get()
             for plugin_id, plugin in self._plugins.items():
-                health = repo.get_plugin(plugin_id)
-                if health is not None:
-                    plugin.metadata.enabled = health.get("enabled", plugin.metadata.enabled)
+                plugin.metadata.enabled = cfg.is_plugin_enabled(
+                    plugin_id, default=plugin.metadata.enabled
+                )
         except Exception:
             pass
 
     def reload(self) -> None:
         self._load_plugins()
 
+    def refresh_config(self) -> None:
+        """Rebuild runtime config from the canonical AppConfig file."""
+        self.config = self._default_config()
+
     def _enabled_plugins(self) -> list[LoadedPlugin]:
         return [p for p in self._plugins.values() if p.metadata.enabled]
 
     def _search_priority_plugins(self, plugins: list[LoadedPlugin]) -> list[LoadedPlugin]:
-        """Official sources are always searched first."""
-        return sorted(
-            plugins,
-            key=lambda plugin: (
+        """Run fast/reliable sources first for better partial results.
+
+        Official sources are still kept first when they are included. Ordering
+        is based purely on runtime metadata (priority, name); no persistent
+        health table is consulted.
+        """
+        def sort_key(plugin: LoadedPlugin) -> tuple:
+            priority = getattr(plugin.metadata, "priority", 50) or 50
+            return (
                 0 if plugin.metadata.is_official_source() else 1,
-                plugin.metadata.name,
+                priority,
+                plugin.metadata.name or "",
                 plugin.metadata.id,
-            ),
-        )
+            )
+
+        return sorted(plugins, key=sort_key)
 
     def _official_explore_plugins(self) -> list[LoadedPlugin]:
         return [
@@ -100,12 +132,33 @@ class PluginScheduler:
             if "explore" in p.capabilities and p.metadata.is_official_source()
         ]
 
-    def _make_fetcher(self, plugin: LoadedPlugin | None = None) -> Fetcher:
-        proxy_url = ""
+    def _resolve_proxy_url(self, plugin: LoadedPlugin | None) -> str:
+        """Return the proxy URL for a plugin under the tightened policy.
+
+        Policy:
+        - Direct by default.
+        - ``never`` => direct.
+        - ``always`` => proxy.
+        - ``auto`` => proxy only when the source explicitly requires it and the
+          host config allows automatic proxy retry.
+        """
         proxy_cfg = self.config.get("proxy", {})
+        if not proxy_cfg.get("enabled"):
+            return ""
+        proxy_meta = plugin.metadata.proxy if plugin else {}
+        proxy_mode = proxy_meta.get("mode", "auto")
+        if proxy_mode == "never":
+            return ""
+        if proxy_mode == "always":
+            return proxy_cfg.get("url", "")
+        if proxy_mode == "auto" and proxy_meta.get("required") and proxy_cfg.get("allowAutoRetry"):
+            return proxy_cfg.get("url", "")
+        return ""
+
+    def _make_fetcher(self, plugin: LoadedPlugin | None = None) -> Fetcher:
+        proxy_cfg = self.config.get("proxy", {})
+        proxy_url = self._resolve_proxy_url(plugin)
         proxy_mode = (plugin.metadata.proxy or {}).get("mode", "auto") if plugin else "auto"
-        if proxy_mode != "never" and proxy_cfg.get("enabled"):
-            proxy_url = proxy_cfg.get("url", "")
         return Fetcher(
             user_agent=self.config.get("default_user_agent", ""),
             timeout=self.config.get("source_timeout_seconds", 20.0),
@@ -115,47 +168,37 @@ class PluginScheduler:
         )
 
     def _make_ctx(self, plugin_id: str) -> PluginContext:
-        from app.services.plugin_auth_repository import PluginAuthRepository
         from app.services.access_bridge.client import AccessBridgeClient
 
-        auth_repository = PluginAuthRepository()
+        if getattr(self, "_access_bridge", None) is None:
+            self._access_bridge = AccessBridgeClient()
         plugin = self._plugins.get(plugin_id)
-        proxy_cfg = self.config.get("proxy", {})
+        proxy_url = self._resolve_proxy_url(plugin)
         proxy_mode = (plugin.metadata.proxy or {}).get("mode", "auto") if plugin else "auto"
-        proxy_url = proxy_cfg.get("url", "") if proxy_mode != "never" and proxy_cfg.get("enabled") else ""
+        cookie_allowed = bool(plugin and plugin.metadata.declares_cookies)
         ctx = PluginContext(
-            fetcher=self._make_fetcher_with_cookies(plugin_id, auth_repository),
+            fetcher=self._make_fetcher_with_cookies(plugin_id),
             plugin_id=plugin_id,
-            auth_repository=auth_repository,
-            access_bridge=AccessBridgeClient(),
+            cookie_store=self._cookie_store,
+            access_bridge=self._access_bridge,
             proxy_mode=proxy_mode,
             proxy_url=proxy_url,
+            cookie_allowed=cookie_allowed,
         )
         if plugin and plugin.metadata.uses_search_provider("search"):
             ctx.allow_search_provider = True
         return ctx
 
-    def _make_fetcher_with_cookies(self, plugin_id: str, auth_repository) -> Fetcher:
-        from app.services import plugin_cookie_file_store
-
+    def _make_fetcher_with_cookies(self, plugin_id: str) -> Fetcher:
         try:
             fetcher = self._make_fetcher(self._plugins.get(plugin_id))
         except TypeError:
             fetcher = self._make_fetcher()
 
-        # Cookie.json in the plugin directory is the truth source when present.
-        # Fall back to DB cookie cache for unknown plugins.
-        if plugin_cookie_file_store.has_plugin_dir(plugin_id):
-            cookie_jar = plugin_cookie_file_store.load(plugin_id)
-            if not cookie_jar:
-                cookie_jar = auth_repository.get_cookies(plugin_id)
-        else:
-            cookie_jar = auth_repository.get_cookies(plugin_id)
-
-        for domain, cookies in cookie_jar.items():
-            if isinstance(cookies, dict):
-                for name, value in cookies.items():
-                    fetcher.set_cookie(domain, name, value)
+        # Load persisted cookies from the host-managed store into the fetcher.
+        plugin = self._plugins.get(plugin_id)
+        cookie_allowed = bool(plugin and plugin.metadata.declares_cookies)
+        CookieJar(fetcher, plugin_id, self._cookie_store, allowed=cookie_allowed).load_into_fetcher()
         return fetcher
 
     def _positive_int(self, value: Any, default: int) -> int:
@@ -177,22 +220,59 @@ class PluginScheduler:
             return float(self.config.get("browser_search_timeout_seconds", 60.0))
         return float(self.config.get("source_timeout_seconds", 20.0))
 
+    async def search_one(self, plugin_id: str, keyword: str, page: int = 1) -> dict:
+        """Search a single plugin and return normalized items/errors.
+
+        This is the per-source primitive used by the host SearchCoordinator.
+        """
+        plugin = self._plugins.get(plugin_id)
+        if not plugin or "search" not in plugin.capabilities:
+            return {"items": [], "error": None, "latencyMs": 0, "proxyUsed": False}
+        ctx = self._make_ctx(plugin_id)
+        t0 = time.perf_counter()
+        try:
+            raw_items = await asyncio.wait_for(
+                plugin.source.search(ctx, keyword, page),
+                timeout=self.search_timeout_for_plugin(plugin),
+            )
+            latency_ms = int((time.perf_counter() - t0) * 1000)
+            items = []
+            for item in raw_items or []:
+                if isinstance(item, dict):
+                    item.setdefault("sourceId", plugin.metadata.id)
+                    item.setdefault("sourceName", plugin.metadata.name)
+                    items.append(item)
+            self._trace_success(ctx, plugin.metadata.id, "search", latency_ms)
+            return {"items": items, "error": None, "latencyMs": latency_ms, "proxyUsed": bool(ctx.proxy_url)}
+        except asyncio.TimeoutError:
+            latency_ms = int((time.perf_counter() - t0) * 1000)
+            extra: dict[str, Any] = {}
+            code = "BROWSER_REQUIRED" if (plugin.metadata.browser or {}).get("mode") in {"required", "optional"} else "PLUGIN_TIMEOUT"
+            message = "timeout; browser bypass required" if code == "BROWSER_REQUIRED" else "timeout"
+            if code == "BROWSER_REQUIRED":
+                extra["bypassRequired"] = True
+            err = normalize_failure(
+                source_id=plugin.metadata.id,
+                stage="search",
+                code=code,
+                message=message,
+                url="",
+                extra=extra,
+            )
+            self._trace_failure(ctx, plugin.metadata.id, "search", code, message)
+            return {"items": [], "error": err, "latencyMs": latency_ms, "proxyUsed": bool(ctx.proxy_url)}
+        except Exception as exc:
+            latency_ms = int((time.perf_counter() - t0) * 1000)
+            err = self._failure_for_exception(plugin, "search", exc)
+            self._trace_failure(ctx, plugin.metadata.id, "search", err.get("code", "PLUGIN_RUNTIME_ERROR"), err.get("message", str(exc)))
+            return {"items": [], "error": err, "latencyMs": latency_ms, "proxyUsed": bool(ctx.proxy_url)}
+        finally:
+            await ctx._fetcher.close()
+
     async def search(self, keyword: str, page: int = 1) -> dict:
         all_enabled = self._enabled_plugins()
-
-        # Filter out unreachable sources based on last ping
-        try:
-            from app.services.plugin_health_repository import PluginHealthRepository
-            repo = PluginHealthRepository()
-            enabled_ids = [p.metadata.id for p in all_enabled]
-            reachable_ids = set(repo.get_reachable_plugin_ids(enabled_ids))
-            plugins = [p for p in all_enabled if p.metadata.id in reachable_ids]
-            skipped_unreachable = len(all_enabled) - len(plugins)
-        except Exception:
-            plugins = all_enabled
-            skipped_unreachable = 0
-
-        plugins = self._search_priority_plugins(plugins)
+        plugins = self._search_priority_plugins(all_enabled)
+        skipped_unreachable = 0
 
         max_concurrency = self._positive_int(self.config.get("max_concurrency"), 3)
         overall_timeout = self.config.get("overall_search_timeout_seconds", 60.0)
@@ -298,8 +378,8 @@ class PluginScheduler:
                     remaining_timeout = max(0.1, overall_timeout - (time.perf_counter() - start_time))
                     done, pending_tasks = await asyncio.wait(
                         pending_tasks,
-                        timeout=remaining_timeout,
                         return_when=asyncio.FIRST_COMPLETED,
+                        timeout=remaining_timeout,
                     )
                     if not done:
                         raise asyncio.TimeoutError
@@ -333,6 +413,8 @@ class PluginScheduler:
                     for item in items:
                         self._score_search_item(item, keyword)
                     all_items.extend(items)
+                    # Yield to sibling threads/requests during CPU-heavy aggregation.
+                    await asyncio.sleep(0.01)
 
         items = self._source_result_items(all_items)
 
@@ -593,7 +675,7 @@ class PluginScheduler:
 
     async def smoke(self, plugin_id: str, keyword: str = "凡人修仙传") -> dict:
         from app.source_plugins.smoke import run_fixture_smoke, run_smoke
-        from app.services.plugin_health_repository import PluginHealthRepository
+
         plugin = self._plugins.get(plugin_id)
         if not plugin:
             return {"pass": False, "error": f"plugin not found: {plugin_id}"}
@@ -606,14 +688,6 @@ class PluginScheduler:
                 result = await run_smoke(plugin, ctx, keyword)
             finally:
                 await ctx._fetcher.close()
-        repo = PluginHealthRepository()
-        repo.ensure_plugin(plugin_id, plugin.metadata.name, plugin.metadata.enabled)
-        repo.update_test_result(plugin_id, result)
-        if result.get("pass"):
-            repo.record_success(plugin_id, result.get("stages", {}).get("search", {}).get("elapsedMs", 0))
-        else:
-            first_error = (result.get("errors") or [{"message": "smoke failed"}])[0]
-            repo.record_failure(plugin_id, first_error.get("stage", "smoke"), first_error.get("message", "smoke failed"))
         return result
 
     def _score_search_item(self, item: dict, keyword: str) -> dict:
@@ -689,3 +763,24 @@ class PluginScheduler:
             url=url,
             extra=extra,
         )
+
+
+_scheduler_instance: PluginScheduler | None = None
+_scheduler_lock = threading.Lock()
+
+
+def get_plugin_scheduler(config: dict | None = None, reload: bool = False) -> "PluginScheduler":
+    """Return the process-wide PluginScheduler singleton.
+
+    Creating a PluginScheduler scans the plugins directory and imports every
+    source plugin, which is expensive. Sharing one instance across requests
+    removes that per-request overhead and keeps the enabled plugin pool in
+    memory. Call with ``reload=True`` after plugin files have changed.
+    """
+    global _scheduler_instance
+    with _scheduler_lock:
+        if reload or _scheduler_instance is None:
+            _scheduler_instance = PluginScheduler(config=config)
+        elif config is not None:
+            _scheduler_instance.config = config
+        return _scheduler_instance

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertCircle, BookOpen, Loader2, Search, Filter, ChevronDown, ChevronUp, ChevronRight, MessageSquare, ThumbsUp, MessageCircle, X } from "lucide-react"
+import { AlertCircle, BookOpen, Check, Loader2, Search, Filter, ChevronDown, ChevronUp, ChevronRight, MessageSquare, ThumbsUp, MessageCircle, X } from "lucide-react"
 
 import { api } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
@@ -29,8 +29,25 @@ function cacheReasonText(reason?: string) {
 function statusVariant(status?: string) {
   if (status === "completed" || status === "success" || status === "passed") return "success"
   if (status === "running") return "info"
-  if (status === "failed" || status === "error" || status === "timeout") return "destructive"
+  if (status === "partial") return "warning"
+  if (status === "timed_out" || status === "timeout") return "destructive"
+  if (status === "failed" || status === "error") return "destructive"
   return "outline"
+}
+
+function jobStatusText(status?: string) {
+  if (status === "completed") return "已完成"
+  if (status === "running") return "搜索中"
+  if (status === "cancelled") return "已取消"
+  if (status === "partial") return "部分完成"
+  if (status === "timed_out") return "整体超时"
+  if (status === "failed") return "失败"
+  if (status === "pending") return "等待调度"
+  return status || "未知"
+}
+
+function isTerminalStatus(status?: string) {
+  return ["completed", "partial", "timed_out", "failed", "cancelled"].includes(status || "")
 }
 
 function sourceStatusLabel(event: any) {
@@ -56,10 +73,13 @@ function eventLabel(event: any) {
     queued: "已加入队列",
     summary: "开始搜索",
     source_start: "书源开始",
+    source_complete: "书源完成",
     source_done: "书源完成",
     source_empty: "无搜索结果",
     source_timeout: "书源超时",
     source_error: "书源报错",
+    result: "结果返回",
+    stage_boundary: "阶段边界",
     overall_timeout: "整体超时",
     batch_done: "批次完成",
     done: "搜索完成",
@@ -546,23 +566,6 @@ function ChapterReviewPanel({ reviews, loading, error }: { reviews: any; loading
   )
 }
 
-function sourceResultsFromEvents(events: any[]) {
-  const items = new Map<string, any>()
-  events
-    .filter((event: any) => event.type === "result" && event.item)
-    .forEach((event: any) => {
-      const item = {
-        ...event.item,
-        sourceId: event.item.sourceId || event.sourceId,
-        sourceName: event.item.sourceName || event.sourceName,
-      }
-      const key = `${item.sourceId || ""}::${item.bookUrl || ""}::${item.name || ""}`.trim()
-      if (!key) return
-      items.set(key, item)
-    })
-  return Array.from(items.values()).sort((left, right) => (right.score || 0) - (left.score || 0))
-}
-
 function visibleLogEvents(events: any[]) {
   return events.filter((event: any) => {
     if (event.type === "result" || event.type === "candidate_grouped") return false
@@ -594,7 +597,8 @@ function formatLogLine(event: any, index: number): string {
       return `${ts}  INFO  [search] 开始搜索: 共 ${event.sourceCount || 0} 个书源, 批次大小 ${event.batchSize || 0}, 最大并发 ${event.maxConcurrency || 0}`
     case "source_start":
       return `${ts}  INFO  [search] 开始调用书源 → ${sourceName}`
-    case "source_done": {
+    case "source_done":
+    case "source_complete": {
       const status = event.statusLabel || sourceStatusText(event.status)
       const latency = event.latencyMs != null ? `${event.latencyMs}ms` : "-"
       if (event.status === "error" && event.error) {
@@ -608,8 +612,10 @@ function formatLogLine(event: any, index: number): string {
       return `${ts}  WARN  [search] 书源超时 ← ${sourceName}${event.error ? " | " + _errDetail(event.error) : ""}`
     case "source_error":
       return `${ts}  ERROR [search] 书源报错 ← ${sourceName} | ${_errDetail(event.error)}`
+    case "stage_boundary":
+      return `${ts}  INFO  [search] 阶段边界 | stage=${event.stage || "-"} | reason=${event.reason || "-"} | 已耗时 ${event.elapsedMs || 0}ms`
     case "overall_timeout":
-      return `${ts}  WARN  [search] 整体搜索超时 | 已耗时 ${event.elapsedMs || 0}ms`
+      return `${ts}  WARN  [search] 整体超时截断 | reason=${event.reason || "-"} | 已耗时 ${event.elapsedMs || 0}ms`
     case "batch_done":
       return `${ts}  INFO  [search] 批次完成 | 进度 ${event.completedCount || 0}/${event.sourceCount || 0}`
     case "done": {
@@ -629,11 +635,12 @@ export function SearchJobs() {
   const queryClient = useQueryClient()
   const [keyword, setKeyword] = useState("")
   const [jobId, setJobId] = useState<string | null>(null)
-  const [pendingJob, setPendingJob] = useState<any>(null)
+  const [refreshedSourceIds, setRefreshedSourceIds] = useState<Set<string>>(new Set())
   const [bookDetail, setBookDetail] = useState<any>(null)
   const [activeChapterIndex, setActiveChapterIndex] = useState(0)
   const [showSourceFilter, setShowSourceFilter] = useState(false)
   const [selectedSourceIds, setSelectedSourceIds] = useState<Set<string>>(new Set())
+  const [searchMode, setSearchMode] = useState<"source" | "aggregate">("source")
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<any>(null)
   // Reviews are fetched asynchronously so VIP chapter previews don't block.
@@ -650,12 +657,15 @@ export function SearchJobs() {
   const allPlugins = pluginsData?.items || []
 
   const createMutation = useMutation({
-    mutationFn: (payload: { keyword: string; sourceIds?: string[] }) =>
-      api.createSearchJob(payload.keyword, 1, undefined, payload.sourceIds),
+    mutationFn: (payload: { keyword: string; sourceIds?: string[]; mode: "source" | "aggregate" }) =>
+      payload.mode === "aggregate"
+        ? api.createAggregateSearch({ keyword: payload.keyword, page: 1, sourceIds: payload.sourceIds })
+        : api.createSearchJob({ keyword: payload.keyword, page: 1, sourceIds: payload.sourceIds }),
     onSuccess: (data) => {
       if (!data.jobId) return
       const initialEvents = data.events || []
-      setPendingJob(data)
+      // Cache hit: the same job is reused for the background refresh.  Seed the
+      // query cache with the cached response so the UI can show it immediately.
       setJobId(data.jobId)
       queryClient.invalidateQueries({ queryKey: ["search-jobs"] })
       queryClient.setQueryData(["search-job", data.jobId], data)
@@ -719,44 +729,77 @@ export function SearchJobs() {
     queryKey: ["search-job", jobId],
     queryFn: () => api.searchJob(jobId!),
     enabled: !!jobId,
-    refetchInterval: (query) => (query.state.data?.status === "completed" ? false : 500),
+    refetchInterval: (query) => (isTerminalStatus(query.state.data?.status) ? false : 1000),
   })
 
   const { data: eventsData } = useQuery({
     queryKey: ["search-job-events", jobId],
     queryFn: () => api.searchJobEvents(jobId!),
     enabled: !!jobId,
-    refetchInterval: jobData?.status === "completed" ? false : 500,
+    refetchInterval: isTerminalStatus(jobData?.status) ? false : 500,
   })
 
   const events = useMemo(() => eventsData?.events || [], [eventsData?.events])
-  const visibleJob = jobData || pendingJob
+  const visibleJob = jobData
   const { data: recentJobsData } = useQuery({
     queryKey: ["search-jobs"],
     queryFn: api.searchJobs,
-    refetchInterval: visibleJob?.status === "running" ? 1000 : false,
+    refetchInterval: visibleJob?.status === "running" ? 3000 : false,
   })
   const recentJobs = recentJobsData?.items || []
 
   // Apply score filter on frontend as well for real-time events
   const scoreFilter = visibleJob?.result?.debug?.scoreFilter ?? 100
+
   const sourceResults = useMemo(() => {
-    let items = visibleJob?.result?.items || []
-    if (items.length) {
-      items = items.filter((item: any) => (item.score || 0) >= scoreFilter)
-    } else {
-      items = sourceResultsFromEvents(events)
-      items = items.filter((item: any) => (item.score || 0) >= scoreFilter)
+    const isAggregateMode = visibleJob?.debug?.searchMode === "aggregate"
+    const allItems = visibleJob?.result?.items || []
+
+    if (isAggregateMode) {
+      // Aggregate mode: only show aggregate items.
+      return allItems.filter((item: any) => item.displayType === "aggregate")
     }
-    return items
-  }, [visibleJob, events, scoreFilter])
+
+    // Source mode: show source items (live + cached fallback).
+    return allItems.filter((item: any) =>
+      item.displayType === "source" || !item.displayType
+    ).filter((item: any) => (item.score || 0) >= scoreFilter)
+  }, [visibleJob, scoreFilter])
+
+  useEffect(() => {
+    // Track sourceIds that have produced live results so we can switch the
+    // cache-column badge from "刷新中" to "已刷新".
+    const liveIds = new Set<string>()
+    for (const event of events) {
+      const sid = event.sourceId || event.item?.sourceId
+      if (sid && (event.type === "result" || event.type === "source_complete")) {
+        liveIds.add(sid)
+      }
+    }
+    if (liveIds.size === 0) return
+    setRefreshedSourceIds((prev) => {
+      const next = new Set(prev)
+      let changed = false
+      for (const id of liveIds) {
+        if (!next.has(id)) {
+          next.add(id)
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [events])
 
   const logEvents = useMemo(() => visibleLogEvents(events), [events])
+
   const progress = useMemo(() => {
     const summary = events.find((event: any) => event.type === "summary") || {}
     const doneBySource = new Map<string, any>()
     events.forEach((event: any) => {
-      if (["source_done", "source_empty", "source_timeout", "source_error"].includes(event.type)) {
+      if (
+        event.type === "source_complete" ||
+        ["source_empty", "source_timeout", "source_error"].includes(event.type)
+      ) {
         doneBySource.set(event.sourceId || `${event.type}-${doneBySource.size}`, event)
       }
     })
@@ -779,21 +822,39 @@ export function SearchJobs() {
     setActiveChapterIndex(0)
     setAsyncReviews(null)
     setAsyncReviewsError(null)
-    setPendingJob({
-      status: "starting",
-      keyword: value,
-      sourceCount: 0,
-      completedCount: 0,
-      successCount: 0,
-      errorCount: 0,
-      elapsedMs: 0,
-      result: { items: [] },
-    })
+    setRefreshedSourceIds(new Set())
     const sourceIds = selectedSourceIds.size > 0 ? Array.from(selectedSourceIds) : undefined
-    createMutation.mutate({ keyword: value, sourceIds })
+    createMutation.mutate({ keyword: value, sourceIds, mode: searchMode })
   }
 
   const handleOpenDetail = (item: any) => {
+    if (item.resultKind === "aggregate") {
+      // Aggregate item: show aggregate info directly (no verify_candidate).
+      setDetailTarget(item)
+      setBookDetail({
+        selectedCandidate: item,
+        detail: {
+          name: item.name,
+          author: item.author,
+          coverUrl: item.coverUrl,
+          intro: item.intro,
+          wordCount: item.wordCount,
+          lastChapter: item.lastChapter,
+          bookUrl: item.bookUrl,
+          sourceName: item.sourceName,
+          debug: { sourceCount: item.sourceCount },
+        },
+        toc: { items: [], chapterCount: 0 },
+        chapter: { title: "聚合源", content: "这是一个 AI 聚合书籍，包含多个书源的结果。\n\n点击目录中的章节可从主源获取内容。", contentLength: 0 },
+        status: "aggregate",
+        sourceName: item.sourceName,
+        aggregate: true,
+        sourceCount: item.sourceCount,
+      })
+      setIsDetailOpen(true)
+      setActiveChapterIndex(0)
+      return
+    }
     if (!item.candidateId) return
     setDetailTarget(item)
     setBookDetail(null)
@@ -804,7 +865,6 @@ export function SearchJobs() {
 
   const handleOpenJob = (job: any) => {
     if (!job.jobId) return
-    setPendingJob(null)
     setBookDetail(null)
     setIsDetailOpen(false)
     setDetailTarget(null)
@@ -880,6 +940,26 @@ export function SearchJobs() {
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground">模式:</Label>
+            <Button
+              variant={searchMode === "source" ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setSearchMode("source")}
+            >
+              普通书源
+            </Button>
+            <Button
+              variant={searchMode === "aggregate" ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setSearchMode("aggregate")}
+            >
+              书源聚合
+            </Button>
+          </div>
+
           {showSourceFilter && (
             <div className="rounded-md border bg-muted/30 p-3 space-y-3">
               <div className="flex items-center justify-between">
@@ -919,7 +999,11 @@ export function SearchJobs() {
             <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={statusVariant(visibleJob.status) as any}>{visibleJob.status}</Badge>
+                  {visibleJob?.status === "running" ? (
+                    <Badge variant="info">搜索中</Badge>
+                  ) : (
+                    <Badge variant={statusVariant(visibleJob.status) as any}>{jobStatusText(visibleJob.status)}</Badge>
+                  )}
                   <span className="font-medium">{progress.completed}/{progress.total} 书源</span>
                   <span className="text-muted-foreground">成功 {visibleJob.successCount || 0}</span>
                   <span className="text-muted-foreground">失败 {visibleJob.errorCount || 0}</span>
@@ -931,7 +1015,7 @@ export function SearchJobs() {
                 <div className="flex flex-wrap items-center gap-1">
                   <span className="text-muted-foreground">当前</span>
                   {progress.running.length === 0 ? (
-                    <Badge variant="outline">{visibleJob.status === "completed" ? "已完成" : "等待调度"}</Badge>
+                    <Badge variant="outline">{jobStatusText(visibleJob.status)}</Badge>
                   ) : (
                     progress.running.map((source: any) => (
                       <Badge key={`${source.id}-${source.name}`} variant="info">{source.name || source.id}</Badge>
@@ -962,7 +1046,7 @@ export function SearchJobs() {
               <TableHead>作者</TableHead>
               <TableHead>来源</TableHead>
               <TableHead>最新章节</TableHead>
-              <TableHead>缓存</TableHead>
+              <TableHead>获取时间</TableHead>
               <TableHead>评分</TableHead>
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
@@ -970,47 +1054,61 @@ export function SearchJobs() {
           <TableBody>
             {sourceResults.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-28 text-center text-sm text-muted-foreground">
+                 <TableCell colSpan={8} className="h-28 text-center text-sm text-muted-foreground">
                   {visibleJob ? "搜索进行中，结果会实时出现" : "输入关键词后开始搜索"}
                 </TableCell>
               </TableRow>
             )}
-            {sourceResults.map((item: any) => (
-              <TableRow key={item.candidateId || `${item.sourceId}-${item.bookUrl}`}>
-                <TableCell className="font-medium">{item.name || "-"}</TableCell>
-                <TableCell>{item.author || "-"}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <Badge variant="outline" className="w-fit">{item.sourceName || item.sourceId || "-"}</Badge>
-                    {item.sourceId && <span className="font-mono text-xs text-muted-foreground">{item.sourceId}</span>}
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-64 truncate">{item.lastChapter || "-"}</TableCell>
-                <TableCell>
-                  {!item.aggregate && item.cacheHit ? (
-                    <Badge variant="secondary">{cacheReasonText(item.cacheReason)}</Badge>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">实时</span>
-                  )}
-                </TableCell>
-                <TableCell>{item.score || 0}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={verifyMutation.isPending || !item.candidateId}
-                    onClick={() => handleOpenDetail(item)}
-                  >
-                    {verifyMutation.isPending && detailTarget?.candidateId === item.candidateId ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <BookOpen className="h-4 w-4" />
+            {sourceResults.map((item: any) => {
+              const sid = item.sourceId
+              const isRefreshing = sid ? progress.running.some((r: any) => r.id === sid) : false
+              const isRefreshed = sid ? refreshedSourceIds.has(sid) : false
+              return (
+                <TableRow key={item.candidateId || `${item.sourceId}-${item.bookUrl}`}>
+                  <TableCell className="font-medium">{item.name || "-"}</TableCell>
+                  <TableCell>{item.author || "-"}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant="outline" className="w-fit">{item.sourceName || item.sourceId || "-"}</Badge>
+                      {sid && <span className="font-mono text-xs text-muted-foreground">{sid}</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-64 truncate">{item.lastChapter || "-"}</TableCell>
+                  <TableCell>
+                    <span className={`text-xs ${item.freshness === "cached" ? "text-muted-foreground" : "text-green-600"}`}>
+                      {item.fetchedAt
+                        ? new Date(item.fetchedAt).toLocaleString("zh-CN", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })
+                        : "-"}
+                    </span>
+                    {item.displayType === "aggregate" && (
+                      <Badge variant="secondary" className="ml-1 text-xs">聚合</Badge>
                     )}
-                    查看详情
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>{item.score || 0}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={verifyMutation.isPending || (!item.candidateId && item.resultKind !== "aggregate")}
+                      onClick={() => handleOpenDetail(item)}
+                    >
+                      {verifyMutation.isPending && detailTarget?.candidateId === item.candidateId ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <BookOpen className="h-4 w-4" />
+                      )}
+                      {item.resultKind === "aggregate" ? "聚合详情" : "查看详情"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </div>
@@ -1031,9 +1129,11 @@ export function SearchJobs() {
                     className={`px-4 py-0.5 font-mono text-xs leading-5 ${
                       event.type === "source_error" || event.type === "source_timeout"
                         ? "text-destructive bg-destructive/5"
-                        : event.type === "done"
-                          ? "text-green-700 bg-green-50"
-                          : "text-muted-foreground hover:bg-muted/40"
+                        : event.type === "overall_timeout"
+                          ? "text-amber-700 bg-amber-50"
+                          : event.type === "done"
+                            ? "text-green-700 bg-green-50"
+                            : "text-muted-foreground hover:bg-muted/40"
                     }`}
                   >
                     {formatLogLine(event, index)}
@@ -1065,7 +1165,7 @@ export function SearchJobs() {
                 <TableRow key={job.jobId}>
                   <TableCell className="font-medium">{job.keyword || "-"}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant(job.status) as any}>{job.status || "-"}</Badge>
+                    <Badge variant={statusVariant(job.status) as any}>{jobStatusText(job.status)}</Badge>
                   </TableCell>
                   <TableCell>{job.completedCount || 0} 完成 / 成功 {job.successCount || 0}</TableCell>
                   <TableCell>{job.elapsedMs || 0}ms</TableCell>
@@ -1084,7 +1184,7 @@ export function SearchJobs() {
       <Dialog open={isDetailOpen} onOpenChange={(open) => { setIsDetailOpen(open); if (!open) { setBookDetail(null); setDetailTarget(null); setAsyncReviews(null); setAsyncReviewsError(null) } }}>
         <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
           <DialogHeader>
-            <DialogTitle className="px-6 pt-6">小说详情</DialogTitle>
+            <DialogTitle className="px-6 pt-6">{displayDetail?.aggregate ? "聚合书籍详情" : "小说详情"}</DialogTitle>
           </DialogHeader>
           <div className="grid min-h-0 gap-0 border-t text-sm lg:grid-cols-[1fr_320px]">
             <ScrollArea className="max-h-[78vh]">

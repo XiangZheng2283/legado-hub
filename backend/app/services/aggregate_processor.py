@@ -578,13 +578,17 @@ class AggregateProcessor:
     # ── core chapter processing state machine ────────────────────────────
 
     async def _process_chapter(self, catalog, chapter: dict) -> dict:
+        """Process a single chapter through the 3-path pipeline.
+
+        Path 1: Content is full → purify → optional AI → processed
+        Path 2: Content is preview → try candidates → fallback
+        Path 3: Content is empty → try candidates → error
+        """
         from app.services.aggregate_alignment import (
-            align_candidate_chapter,
             build_source_alignment_json,
             classify_source_content,
         )
 
-        now = self._now()
         chapter_id = chapter["chapterId"]
         source_chapter_id = chapter.get("sourceChapterId") or chapter_id
         aggregate_book_id = chapter.get("aggregateBookId", "")
@@ -595,327 +599,213 @@ class AggregateProcessor:
         primary_source_id = payload.get("primarySourceId", "")
         if not primary_source_id:
             primary_source_id = source_chapter_id.split(":")[0] if ":" in source_chapter_id else ""
-        is_official = self._is_official_source(primary_source_id)
 
         try:
             result = await catalog.chapter(source_chapter_id)
             content = result.get("content", "")
-            if not content:
-                raise ValueError("empty chapter content")
+            is_official = self._is_official_source(primary_source_id)
+            classification = classify_source_content(
+                content, source_id=primary_source_id, is_official=is_official
+            )
 
-            classification = classify_source_content(content, source_id=primary_source_id, is_official=is_official)
+            # ── Path 1: full content ────────────────────────────────────
+            if classification["classification"] == "full":
+                return await self._process_full_content(
+                    catalog=catalog, chapter=chapter, content=content,
+                    classification=classification, primary_source_id=primary_source_id,
+                    payload=payload,
+                )
 
-            # ── path 1: official full ────────────────────────────────────
-            if classification["classification"] == "full" and is_official:
-                ai_service = self._get_ai_service()
-                selected_content = content
-                ai_model = ""
-                ai_self_score = 0.0
-                ai_prompt_tokens = 0
-                ai_completion_tokens = 0
-                ai_total_tokens = 0
-                ai_latency_ms = 0
-                if ai_service:
-                    try:
-                        book_name = self._aggregate_book_name_from_cache(aggregate_book_id)
-                        ai_result = await ai_service.process_official_full(
-                            book_name=book_name, author="", title=title, content=content,
-                        )
-                        selected_content = ai_result.get("content", content)
-                        ai_model = ai_result.get("aiModel", "")
-                        ai_self_score = ai_result.get("selfScore", 0.0)
-                        ai_prompt_tokens = ai_result.get("promptTokens", 0)
-                        ai_completion_tokens = ai_result.get("completionTokens", 0)
-                        ai_total_tokens = ai_result.get("totalTokens", 0)
-                        ai_latency_ms = ai_result.get("latencyMs", 0)
-                    except Exception:
-                        selected_content = self._purify_content(content)
-                else:
-                    selected_content = self._purify_content(content)
-
+            # ── Path 2: preview content → try candidates ────────────────
+            if classification["classification"] == "preview":
+                candidate_result = await self._try_candidate_content(
+                    catalog, chapter, payload, primary_source_id
+                )
+                if candidate_result:
+                    # Candidate found with full content → treat as full.
+                    return await self._process_full_content(
+                        catalog=catalog, chapter=chapter,
+                        content=candidate_result["content"],
+                        classification=classification,
+                        primary_source_id=candidate_result["source_id"],
+                        payload=payload,
+                        fallback_source_id=candidate_result["source_id"],
+                    )
+                # No candidate → purified preview as fallback.
+                purified = self._purify_content(content)
                 alignment_json = build_source_alignment_json(
-                    selected_content_source="official",
-                    official_content_length=classification["contentLength"],
-                    alignment_passed=True,
-                    alignment_reason="official_full_content",
+                    selected_content_source="preview_fallback",
+                    alignment_passed=False,
+                    alignment_reason="no_candidate_for_preview",
                     primary_source_id=primary_source_id,
                 )
                 self._write_chapter_result(
                     chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
                     title=title, chapter_index=chapter_index,
-                    status="processed", content=selected_content, alignment_json=alignment_json,
-                    ai_model=ai_model,
-                    deviation_score=ai_self_score if ai_model else 0.0,
-                    ai_self_score=ai_self_score,
-                    ai_prompt_tokens=ai_prompt_tokens,
-                    ai_completion_tokens=ai_completion_tokens,
-                    ai_total_tokens=ai_total_tokens,
-                    ai_latency_ms=ai_latency_ms,
+                    status="fallback", content=purified,
+                    alignment_json=alignment_json,
+                    fallback_source_id=primary_source_id,
                 )
-                return {"chapterId": chapter_id, "success": True, "contentLength": len(selected_content)}
+                return {"chapterId": chapter_id, "success": True,
+                        "contentLength": len(purified), "fallback": True}
 
-            # ── path 2: third-party primary ──────────────────────────────
-            if classification["classification"] == "full" and not is_official:
-                return await self._process_third_party_primary(
+            # ── Path 3: empty → try candidates ──────────────────────────
+            candidate_result = await self._try_candidate_content(
+                catalog, chapter, payload, primary_source_id
+            )
+            if candidate_result:
+                return await self._process_full_content(
                     catalog=catalog, chapter=chapter,
-                    content=content, classification=classification,
-                    primary_source_id=primary_source_id,
-                )
-
-            # ── path 3: preview → try candidates then AI ────────────────
-            if classification["classification"] == "preview":
-                return await self._process_preview_chapter(
-                    catalog=catalog, chapter=chapter,
-                    content=content, classification=classification,
-                    primary_source_id=primary_source_id,
+                    content=candidate_result["content"],
+                    classification=classification,
+                    primary_source_id=candidate_result["source_id"],
                     payload=payload,
+                    fallback_source_id=candidate_result["source_id"],
                 )
-
-            # ── path 4: empty ───────────────────────────────────────────
-            raise ValueError("empty chapter content")
+            raise ValueError("empty chapter content from all sources")
 
         except Exception as exc:
             return self._handle_processing_error(exc, chapter, source_chapter_id)
 
-    async def _process_third_party_primary(
+    async def _process_full_content(
         self, *, catalog, chapter: dict, content: str,
-        classification: dict, primary_source_id: str,
+        classification: dict, primary_source_id: str, payload: dict,
+        fallback_source_id: str = "",
     ) -> dict:
+        """Path 1: Content is full. Purify → optional AI → write result."""
         from app.services.aggregate_alignment import build_source_alignment_json
 
         chapter_id = chapter["chapterId"]
         aggregate_book_id = chapter.get("aggregateBookId", "")
+        title = chapter.get("title", "")
+        chapter_index = chapter.get("chapterIndex")
+
+        # Step 1: Always purify first.
+        purified = self._purify_content(content)
+
+        # Step 2: If AI enabled, try AI processing.
+        selected_content = purified
+        ai_model = ""
+        ai_self_score = 0.0
+        ai_prompt_tokens = 0
+        ai_completion_tokens = 0
+        ai_total_tokens = 0
+        ai_latency_ms = 0
+
         ai_service = self._get_ai_service()
-
         if ai_service:
-            prev_ctx = self._load_previous_chapters_context(
-                aggregate_book_id, chapter.get("chapterIndex", 999))
-            result = await ai_service.process_third_party_primary(
-                book_name=self._aggregate_book_name_from_cache(aggregate_book_id),
-                author="", title=chapter.get("title", ""),
-                content=content, source_id=primary_source_id,
-                previous_context=prev_ctx,
-            )
-            if result["status"] == "processed":
-                from app.services.aggregate_alignment import compute_deviation_score
-                deviation = compute_deviation_score(
-                    content, result["content"], ai_self_score=result.get("selfScore")
+            try:
+                book_name = self._aggregate_book_name_from_cache(aggregate_book_id)
+                prev_ctx = self._load_previous_chapters_context(
+                    aggregate_book_id, chapter_index or 999
                 )
-                threshold = self._workflow_settings().get("deviationThreshold", 0.90)
-                if deviation < threshold:
-                    # Deviation too high — fall through to fallback.
-                    pass
+                if fallback_source_id:
+                    # Content came from a candidate source → use third-party AI path.
+                    ai_result = await ai_service.process_third_party_primary(
+                        book_name=book_name, author="", title=title,
+                        content=purified, source_id=primary_source_id,
+                        previous_context=prev_ctx,
+                    )
                 else:
-                    alignment_json = build_source_alignment_json(
-                        selected_content_source="third_party_primary_ai",
-                        official_content_length=classification["contentLength"],
-                        alignment_passed=True,
-                        alignment_reason="third_party_ai_processed",
-                        primary_source_id=primary_source_id,
+                    # Content from primary source → use official AI path.
+                    ai_result = await ai_service.process_official_full(
+                        book_name=book_name, author="", title=title,
+                        content=purified,
                     )
-                    self._write_chapter_result(
-                        chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
-                        title=chapter.get("title", ""), chapter_index=chapter.get("chapterIndex"),
-                        status="processed", content=result["content"], alignment_json=alignment_json,
-                        ai_model=result.get("aiModel", ""),
-                        deviation_score=deviation,
-                        ai_self_score=result.get("selfScore", 0.0),
-                        ai_prompt_tokens=result.get("promptTokens", 0),
-                        ai_completion_tokens=result.get("completionTokens", 0),
-                        ai_total_tokens=result.get("totalTokens", 0),
-                        ai_latency_ms=result.get("latencyMs", 0),
-                    )
-                    return {"chapterId": chapter_id, "success": True, "contentLength": len(result["content"])}
+                if ai_result.get("status") in ("processed", "fallback"):
+                    selected_content = ai_result.get("content", purified)
+                    ai_model = ai_result.get("aiModel", "")
+                    ai_self_score = ai_result.get("selfScore", 0.0)
+                    ai_prompt_tokens = ai_result.get("promptTokens", 0)
+                    ai_completion_tokens = ai_result.get("completionTokens", 0)
+                    ai_total_tokens = ai_result.get("totalTokens", 0)
+                    ai_latency_ms = ai_result.get("latencyMs", 0)
+            except Exception:
+                pass  # AI failed → keep purified content.
 
-        # Fallback: AI unavailable → original content + degradation marker.
-        fallback = self._purify_content(content)
-        fallback += "\n\n> 聚合提示：AI 处理失败，当前为原始正文回退版本。"
+        # Step 3: Write result.
+        status = "fallback" if fallback_source_id else "processed"
         alignment_json = build_source_alignment_json(
-            selected_content_source="third_party_primary_fallback",
-            official_content_length=classification["contentLength"],
-            alignment_passed=False,
-            alignment_reason="ai_unavailable_for_third_party",
+            selected_content_source="official" if not fallback_source_id else "candidate",
+            alignment_passed=True,
+            alignment_reason="full_content_processed",
             primary_source_id=primary_source_id,
+            candidate_source_id=fallback_source_id or "",
         )
         self._write_chapter_result(
             chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
-            title=chapter.get("title", ""), chapter_index=chapter.get("chapterIndex"),
-            status="fallback", content=fallback, alignment_json=alignment_json,
-            fallback_source_id=primary_source_id,
+            title=title, chapter_index=chapter_index,
+            status=status, content=selected_content,
+            alignment_json=alignment_json,
+            ai_model=ai_model,
+            deviation_score=ai_self_score if ai_model else 0.0,
+            ai_self_score=ai_self_score,
+            ai_prompt_tokens=ai_prompt_tokens,
+            ai_completion_tokens=ai_completion_tokens,
+            ai_total_tokens=ai_total_tokens,
+            ai_latency_ms=ai_latency_ms,
+            fallback_source_id=fallback_source_id or primary_source_id,
         )
-        return {"chapterId": chapter_id, "success": True, "contentLength": len(fallback),
-                "fallback": True}
+        return {"chapterId": chapter_id, "success": True,
+                "contentLength": len(selected_content),
+                "fallback": bool(fallback_source_id)}
 
-    async def _process_preview_chapter(
-        self, *, catalog, chapter: dict, content: str,
-        classification: dict, primary_source_id: str, payload: dict,
-    ) -> dict:
-        from app.services.aggregate_alignment import (
-            align_candidate_chapter,
-            build_source_alignment_json,
-        )
+    async def _try_candidate_content(
+        self, catalog, chapter: dict, payload: dict, primary_source_id: str
+    ) -> dict | None:
+        """Try to get full content from candidate sources.
 
-        chapter_id = chapter["chapterId"]
-        aggregate_book_id = chapter.get("aggregateBookId", "")
-        title = chapter.get("title", "")
-        preview_text = classification.get("previewText", content)
-
-        # Try candidate sources.
+        Simplified matching: find the same chapter index in candidate's TOC.
+        Returns {"content": str, "source_id": str} or None.
+        """
         candidates = self._candidate_sources_from_payload(payload, primary_source_id)
-        best_alignment = None
-        best_candidate_content = ""
-        best_candidate_source_id = ""
+        target_index = chapter.get("chapterIndex", 1)
+        target_title = chapter.get("title", "")
 
-        for cand in candidates[:3]:  # Don't try too many at once.
+        for cand in candidates[:3]:
             cand_source_id = cand.get("sourceId", "")
             cand_book_id = cand.get("bookId", "")
             if not cand_source_id or not cand_book_id:
                 continue
-            # Look up candidate's real TOC and only check N-2..N+2 window.
             try:
                 cand_toc = await self._cached_toc(catalog, cand_book_id)
                 cand_chapters = [c for c in cand_toc.get("chapters", []) if isinstance(c, dict)]
             except Exception:
                 continue
-            target_index = chapter.get("chapterIndex", 1)
-            window_chapters = []
+
+            # Find matching chapter by index or title.
+            matched_ch = None
             for ch in cand_chapters:
-                idx = ch.get("index")
-                if idx is None:
-                    continue
-                if target_index - 2 <= idx <= target_index + 2:
-                    window_chapters.append(ch)
-            if not window_chapters and target_index - 1 < len(cand_chapters):
-                # Fallback: position-based window if index metadata is missing.
-                start = max(0, target_index - 3)
-                window_chapters = cand_chapters[start:target_index + 2]
+                if ch.get("index") == target_index:
+                    matched_ch = ch
+                    break
+            if not matched_ch and target_title:
+                for ch in cand_chapters:
+                    if target_title in (ch.get("title") or ""):
+                        matched_ch = ch
+                        break
+            if not matched_ch:
+                continue
 
-            for matched_ch in window_chapters:
-                cand_chapter_id = matched_ch.get("chapterId", "")
-                if not cand_chapter_id and matched_ch.get("chapterUrl"):
-                    cand_chapter_id = encode_chapter_id(cand_source_id, matched_ch["chapterUrl"])
-                if not cand_chapter_id:
-                    continue
-                try:
-                    cand_result = await catalog.chapter(cand_chapter_id)
-                    cand_content = cand_result.get("content", "")
-                    if not cand_content or len(cand_content.strip()) < 200:
-                        continue
-                    alignment = align_candidate_chapter(
-                        official_preview=preview_text,
-                        candidate_title=cand_result.get("title", ""),
-                        candidate_content=cand_content,
-                        expected_title=title,
-                    )
-                    score = float(alignment.get("previewSimilarity", 0)) + float(alignment.get("titleSimilarity", 0))
-                    if alignment.get("alignmentPassed"):
-                        if best_alignment is None or score > (
-                            float(best_alignment.get("previewSimilarity", 0)) + float(best_alignment.get("titleSimilarity", 0))
-                        ):
-                            best_alignment = alignment
-                            best_candidate_content = cand_content
-                            best_candidate_source_id = cand_source_id
-                except Exception:
-                    continue
+            cand_chapter_id = matched_ch.get("chapterId", "")
+            if not cand_chapter_id and matched_ch.get("chapterUrl"):
+                from app.source_plugins.id_codec import encode_chapter_id
+                cand_chapter_id = encode_chapter_id(cand_source_id, matched_ch["chapterUrl"])
+            if not cand_chapter_id:
+                continue
 
-        if best_alignment and best_candidate_content:
-            # Try AI aggregation.
-            ai_service = self._get_ai_service()
-            if ai_service:
-                try:
-                    prev_ctx = self._load_previous_chapters_context(
-                        aggregate_book_id, chapter.get("chapterIndex", 999))
-                    ai_result = await ai_service.process_with_candidates(
-                        book_name=self._aggregate_book_name_from_cache(aggregate_book_id),
-                        author="", title=title,
-                        official_preview=preview_text,
-                        candidate_content=best_candidate_content,
-                        alignment=best_alignment,
-                        previous_context=prev_ctx,
-                    )
-                    # Compute deviation score: how much did AI change the content?
-                    from app.services.aggregate_alignment import compute_deviation_score
-                    deviation = compute_deviation_score(
-                        best_candidate_content,
-                        ai_result["content"],
-                        ai_self_score=ai_result.get("selfScore"),
-                    )
-                    threshold = self._workflow_settings().get("deviationThreshold", 0.90)
-                    if deviation < threshold:
-                        # AI output deviated too much — treat as failure.
-                        raise ValueError(
-                            f"AI_OUTPUT_DEVIATION: score {deviation:.4f} < threshold {threshold}"
-                        )
-                    alignment_json = build_source_alignment_json(
-                        selected_content_source="ai_aggregate_candidate",
-                        official_content_length=classification["contentLength"],
-                        candidate_content_length=len(best_candidate_content),
-                        title_similarity=best_alignment.get("titleSimilarity", 0),
-                        preview_similarity=best_alignment.get("previewSimilarity", 0),
-                        alignment_passed=True,
-                        alignment_reason=best_alignment.get("alignmentReason", ""),
-                        candidate_source_id=best_candidate_source_id,
-                        primary_source_id=primary_source_id,
-                    )
-                    self._write_chapter_result(
-                        chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
-                        title=title, chapter_index=chapter.get("chapterIndex"),
-                        status="processed", content=ai_result["content"],
-                        alignment_json=alignment_json,
-                        ai_model=ai_result.get("aiModel", ""),
-                        deviation_score=deviation,
-                        ai_self_score=ai_result.get("selfScore", 0.0),
-                        ai_prompt_tokens=ai_result.get("promptTokens", 0),
-                        ai_completion_tokens=ai_result.get("completionTokens", 0),
-                        ai_total_tokens=ai_result.get("totalTokens", 0),
-                        ai_latency_ms=ai_result.get("latencyMs", 0),
-                    )
-                    return {"chapterId": chapter_id, "success": True,
-                            "contentLength": len(ai_result["content"])}
-                except Exception:
-                    pass  # AI failed → fall through to candidate fallback.
+            try:
+                cand_result = await catalog.chapter(cand_chapter_id)
+                cand_content = cand_result.get("content", "")
+                from app.services.aggregate_alignment import classify_source_content
+                is_official = self._is_official_source(cand_source_id)
+                cls = classify_source_content(cand_content, source_id=cand_source_id, is_official=is_official)
+                if cls["classification"] == "full":
+                    return {"content": cand_content, "source_id": cand_source_id}
+            except Exception:
+                continue
 
-            # AI unavailable or failed → fallback to candidate content.
-            purified_cand = self._purify_content(best_candidate_content)
-            alignment_json = build_source_alignment_json(
-                selected_content_source="candidate",
-                official_content_length=classification["contentLength"],
-                candidate_content_length=len(best_candidate_content),
-                title_similarity=best_alignment.get("titleSimilarity", 0),
-                preview_similarity=best_alignment.get("previewSimilarity", 0),
-                alignment_passed=True,
-                alignment_reason=best_alignment.get("alignmentReason", ""),
-                candidate_source_id=best_candidate_source_id,
-                primary_source_id=primary_source_id,
-            )
-            self._write_chapter_result(
-                chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
-                title=title, chapter_index=chapter.get("chapterIndex"),
-                status="fallback", content=purified_cand,
-                alignment_json=alignment_json,
-                fallback_source_id=best_candidate_source_id,
-            )
-            return {"chapterId": chapter_id, "success": True,
-                    "contentLength": len(purified_cand), "fallback": True}
-
-        # No candidate passed alignment → error/fallback with preview only.
-        alignment_json = build_source_alignment_json(
-            selected_content_source="official_preview_fallback",
-            official_content_length=classification["contentLength"],
-            alignment_passed=False,
-            alignment_reason="only_preview_no_candidate",
-            primary_source_id=primary_source_id,
-        )
-        purified = self._purify_content(content)
-        self._write_chapter_result(
-            chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
-            title=title, chapter_index=chapter.get("chapterIndex"),
-            status="fallback", content=purified,
-            alignment_json=alignment_json,
-            fallback_source_id=primary_source_id,
-        )
-        return {"chapterId": chapter_id, "success": True,
-                "contentLength": len(purified), "fallback": True}
+        return None
 
     def _handle_processing_error(self, exc: Exception, chapter: dict, source_chapter_id: str) -> dict:
         from app.services.aggregate_alignment import build_source_alignment_json
@@ -1045,31 +935,64 @@ class AggregateProcessor:
             },
         }
 
+    # Ad/watermark patterns to remove (unified list).
+    _AD_PATTERNS = re.compile(
+        r"(?im)^.*("
+        r"最新网址|最新地址|最新域名|最新章节地址|"
+        r"本章未完|本章未完.*点击下一页|"
+        r"请收藏|请记住本书首发域名|"
+        r"手机用户请浏览|手机阅读|"
+        r"百度搜索|百度搜|"
+        r"天才一秒|笔趣阁|"
+        r"一秒记住.*\.com|一秒记住.*\.net|"
+        r"亲,.*收藏|加入书签|"
+        r"www\.|\.com|\.net|\.org"
+        r").*$"
+    )
+    _CHAPTER_TITLE_RE = re.compile(r"^(#\s*)?第[一二三四五六七八九十百零\d]+章.*$")
+
     def _purify_content(self, content: str) -> str:
-        settings = self._workflow_settings()
-        mode = settings.get("purifyMode", "conservative")
-        if mode == "off":
+        """Unified content purification.
+
+        Steps:
+        1. Basic cleanup: normalize line endings, strip trailing whitespace, compress blank lines.
+        2. Ad/watermark removal: remove common ad lines, duplicate title lines.
+        3. Integrity check: if cleaned content is too short or shrunk >50%, fall back to basic cleanup only.
+        """
+        if not content:
             return content
+
+        original_length = len(content)
+
+        # Step 1: Basic cleanup.
         text = content.replace("\r\n", "\n").replace("\r", "\n")
         text = re.sub(r"[ \t]+\n", "\n", text)
         text = re.sub(r"\n{3,}", "\n\n", text)
-        if mode == "aggressive":
-            text = re.sub(r"(?im)^.*(最新网址|最新地址|本章未完|请收藏|手机用户请浏览).*$", "", text)
-            # Drop duplicated chapter-title lines (a common ad/watermark pattern).
-            _CHAPTER_TITLE_RE = re.compile(r"^(#\s*)?第[一二三四五六七八九十百零\d]+章.*$")
-            seen_titles: set[str] = set()
-            kept_lines: list[str] = []
-            for line in text.splitlines():
-                stripped = line.strip()
-                title_key = stripped.lstrip("#").strip()
-                if _CHAPTER_TITLE_RE.match(stripped) and title_key in seen_titles:
-                    continue
-                if _CHAPTER_TITLE_RE.match(stripped):
-                    seen_titles.add(title_key)
-                kept_lines.append(line)
-            text = "\n".join(kept_lines)
-            text = re.sub(r"\n{3,}", "\n\n", text)
-        return text.strip()
+        basic_text = text.strip()
+
+        # Step 2: Ad/watermark removal.
+        text = self._AD_PATTERNS.sub("", basic_text)
+
+        # Remove duplicate chapter-title lines.
+        seen_titles: set[str] = set()
+        kept_lines: list[str] = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            title_key = stripped.lstrip("#").strip()
+            if self._CHAPTER_TITLE_RE.match(stripped) and title_key in seen_titles:
+                continue
+            if self._CHAPTER_TITLE_RE.match(stripped):
+                seen_titles.add(title_key)
+            kept_lines.append(line)
+        text = "\n".join(kept_lines)
+        text = re.sub(r"\n{3,}", "\n\n", text).strip()
+
+        # Step 3: Integrity check.
+        # If cleaned content is too short or shrunk significantly, fall back to basic cleanup.
+        if len(text) < 100 or (original_length > 200 and len(text) < original_length * 0.5):
+            return basic_text
+
+        return text
 
     def _write_processed_chapter_if_needed(
         self,
