@@ -12,13 +12,39 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = "5"
+SCHEMA_VERSION = "6"
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    user_id TEXT PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    disabled INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_username
+    ON users (username);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    session_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    last_seen_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user
+    ON user_sessions (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires
+    ON user_sessions (expires_at);
 
 CREATE TABLE IF NOT EXISTS books (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -199,17 +225,31 @@ CREATE TABLE IF NOT EXISTS plugin_live_checks (
 
 CREATE TABLE IF NOT EXISTS aggregate_book_tasks (
     aggregate_book_id TEXT PRIMARY KEY,
+    canonical_name TEXT DEFAULT '',
+    canonical_author TEXT DEFAULT '',
     name TEXT,
     author TEXT,
+    cover_url TEXT DEFAULT '',
+    intro TEXT DEFAULT '',
+    word_count TEXT DEFAULT '',
     aggregate_payload_json TEXT,
     primary_book_id TEXT,
     primary_source_id TEXT,
+    added_by_user_id TEXT DEFAULT '',
+    start_chapter_index INTEGER DEFAULT 1,
+    initial_snapshot_last_index INTEGER DEFAULT 0,
+    backfill_started INTEGER DEFAULT 0,
+    auto_archive_on_complete INTEGER DEFAULT 1,
+    search_visibility_status TEXT DEFAULT 'hidden',
     book_status TEXT DEFAULT 'unknown',
     total_chapters INTEGER DEFAULT 0,
     processed_chapters INTEGER DEFAULT 0,
+    visible_processed_chapters INTEGER DEFAULT 0,
     failed_chapters INTEGER DEFAULT 0,
     total_tokens INTEGER DEFAULT 0,
     status TEXT DEFAULT 'active',
+    settings_json TEXT DEFAULT '',
+    current_policy_version INTEGER DEFAULT 1,
     interval_minutes INTEGER DEFAULT 30,
     last_check_time TEXT,
     next_check_time TEXT,
@@ -217,6 +257,7 @@ CREATE TABLE IF NOT EXISTS aggregate_book_tasks (
     last_error TEXT,
     ai_enabled INTEGER DEFAULT 0,
     last_processed_at TEXT,
+    archived_at TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -228,10 +269,16 @@ CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     chapter_index INTEGER,
     title TEXT,
     status TEXT DEFAULT 'pending',
+    placeholder INTEGER DEFAULT 0,
     content_length INTEGER DEFAULT 0,
     processed_content TEXT,
+    content_file_path TEXT DEFAULT '',
     last_processed_at TEXT,
     error TEXT,
+    policy_version INTEGER DEFAULT 1,
+    policy_snapshot_json TEXT DEFAULT '',
+    source_snapshot_refs_json TEXT DEFAULT '',
+    trace_hash TEXT DEFAULT '',
     ai_model TEXT,
     ai_prompt_tokens INTEGER DEFAULT 0,
     ai_completion_tokens INTEGER DEFAULT 0,
@@ -264,6 +311,62 @@ CREATE TABLE IF NOT EXISTS aggregate_ai_usage (
     ai_self_score REAL DEFAULT 0.0,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS aggregate_book_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aggregate_book_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    source_book_id TEXT DEFAULT '',
+    source_name TEXT DEFAULT '',
+    source_book_url TEXT DEFAULT '',
+    role TEXT NOT NULL DEFAULT 'candidate',
+    score INTEGER DEFAULT 0,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    last_seen_at TEXT DEFAULT (datetime('now')),
+    last_chapter_title TEXT DEFAULT '',
+    chapter_count INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(aggregate_book_id, source_id, source_book_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_aggregate_book_sources_book
+    ON aggregate_book_sources (aggregate_book_id, role, enabled);
+CREATE INDEX IF NOT EXISTS idx_aggregate_book_sources_source_book
+    ON aggregate_book_sources (source_id, source_book_id);
+
+CREATE TABLE IF NOT EXISTS aggregate_operation_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aggregate_book_id TEXT NOT NULL,
+    actor_user_id TEXT DEFAULT '',
+    actor_role TEXT DEFAULT '',
+    operation_type TEXT NOT NULL,
+    before_json TEXT DEFAULT '',
+    after_json TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_aggregate_operation_logs_book
+    ON aggregate_operation_logs (aggregate_book_id, created_at);
+
+CREATE TABLE IF NOT EXISTS aggregate_source_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aggregate_book_id TEXT NOT NULL,
+    chapter_index INTEGER NOT NULL,
+    source_id TEXT NOT NULL,
+    source_book_id TEXT DEFAULT '',
+    source_chapter_id TEXT DEFAULT '',
+    title TEXT DEFAULT '',
+    clean_content TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    classification TEXT DEFAULT '',
+    fetched_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(aggregate_book_id, chapter_index, source_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_aggregate_source_snapshots_book
+    ON aggregate_source_snapshots (aggregate_book_id, chapter_index);
 """
 
 
@@ -280,8 +383,8 @@ def _is_legacy_database(path: Path) -> bool:
             ).fetchall()
             if len(rows) > 0:
                 return True
-            # Also trigger rebuild if the DB schema version is older than 5
-            # (pre-book_search_cache).
+            # Also trigger rebuild if the DB schema version is older than the
+            # current shared-library schema.
             try:
                 ver = conn.execute(
                     "SELECT value FROM schema_meta WHERE key = 'version'"
@@ -299,6 +402,79 @@ def ensure_data_dir() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _table_columns(conn: sqlite3.Connection, table_name: str) -> set[str]:
+    rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return {str(row[1]) for row in rows}
+
+
+def _ensure_column(conn: sqlite3.Connection, table_name: str, column_name: str, sql_type: str) -> None:
+    columns = _table_columns(conn, table_name)
+    if column_name in columns:
+        return
+    conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {sql_type}")
+
+
+def _ensure_shared_library_schema(conn: sqlite3.Connection) -> None:
+    if "aggregate_book_tasks" in {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }:
+        book_columns = {
+            "canonical_name": "TEXT DEFAULT ''",
+            "canonical_author": "TEXT DEFAULT ''",
+            "cover_url": "TEXT DEFAULT ''",
+            "intro": "TEXT DEFAULT ''",
+            "word_count": "TEXT DEFAULT ''",
+            "added_by_user_id": "TEXT DEFAULT ''",
+            "start_chapter_index": "INTEGER DEFAULT 1",
+            "initial_snapshot_last_index": "INTEGER DEFAULT 0",
+            "backfill_started": "INTEGER DEFAULT 0",
+            "auto_archive_on_complete": "INTEGER DEFAULT 1",
+            "search_visibility_status": "TEXT DEFAULT 'hidden'",
+            "visible_processed_chapters": "INTEGER DEFAULT 0",
+            "settings_json": "TEXT DEFAULT ''",
+            "current_policy_version": "INTEGER DEFAULT 1",
+            "last_source_chapter_title": "TEXT DEFAULT ''",
+            "archived_at": "TEXT",
+        }
+        for name, sql_type in book_columns.items():
+            _ensure_column(conn, "aggregate_book_tasks", name, sql_type)
+
+    if "aggregate_chapter_tasks" in {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }:
+        chapter_columns = {
+            "placeholder": "INTEGER DEFAULT 0",
+            "content_file_path": "TEXT DEFAULT ''",
+            "policy_version": "INTEGER DEFAULT 1",
+            "policy_snapshot_json": "TEXT DEFAULT ''",
+            "source_snapshot_refs_json": "TEXT DEFAULT ''",
+            "trace_hash": "TEXT DEFAULT ''",
+        }
+        for name, sql_type in chapter_columns.items():
+            _ensure_column(conn, "aggregate_chapter_tasks", name, sql_type)
+
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_aggregate_book_tasks_canonical
+            ON aggregate_book_tasks (canonical_name, canonical_author)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_aggregate_book_tasks_added_by
+            ON aggregate_book_tasks (added_by_user_id)
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_aggregate_book_tasks_status
+            ON aggregate_book_tasks (status, search_visibility_status)
+        """
+    )
+
+
 def initialize_database(db_path: Path | None = None) -> str:
     path = db_path or DB_PATH
     ensure_data_dir()
@@ -313,6 +489,7 @@ def initialize_database(db_path: Path | None = None) -> str:
 
     with sqlite3.connect(path) as conn:
         conn.executescript(SCHEMA_SQL)
+        _ensure_shared_library_schema(conn)
         conn.execute(
             "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
             ("version", SCHEMA_VERSION),

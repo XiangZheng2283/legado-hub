@@ -5,27 +5,30 @@ import {
   Search,
   HardDrive,
   Settings,
-  FileJson,
-  ShieldCheck,
   KeyRound,
   BookOpen,
+  Rss,
+  LogOut,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/auth"
 
 const navItems = [
   { to: "/console", label: "仪表盘", icon: LayoutDashboard, end: true },
   { to: "/console/plugins", label: "书源", icon: Puzzle },
   { to: "/console/search", label: "搜索", icon: Search },
+  { to: "/console/subscription", label: "共享订阅", icon: Rss },
+  { to: "/console/library", label: "共享书库", icon: BookOpen },
   { to: "/console/official-sources", label: "官方源", icon: KeyRound },
   { to: "/console/cache", label: "缓存", icon: HardDrive },
   { to: "/console/settings", label: "设置", icon: Settings },
-  { to: "/console/aggregate-source", label: "聚合书源", icon: FileJson },
-  { to: "/console/aggregate-books", label: "聚合书架", icon: BookOpen },
-  { to: "/console/verification", label: "验证", icon: ShieldCheck },
 ]
 
 export function Layout() {
   const location = useLocation()
+  const { user, logout } = useAuth()
+
   return (
     <div className="flex min-h-screen">
       <aside className="w-56 bg-card border-r flex flex-col sticky top-0 h-screen">
@@ -57,8 +60,14 @@ export function Layout() {
           })}
         </nav>
         <Separator />
-        <div className="p-3 text-xs text-muted-foreground">
-          Plugin Runtime Stage 3
+        <div className="p-3 space-y-2">
+          <div className="text-xs text-muted-foreground truncate">
+            {user?.username || "管理员"}
+          </div>
+          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => logout()}>
+            <LogOut className="w-3 h-3" />
+            退出登录
+          </Button>
         </div>
       </aside>
       <main className="flex-1 p-6 overflow-y-auto bg-background">

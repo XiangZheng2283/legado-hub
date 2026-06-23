@@ -1,473 +1,722 @@
-# 聚合书源订阅模式设计文档
+# 共享订阅式聚合书库方案
 
-> 状态：待实施  
-> 日期：2026-06-20  
-> 范围：legado-hub 聚合书源、用户订阅、搜索注入、章节处理  
-> 决策：废弃当前搜索时聚合接口，全面转向订阅模式
-
----
-
-## 1. 背景与决策
-
-### 1.1 当前方案
-
-当前聚合书源通过 `POST /api/console/search/aggregate` 接口在搜索时即时生成聚合壳，用户点击后才开始处理章节。
-
-### 1.2 问题
-
-1. 搜索时聚合结果不稳定，依赖单次搜索的源质量
-2. 用户首次打开章节看到 `PROCESSING_PLACEHOLDER`
-3. 后台处理与搜索流程耦合
-4. 管理后台搜索页不适合普通用户直接使用
-
-### 1.3 新方案决策
-
-全面转向**订阅模式**：
-
-- 提供独立的用户搜索/订阅页面
-- 用户订阅小说后，后台持续处理章节
-- 普通搜索自动注入已订阅小说的聚合源
-- 任意用户订阅一本小说后，所有用户搜索都能看到该聚合源
-- 废弃 `POST /api/console/search/aggregate`
+> 状态：执行方案
+> 日期：2026-06-23
+> 范围：legado-hub 订阅页、书库页、阅读端搜索注入、管理员后台、聚合章节处理、任务重建与追踪
+> 结论：废弃“即时 AI 聚合搜索入口”，改为“MoviePilot 风格的共享订阅书库 + 后台持续处理 + 阅读端普通搜索注入”
 
 ---
 
-## 2. 总体架构
+## 1. 背景与目标
 
-```
-用户前端（新增）
-├── /subscribe/search        用户搜索页
-├── /subscribe/library       我的订阅
-└── BookDetailModal          书籍详情弹窗（含订阅按钮）
+当前“搜索时即时生成 AI 聚合书”的方案存在四个根问题：
 
-管理后台（现有，不变）
-├── /console/search-jobs     普通搜索（自动注入聚合源）
-└── /console/settings        管理设置
+1. 聚合结果依赖单次搜索现场状态，书会闪烁、混杂、抖动。
+2. 搜索、聚合、正文处理耦合在同一链路里，响应慢且难维护。
+3. 阅读端拿到的是临时聚合结果，不是长期可维护的本地书库对象。
+4. 管理后台旧有的“聚合书源 / 聚合书架 / 验证”三条入口已经和新的产品方向冲突。
 
-后端
-├── /api/subscribe/search                    用户搜索
-├── /api/subscribe/books/{name}              书籍详情
-├── /api/subscribe/books/{name}              订阅/取消订阅
-├── /api/subscribe/library                   我的订阅列表
-├── /api/subscribe/books/{name}/settings     订阅设置
-├── /api/console/search-jobs                 普通搜索（注入聚合源）
-└── 后台调度器：检查订阅小说更新
+本方案改为：
 
-数据库
-├── novel_subscriptions      小说订阅全局表
-└── user_subscriptions       用户-小说关联表
+1. 提供一个**订阅页**，按“书”聚合卡片搜索，而不是按“源”搜索。
+2. 任意普通用户可以把一本**尚未入库**的书加入全局书库。
+3. 一本书一旦进入书库，就变成**全局共享本地资产**，后续由后台持续处理。
+4. 阅读端仍然走普通搜索，但会按匹配规则把本地书库中的聚合书注入结果。
+5. 管理员后台负责验证搜索效果、管理书库、管理任务、管理用户和系统参数。
 
-本地存储
-backend/data/novels/
-└── {normalized_novel_name}/
-    ├── novel.json           # 元数据 + 处理进度
-    └── chapters/
-        ├── 第001章_xxx.md
-        └── ...
-```
+产品抽象参考 [MoviePilot](https://github.com/jxxghp/MoviePilot)：
+
+1. 搜索结果是一媒体一卡片，这里对应为“一本书一卡片”。
+2. 订阅后创建长期对象，并由后台持续处理。
+3. 本地库是长期资产，搜索和管理都围绕本地库展开。
 
 ---
 
-## 3. 核心规则
+## 2. 角色与入口
 
-1. **用户搜索页**与**管理后台搜索页**完全分离
-2. **任意用户订阅一本小说后**，所有用户在普通搜索中都能看到该小说的 `legadohub_ai_aggregate` 源
-3. **小说存储按小说名称**，不区分用户
-4. **处理一章写入一章**，不再创建空文件或 pending/processed 文件夹
-5. **废弃 `POST /api/console/search/aggregate`**，前端"书源聚合"模式移除
-6. **普通搜索自动注入聚合源**（仅对已订阅小说）
+### 2.1 普通用户
 
----
+普通用户只有两类页面：
 
-## 4. 数据模型
+1. `订阅`
+2. `书库`
 
-### 4.1 `novel_subscriptions`
+普通用户权限：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | INTEGER PK | |
-| `novel_name` | TEXT UNIQUE | 标准化小说名，去重键 |
-| `display_name` | TEXT | 原始小说名 |
-| `author` | TEXT | 作者 |
-| `cover_url` | TEXT | 封面 URL |
-| `word_count` | TEXT | 总字数 |
-| `total_chapters` | INTEGER | 总章节数 |
-| `processed_chapters` | INTEGER | 已处理章节数 |
-| `completed` | BOOLEAN | 是否完结 |
-| `primary_source_id` | TEXT | 主源 ID |
-| `candidate_sources` | TEXT(JSON) | 候选源列表 |
-| `settings_json` | TEXT(JSON) | 订阅设置 |
-| `last_checked_at` | TEXT | 上次检查更新时间 |
-| `last_chapter_title` | TEXT | 最新章节标题 |
-| `created_at` | TEXT | |
-| `updated_at` | TEXT | |
+1. 可以在订阅页搜索书籍。
+2. 可以把**尚未入库**的书加入全局书库。
+3. 首次加书时只允许设置 `startChapterIndex`。
+4. 可以查看全局书库与“我添加的”书。
+5. 不允许修改任何全局处理参数。
+6. 不允许暂停、恢复、归档、删除、重建。
+7. 如果书已经入库，只能看到“已入库”，不能重复添加。
 
-### 4.2 `user_subscriptions`
+### 2.2 管理员
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | INTEGER PK | |
-| `user_id` | TEXT | 用户 ID |
-| `novel_name` | TEXT | 关联 novel_subscriptions |
-| `settings_override` | TEXT(JSON) | 用户个性化设置（可选） |
-| `created_at` | TEXT | |
+管理员后台导航固定为：
 
-### 4.3 `aggregate_chapter_tasks` 新增字段
+1. `仪表盘`
+2. `书源`
+3. `搜索`
+4. `订阅`
+5. `书库`
+6. `缓存`
+7. `用户`
+8. `设置`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `priority` | INTEGER | 处理优先级 |
-| `processing_started_at` | TEXT | 处理开始时间 |
-| `novel_name` | TEXT | 归属小说 |
+其中：
+
+1. `书源` 内部分为两个 tab：
+   - `官方源`
+   - `第三方源`
+2. `搜索` 只用于**验证阅读端最终搜索效果**。
+3. `订阅` 是管理员可操作的书籍订阅卡片页。
+4. `书库` 是全局书库和书籍管理入口。
+5. `用户` 用于创建用户、重置密码、禁用用户。
+
+### 2.3 已废弃页面
+
+以下旧页面和旧路由直接删除，不做兼容跳转：
+
+1. `聚合书源`
+2. `聚合书架`
+3. `验证`
 
 ---
 
-## 5. 本地存储结构
+## 3. 三类搜索面的职责
 
-```
-backend/data/novels/
-└── {normalized_novel_name}/
-    ├── novel.json
-    └── chapters/
-        ├── 第001章_开局.md
-        ├── 第002章_入门.md
-        └── ...
-```
+### 3.1 订阅页搜索
 
-### 5.1 `novel.json` 示例
+订阅页搜索是**按书聚合后的卡片搜索**，不是多源调试搜索。
 
-```json
-{
-  "novelName": "剑宗外门",
-  "author": "其声喵喵然",
-  "primarySourceId": "qidian_com_web",
-  "candidateSources": ["69shuba_tw", "twkan_com", "kks101_com"],
-  "totalChapters": 389,
-  "processedChapters": 12,
-  "completed": false,
-  "lastChapter": "第389章 拔剑而已",
-  "lastCheckedAt": "2026-06-20T10:00:00Z",
-  "settings": {
-    "aiEnabled": true,
-    "updateIntervalMinutes": 60,
-    "sourcePriority": ["auto"]
-  }
-}
-```
+规则：
 
----
+1. 一本书只显示一张卡片。
+2. 卡片以**官方源元数据优先**：
+   - 有官方源时，封面、作者、简介、章节数、完结状态优先取官方源。
+   - 无官方源时，取综合分最高的第三方源。
+3. 搜索结果以**瀑布流卡片 + 无限滚动**形式展示。
+4. 搜索结果支持**实时增量出卡片**，但卡片 ID 必须稳定，只允许补字段和补状态，不允许闪烁删除重建。
+5. 如果命中已入库书，订阅页折叠成一张“已入库”卡片，不再展示多个源候选。
 
-## 6. 接口设计
+订阅页卡片按钮只出现在这里，不出现在调试搜索页：
 
-### 6.1 用户搜索
+1. `订阅`
+2. `查看`
+3. `管理`
 
-```http
-POST /api/subscribe/search
-Content-Type: application/json
+权限：
 
-{
-  "keyword": "剑宗外门",
-  "page": 1
-}
-```
+1. 普通用户：
+   - 未入库：显示 `订阅`
+   - 已入库：显示灰色 `已入库`
+   - `查看` 可用
+   - `管理` 不可用
+2. 管理员：
+   - 未入库：显示 `订阅`
+   - 已入库：显示 `查看`、`管理`
 
-返回普通源结果列表（不含聚合源）。每个结果可点击进入书籍详情弹窗。
+### 3.2 阅读端普通搜索
 
-### 6.2 书籍详情
+阅读端继续走**普通搜索**，不提供订阅入口，不走登录态。
 
-```http
-GET /api/subscribe/books/{novel_name}
-```
+规则：
 
-返回：
+1. 普通源结果正常返回。
+2. 本地书库命中时，按匹配规则注入 `legadohub_ai_aggregate` 结果。
+3. 注入规则是**按书名/作者匹配命中**，不是把本地所有书都塞进去。
+4. 本地聚合书与普通源结果**同时展示**。
+5. 本地聚合书排序按“官方源同档加权”处理，默认 `+50`。
 
-```json
-{
-  "novelName": "剑宗外门",
-  "author": "其声喵喵然",
-  "coverUrl": "https://...",
-  "wordCount": "100万",
-  "totalChapters": 389,
-  "completed": false,
-  "lastChapter": "第389章 拔剑而已",
-  "isSubscribed": false,
-  "availableSources": [
-    {"sourceId": "qidian_com_web", "sourceName": "起点中文网"},
-    {"sourceId": "69shuba_tw", "sourceName": "69书吧"}
-  ],
-  "defaultSettings": {
-    "aiEnabled": true,
-    "updateIntervalMinutes": 60,
-    "sourcePriority": ["auto"]
-  }
-}
-```
+### 3.3 管理员后台搜索
 
-### 6.3 订阅小说
+管理员后台搜索页与阅读端逻辑保持一致，用于验证“阅读端会看到什么”。
 
-```http
-POST /api/subscribe/books/{novel_name}
-Content-Type: application/json
+规则：
 
-{
-  "aiEnabled": true,
-  "updateIntervalMinutes": 60,
-  "sourcePriority": ["auto"]
-}
-```
-
-行为：
-1. 创建/更新 `novel_subscriptions`
-2. 创建 `user_subscriptions`
-3. 触发首次处理：搜索源 → 建聚合壳 → 取 TOC → 开始处理
-
-### 6.4 取消订阅
-
-```http
-DELETE /api/subscribe/books/{novel_name}
-```
-
-仅删除 `user_subscriptions`。如果还有其他用户订阅，`novel_subscriptions` 保留。
-
-### 6.5 我的订阅
-
-```http
-GET /api/subscribe/library
-```
-
-返回当前用户订阅列表。
-
-### 6.6 普通搜索注入聚合源
-
-```http
-POST /api/console/search-jobs
-Content-Type: application/json
-
-{
-  "keyword": "剑宗外门",
-  "page": 1
-}
-```
-
-后端行为：
-1. 搜索第三方/官方源
-2. 检查 `novel_subscriptions` 是否有匹配 `novel_name`
-3. 如果有 → 在结果中注入 `legadohub_ai_aggregate` 源
-4. 聚合源显示处理进度
+1. 搜索结果保留多源普通搜索形态。
+2. 按与阅读端相同的规则注入本地聚合书。
+3. 不显示 `订阅 / 查看 / 管理` 三个动作按钮。
+4. 该页面只用于调试和验证搜索效果，不承担订阅入口职责。
 
 ---
 
-## 7. 处理流程
+## 4. 全局书库对象模型
 
-### 7.1 订阅时首次处理
+### 4.1 共享书对象
 
-```
-用户点击订阅
-    ↓
-从所有可用源搜索该书
-    ↓
-选择主源（官方优先，第三方按分数兜底）
-    ↓
-创建 novel 目录 + novel.json
-    ↓
-取主源 TOC
-    ↓
-把全部章节写入 chapters/ 目录（一章一个文件）
-    ↓
-按优先级加入全局处理队列
-    ↓
-Worker 处理 → 写入 chapters/xxx.md → 更新 novel.json
-```
+系统以**全局共享书对象**为中心。
 
-### 7.2 后台更新检查
+约束：
 
-```
-定时扫描 novel_subscriptions
-    ↓
-检查主源是否有新章节
-    ↓
-有更新 → 更新 total_chapters → 处理新章节
-    ↓
-无更新 → 只更新 last_checked_at
-```
+1. 一本入库书只有一个稳定的 `aggregate_book_id`。
+2. `aggregate_book_id` 是不透明稳定 ID，不从书名或 source 列表动态拼接。
+3. 一本书一旦入库，就是全局共享本地资产。
+4. 后续任何用户看到的都是同一个本地库对象与同一套处理结果。
 
-### 7.3 用户点击章节
+### 4.2 书籍身份匹配
 
-```python
-def aggregate_chapter_response(chapter_url):
-    chapter_id = decode(chapter_url)
-    file_path = get_chapter_file(chapter_id)
-    if file_path.exists() and file_path.stat().st_size > 0:
-        return file_path.read_text()
-    
-    # 未处理：触发高优先级处理 + 返回提示语
-    trigger_priority_processing(chapter_id)
-    return "章节处理中，请稍后刷新..."
-```
+共享书匹配采用多字段模型：
 
----
+1. 官方作品 ID 优先。
+2. 再看 `canonical_name + canonical_author`。
+3. 管理后台保留人工 `合并 / 拆分` 能力。
 
-## 8. 并行处理设计
+禁止的旧做法：
 
-### 8.1 Worker 配置
+1. 用 `novel_name` 作为唯一键。
+2. 用 source 列表拼接身份。
+3. 按目录名承担真正主键语义。
 
-```python
-max_workers = 4          # 全局章节处理并发
-max_per_book = 2         # 单本书并发上限
-max_ai_concurrency = 2   # AI 调用并发上限
-```
+### 4.3 数据表
 
-### 8.2 队列优先级
+第一版只保留全局书库，不保留 `user_subscriptions`。
 
-| 优先级 | 场景 |
-|--------|------|
-| 1 | 用户当前点击的章节 |
-| 2 | 用户点击章节的后 3 章 |
-| 3 | 订阅新小说的前 10 章 |
-| 4 | 后台更新章节 |
-| 5 | 空闲时预读后续章节 |
+建议核心表：
 
-### 8.3 用户跳转到后面章节
+#### `users`
 
-如果用户点击第 N 章：
-- 第 N 章立即入队（优先级 1）
-- 第 N+1, N+2, N+3 章入队（优先级 2）
-- 第 1 至 N-1 章暂停或低优先级处理
-- 仅在该小说之前没有本地数据时生效
+字段：
 
----
+1. `user_id`
+2. `username`
+3. `password_hash`
+4. `role`
+5. `disabled`
+6. `created_at`
+7. `updated_at`
 
-## 9. AI 处理路径
+#### `aggregate_books`
 
-| 主源 | 内容分类 | 处理方式 |
-|------|---------|---------|
-| 官方 | full | `_purify_content` + AI 净化 + 屏蔽词修复 |
-| 官方 | preview | AI 聚合：官方 preview 为框架 + 第三方候选源补全 |
-| 官方 | empty | 按分数降序找第三方候选源 full 内容 → AI 净化 |
-| 第三方 | full | `_purify_content` + AI 净化 |
-| 第三方 | preview/empty | 按分数降序找候选源 full → 规则/AI 净化 |
+字段：
 
-候选源查找：**串行按分数降序尝试**，命中即停。章节标题做模糊匹配（中文数字/阿拉伯数字归一化）。
+1. `aggregate_book_id`
+2. `canonical_name`
+3. `canonical_author`
+4. `display_name`
+5. `display_author`
+6. `cover_url`
+7. `intro`
+8. `word_count`
+9. `book_status`
+10. `primary_source_id`
+11. `primary_book_id`
+12. `start_chapter_index`
+13. `search_visibility_status`
+14. `status`
+15. `total_chapters`
+16. `processed_chapters`
+17. `visible_processed_chapters`
+18. `failed_chapters`
+19. `last_source_chapter_title`
+20. `last_local_chapter_title`
+21. `added_by_user_id`
+22. `auto_archive_on_complete`
+23. `settings_json`
+24. `current_policy_version`
+25. `created_at`
+26. `updated_at`
+27. `last_checked_at`
+28. `archived_at`
 
----
+#### `aggregate_book_sources`
 
-## 10. 前端页面
+字段：
 
-### 10.1 用户搜索页 `/subscribe/search`
+1. `aggregate_book_id`
+2. `source_id`
+3. `source_book_id`
+4. `source_book_url`
+5. `role`
+6. `score`
+7. `enabled`
+8. `last_seen_at`
+9. `last_chapter_title`
+10. `chapter_count`
 
-- 搜索框
-- 结果列表（普通源书籍卡片）
-- 点击卡片 → 书籍详情弹窗
+#### `aggregate_chapter_tasks`
 
-### 10.2 书籍详情弹窗
+字段：
 
-显示：
-- 封面
-- 书名
-- 作者
-- 总字数
-- 总章节数
-- 完结状态
-- 最新章节
-- 可用源列表
-- 订阅按钮
+1. `aggregate_book_id`
+2. `chapter_index`
+3. `title`
+4. `status`
+5. `placeholder`
+6. `primary_source_chapter_id`
+7. `selected_source_id`
+8. `selected_source_chapter_id`
+9. `policy_version`
+10. `policy_snapshot_json`
+11. `source_snapshot_refs_json`
+12. `processed_at`
+13. `trace_hash`
+14. `content_file_path`
 
-订阅配置：
-- AI 聚合开关
-- AI 净化开关
-- 更新检查间隔
-- 源优先级（默认自动）
+#### `aggregate_operation_logs`
 
-### 10.3 我的订阅页 `/subscribe/library`
+字段：
 
-- 已订阅小说列表
-- 处理进度条
-- 最新章节
-- 取消订阅
-
-### 10.4 管理后台变更
-
-- 移除"书源聚合"模式按钮
-- 普通搜索结果中自动显示已订阅小说的聚合源
+1. `id`
+2. `aggregate_book_id`
+3. `actor_user_id`
+4. `actor_role`
+5. `operation_type`
+6. `before_json`
+7. `after_json`
+8. `created_at`
 
 ---
 
-## 11. 实施顺序
+## 5. 用户后台信息架构
 
-### 阶段 1：基础数据层
-1. 创建 `novel_subscriptions`、`user_subscriptions` 表
-2. `aggregate_chapter_tasks` 新增字段
-3. 创建小说目录结构工具
+### 5.1 订阅页
 
-### 阶段 2：订阅后端 API
-1. `POST /api/subscribe/search`
-2. `GET /api/subscribe/books/{name}`
-3. `POST /api/subscribe/books/{name}`
-4. `GET /api/subscribe/library`
-5. `DELETE /api/subscribe/books/{name}`
+订阅页是新增全局书的唯一普通用户入口。
 
-### 阶段 3：处理引擎
-1. 全局章节队列 + Worker 池
-2. 订阅时首次处理
-3. 官方 preview AI 聚合
-4. 候选源串行查找 + 模糊匹配
+卡片字段：
 
-### 阶段 4：普通搜索注入
-1. 修改 `search-jobs` 接口
-2. 根据订阅表注入聚合源
-3. 移除 `search/aggregate` 接口
+1. 封面
+2. 书名
+3. 作者
+4. 简介
+5. 字数
+6. 章节数
+7. 完结状态
+8. 来源概览
+9. 当前是否已入库
+10. 添加人
+11. 当前处理进度
 
-### 阶段 5：前端用户页
-1. `/subscribe/search`
-2. `/subscribe/library`
-3. 书籍详情弹窗
+### 5.2 书库页
 
-### 阶段 6：后台更新调度
-1. 定时检查订阅小说更新
-2. 新章节自动处理
+用户书库页保留两个视图：
 
-### 阶段 7：验证
-1. 端到端订阅流程
-2. 搜索注入
-3. 章节处理
-4. 后台更新
+1. `全局书库`
+2. `我添加的`
+
+其中“我添加的”只按 `added_by_user_id = current_user` 过滤，不依赖 `user_subscriptions`。
 
 ---
 
-## 12. 依赖与风险
+## 6. 查看与管理交互
 
-### 12.1 依赖
+### 6.1 查看
 
-- 用户系统：需要用户登录才能区分"我的订阅"
-- 前端路由：新增 `/subscribe/*` 页面
+`查看` 打开一个**轻量书籍详情弹窗**。
 
-### 12.2 风险
+该弹窗和当前后台“查看详情”逻辑合并，但收缩成轻量模式：
 
-1. **存储膨胀**：每本订阅小说所有章节落盘，需要磁盘监控
-2. **AI 成本**：官方 preview 强制 AI 聚合，调用量较大
-3. **源站压力**：后台持续检查更新，需要限流
-4. **多用户共享**：任意用户订阅所有人可见，可能被滥用
+1. 封面
+2. 书名
+3. 作者
+4. 简介
+5. 处理进度
+6. 目录
+
+### 6.2 目录与试读
+
+详情弹窗中的目录只用于浏览、选中和双击进入试读。
+
+规则：
+
+1. 不单独放“试读”按钮。
+2. 单击目录章节只做选中，不跳转页面。
+3. 双击目录章节，进入现有后台阅读页面。
+4. 未处理章节在目录中可见；如果双击进入阅读页，则正文区域返回占位提示。
+
+### 6.3 管理
+
+`管理` 不在弹窗里做，直接跳转到书库管理页。
 
 ---
 
-## 13. 与当前代码的关系
+## 7. 章节处理顺序与可搜索门槛
 
-### 13.1 保留
+### 7.1 首次入库
 
-- `aggregate_virtual_source.py`：聚合壳生成逻辑，改为订阅时调用
-- `aggregate_processor.py`：章节处理核心，简化路径后保留
-- `aggregate_ai_service.py`：AI 服务保留
-- 搜索双路径/双超时/官方源开关：保留在普通搜索中
+普通用户首次加书时，只允许设置：
 
-### 13.2 废弃
+1. `startChapterIndex`
+2. `autoArchiveOnComplete`
 
-- `POST /api/console/search/aggregate` 接口
-- 前端"书源聚合"模式
-- 搜索后预处理 `_schedule_aggregate_preprocessing`
+其他参数全部走系统默认值：
 
-### 13.3 新增
+1. 自动追更：开启
+2. 更新检查间隔：60 分钟
+3. 主源策略：官方优先，第三方综合分数兜底
+4. AI 聚合：开启
+5. AI 净化：开启
+6. 自动归档：默认开启，可由首次加书用户关闭
 
-- 订阅相关 API 和表
-- 用户前端页面
-- 小说目录管理工具
-- 后台更新调度器
+### 7.2 顺序处理模型
+
+一本书创建后立刻开始处理。
+
+规则：
+
+1. 从 `startChapterIndex` 开始，**严格顺序向后处理**。
+2. `startChapterIndex` 之前的章节先标记为 `placeholder`。
+3. 真实正文文件只在章节处理完成后写入。
+4. 不创建空的占位正文文件。
+5. 目录完整可见，占位章也显示在目录中。
+6. 点击占位章只返回提示，不提权重排队。
+
+### 7.3 连载书回填规则
+
+如果书是连载中的：
+
+1. 先处理从 `startChapterIndex` 到“订阅时快照的最后一章”这一段。
+2. 当这段完成后，开始回填 `startChapterIndex` 之前的旧章节。
+3. 后续新增章节与前置旧章节并行穿插处理。
+
+### 7.4 搜索可见门槛
+
+一本书允许进入阅读端普通搜索的条件是：
+
+1. TOC 已完成。
+2. 从 `startChapterIndex` 开始，**连续可读 50 章**。
+
+注意：
+
+1. 这个 50 章门槛只按 `startChapterIndex` 往后计数。
+2. 不要求前置旧章节已经回填。
+3. 不要求最新章节正文已经处理成功。
+4. 如果从 `startChapterIndex` 到当前末章总数不足 50 章，则该区间全部处理完成后，也允许进入搜索。
+
+### 7.5 最新章节策略
+
+最新章节只探测**元数据**，不抢先处理正文。
+
+搜索卡片展示：
+
+1. `源站最新章节`
+2. `本地已处理到第 X 章`
+
+---
+
+## 8. 本地书库搜索注入规则
+
+### 8.1 注入范围
+
+本地书库参与普通搜索时，必须仍按书名/作者匹配命中，不允许全量注入。
+
+### 8.2 排序
+
+本地聚合书：
+
+1. 与普通源结果同时展示。
+2. 排序时享受与官方源同档的固定加权，默认 `+50`。
+3. 不做绝对置顶。
+
+### 8.3 归档书
+
+已归档书仍继续参与普通搜索注入，只是不再自动更新。
+
+---
+
+## 9. 生命周期与管理员状态
+
+### 9.1 普通用户行为
+
+普通用户只负责把书加入全局书库。
+
+书一旦入库：
+
+1. 后续生命周期不再由普通用户控制。
+2. 普通用户不能删除、暂停、归档、重建。
+
+### 9.2 管理员状态
+
+管理员管理状态固定为三种：
+
+1. `暂停`
+2. `归档`
+3. `删除`
+
+定义：
+
+#### 暂停
+
+1. 临时停止处理与更新。
+2. 书仍可搜索、可阅读。
+
+#### 归档
+
+1. 永久停止自动更新。
+2. 书继续作为本地书库资产保留。
+3. 仍可搜索、可阅读。
+
+#### 删除
+
+1. 从全局书库移除。
+2. 清理章节文件、任务、来源快照、追踪信息。
+
+### 9.3 自动归档
+
+如果 `autoArchiveOnComplete = true`，书籍被判定为完本后自动归档。
+
+完本判定规则：
+
+1. 优先以官方主源返回的完结状态为准。
+2. 没有官方主源时，以当前主源返回的完结状态为准。
+3. 只有在最近一次成功更新后仍判定为完本，才执行自动归档。
+4. 如果 `autoArchiveOnComplete = false`，则完本后不自动归档，而是标记为“等待管理员归档”，继续保留在书库中，直到管理员手动执行归档。
+
+---
+
+## 10. 管理员修改任务的三类语义
+
+### 10.1 即时生效，不重跑
+
+适用于：
+
+1. 暂停 / 恢复
+2. 更新检查间隔
+3. 自动追更开关
+4. 立即重试某章
+5. 立即重查 TOC
+
+### 10.2 前向生效，不回刷旧章
+
+适用于：
+
+1. AI 聚合开关
+2. AI 净化开关
+3. 候选源优先级
+4. 主源偏好策略
+
+规则：
+
+1. 已处理章节不改。
+2. 未处理章节按新规则继续处理。
+3. 管理后台需要能看到该书存在多批次处理策略。
+
+### 10.3 重建
+
+适用于：
+
+1. 修改 `startChapterIndex`
+2. 管理员明确要求整本按新规则重做
+3. 需要整书一致性时
+
+重建规则：
+
+1. 停止旧任务。
+2. 清空旧的最终章节产物和章节状态。
+3. 重建 TOC、占位状态和处理队列。
+4. 优先重新抓取当前源内容。
+5. 抓不到时，再回退旧来源快照。
+6. 不直接复用旧 AI 输出正文。
+
+---
+
+## 11. 来源快照与章节追踪
+
+### 11.1 来源快照
+
+每章每来源只保留一份**最新干净快照**。
+
+“干净快照”的定义：
+
+1. 保存插件清洗后的来源正文文本与元数据。
+2. 不保存原始 HTML。
+
+每份快照至少包含：
+
+1. `source_id`
+2. `source_chapter_id`
+3. `chapter_index`
+4. `title`
+5. `clean_content`
+6. `content_hash`
+7. `classification`
+8. `fetched_at`
+
+### 11.2 本地章节尾注追踪块
+
+每个生成的本地章节文件末尾追加一段固定标记的 YAML/纯文本追踪块：
+
+1. `LEGADOHUB_TRACE_BEGIN`
+2. `LEGADOHUB_TRACE_END`
+
+内容至少记录：
+
+1. `aggregateBookId`
+2. `chapterIndex`
+3. `policyVersion`
+4. `processedAt`
+5. `startChapterIndex`
+6. `autoArchiveOnComplete`
+7. `primarySource`
+8. `candidateSources`
+9. `selectedSource`
+10. `selectedContentSource`
+11. `aiAggregateEnabled`
+12. `aiPurifyEnabled`
+13. `modificationTrail`
+14. `sourceHashes`
+15. `finalContentHash`
+
+其中 `modificationTrail` 需要能表达：
+
+1. 原始来源是谁
+2. 聚合补全来源是谁
+3. 做了哪些清洗/净化/替换
+4. 哪一步使用了 AI
+5. 当前章是按哪一版策略产生的
+
+### 11.3 阅读端输出
+
+阅读端返回正文时必须自动过滤整个追踪块，只让用户看到纯正文。
+
+---
+
+## 12. 管理后台页面职责
+
+### 12.1 书源
+
+`书源` 页面拆分为两个 tab：
+
+1. `官方源`
+2. `第三方源`
+
+### 12.2 搜索
+
+搜索页只用于验证阅读端效果：
+
+1. 多源搜索
+2. 注入本地聚合书
+3. 对比普通源与本地书效果
+
+不承担订阅入口。
+
+### 12.3 订阅
+
+管理员订阅页与普通用户订阅页复用同一套书卡片搜索逻辑。
+
+管理员可在这里：
+
+1. 订阅新书
+2. 查看轻量详情弹窗
+3. 跳转管理
+
+### 12.4 书库
+
+书库页是唯一的管理入口。
+
+管理员可在这里：
+
+1. 查看全局书
+2. 修改参数
+3. 暂停
+4. 归档
+5. 删除
+6. 重建
+7. 查看章节任务
+8. 查看来源快照与策略版本
+
+### 12.5 用户
+
+管理员可：
+
+1. 创建用户
+2. 重置密码
+3. 禁用用户
+
+不开放注册接口。
+
+---
+
+## 13. 阅读端接入
+
+阅读端不走登录态。
+
+规则：
+
+1. `/api/legado/source`
+2. `/api/legado/search`
+3. `/api/legado/book/*`
+4. `/api/legado/chapter/*`
+
+均按匿名共享书库能力设计。
+
+因此：
+
+1. 生成的 LegadoHub 源不要求用户登录。
+2. 如果保留 `loginUrl` 字段，它只作为用户后台入口快捷跳转，不承担认证语义。
+3. 阅读端直接读取共享本地书库结果。
+
+---
+
+## 14. 实施顺序
+
+### 阶段 1：路由与导航清理
+
+1. 删除 `聚合书源 / 聚合书架 / 验证` 页面与路由
+2. 重建管理员后台导航
+3. 重建用户后台导航
+
+### 阶段 2：数据模型重构
+
+1. 新增 `aggregate_books`
+2. 新增 `aggregate_book_sources`
+3. 扩展 `aggregate_chapter_tasks`
+4. 新增 `aggregate_operation_logs`
+5. 不再新增 `user_subscriptions`
+
+### 阶段 3：订阅页
+
+1. 新增书卡片搜索接口
+2. 官方元数据优先聚合
+3. 实时增量卡片
+4. 瀑布流布局
+5. 无限滚动
+6. 卡片详情弹窗
+
+### 阶段 4：书库与处理引擎
+
+1. 全局书库页
+2. 我添加的视图
+3. 顺序处理模型
+4. 占位章状态
+5. 50 章可搜索门槛
+6. 前后双阶段处理
+7. 自动归档开关
+
+### 阶段 5：管理能力
+
+1. 暂停 / 归档 / 删除
+2. 参数修改三类语义
+3. 重建流程
+4. 策略版本与追踪块
+5. 来源快照管理
+
+### 阶段 6：阅读端搜索注入
+
+1. 阅读端普通搜索注入本地书
+2. 排序加权
+3. 归档书继续参与搜索
+4. 调试搜索页与阅读端对齐
+
+---
+
+## 15. 验证清单
+
+1. 订阅页搜索结果是一书一卡片，而不是多源列表。
+2. 订阅页命中已入库书时，显示单卡片 `已入库` 状态，不再重复可订阅。
+3. 普通用户首次加书时只能设置 `startChapterIndex`。
+4. 从 `startChapterIndex` 开始连续处理满 50 章后，该书开始进入阅读端普通搜索。
+5. 目录里可以看到占位章，但没有真实正文文件。
+6. 点击占位章不会提权，只返回提示。
+7. 阅读端普通搜索不会注入全库，只会注入书名/作者匹配命中的本地书。
+8. 本地聚合书和普通源结果同时展示，且本地书有 `+50` 同档加权。
+9. 已归档书仍然能在阅读端普通搜索中出现。
+10. 管理员修改 AI 聚合 / AI 净化 / 源优先级时，默认只前向生效。
+11. 管理员修改 `startChapterIndex` 时，触发重建。
+12. 重建优先重新抓当前源内容，失败时回退来源快照。
+13. 本地章节文件末尾有追踪块，阅读端返回时已过滤。
+14. 管理后台搜索页不再显示 `订阅 / 查看 / 管理` 按钮。
+15. `聚合书源 / 聚合书架 / 验证` 三个旧入口已经删除。
+16. 首次加书时可以设置 `autoArchiveOnComplete`；关闭后完本只进入“等待管理员归档”状态，不自动归档。

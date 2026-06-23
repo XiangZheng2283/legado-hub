@@ -40,6 +40,7 @@ class NovelFileCache:
         book_id: str = "",
         book_name: str = "",
         chapter_index: int | None = None,
+        trace_meta: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         if not content:
             return {"written": False, "reason": "empty content"}
@@ -54,14 +55,17 @@ class NovelFileCache:
             fallback_chapter_index=chapter_index,
         )
         source_folder = self._source_folder(source_id, chapter_url)
-        book_folder = self._safe_segment(context["bookName"] or "unknown-book")
+        if source_id == "legadohub_ai_aggregate" and book_id:
+            book_folder = self._safe_segment(book_id)
+        else:
+            book_folder = self._safe_segment(context["bookName"] or "unknown-book")
         chapter_title = context["chapterTitle"] or title or "未命名章节"
         chapter_number = context["chapterIndex"]
         file_stem = self._chapter_file_stem(chapter_number, chapter_title)
         target_dir = self.root / source_folder / book_folder
         target_dir.mkdir(parents=True, exist_ok=True)
         target_path = target_dir / f"{file_stem}.md"
-        text = self._markdown_content(chapter_title, content)
+        text = self._markdown_content(chapter_title, content, trace_meta=trace_meta or {})
         target_path.write_text(text, encoding="utf-8", newline="\n")
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
         return {
@@ -160,11 +164,67 @@ class NovelFileCache:
             return f"{index:06d} {safe_title}"
         return safe_title
 
-    def _markdown_content(self, title: str, content: str) -> str:
+    def _markdown_content(self, title: str, content: str, trace_meta: dict[str, Any] | None = None) -> str:
         body = str(content or "").replace("\r\n", "\n").replace("\r", "\n").strip()
         heading = str(title or "").strip()
+        text = body
         if heading and not body.startswith(f"# {heading}"):
-            return f"# {heading}\n\n{body}\n"
-        return f"{body}\n"
+            text = f"# {heading}\n\n{body}"
+        trace_block = self._trace_block(trace_meta or {})
+        if trace_block:
+            return f"{text}\n\n{trace_block}\n"
+        return f"{text}\n"
 
+    def _trace_block(self, trace_meta: dict[str, Any]) -> str:
+        if not trace_meta:
+            return ""
+        yaml_lines = [
+            "LEGADOHUB_TRACE_BEGIN",
+            "```yaml",
+        ]
+        yaml_lines.extend(self._yaml_lines(trace_meta))
+        yaml_lines.extend(
+            [
+                "```",
+                "LEGADOHUB_TRACE_END",
+            ]
+        )
+        return "\n".join(yaml_lines)
+
+    def _yaml_lines(self, value: Any, indent: int = 0) -> list[str]:
+        prefix = "  " * indent
+        if isinstance(value, dict):
+            lines: list[str] = []
+            for key, item in value.items():
+                if isinstance(item, (dict, list)):
+                    lines.append(f"{prefix}{key}:")
+                    lines.extend(self._yaml_lines(item, indent + 1))
+                else:
+                    lines.append(f"{prefix}{key}: {self._yaml_scalar(item)}")
+            return lines
+        if isinstance(value, list):
+            lines: list[str] = []
+            for item in value:
+                if isinstance(item, (dict, list)):
+                    lines.append(f"{prefix}-")
+                    lines.extend(self._yaml_lines(item, indent + 1))
+                else:
+                    lines.append(f"{prefix}- {self._yaml_scalar(item)}")
+            return lines
+        return [f"{prefix}{self._yaml_scalar(value)}"]
+
+    def _yaml_scalar(self, value: Any) -> str:
+        if value is None:
+            return "null"
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, (int, float)):
+            return str(value)
+        text = str(value).replace("\r\n", "\\n").replace("\n", "\\n")
+        if text == "":
+            return '""'
+        if any(ch in text for ch in [":", "#", "{", "}", "[", "]", ",", '"', "'"]):
+            text = text.replace('"', '\\"')
+            return f'"{text}"'
+        return text
 

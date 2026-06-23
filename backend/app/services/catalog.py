@@ -17,11 +17,13 @@ from app.services.search_coordinator import SearchCoordinator
 from app.services.aggregate_virtual_source import (
     VIRTUAL_SOURCE_ID,
     VIRTUAL_SOURCE_NAME,
+    make_library_aggregate_book_url,
     make_aggregate_chapter_url,
     primary_book_id_from_payload,
     unpack_aggregate_chapter_url,
     unpack_aggregate_book_url,
 )
+from app.services.library_books import library_books_service
 from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
 
 
@@ -548,9 +550,17 @@ class Catalog:
             conn.commit()
 
     async def _aggregate_book_detail(self, book_id: str, book_url: str) -> dict:
+        aggregate_task_book_id = book_id
         try:
             payload = unpack_aggregate_book_url(book_url)
-            primary_book_id = primary_book_id_from_payload(payload)
+            if payload.get("library") and payload.get("aggregateBookId"):
+                aggregate_book_id = payload.get("aggregateBookId", "")
+                payload = library_books_service.load_payload(aggregate_book_id)
+                book_url = make_library_aggregate_book_url(aggregate_book_id)
+                aggregate_task_book_id = aggregate_book_id
+                primary_book_id = primary_book_id_from_payload(payload)
+            else:
+                primary_book_id = primary_book_id_from_payload(payload)
         except Exception as exc:
             return {"implemented": True, "data": None, "debug": {"error": str(exc), "aggregate": True}}
         if not primary_book_id:
@@ -558,7 +568,7 @@ class Catalog:
 
         from app.services.aggregate_processor import AggregateProcessor
 
-        enqueue_result = AggregateProcessor().enqueue_book(book_id, payload)
+        enqueue_result = AggregateProcessor().enqueue_book(aggregate_task_book_id, payload)
         detail = await self.book_detail(primary_book_id)
         data = dict(detail.get("data") or {})
         official_debug = _aggregate_official_debug(payload, primary_book_id)
@@ -633,9 +643,15 @@ class Catalog:
         return response
 
     async def _aggregate_toc(self, book_id: str, book_url: str) -> dict:
+        aggregate_task_book_id = book_id
         try:
             payload = unpack_aggregate_book_url(book_url)
-            primary_book_id = primary_book_id_from_payload(payload)
+            if payload.get("library") and payload.get("aggregateBookId"):
+                aggregate_task_book_id = payload.get("aggregateBookId", "")
+                payload = library_books_service.load_payload(aggregate_task_book_id)
+                primary_book_id = primary_book_id_from_payload(payload)
+            else:
+                primary_book_id = primary_book_id_from_payload(payload)
         except Exception as exc:
             return {"implemented": True, "bookId": book_id, "chapters": [], "debug": {"error": str(exc), "aggregate": True}}
         if not primary_book_id:
@@ -645,15 +661,15 @@ class Catalog:
         chapters = [dict(chapter) for chapter in toc.get("chapters", []) if isinstance(chapter, dict)]
         from app.services.aggregate_processor import AggregateProcessor
 
-        register_result = AggregateProcessor().register_toc(book_id, payload, chapters)
+        register_result = AggregateProcessor().register_toc(aggregate_task_book_id, payload, chapters)
         source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
         for index, chapter in enumerate(chapters, start=1):
             raw_url = chapter.get("chapterUrl", "")
             source_chapter_id = chapter.get("chapterId") or (
-                encode_chapter_id(source_id, raw_url) if source_id and raw_url else f"{book_id}:{index}"
+                encode_chapter_id(source_id, raw_url) if source_id and raw_url else f"{aggregate_task_book_id}:{index}"
             )
             aggregate_chapter_url = make_aggregate_chapter_url(
-                aggregate_book_id=book_id,
+                aggregate_book_id=aggregate_task_book_id,
                 source_chapter_id=source_chapter_id,
                 title=chapter.get("title", ""),
                 index=index,

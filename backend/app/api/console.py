@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Request
@@ -25,9 +26,12 @@ from app.services.source_ping import SourcePingService
 from app.services.login_browser_service import login_browser_service
 from app.services.official_auth.manager import official_auth_manager
 from app.services.aggregate_reviews import empty_aggregate_reviews
+from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_settings import AggregateSettingsRepository
+from app.services.library_books import library_books_service
 from app.source_plugins.loader import PluginLoader
 from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
+from app.services.user_auth import auth_service
 
 console_router = APIRouter(prefix="/api/console")
 
@@ -53,6 +57,13 @@ def _read_json(path: Path, default: dict) -> dict:
 
 def _write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _aggregate_book_settings(payload: str) -> dict:
+    try:
+        return json.loads(payload or "{}")
+    except Exception:
+        return {}
 
 
 # ---- Plugins ----
@@ -673,8 +684,9 @@ def _schedule_console_search(job_id: str) -> None:
 
 
 @console_route("post", "/search-jobs")
-async def create_search_job(payload: dict):
+async def create_search_job(request: Request, payload: dict):
     """Create a source search job.  Always starts a live search."""
+    auth_service.require_admin(request)
     keyword = payload.get("keyword", "")
     page = payload.get("page", 1)
     limit = payload.get("limit")
@@ -705,49 +717,24 @@ async def create_search_job(payload: dict):
 
 
 @console_route("post", "/search/aggregate")
-async def create_aggregate_search(payload: dict):
-    """Create an aggregate search job.
-
-    Internally runs a source search first, then aggregates results.
-    Only aggregate items are returned in the result.
-    """
-    keyword = payload.get("keyword", "")
-    page = payload.get("page", 1)
-    limit = payload.get("limit")
-    source_ids = payload.get("sourceIds")
-
-    job = _search_service.create_job(
-        keyword=keyword, page=page, limit=limit,
-        source_ids=source_ids, search_mode="aggregate",
-    )
-
+async def create_aggregate_search(request: Request, payload: dict):
+    auth_service.require_admin(request)
     return {
-        "jobId": job.job_id,
-        "status": "running",
-        "keyword": job.keyword,
-        "page": job.page,
-        "searchMode": "aggregate",
-        "sourceCount": len(job.sources),
-        "completedCount": 0,
-        "successCount": 0,
-        "errorCount": 0,
-        "timeoutCount": 0,
-        "elapsedMs": 0,
-        "result": {"items": [], "candidateGroups": []},
-        "candidateGroups": [],
-        "events": [],
-        "liveSearchPending": True,
+        "deprecated": True,
+        "message": "即时聚合搜索入口已废弃，请改用 /api/subscribe/search 做订阅发现，或使用普通搜索查看本地书库注入效果。",
     }
 
 
 @console_route("get", "/search-jobs")
-def list_search_jobs(limit: int = 20):
+def list_search_jobs(request: Request, limit: int = 20):
+    auth_service.require_admin(request)
     return {"items": _search_service.list_jobs(limit=limit)}
 
 
 @console_route("get", "/search-jobs/{job_id}")
-def get_search_job(job_id: str):
+def get_search_job(request: Request, job_id: str):
     """Get search job status and results using the session model."""
+    auth_service.require_admin(request)
     # Try session snapshot first (in-memory, includes merged items).
     snapshot = _search_service.session_snapshot(
         job_id, base_api=None, include_official_sources=True
@@ -811,13 +798,15 @@ def get_search_job(job_id: str):
 
 
 @console_route("get", "/search-jobs/{job_id}/events")
-def get_search_job_events(job_id: str, after: int = 0):
+def get_search_job_events(request: Request, job_id: str, after: int = 0):
+    auth_service.require_admin(request)
     events = _search_service.get_events(job_id, after_index=after)
     return {"jobId": job_id, "events": events, "nextAfter": after + len(events)}
 
 
 @console_route("get", "/search-jobs/{job_id}/candidates")
-def get_search_job_candidates(job_id: str):
+def get_search_job_candidates(request: Request, job_id: str):
+    auth_service.require_admin(request)
     job = _search_service.get_job(job_id)
     if not job:
         return {"error": "任务不存在", "items": []}
@@ -835,7 +824,8 @@ def get_search_job_candidates(job_id: str):
 
 
 @console_route("post", "/search-jobs/{job_id}/candidates/{candidate_id}/verify")
-async def verify_search_job_candidate(job_id: str, candidate_id: str, payload: dict | None = None):
+async def verify_search_job_candidate(request: Request, job_id: str, candidate_id: str, payload: dict | None = None):
+    auth_service.require_admin(request)
     candidate = _search_service.find_candidate(job_id, candidate_id)
     if not candidate:
         return {"error": "候选不存在", "jobId": job_id, "candidateId": candidate_id}
@@ -853,13 +843,14 @@ async def verify_search_job_candidate(job_id: str, candidate_id: str, payload: d
 
 
 @console_route("post", "/search-jobs/{job_id}/candidates/{candidate_id}/reviews")
-async def fetch_search_job_candidate_reviews(job_id: str, candidate_id: str, payload: dict | None = None):
+async def fetch_search_job_candidate_reviews(request: Request, job_id: str, candidate_id: str, payload: dict | None = None):
     """Fetch chapter reviews independently of chapter content.
 
     Useful for VIP chapters where the main text is only a preview but reviews
     are still available. This endpoint intentionally allows a longer timeout
     so it can retrieve all review pages asynchronously from the frontend.
     """
+    auth_service.require_admin(request)
     candidate = _search_service.find_candidate(job_id, candidate_id)
     if not candidate:
         return {"error": "候选不存在", "jobId": job_id, "candidateId": candidate_id}
@@ -882,9 +873,40 @@ async def fetch_search_job_candidate_reviews(job_id: str, candidate_id: str, pay
 
 
 @console_route("post", "/search-jobs/{job_id}/cancel")
-def cancel_search_job(job_id: str):
+def cancel_search_job(request: Request, job_id: str):
+    auth_service.require_admin(request)
     ok = _search_service.cancel_job(job_id)
     return {"jobId": job_id, "cancelled": ok}
+
+
+@console_route("post", "/search-jobs/{job_id}/subscribe")
+async def subscribe_from_search_job(request: Request, job_id: str, payload: dict):
+    """Admin shortcut: add a candidate group to the shared library."""
+    admin = auth_service.require_admin(request)
+    candidate_id = str(payload.get("candidateId", "")).strip()
+    added_by_user_id = str(payload.get("addedByUserId", "")).strip() or admin.user_id
+    start_chapter_index = max(1, int(payload.get("startChapterIndex", 1) or 1))
+    auto_archive = bool(payload.get("autoArchiveOnComplete", True))
+    if not candidate_id:
+        return {"error": "缺少 candidateId"}
+    group = _search_service.find_candidate_group(job_id, candidate_id)
+    if not group:
+        return {"error": "候选书籍不存在", "jobId": job_id, "candidateId": candidate_id}
+    created = library_books_service.create_or_get_shared_book(
+        group,
+        added_by_user_id=added_by_user_id,
+        start_chapter_index=start_chapter_index,
+        auto_archive_on_complete=auto_archive,
+    )
+    if created.get("created"):
+        processor = AggregateProcessor()
+        processor.enqueue_book(created["book"]["aggregateBookId"], created["payload"])
+        asyncio.create_task(processor.bootstrap_book_until_visible(created["book"]["aggregateBookId"]))
+    return {
+        "ok": True,
+        "created": bool(created.get("created")),
+        "book": created.get("book"),
+    }
 
 
 # ---- Live Acceptance ----
@@ -1373,8 +1395,86 @@ def _bounded_page(value: int | str | None, default: int, maximum: int) -> int:
     return min(max(parsed, 1), maximum)
 
 
+def _serialize_aggregate_book_row(row: tuple) -> dict:
+    total_chapters = int(row[6] or 0)
+    processed_chapters = int(row[7] or 0)
+    visible_processed_chapters = int(row[8] or 0)
+    settings = _aggregate_book_settings(row[21] or "")
+    return {
+        "id": row[0],
+        "bookId": row[0],
+        "aggregateBookId": row[0],
+        "name": row[1] or "",
+        "author": row[2] or "",
+        "status": row[3] or "active",
+        "bookStatus": row[4] or "unknown",
+        "primarySourceId": row[5] or "",
+        "totalChapters": total_chapters,
+        "processedChapters": processed_chapters,
+        "visibleProcessedChapters": visible_processed_chapters,
+        "failedChapters": int(row[9] or 0),
+        "progress": processed_chapters / total_chapters if total_chapters else 0,
+        "totalTokens": int(row[10] or 0),
+        "lastProcessedAt": row[11] or "",
+        "nextCheckTime": row[12] or "",
+        "lastError": row[13] or "",
+        "addedByUserId": row[14] or "",
+        "addedByUsername": library_books_service.username_for_user_id(row[14] or ""),
+        "coverUrl": row[15] or "",
+        "intro": row[16] or "",
+        "wordCount": row[17] or "",
+        "searchVisibilityStatus": row[18] or "hidden",
+        "startChapterIndex": int(row[19] or 1),
+        "autoArchiveOnComplete": bool(row[20]),
+        "settings": settings,
+        "currentPolicyVersion": int(row[22] or 1),
+    }
+
+
+def _fetch_aggregate_book_row(conn: sqlite3.Connection, book_id: str):
+    return conn.execute(
+        """
+        SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
+               total_chapters, processed_chapters, visible_processed_chapters, failed_chapters, total_tokens,
+               last_processed_at, next_check_time, last_error, added_by_user_id, cover_url, intro,
+               word_count, search_visibility_status, start_chapter_index, auto_archive_on_complete,
+               settings_json, current_policy_version
+        FROM aggregate_book_tasks
+        WHERE aggregate_book_id = ?
+        """,
+        (book_id,),
+    ).fetchone()
+
+
+def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_role: str = "admin") -> dict:
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    base_dir = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_operation_logs
+            (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
+            VALUES (?, ?, ?, 'delete', '', '', ?)
+            """,
+            (book_id, actor_user_id, actor_role, _now()),
+        )
+        conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (book_id,))
+        conn.execute("DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ?", (book_id,))
+        conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
+        cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
+        conn.commit()
+    if base_dir.exists():
+        shutil.rmtree(base_dir, ignore_errors=True)
+    return {"bookId": book_id, "deleted": cursor.rowcount > 0}
+
+
 @console_route("get", "/aggregate-books")
-def list_aggregate_books(page: int = 1, pageSize: int = 20, status: str = "all", keyword: str = "", sort: str = "updated_desc"):
+def list_aggregate_books(request: Request, page: int = 1, pageSize: int = 20, status: str = "all", keyword: str = "", sort: str = "updated_desc"):
+    auth_service.require_admin(request)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -1402,8 +1502,10 @@ def list_aggregate_books(page: int = 1, pageSize: int = 20, status: str = "all",
         rows = conn.execute(
             f"""
             SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
-                   total_chapters, processed_chapters, failed_chapters, total_tokens,
-                   last_processed_at, next_check_time, last_error
+                   total_chapters, processed_chapters, visible_processed_chapters, failed_chapters, total_tokens,
+                   last_processed_at, next_check_time, last_error, added_by_user_id, cover_url, intro,
+                   word_count, search_visibility_status, start_chapter_index, auto_archive_on_complete,
+                   settings_json, current_policy_version
             FROM aggregate_book_tasks
             {where_sql}
             ORDER BY {sort_sql}
@@ -1411,122 +1513,97 @@ def list_aggregate_books(page: int = 1, pageSize: int = 20, status: str = "all",
             """,
             [*params, page_size, offset],
         ).fetchall()
-    items = []
-    for row in rows:
-        total_chapters = int(row[6] or 0)
-        processed_chapters = int(row[7] or 0)
-        items.append(
-            {
-                "id": row[0],
-                "bookId": row[0],
-                "name": row[1] or "",
-                "author": row[2] or "",
-                "status": row[3] or "active",
-                "bookStatus": row[4] or "unknown",
-                "primarySourceId": row[5] or "",
-                "totalChapters": total_chapters,
-                "processedChapters": processed_chapters,
-                "failedChapters": int(row[8] or 0),
-                "progress": processed_chapters / total_chapters if total_chapters else 0,
-                "totalTokens": int(row[9] or 0),
-                "lastProcessedAt": row[10] or "",
-                "nextCheckTime": row[11] or "",
-                "lastError": row[12] or "",
-            }
-        )
+    items = [_serialize_aggregate_book_row(row) for row in rows]
     return {"items": items, "page": page, "pageSize": page_size, "total": total}
 
 
 @console_route("get", "/aggregate-books/{book_id}")
-def get_aggregate_book(book_id: str):
+def get_aggregate_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
 
     initialize_database(DB_PATH)
     with sqlite3.connect(DB_PATH) as conn:
-        row = conn.execute(
-            """
-            SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
-                   total_chapters, processed_chapters, failed_chapters, total_tokens,
-                   last_processed_at, next_check_time, last_error
-            FROM aggregate_book_tasks
-            WHERE aggregate_book_id = ?
-            """,
-            (book_id,),
-        ).fetchone()
+        row = _fetch_aggregate_book_row(conn, book_id)
     if not row:
         return {"bookId": book_id, "found": False}
-    total_chapters = int(row[6] or 0)
-    processed_chapters = int(row[7] or 0)
-    return {
-        "id": row[0],
-        "bookId": row[0],
-        "name": row[1] or "",
-        "author": row[2] or "",
-        "status": row[3] or "active",
-        "bookStatus": row[4] or "unknown",
-        "primarySourceId": row[5] or "",
-        "totalChapters": total_chapters,
-        "processedChapters": processed_chapters,
-        "failedChapters": int(row[8] or 0),
-        "progress": processed_chapters / total_chapters if total_chapters else 0,
-        "totalTokens": int(row[9] or 0),
-        "lastProcessedAt": row[10] or "",
-        "nextCheckTime": row[11] or "",
-        "lastError": row[12] or "",
-        "found": True,
-    }
+    data = _serialize_aggregate_book_row(row)
+    data["found"] = True
+    return data
 
 
 @console_route("post", "/aggregate-books/{book_id}/run")
-async def run_aggregate_book(book_id: str):
+async def run_aggregate_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
     from app.services.aggregate_processor import AggregateProcessor
 
     return await AggregateProcessor().run_book_task(book_id)
 
 
 @console_route("post", "/aggregate-books/{book_id}/pause")
-def pause_aggregate_book(book_id: str):
+def pause_aggregate_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
     return _update_aggregate_book_status(book_id, "paused")
 
 
 @console_route("post", "/aggregate-books/{book_id}/resume")
-def resume_aggregate_book(book_id: str):
+def resume_aggregate_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
     return _update_aggregate_book_status(book_id, "active")
 
 
-def _update_aggregate_book_status(book_id: str, status: str):
+def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: str = "", actor_role: str = "admin"):
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
 
     initialize_database(DB_PATH)
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_operation_logs
+            (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
+            VALUES (?, ?, ?, ?, '', ?, ?)
+            """,
+            (
+                book_id,
+                actor_user_id,
+                actor_role,
+                f"set_status:{status}",
+                json.dumps({"status": status}, ensure_ascii=False),
+                _now(),
+            ),
+        )
         cursor = conn.execute(
-            "UPDATE aggregate_book_tasks SET status = ?, updated_at = datetime('now') WHERE aggregate_book_id = ?",
-            (status, book_id),
+            """
+            UPDATE aggregate_book_tasks
+            SET status = ?,
+                archived_at = CASE
+                        WHEN ? = 'archived' THEN COALESCE(archived_at, datetime('now'))
+                    WHEN ? = 'active' THEN NULL
+                    WHEN ? != 'archived' THEN archived_at
+                    ELSE archived_at
+                END,
+                updated_at = datetime('now')
+            WHERE aggregate_book_id = ?
+            """,
+            (status, status, status, status, book_id),
         )
         conn.commit()
     return {"bookId": book_id, "status": status, "updated": cursor.rowcount > 0}
 
 
 @console_route("delete", "/aggregate-books/{book_id}")
-def delete_aggregate_book(book_id: str):
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
-        cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
-        conn.commit()
-    return {"bookId": book_id, "deleted": cursor.rowcount > 0}
+def delete_aggregate_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    return _delete_aggregate_book_impl(book_id)
 
 
 @console_route("get", "/aggregate-books/{book_id}/chapters")
-def list_aggregate_chapters(book_id: str, page: int = 1, pageSize: int = 50, status: str = "all", keyword: str = ""):
+def list_aggregate_chapters(request: Request, book_id: str, page: int = 1, pageSize: int = 50, status: str = "all", keyword: str = ""):
+    auth_service.require_admin(request)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -1580,7 +1657,8 @@ def list_aggregate_chapters(book_id: str, page: int = 1, pageSize: int = 50, sta
 
 
 @console_route("get", "/aggregate-books/{book_id}/chapters/{chapter_id}")
-def get_aggregate_chapter(book_id: str, chapter_id: str):
+def get_aggregate_chapter(request: Request, book_id: str, chapter_id: str):
+    auth_service.require_admin(request)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -1665,7 +1743,8 @@ def get_aggregate_chapter(book_id: str, chapter_id: str):
 
 
 @console_route("post", "/aggregate-books/{book_id}/chapters/{chapter_id}/retry")
-def retry_aggregate_chapter(book_id: str, chapter_id: str):
+def retry_aggregate_chapter(request: Request, book_id: str, chapter_id: str):
+    auth_service.require_admin(request)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -1685,7 +1764,8 @@ def retry_aggregate_chapter(book_id: str, chapter_id: str):
 
 
 @console_route("get", "/aggregate-books/{book_id}/chapters/{chapter_id}/reviews")
-async def get_aggregate_chapter_reviews(book_id: str, chapter_id: str):
+async def get_aggregate_chapter_reviews(request: Request, book_id: str, chapter_id: str):
+    auth_service.require_admin(request)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -1779,6 +1859,254 @@ async def get_aggregate_chapter_reviews(book_id: str, chapter_id: str):
         )
         result["debug"]["error"] = str(exc)
         return result
+
+
+# ---- Shared Library / Users ----
+
+@console_route("get", "/library-books")
+def list_library_books(request: Request, keyword: str = ""):
+    auth_service.require_admin(request)
+    items = library_books_service.list_books(keyword=keyword, include_hidden=True)
+    return {"items": items, "total": len(items)}
+
+
+@console_route("get", "/library-books/{book_id}")
+def get_library_book_admin(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    return get_aggregate_book(request, book_id)
+
+
+@console_route("get", "/library-books/{book_id}/chapters")
+def list_library_book_chapters_admin(
+    request: Request,
+    book_id: str,
+    page: int = 1,
+    pageSize: int = 50,
+    status: str = "all",
+    keyword: str = "",
+):
+    auth_service.require_admin(request)
+    return list_aggregate_chapters(request, book_id, page=page, pageSize=pageSize, status=status, keyword=keyword)
+
+
+@console_route("post", "/library-books/{book_id}/pause")
+def pause_library_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    return _update_aggregate_book_status(book_id, "paused")
+
+
+@console_route("post", "/library-books/{book_id}/resume")
+def resume_library_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    return _update_aggregate_book_status(book_id, "active")
+
+
+@console_route("post", "/library-books/{book_id}/archive")
+def archive_library_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    return _update_aggregate_book_status(book_id, "archived")
+
+
+@console_route("delete", "/library-books/{book_id}")
+def delete_library_book(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    return delete_aggregate_book(request, book_id)
+
+
+@console_route("post", "/library-books/{book_id}/settings")
+def update_library_book_settings(request: Request, book_id: str, payload: dict):
+    admin = auth_service.require_admin(request)
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    now = _now()
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            """
+            SELECT settings_json, current_policy_version, interval_minutes, auto_archive_on_complete
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        ).fetchone()
+        if not row:
+            return {"error": "书籍不存在", "bookId": book_id}
+
+        settings = _aggregate_book_settings(row[0] or "")
+        current_policy_version = int(row[1] or 1)
+        interval_minutes = int(row[2] or settings.get("updateIntervalMinutes", 60) or 60)
+        auto_archive = bool(row[3])
+        policy_changed = False
+
+        if "autoTrackUpdates" in payload:
+            settings["autoTrackUpdates"] = bool(payload["autoTrackUpdates"])
+            policy_changed = True
+        if "updateIntervalMinutes" in payload:
+            settings["updateIntervalMinutes"] = max(10, int(payload["updateIntervalMinutes"] or 60))
+            interval_minutes = settings["updateIntervalMinutes"]
+        if "aiAggregateEnabled" in payload:
+            settings["aiAggregateEnabled"] = bool(payload["aiAggregateEnabled"])
+            policy_changed = True
+        if "aiPurifyEnabled" in payload:
+            settings["aiPurifyEnabled"] = bool(payload["aiPurifyEnabled"])
+            policy_changed = True
+        if "primarySourceMode" in payload:
+            settings["primarySourceMode"] = str(payload["primarySourceMode"] or "official")
+            policy_changed = True
+        if "sourcePriorityMode" in payload:
+            settings["sourcePriorityMode"] = str(payload["sourcePriorityMode"] or "auto")
+            policy_changed = True
+        if "sourcePriority" in payload and isinstance(payload["sourcePriority"], list):
+            settings["sourcePriority"] = [str(x) for x in payload["sourcePriority"]]
+            policy_changed = True
+        if "autoArchiveOnComplete" in payload:
+            auto_archive = bool(payload["autoArchiveOnComplete"])
+
+        next_policy_version = current_policy_version + 1 if policy_changed else current_policy_version
+        conn.execute(
+            """
+            UPDATE aggregate_book_tasks
+            SET settings_json = ?, interval_minutes = ?, auto_archive_on_complete = ?,
+                current_policy_version = ?, updated_at = ?
+            WHERE aggregate_book_id = ?
+            """,
+            (
+                json.dumps(settings, ensure_ascii=False),
+                interval_minutes,
+                1 if auto_archive else 0,
+                next_policy_version,
+                now,
+                book_id,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO aggregate_operation_logs
+            (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
+            VALUES (?, ?, 'admin', 'update_settings', '', ?, ?)
+            """,
+            (book_id, admin.user_id, json.dumps(payload, ensure_ascii=False), now),
+        )
+        conn.commit()
+
+    return {
+        "bookId": book_id,
+        "updated": True,
+        "policyChanged": policy_changed,
+        "currentPolicyVersion": next_policy_version,
+    }
+
+
+@console_route("post", "/library-books/{book_id}/rebuild")
+async def rebuild_library_book(request: Request, book_id: str, payload: dict | None = None):
+    admin = auth_service.require_admin(request)
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    payload = payload or {}
+    now = _now()
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            """
+            SELECT aggregate_payload_json, settings_json, current_policy_version, start_chapter_index
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        ).fetchone()
+        if not row:
+            return {"error": "书籍不存在", "bookId": book_id}
+
+        aggregate_payload_json, settings_json, current_policy_version, current_start_index = row
+        settings = _aggregate_book_settings(settings_json or "")
+        new_start_index = max(1, int(payload.get("startChapterIndex", current_start_index or 1) or 1))
+        new_auto_archive = bool(payload.get("autoArchiveOnComplete", settings.get("autoArchiveOnComplete", True)))
+        settings["startChapterIndex"] = new_start_index
+        settings["autoArchiveOnComplete"] = new_auto_archive
+        if "aiAggregateEnabled" in payload:
+            settings["aiAggregateEnabled"] = bool(payload["aiAggregateEnabled"])
+        if "aiPurifyEnabled" in payload:
+            settings["aiPurifyEnabled"] = bool(payload["aiPurifyEnabled"])
+        if "primarySourceMode" in payload:
+            settings["primarySourceMode"] = str(payload["primarySourceMode"] or "official")
+        if "sourcePriorityMode" in payload:
+            settings["sourcePriorityMode"] = str(payload["sourcePriorityMode"] or "auto")
+        if "sourcePriority" in payload and isinstance(payload["sourcePriority"], list):
+            settings["sourcePriority"] = [str(x) for x in payload["sourcePriority"]]
+
+        conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
+        conn.execute(
+            """
+            UPDATE aggregate_book_tasks
+            SET start_chapter_index = ?, initial_snapshot_last_index = 0, backfill_started = 0,
+                total_chapters = 0, processed_chapters = 0, visible_processed_chapters = 0, failed_chapters = 0,
+                search_visibility_status = 'hidden', status = 'active', archived_at = NULL,
+                settings_json = ?, current_policy_version = ?, auto_archive_on_complete = ?,
+                last_processed_at = NULL, updated_at = ?
+            WHERE aggregate_book_id = ?
+            """,
+            (
+                new_start_index,
+                json.dumps(settings, ensure_ascii=False),
+                int(current_policy_version or 1) + 1,
+                1 if new_auto_archive else 0,
+                now,
+                book_id,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO aggregate_operation_logs
+            (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
+            VALUES (?, ?, 'admin', 'rebuild', '', ?, ?)
+            """,
+            (book_id, admin.user_id, json.dumps(payload, ensure_ascii=False), now),
+        )
+        conn.commit()
+
+    library_root = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
+    if library_root.exists():
+        shutil.rmtree(library_root, ignore_errors=True)
+
+    aggregate_payload = json.loads(aggregate_payload_json or "{}")
+    processor = AggregateProcessor()
+    processor.enqueue_book(book_id, aggregate_payload)
+    bootstrap = await processor.bootstrap_book_until_visible(book_id)
+    return {"bookId": book_id, "rebuilt": True, "bootstrap": bootstrap}
+
+
+@console_route("get", "/users")
+def list_users(request: Request):
+    auth_service.require_admin(request)
+    items = auth_service.list_users()
+    return {"items": items, "total": len(items)}
+
+
+@console_route("post", "/users")
+def create_user(request: Request, payload: dict):
+    auth_service.require_admin(request)
+    return auth_service.create_user(
+        username=str(payload.get("username", "")).strip(),
+        password=str(payload.get("password", "")),
+        role=str(payload.get("role", "user")),
+    )
+
+
+@console_route("post", "/users/{user_id}/reset-password")
+def reset_user_password(request: Request, user_id: str, payload: dict):
+    auth_service.require_admin(request)
+    return auth_service.reset_password(user_id, str(payload.get("password", "")))
+
+
+@console_route("post", "/users/{user_id}/disable")
+def disable_user(request: Request, user_id: str, payload: dict | None = None):
+    auth_service.require_admin(request)
+    disabled = True if payload is None else bool(payload.get("disabled", True))
+    return auth_service.set_disabled(user_id, disabled)
 
 
 # ---- Progress ----

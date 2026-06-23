@@ -29,7 +29,7 @@ def _build_source(base_api: str = BASE_API) -> dict:
         "enabledCookieJar": True,
         "enabledExplore": bool(explore_url),
         "header": "",
-        "loginUrl": f"{base_api}/console",
+        "loginUrl": "",
         "bookSourceComment": "聚合搜索会先返回当前已完成书源的快照，并在后台继续搜索；排行榜、分类、聚合书籍章节元信息后续仅从正版书源获取，普通书源不再暴露排行榜/分类；遇到 Cloudflare 或浏览器挑战的书源会被标记为需要绕过并跳过，不再提供手动验证、验证页或 Cookie 回传链路。",
         "searchUrl": f"{base_api}/api/legado/search?keyword={{{{key}}}}&page={{{{page}}}}&waitMs=180000",
         "exploreUrl": explore_url,
@@ -140,4 +140,3 @@ def _sync_progress() -> None:
             "unsupported_sources": 0,
         }
     )
-

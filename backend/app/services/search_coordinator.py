@@ -23,6 +23,7 @@ from app.core.app_config import AppConfig
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_virtual_source import aggregate_items_for_groups
 from app.services.bookshelf import record_bookshelf_items
+from app.services.library_books import library_books_service
 from app.services.live_acceptance import candidate_id_for, group_candidates, normalize_text
 from app.source_plugins.id_codec import encode_book_id
 from app.source_plugins.models import LoadedPlugin
@@ -488,8 +489,10 @@ class SearchCoordinator:
     ) -> SearchJob:
         """Create a search job.  Always starts a live search.
 
-        ``search_mode``: "source" for normal source search, "aggregate" for
-        AI aggregate mode (runs source search first, then aggregates).
+        ``search_mode``:
+        - "source" for normal source search
+        - "aggregate" for AI aggregate mode (runs source search first, then aggregates)
+        - "subscription" for book-card subscription search (includes official sources, no aggregate result mode)
         """
         normalized = self._normalize_keyword(keyword)
         scope = self._scope_key(source_ids)
@@ -593,6 +596,19 @@ class SearchCoordinator:
                     continue
                 items.append(self._reading_item(dict(item), base_api=base_api))
             candidate_groups = session.candidate_groups or group_candidates(items, session.keyword)
+            injected_items = library_books_service.build_search_injected_items_for_groups(
+                candidate_groups,
+                base_api=base_api,
+                score_bonus=self._cfg.official_source_bonus,
+            )
+            if not injected_items:
+                injected_items = library_books_service.build_search_injected_items_for_keyword(
+                    session.keyword,
+                    base_api=base_api,
+                    score_bonus=self._cfg.official_source_bonus,
+                )
+            items.extend([self._reading_item(dict(item), base_api=base_api) for item in injected_items])
+            items.sort(key=lambda x: (-x.get("score", 0), x.get("name", ""), x.get("sourceName", "") or x.get("sourceId", "")))
 
         debug = {
             "sourceCount": len(session.sources),
@@ -711,6 +727,16 @@ class SearchCoordinator:
                         return dict(item)
         return None
 
+    def find_candidate_group(self, job_id: str, candidate_id: str) -> dict | None:
+        job = self.get_job(job_id)
+        if not job:
+            return None
+        for groups in self._candidate_sources(job):
+            for group in groups:
+                if group.get("candidateId") == candidate_id:
+                    return dict(group)
+        return None
+
     def cancel_job(self, job_id: str) -> bool:
         job = self.get_job(job_id)
         if not job or job.status not in {"pending", "running"}:
@@ -793,8 +819,9 @@ class SearchCoordinator:
         if source_ids:
             ids = set(source_ids)
             plugins = [p for p in plugins if p.metadata.id in ids]
-        elif search_mode == "aggregate":
-            # Aggregate search always includes all sources (official + third-party).
+        elif search_mode in {"aggregate", "subscription"}:
+            # Aggregate/subscription search always includes all sources
+            # (official + third-party).
             pass
         else:
             # Normal search: check global config for official source inclusion.
@@ -827,7 +854,7 @@ class SearchCoordinator:
         """Return the source list that would be used for a fresh search.
 
         Mirrors the filtering logic in ``_create_job()``:
-        - ``search_mode="aggregate"``: includes all sources (official + third-party).
+        - ``search_mode in {"aggregate", "subscription"}``: includes all sources.
         - ``search_mode="source"``: respects ``officialSourceInNormalSearch`` config.
 
         Currently unused — kept for potential future use.  Do NOT re-add
@@ -838,8 +865,8 @@ class SearchCoordinator:
         if source_ids:
             ids = set(source_ids)
             plugins = [p for p in plugins if p.metadata.id in ids]
-        elif search_mode == "aggregate":
-            pass  # Aggregate: include all sources.
+        elif search_mode in {"aggregate", "subscription"}:
+            pass  # Aggregate/subscription: include all sources.
         else:
             include_official = self._cfg.official_source_in_normal_search
             if not include_official:
@@ -1756,19 +1783,22 @@ class SearchCoordinator:
             reading_item["cacheHit"] = False
             items.append(reading_item)
 
-        aggregate_items = aggregate_items_for_groups(
+        injected_items = library_books_service.build_search_injected_items_for_groups(
             candidate_groups,
-            base_api=base_api or f"http://{HOST}:{PORT}",
-            plugins=getattr(self.scheduler, "_plugins", None),
+            base_api=base_api,
+            score_bonus=self._cfg.official_source_bonus,
         )
-        for item in aggregate_items:
-            if isinstance(item, dict):
-                item["resultSource"] = "live"
-                item["cacheHit"] = False
-        if AggregateProcessor().return_only_aggregate_source():
-            items = aggregate_items
-        else:
-            items.extend(aggregate_items)
+        if not injected_items:
+            injected_items = library_books_service.build_search_injected_items_for_keyword(
+                job.keyword,
+                base_api=base_api,
+                score_bonus=self._cfg.official_source_bonus,
+            )
+        for item in injected_items:
+            reading_item = self._reading_item(dict(item), base_api=base_api)
+            reading_item["resultSource"] = "library"
+            reading_item["cacheHit"] = False
+            items.append(reading_item)
 
         official_debug = self._official_source_debug_info(raw_items, include_official_sources)
         debug = {

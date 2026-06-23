@@ -12,6 +12,7 @@ from app.source_plugins.loader import PluginLoader
 
 VIRTUAL_SOURCE_ID = "legadohub_ai_aggregate"
 VIRTUAL_SOURCE_NAME = "LegadoHub AI聚合"
+LIBRARY_BOOK_PREFIX = "legadohub://aggregate/library/"
 
 
 def _pack_payload(payload: dict[str, Any]) -> str:
@@ -20,6 +21,11 @@ def _pack_payload(payload: dict[str, Any]) -> str:
 
 
 def unpack_aggregate_book_url(book_url: str) -> dict[str, Any]:
+    if book_url.startswith(LIBRARY_BOOK_PREFIX):
+        aggregate_book_id = book_url[len(LIBRARY_BOOK_PREFIX):].strip()
+        if not aggregate_book_id:
+            raise ValueError("invalid aggregate library book url")
+        return {"aggregateBookId": aggregate_book_id, "library": True}
     prefix = "legadohub://aggregate/book/"
     if not book_url.startswith(prefix):
         raise ValueError("invalid aggregate book url")
@@ -29,6 +35,10 @@ def unpack_aggregate_book_url(book_url: str) -> dict[str, Any]:
         encoded += "=" * padding
     payload = json.loads(base64.urlsafe_b64decode(encoded).decode("utf-8"))
     return payload if isinstance(payload, dict) else {}
+
+
+def make_library_aggregate_book_url(aggregate_book_id: str) -> str:
+    return f"{LIBRARY_BOOK_PREFIX}{aggregate_book_id}"
 
 
 def unpack_aggregate_chapter_url(chapter_url: str) -> dict[str, Any]:
@@ -230,5 +240,4 @@ def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any
         reverse=True,
     )
     return ranked[0]["bookId"] if ranked else ""
-
 

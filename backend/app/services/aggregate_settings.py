@@ -81,7 +81,7 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "primarySourceMode": "official",
     "primarySourcePriority": ["qidian_com_web"],  # Ordered list of preferred primary source IDs.
     "minSourceScore": 100,
-    "aiEnabled": False,
+    "aiEnabled": True,
     "blockedWordRepair": True,
     "sensitiveLexiconEnabled": True,
     "sensitiveLexiconPath": DEFAULT_LEXICON_PATH,

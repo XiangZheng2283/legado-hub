@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app import config
-from app.api import health, legado, console
+from app.api import health, legado, console, auth, subscribe
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.source_ping_scheduler import SourcePingScheduler
 from app.storage.db import initialize_database
@@ -76,6 +76,8 @@ def create_app() -> FastAPI:
     app = FastAPI(title=config.APP_NAME, version=config.APP_VERSION, lifespan=lifespan)
     app.include_router(health.router)
     app.include_router(legado.router)
+    app.include_router(auth.router)
+    app.include_router(subscribe.router)
     app.include_router(console.console_router)
     # Serve React console frontend.
     if FRONTEND_DIST.exists():
@@ -104,5 +106,4 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
 

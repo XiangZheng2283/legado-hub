@@ -79,6 +79,9 @@ class SearchJobService:
     def find_candidate(self, job_id: str, candidate_id: str) -> dict | None:
         return self._coordinator.find_candidate(job_id, candidate_id)
 
+    def find_candidate_group(self, job_id: str, candidate_id: str) -> dict | None:
+        return self._coordinator.find_candidate_group(job_id, candidate_id)
+
     def cancel_job(self, job_id: str) -> bool:
         return self._coordinator.cancel_job(job_id)
 
