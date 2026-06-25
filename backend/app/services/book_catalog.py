@@ -61,6 +61,18 @@ class BookCatalog:
     async def toc(self, book_id: str) -> dict:
         from app.services.catalog import Catalog
         catalog = Catalog(repo=self.repo, cache=self.cache)
+        detail = await catalog.book_detail(book_id)
+        detail_data = detail.get("data") if isinstance(detail, dict) else {}
+        if isinstance(detail_data, dict) and (detail_data.get("rawTocUrl") or detail_data.get("tocUrl")):
+            try:
+                from app.source_plugins.id_codec import decode_book_id, encode_book_id
+
+                source_id, _ = decode_book_id(book_id)
+                raw_toc_url = str(detail_data.get("rawTocUrl") or detail_data.get("tocUrl"))
+                toc_book_id = encode_book_id(source_id, raw_toc_url)
+                return await catalog.toc(toc_book_id)
+            except Exception:
+                pass
         return await catalog.toc(book_id)
 
     async def chapter(self, chapter_id: str) -> dict:
@@ -157,5 +169,3 @@ class BookCatalog:
                     "nextTitle": next_ch.get("title") if next_ch else None,
                 }
         return {"prev": None, "next": None}
-
-

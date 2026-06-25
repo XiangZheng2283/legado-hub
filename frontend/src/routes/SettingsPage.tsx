@@ -4,13 +4,14 @@ import {
   Bot, Save, ShieldCheck, Wand2, Zap, RefreshCw, X, Plus,
   Loader2, CheckCircle2, XCircle, ChevronUp, ChevronDown,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
@@ -134,6 +135,11 @@ export function SettingsPage() {
   const [fetchingModels, setFetchingModels] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState("custom")
   const [sourceDropdownOpen, setSourceDropdownOpen] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordOk, setPasswordOk] = useState(false)
 
   useEffect(() => {
     if (aggData && aggForm === null) {
@@ -161,6 +167,20 @@ export function SettingsPage() {
     mutationFn: api.updateAggregateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["aggregateSettings"] })
+    },
+  })
+  const changePassword = useMutation({
+    mutationFn: api.auth.changePassword,
+    onSuccess: () => {
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      setPasswordError(null)
+      setPasswordOk(true)
+    },
+    onError: (err: any) => {
+      setPasswordOk(false)
+      setPasswordError(err?.message || "修改密码失败")
     },
   })
 
@@ -194,6 +214,20 @@ export function SettingsPage() {
     setSelectedPreset(id)
     const pre = PROVIDER_PRESETS.find((p) => p.id === id)
     if (pre?.baseUrl) updateAggProvider({ baseUrl: pre.baseUrl })
+  }
+  const handlePasswordSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    setPasswordError(null)
+    setPasswordOk(false)
+    if (!currentPassword || !newPassword) {
+      setPasswordError("请输入当前密码和新密码")
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("两次输入的新密码不一致")
+      return
+    }
+    changePassword.mutate({ currentPassword, newPassword })
   }
 
   if (isLoading || !settingsData) return <div className="text-muted-foreground">加载中...</div>
@@ -238,6 +272,40 @@ export function SettingsPage() {
           {saved ? "已保存" : "保存"}
         </Button>
       </div>
+
+      <Card className="lg:col-span-2">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">账户安全</CardTitle></CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="space-y-1">
+              <Label htmlFor="current-password">当前密码</Label>
+              <Input id="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="new-password">新密码</Label>
+              <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="confirm-password">确认新密码</Label>
+              <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+            </div>
+            <Button type="submit" disabled={changePassword.isPending}>
+              {changePassword.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              修改密码
+            </Button>
+          </form>
+          {passwordError && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>{passwordError}</AlertDescription>
+            </Alert>
+          )}
+          {passwordOk && (
+            <Alert className="mt-4">
+              <AlertDescription>密码已修改。</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── 书源池 ────────────────────────────────────────────────── */}
       <Card>

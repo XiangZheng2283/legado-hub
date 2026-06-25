@@ -16,6 +16,10 @@ function formatLoginError(message?: string, code?: number | string): string {
   return "登录请求失败"
 }
 
+function isLoginAccepted(result: any): boolean {
+  return Boolean(result?.ok) && (Boolean(result?.authenticated) || result?.authStatus === "pending")
+}
+
 // Types from backend login-capabilities response
 interface LoginCapabilities {
   pluginId: string
@@ -256,8 +260,9 @@ export function OfficialSourceLoginDialog({
         code: smsCode,
       })
 
-      if (result.ok && result.authenticated) {
-        setSuccess(`登录成功${result.accountName ? ` - ${result.accountName}` : ""}`)
+      if (isLoginAccepted(result)) {
+        const suffix = result.accountName ? ` - ${result.accountName}` : ""
+        setSuccess(`${result.authenticated ? "登录成功" : "登录态待确认"}${suffix}`)
         onSuccess?.()
         setTimeout(() => onOpenChange(false), 1500)
       } else {
@@ -282,8 +287,9 @@ export function OfficialSourceLoginDialog({
     try {
       const result = await api.loginCookieVerify(pluginId, { cookieText: cookieText.trim() })
 
-      if (result.ok && result.authenticated) {
-        setSuccess(`Cookie 验证通过${result.accountName ? ` - ${result.accountName}` : ""}`)
+      if (isLoginAccepted(result)) {
+        const prefix = result.authenticated ? "Cookie 验证通过" : "Cookie 已保存，等待确认"
+        setSuccess(`${prefix}${result.accountName ? ` - ${result.accountName}` : ""}`)
         onSuccess?.()
         setTimeout(() => onOpenChange(false), 1500)
       } else {

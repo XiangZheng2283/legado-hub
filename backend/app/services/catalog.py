@@ -132,9 +132,12 @@ class Catalog:
             if not isinstance(chapter, dict):
                 continue
             out = dict(chapter)
+            raw_chapter_url = out.get("rawChapterUrl") or out.get("chapterUrl", "")
             chapter_url = out.get("chapterUrl", "")
+            if raw_chapter_url:
+                out["rawChapterUrl"] = raw_chapter_url
             if chapter_url and "/api/legado/chapter/" in chapter_url:
-                chapter_id = chapter_url.rsplit("/", 1)[-1]
+                chapter_id = out.get("chapterId") or chapter_url.rsplit("/", 1)[-1]
                 out["chapterId"] = out.get("chapterId") or chapter_id
                 out["chapterUrl"] = self._chapter_api_url(chapter_id)
             chapters.append(out)
@@ -526,6 +529,10 @@ class Catalog:
         if data is None:
             return {"implemented": True, "data": None, "debug": result.get("debug", {})}
 
+        raw_book_url = data.get("bookUrl", "") or book_url
+        raw_toc_url = data.get("tocUrl", "") or raw_book_url
+        data["rawBookUrl"] = raw_book_url
+        data["rawTocUrl"] = raw_toc_url
         data["bookUrl"] = self._book_api_url(book_id)
         data["tocUrl"] = self._toc_api_url(book_id)
 
@@ -617,7 +624,16 @@ class Catalog:
             return await self._aggregate_toc(book_id, book_url)
 
         cached = self.cache.get_toc(book_id)
-        result = await self.scheduler.toc(source_id, book_url)
+        toc_url = book_url
+        cached_book = self.cache.get_book(book_id)
+        cached_book_data = cached_book.get("data") if isinstance(cached_book, dict) else {}
+        if isinstance(cached_book_data, dict):
+            toc_url = (
+                cached_book_data.get("rawTocUrl", "")
+                or cached_book_data.get("tocUrl", "")
+                or toc_url
+            )
+        result = await self.scheduler.toc(source_id, toc_url)
         chapters = result.get("chapters", [])
         debug = result.get("debug", {})
         error_info = debug.get("error")
@@ -664,7 +680,7 @@ class Catalog:
         register_result = AggregateProcessor().register_toc(aggregate_task_book_id, payload, chapters)
         source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
         for index, chapter in enumerate(chapters, start=1):
-            raw_url = chapter.get("chapterUrl", "")
+            raw_url = chapter.get("rawChapterUrl") or chapter.get("chapterUrl", "")
             source_chapter_id = chapter.get("chapterId") or (
                 encode_chapter_id(source_id, raw_url) if source_id and raw_url else f"{aggregate_task_book_id}:{index}"
             )
@@ -677,6 +693,7 @@ class Catalog:
             aggregate_chapter_id = encode_chapter_id(VIRTUAL_SOURCE_ID, aggregate_chapter_url)
             chapter["sourceId"] = VIRTUAL_SOURCE_ID
             chapter["sourceChapterId"] = source_chapter_id
+            chapter["rawChapterUrl"] = raw_url
             chapter["chapterId"] = aggregate_chapter_id
             chapter["chapterUrl"] = self._chapter_api_url(aggregate_chapter_id)
         official_debug = _aggregate_official_debug(payload, primary_book_id)
@@ -727,6 +744,9 @@ class Catalog:
             "chapterId": chapter_id,
             "title": title,
             "content": content,
+            "rawChapterUrl": chapter_url,
+            "chapterUrl": chapter_url,
+            "extra": result.get("extra", {}) if isinstance(result.get("extra", {}), dict) else {},
             "debug": debug,
         }
         # Only cache if content is non-empty and no error

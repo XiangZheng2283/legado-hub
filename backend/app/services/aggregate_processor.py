@@ -14,7 +14,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
+from app.source_plugins.id_codec import decode_chapter_id, encode_book_id, encode_chapter_id
 from app.services.aggregate_virtual_source import (
     VIRTUAL_SOURCE_ID,
     make_aggregate_chapter_url,
@@ -115,6 +115,11 @@ class AggregateProcessor:
     def _conn(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
 
+    def _library_books(self):
+        from app.services.library_books import LibraryBooksService
+
+        return LibraryBooksService(db_path=self.db_path)
+
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
 
@@ -126,7 +131,7 @@ class AggregateProcessor:
         if not aggregate_book_id:
             return settings
         try:
-            book = library_books_service.get_book(aggregate_book_id) or {}
+            book = self._library_books().get_book(aggregate_book_id) or {}
             raw = book.get("settingsJson", "") or ""
             per_book = json.loads(raw) if raw else {}
         except Exception:
@@ -188,15 +193,23 @@ class AggregateProcessor:
                 """
                 INSERT INTO aggregate_book_tasks
                 (aggregate_book_id, name, author, aggregate_payload_json, primary_book_id, primary_source_id,
+                 primary_source_name, primary_book_url, primary_toc_url, total_chapters_at_subscribe,
                  status, interval_minutes, last_check_time, next_check_time, error_count, last_error,
                  ai_enabled, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 'active', ?, NULL, ?, 0, '', ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NULL, ?, 0, '', ?, ?, ?)
                 ON CONFLICT(aggregate_book_id) DO UPDATE SET
                     name = COALESCE(NULLIF(excluded.name, ''), aggregate_book_tasks.name),
                     author = COALESCE(NULLIF(excluded.author, ''), aggregate_book_tasks.author),
                     aggregate_payload_json = excluded.aggregate_payload_json,
                     primary_book_id = excluded.primary_book_id,
                     primary_source_id = excluded.primary_source_id,
+                    primary_source_name = COALESCE(NULLIF(excluded.primary_source_name, ''), aggregate_book_tasks.primary_source_name),
+                    primary_book_url = COALESCE(NULLIF(excluded.primary_book_url, ''), aggregate_book_tasks.primary_book_url),
+                    primary_toc_url = COALESCE(NULLIF(excluded.primary_toc_url, ''), aggregate_book_tasks.primary_toc_url),
+                    total_chapters_at_subscribe = CASE
+                        WHEN COALESCE(aggregate_book_tasks.total_chapters_at_subscribe, 0) > 0 THEN aggregate_book_tasks.total_chapters_at_subscribe
+                        ELSE excluded.total_chapters_at_subscribe
+                    END,
                     status = CASE
                         WHEN aggregate_book_tasks.status IN ('archived', 'paused') THEN aggregate_book_tasks.status
                         ELSE 'active'
@@ -213,6 +226,10 @@ class AggregateProcessor:
                     json.dumps(payload, ensure_ascii=False),
                     primary_book_id,
                     primary_source_id,
+                    payload.get("primarySourceName", "") or primary_source_id,
+                    payload.get("primaryBookUrl", "") or "",
+                    payload.get("primaryTocUrl", "") or "",
+                    int(payload.get("totalChaptersAtSubscribe", 0) or 0),
                     interval,
                     now,
                     int(bool(settings.get("aiEnabled", True))),
@@ -269,7 +286,7 @@ class AggregateProcessor:
                 )
 
             for index, chapter in enumerate(chapters, start=1):
-                raw_url = chapter.get("chapterUrl", "")
+                raw_url = chapter.get("rawChapterUrl") or chapter.get("chapterUrl", "")
                 source_chapter_id = chapter.get("chapterId") or (
                     encode_chapter_id(source_id, raw_url) if source_id and raw_url else f"{aggregate_book_id}:{index}"
                 )
@@ -304,8 +321,8 @@ class AggregateProcessor:
                     placeholder_flag = 1 if initial_status == "placeholder" else 0
                     conn.execute(
                         """INSERT OR IGNORE INTO aggregate_chapter_tasks
-                           (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status, placeholder, created_at, updated_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                           (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status, placeholder, primary_source_chapter_url, created_at, updated_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                         (
                             chapter_id,
                             aggregate_book_id,
@@ -314,6 +331,7 @@ class AggregateProcessor:
                             chapter.get("title", ""),
                             initial_status,
                             placeholder_flag,
+                            raw_url,
                             now,
                             now,
                         ),
@@ -341,6 +359,10 @@ class AggregateProcessor:
             conn.execute(
                 """UPDATE aggregate_book_tasks
                    SET total_chapters = ?,
+                       total_chapters_at_subscribe = CASE
+                           WHEN COALESCE(total_chapters_at_subscribe, 0) = 0 THEN ?
+                           ELSE total_chapters_at_subscribe
+                       END,
                        initial_snapshot_last_index = CASE
                            WHEN COALESCE(initial_snapshot_last_index, 0) = 0 THEN ?
                            ELSE initial_snapshot_last_index
@@ -355,7 +377,7 @@ class AggregateProcessor:
                        ),
                        updated_at = ?
                    WHERE aggregate_book_id = ?""",
-                (registered, registered, aggregate_book_id, aggregate_book_id, now, aggregate_book_id),
+                (registered, registered, registered, aggregate_book_id, aggregate_book_id, now, aggregate_book_id),
             )
             conn.commit()
         self._refresh_shared_book_state(aggregate_book_id)
@@ -410,34 +432,36 @@ class AggregateProcessor:
                 "processedBooks": len(processed), "items": processed}
 
     async def bootstrap_book_until_visible(self, aggregate_book_id: str, max_rounds: int = 20) -> dict:
-        """Run multiple task rounds after first intake until the book becomes visible.
+        """Run multiple task rounds after first intake.
 
-        This avoids waiting for the periodic scheduler during initial ingestion.
+        Search visibility is only one milestone. Initial bootstrap should keep
+        running until the current pending chapter window is drained, so first
+        subscription intake does not stop merely because the book became
+        searchable.
         """
+        bootstrap_window = max(50, WINDOW_CHAPTER_LIMIT)
+        initial_pending = max(1, self._pending_chapter_count(aggregate_book_id))
+        planned_rounds = max(int(max_rounds or 0), (initial_pending + bootstrap_window - 1) // bootstrap_window + 2)
         rounds = 0
         last_result: dict[str, Any] = {}
-        for _ in range(max_rounds):
+        ever_visible = False
+        for _ in range(planned_rounds):
             rounds += 1
-            last_result = await self.run_book_task(aggregate_book_id)
-            book = library_books_service.get_book(aggregate_book_id) or {}
+            last_result = await self.run_book_task(aggregate_book_id, chapter_limit=bootstrap_window)
+            book = self._library_books().get_book(aggregate_book_id) or {}
             if book.get("searchVisibilityStatus") == "visible":
-                return {
-                    "bookId": aggregate_book_id,
-                    "rounds": rounds,
-                    "visible": True,
-                    "result": last_result,
-                }
+                ever_visible = True
             pending = self._pending_chapter_count(aggregate_book_id)
             if pending <= 0:
                 break
         return {
             "bookId": aggregate_book_id,
             "rounds": rounds,
-            "visible": False,
+            "visible": ever_visible,
             "result": last_result,
         }
 
-    async def run_book_task(self, aggregate_book_id: str) -> dict:
+    async def run_book_task(self, aggregate_book_id: str, chapter_limit: int = WINDOW_CHAPTER_LIMIT) -> dict:
         from app.services.book_catalog import BookCatalog
 
         with self._conn() as conn:
@@ -467,7 +491,7 @@ class AggregateProcessor:
             chapters = [dict(item) for item in toc.get("chapters", []) if isinstance(item, dict)]
             self.register_toc(aggregate_book_id, payload, chapters)
             chapter_results = []
-            for chapter in self._chapters_for_processing(aggregate_book_id):
+            for chapter in self._chapters_for_processing(aggregate_book_id, limit=chapter_limit):
                 chapter_results.append(await self._process_chapter(catalog, chapter))
 
             latest_chapter = chapters[-1].get("title", "") if chapters else ""
@@ -479,6 +503,8 @@ class AggregateProcessor:
                     UPDATE aggregate_book_tasks
                     SET status = 'active', last_check_time = ?, next_check_time = ?,
                         book_status = ?,
+                        primary_toc_url = COALESCE(NULLIF(?, ''), primary_toc_url),
+                        primary_book_url = COALESCE(NULLIF(?, ''), primary_book_url),
                         name = COALESCE(NULLIF(?, ''), name),
                         author = COALESCE(NULLIF(?, ''), author),
                         cover_url = COALESCE(NULLIF(?, ''), cover_url),
@@ -501,6 +527,8 @@ class AggregateProcessor:
                         now,
                         next_check,
                         book_status,
+                        detail_data.get("rawTocUrl", "") or detail_data.get("tocUrl", ""),
+                        detail_data.get("rawBookUrl", "") or detail_data.get("bookUrl", ""),
                         detail_data.get("name", ""),
                         detail_data.get("author", ""),
                         detail_data.get("coverUrl", ""),
@@ -547,14 +575,231 @@ class AggregateProcessor:
             self._refresh_shared_book_state(aggregate_book_id)
             return {"bookId": aggregate_book_id, "success": False, "error": str(exc), "nextCheckTime": next_check}
 
+    async def _ensure_candidate_sources_for_book(
+        self,
+        aggregate_book_id: str,
+        payload: dict[str, Any],
+        *,
+        max_candidates: int = 5,
+        max_discovery_sources: int = 12,
+    ) -> dict[str, Any]:
+        """Discover third-party candidate sources for an official-only aggregate book.
+
+        Subscription discovery intentionally searches only official sources. The
+        long-running aggregate task owns third-party source discovery so initial
+        subscription stays fast while chapter processing still has fallback
+        sources.
+        """
+        sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+        normalized_sources = [dict(source) for source in sources if isinstance(source, dict)]
+        if self._has_candidate_source(normalized_sources):
+            return payload
+
+        keyword = str(payload.get("name", "") or "").strip()
+        author = str(payload.get("author", "") or "").strip()
+        if not keyword:
+            return payload
+
+        discovered = await self._discover_third_party_candidates(
+            keyword=keyword,
+            author=author,
+            existing_sources=normalized_sources,
+            max_candidates=max_candidates,
+            max_sources=max_discovery_sources,
+        )
+        if not discovered:
+            return payload
+
+        merged_sources = self._merge_payload_sources(normalized_sources, discovered)
+        updated_payload = dict(payload)
+        updated_payload["sources"] = merged_sources
+        self._persist_candidate_sources(aggregate_book_id, updated_payload, discovered)
+        return updated_payload
+
+    def _has_candidate_source(self, sources: list[dict[str, Any]]) -> bool:
+        for source in sources:
+            source_id = str(source.get("sourceId", "") or "")
+            if not source_id:
+                continue
+            if not self._is_official_source(source_id):
+                return True
+        return False
+
+    async def _discover_third_party_candidates(
+        self,
+        *,
+        keyword: str,
+        author: str,
+        existing_sources: list[dict[str, Any]],
+        max_candidates: int,
+        max_sources: int,
+    ) -> list[dict[str, Any]]:
+        from app.services.live_acceptance import normalize_author_key, normalize_text
+        from app.source_plugins.scheduler import get_plugin_scheduler
+
+        try:
+            scheduler = get_plugin_scheduler()
+        except Exception:
+            return []
+
+        plugins = [
+            plugin
+            for plugin in scheduler._enabled_plugins()
+            if "search" in getattr(plugin, "capabilities", [])
+            and not plugin.metadata.is_official_source()
+        ]
+        if not plugins:
+            return []
+
+        try:
+            plugins = scheduler._search_priority_plugins(plugins)
+        except Exception:
+            pass
+        plugins = plugins[:max(1, int(max_sources or 12))]
+
+        existing_keys = {
+            (str(source.get("sourceId", "") or ""), str(source.get("bookId", "") or ""))
+            for source in existing_sources
+        }
+        target_name = normalize_text(keyword)
+        target_author = normalize_author_key(author)
+        found: list[dict[str, Any]] = []
+        max_concurrency = self._positive_int(getattr(scheduler, "config", {}).get("max_concurrency"), 3)
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def search_plugin(plugin: Any) -> list[dict[str, Any]]:
+            async with semaphore:
+                source_id = plugin.metadata.id
+                try:
+                    result = await scheduler.search_one(source_id, keyword, 1)
+                except Exception:
+                    return []
+                items = result.get("items") if isinstance(result, dict) else []
+                candidates = []
+                for raw in items or []:
+                    if not isinstance(raw, dict):
+                        continue
+                    if normalize_text(raw.get("name", "")) != target_name:
+                        continue
+                    item_author = normalize_author_key(raw.get("author", ""))
+                    if target_author and item_author and item_author != target_author:
+                        continue
+                    source_id = raw.get("sourceId", "") or plugin.metadata.id
+                    raw_book_url = raw.get("rawBookUrl") or raw.get("bookUrl", "")
+                    book_id = raw.get("bookId") or (encode_book_id(source_id, raw_book_url) if raw_book_url else "")
+                    if not source_id or not book_id or (source_id, book_id) in existing_keys:
+                        continue
+                    candidates.append(
+                        {
+                            "bookId": book_id,
+                            "sourceId": source_id,
+                            "sourceName": raw.get("sourceName", "") or plugin.metadata.name,
+                            "bookUrl": raw_book_url,
+                            "score": int(raw.get("score", 0) or 0),
+                            "lastChapter": raw.get("lastChapter", "") or "",
+                            "coverUrl": raw.get("coverUrl", "") or "",
+                            "intro": raw.get("intro", "") or "",
+                            "wordCount": raw.get("wordCount", "") or "",
+                            "author": raw.get("author", "") or author,
+                            "name": raw.get("name", "") or keyword,
+                        }
+                    )
+                return candidates
+
+        results = await asyncio.gather(*(search_plugin(plugin) for plugin in plugins))
+        for candidates in results:
+            for candidate in candidates:
+                key = (candidate["sourceId"], candidate["bookId"])
+                if key in existing_keys:
+                    continue
+                existing_keys.add(key)
+                found.append(candidate)
+                if len(found) >= max_candidates:
+                    return found
+        return found
+
+    def _merge_payload_sources(
+        self,
+        existing_sources: list[dict[str, Any]],
+        discovered_sources: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        merged: list[dict[str, Any]] = []
+        seen: set[tuple[str, str]] = set()
+        for source in [*existing_sources, *discovered_sources]:
+            source_id = str(source.get("sourceId", "") or "")
+            book_id = str(source.get("bookId", "") or "")
+            if not source_id or not book_id:
+                continue
+            key = (source_id, book_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(dict(source))
+        return merged
+
+    def _persist_candidate_sources(
+        self,
+        aggregate_book_id: str,
+        payload: dict[str, Any],
+        discovered_sources: list[dict[str, Any]],
+    ) -> None:
+        now = self._now()
+        with self._conn() as conn:
+            conn.execute(
+                """
+                UPDATE aggregate_book_tasks
+                SET aggregate_payload_json = ?, updated_at = ?
+                WHERE aggregate_book_id = ?
+                """,
+                (json.dumps(payload, ensure_ascii=False), now, aggregate_book_id),
+            )
+            for source in discovered_sources:
+                conn.execute(
+                    """
+                    INSERT INTO aggregate_book_sources (
+                        aggregate_book_id, source_id, source_book_id, source_name, source_book_url,
+                        role, score, enabled, last_seen_at, last_chapter_title, chapter_count, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, 'candidate', ?, 1, ?, ?, 0, ?, ?)
+                    ON CONFLICT(aggregate_book_id, source_id, source_book_id) DO UPDATE SET
+                        source_name = excluded.source_name,
+                        source_book_url = excluded.source_book_url,
+                        role = 'candidate',
+                        score = excluded.score,
+                        enabled = 1,
+                        last_seen_at = excluded.last_seen_at,
+                        last_chapter_title = excluded.last_chapter_title,
+                        updated_at = excluded.updated_at
+                    """,
+                    (
+                        aggregate_book_id,
+                        source.get("sourceId", ""),
+                        source.get("bookId", ""),
+                        source.get("sourceName", ""),
+                        source.get("bookUrl", ""),
+                        int(source.get("score", 0) or 0),
+                        now,
+                        source.get("lastChapter", "") or "",
+                        now,
+                        now,
+                    ),
+                )
+            conn.commit()
+
+    def _positive_int(self, value: Any, default: int) -> int:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return default
+        return parsed if parsed > 0 else default
+
     def _chapters_for_processing(self, aggregate_book_id: str, limit: int = WINDOW_CHAPTER_LIMIT) -> list[dict]:
         terminal_codes = tuple(sorted(ERROR_CODES_NO_RETRY))
         placeholders = ",".join("?" for _ in terminal_codes) if terminal_codes else "''"
         now = self._now()
         with self._conn() as conn:
-            normal_limit = max(1, int(limit)) - 1
+            requested_limit = max(1, int(limit))
             rows: list[tuple] = []
-            if normal_limit > 0:
+            if requested_limit > 0:
                 rows.extend(
                     conn.execute(
                         f"""
@@ -574,31 +819,33 @@ class AggregateProcessor:
                         ORDER BY COALESCE(chapter_index, 999999), created_at
                         LIMIT ?
                         """,
-                        (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), normal_limit),
+                        (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), requested_limit),
                     ).fetchall()
                 )
-            rows.extend(
-                conn.execute(
-                    f"""
-                    SELECT chapter_id, source_chapter_id, title, status, chapter_index, aggregate_book_id, placeholder
-                    FROM aggregate_chapter_tasks
-                    WHERE aggregate_book_id = ?
-                      AND placeholder = 1
-                      AND (
-                        status = 'pending'
-                        OR (
-                          status = 'error'
-                          AND (next_retry_time IS NULL OR next_retry_time <= ?)
-                          AND (last_error_code IS NULL OR last_error_code NOT IN ({placeholders}))
-                          AND (retry_count IS NULL OR retry_count < ?)
+            remaining_limit = max(0, requested_limit - len(rows))
+            if remaining_limit > 0:
+                rows.extend(
+                    conn.execute(
+                        f"""
+                        SELECT chapter_id, source_chapter_id, title, status, chapter_index, aggregate_book_id, placeholder
+                        FROM aggregate_chapter_tasks
+                        WHERE aggregate_book_id = ?
+                          AND placeholder = 1
+                          AND (
+                            status = 'pending'
+                            OR (
+                              status = 'error'
+                              AND (next_retry_time IS NULL OR next_retry_time <= ?)
+                              AND (last_error_code IS NULL OR last_error_code NOT IN ({placeholders}))
+                              AND (retry_count IS NULL OR retry_count < ?)
+                            )
                         )
-                      )
-                    ORDER BY COALESCE(chapter_index, 999999), created_at
-                    LIMIT 1
-                    """,
-                    (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES)),
-                ).fetchall()
-            )
+                        ORDER BY COALESCE(chapter_index, 999999), created_at
+                        LIMIT ?
+                        """,
+                        (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), remaining_limit),
+                    ).fetchall()
+                )
         return [
             {
                 "chapterId": row[0],
@@ -689,10 +936,11 @@ class AggregateProcessor:
 
                     lex_path = resolve_sensitive_lexicon_path(raw_lex_path)
                     if not lex_path.exists():
-                        logger.warning(
-                            "Sensitive lexicon path does not exist: %s (resolved to %s)",
-                            raw_lex_path,
+                        lex_path.mkdir(parents=True, exist_ok=True)
+                        logger.info(
+                            "Created empty sensitive lexicon directory: %s (resolved from %s)",
                             lex_path,
+                            raw_lex_path,
                         )
                     else:
                         try:
@@ -776,6 +1024,8 @@ class AggregateProcessor:
         try:
             result = await catalog.chapter(source_chapter_id)
             content = result.get("content", "")
+            source_word_count = self._extract_source_word_count(result)
+            primary_source_chapter_url = self._extract_source_chapter_url(result, source_chapter_id)
             if content:
                 self._save_source_snapshot(
                     aggregate_book_id=aggregate_book_id,
@@ -795,7 +1045,13 @@ class AggregateProcessor:
                 )
             is_official = self._is_official_source(primary_source_id)
             classification = classify_source_content(
-                content, source_id=primary_source_id, is_official=is_official
+                content,
+                source_id=primary_source_id,
+                is_official=is_official,
+                source_word_count=source_word_count,
+                preview_only_hint=self._extract_preview_only(result),
+                extra=result.get("extra") if isinstance(result.get("extra"), dict) else {},
+                is_paid=self._extract_is_paid(result),
             )
 
             # ── Path 1: full content ────────────────────────────────────
@@ -804,10 +1060,16 @@ class AggregateProcessor:
                     catalog=catalog, chapter=chapter, content=content,
                     classification=classification, primary_source_id=primary_source_id,
                     payload=payload,
+                    source_word_count=source_word_count,
+                    primary_source_chapter_url=primary_source_chapter_url,
                 )
 
             # ── Path 2: preview content → try candidates ────────────────
             if classification["classification"] == "preview":
+                payload = await self._ensure_candidate_sources_for_book(
+                    aggregate_book_id,
+                    payload,
+                )
                 candidate_result = await self._try_candidate_content(
                     catalog, chapter, payload, primary_source_id
                 )
@@ -816,10 +1078,15 @@ class AggregateProcessor:
                     return await self._process_full_content(
                         catalog=catalog, chapter=chapter,
                         content=candidate_result["content"],
-                        classification=classification,
+                        classification={
+                            **classification,
+                            "alignmentJson": candidate_result.get("alignment_json") or {},
+                        },
                         primary_source_id=candidate_result["source_id"],
                         payload=payload,
                         fallback_source_id=candidate_result["source_id"],
+                        source_word_count=source_word_count,
+                        primary_source_chapter_url=primary_source_chapter_url,
                     )
                 # No candidate → purified preview as fallback.
                 purified = self._purify_content(content) if self.purify_enabled(aggregate_book_id) else self._normalize_content_light(content)
@@ -835,11 +1102,18 @@ class AggregateProcessor:
                     status="fallback", content=purified,
                     alignment_json=alignment_json,
                     fallback_source_id=primary_source_id,
+                    source_word_count=source_word_count,
+                    primary_source_chapter_url=primary_source_chapter_url,
+                    preview_only=True,
                 )
                 return {"chapterId": chapter_id, "success": True,
                         "contentLength": len(purified), "fallback": True}
 
             # ── Path 3: empty → try candidates ──────────────────────────
+            payload = await self._ensure_candidate_sources_for_book(
+                aggregate_book_id,
+                payload,
+            )
             candidate_result = await self._try_candidate_content(
                 catalog, chapter, payload, primary_source_id
             )
@@ -847,10 +1121,15 @@ class AggregateProcessor:
                 return await self._process_full_content(
                     catalog=catalog, chapter=chapter,
                     content=candidate_result["content"],
-                    classification=classification,
+                    classification={
+                        **classification,
+                        "alignmentJson": candidate_result.get("alignment_json") or {},
+                    },
                     primary_source_id=candidate_result["source_id"],
                     payload=payload,
                     fallback_source_id=candidate_result["source_id"],
+                    source_word_count=source_word_count,
+                    primary_source_chapter_url=primary_source_chapter_url,
                 )
             raise ValueError("empty chapter content from all sources")
 
@@ -861,6 +1140,8 @@ class AggregateProcessor:
         self, *, catalog, chapter: dict, content: str,
         classification: dict, primary_source_id: str, payload: dict,
         fallback_source_id: str = "",
+        source_word_count: int = 0,
+        primary_source_chapter_url: str = "",
     ) -> dict:
         """Path 1: Content is full. Purify → optional AI → write result."""
         from app.services.aggregate_alignment import build_source_alignment_json
@@ -881,6 +1162,7 @@ class AggregateProcessor:
         ai_completion_tokens = 0
         ai_total_tokens = 0
         ai_latency_ms = 0
+        preview_only = False
 
         ai_service = self._get_ai_service(aggregate_book_id)
         if ai_service:
@@ -893,7 +1175,7 @@ class AggregateProcessor:
                     # Content came from a candidate source → use third-party AI path.
                     ai_result = await ai_service.process_third_party_primary(
                         book_name=book_name, author="", title=title,
-                        content=purified, source_id=primary_source_id,
+                        content=purified, source_id=fallback_source_id,
                         previous_context=prev_ctx,
                     )
                 else:
@@ -922,6 +1204,8 @@ class AggregateProcessor:
             primary_source_id=primary_source_id,
             candidate_source_id=fallback_source_id or "",
         )
+        if isinstance(classification.get("alignmentJson"), dict) and classification.get("alignmentJson"):
+            alignment_json = dict(classification["alignmentJson"])
         self._write_chapter_result(
             chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
             title=title, chapter_index=chapter_index,
@@ -935,6 +1219,9 @@ class AggregateProcessor:
             ai_total_tokens=ai_total_tokens,
             ai_latency_ms=ai_latency_ms,
             fallback_source_id=fallback_source_id or primary_source_id,
+            source_word_count=source_word_count,
+            primary_source_chapter_url=primary_source_chapter_url,
+            preview_only=preview_only,
         )
         return {"chapterId": chapter_id, "success": True,
                 "contentLength": len(selected_content),
@@ -945,9 +1232,16 @@ class AggregateProcessor:
     ) -> dict | None:
         """Try to get full content from candidate sources.
 
-        Simplified matching: find the same chapter index in candidate's TOC.
-        Returns {"content": str, "source_id": str} or None.
+        For preview chapters, prefer title-fuzzy matching + preview alignment.
+        For empty chapters, fall back to chapter-index/title matching.
         """
+        from app.services.aggregate_alignment import (
+            align_candidate_chapter,
+            build_source_alignment_json,
+            chapter_title_similarity,
+            classify_source_content,
+        )
+
         candidates = self._candidate_sources_from_payload(
             payload,
             primary_source_id,
@@ -955,6 +1249,13 @@ class AggregateProcessor:
         )
         target_index = chapter.get("chapterIndex", 1)
         target_title = chapter.get("title", "")
+        aggregate_book_id = chapter.get("aggregateBookId", "")
+        official_snapshot = self._load_source_snapshot_content(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=target_index or 0,
+            source_id=primary_source_id,
+        )
+        official_preview = str(official_snapshot or "").strip()
 
         for cand in candidates[:3]:
             cand_source_id = cand.get("sourceId", "")
@@ -967,63 +1268,151 @@ class AggregateProcessor:
             except Exception:
                 continue
 
-            # Find matching chapter by index or title.
-            matched_ch = None
-            for ch in cand_chapters:
-                if ch.get("index") == target_index:
-                    matched_ch = ch
-                    break
-            if not matched_ch and target_title:
-                for ch in cand_chapters:
-                    if target_title in (ch.get("title") or ""):
-                        matched_ch = ch
-                        break
-            if not matched_ch:
+            matched_candidates = self._match_candidate_toc_entries(
+                cand_chapters=cand_chapters,
+                target_index=target_index,
+                target_title=target_title,
+            )
+            if not matched_candidates:
                 continue
 
-            cand_chapter_id = matched_ch.get("chapterId", "")
-            if not cand_chapter_id and matched_ch.get("chapterUrl"):
-                from app.source_plugins.id_codec import encode_chapter_id
-                cand_chapter_id = encode_chapter_id(cand_source_id, matched_ch["chapterUrl"])
-            if not cand_chapter_id:
-                continue
+            for matched_ch in matched_candidates:
+                cand_chapter_id = matched_ch.get("chapterId", "")
+                if not cand_chapter_id and matched_ch.get("chapterUrl"):
+                    from app.source_plugins.id_codec import encode_chapter_id
 
-            try:
-                cand_result = await catalog.chapter(cand_chapter_id)
-                cand_content = cand_result.get("content", "")
-                from app.services.aggregate_alignment import classify_source_content
-                is_official = self._is_official_source(cand_source_id)
-                if cand_content:
-                    self._save_source_snapshot(
-                        aggregate_book_id=chapter.get("aggregateBookId", ""),
-                        chapter_index=target_index or 0,
+                    cand_chapter_id = encode_chapter_id(cand_source_id, matched_ch["chapterUrl"])
+                if not cand_chapter_id:
+                    continue
+
+                try:
+                    cand_result = await catalog.chapter(cand_chapter_id)
+                    cand_content = cand_result.get("content", "")
+                    is_official = self._is_official_source(cand_source_id)
+                    candidate_word_count = self._extract_source_word_count(cand_result)
+                    candidate_preview_only = self._extract_preview_only(cand_result)
+                    candidate_is_paid = self._extract_is_paid(cand_result)
+                    if cand_content:
+                        self._save_source_snapshot(
+                            aggregate_book_id=aggregate_book_id,
+                            chapter_index=target_index or 0,
+                            source_id=cand_source_id,
+                            source_book_id=cand.get("bookId", ""),
+                            source_chapter_id=cand_chapter_id,
+                            title=matched_ch.get("title", "") or target_title,
+                            clean_content=cand_content,
+                            classification="unknown",
+                        )
+                    if not cand_content:
+                        cand_content = self._load_source_snapshot_content(
+                            aggregate_book_id=aggregate_book_id,
+                            chapter_index=target_index or 0,
+                            source_id=cand_source_id,
+                        )
+                    cls = classify_source_content(
+                        cand_content,
                         source_id=cand_source_id,
-                        source_book_id=cand.get("bookId", ""),
-                        source_chapter_id=cand_chapter_id,
-                        title=matched_ch.get("title", "") or target_title,
-                        clean_content=cand_content,
-                        classification="unknown",
+                        is_official=is_official,
+                        source_word_count=candidate_word_count,
+                        preview_only_hint=candidate_preview_only,
+                        extra=cand_result.get("extra") if isinstance(cand_result.get("extra"), dict) else {},
+                        is_paid=candidate_is_paid,
                     )
-                if not cand_content:
+                    if cls["classification"] != "full":
+                        continue
+
+                    alignment_json = build_source_alignment_json(
+                        selected_content_source="candidate",
+                        official_content_length=len(official_preview),
+                        candidate_content_length=len(cand_content or ""),
+                        candidate_source_id=cand_source_id,
+                        primary_source_id=primary_source_id,
+                    )
+                    if official_preview:
+                        aligned = align_candidate_chapter(
+                            official_preview=official_preview,
+                            candidate_title=matched_ch.get("title", "") or target_title,
+                            candidate_content=cand_content,
+                            expected_title=target_title,
+                        )
+                        alignment_json = build_source_alignment_json(
+                            selected_content_source="candidate",
+                            official_content_length=len(official_preview),
+                            candidate_content_length=len(cand_content or ""),
+                            title_similarity=aligned.get("titleSimilarity", 0.0),
+                            preview_similarity=aligned.get("previewSimilarity", 0.0),
+                            head_preview_similarity=aligned.get("headPreviewSimilarity", 0.0),
+                            alignment_passed=bool(aligned.get("alignmentPassed")),
+                            alignment_reason=aligned.get("alignmentReason", ""),
+                            candidate_source_id=cand_source_id,
+                            primary_source_id=primary_source_id,
+                        )
+                        if not aligned.get("alignmentPassed"):
+                            continue
+
+                    return {
+                        "content": cand_content,
+                        "source_id": cand_source_id,
+                        "alignment_json": alignment_json,
+                    }
+                except Exception:
+                    if official_preview:
+                        continue
                     cand_content = self._load_source_snapshot_content(
-                        aggregate_book_id=chapter.get("aggregateBookId", ""),
+                        aggregate_book_id=aggregate_book_id,
                         chapter_index=target_index or 0,
                         source_id=cand_source_id,
                     )
-                cls = classify_source_content(cand_content, source_id=cand_source_id, is_official=is_official)
-                if cls["classification"] == "full":
-                    return {"content": cand_content, "source_id": cand_source_id}
-            except Exception:
-                cand_content = self._load_source_snapshot_content(
-                    aggregate_book_id=chapter.get("aggregateBookId", ""),
-                    chapter_index=target_index or 0,
-                    source_id=cand_source_id,
-                )
-                if cand_content:
-                    return {"content": cand_content, "source_id": cand_source_id}
-                continue
+                    if cand_content:
+                        return {
+                            "content": cand_content,
+                            "source_id": cand_source_id,
+                            "alignment_json": build_source_alignment_json(
+                                selected_content_source="candidate",
+                                candidate_content_length=len(cand_content),
+                                alignment_passed=False,
+                                alignment_reason="snapshot_fallback_without_preview_alignment",
+                                candidate_source_id=cand_source_id,
+                                primary_source_id=primary_source_id,
+                            ),
+                        }
+                    continue
 
         return None
+
+    def _match_candidate_toc_entries(
+        self,
+        *,
+        cand_chapters: list[dict[str, Any]],
+        target_index: int,
+        target_title: str,
+    ) -> list[dict[str, Any]]:
+        from app.services.aggregate_alignment import chapter_title_similarity
+
+        scored: list[tuple[float, dict[str, Any]]] = []
+        for ch in cand_chapters:
+            if not isinstance(ch, dict):
+                continue
+            score = 0.0
+            ch_index = int(ch.get("index") or 0)
+            if ch_index and ch_index == target_index:
+                score += 1.0
+            title = str(ch.get("title", "") or "")
+            if target_title and title:
+                title_sim = chapter_title_similarity(target_title, title)
+                score += title_sim
+                if target_title == title:
+                    score += 0.5
+            if score <= 0:
+                continue
+            scored.append((score, ch))
+        scored.sort(
+            key=lambda item: (
+                -item[0],
+                abs(int(item[1].get("index") or 0) - int(target_index or 0)),
+            )
+        )
+        return [item[1] for item in scored[:3]]
 
     def _handle_processing_error(self, exc: Exception, chapter: dict, source_chapter_id: str) -> dict:
         from app.services.aggregate_alignment import build_source_alignment_json
@@ -1074,6 +1463,9 @@ class AggregateProcessor:
         ai_self_score: float = 0.0,
         ai_prompt_tokens: int = 0, ai_completion_tokens: int = 0,
         ai_total_tokens: int = 0, ai_latency_ms: int = 0,
+        source_word_count: int = 0,
+        primary_source_chapter_url: str = "",
+        preview_only: bool = False,
     ) -> None:
         now = self._now()
         trace_meta = self._build_trace_meta(
@@ -1085,6 +1477,9 @@ class AggregateProcessor:
             ai_model=ai_model,
             ai_self_score=ai_self_score,
             content=content,
+            source_word_count=source_word_count,
+            primary_source_chapter_url=primary_source_chapter_url,
+            preview_only=preview_only,
         )
         trace_hash = hashlib.sha256(
             json.dumps(trace_meta, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -1098,6 +1493,7 @@ class AggregateProcessor:
                        trace_hash = ?, policy_version = COALESCE(policy_version, 1),
                        source_alignment_json = ?, fallback_source_id = ?, ai_model = ?,
                        deviation_score = ?, ai_self_score = ?, ai_prompt_tokens = ?, ai_completion_tokens = ?,
+                       source_word_count = ?, primary_source_chapter_url = ?, preview_only = ?,
                        ai_total_tokens = ?, ai_latency_ms = ?,
                        updated_at = ?
                    WHERE chapter_id = ?""",
@@ -1106,6 +1502,7 @@ class AggregateProcessor:
                  json.dumps(alignment_json, ensure_ascii=False),
                  fallback_source_id, ai_model,
                  deviation_score, ai_self_score, ai_prompt_tokens, ai_completion_tokens,
+                 int(source_word_count or 0), primary_source_chapter_url or "", 1 if preview_only else 0,
                  ai_total_tokens, ai_latency_ms,
                  now, chapter_id),
             )
@@ -1307,6 +1704,8 @@ class AggregateProcessor:
             except Exception:
                 chapter_url = ""
         book_name = self._aggregate_book_name(conn, aggregate_book_id)
+        book_author = self._aggregate_book_author(conn, aggregate_book_id)
+        book_meta = self._aggregate_book_meta(conn, aggregate_book_id)
         file_result = NovelFileCache(root=self.db_path.parent / "novels").write_chapter(
             conn=conn,
             chapter_id=chapter_id,
@@ -1316,9 +1715,25 @@ class AggregateProcessor:
             content=content,
             book_id=aggregate_book_id,
             book_name=book_name,
+            author=book_author,
             chapter_index=chapter_index,
             trace_meta=trace_meta or {},
         )
+        # Persist a superset of metadata into the book folder so the folder can
+        # be rescanned on startup to recreate the library entry if needed.
+        if file_result and file_result.get("written") and file_result.get("filePath"):
+            try:
+                target_dir = Path(file_result["filePath"]).parent
+                cache = NovelFileCache(root=self.db_path.parent / "novels")
+                cache._write_subscription_metadata(
+                    target_dir,
+                    book_id=aggregate_book_id,
+                    book_name=book_name,
+                    author=book_author,
+                    extra=book_meta,
+                )
+            except Exception:
+                logger.debug("Failed to write subscription metadata for %s", aggregate_book_id, exc_info=True)
         return file_result
 
     def _source_book_id_from_payload(self, payload: dict[str, Any], source_id: str) -> str:
@@ -1414,8 +1829,11 @@ class AggregateProcessor:
         ai_model: str,
         ai_self_score: float,
         content: str,
+        source_word_count: int = 0,
+        primary_source_chapter_url: str = "",
+        preview_only: bool = False,
     ) -> dict[str, Any]:
-        book = library_books_service.get_book(aggregate_book_id) or {}
+        book = self._library_books().get_book(aggregate_book_id) or {}
         candidate_sources = []
         with self._conn() as conn:
             rows = conn.execute(
@@ -1456,6 +1874,19 @@ class AggregateProcessor:
                 "alignmentReason": alignment_json.get("alignmentReason", ""),
             },
         ]
+        if fallback_source_id and fallback_source_id != alignment_json.get("primarySourceId", ""):
+            modification_trail.insert(
+                1,
+                {
+                    "step": "candidate_completion",
+                    "candidateSourceId": fallback_source_id,
+                    "titleSimilarity": alignment_json.get("titleSimilarity", 0.0),
+                    "previewSimilarity": alignment_json.get("previewSimilarity", 0.0),
+                    "headPreviewSimilarity": alignment_json.get("headPreviewSimilarity", 0.0),
+                    "alignmentPassed": bool(alignment_json.get("alignmentPassed")),
+                    "alignmentReason": alignment_json.get("alignmentReason", ""),
+                },
+            )
         source_hashes: list[dict[str, Any]] = []
         if chapter_index:
             with self._conn() as conn:
@@ -1486,15 +1917,104 @@ class AggregateProcessor:
             "startChapterIndex": book.get("startChapterIndex", 1),
             "autoArchiveOnComplete": book.get("autoArchiveOnComplete", True),
             "primarySource": book.get("primarySourceId", ""),
+            "primarySourceChapterUrl": primary_source_chapter_url,
             "candidateSources": candidate_sources,
             "selectedSource": alignment_json.get("candidateSourceId", "") or alignment_json.get("primarySourceId", ""),
             "selectedContentSource": alignment_json.get("selectedContentSource", ""),
+            "sourceWordCount": int(source_word_count or 0),
+            "previewOnly": bool(preview_only),
             "aiAggregateEnabled": bool(settings.get("aiAggregateEnabled", True)),
             "aiPurifyEnabled": bool(settings.get("aiPurifyEnabled", True)),
             "modificationTrail": modification_trail,
             "sourceHashes": source_hashes,
             "finalContentHash": hashlib.sha256((content or "").encode("utf-8")).hexdigest() if content else "",
         }
+
+    def _extract_source_word_count(self, chapter_result: dict[str, Any]) -> int:
+        if not isinstance(chapter_result, dict):
+            return 0
+        for key in ("sourceWordCount", "wordCount", "wordsCount", "WordsCnt"):
+            value = chapter_result.get(key)
+            try:
+                if value is not None and int(value) > 0:
+                    return int(value)
+            except (TypeError, ValueError):
+                continue
+        extra = chapter_result.get("extra")
+        if isinstance(extra, dict):
+            for key in ("sourceWordCount", "wordCount", "wordsCount", "WordsCnt", "actualWords"):
+                value = extra.get(key)
+                try:
+                    if value is not None and int(value) > 0:
+                        return int(value)
+                except (TypeError, ValueError):
+                    continue
+        debug = chapter_result.get("debug")
+        if isinstance(debug, dict):
+            for key in ("sourceWordCount", "wordCount", "wordsCount", "WordsCnt"):
+                value = debug.get(key)
+                try:
+                    if value is not None and int(value) > 0:
+                        return int(value)
+                except (TypeError, ValueError):
+                    continue
+        return 0
+
+    def _extract_source_chapter_url(self, chapter_result: dict[str, Any], source_chapter_id: str) -> str:
+        if isinstance(chapter_result, dict):
+            for key in ("primarySourceChapterUrl", "sourceChapterUrl", "rawChapterUrl", "url", "chapterUrl"):
+                value = chapter_result.get(key)
+                if value:
+                    return str(value)
+            debug = chapter_result.get("debug")
+            if isinstance(debug, dict):
+                for key in ("primarySourceChapterUrl", "sourceChapterUrl", "rawChapterUrl", "url", "chapterUrl"):
+                    value = debug.get(key)
+                    if value:
+                        return str(value)
+        try:
+            source_id, raw_url = decode_chapter_id(source_chapter_id)
+            if raw_url and source_id != VIRTUAL_SOURCE_ID:
+                return raw_url
+        except Exception:
+            pass
+        return ""
+
+    def _extract_preview_only(self, chapter_result: dict[str, Any]) -> bool:
+        if not isinstance(chapter_result, dict):
+            return False
+        for key in ("previewOnly", "isPreview", "preview_only"):
+            if key in chapter_result:
+                return bool(chapter_result.get(key))
+        extra = chapter_result.get("extra")
+        if isinstance(extra, dict):
+            for key in ("previewOnly", "isPreview", "preview_only", "isLocked"):
+                if key in extra:
+                    return bool(extra.get(key))
+        debug = chapter_result.get("debug")
+        if isinstance(debug, dict):
+            for key in ("previewOnly", "isPreview", "preview_only"):
+                if key in debug:
+                    return bool(debug.get(key))
+        return False
+
+    def _extract_is_paid(self, chapter_result: dict[str, Any]) -> bool:
+        if not isinstance(chapter_result, dict):
+            return False
+        for key in ("isPaid", "paid", "authRequired"):
+            if key in chapter_result:
+                return bool(chapter_result.get(key))
+        extra = chapter_result.get("extra")
+        if isinstance(extra, dict):
+            for key in ("isPaid", "paid", "authRequired"):
+                if key in extra:
+                    return bool(extra.get(key))
+        debug = chapter_result.get("debug")
+        if isinstance(debug, dict):
+            for key in ("isPaid", "paid", "authRequired"):
+                if key in debug:
+                    return bool(debug.get(key))
+        return False
 
     def _normalize_book_status(self, detail_data: dict[str, Any]) -> str:
         if not isinstance(detail_data, dict):
@@ -1504,6 +2024,7 @@ class AggregateProcessor:
             or detail_data.get("bookStatus")
             or detail_data.get("bookStatusText")
             or detail_data.get("kindStatus")
+            or detail_data.get("kind")
             or ""
         ).strip().lower()
         if any(key in raw for key in ("完结", "completed", "finished", "已完结", "完本")):
@@ -1602,12 +2123,26 @@ class AggregateProcessor:
             book_status = str(row[3] or "unknown")
             current_status = str(row[4] or "active")
             visible_count = self._visible_processed_count(conn, aggregate_book_id, start_index)
+            unfinished_count = int(
+                conn.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM aggregate_chapter_tasks
+                    WHERE aggregate_book_id = ?
+                      AND status NOT IN ('processed', 'fallback')
+                    """,
+                    (aggregate_book_id,),
+                ).fetchone()[0]
+                or 0
+            )
             required = max(0, total_chapters - start_index + 1)
             threshold = min(50, required) if required > 0 else 0
             search_visibility = "visible" if visible_count >= threshold and threshold > 0 else "hidden"
             next_status = current_status
             if current_status not in {"paused", "archived"}:
-                if book_status == "completed" and auto_archive:
+                if unfinished_count > 0:
+                    next_status = "active"
+                elif book_status == "completed" and auto_archive:
                     next_status = "archived"
                 elif book_status == "completed" and not auto_archive:
                     next_status = "awaiting_archive"
@@ -1663,8 +2198,47 @@ class AggregateProcessor:
         row = conn.execute("SELECT name FROM book_records WHERE book_id = ?", (aggregate_book_id,)).fetchone()
         return row[0] if row and row[0] else ""
 
+    def _aggregate_book_author(self, conn: sqlite3.Connection, aggregate_book_id: str) -> str:
+        row = conn.execute(
+            "SELECT author FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+            (aggregate_book_id,),
+        ).fetchone()
+        if row and row[0]:
+            return row[0]
+        row = conn.execute("SELECT author FROM book_records WHERE book_id = ?", (aggregate_book_id,)).fetchone()
+        return row[0] if row and row[0] else ""
+
+    def _aggregate_book_meta(self, conn: sqlite3.Connection, aggregate_book_id: str) -> dict[str, Any]:
+        """Return the book-level metadata needed to rebuild a library card."""
+        row = conn.execute(
+            """
+            SELECT cover_url, intro, word_count, primary_book_id, primary_source_id,
+                   primary_source_name, primary_book_url, primary_toc_url,
+                   start_chapter_index, total_chapters, book_status
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (aggregate_book_id,),
+        ).fetchone()
+        if not row:
+            return {}
+        return {
+            "coverUrl": row[0] or "",
+            "intro": row[1] or "",
+            "wordCount": row[2] or "",
+            "primaryBookId": row[3] or "",
+            "primarySourceId": row[4] or "",
+            "primarySourceName": row[5] or "",
+            "primaryBookUrl": row[6] or "",
+            "primaryTocUrl": row[7] or "",
+            "startChapterIndex": row[8] or 1,
+            "totalChapters": row[9] or 0,
+            "bookStatus": row[10] or "unknown",
+        }
+
     async def run_forever(self, stop_event: asyncio.Event, poll_seconds: int = 60) -> None:
         logger.info("Aggregate processor started, pollSeconds=%d", poll_seconds)
+        cleanup_counter = 0
         while not stop_event.is_set():
             try:
                 result = await self.run_due_once(limit=5)
@@ -1676,6 +2250,20 @@ class AggregateProcessor:
                     )
             except Exception:
                 logger.warning("Aggregate run_due_once failed", exc_info=True)
+
+            cleanup_counter += 1
+            if cleanup_counter >= 10:
+                cleanup_counter = 0
+                try:
+                    await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        lambda: NovelFileCache(
+                            root=self.db_path.parent / "novels"
+                        ).cleanup_temp_cache(max_age_hours=24),
+                    )
+                except Exception:
+                    logger.warning("Novel file cache cleanup failed", exc_info=True)
+
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=poll_seconds)
             except asyncio.TimeoutError:

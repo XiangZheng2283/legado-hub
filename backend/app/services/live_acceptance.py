@@ -62,7 +62,9 @@ def score_candidate(item: dict[str, Any], keyword: str) -> tuple[int, list[str]]
 
 def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str, Any]]:
     try:
-        plugins = PluginLoader().load_all()
+        # Reuse the process-wide plugin scheduler cache instead of rescanning
+        # the plugins directory on every candidate refresh.
+        plugins = get_plugin_scheduler()._plugins
     except Exception:
         plugins = {}
 
@@ -80,13 +82,17 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
         item["scoreReasons"] = reasons
         name_key = normalize_text(item.get("name", ""))
         author_key = normalize_author_key(item.get("author", ""))
+        source_id = item.get("sourceId", "")
         if not name_key:
             groups.setdefault((item["candidateId"], ""), []).append(item)
             continue
         if not author_key:
             unresolved_by_name.setdefault(name_key, []).append(item)
             continue
-        groups.setdefault((name_key, author_key), []).append(item)
+        if is_official(source_id):
+            groups.setdefault((f"{source_id}:{name_key}", author_key), []).append(item)
+        else:
+            groups.setdefault((name_key, author_key), []).append(item)
 
     for name_key, unresolved_items in unresolved_by_name.items():
         matching_keys = [key for key in groups if key[0] == name_key]
@@ -114,8 +120,11 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
         source_items = sorted(group_items, key=lambda candidate: -candidate.get("score", 0))
         source_ids = sorted({item.get("sourceId", "") for item in group_items if item.get("sourceId")})
         official_items = [item for item in group_items if is_official(item.get("sourceId", ""))]
+        source_seed = "|".join(source_ids)
+        if len(group_items) == 1 and is_official(group_items[0].get("sourceId", "")):
+            source_seed = group_items[0].get("sourceId", "")
         group_id = hashlib.sha256(
-            f"{name_key}|{author_key}|{'|'.join(source_ids)}".encode("utf-8")
+            f"{name_key}|{author_key}|{source_seed}".encode("utf-8")
         ).hexdigest()[:24]
         result.append(
             {
@@ -808,5 +817,3 @@ class LiveAcceptanceService:
     def _timeout_requires_bypass(self, plugin) -> bool:
         browser_mode = (plugin.metadata.browser or {}).get("mode", "")
         return browser_mode in {"required", "optional"}
-
-

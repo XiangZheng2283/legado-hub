@@ -640,7 +640,6 @@ export function SearchJobs() {
   const [activeChapterIndex, setActiveChapterIndex] = useState(0)
   const [showSourceFilter, setShowSourceFilter] = useState(false)
   const [selectedSourceIds, setSelectedSourceIds] = useState<Set<string>>(new Set())
-  const [searchMode, setSearchMode] = useState<"source" | "aggregate">("source")
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<any>(null)
   // Reviews are fetched asynchronously so VIP chapter previews don't block.
@@ -657,10 +656,8 @@ export function SearchJobs() {
   const allPlugins = pluginsData?.items || []
 
   const createMutation = useMutation({
-    mutationFn: (payload: { keyword: string; sourceIds?: string[]; mode: "source" | "aggregate" }) =>
-      payload.mode === "aggregate"
-        ? api.createAggregateSearch({ keyword: payload.keyword, page: 1, sourceIds: payload.sourceIds })
-        : api.createSearchJob({ keyword: payload.keyword, page: 1, sourceIds: payload.sourceIds }),
+    mutationFn: (payload: { keyword: string; sourceIds?: string[] }) =>
+      api.createSearchJob({ keyword: payload.keyword, page: 1, sourceIds: payload.sourceIds }),
     onSuccess: (data) => {
       if (!data.jobId) return
       const initialEvents = data.events || []
@@ -824,7 +821,7 @@ export function SearchJobs() {
     setAsyncReviewsError(null)
     setRefreshedSourceIds(new Set())
     const sourceIds = selectedSourceIds.size > 0 ? Array.from(selectedSourceIds) : undefined
-    createMutation.mutate({ keyword: value, sourceIds, mode: searchMode })
+    createMutation.mutate({ keyword: value, sourceIds })
   }
 
   const handleOpenDetail = (item: any) => {
@@ -938,26 +935,6 @@ export function SearchJobs() {
                 </Button>
               )}
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Label className="text-sm text-muted-foreground">模式:</Label>
-            <Button
-              variant={searchMode === "source" ? "default" : "outline"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setSearchMode("source")}
-            >
-              普通书源
-            </Button>
-            <Button
-              variant={searchMode === "aggregate" ? "default" : "outline"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setSearchMode("aggregate")}
-            >
-              书源聚合
-            </Button>
           </div>
 
           {showSourceFilter && (

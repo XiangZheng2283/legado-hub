@@ -241,8 +241,9 @@ class SearchCoordinator:
                     (match_mode, normalized_name, normalized_author, source_id, source_name,
                      raw_book_url, payload_json, score, last_seen_at, expires_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now', ?))
-                    ON CONFLICT(source_id, raw_book_url, match_mode)
+                    ON CONFLICT(source_id, raw_book_url)
                     DO UPDATE SET
+                        match_mode = excluded.match_mode,
                         normalized_name = excluded.normalized_name,
                         normalized_author = excluded.normalized_author,
                         source_name = excluded.source_name,
@@ -353,6 +354,7 @@ class SearchCoordinator:
         except Exception:
             return []
         items: list[dict] = []
+        seen: set[tuple[str, str]] = set()
         for (payload_json,) in rows:
             if not payload_json:
                 continue
@@ -361,6 +363,13 @@ class SearchCoordinator:
             except Exception:
                 continue
             if isinstance(item, dict):
+                dedupe_key = (
+                    str(item.get("sourceId", source_id) or source_id),
+                    str(item.get("rawBookUrl") or item.get("bookUrl", "")),
+                )
+                if dedupe_key in seen:
+                    continue
+                seen.add(dedupe_key)
                 items.append(dict(item))
         return items
 
@@ -830,6 +839,8 @@ class SearchCoordinator:
                 plugins = [p for p in plugins if not p.metadata.is_official_source()]
         if limit is not None:
             plugins = plugins[: max(1, int(limit))]
+        if search_mode == "subscription":
+            plugins = sorted(plugins, key=lambda p: 0 if p.metadata.is_official_source() else 1)
         sources = [
             {"sourceId": p.metadata.id, "bookSourceName": p.metadata.name, "proxyMode": "auto"}
             for p in plugins
@@ -873,6 +884,8 @@ class SearchCoordinator:
                 plugins = [p for p in plugins if not p.metadata.is_official_source()]
         if limit is not None:
             plugins = plugins[: max(1, int(limit))]
+        if search_mode == "subscription":
+            plugins = sorted(plugins, key=lambda p: 0 if p.metadata.is_official_source() else 1)
         return [
             {"sourceId": p.metadata.id, "bookSourceName": p.metadata.name, "proxyMode": "auto"}
             for p in plugins

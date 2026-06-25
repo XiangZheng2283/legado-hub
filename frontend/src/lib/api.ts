@@ -35,6 +35,58 @@ async function fetchApiJson(path: string, options?: RequestInit): Promise<any> {
   return res.json()
 }
 
+function normalizeLibraryBook(raw: any): any {
+  if (!raw || typeof raw !== "object") return raw
+  return {
+    ...raw,
+    id: raw.aggregateBookId ?? raw.id,
+    displayName: raw.displayName ?? raw.name ?? raw.canonicalName ?? "",
+    displayAuthor: raw.displayAuthor ?? raw.author ?? raw.canonicalAuthor ?? "",
+    lastChapterTitle: raw.lastChapterTitle ?? raw.lastSourceChapterTitle ?? raw.lastLocalChapterTitle ?? "",
+    lastCheckedAt: raw.lastCheckedAt ?? raw.lastCheckTime ?? "",
+  }
+}
+
+function normalizeLibraryList(data: any): any {
+  return {
+    ...data,
+    items: (data?.items || []).map(normalizeLibraryBook),
+  }
+}
+
+function normalizeLibraryDetail(data: any): any {
+  const book = normalizeLibraryBook(data?.book ?? data)
+  return {
+    ...data,
+    ...book,
+    book,
+  }
+}
+
+function normalizeChapterList(data: any): any {
+  const chapters = data?.chapters || data?.items || []
+  return {
+    ...data,
+    chapters,
+    items: data?.items || chapters,
+  }
+}
+
+function normalizeSearchCards(data: any): any {
+  return {
+    ...data,
+    cards: (data?.cards || []).map((card: any) => ({
+      ...card,
+      status: card.status ?? "completed",
+      alreadyIngested: card.alreadyIngested ?? card.alreadyInLibrary ?? false,
+      addedBy: card.addedBy ?? card.addedByUsername ?? "",
+      sourceSummaryText: Array.isArray(card.sourceSummary)
+        ? card.sourceSummary.map((source: any) => source.sourceName || source.sourceId).filter(Boolean).join(" / ")
+        : card.sourceSummary ?? "",
+    })),
+  }
+}
+
 export const api = {
   status: (): Promise<any> => fetch("/api/console/status", { credentials: "include" }).then((r) => r.json()),
 
@@ -225,14 +277,17 @@ export const api = {
       fetchApiJson("/auth/bootstrap", { method: "POST", body: JSON.stringify(payload) }),
     login: (payload: { username: string; password: string }): Promise<any> =>
       fetchApiJson("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+    changePassword: (payload: { currentPassword: string; newPassword: string }): Promise<any> =>
+      fetchApiJson("/auth/change-password", { method: "POST", body: JSON.stringify(payload) }),
     logout: (): Promise<any> => fetchApiJson("/auth/logout", { method: "POST" }),
   },
 
   // Subscription discovery (shared library)
   subscribe: {
     search: (payload: { keyword: string; page?: number }): Promise<any> =>
-      fetchApiJson("/subscribe/search", { method: "POST", body: JSON.stringify(payload) }),
-    searchJob: (jobId: string): Promise<any> => fetchApiJson(`/subscribe/search/${jobId}`),
+      fetchApiJson("/subscribe/search", { method: "POST", body: JSON.stringify(payload) }).then(normalizeSearchCards),
+    searchJob: (jobId: string): Promise<any> =>
+      fetchApiJson(`/subscribe/search/${jobId}`).then(normalizeSearchCards),
     subscribeCard: (
       jobId: string,
       candidateId: string,
@@ -242,20 +297,23 @@ export const api = {
         method: "POST",
         body: JSON.stringify(payload),
       }),
-    library: (): Promise<any> => fetchApiJson("/subscribe/library"),
-    myLibrary: (): Promise<any> => fetchApiJson("/subscribe/library/mine"),
-    book: (aggregateBookId: string): Promise<any> => fetchApiJson(`/subscribe/books/${aggregateBookId}`),
+    library: (): Promise<any> => fetchApiJson("/subscribe/library").then(normalizeLibraryList),
+    myLibrary: (): Promise<any> => fetchApiJson("/subscribe/library/mine").then(normalizeLibraryList),
+    book: (aggregateBookId: string): Promise<any> =>
+      fetchApiJson(`/subscribe/books/${aggregateBookId}`).then(normalizeLibraryDetail),
     chapters: (aggregateBookId: string): Promise<any> =>
-      fetchApiJson(`/subscribe/books/${aggregateBookId}/chapters`),
+      fetchApiJson(`/subscribe/books/${aggregateBookId}/chapters`).then(normalizeChapterList),
   },
 
   // Admin shared library management
   libraryBooks: (params?: Record<string, string>): Promise<any> => {
     const qs = params ? `?${new URLSearchParams(params)}` : ""
-    return fetchJson(`/library-books${qs}`)
+    return fetchJson(`/library-books${qs}`).then(normalizeLibraryList)
   },
-  libraryBook: (bookId: string): Promise<any> => fetchJson(`/library-books/${bookId}`),
-  libraryBookChapters: (bookId: string): Promise<any> => fetchJson(`/library-books/${bookId}/chapters`),
+  libraryBook: (bookId: string): Promise<any> =>
+    fetchJson(`/library-books/${bookId}`).then(normalizeLibraryDetail),
+  libraryBookChapters: (bookId: string): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/chapters`).then(normalizeChapterList),
   pauseLibraryBook: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}/pause`, { method: "POST" }),
   resumeLibraryBook: (bookId: string): Promise<any> =>
@@ -268,6 +326,8 @@ export const api = {
     fetchJson(`/library-books/${bookId}/settings`, { method: "POST", body: JSON.stringify(payload) }),
   rebuildLibraryBook: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}/rebuild`, { method: "POST" }),
+  libraryBookProcessingLogs: (bookId: string, limit = 50, offset = 0): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/processing-logs?limit=${limit}&offset=${offset}`),
 
   // Admin users
   users: (): Promise<any> => fetchJson("/users"),

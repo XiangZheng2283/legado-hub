@@ -142,7 +142,7 @@ def list_plugins():
 
 
 @console_route("get", "/official-sources")
-def list_official_sources():
+async def list_official_sources():
     plugins = _plugin_scheduler._plugins
     cookie_store = CookieStore()
     items = []
@@ -154,6 +154,33 @@ def list_official_sources():
         has_cookies = bool(payload) and (
             bool(payload.get("cookies")) if isinstance(payload, dict) else True
         )
+        auth_status = {
+            "authenticated": False,
+            "authStatus": "anonymous" if not has_cookies else "unknown",
+            "accountName": "",
+            "message": "",
+            "requiredActions": ["check_auth_status"] if has_cookies else [],
+            "hasCookies": has_cookies,
+            "cookieDomains": sorted((payload.get("cookies") or {}).keys()) if isinstance(payload, dict) and isinstance(payload.get("cookies"), dict) else [],
+        }
+        if "auth" in plugin.capabilities:
+            ctx = _plugin_scheduler._make_ctx(plugin.metadata.id)
+            try:
+                result = await plugin.source.auth_status(ctx)
+                auth_status = {
+                    **auth_status,
+                    **result,
+                    "hasCookies": has_cookies,
+                    "cookieDomains": auth_status["cookieDomains"],
+                }
+            except Exception as exc:
+                auth_status = {
+                    **auth_status,
+                    "message": str(exc),
+                }
+            finally:
+                await ctx._fetcher.close()
+
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
@@ -168,6 +195,7 @@ def list_official_sources():
             "browser": plugin.metadata.browser,
             "official": plugin.metadata.is_official_source(),
             "hasCookies": has_cookies,
+            "authStatus": auth_status,
         })
     items.sort(key=lambda item: (not item["official"], item["name"], item["pluginId"]))
     return {"items": items, "total": len(items)}
@@ -892,7 +920,7 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
     group = _search_service.find_candidate_group(job_id, candidate_id)
     if not group:
         return {"error": "候选书籍不存在", "jobId": job_id, "candidateId": candidate_id}
-    created = library_books_service.create_or_get_shared_book(
+    created = await library_books_service.create_or_get_shared_book(
         group,
         added_by_user_id=added_by_user_id,
         start_chapter_index=start_chapter_index,
@@ -2077,6 +2105,134 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
     processor.enqueue_book(book_id, aggregate_payload)
     bootstrap = await processor.bootstrap_book_until_visible(book_id)
     return {"bookId": book_id, "rebuilt": True, "bootstrap": bootstrap}
+
+
+@console_route("get", "/library-books/{book_id}/processing-logs")
+def list_library_book_processing_logs(
+    request: Request,
+    book_id: str,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Return recent chapter processing events for a shared book.
+
+    This is the backend feed consumed by the console "subscription processing
+    log" panel. It surfaces per-chapter status, selected source, AI usage and
+    alignment metadata without leaking raw chapter text.
+    """
+    auth_service.require_admin(request)
+    import sqlite3
+    from app.config import DB_PATH
+    from app.storage.db import initialize_database
+
+    initialize_database(DB_PATH)
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        book = cur.execute(
+            """
+            SELECT status, search_visibility_status
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        ).fetchone()
+        if book is None:
+            return {"error": "书籍不存在", "bookId": book_id}
+
+        stats = cur.execute(
+            """
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN status = 'processed' THEN 1 ELSE 0 END) AS processed,
+                SUM(CASE WHEN status IN ('processed', 'fallback') THEN 1 ELSE 0 END) AS completed,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
+                SUM(CASE WHEN status = 'fallback' THEN 1 ELSE 0 END) AS fallback,
+                SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) AS failed
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        ).fetchone()
+
+        rows = cur.execute(
+            """
+            SELECT
+                chapter_id,
+                chapter_index,
+                title,
+                status,
+                preview_only,
+                content_length,
+                source_word_count,
+                primary_source_chapter_url,
+                fallback_source_id,
+                ai_model,
+                (ai_prompt_tokens + ai_completion_tokens) AS ai_tokens,
+                last_processed_at,
+                updated_at,
+                error,
+                source_alignment_json
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ?
+            ORDER BY
+                last_processed_at DESC,
+                updated_at DESC
+            LIMIT ? OFFSET ?
+            """,
+            (book_id, limit, offset),
+        ).fetchall()
+
+        items = []
+        for row in rows:
+            alignment = {}
+            try:
+                alignment = json.loads(row["source_alignment_json"] or "{}")
+            except Exception:
+                pass
+
+            source = row["fallback_source_id"] or "primary"
+            if alignment.get("selectedSource"):
+                source = alignment["selectedSource"]
+
+            items.append(
+                {
+                    "chapterId": row["chapter_id"],
+                    "chapterIndex": row["chapter_index"],
+                    "title": row["title"],
+                    "status": row["status"],
+                    "previewOnly": bool(row["preview_only"]),
+                    "wordCount": row["source_word_count"] or row["content_length"] or 0,
+                    "source": source,
+                    "aiModel": row["ai_model"] or "",
+                    "aiTokens": row["ai_tokens"] or 0,
+                    "processedAt": row["last_processed_at"] or row["updated_at"],
+                    "error": row["error"] or "",
+                    "alignment": {
+                        "passed": alignment.get("alignmentPassed"),
+                        "reason": alignment.get("alignmentReason"),
+                        "titleSimilarity": alignment.get("titleSimilarity"),
+                        "previewSimilarity": alignment.get("previewSimilarity"),
+                    },
+                }
+            )
+
+        return {
+            "bookId": book_id,
+            "bookStatus": book["status"],
+            "searchVisibilityStatus": book["search_visibility_status"],
+            "stats": {
+                "total": stats["total"] or 0,
+                "processed": stats["processed"] or 0,
+                "completed": stats["completed"] or 0,
+                "pending": stats["pending"] or 0,
+                "fallback": stats["fallback"] or 0,
+                "failed": stats["failed"] or 0,
+            },
+            "items": items,
+            "limit": limit,
+            "offset": offset,
+        }
 
 
 @console_route("get", "/users")

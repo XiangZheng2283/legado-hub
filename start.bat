@@ -33,24 +33,31 @@ if errorlevel 1 (
 if exist "frontend\package.json" (
     echo.
     echo Building console frontend...
+    where npm >nul 2>nul
+    if errorlevel 1 (
+        echo npm was not found. Please install Node.js before building the console frontend.
+        pause
+        exit /b 1
+    )
     pushd frontend
-    if not exist "node_modules" (
-        if exist "package-lock.json" (
-            call npm ci
-        ) else (
-            call npm install
-        )
-        if errorlevel 1 (
-            popd
-            echo Failed to install frontend dependencies.
-            pause
-            exit /b 1
-        )
+    echo Installing console frontend dependencies...
+    call npm install
+    if errorlevel 1 (
+        popd
+        echo Failed to install frontend dependencies.
+        pause
+        exit /b 1
     )
     call npm run build
     if errorlevel 1 (
         popd
         echo Failed to build console frontend.
+        pause
+        exit /b 1
+    )
+    if not exist "dist\index.html" (
+        popd
+        echo Console frontend build finished, but dist\index.html was not found.
         pause
         exit /b 1
     )

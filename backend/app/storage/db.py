@@ -12,7 +12,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = "6"
+SCHEMA_VERSION = "8"
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -201,7 +201,7 @@ CREATE INDEX IF NOT EXISTS idx_book_search_cache_title
 CREATE INDEX IF NOT EXISTS idx_book_search_cache_author
     ON book_search_cache (match_mode, normalized_author, last_seen_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_book_search_cache_unique_source_book
-    ON book_search_cache (source_id, raw_book_url, match_mode);
+    ON book_search_cache (source_id, raw_book_url);
 
 -- Live acceptance checks (debugging/diagnostics, not long-lived facts).
 
@@ -235,8 +235,12 @@ CREATE TABLE IF NOT EXISTS aggregate_book_tasks (
     aggregate_payload_json TEXT,
     primary_book_id TEXT,
     primary_source_id TEXT,
+    primary_source_name TEXT DEFAULT '',
+    primary_book_url TEXT DEFAULT '',
+    primary_toc_url TEXT DEFAULT '',
     added_by_user_id TEXT DEFAULT '',
     start_chapter_index INTEGER DEFAULT 1,
+    total_chapters_at_subscribe INTEGER DEFAULT 0,
     initial_snapshot_last_index INTEGER DEFAULT 0,
     backfill_started INTEGER DEFAULT 0,
     auto_archive_on_complete INTEGER DEFAULT 1,
@@ -271,6 +275,9 @@ CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     status TEXT DEFAULT 'pending',
     placeholder INTEGER DEFAULT 0,
     content_length INTEGER DEFAULT 0,
+    source_word_count INTEGER DEFAULT 0,
+    preview_only INTEGER DEFAULT 0,
+    primary_source_chapter_url TEXT DEFAULT '',
     processed_content TEXT,
     content_file_path TEXT DEFAULT '',
     last_processed_at TEXT,
@@ -374,28 +381,32 @@ def _is_legacy_database(path: Path) -> bool:
     """Detect whether the existing DB still carries old tables that need rebuild."""
     if not path.exists():
         return False
+    conn = None
     try:
-        with sqlite3.connect(path) as conn:
-            rows = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name IN (?, ?, ?, ?, ?, ?)",
-                ("plugin_health", "plugin_attempts", "search_job_events",
-                 "plugin_runtime_state", "plugin_auth_state", "search_query_cache"),
-            ).fetchall()
-            if len(rows) > 0:
+        conn = sqlite3.connect(path)
+        rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name IN (?, ?, ?, ?, ?, ?)",
+            ("plugin_health", "plugin_attempts", "search_job_events",
+             "plugin_runtime_state", "plugin_auth_state", "search_query_cache"),
+        ).fetchall()
+        if len(rows) > 0:
+            return True
+        # Also trigger rebuild if the DB schema version is older than the
+        # current shared-library schema.
+        try:
+            ver = conn.execute(
+                "SELECT value FROM schema_meta WHERE key = 'version'"
+            ).fetchone()
+            if ver and ver[0] < SCHEMA_VERSION:
                 return True
-            # Also trigger rebuild if the DB schema version is older than the
-            # current shared-library schema.
-            try:
-                ver = conn.execute(
-                    "SELECT value FROM schema_meta WHERE key = 'version'"
-                ).fetchone()
-                if ver and ver[0] < SCHEMA_VERSION:
-                    return True
-            except Exception:
-                pass
-            return False
+        except Exception:
+            pass
+        return False
     except Exception:
         return False
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def ensure_data_dir() -> None:
@@ -425,8 +436,12 @@ def _ensure_shared_library_schema(conn: sqlite3.Connection) -> None:
             "cover_url": "TEXT DEFAULT ''",
             "intro": "TEXT DEFAULT ''",
             "word_count": "TEXT DEFAULT ''",
+            "primary_source_name": "TEXT DEFAULT ''",
+            "primary_book_url": "TEXT DEFAULT ''",
+            "primary_toc_url": "TEXT DEFAULT ''",
             "added_by_user_id": "TEXT DEFAULT ''",
             "start_chapter_index": "INTEGER DEFAULT 1",
+            "total_chapters_at_subscribe": "INTEGER DEFAULT 0",
             "initial_snapshot_last_index": "INTEGER DEFAULT 0",
             "backfill_started": "INTEGER DEFAULT 0",
             "auto_archive_on_complete": "INTEGER DEFAULT 1",
@@ -446,6 +461,9 @@ def _ensure_shared_library_schema(conn: sqlite3.Connection) -> None:
     }:
         chapter_columns = {
             "placeholder": "INTEGER DEFAULT 0",
+            "source_word_count": "INTEGER DEFAULT 0",
+            "preview_only": "INTEGER DEFAULT 0",
+            "primary_source_chapter_url": "TEXT DEFAULT ''",
             "content_file_path": "TEXT DEFAULT ''",
             "policy_version": "INTEGER DEFAULT 1",
             "policy_snapshot_json": "TEXT DEFAULT ''",
@@ -475,6 +493,51 @@ def _ensure_shared_library_schema(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migrate_book_search_cache(conn: sqlite3.Connection) -> None:
+    """Collapse duplicate book cache rows and align the uniqueness rule."""
+    tables = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    }
+    if "book_search_cache" not in tables:
+        return
+
+    try:
+            conn.execute(
+            """
+            DELETE FROM book_search_cache
+            WHERE id IN (
+                SELECT current.id
+                FROM book_search_cache AS current
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM book_search_cache AS newer
+                    WHERE newer.source_id = current.source_id
+                      AND newer.raw_book_url = current.raw_book_url
+                      AND (
+                            newer.last_seen_at > current.last_seen_at
+                         OR (newer.last_seen_at = current.last_seen_at AND newer.id > current.id)
+                      )
+                )
+            )
+            """
+        )
+    except Exception:
+        pass
+    try:
+        conn.execute("DROP INDEX IF EXISTS idx_book_search_cache_unique_source_book")
+        conn.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_book_search_cache_unique_source_book
+                ON book_search_cache (source_id, raw_book_url)
+            """
+        )
+    except Exception:
+        pass
+
+
 def initialize_database(db_path: Path | None = None) -> str:
     path = db_path or DB_PATH
     ensure_data_dir()
@@ -487,12 +550,16 @@ def initialize_database(db_path: Path | None = None) -> str:
         except OSError:
             pass
 
-    with sqlite3.connect(path) as conn:
+    conn = sqlite3.connect(path)
+    try:
         conn.executescript(SCHEMA_SQL)
         _ensure_shared_library_schema(conn)
+        _migrate_book_search_cache(conn)
         conn.execute(
             "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
             ("version", SCHEMA_VERSION),
         )
         conn.commit()
+    finally:
+        conn.close()
     return str(path)

@@ -12,6 +12,7 @@ import os
 import secrets
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -19,6 +20,7 @@ from typing import Any
 from fastapi import HTTPException, Request, Response, status
 
 from app.config import DB_PATH
+from app.core.app_config import AppConfig
 from app.storage.db import initialize_database
 
 SESSION_COOKIE_NAME = "legadohub_session"
@@ -42,9 +44,14 @@ class UserAuthService:
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
 
-    def _conn(self) -> sqlite3.Connection:
+    @contextmanager
+    def _conn(self):
         initialize_database(self.db_path)
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path)
+        try:
+            yield conn
+        finally:
+            conn.close()
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -103,10 +110,35 @@ class UserAuthService:
             raise HTTPException(status_code=409, detail="用户名已存在")
         return {"userId": user_id, "username": username, "role": role, "disabled": False}
 
-    def bootstrap_admin(self, username: str, password: str) -> dict[str, Any]:
+    def bootstrap_admin(self, username: str, password: str | None = None) -> dict[str, Any]:
         if self.user_count() > 0:
             raise HTTPException(status_code=409, detail="系统已存在用户，不能再次初始化管理员")
+        if password is None:
+            password = self._admin_password_from_config()
+        if not password:
+            password = secrets.token_urlsafe(12)
+            config = AppConfig.get()
+            config.set(
+                "auth.adminPasswordBase64",
+                base64.b64encode(password.encode("utf-8")).decode("ascii"),
+            )
+            config.save()
         return self.create_user(username=username, password=password, role="admin")
+
+    def ensure_default_admin(self, username: str = "admin") -> str | None:
+        if self.user_count() > 0:
+            return None
+        password = self._admin_password_from_config()
+        if not password:
+            password = secrets.token_urlsafe(12)
+            config = AppConfig.get()
+            config.set(
+                "auth.adminPasswordBase64",
+                base64.b64encode(password.encode("utf-8")).decode("ascii"),
+            )
+            config.save()
+        self.bootstrap_admin(username=username, password=password)
+        return password
 
     def reset_password(self, user_id: str, password: str) -> dict[str, Any]:
         if not password:
@@ -121,7 +153,20 @@ class UserAuthService:
             conn.commit()
         if cursor.rowcount <= 0:
             raise HTTPException(status_code=404, detail="用户不存在")
+
+        # Keep the configured admin password in sync with app_config.json so the
+        # file remains the single source of truth.
+        user = self.get_user(user_id)
+        if user and user.username == "admin":
+            config = AppConfig.get()
+            config.set("auth.adminPasswordBase64", base64.b64encode(password.encode("utf-8")).decode("ascii"))
+            config.save()
+
         return {"userId": user_id, "passwordReset": True}
+
+    def change_password(self, user: AuthUser, current_password: str, new_password: str) -> dict[str, Any]:
+        self.authenticate(user.username, current_password)
+        return self.reset_password(user.user_id, new_password)
 
     def set_disabled(self, user_id: str, disabled: bool) -> dict[str, Any]:
         now = self._now()
@@ -197,10 +242,30 @@ class UserAuthService:
         except Exception:
             return False
 
+    def _admin_password_from_config(self) -> str | None:
+        """Return the admin password configured in app_config.json, if any."""
+        return AppConfig.get().auth.admin_password()
+
     def authenticate(self, username: str, password: str) -> AuthUser:
-        row = self.get_user_by_username(str(username or "").strip())
-        if not row or not self.verify_password(str(password or ""), row["passwordHash"]):
+        username = str(username or "").strip()
+        supplied = str(password or "")
+        row = self.get_user_by_username(username)
+        if not row:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+
+        # Admin password lives in app_config.json (base64 encoded) so it can be
+        # adjusted without touching the database. Non-admin users still use the
+        # password hash stored in the database.
+        if username == "admin":
+            config_password = self._admin_password_from_config()
+            if config_password is not None:
+                if not hmac.compare_digest(config_password, supplied):
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+            elif not self.verify_password(supplied, row["passwordHash"]):
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+        elif not self.verify_password(supplied, row["passwordHash"]):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+
         if row["disabled"]:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="用户已被禁用")
         user = self.get_user(row["userId"])

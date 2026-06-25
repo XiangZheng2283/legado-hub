@@ -1,4 +1,16 @@
-"""Filesystem cache for readable novel chapter files."""
+"""Filesystem cache for readable novel chapter files.
+
+Directory layout:
+- Subscription books (source_id == "legadohub_ai_aggregate"):
+    data/novels/legadohub_ai_aggregate/{书名}_{作者}/
+        ├── metadata.json
+        ├── 000001 第一章.md
+        └── ...
+- Third-party source caches (everything else):
+    data/novels/{source-domain}/{encoded-book-key}/
+        └── ...
+  These folders are temporary and can be cleaned up by a periodic job.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +18,7 @@ import hashlib
 import json
 import re
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -21,9 +34,13 @@ RESERVED_WINDOWS_NAMES = {
     *(f"LPT{i}" for i in range(1, 10)),
 }
 
+SUBSCRIPTION_SOURCE_ID = "legadohub_ai_aggregate"
+SUBSCRIPTION_FOLDER = "legadohub"
+METADATA_FILE = "metadata.json"
+
 
 class NovelFileCache:
-    """Write chapter content under data/novels/source-domain/book-name."""
+    """Write chapter content under data/novels/source-domain/book-folder."""
 
     def __init__(self, root: Path | None = None):
         self.root = root or DATA_DIR / "novels"
@@ -39,6 +56,7 @@ class NovelFileCache:
         content: str,
         book_id: str = "",
         book_name: str = "",
+        author: str = "",
         chapter_index: int | None = None,
         trace_meta: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -55,10 +73,13 @@ class NovelFileCache:
             fallback_chapter_index=chapter_index,
         )
         source_folder = self._source_folder(source_id, chapter_url)
-        if source_id == "legadohub_ai_aggregate" and book_id:
-            book_folder = self._safe_segment(book_id)
-        else:
-            book_folder = self._safe_segment(context["bookName"] or "unknown-book")
+        book_folder = self._book_folder(
+            source_id=source_id,
+            book_id=book_id or context["bookId"],
+            book_name=context["bookName"] or book_name,
+            author=author,
+            chapter_url=chapter_url,
+        )
         chapter_title = context["chapterTitle"] or title or "未命名章节"
         chapter_number = context["chapterIndex"]
         file_stem = self._chapter_file_stem(chapter_number, chapter_title)
@@ -68,10 +89,19 @@ class NovelFileCache:
         text = self._markdown_content(chapter_title, content, trace_meta=trace_meta or {})
         target_path.write_text(text, encoding="utf-8", newline="\n")
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+        if source_id == SUBSCRIPTION_SOURCE_ID:
+            self._write_subscription_metadata(
+                target_dir,
+                book_id=book_id or context["bookId"],
+                book_name=context["bookName"] or book_name,
+                author=author,
+            )
+
         return {
             "written": True,
-            "bookId": context["bookId"],
-            "bookName": context["bookName"],
+            "bookId": context["bookId"] or book_id,
+            "bookName": context["bookName"] or book_name,
             "chapterTitle": chapter_title,
             "chapterIndex": chapter_number,
             "filePath": str(target_path),
@@ -95,7 +125,10 @@ class NovelFileCache:
             "chapterTitle": fallback_chapter_title,
             "chapterIndex": fallback_chapter_index,
         }
-        toc_rows = conn.execute("SELECT book_id, response_json FROM toc_cache").fetchall()
+        try:
+            toc_rows = conn.execute("SELECT book_id, response_json FROM toc_cache").fetchall()
+        except sqlite3.OperationalError:
+            toc_rows = []
         for book_id, response_json in toc_rows:
             try:
                 payload = json.loads(response_json or "{}")
@@ -124,22 +157,25 @@ class NovelFileCache:
         return context
 
     def _book_name(self, conn: sqlite3.Connection, book_id: str) -> str:
-        row = conn.execute("SELECT response_json FROM book_cache WHERE book_id = ?", (book_id,)).fetchone()
-        if row:
-            try:
-                payload = json.loads(row[0] or "{}")
-                data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
-                name = data.get("name", "") if isinstance(data, dict) else ""
-                if name:
-                    return name
-            except Exception:
-                pass
-        row = conn.execute("SELECT name FROM book_records WHERE book_id = ?", (book_id,)).fetchone()
-        return row[0] if row and row[0] else ""
+        try:
+            row = conn.execute("SELECT response_json FROM book_cache WHERE book_id = ?", (book_id,)).fetchone()
+            if row:
+                try:
+                    payload = json.loads(row[0] or "{}")
+                    data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+                    name = data.get("name", "") if isinstance(data, dict) else ""
+                    if name:
+                        return name
+                except Exception:
+                    pass
+            row = conn.execute("SELECT name FROM book_records WHERE book_id = ?", (book_id,)).fetchone()
+            return row[0] if row and row[0] else ""
+        except sqlite3.OperationalError:
+            return ""
 
     def _source_folder(self, source_id: str, chapter_url: str) -> str:
-        if source_id == "legadohub_ai_aggregate":
-            return self._safe_segment(source_id)
+        if source_id == SUBSCRIPTION_SOURCE_ID:
+            return self._safe_segment(SUBSCRIPTION_FOLDER)
         parsed = urlparse(chapter_url or "")
         host = parsed.netloc.lower()
         if "@" in host:
@@ -147,6 +183,109 @@ class NovelFileCache:
         if ":" in host:
             host = host.split(":", 1)[0]
         return self._safe_segment(host or source_id or "unknown-source")
+
+    def _book_folder(
+        self,
+        *,
+        source_id: str,
+        book_id: str,
+        book_name: str,
+        author: str,
+        chapter_url: str,
+    ) -> str:
+        if source_id == SUBSCRIPTION_SOURCE_ID:
+            name = self._safe_segment(book_name or "unknown-book", max_length=80)
+            author_part = self._safe_segment(author or "", max_length=40)
+            if author_part:
+                return f"{name}_{author_part}"
+            return name
+
+        # Third-party caches use an opaque encoded key so they stay temporary
+        # and can be safely cleaned up without colliding with subscription books.
+        key = book_id or f"{source_id}:{chapter_url}"
+        if not key:
+            return "unknown-book"
+        return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+
+    def _write_subscription_metadata(
+        self,
+        book_dir: Path,
+        *,
+        book_id: str,
+        book_name: str,
+        author: str,
+        extra: dict[str, Any] | None = None,
+    ) -> None:
+        metadata_path = book_dir / METADATA_FILE
+        now = datetime.now(timezone.utc).isoformat()
+        existing: dict[str, Any] = {}
+        if metadata_path.exists():
+            try:
+                existing = json.loads(metadata_path.read_text(encoding="utf-8"))
+            except Exception:
+                existing = {}
+
+        chapter_files = sorted(
+            p for p in book_dir.glob("*.md") if p.is_file() and p.name != METADATA_FILE
+        )
+
+        metadata: dict[str, Any] = {
+            "bookId": book_id or existing.get("bookId", ""),
+            "bookName": book_name or existing.get("bookName", ""),
+            "author": author or existing.get("author", ""),
+            "sourceId": SUBSCRIPTION_SOURCE_ID,
+            "createdAt": existing.get("createdAt") or now,
+            "updatedAt": now,
+            "chapterCount": len(chapter_files),
+        }
+        # Merge persistent extra fields (cover, primary source, etc.) so the
+        # directory can be rebuilt on a fresh start without the database.
+        for key, value in (extra or {}).items():
+            if key not in ("bookId", "bookName", "author", "sourceId", "createdAt", "updatedAt", "chapterCount"):
+                metadata[key] = value
+
+        metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    def cleanup_temp_cache(
+        self,
+        *,
+        max_age_hours: int = 24,
+        dry_run: bool = False,
+    ) -> list[Path]:
+        """Remove third-party source cache folders older than max_age_hours.
+
+        Subscription books under legadohub_ai_aggregate are never touched.
+        """
+        removed: list[Path] = []
+        if not self.root.exists():
+            return removed
+
+        now = datetime.now(timezone.utc)
+        cutoff = max_age_hours * 3600
+
+        for source_dir in self.root.iterdir():
+            if not source_dir.is_dir():
+                continue
+            if source_dir.name == self._safe_segment(SUBSCRIPTION_FOLDER):
+                continue
+            for book_dir in source_dir.iterdir():
+                if not book_dir.is_dir():
+                    continue
+                try:
+                    mtime = book_dir.stat().st_mtime
+                    mtime_dt = datetime.fromtimestamp(mtime, tz=timezone.utc)
+                    if (now - mtime_dt).total_seconds() > cutoff:
+                        if not dry_run:
+                            import shutil
+
+                            shutil.rmtree(book_dir, ignore_errors=True)
+                        removed.append(book_dir)
+                except Exception:
+                    continue
+        return removed
 
     def _safe_segment(self, value: str, max_length: int = 96) -> str:
         value = str(value or "").strip().strip(".")
@@ -227,4 +366,3 @@ class NovelFileCache:
             text = text.replace('"', '\\"')
             return f'"{text}"'
         return text
-

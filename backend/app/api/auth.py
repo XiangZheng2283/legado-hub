@@ -51,6 +51,17 @@ def logout(request: Request, response: Response):
     return {"ok": True}
 
 
+@router.post("/change-password")
+def change_password(payload: dict, request: Request):
+    user = auth_service.require_user(request)
+    auth_service.change_password(
+        user=user,
+        current_password=str(payload.get("currentPassword", "")),
+        new_password=str(payload.get("newPassword", "")),
+    )
+    return {"ok": True}
+
+
 @router.get("/me")
 def me(request: Request):
     user = auth_service.current_user(request)

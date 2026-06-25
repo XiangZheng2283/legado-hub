@@ -20,6 +20,16 @@ FRONTEND_DIST = config.FRONTEND_DIST_DIR
 async def lifespan(app: FastAPI):
     initialize_database()
     from app.services.official_auth.manager import official_auth_manager
+    from app.services.user_auth import auth_service
+
+    admin_password = auth_service.ensure_default_admin()
+    if admin_password:
+        print("")
+        print("LegadoHub default administrator created.")
+        print("  Username: admin")
+        print(f"  Password: {admin_password}")
+        print("  Change this password after logging in.")
+        print("")
 
     # Clean up jobs that were left running from a previous server process.  Their
     # workers/tasks are gone, so keeping them as "running" would make new requests
@@ -51,6 +61,17 @@ async def lifespan(app: FastAPI):
             await official_auth_manager.probe_saved_cookie_file(plugin_id)
     except Exception:
         # Startup should stay resilient even if the probe fails.
+        pass
+
+    # Recover library entries from local novel folders on startup.
+    try:
+        from app.services.startup_library_scanner import scan_local_library
+
+        scan_result = scan_local_library()
+        if scan_result.get("recovered") or scan_result.get("chapters"):
+            print(f"Startup library scan: recovered {scan_result['recovered']} books, {scan_result['chapters']} chapters")
+    except Exception:
+        # Startup should not fail because of a scan error.
         pass
 
     stop_event = asyncio.Event()
@@ -106,4 +127,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-

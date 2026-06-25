@@ -283,4 +283,45 @@ describe("OfficialSourceLoginDialog", () => {
       expect(onSuccess).toHaveBeenCalled()
     })
   })
+
+  it("accepts pending phone login confirmation after verify", async () => {
+    const user = userEvent.setup()
+    const onSuccess = vi.fn()
+
+    ;(api.loginCapabilities as any).mockResolvedValue({
+      pluginId: "qidian_com_app",
+      methods: ["phone", "cookie"],
+      defaultMethod: "phone",
+      privateFeatures: { phoneAuth: true, cookieAuth: false, reviews: false },
+      hasPrivatePackage: true,
+    })
+
+    ;(api.loginPhoneRequestCode as any).mockResolvedValue({
+      ok: true,
+      sessionId: "sess_pending",
+      nextAction: "verify_code",
+    })
+
+    ;(api.loginPhoneVerify as any).mockResolvedValue({
+      ok: true,
+      authenticated: false,
+      authStatus: "pending",
+      message: "Cookie 已保存，但用户中心未识别登录态",
+    })
+
+    renderDialog({ pluginId: "qidian_com_app", onSuccess })
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: /手机号/i })).toBeInTheDocument()
+    })
+
+    await user.type(screen.getByPlaceholderText(/请输入手机号/), "13800138000")
+    await user.click(screen.getByRole("button", { name: /获取验证码/ }))
+    await user.type(screen.getByPlaceholderText(/请输入短信验证码/), "123456")
+    await user.click(screen.getByRole("button", { name: /^登录$/ }))
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalled()
+    })
+  })
 })

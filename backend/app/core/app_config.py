@@ -7,6 +7,7 @@ runtime does not scatter JSON reads across multiple files.
 
 from __future__ import annotations
 
+import base64
 import json
 import threading
 from dataclasses import dataclass, field
@@ -16,6 +17,25 @@ from typing import Any
 from app.config import CONFIG_DIR
 
 APP_CONFIG_PATH = CONFIG_DIR / "app_config.json"
+
+
+@dataclass
+class AuthConfig:
+    admin_password_base64: str = ""
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "AuthConfig":
+        return cls(admin_password_base64=str(data.get("adminPasswordBase64", "")))
+
+    def admin_password(self) -> str | None:
+        """Return the configured admin password if set, otherwise None."""
+        value = self.admin_password_base64.strip()
+        if not value:
+            return None
+        try:
+            return base64.b64decode(value.encode("ascii")).decode("utf-8")
+        except Exception:
+            return None
 
 
 @dataclass
@@ -243,6 +263,10 @@ class AppConfig:
     @property
     def debug(self) -> DebugConfig:
         return DebugConfig.from_dict(self._section("debug"))
+
+    @property
+    def auth(self) -> AuthConfig:
+        return AuthConfig.from_dict(self._section("auth"))
 
     def is_plugin_enabled(self, plugin_id: str, default: bool = True) -> bool:
         """Return runtime enabled state for a plugin from app_config.json.

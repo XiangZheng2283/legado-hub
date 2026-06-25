@@ -247,10 +247,12 @@ class OfficialAuthManager:
 
         probe = await self._save_cookie_jar_and_probe(plugin_id, cookie_jar)
         return {
-            "ok": probe["authenticated"],
+            "ok": probe["authenticated"] or probe.get("authStatus") == "pending",
             "authenticated": probe["authenticated"],
             "accountName": probe["accountName"],
             "message": probe["message"],
+            "authStatus": probe.get("authStatus", "unknown"),
+            "requiredActions": probe.get("requiredActions", []),
             "hasCookies": bool(cookie_jar),
             "cookieDomains": sorted(cookie_jar.keys()),
         }
@@ -472,6 +474,8 @@ class OfficialAuthManager:
                 "authenticated": probe["authenticated"],
                 "accountName": probe["accountName"],
                 "message": probe["message"],
+                "authStatus": probe.get("authStatus", "unknown"),
+                "requiredActions": probe.get("requiredActions", []),
                 "hasCookies": bool(cookie_jar),
             }
             login_trace_store.record(

@@ -85,6 +85,9 @@ class Cache:
                 chapter_url=chapter_url,
                 title=data.get("title", ""),
                 content=data.get("content", ""),
+                book_id=data.get("bookId", "") or data.get("book_id", ""),
+                book_name=data.get("bookName", "") or data.get("book_name", ""),
+                author=data.get("author", ""),
             )
             conn.execute(
                 """

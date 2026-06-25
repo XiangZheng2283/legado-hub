@@ -6,9 +6,11 @@ Copyright (c) 2026 moo. All rights reserved.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import uuid
 from typing import Any
+from urllib.parse import urlparse
 
 from app.config import DB_PATH, HOST, PORT
 from app.services.aggregate_settings import AggregateSettingsRepository
@@ -31,6 +33,17 @@ def make_library_book_id(aggregate_book_id: str) -> str:
     return encode_book_id(VIRTUAL_SOURCE_ID, make_library_aggregate_book_url(aggregate_book_id))
 
 
+def _normalize_book_status_text(*values: object) -> str:
+    for value in values:
+        raw = str(value or "").strip().lower()
+        if not raw:
+            continue
+        if any(key in raw for key in ("完结", "completed", "finished", "已完结", "完本")):
+            return "completed"
+        return "ongoing"
+    return ""
+
+
 class LibraryBooksService:
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
@@ -41,7 +54,9 @@ class LibraryBooksService:
 
     def _plugins(self) -> dict[str, Any]:
         try:
-            return PluginLoader().load_all()
+            from app.source_plugins.scheduler import get_plugin_scheduler
+
+            return get_plugin_scheduler()._plugins
         except Exception:
             return {}
 
@@ -79,15 +94,29 @@ class LibraryBooksService:
     def _canonical_author(self, value: str) -> str:
         return normalize_author_key(value or "")
 
+    def _normalize_source_urls(self, source_id: str, raw_book_url: str) -> tuple[str, str]:
+        """Return normalized (book_url, toc_url) for sources that need a canonical URL shape."""
+        book_url = str(raw_book_url or "").strip()
+        toc_url = book_url
+        if source_id in {"qidian_com_web", "qidian_com_app"} and book_url:
+            parsed = urlparse(book_url)
+            match = re.search(r"/book/(\d+)/?", parsed.path or "")
+            if match:
+                book_id = match.group(1)
+                book_url = f"https://m.qidian.com/book/{book_id}/"
+                toc_url = f"https://m.qidian.com/book/{book_id}/catalog/"
+        return book_url, toc_url
+
     def _payload_from_group(self, group: dict[str, Any]) -> dict[str, Any]:
         items = [dict(item) for item in group.get("items", []) if isinstance(item, dict)]
         sources = []
         for item in items:
             source_id = item.get("sourceId", "")
             raw_book_url = item.get("rawBookUrl") or item.get("bookUrl", "")
+            normalized_book_url, normalized_toc_url = self._normalize_source_urls(source_id, raw_book_url)
             book_id = item.get("bookId", "")
-            if not book_id and source_id and raw_book_url:
-                book_id = encode_book_id(source_id, raw_book_url)
+            if source_id and normalized_book_url:
+                book_id = encode_book_id(source_id, normalized_book_url)
             if not source_id or not raw_book_url or not book_id:
                 continue
             sources.append(
@@ -95,12 +124,15 @@ class LibraryBooksService:
                     "bookId": book_id,
                     "sourceId": source_id,
                     "sourceName": item.get("sourceName", ""),
-                    "bookUrl": raw_book_url,
+                    "bookUrl": normalized_book_url,
+                    "tocUrl": item.get("tocUrl", "") or normalized_toc_url,
                     "score": int(item.get("score", 0) or 0),
                     "lastChapter": item.get("lastChapter", "") or "",
                     "coverUrl": item.get("coverUrl", "") or "",
                     "intro": item.get("intro", "") or "",
                     "wordCount": item.get("wordCount", "") or "",
+                    "chapterCount": int(item.get("chapterCount", 0) or 0),
+                    "bookStatus": item.get("status", "") or item.get("bookStatus", "") or "",
                     "author": item.get("author", "") or "",
                     "name": item.get("name", "") or "",
                 }
@@ -109,6 +141,10 @@ class LibraryBooksService:
             "candidateId": group.get("candidateId", ""),
             "name": group.get("name", "") or (sources[0].get("name", "") if sources else ""),
             "author": group.get("author", "") or (sources[0].get("author", "") if sources else ""),
+            "coverUrl": group.get("coverUrl", "") or (sources[0].get("coverUrl", "") if sources else ""),
+            "intro": group.get("intro", "") or (sources[0].get("intro", "") if sources else ""),
+            "bookStatus": group.get("bookStatus", "") or (sources[0].get("bookStatus", "") if sources else ""),
+            "totalChaptersAtSubscribe": int(group.get("chapterCount", 0) or (sources[0].get("chapterCount", 0) if sources else 0) or 0),
             "sources": sources,
         }
 
@@ -119,6 +155,78 @@ class LibraryBooksService:
         official_items = [item for item in items if self._is_official(item.get("sourceId", ""))]
         ranked = official_items or sorted(items, key=lambda item: -int(item.get("score", 0) or 0))
         return dict(ranked[0]) if ranked else {}
+
+    def _primary_source_payload(self, payload: dict[str, Any], primary_book_id: str) -> dict[str, Any]:
+        sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+        for source in sources:
+            if isinstance(source, dict) and source.get("bookId", "") == primary_book_id:
+                return dict(source)
+        return {}
+
+    async def _hydrate_primary_source_payload(
+        self,
+        payload: dict[str, Any],
+        primary_book_id: str,
+        primary_source_id: str,
+        primary_source: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Best-effort fill of subscription fields from the resolved primary source.
+
+        Phase 1 must not block subscription intake on primary-source detail/toc
+        enrichment. If the live book-detail or toc path is unavailable, we keep
+        the search-card values and let the first background processing round
+        refresh them from the real source.
+        """
+        hydrated = dict(payload)
+        hydrated["primarySourceId"] = primary_source_id
+        hydrated["primarySourceName"] = primary_source.get("sourceName", "") or primary_source_id
+        hydrated["primaryBookId"] = primary_book_id
+        hydrated["primaryBookUrl"] = primary_source.get("bookUrl", "") or ""
+        hydrated["primaryTocUrl"] = primary_source.get("tocUrl", "") or primary_source.get("bookUrl", "") or ""
+        hydrated["supplementSourceConfig"] = hydrated.get("supplementSourceConfig") or {}
+
+        try:
+            from app.services.book_catalog import BookCatalog
+
+            catalog = BookCatalog()
+            detail = await catalog.book_detail(primary_book_id)
+            detail_data = detail.get("data") if isinstance(detail, dict) else {}
+            if isinstance(detail_data, dict):
+                hydrated["name"] = detail_data.get("name", "") or hydrated.get("name", "")
+                hydrated["author"] = detail_data.get("author", "") or hydrated.get("author", "")
+                hydrated["coverUrl"] = detail_data.get("coverUrl", "") or hydrated.get("coverUrl", "")
+                hydrated["intro"] = detail_data.get("intro", "") or hydrated.get("intro", "")
+                hydrated["bookStatus"] = _normalize_book_status_text(
+                    detail_data.get("status", "")
+                    or detail_data.get("bookStatus", "")
+                    or detail_data.get("bookStatusText", "")
+                    or detail_data.get("kindStatus", "")
+                    or detail_data.get("kind", "")
+                    or hydrated.get("bookStatus", "")
+                )
+                hydrated["wordCount"] = (
+                    detail_data.get("wordCountText", "")
+                    or detail_data.get("wordCount", "")
+                    or hydrated.get("wordCount", "")
+                )
+                hydrated["primaryBookUrl"] = detail_data.get("rawBookUrl", "") or detail_data.get("bookUrl", "") or hydrated.get("primaryBookUrl", "")
+                hydrated["primaryTocUrl"] = detail_data.get("rawTocUrl", "") or detail_data.get("tocUrl", "") or hydrated.get("primaryTocUrl", "")
+
+            toc = await catalog.toc(primary_book_id)
+            chapters = toc.get("chapters") if isinstance(toc, dict) else []
+            if isinstance(chapters, list):
+                hydrated["totalChaptersAtSubscribe"] = len(chapters)
+                for source in hydrated.get("sources", []):
+                    if isinstance(source, dict) and source.get("bookId", "") == primary_book_id:
+                        source["chapterCount"] = len(chapters)
+                        if chapters:
+                            source["lastChapter"] = chapters[-1].get("title", "") or source.get("lastChapter", "")
+                        break
+        except Exception:
+            # Use the search-card payload when live enrichment is unavailable.
+            pass
+
+        return hydrated
 
     def _aggregate_book_row_to_dict(self, row: sqlite3.Row | tuple | None) -> dict[str, Any] | None:
         if not row:
@@ -136,28 +244,32 @@ class LibraryBooksService:
             "wordCount": row[7] or "",
             "primaryBookId": row[8] or "",
             "primarySourceId": row[9] or "",
-            "addedByUserId": row[10] or "",
-            "startChapterIndex": int(row[11] or 1),
-            "initialSnapshotLastIndex": int(row[12] or 0),
-            "backfillStarted": bool(row[13]),
-            "autoArchiveOnComplete": bool(row[14]),
-            "searchVisibilityStatus": row[15] or "hidden",
-            "bookStatus": row[16] or "unknown",
-            "totalChapters": int(row[17] or 0),
-            "processedChapters": int(row[18] or 0),
-            "visibleProcessedChapters": int(row[19] or 0),
-            "failedChapters": int(row[20] or 0),
-            "status": row[21] or "active",
-            "settingsJson": row[22] or "",
-            "currentPolicyVersion": int(row[23] or 1),
-            "lastSourceChapterTitle": row[24] or "",
-            "lastLocalChapterTitle": row[25] or "",
-            "lastCheckTime": row[26] or "",
-            "nextCheckTime": row[27] or "",
-            "lastError": row[28] or "",
-            "archivedAt": row[29] or "",
-            "createdAt": row[30] or "",
-            "updatedAt": row[31] or "",
+            "primarySourceName": row[10] or "",
+            "primaryBookUrl": row[11] or "",
+            "primaryTocUrl": row[12] or "",
+            "addedByUserId": row[13] or "",
+            "startChapterIndex": int(row[14] or 1),
+            "totalChaptersAtSubscribe": int(row[15] or 0),
+            "initialSnapshotLastIndex": int(row[16] or 0),
+            "backfillStarted": bool(row[17]),
+            "autoArchiveOnComplete": bool(row[18]),
+            "searchVisibilityStatus": row[19] or "hidden",
+            "bookStatus": row[20] or "unknown",
+            "totalChapters": int(row[21] or 0),
+            "processedChapters": int(row[22] or 0),
+            "visibleProcessedChapters": int(row[23] or 0),
+            "failedChapters": int(row[24] or 0),
+            "status": row[25] or "active",
+            "settingsJson": row[26] or "",
+            "currentPolicyVersion": int(row[27] or 1),
+            "lastSourceChapterTitle": row[28] or "",
+            "lastLocalChapterTitle": row[29] or "",
+            "lastCheckTime": row[30] or "",
+            "nextCheckTime": row[31] or "",
+            "lastError": row[32] or "",
+            "archivedAt": row[33] or "",
+            "createdAt": row[34] or "",
+            "updatedAt": row[35] or "",
         }
 
     def _book_lookup_row(self, aggregate_book_id: str) -> dict[str, Any] | None:
@@ -166,7 +278,8 @@ class LibraryBooksService:
                 """
                 SELECT aggregate_book_id, canonical_name, canonical_author, name, author,
                        cover_url, intro, word_count, primary_book_id, primary_source_id,
-                       added_by_user_id, start_chapter_index, initial_snapshot_last_index,
+                       primary_source_name, primary_book_url, primary_toc_url, added_by_user_id,
+                       start_chapter_index, total_chapters_at_subscribe, initial_snapshot_last_index,
                        backfill_started, auto_archive_on_complete, search_visibility_status,
                        book_status, total_chapters, processed_chapters, visible_processed_chapters,
                        failed_chapters, status, settings_json, current_policy_version,
@@ -215,7 +328,8 @@ class LibraryBooksService:
                     """
                     SELECT aggregate_book_id, canonical_name, canonical_author, name, author,
                            cover_url, intro, word_count, primary_book_id, primary_source_id,
-                           added_by_user_id, start_chapter_index, initial_snapshot_last_index,
+                           primary_source_name, primary_book_url, primary_toc_url, added_by_user_id,
+                           start_chapter_index, total_chapters_at_subscribe, initial_snapshot_last_index,
                            backfill_started, auto_archive_on_complete, search_visibility_status,
                            book_status, total_chapters, processed_chapters, visible_processed_chapters,
                            failed_chapters, status, settings_json, current_policy_version,
@@ -281,7 +395,7 @@ class LibraryBooksService:
             },
         }
 
-    def create_or_get_shared_book(
+    async def create_or_get_shared_book(
         self,
         group: dict[str, Any],
         *,
@@ -306,11 +420,27 @@ class LibraryBooksService:
         primary_source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
         if not primary_book_id or not primary_source_id:
             raise ValueError("failed to resolve primary source")
+        primary_source = self._primary_source_payload(payload, primary_book_id)
+        display = self._display_item_for_group(group)
+        payload = await self._hydrate_primary_source_payload(
+            payload,
+            primary_book_id,
+            primary_source_id,
+            primary_source,
+        )
+        payload["coverUrl"] = payload.get("coverUrl", "") or display.get("coverUrl", "")
+        payload["intro"] = payload.get("intro", "") or display.get("intro", "")
+        payload["bookStatus"] = (
+            _normalize_book_status_text(payload.get("bookStatus", ""), display.get("status", ""))
+            or "unknown"
+        )
+        payload["totalChaptersAtSubscribe"] = int(payload.get("totalChaptersAtSubscribe", 0) or 0)
+        payload["startChapterIndex"] = max(1, int(start_chapter_index or 1))
+        payload["autoArchiveOnComplete"] = bool(auto_archive_on_complete)
 
         aggregate_book_id = uuid.uuid4().hex
         canonical_name = self._canonical_name(payload.get("name", ""))
         canonical_author = self._canonical_author(payload.get("author", ""))
-        display = self._display_item_for_group(group)
         now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
 
         with self._conn() as conn:
@@ -319,14 +449,15 @@ class LibraryBooksService:
                 INSERT INTO aggregate_book_tasks (
                     aggregate_book_id, canonical_name, canonical_author, name, author,
                     cover_url, intro, word_count, aggregate_payload_json, primary_book_id,
-                    primary_source_id, added_by_user_id, start_chapter_index,
+                    primary_source_id, primary_source_name, primary_book_url, primary_toc_url,
+                    added_by_user_id, start_chapter_index, total_chapters_at_subscribe,
                     initial_snapshot_last_index, backfill_started, auto_archive_on_complete,
                     search_visibility_status, book_status, total_chapters, processed_chapters,
                     visible_processed_chapters, failed_chapters, total_tokens, status,
                     settings_json, current_policy_version, interval_minutes, last_check_time,
                     next_check_time, error_count, last_error, ai_enabled, last_processed_at,
                     archived_at, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 'hidden', ?, 0, 0, 0, 0, 0, 'active', ?, 1, ?, NULL, NULL, 0, '', ?, NULL, NULL, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 'hidden', ?, 0, 0, 0, 0, 0, 'active', ?, 1, ?, NULL, NULL, 0, '', ?, NULL, NULL, ?, ?)
                 """,
                 (
                     aggregate_book_id,
@@ -334,21 +465,26 @@ class LibraryBooksService:
                     canonical_author,
                     payload.get("name", "") or display.get("name", ""),
                     payload.get("author", "") or display.get("author", ""),
-                    display.get("coverUrl", ""),
-                    display.get("intro", ""),
-                    display.get("wordCount", ""),
+                    payload.get("coverUrl", "") or display.get("coverUrl", ""),
+                    payload.get("intro", "") or display.get("intro", ""),
+                    payload.get("wordCount", "") or display.get("wordCount", ""),
                     json.dumps(payload, ensure_ascii=False),
                     primary_book_id,
                     primary_source_id,
+                    payload.get("primarySourceName", "") or primary_source_id,
+                    payload.get("primaryBookUrl", "") or "",
+                    payload.get("primaryTocUrl", "") or "",
                     added_by_user_id,
                     max(1, int(start_chapter_index or 1)),
+                    int(payload.get("totalChaptersAtSubscribe", 0) or 0),
                     1 if auto_archive_on_complete else 0,
-                    display.get("status", "") or "unknown",
+                    payload.get("bookStatus", "") or display.get("status", "") or "unknown",
                     json.dumps(
                         {
                             **settings,
                             "startChapterIndex": max(1, int(start_chapter_index or 1)),
                             "autoArchiveOnComplete": bool(auto_archive_on_complete),
+                            "supplementSourceConfig": payload.get("supplementSourceConfig", {}),
                         },
                         ensure_ascii=False,
                     ),
@@ -394,6 +530,7 @@ class LibraryBooksService:
                             "startChapterIndex": max(1, int(start_chapter_index or 1)),
                             "autoArchiveOnComplete": bool(auto_archive_on_complete),
                             "primarySourceId": primary_source_id,
+                            "primaryBookUrl": primary_source.get("bookUrl", "") or "",
                         },
                         ensure_ascii=False,
                     ),
@@ -422,7 +559,8 @@ class LibraryBooksService:
                 f"""
                 SELECT aggregate_book_id, canonical_name, canonical_author, name, author,
                        cover_url, intro, word_count, primary_book_id, primary_source_id,
-                       added_by_user_id, start_chapter_index, initial_snapshot_last_index,
+                       primary_source_name, primary_book_url, primary_toc_url, added_by_user_id,
+                       start_chapter_index, total_chapters_at_subscribe, initial_snapshot_last_index,
                        backfill_started, auto_archive_on_complete, search_visibility_status,
                        book_status, total_chapters, processed_chapters, visible_processed_chapters,
                        failed_chapters, status, settings_json, current_policy_version,
@@ -454,7 +592,8 @@ class LibraryBooksService:
                 """
                 SELECT aggregate_book_id, canonical_name, canonical_author, name, author,
                        cover_url, intro, word_count, primary_book_id, primary_source_id,
-                       added_by_user_id, start_chapter_index, initial_snapshot_last_index,
+                       primary_source_name, primary_book_url, primary_toc_url, added_by_user_id,
+                       start_chapter_index, total_chapters_at_subscribe, initial_snapshot_last_index,
                        backfill_started, auto_archive_on_complete, search_visibility_status,
                        book_status, total_chapters, processed_chapters, visible_processed_chapters,
                        failed_chapters, status, settings_json, current_policy_version,

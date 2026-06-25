@@ -17,6 +17,9 @@ PREVIEW_PREFERRED_MIN = 80
 PREVIEW_PREFERRED_MAX = 200
 CANDIDATE_WINDOW_SIZE = 1000
 FULL_CONTENT_MIN_LENGTH = 200
+HEAD_PREVIEW_SIMILARITY_THRESHOLD = 0.35
+RELAXED_PREVIEW_SIMILARITY_THRESHOLD = 0.50
+RELAXED_HEAD_PREVIEW_SIMILARITY_THRESHOLD = 0.50
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -25,14 +28,14 @@ FULL_CONTENT_MIN_LENGTH = 200
 def _normalize_for_compare(text: str) -> str:
     """Strip whitespace, punctuation and line breaks for fuzzy comparison."""
     text = re.sub(r"\s+", "", text)
-    text = re.sub(r"[，。！？、；：""''（）《》【】\.\,\!\?\;\:\"\'\(\)\<\>\[\]]", "", text)
+    text = re.sub(r"""[，。！？、；："'（）《》【】\.,!\?;:\(\)<>\[\]]""", "", text)
     return text
 
 
 def _title_similarity(a: str, b: str) -> float:
     """Character-level similarity between two chapter titles."""
-    na = _normalize_for_compare(a)
-    nb = _normalize_for_compare(b)
+    na = _normalize_chapter_title(a)
+    nb = _normalize_chapter_title(b)
     if not na or not nb:
         return 0.0
     return SequenceMatcher(None, na, nb, autojunk=False).ratio()
@@ -45,6 +48,82 @@ def _sequence_similarity(a: str, b: str) -> float:
     if not na or not nb:
         return 0.0
     return SequenceMatcher(None, na, nb, autojunk=False).ratio()
+
+
+_CHINESE_DIGITS = {
+    "零": 0,
+    "〇": 0,
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+}
+_CHINESE_UNITS = {"十": 10, "百": 100, "千": 1000, "万": 10000}
+
+
+def _parse_chinese_number(token: str) -> int | None:
+    token = str(token or "").strip()
+    if not token:
+        return None
+    if token.isdigit():
+        return int(token)
+    total = 0
+    section = 0
+    number = 0
+    seen = False
+    for char in token:
+        if char in _CHINESE_DIGITS:
+            number = _CHINESE_DIGITS[char]
+            seen = True
+            continue
+        unit = _CHINESE_UNITS.get(char)
+        if unit is None:
+            return None
+        seen = True
+        if unit == 10000:
+            section = (section + (number or 0)) * unit
+            total += section
+            section = 0
+        else:
+            section += (number or 1) * unit
+        number = 0
+    if not seen:
+        return None
+    return total + section + number
+
+
+def _normalize_chapter_title(text: str) -> str:
+    text = str(text or "")
+
+    def replace_ordinal(match: re.Match[str]) -> str:
+        number = _parse_chinese_number(match.group(1))
+        return str(number) if number is not None else match.group(1)
+
+    text = re.sub(r"第([零〇一二两三四五六七八九十百千万\d]+)([章节回卷篇部集])", replace_ordinal, text)
+    text = text.replace("正文", "")
+    return _normalize_for_compare(text)
+
+
+def chapter_title_similarity(expected_title: str, candidate_title: str) -> float:
+    return _title_similarity(expected_title, candidate_title)
+
+
+def _candidate_body_head(candidate_title: str, candidate_content: str) -> str:
+    stripped = str(candidate_content or "").strip()
+    if not stripped:
+        return stripped
+    lines = stripped.splitlines()
+    if not lines:
+        return stripped
+    if _title_similarity(candidate_title, lines[0]) >= 0.95:
+        return "\n".join(lines[1:]).strip()
+    return stripped
 
 
 def _sliding_preview_similarity(preview: str, candidate_content: str) -> float:
@@ -89,6 +168,11 @@ def classify_source_content(
     content: str | None,
     source_id: str = "",
     is_official: bool = False,
+    *,
+    source_word_count: int = 0,
+    preview_only_hint: bool = False,
+    extra: dict[str, Any] | None = None,
+    is_paid: bool = False,
 ) -> dict[str, Any]:
     """Classify fetched chapter content as ``full`` / ``preview`` / ``empty``.
 
@@ -108,6 +192,41 @@ def classify_source_content(
     stripped = content.strip()
     length = len(stripped)
     preview_text = stripped[:PREVIEW_PREFERRED_MAX]
+    extra = extra if isinstance(extra, dict) else {}
+
+    explicit_preview = bool(preview_only_hint)
+    for key in ("previewOnly", "isPreview", "preview_only", "isLocked"):
+        if key in extra:
+            explicit_preview = explicit_preview or bool(extra.get(key))
+    if is_paid:
+        explicit_preview = True
+
+    try:
+        source_word_count = int(source_word_count or 0)
+    except (TypeError, ValueError):
+        source_word_count = 0
+
+    if explicit_preview:
+        return {
+            "classification": "preview",
+            "contentLength": length,
+            "previewText": preview_text,
+            "isOfficial": is_official,
+            "sourceId": source_id,
+            "reason": "explicit_preview_signal",
+            "sourceWordCount": source_word_count,
+        }
+
+    if source_word_count > 0 and length > 0 and length + 80 < source_word_count:
+        return {
+            "classification": "preview",
+            "contentLength": length,
+            "previewText": preview_text,
+            "isOfficial": is_official,
+            "sourceId": source_id,
+            "reason": "visible_content_shorter_than_source_word_count",
+            "sourceWordCount": source_word_count,
+        }
 
     if length >= FULL_CONTENT_MIN_LENGTH:
         return {
@@ -117,6 +236,7 @@ def classify_source_content(
             "isOfficial": is_official,
             "sourceId": source_id,
             "reason": "content_length_sufficient",
+            "sourceWordCount": source_word_count,
         }
 
     # Short content — likely a VIP preview.
@@ -127,6 +247,7 @@ def classify_source_content(
         "isOfficial": is_official,
         "sourceId": source_id,
         "reason": "content_too_short_likely_preview",
+        "sourceWordCount": source_word_count,
     }
 
 
@@ -152,28 +273,53 @@ def align_candidate_chapter(
             "alignmentPassed": False,
             "titleSimilarity": 0.0,
             "previewSimilarity": 0.0,
+            "headPreviewSimilarity": 0.0,
             "alignmentReason": "no_preview_available",
         }
 
     title_sim = _title_similarity(expected_title, candidate_title)
     preview_sim = _sliding_preview_similarity(official_preview, candidate_content)
+    head_sim = _sequence_similarity(
+        official_preview[:PREVIEW_PREFERRED_MAX],
+        _candidate_body_head(candidate_title, candidate_content)[:PREVIEW_PREFERRED_MAX],
+    )
 
     # High-confidence preview bypasses title check.
-    if preview_sim >= PREVIEW_HIGH_CONFIDENCE:
+    if preview_sim >= PREVIEW_HIGH_CONFIDENCE and head_sim >= HEAD_PREVIEW_SIMILARITY_THRESHOLD:
         return {
             "alignmentPassed": True,
             "titleSimilarity": round(title_sim, 4),
             "previewSimilarity": round(preview_sim, 4),
+            "headPreviewSimilarity": round(head_sim, 4),
             "alignmentReason": "preview_high_confidence",
         }
 
     # Standard check: both must pass thresholds.
-    if title_sim >= TITLE_SIMILARITY_THRESHOLD and preview_sim >= PREVIEW_SIMILARITY_THRESHOLD:
+    if (
+        title_sim >= TITLE_SIMILARITY_THRESHOLD
+        and preview_sim >= PREVIEW_SIMILARITY_THRESHOLD
+        and head_sim >= HEAD_PREVIEW_SIMILARITY_THRESHOLD
+    ):
         return {
             "alignmentPassed": True,
             "titleSimilarity": round(title_sim, 4),
             "previewSimilarity": round(preview_sim, 4),
+            "headPreviewSimilarity": round(head_sim, 4),
             "alignmentReason": "title_and_preview_matched",
+        }
+
+    # Relaxed path: exact-ish title plus a clear body-head match.
+    if (
+        title_sim >= 0.95
+        and preview_sim >= RELAXED_PREVIEW_SIMILARITY_THRESHOLD
+        and head_sim >= RELAXED_HEAD_PREVIEW_SIMILARITY_THRESHOLD
+    ):
+        return {
+            "alignmentPassed": True,
+            "titleSimilarity": round(title_sim, 4),
+            "previewSimilarity": round(preview_sim, 4),
+            "headPreviewSimilarity": round(head_sim, 4),
+            "alignmentReason": "title_and_head_matched",
         }
 
     reason_parts = []
@@ -181,10 +327,13 @@ def align_candidate_chapter(
         reason_parts.append("title_low")
     if preview_sim < PREVIEW_SIMILARITY_THRESHOLD:
         reason_parts.append("preview_low")
+    if head_sim < HEAD_PREVIEW_SIMILARITY_THRESHOLD:
+        reason_parts.append("head_low")
     return {
         "alignmentPassed": False,
         "titleSimilarity": round(title_sim, 4),
         "previewSimilarity": round(preview_sim, 4),
+        "headPreviewSimilarity": round(head_sim, 4),
         "alignmentReason": "+".join(reason_parts) or "alignment_failed",
     }
 
@@ -199,6 +348,7 @@ def build_source_alignment_json(
     candidate_content_length: int = 0,
     title_similarity: float = 0.0,
     preview_similarity: float = 0.0,
+    head_preview_similarity: float = 0.0,
     alignment_passed: bool = False,
     alignment_reason: str = "",
     candidate_source_id: str = "",
@@ -213,6 +363,7 @@ def build_source_alignment_json(
         "candidateContentLength": candidate_content_length,
         "titleSimilarity": round(title_similarity, 4),
         "previewSimilarity": round(preview_similarity, 4),
+        "headPreviewSimilarity": round(head_preview_similarity, 4),
         "alignmentPassed": alignment_passed,
         "alignmentReason": alignment_reason,
     }

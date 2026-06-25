@@ -84,6 +84,7 @@ export function LibraryPage() {
   const allQuery = useQuery({
     queryKey: ["library", "all"],
     queryFn: () => api.libraryBooks(),
+    enabled: isAdmin,
   })
 
   const mineQuery = useQuery({
@@ -126,8 +127,9 @@ export function LibraryPage() {
     },
   })
 
+  const activeData = activeTab === "all" && isAdmin ? allQuery.data : mineQuery.data
   const books: LibraryBook[] =
-    ((activeTab === "all" ? allQuery.data : mineQuery.data) as { items?: LibraryBook[] } | undefined)
+    (activeData as { items?: LibraryBook[] } | undefined)
       ?.items || []
 
   const filteredBooks = books.filter(
@@ -250,7 +252,7 @@ export function LibraryPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="all">全部书库</TabsTrigger>
+            {isAdmin && <TabsTrigger value="all">全部书库</TabsTrigger>}
             <TabsTrigger value="mine">我添加的</TabsTrigger>
           </TabsList>
           <Input

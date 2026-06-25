@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { Loader2, Shield, User } from "lucide-react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Loader2, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,9 +11,9 @@ import { api } from "@/lib/api"
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [username, setUsername] = useState("")
+  const queryClient = useQueryClient()
+  const [username, setUsername] = useState("admin")
   const [password, setPassword] = useState("")
-  const [isBootstrap, setIsBootstrap] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const { data: meData, isLoading: checking } = useQuery({
@@ -22,15 +22,18 @@ export function LoginPage() {
     retry: false,
   })
 
-  const bootstrapMutation = useMutation({
-    mutationFn: api.auth.bootstrap,
-    onSuccess: () => navigate("/console", { replace: true }),
-    onError: (err: any) => setError(err?.message || "初始化失败"),
-  })
+  useEffect(() => {
+    if (!checking && meData?.user) {
+      navigate("/console", { replace: true })
+    }
+  }, [checking, meData?.user, navigate])
 
   const loginMutation = useMutation({
     mutationFn: api.auth.login,
-    onSuccess: () => navigate("/console", { replace: true }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+      navigate("/console", { replace: true })
+    },
     onError: (err: any) => setError(err?.message || "登录失败"),
   })
 
@@ -42,11 +45,6 @@ export function LoginPage() {
     )
   }
 
-  if (meData?.user) {
-    navigate("/console", { replace: true })
-    return null
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -54,11 +52,7 @@ export function LoginPage() {
       setError("请输入用户名和密码")
       return
     }
-    if (isBootstrap) {
-      bootstrapMutation.mutate({ username, password })
-    } else {
-      loginMutation.mutate({ username, password })
-    }
+    loginMutation.mutate({ username, password })
   }
 
   return (
@@ -66,16 +60,10 @@ export function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
           <div className="flex items-center gap-2">
-            {isBootstrap ? <Shield className="w-5 h-5" /> : <User className="w-5 h-5" />}
-            <CardTitle className="text-lg">
-              {isBootstrap ? "初始化管理员账号" : "登录 LegadoHub"}
-            </CardTitle>
+            <User className="w-5 h-5" />
+            <CardTitle className="text-lg">登录 LegadoHub</CardTitle>
           </div>
-          <CardDescription>
-            {isBootstrap
-              ? "系统尚未创建用户，请先设置管理员账号。"
-              : "请输入管理员账号登录控制台。"}
-          </CardDescription>
+          <CardDescription>首次使用请在后端启动窗口查看随机生成的 admin 密码。</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,7 +85,7 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                autoComplete={isBootstrap ? "new-password" : "current-password"}
+                autoComplete="current-password"
               />
             </div>
             {error && (
@@ -108,23 +96,10 @@ export function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loginMutation.isPending || bootstrapMutation.isPending}
+              disabled={loginMutation.isPending}
             >
-              {(loginMutation.isPending || bootstrapMutation.isPending) && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              {isBootstrap ? "创建管理员" : "登录"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full text-xs"
-              onClick={() => {
-                setIsBootstrap(!isBootstrap)
-                setError(null)
-              }}
-            >
-              {isBootstrap ? "已有账号？去登录" : "首次使用？初始化账号"}
+              {loginMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              登录
             </Button>
           </form>
         </CardContent>

@@ -485,9 +485,11 @@ class PluginScheduler:
             from app.config import HOST, PORT
             base_api = f"http://{HOST}:{PORT}"
             for ch in chapters:
-                ch_url = ch.get("chapterUrl", "")
+                ch_url = ch.get("rawChapterUrl") or ch.get("chapterUrl", "")
                 if ch_url:
-                    ch_id = encode_chapter_id(source_id, ch_url)
+                    ch["rawChapterUrl"] = ch_url
+                    ch_id = ch.get("chapterId") or encode_chapter_id(source_id, ch_url)
+                    ch["chapterId"] = ch_id
                     ch["chapterUrl"] = f"{base_api}/api/legado/chapter/{ch_id}"
             return {"implemented": True, "bookId": "", "chapters": chapters, "debug": {}}
         except Exception as exc:
@@ -514,6 +516,9 @@ class PluginScheduler:
                     "chapterId": raw.get("chapterId", ""),
                     "title": raw.get("title", ""),
                     "content": raw.get("content", ""),
+                    "chapterUrl": raw.get("chapterUrl", ""),
+                    "rawChapterUrl": raw.get("rawChapterUrl", "") or raw.get("chapterUrl", ""),
+                    "extra": raw.get("extra", {}) if isinstance(raw.get("extra", {}), dict) else {},
                     "debug": debug,
                 }
             return {"implemented": True, "chapterId": "", "title": "", "content": "", "debug": {}}

@@ -13,20 +13,11 @@ from fastapi import APIRouter, HTTPException, Request
 from app.config import DB_PATH
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.library_books import library_books_service
-from app.services.search_jobs import SearchJobService
+from app.services.subscription_search import subscription_search_service
 from app.services.user_auth import auth_service
 from app.storage.db import initialize_database
 
 router = APIRouter(prefix="/api/subscribe")
-_search_service = SearchJobService()
-
-
-def _build_cards(job_id: str) -> list[dict]:
-    session = _search_service.get_session(job_id)
-    if not session:
-        return []
-    groups = session.candidate_groups or []
-    return [library_books_service.build_subscription_card(group) for group in groups if isinstance(group, dict)]
 
 
 @router.post("/search")
@@ -45,66 +36,28 @@ async def subscription_search(request: Request, payload: dict):
             "liveSearchPending": False,
         }
 
-    job = _search_service.create_job(
-        keyword=keyword,
-        page=page,
-        search_mode="subscription",
-    )
-    loop = asyncio.get_running_loop()
-    deadline = loop.time() + 5.0
-    while loop.time() < deadline:
-        cards = _build_cards(job.job_id)
-        session = _search_service.get_session(job.job_id)
-        if cards:
-            break
-        if session and session.status not in {"running", "pending"}:
-            break
-        await asyncio.sleep(0.2)
-    return {
-        "implemented": True,
-        "jobId": job.job_id,
-        "keyword": job.keyword,
-        "page": page,
-        "cards": _build_cards(job.job_id),
-        "status": "running",
-        "liveSearchPending": True,
-        "viewer": {"userId": user.user_id, "role": user.role},
-    }
+    job = subscription_search_service.create_job(keyword=keyword, page=page)
+    snapshot = subscription_search_service.snapshot(job.job_id)
+    snapshot["viewer"] = {"userId": user.user_id, "role": user.role}
+    return snapshot
 
 
 @router.get("/search/{job_id}")
 def get_subscription_search(request: Request, job_id: str):
     auth_service.require_user(request)
-    session = _search_service.get_session(job_id)
-    if not session:
-        return {
-            "implemented": True,
-            "jobId": job_id,
-            "cards": [],
-            "status": "unknown",
-            "liveSearchPending": False,
-        }
-    return {
-        "implemented": True,
-        "jobId": job_id,
-        "keyword": session.keyword,
-        "page": session.page,
-        "cards": _build_cards(job_id),
-        "status": session.status,
-        "liveSearchPending": session.status in {"running", "pending"},
-    }
+    return subscription_search_service.snapshot(job_id)
 
 
 @router.post("/search/{job_id}/cards/{candidate_id}/subscribe")
 async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
-    group = _search_service.find_candidate_group(job_id, candidate_id)
+    group = subscription_search_service.find_card_group(job_id, candidate_id)
     if not group:
         raise HTTPException(status_code=404, detail="候选书籍不存在")
     payload = payload or {}
     start_chapter_index = max(1, int(payload.get("startChapterIndex", 1) or 1))
     auto_archive = bool(payload.get("autoArchiveOnComplete", True))
-    created = library_books_service.create_or_get_shared_book(
+    created = await library_books_service.create_or_get_shared_book(
         group,
         added_by_user_id=user.user_id,
         start_chapter_index=start_chapter_index,
@@ -120,6 +73,26 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
         "ok": True,
         "created": True,
         "book": book,
+        "subscriptionConfig": {
+            "coverUrl": book.get("coverUrl", ""),
+            "name": book.get("name", ""),
+            "author": book.get("author", ""),
+            "intro": book.get("intro", ""),
+            "bookStatus": book.get("bookStatus", ""),
+            "totalChaptersAtSubscribe": book.get("totalChaptersAtSubscribe", 0),
+            "startChapterIndex": book.get("startChapterIndex", 1),
+            "autoArchiveOnComplete": book.get("autoArchiveOnComplete", True),
+            "primarySourceId": book.get("primarySourceId", ""),
+            "primarySourceName": book.get("primarySourceName", ""),
+            "primaryBookId": book.get("primaryBookId", ""),
+            "primaryBookUrl": book.get("primaryBookUrl", ""),
+            "primaryTocUrl": book.get("primaryTocUrl", ""),
+            "supplementSourceConfig": (
+                __import__("json").loads(book.get("settingsJson", "") or "{}").get("supplementSourceConfig", {})
+                if book.get("settingsJson", "")
+                else {}
+            ),
+        },
     }
 
 
@@ -181,7 +154,8 @@ def list_library_book_chapters(request: Request, aggregate_book_id: str, limit: 
         rows = conn.execute(
             """
             SELECT chapter_id, source_chapter_id, chapter_index, title, status, placeholder,
-                   content_length, content_file_path, processed_content, last_processed_at
+                   content_length, content_file_path, processed_content, last_processed_at,
+                   source_word_count, preview_only, primary_source_chapter_url
             FROM aggregate_chapter_tasks
             WHERE aggregate_book_id = ?
             ORDER BY COALESCE(chapter_index, 999999), created_at
@@ -201,6 +175,9 @@ def list_library_book_chapters(request: Request, aggregate_book_id: str, limit: 
             "contentFilePath": row[7] or "",
             "hasContent": bool(row[8]),
             "processedAt": row[9] or "",
+            "sourceWordCount": int(row[10] or 0),
+            "previewOnly": bool(row[11]),
+            "primarySourceChapterUrl": row[12] or "",
         }
         for row in rows
     ]

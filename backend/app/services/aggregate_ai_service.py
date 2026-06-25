@@ -82,21 +82,33 @@ class AggregateAIService:
         title: str,
         content: str,
     ) -> dict[str, Any]:
-        """Process an official-source chapter that has full content.
-
-        First version: lightweight cleanup only. AI analysis is planned but
-        not executed (``plannedAnalysis=True``).
-        """
+        """Process an official-source chapter that has full content."""
         cleaned = _purify_lightweight(content)
+        user_prompt = (
+            f"书名：{book_name}\n"
+            f"作者：{author}\n"
+            f"章节标题：{title}\n\n"
+            f"--- 章节正文 ---\n{cleaned}\n\n"
+            "请整理出最终章节正文。"
+            "只保留小说正文，去除广告、站点提示和重复内容。"
+            "不新增无依据的剧情，只做格式整理、敏感词恢复和错字修正。"
+            f"{_SELF_RATING_INSTRUCTION}"
+        )
+        blocked = self._scan_blocked_words(cleaned)
+        if blocked:
+            user_prompt += "\n\n" + blocked
+
+        result, self_score = await self._call_ai(user_prompt)
         return {
             "status": "processed",
-            "content": cleaned,
-            "aiModel": "",
-            "promptTokens": 0,
-            "completionTokens": 0,
-            "totalTokens": 0,
-            "latencyMs": 0,
-            "plannedAnalysis": True,
+            "content": result.content,
+            "selfScore": self_score if self_score is not None else 0.0,
+            "aiModel": result.model,
+            "promptTokens": result.prompt_tokens,
+            "completionTokens": result.completion_tokens,
+            "totalTokens": result.total_tokens,
+            "latencyMs": result.latency_ms,
+            "plannedAnalysis": False,
         }
 
     # ── official preview + candidate aggregation ──────────────────────────
