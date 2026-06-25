@@ -68,6 +68,8 @@ ALTER TABLE aggregate_book_tasks ADD COLUMN failed_chapters INTEGER DEFAULT 0;
 ALTER TABLE aggregate_book_tasks ADD COLUMN total_tokens INTEGER DEFAULT 0;
 ALTER TABLE aggregate_book_tasks ADD COLUMN ai_enabled INTEGER DEFAULT 0;
 ALTER TABLE aggregate_book_tasks ADD COLUMN last_processed_at TEXT;
+ALTER TABLE aggregate_book_tasks ADD COLUMN source_map_json TEXT;       -- 第三方源搜索缓存
+ALTER TABLE aggregate_book_tasks ADD COLUMN source_map_updated_at TEXT; -- sourceMap 更新时间
 
 ALTER TABLE aggregate_chapter_tasks ADD COLUMN ai_model TEXT;
 ALTER TABLE aggregate_chapter_tasks ADD COLUMN ai_prompt_tokens INTEGER DEFAULT 0;
@@ -80,6 +82,11 @@ ALTER TABLE aggregate_chapter_tasks ADD COLUMN source_alignment_json TEXT;
 ALTER TABLE aggregate_chapter_tasks ADD COLUMN retry_count INTEGER DEFAULT 0;
 ALTER TABLE aggregate_chapter_tasks ADD COLUMN next_retry_time TEXT;
 ALTER TABLE aggregate_chapter_tasks ADD COLUMN last_error_code TEXT;
+ALTER TABLE aggregate_chapter_tasks ADD COLUMN official_word_count INTEGER;   -- 官方接口返回字数
+ALTER TABLE aggregate_chapter_tasks ADD COLUMN fetched_word_count INTEGER;    -- 实际拉取字数
+ALTER TABLE aggregate_chapter_tasks ADD COLUMN completeness_checked INTEGER DEFAULT 0; -- 是否已完成完整性检查
+ALTER TABLE aggregate_chapter_tasks ADD COLUMN attribution_passed INTEGER DEFAULT 0;   -- 校对是否通过
+ALTER TABLE aggregate_chapter_tasks ADD COLUMN stage TEXT DEFAULT 'fetched';  -- 'fetched' | 'completing' | 'proofreading' | 'post_processing' | 'processed' | 'fallback' | 'error'
 ```
 
 并发处理约束：
@@ -126,7 +133,7 @@ CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     source_chapter_id TEXT,
     chapter_index INTEGER,
     title TEXT,
-    status TEXT DEFAULT 'pending',            -- 'pending' | 'fetching' | 'ai_processing' | 'processed' | 'error' | 'skipped' | 'fallback'
+    status TEXT DEFAULT 'fetched',            -- 'fetched' | 'completing' | 'proofreading' | 'post_processing' | 'processed' | 'fallback' | 'error' | 'skipped'
     content_length INTEGER DEFAULT 0,
     processed_content TEXT,
     last_processed_at TEXT,
@@ -138,10 +145,32 @@ CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     ai_latency_ms INTEGER DEFAULT 0,
     deviation_score REAL DEFAULT 0.0,         -- 偏差值 0~1
     fallback_source_id TEXT,                  -- 最终回退来源
+    source_alignment_json TEXT,               -- 章节对齐/来源决策记录
+    retry_count INTEGER DEFAULT 0,
+    next_retry_time TEXT,
+    last_error_code TEXT,
+    official_word_count INTEGER,              -- 官方接口返回字数
+    fetched_word_count INTEGER,               -- 实际拉取字数
+    completeness_checked INTEGER DEFAULT 0,   -- 是否已完成完整性检查
+    attribution_passed INTEGER DEFAULT 0,     -- 校对归属校验是否通过
+    stage TEXT DEFAULT 'fetched',             -- 当前所处生命周期阶段
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
 ```
+
+状态语义更新：
+
+| 状态 | 含义 |
+|------|------|
+| `fetched` | Stage 1 已完成，已拉取主源正文 |
+| `completing` | Stage 2 完整性补全中 |
+| `proofreading` | Stage 3 校对中 |
+| `post_processing` | Stage 4 后处理中 |
+| `processed` | 全部阶段完成 |
+| `fallback` | 处理失败但已有可用正文 |
+| `error` | 无可用正文 |
+| `skipped` | 特殊章节跳过 |
 
 ### 4.3 AI 调用明细表（`aggregate_ai_usage`）
 
@@ -175,6 +204,35 @@ CREATE TABLE IF NOT EXISTS aggregate_settings (
 );
 ```
 
+### 4.5 第三方源搜索缓存表（`aggregate_source_map`）
+
+`sourceMap` 主存储在 `metadata.json`，数据库表作为索引和搜索缓存，便于快速查询某书在某源上的详情页。
+
+```sql
+CREATE TABLE IF NOT EXISTS aggregate_source_map (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aggregate_book_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    book_url TEXT NOT NULL,
+    score INTEGER DEFAULT 0,
+    last_chapter TEXT,
+    progress INTEGER DEFAULT 0,
+    search_tier TEXT DEFAULT 'tier1',         -- 'tier1' | 'tier2'
+    matched_at TEXT,
+    search_failed_at TEXT,
+    search_fail_count INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(aggregate_book_id, source_id)
+);
+```
+
+设计说明：
+
+- 与 `metadata.json` 的 `sourceMap` 保持同步；写入时双写，读取时以 `metadata.json` 为准。
+- `search_failed_at` / `search_fail_count` 用于失败退避。
+- `search_tier` 用于分级搜索策略。
+
 ---
 
 ## 5. 设置 Schema
@@ -203,6 +261,17 @@ CREATE TABLE IF NOT EXISTS aggregate_settings (
   "includePreviousChapters": 3,
   "deviationThreshold": 0.90,
 
+  "completenessRatio": 0.85,
+  "minChapterLength": 200,
+  "sourceSearchEnabled": true,
+  "sourceSearchTier": "tier1",
+  "sourceSearchConcurrency": 5,
+  "sourceSearchCacheTtlHours": 24,
+  "sourceFetchConcurrency": 5,
+  "agentMaxSteps": 5,
+  "agentAttributionThreshold": 0.85,
+  "agentSelfRatingThreshold": 0.85,
+
   "promptTemplate": "...",
   "systemPrompt": "..."
 }
@@ -220,6 +289,16 @@ CREATE TABLE IF NOT EXISTS aggregate_settings (
 | `sensitiveLexiconPath` | string | `backend/data/lexicons/Sensitive-lexicon` | 本地敏感词库路径，默认使用 `konsheng/Sensitive-lexicon` 的本地副本。 |
 | `includePreviousChapters` | int | 3 | AI 处理时携带前几章已处理内容作为校准。 |
 | `deviationThreshold` | float | 0.90 | 偏差值阈值，可选 0.95 / 0.90 / 0.80。 |
+| `completenessRatio` | float | 0.85 | 实际字数 / 官方字数 >= 该值视为完整。 |
+| `minChapterLength` | int | 200 | 无官方字数时的最小完整章节长度。 |
+| `sourceSearchEnabled` | bool | true | 订阅时是否自动搜索第三方源。 |
+| `sourceSearchTier` | string | `tier1` | 默认搜索的书源分级：`tier1` / `tier2` / `all`。 |
+| `sourceSearchConcurrency` | int | 5 | 全源搜索并发数。 |
+| `sourceSearchCacheTtlHours` | int | 24 | sourceMap 缓存 TTL。 |
+| `sourceFetchConcurrency` | int | 5 | Stage 1 主源正文拉取并发数。 |
+| `agentMaxSteps` | int | 5 | 单个 Stage 内 Agent 最大步数。 |
+| `agentAttributionThreshold` | float | 0.85 | 归属校验通过阈值。 |
+| `agentSelfRatingThreshold` | float | 0.85 | 后处理自评通过阈值。 |
 | `promptTemplate` | string | - | 用户 prompt 模板。 |
 | `systemPrompt` | string | - | 系统 prompt。 |
 
@@ -513,7 +592,11 @@ MODEL_CONTEXT_LENGTHS = {
 
 ---
 
-## 7. 主源选择策略
+## 7. 主源选择与章节对齐
+
+> 本章规则是 §8 四阶段流程的组成部分：
+> - §7.1~§7.3 的主源选择属于 **Stage 1: 订阅初始化**。
+> - §7.4 的跨书源章节对齐属于 **Stage 2: 完整性补全** 中 `align_chapter` tool 的实现细节。
 
 ### 7.1 默认规则
 
@@ -649,178 +732,399 @@ def _extract_chapter_number(last_chapter: str) -> int:
 
 ---
 
-## 8. AI 处理流程
+## 8. Agent 驱动的章节处理流程
 
-### 8.1 单章处理状态机
+本章描述订阅加入后的完整生命周期。核心变化：把“主源拉取 → 候选源补充 → AI 整理”的硬编码流水线，改为 **Agent 决策 + Tools 调用** 的四阶段模型。基础拉取（Stage 1）保持确定性；完整性补全、校对、后处理三个阶段由 Agent 通过 Tools 完成。
 
+### 8.1 订阅生命周期四阶段
+
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│  Stage 1: 订阅初始化（Subscription Bootstrap）                       │
+│  - 选定主源                                                          │
+│  - 拉取全书目录 + 全部章节正文（含 preview）                         │
+│  - 并发搜索全部书源，缓存每本书的详情页 URL（sourceMap）             │
+│  - 写入 metadata.json / process.jsonl / aggregate_book_tasks         │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  Stage 2: 完整性补全（Completeness Completion）                      │
+│  - 用官方字数 vs 实际拉取字数判断完整性                              │
+│  - 不完整时 Agent 调用 source tool 从第三方源拉取                    │
+│  - 输出完整或尽力补全的正文                                          │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  Stage 3: 校对（Proofreading / Attribution）                         │
+│  - Agent 判断章节是否确实属于本书                                    │
+│  - 发现串书/错误时，调用 source tool 换源重拉                        │
+│  - 输出 content_approved 或 fallback                                 │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  Stage 4: 后处理（Post-processing）                                  │
+│  - Agent 决定是否需要净化、去屏蔽词、校对整理                        │
+│  - 每个动作对应一个 tool，按需调用                                   │
+│  - 输出最终 .md 文件                                                 │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-pending -> fetching -> ai_processing -> processed
-                              |
-                              v
-                           fallback
-                              |
-                              v
-                           error
+
+### 8.2 Stage 1: 订阅初始化
+
+#### 8.2.1 主源选择
+
+- 默认官方源优先。
+- 若用户配置了 `sourcePriority`，按优先级选第一个可用源。
+- 主源一旦选定，在订阅生命周期内不随意变更；仅当主源整书失效（目录不可达、全部章节为空）时才允许重新竞选。
+
+#### 8.2.2 全书目录与正文拉取
+
+- **目录**：一次性拉取全书目录，写入 `aggregate_chapter_tasks`。
+- **正文**：并发拉取全部章节正文，允许 preview/不完整。
+- 每章记录：
+  - `official_word_count`：官方接口返回的本章字数（优先使用）。
+  - `fetched_word_count`：实际拉取到的正文字数。
+  - `content`：原始正文（可为 preview）。
+  - 状态初始为 `fetched`。
+
+字数统计规则：
+
+```python
+def count_chinese_chars(text: str) -> int:
+    """统计中文字符、常见标点、数字、ASCII 单词，忽略纯空白。"""
+    ...
 ```
 
-### 8.2 处理步骤
+#### 8.2.3 全书源搜索与 sourceMap
 
-1. **拉取主源章节** → 状态 `fetching`。
-2. **判断主源内容完整性**：
-   - 若主源内容过短（如 < 200 字）且存在 VIP/付费标识，标记为「主源不完整」。
-3. **补充候选源**（仅当主源不完整时）：
-   - 按评分从高到低拉取其他候选源同章节。
-   - 选择内容最长且无明显乱码的作为补充。
-4. **传统净化**：空行压缩、去广告关键词。
-5. **敏感词候选定位**：
-   - 先用本地敏感词词库扫描原文，定位可能被 `*`、`□`、`x`、空格、谐音或拆字屏蔽的位置。
-   - 词库主要来源使用 [konsheng/Sensitive-lexicon](https://github.com/konsheng/Sensitive-lexicon) 的本地副本。
-   - 扫描结果只作为候选提示，不直接替换正文，避免机械误恢复。
-6. **组装 Prompt**：
-   - system prompt + 用户配置的系统提示词。
-   - user prompt 中包含书名、作者、章节标题、前文参考、当前正文。
-   - 当启用敏感词恢复时，同时传入敏感词候选、屏蔽位置和上下文片段，让 AI 结合语义做最终恢复。
-7. **AI 调用** → 状态 `ai_processing`。
-8. **结果校验**：
-   - 官方完整正文场景：使用原文相似度校验，防止 AI 过度改写。
-   - 第三方补全文 / 敏感词恢复场景：使用语义一致性 + 多源相似性校验，防止把正确补全误判为偏差过大。
-   - 校验不通过时按失败分类进入重试或回退。
-9. **写入结果**：
-   - `processed_content` 入库。
-   - 生成 `{index:06d} {title}.md` 明文文件。
-10. **更新统计**：token、耗时、状态、偏差值。
+订阅初始化阶段，除了拉取主源，还要**并发搜索全部已启用书源**，找到本书在第三方源上的详情页地址。
 
-### 8.2.1 AI 调用时机
-
-不同正文来源使用不同处理路径，避免 AI 凭空补写。
-
-1. **官方完整正文**
-   - 官方源有完整正文时，先将官方正文做轻量清洗后直接写入本地 Markdown。
-   - 写入后再异步调用 AI 做一次简单判断分析，检查敏感词、乱码、广告残留、明显错字和分段问题。
-   - AI 分析结果通过校验后，可以覆盖本地文件；不通过时保留已写入的官方正文。
-   - 这个路径不读取第三方正文，不做跨源聚合。
-
-2. **官方不完整，但第三方通过章节校验**
-   - 只能使用官方预览正文和已经通过章节对齐校验的候选源正文。
-   - 调用 AI 做聚合补全文、敏感词恢复和整理。
-   - Prompt 必须明确禁止凭空想象内容；未在输入正文中出现或无法从上下文确定的内容不得新增。
-   - AI 输出必须通过语义一致性和多源相似性校验。
-
-3. **第三方主源**
-   - 每章处理前先调用 AI 做正文归属校验，判断该章节是否确实属于这本书。
-   - 归属校验通过后，再调用 AI 做敏感词恢复、去广告和简单整理。
-   - 归属校验不通过时，尝试其他候选源；无可用候选源时进入 `fallback/error`。
-
-### 8.2.2 敏感词词库与恢复链路
-
-敏感词恢复采用「词库定位 + AI 语义恢复」两阶段，而不是让 AI 凭空猜。
-
-主要词库：
-
-- 仓库：[konsheng/Sensitive-lexicon](https://github.com/konsheng/Sensitive-lexicon)
-- 许可：MIT
-- 用途：作为本地敏感词、变体词、风险词候选来源。
-
-落地方式：
-
-1. 将词库作为本地资源放入 `backend/data/lexicons/Sensitive-lexicon`，不在运行时依赖网络。
-2. 启动时加载词库并构建 Trie / DFA 匹配结构，避免每章重复解析文件。
-3. 扫描正文中的明显屏蔽符号：`*`、`＊`、`□`、`x`、`X`、空格拆字、同音替代、形近字替代。
-4. 对每个疑似屏蔽位置截取前后上下文，结合词库命中候选生成 `blocked_word_candidates`。
-5. Prompt 中把候选词作为「参考候选」传给 AI，要求 AI 只在上下文充分支持时恢复。
-6. AI 输出后再次做偏差值校验，避免敏感词恢复导致剧情或语义过度改写。
-7. 记录每章恢复统计：候选数量、AI 采用数量、低置信度跳过数量。
-
-候选结构示例：
+搜索结果写入 `metadata.json` 的 `sourceMap`：
 
 ```json
 {
-  "blockedWordCandidates": [
-    {
-      "offset": 128,
-      "maskedText": "杀*",
-      "contextBefore": "他眼中闪过一丝",
-      "contextAfter": "意，手中长剑出鞘",
-      "candidates": ["杀意"],
-      "confidence": 0.72
+  "sourceMap": {
+    "kks101_com": {
+      "bookUrl": "https://kks101.com/book/12345",
+      "score": 120,
+      "lastChapter": "第 388 章 风起",
+      "progress": 388,
+      "matchedAt": "2026-06-25T10:00:00Z",
+      "searchTier": "tier1"
     }
-  ]
+  }
 }
 ```
 
-安全规则：
+搜索阶段**不拉取第三方正文**，只存详情页 URL、评分、进度等元数据。
 
-- 词库命中不等于自动替换。
-- 无上下文支持的候选必须跳过。
-- 多候选冲突时交给 AI 判断；AI 无法判断时保留原文。
-- 官方源完整正文只做轻量敏感词恢复与整理，不引入第三方正文。
+#### 8.2.4 书源过多处理策略
 
-### 8.2.3 处理窗口与队列策略
+当已启用书源数量较多时（>20），需要避免全量并发搜索导致被封 IP 或任务耗时过长。
 
-后端不能在一本书加入后一次性抓取和处理全部章节。目录可以刷新完整列表，但正文抓取、AI 调用、文件写入必须按窗口推进。
+| 策略 | 说明 |
+|---|---|
+| **分级搜索** | 书源按质量分为 `tier1`（官方/大站）和 `tier2`（小站/镜像）。订阅时只搜 `tier1`；`tier2` 在补全失败时按需搜索。 |
+| **缓存 TTL** | `sourceMap` 缓存 24h~7d，避免同一本书频繁全量搜索。 |
+| **并发限制** | 全源搜索全局并发 <= 5，单源失败不影响其他源。 |
+| **失败退避** | 源搜索失败时记录 `search_failed_at`，下次延长重试间隔。 |
+| **用户白名单** | 设置中可指定“仅搜索”“不用于聚合”的书源。 |
+
+#### 8.2.5 处理窗口调整
+
+Stage 1 允许一次性拉取全书目录和正文（IO 密集，成本低）。Stage 2~4 的 AI 处理仍按窗口推进，避免一次性发起大量 AI 调用。
 
 已确认规则：
 
-- 目录刷新可以全量获取，但正文抓取每次只处理一个小窗口。
-- 首次加入默认处理前 5 章。
-- 阅读端打开聚合章节时，第一版直接返回本地生成的占位 Markdown 文件，不做同步等待。
-- 阅读端自动缓存后续章节时，也返回对应占位 Markdown；后台 worker 按窗口自然处理，不为阅读缓存请求额外插队。
-- 后台每本书每轮最多处理 5 章。
+- 目录刷新可以全量获取。
+- Stage 1 正文拉取可一次性完成，但需控制并发（建议每源 <= 5）。
+- Stage 2~4 每轮最多处理 5 章。
 - 优先级：用户手动重试 > 新增章节 > 历史待处理章节 > 失败重试到期章节。
-- 一本书处理完当前窗口后释放 worker，让队列里的下一本书继续推进。
 
-暂不采用的方案：
+### 8.3 Stage 2: 完整性补全
 
-- 不在章节读取接口中等待 AI 处理完成后再返回，避免阅读端请求长时间挂起。
-- 不在第一版加入复杂的「当前阅读章优先」机制；该机制需要额外维护阅读触发时间、缓存预取识别、优先级队列和抢占规则，后续确认有必要再加。
+#### 8.3.1 完整性判断
 
-### 8.3 失败降级
-
-当 AI 调用最终失败或偏差值持续不达标时：
-
-1. 返回主源原始内容。
-2. 若主源内容不完整，返回最高评分第三方源内容。
-3. 在正文结尾追加：
-
-```markdown
-
----
-
-【聚合处理提示】当前章节 AI 处理失败，来源：{source_id}。已返回原始内容，可稍后重试。
+```python
+def is_chapter_complete(fetched_content: str, official_word_count: int | None) -> bool:
+    fetched_count = count_chinese_chars(fetched_content)
+    if official_word_count and official_word_count > 0:
+        ratio = fetched_count / official_word_count
+        return ratio >= COMPLETENESS_RATIO  # 默认 0.85，可配置
+    return fetched_count >= MIN_CHAPTER_LENGTH  # 兜底 200 字
 ```
 
-### 8.3.1 失败分类与重试退避
+- 官方字数 > 0 时，以字数比例为准。
+- 官方无字数时，以绝对长度兜底。
+- 特殊章节（番外、上架感言、请假条）跳过完整性补全。
 
-失败不能只记录字符串，需要可统计、可重试、可展示的错误码。
+#### 8.3.2 补全 Agent Loop
 
-错误码：
+不完整的章节进入补全 Agent。Agent 根据当前状态选择调用 source tool 拉取第三方正文，或结束补全。
+
+```text
+1. 读取 sourceMap，按评分/进度排序候选源。
+2. 选择下一个未尝试的候选源。
+3. 调用 fetch_chapter_from_source(source_id, book_url, chapter_index, title)。
+4. 调用 align_chapter(candidate_content, official_preview, title) 判断是否同一章。
+5. 若对齐通过 → aggregate_contents 或直接采用，结束 Stage 2。
+6. 若未通过 → 回到步骤 2，直到候选源耗尽。
+7. 全部失败 → 标记 `completeness_failed`，携带最佳可用内容进入 Stage 3（校对 agent 决定）。
+```
+
+#### 8.3.3 Stage 2 Tools
+
+| Tool | 输入 | 输出 |
+|---|---|---|
+| `fetch_chapter_from_source` | `source_id`, `book_url`, `chapter_index`, `title` | 第三方源对应章节正文、URL、字数 |
+| `align_chapter` | `candidate_content`, `official_preview`, `title` | `is_same`, `confidence`, `reason` |
+| `aggregate_contents` | `contents: list[str]`, `official_preview: str` | 聚合后的完整正文 |
+| `self_rate` | `content` | `score`, `reason` |
+
+### 8.4 Stage 3: 校对
+
+所有章节（无论 Stage 2 是否补全）都进入校对 Agent。
+
+#### 8.4.1 校对 Agent Loop
+
+```text
+1. 调用 attribution_check(content, book_name, author, title, previous_context)。
+2. 若 confidence >= threshold → 通过，进入 Stage 4。
+3. 若 confidence < threshold → 可能串书/广告正文/严重错误。
+   a. 调用 find_alternative_source(chapter_index, excluded_source_ids)。
+   b. 调用 fetch_chapter_from_source 拉取新源正文。
+   c. 再次 attribution_check。
+4. 多次失败后 → fallback（写入最佳可用内容 + 提示）。
+```
+
+#### 8.4.2 归属校验
+
+归属校验返回结构化结果：
+
+```json
+{
+  "belongsToBook": true,
+  "confidence": 0.94,
+  "reason": "主角名、章节标题和前文事件连续",
+  "issues": []
+}
+```
+
+校验重点：
+
+- 主角名、核心设定是否一致。
+- 上下文事件是否衔接。
+- 章节标题是否匹配。
+- 叙事风格是否明显不同。
+- 是否混入其他小说正文或广告正文。
+
+#### 8.4.3 Stage 3 Tools
+
+| Tool | 输入 | 输出 |
+|---|---|---|
+| `attribution_check` | `content`, `book_name`, `author`, `title`, `previous_context` | `belongsToBook`, `confidence`, `reason`, `issues` |
+| `find_alternative_source` | `chapter_index`, `excluded_source_ids` | 新的可用源及 `book_url` |
+| `fetch_chapter_from_source` | 同上 | 同上 |
+
+### 8.5 Stage 4: 后处理
+
+校对通过后，进入后处理 Agent。后处理 Agent 根据正文内容决定调用哪些 tools。
+
+#### 8.5.1 后处理 Agent Loop
+
+```text
+1. detect_blocked_words(content) → 有候选则 unmask_blocked_words。
+2. purify(content) → 去广告、去站点提示、规范化格式。
+3. proofread(content, previous_context) → 错字修正、分段整理。
+4. self_rate(content) → score >= 0.85 可结束。
+5. score < 0.85 时，可再次 proofread 或接受当前结果（记录提示）。
+```
+
+后处理 Agent 不一定需要 LLM 决策；第一阶段可用固定规则链，后续再升级为 LLM 决策。
+
+#### 8.5.2 Stage 4 Tools
+
+| Tool | 输入 | 输出 |
+|---|---|---|
+| `purify` | `content` | 去广告、去站点提示、压缩空行后的正文 |
+| `detect_blocked_words` | `content` | 屏蔽词候选列表 |
+| `unmask_blocked_words` | `content`, `candidates` | 恢复屏蔽词后的正文 |
+| `proofread` | `content`, `previous_context` | 错字修正、格式整理后的正文 |
+| `self_rate` | `content` | `score`, `reason` |
+
+### 8.6 Source Tool / MCP-like 书源工具接口
+
+为了让 Agent 能够调用书源，需要把书源访问封装成统一的工具接口。Agent 不需要知道书源插件、登录、反爬等细节，只通过标准接口请求数据。
+
+#### 8.6.1 设计目标
+
+- Agent 只调用高层工具函数，不直接访问插件。
+- 所有书源访问走统一入口，便于缓存、限流、重试、审计。
+- 未来新增书源时，只需在 Source Tool 层注册，不需要改 Agent 逻辑。
+- 接口设计参考 MCP（Model Context Protocol）的 tool 调用语义。
+
+#### 8.6.2 接口定义
+
+```python
+class SourceTool:
+    """MCP-like interface exposed to the chapter processing agent."""
+
+    async def search_book(
+        self,
+        query: str,
+        author: str | None = None,
+        source_ids: list[str] | None = None,
+    ) -> list[SourceBookResult]:
+        """Search for a book across sources."""
+
+    async def get_book_detail(
+        self,
+        source_id: str,
+        book_url: str,
+    ) -> SourceBookDetail:
+        """Fetch book detail page metadata."""
+
+    async def get_chapter_list(
+        self,
+        source_id: str,
+        book_url: str,
+    ) -> list[SourceChapterItem]:
+        """Fetch full chapter list from a source."""
+
+    async def get_chapter_content(
+        self,
+        source_id: str,
+        chapter_url: str,
+    ) -> SourceChapterContent:
+        """Fetch a single chapter's raw content."""
+```
+
+Agent 实际调用的 tool 函数更精简：
+
+```python
+async def fetch_chapter_from_source(
+    source_id: str,
+    book_url: str,
+    chapter_index: int,
+    chapter_title: str,
+) -> dict:
+    """
+    Tool exposed to agent.
+    Returns {
+        "sourceId": "...",
+        "chapterUrl": "...",
+        "title": "...",
+        "content": "...",
+        "wordCount": 3500,
+        "fetchedAt": "..."
+    }
+    """
+```
+
+#### 8.6.3 Source Tool 与 Agent 的集成
+
+```text
+┌─────────────────────────────────────────┐
+│         ChapterProcessingAgent          │
+│  - 维护 state                           │
+│  - 调用 LLM 或规则决策                  │
+│  - 调度 tools                           │
+└─────────────────────────────────────────┘
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+┌────────────┐ ┌──────────┐ ┌──────────┐
+│ SourceTool │ │ AI Tools │ │ Text Ops │
+└────────────┘ └──────────┘ └──────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│     Source Plugin Runtime           │
+│  - 登录态管理                       │
+│  - 缓存                             │
+│  - 限流/重试                        │
+└─────────────────────────────────────┘
+```
+
+### 8.7 Agent 决策模型
+
+#### 8.7.1 阶段内决策
+
+- **Stage 2 补全**、**Stage 3 校对** 建议由 LLM 决策（选择哪个源、是否通过对齐结果、是否换源）。
+- **Stage 4 后处理** 第一阶段可用规则链，后续升级为 LLM 决策。
+
+#### 8.7.2 决策 Prompt 结构
+
+```markdown
+你是小说章节处理协调器。当前任务：{stage}
+
+书籍信息：
+- 书名：{book_name}
+- 作者：{author}
+- 章节：{chapter_index} {title}
+
+当前状态：
+- 已处理步数：{step_count}
+- 当前正文来源：{source_trace}
+- 当前质量分：{current_score}
+- 可用 tools：{tool_descriptions}
+
+请输出下一步要调用的 tool：
+{"tool": "...", "input": {...}, "reason": "..."}
+或输出 {"tool": "finish", "reason": "..."}
+```
+
+### 8.8 失败降级与重试
+
+#### 8.8.1 失败分类
+
+在 Agent 模型下，失败分类需要扩展：
 
 | 错误码 | 场景 | 默认处理 |
 |--------|------|----------|
-| `SOURCE_EMPTY_CONTENT` | 书源返回空正文 | 换候选源；无候选源则 `error`。 |
+| `SOURCE_EMPTY_CONTENT` | 书源返回空正文 | 换源；无源则 fallback。 |
 | `SOURCE_TIMEOUT` | 拉取正文超时 | 延迟重试。 |
-| `SOURCE_AUTH_REQUIRED` | 官方源需要登录/购买 | 尝试候选源补充；保留提示。 |
-| `ALIGNMENT_LOW_CONFIDENCE` | 候选源章节对齐失败 | 不跨源补充，返回主源内容或错误。 |
+| `SOURCE_AUTH_REQUIRED` | 官方源需要登录/购买 | 尝试候选源补充。 |
+| `SOURCE_SEARCH_FAILED` | 源搜索失败 | 记录失败时间，延长重试。 |
+| `ALIGNMENT_LOW_CONFIDENCE` | 候选源章节对齐失败 | 换源或 fallback。 |
+| `ATTRIBUTION_LOW_CONFIDENCE` | 校对归属校验失败 | 换源或 fallback。 |
 | `AI_RATE_LIMITED` | AI endpoint 限流 | 延迟重试。 |
 | `AI_TIMEOUT` | AI 请求超时 | 延迟重试。 |
-| `AI_BAD_REQUEST` | 请求体或模型参数错误 | 不自动重试，要求用户检查设置。 |
-| `AI_OUTPUT_DEVIATION` | 偏差值过低 | 调整 prompt 后重试，超过次数回退。 |
+| `AI_BAD_REQUEST` | 请求体或模型参数错误 | 不自动重试。 |
+| `AI_OUTPUT_DEVIATION` | 偏差值过低 | 调整 prompt 后重试。 |
 | `FILE_WRITE_FAILED` | Markdown 写入失败 | 保留数据库结果，提示文件写入失败。 |
 
-已确认退避规则：
+#### 8.8.2 重试退避
 
 - 单章自动重试最多 5 次。
-- 重试等待时间依次叠加：第 1 次 5 分钟、第 2 次 15 分钟、第 3 次 30 分钟、第 4 次 60 分钟、第 5 次 120 分钟。
-- `AI_BAD_REQUEST` 这类明显配置错误可以直接进入失败，避免重复消耗请求。
-- 5 次重试后仍失败时，章节不返回空内容，进入 `fallback`。
-- `fallback` 内容优先使用官方源可用正文；官方源不可用或不完整时，使用已经通过章节对齐校验的候选源正文。
-- 进入 `fallback` 后，在章节末尾追加聚合处理提示，说明 AI 处理失败以及最终采用的正文来源。
-- 第一次 AI 处理失败且已经存在可用正文源时，就应立即用 `fallback` 正文替换本地占位文件，让用户先读到可用内容。
-- 后续重试仍继续进行；如果后续 AI 处理成功，再用最终 AI 整理正文覆盖之前的 `fallback` 文件。
-- `fallback` 是可读降级态，不是最终失败态；只有重试次数耗尽且仍无可用正文时，才进入不可读 `error`。
-- 单本书连续失败章节过多时，书籍状态标记为 `error`，但不影响其他书继续排队。
+- 退避时间：5min / 15min / 30min / 60min / 120min。
+- Stage 2 和 Stage 3 的“换源重试”不计入 AI 调用重试次数，但单源失败次数过多时标记该源为不可靠。
+- 第一次 AI 处理失败且存在可用正文源时，立即写入 `fallback` 正文替换占位文件。
+- 5 次 AI 重试后仍失败，保留 `fallback`；无可用正文时进入 `error`。
 
-### 8.4 分段策略
+### 8.9 偏差值校验
+
+#### 8.9.1 官方完整正文校验
+
+当 Stage 2 未触发补全（主源完整）时，AI 输出应与主源原文保持高相似度。
+
+偏差值 = 代码相似度 × 0.7 + AI 自评分映射 × 0.3
+
+- 代码相似度：去除空格标点后的 LCS / SequenceMatcher。
+- AI 自评分映射：`score = 1 - (rating - 1) / 9`。
+
+#### 8.9.2 第三方补全校验
+
+当 Stage 2 触发补全时，不能只看字面相似度，应使用语义一致性 + 多源互相相似性。
+
+- `semanticConfidence >= 0.85`。
+- AI 输出与至少一个已对齐候选源相似度 `>= 0.75`。
+- 官方预览可用时，AI 输出必须语义覆盖预览关键事件。
+
+### 8.10 分段策略
 
 - 计算 prompt token（系统 prompt + 前文 + 当前正文）。
 - 若总 token ≤ `modelContextLength * maxContextUseRatio`，整章一次性发送。
@@ -829,16 +1133,14 @@ pending -> fetching -> ai_processing -> processed
   - 每段仍携带标题与最小前文提示。
   - 结果按顺序拼接。
 - 若单段仍超限，按句子切分（尽量避免）。
-- 除非正文过长、超过模型上下文限制，或多源正文分段差异过大，不要主动重分段。
 - 官方完整正文路径下，默认保留官方原始分段，只做空行压缩、明显广告清理和轻微格式整理。
 - 多源补全文路径下，优先选择最可靠正文源的分段作为基准；只有多个来源分段冲突严重时，才让 AI 做保守分段整理。
-- 分段结果不作为评论锚点的唯一依据，评论锚点以官方/评论来源段落为准，通过模糊匹配关联到聚合正文。
 
-### 8.5 前文校准
+### 8.11 前文校准
 
 处理第 N 章时，从 `aggregate_chapter_tasks` 读取本书前 `includePreviousChapters` 章的已处理内容，截取末尾约 500~1000 字作为 `context`，帮助 AI 保持人名、地名、文风一致。
 
-### 8.6 目录变更与断更恢复
+### 8.12 目录变更与断更恢复
 
 聚合任务需要能长期跟随连载书更新，因此目录刷新不能简单覆盖历史状态。
 
@@ -846,11 +1148,11 @@ pending -> fetching -> ai_processing -> processed
 
 1. 章节目录永远以主源为准。官方源存在时以官方源为主源；官方源不存在时，以评选出来的第三方主源为准。
 2. 每次刷新目录时，将当前主源目录视为权威目录，对聚合章节表和本地 Markdown 文件做同步。
-3. 主源新增章节时，新增对应 `aggregate_chapter_tasks`，状态为 `pending`。
+3. 主源新增章节时，新增对应 `aggregate_chapter_tasks`，状态为 `fetched`，等待 Stage 2~4 处理。
 4. 主源章节标题变更时，更新数据库标题；如该章节已写入本地 Markdown，需要按新标题重新生成文件路径。
 5. 主源章节索引变更时，更新 `chapter_index`，并按新索引重新生成文件路径。
-6. 主源章节仍存在但 `source_chapter_id` 变化时，标记该聚合章节为 `pending`，按新主源章节重新处理。
-7. 主源章节不存在时，对应聚合章节和本地 Markdown 不继续保留旧结果；实现时可以直接删除对应文件和任务，也可以标记为 `pending` 后按新目录重新映射处理。
+6. 主源章节仍存在但 `source_chapter_id` 变化时，标记该聚合章节为 `fetched`，按新主源章节重新处理。
+7. 主源章节不存在时，对应聚合章节和本地 Markdown 不继续保留旧结果；实现时可以直接删除对应文件和任务，也可以标记为 `fetched` 后按新目录重新映射处理。
 8. 主源切换后，目录和后续处理全部以新主源为准；受影响章节需要重新建立映射，已不匹配的本地文件删除或重新处理。
 9. 断更后恢复更新时，以主源最新目录追加新章，并按同一套规则处理标题、索引和消失章节。
 
@@ -1098,7 +1400,7 @@ Tab 4「设置」：
 |------|------|--------|------|
 | `page` | int | 1 | 页码，从 1 开始。 |
 | `pageSize` | int | 50 | 每页数量，最大 200。 |
-| `status` | string | `all` | `all` / `pending` / `fetching` / `ai_processing` / `processed` / `fallback` / `error` / `skipped`。 |
+| `status` | string | `all` | `all` / `fetched` / `completing` / `proofreading` / `post_processing` / `processed` / `fallback` / `error` / `skipped`。 |
 | `keyword` | string | 空 | 按章节标题模糊搜索。 |
 
 响应：
@@ -1215,15 +1517,16 @@ Tab 4「设置」：
 
 状态语义：
 
-| 状态 | 前端展示 | 是否可重试 |
-|------|----------|------------|
-| `pending` | 等待处理 | 否 |
-| `fetching` | 正在获取正文 | 否 |
-| `ai_processing` | 正在 AI 处理 | 否 |
-| `processed` | 已完成 | 是，作为重新处理 |
-| `fallback` | 已回退原文 | 是 |
-| `error` | 处理失败 | 是 |
-| `skipped` | 已跳过 | 是 |
+| 状态 | 含义 | 前端展示 | 是否可重试 |
+|------|------|----------|------------|
+| `fetched` | Stage 1 已完成，已拉取主源正文 | 已抓取 | 否 |
+| `completing` | Stage 2 完整性补全中 | 补全中 | 否 |
+| `proofreading` | Stage 3 校对中 | 校对中 | 否 |
+| `post_processing` | Stage 4 后处理中 | 整理中 | 否 |
+| `processed` | 全部阶段完成 | 已完成 | 是，作为重新处理 |
+| `fallback` | 处理失败但已有可用正文 | 已回退原文 | 是 |
+| `error` | 无可用正文 | 处理失败 | 是 |
+| `skipped` | 特殊章节跳过 | 已跳过 | 是 |
 
 ### 12.2 聚合设置
 
@@ -1320,14 +1623,31 @@ Tab 4「设置」：
 
 ### 15.1 目录结构
 
+订阅聚合书（长期保存）：
+
 ```
 backend/data/novels/
-└── legadohub_ai_aggregate/
-    └── 《{书名}》/
+└── legadohub/
+    └── {书名}_{作者}/
+        ├── metadata.json
         ├── 000001 第一章 风起.md
         ├── 000002 第二章 云涌.md
         └── ...
 ```
+
+第三方书源缓存（临时，可清理）：
+
+```
+backend/data/novels/
+└── {source-domain}/
+    └── {encoded-book-key}/
+        ├── 000001 第一章.md
+        └── ...
+```
+
+- `legadohub/` 存放订阅聚合书，按 `书名_作者` 组织，便于用户本地整理。
+- `metadata.json` 记录 `bookId`、`bookName`、`author`、`sourceId`、`chapterCount` 等，方便外部程序读取。
+- 第三方书源缓存按 `来源域名/编码书籍键` 组织，`encoded-book-key` 为 `book_id` 或 `source_id:chapter_url` 的短哈希，后台定期清理。
 
 ### 15.2 文件格式
 
@@ -1341,7 +1661,7 @@ backend/data/novels/
 
 ### 15.3 元数据
 
-数据库保留完整元数据；文件本身保持简洁，仅标题 + 正文，便于用户直接阅读。
+数据库保留完整元数据；订阅书目录下额外写入 `metadata.json`，便于用户或外部工具直接识别目录内容。文件正文保持简洁，仅标题 + 正文，便于直接阅读。
 
 ### 15.4 文件命名与清理策略
 
@@ -1352,12 +1672,139 @@ backend/data/novels/
 - 文件名格式固定为 `{chapter_index:06d} {safe_title}.md`。
 - `safe_title` 需要移除 Windows 非法字符：`< > : " / \ | ? *`，并压缩连续空白。
 - 文件名过长时截断标题部分，保证完整路径不超过 Windows 常见限制。
+- 订阅书目录格式为 `书名_作者`，作者为空时退化为 `书名`。
 - 文件路径由主源目录驱动；主源章节标题或索引变化时，按新目录重命名或重写文件。
 - 主源章节删除时，本地对应 Markdown 文件也删除。
 - 删除聚合任务时，默认同步删除本地 Markdown 文件，因为这些文件是聚合任务产物。
 - 第一版只保存最终 Markdown，不保存原始正文、AI 处理正文、失败回退正文的多版本文件。
 - 如需调试原始正文或候选源正文，只在数据库调试字段或日志中短期保存，不写入用户可读目录。
 - 数据库需要保存当前文件路径，便于后续标题/索引变化和任务删除时清理旧文件。
+- 第三方书源缓存目录为临时目录，AggregateProcessor 每运行若干轮后清理超过 TTL 的缓存目录。
+
+### 15.5 启动扫描与恢复
+
+服务启动时自动扫描 `backend/data/novels/legadohub/` 下的 `metadata.json`：
+
+1. 若 `metadata.json` 对应的书籍在 `aggregate_book_tasks` 中不存在，则根据 metadata 重建该书记录。
+2. 扫描目录下的 `.md` 章节文件，按文件名解析章节序号与标题。
+3. 若某章节在 `aggregate_chapter_tasks` 中不存在，则根据文件内容恢复该章节记录。
+4. 恢复后的书籍可立即在阅读端搜索和继续追更，已下载章节不会被重复处理。
+5. 扫描过程跳过已存在的章节，避免重复数据。
+
+### 15.6 订阅即会话：处理事件流（预计规划）
+
+> 参考 AI 终端会话存储方式（如 Kimi Code CLI 的 `~/.kimi/sessions/{workdir}/{session_id}/context.jsonl`），将每个订阅书视为一个会话，处理过程以事件流形式持久化到本地 JSONL 文件。
+
+#### 设计原则
+
+- **一个订阅一个会话**：会话与 `aggregate_book_id` / 书籍目录一一对应，不拆分到章节，避免目录爆炸。
+- **事件流追加写**：处理过程中的关键步骤以 JSON Lines 形式追加写入 `process.jsonl`，不修改历史内容。
+- **目录自包含**：会话元数据、事件流、章节正文放在同一个书籍目录下，便于迁移和外部工具读取。
+- **数据库为辅，文件为主**：事件流作为处理日志的权威来源，数据库保留索引和最新状态。
+
+#### 目录结构
+
+```
+backend/data/novels/legadohub/{书名}_{作者}/
+├── metadata.json              # 会话元数据（含 processLog 路径）
+├── process.jsonl              # 处理事件流
+├── 000001 第一章.md
+├── 000002 第二章.md
+└── ...
+```
+
+#### metadata.json 扩展字段
+
+```json
+{
+  "bookId": "...",
+  "bookName": "...",
+  "author": "...",
+  "processLog": "process.jsonl",
+  "lastProcessedAt": "2026-06-25T10:00:00Z",
+  "lastProcessedChapterIndex": 388
+}
+```
+
+#### process.jsonl 事件类型
+
+每条事件至少包含 `ts`（ISO-8601 时间戳）、`event`（事件类型），以及事件相关字段。事件按四阶段组织：
+
+**Stage 1: 订阅初始化**
+
+```json
+{"ts":"2026-06-25T10:00:00Z","event":"book_task_start","bookId":"..."}
+{"ts":"2026-06-25T10:00:01Z","event":"primary_source_selected","sourceId":"qidian_com","bookUrl":"..."}
+{"ts":"2026-06-25T10:00:02Z","event":"toc_fetched","totalChapters":633}
+{"ts":"2026-06-25T10:00:03Z","event":"source_search_start","tier":"tier1"}
+{"ts":"2026-06-25T10:00:04Z","event":"source_search_result","sourceId":"kks101_com","bookUrl":"...","score":120,"progress":388}
+{"ts":"2026-06-25T10:00:05Z","event":"source_search_failed","sourceId":"example_com","errorCode":"SOURCE_SEARCH_FAILED"}
+{"ts":"2026-06-25T10:00:06Z","event":"chapter_fetch","chapterIndex":1,"source":"qidian_com_app","classification":"preview","officialWordCount":3500,"fetchedWordCount":120}
+{"ts":"2026-06-25T10:00:07Z","event":"stage1_complete","totalChapters":633,"fetchedChapters":633}
+```
+
+**Stage 2: 完整性补全**
+
+```json
+{"ts":"2026-06-25T10:00:08Z","event":"completeness_check","chapterIndex":1,"officialWordCount":3500,"fetchedWordCount":120,"complete":false}
+{"ts":"2026-06-25T10:00:09Z","event":"tool_call","chapterIndex":1,"stage":"completing","tool":"fetch_chapter_from_source","sourceId":"kks101_com"}
+{"ts":"2026-06-25T10:00:10Z","event":"tool_result","chapterIndex":1,"stage":"completing","tool":"align_chapter","confidence":0.91,"accepted":true}
+{"ts":"2026-06-25T10:00:11Z","event":"completeness_complete","chapterIndex":1,"sourceId":"kks101_com","wordCount":3450}
+```
+
+**Stage 3: 校对**
+
+```json
+{"ts":"2026-06-25T10:00:12Z","event":"tool_call","chapterIndex":1,"stage":"proofreading","tool":"attribution_check"}
+{"ts":"2026-06-25T10:00:13Z","event":"tool_result","chapterIndex":1,"stage":"proofreading","tool":"attribution_check","belongsToBook":true,"confidence":0.94}
+{"ts":"2026-06-25T10:00:14Z","event":"proofreading_complete","chapterIndex":1,"passed":true}
+```
+
+**Stage 4: 后处理**
+
+```json
+{"ts":"2026-06-25T10:00:15Z","event":"tool_call","chapterIndex":1,"stage":"post_processing","tool":"detect_blocked_words","candidateCount":3}
+{"ts":"2026-06-25T10:00:16Z","event":"tool_call","chapterIndex":1,"stage":"post_processing","tool":"unmask_blocked_words"}
+{"ts":"2026-06-25T10:00:17Z","event":"tool_call","chapterIndex":1,"stage":"post_processing","tool":"proofread"}
+{"ts":"2026-06-25T10:00:18Z","event":"tool_result","chapterIndex":1,"stage":"post_processing","tool":"self_rate","score":0.92}
+{"ts":"2026-06-25T10:00:19Z","event":"chapter_write","chapterIndex":1,"status":"processed","contentLength":3401}
+```
+
+**通用事件**
+
+```json
+{"ts":"2026-06-25T10:00:20Z","event":"ai_call","chapterIndex":1,"stage":"post_processing","tool":"proofread","model":"mimo-v2.5","promptTokens":1234,"completionTokens":6789,"totalTokens":8023}
+{"ts":"2026-06-25T10:00:21Z","event":"chapter_error","chapterIndex":3,"stage":"completing","errorCode":"SOURCE_TIMEOUT","retryable":true}
+{"ts":"2026-06-25T10:00:22Z","event":"chapter_fallback","chapterIndex":3,"sourceId":"qidian_com_app","reason":"all_sources_failed"}
+```
+
+事件字段说明：
+
+| 事件 | 说明 |
+|------|------|
+| `book_task_start` | 书籍处理任务启动 |
+| `primary_source_selected` | Stage 1 主源选定 |
+| `toc_fetched` | 目录拉取完成 |
+| `source_search_start` | 开始搜索第三方源 |
+| `source_search_result` | 搜索到可用源 |
+| `source_search_failed` | 某源搜索失败 |
+| `chapter_fetch` | 单章主源正文拉取完成 |
+| `stage1_complete` | Stage 1 完成 |
+| `completeness_check` | 完整性判断 |
+| `completeness_complete` | 完整性补全完成 |
+| `tool_call` | Agent 调用某个 tool |
+| `tool_result` | Tool 执行结果 |
+| `proofreading_complete` | 校对完成 |
+| `ai_call` | 发起 AI 调用 |
+| `chapter_write` | 写入最终 .md |
+| `chapter_error` | 章节处理错误 |
+| `chapter_fallback` | 章节进入 fallback |
+
+#### 与现有系统的配合
+
+- 事件流不替代当前 `aggregate_chapter_tasks` 中的状态字段和 `policy_snapshot_json`，而是作为更完整、更适合人类阅读和外部审计的处理日志。
+- 前端「处理日志」可先继续读取 `processing-logs` API；未来可新增读取 `process.jsonl` 的接口，提供更详细的时间线。
+- 文件末尾的 YAML trace block 可逐步精简，仅保留关键摘要，详细信息以 `process.jsonl` 为准。
 
 ---
 
@@ -1366,51 +1813,77 @@ backend/data/novels/
 ### Phase 1：AI Provider 与设置基础
 
 1. 创建 `backend/app/ai/` 模块：
-   - `models_catalog.py`：内置模型元数据（参考 pi 的 `models.generated.ts`）。
-   - `compat.py`：根据 `provider` / `baseUrl` / `model` 自动推断 `compat`，支持 `compatOverrides` 覆盖。
-   - `request_builder.py`：根据 `compat` 与 `thinkingLevel` 构造 OpenAI 兼容请求体。
+   - `models_catalog.py`：内置模型元数据。
+   - `compat.py`：根据 `provider` / `baseUrl` / `model` 自动推断 `compat`。
+   - `request_builder.py`：根据 `compat` 与 `thinkingLevel` 构造请求体。
    - `client.py`：`httpx` 异步客户端、流式响应解析、错误处理。
    - `encryption.py`：API Key Fernet 加密与脱敏。
 2. 实现 OpenAI 兼容 Provider、模型列表获取、连通性测试。
 3. 新增 `aggregate_settings` 表与读写封装。
 4. 新增 `/api/console/aggregate-settings` API（含 `test-provider`、`fetch-models`）。
-5. 前端新增 `/console/aggregate-settings` 分页，模型选择自动填充上下文长度，思考强度使用下拉选项框。
+5. 前端新增 `/console/aggregate-settings` 分页。
 
-### Phase 2：主源选择与任务队列
+### Phase 2：订阅初始化与 Source Tool
 
-1. 实现 `AggregatePrimarySelector`。
-2. 扩展 `aggregate_book_tasks` 字段。
-3. 修改 `AggregateProcessor.enqueue_book` 支持主源自动选择。
-4. 实现「主动选择聚合源才加入书架」的判断。
-5. 补充单元测试。
+1. 实现 `AggregatePrimarySelector`（主源选择，Stage 1 的一部分）。
+2. 扩展 `aggregate_book_tasks` 字段（sourceMap、字数等）。
+3. 实现 `SourceTool` / MCP-like 书源工具接口：
+   - `search_book`
+   - `get_book_detail`
+   - `get_chapter_list`
+   - `get_chapter_content`
+   - 对 Agent 暴露的 `fetch_chapter_from_source`
+4. 实现全源搜索与 `sourceMap` 缓存，支持分级搜索、并发限制、失败退避。
+5. 修改 `AggregateProcessor`：
+   - `bootstrap_book`：一次性拉取全书目录 + 全部章节正文。
+   - 写入 `metadata.json` 的 `sourceMap`。
+6. 新增 `aggregate_source_map` 表与同步逻辑。
 
-### Phase 3：AI 单章处理与偏差校验
+### Phase 3：Agent 驱动的章节处理
 
-1. 实现 `AggregateAIService`。
-2. 引入 `konsheng/Sensitive-lexicon` 本地词库，构建敏感词候选扫描器。
-3. 实现 Prompt 渲染、前文校准、敏感词候选注入、分段策略。
-4. 实现偏差值计算（代码 + AI 综合）。
-5. 修改 `_process_chapter` 接入 AI，实现失败降级。
-6. 扩展 `aggregate_chapter_tasks` 与 `aggregate_ai_usage`。
+1. 创建 `backend/app/services/chapter_tools/` 目录，实现独立 tools：
+   - `purify_tool.py`
+   - `attribution_tool.py`
+   - `aggregate_tool.py`
+   - `unmask_tool.py`
+   - `proofread_tool.py`
+   - `self_rating_tool.py`
+   - `fetch_chapter_tool.py`（封装 SourceTool）
+2. 实现 `ChapterProcessingAgent`：
+   - 维护 `ChapterProcessingState`。
+   - Stage 2 完整性补全 loop。
+   - Stage 3 校对 loop。
+   - Stage 4 后处理 loop（第一阶段可用规则链）。
+3. 将现有 `AggregateAIService` 的三个大方法迁移到 tools，保持旧接口作为兼容层。
+4. 修改 `_process_chapter`，改为调用 `ChapterProcessingAgent`。
+5. 扩展 `aggregate_chapter_tasks` 阶段字段与状态。
 
-### Phase 4：占位文件与本地存储
+### Phase 4：偏差校验与失败降级
+
+1. 实现 `compute_deviation_score`（官方完整正文 + 第三方补全两条路径）。
+2. 实现失败分类与重试退避。
+3. 实现 `fallback` 写入策略。
+4. 扩展 `aggregate_ai_usage` 记录 AI 调用明细。
+
+### Phase 5：占位文件与本地存储
 
 1. 未处理章节读取时生成占位 `.md`。
-2. AI 处理完成后写入正式 `.md`。
-3. 验证本地文件可直接阅读。
+2. Agent 处理完成后写入正式 `.md`。
+3. 实现 `process.jsonl` 事件追加写。
+4. 验证本地文件可直接阅读。
 
-### Phase 5：聚合书架页面
+### Phase 6：聚合书架页面
 
 1. 新增 `/console/aggregate-books` 列表页。
 2. 新增 `/console/aggregate-books/:bookId` 详情页。
 3. 实现章节预览、本章说、统计、重试。
 
-### Phase 6：搜索界面改造
+### Phase 7：搜索界面改造
 
 1. 后端搜索返回中保留聚合源标记。
 2. 前端搜索界面聚合源按钮改为「加入处理」。
 
-### Phase 7：验收与文档
+### Phase 8：验收与文档
 
 1. 跑通完整测试套件。
 2. 更新 README 与插件契约文档中的 AI 聚合说明。
@@ -1420,16 +1893,20 @@ backend/data/novels/
 | 模块 | 测试内容 | 建议测试文件 |
 |------|----------|--------------|
 | 数据迁移 | 旧库启动后自动补齐 `aggregate_*` 新字段，旧任务仍可读取。 | `dev-assets/tests/test_db.py` |
-| 设置迁移 | `admin_settings.contentWorkflow` 能迁移到 `aggregate_settings.contentWorkflow`，后续读取只走新表。 | `dev-assets/tests/test_aggregate_settings.py` |
-| 队列并发 | 同一本书重复触发只返回同一进度，不创建重复任务；多本书按顺序处理。 | `dev-assets/tests/test_aggregate_processor.py` |
-| 已完成跳过 | `completed + processed` 的书不会被后台重复处理。 | `dev-assets/tests/test_aggregate_processor.py` |
-| 章节对齐 | 索引一致标题相似时可补充；标题差异大时拒绝跨源补充。 | `dev-assets/tests/test_aggregate_alignment.py` |
-| 处理窗口 | 首次加入、阅读触发、后台轮询都只处理限定窗口。 | `dev-assets/tests/test_aggregate_processor.py` |
+| 设置迁移 | `admin_settings.contentWorkflow` 能迁移到 `aggregate_settings.contentWorkflow`。 | `dev-assets/tests/test_aggregate_settings.py` |
+| Source Tool | `fetch_chapter_from_source` 能正确调用书源插件并返回正文。 | `dev-assets/tests/test_source_tool.py` |
+| 全源搜索 | 分级搜索、并发限制、sourceMap 缓存、失败退避。 | `dev-assets/tests/test_source_search.py` |
+| 完整性判断 | 官方字数 vs 实际字数比例正确。 | `dev-assets/tests/test_completeness_check.py` |
+| Agent Loop | Stage 2~4 能按状态推进，tool 调用可记录。 | `dev-assets/tests/test_chapter_processing_agent.py` |
+| 章节对齐 | 索引一致标题相似时可补充；标题差异大时拒绝。 | `dev-assets/tests/test_aggregate_alignment.py` |
+| 归属校验 | 串书/广告正文能被识别并换源。 | `dev-assets/tests/test_attribution_check.py` |
+| 处理窗口 | Stage 1 可全量拉取，Stage 2~4 按窗口推进。 | `dev-assets/tests/test_aggregate_processor.py` |
 | 目录变更 | 新增章节被追加，已处理章节不因标题变更重跑。 | `dev-assets/tests/test_aggregate_processor.py` |
 | 敏感词词库 | 词库可加载，屏蔽符上下文能生成候选，候选不会被机械替换。 | `dev-assets/tests/test_sensitive_lexicon.py` |
 | AI 请求构造 | 不同 `compat` 与 `thinkingLevel` 生成正确请求体。 | `dev-assets/tests/test_ai_request_builder.py` |
 | 偏差校验 | 高相似文本通过，低相似文本触发重试或回退。 | `dev-assets/tests/test_aggregate_deviation.py` |
 | 失败退避 | timeout、rate limit、bad request 对应不同 retry 策略。 | `dev-assets/tests/test_aggregate_retry.py` |
+| process.jsonl | 事件追加写、数据库状态同步。 | `dev-assets/tests/test_process_jsonl.py` |
 | 文件落盘 | 文件名清洗、重复写入、删除任务时同步清理本地 Markdown。 | `dev-assets/tests/test_novel_file_cache.py` |
 | 控制台 API | 列表分页、章节分页、详情响应、设置脱敏。 | `dev-assets/tests/test_plugin_console_api.py` |
 | 评论映射 | 聚合章节评论能映射回主源章节，并保留章评与热评结构。 | `dev-assets/tests/test_aggregate_reviews.py` |
@@ -1443,7 +1920,10 @@ backend/data/novels/
 | 风险 | 影响 | 应对 |
 |------|------|------|
 | AI 输出过度改写 | 正文失真 | 偏差值校验 + 低 temperature + 重试机制 |
-| 官方源 VIP 章节只有预览 | 聚合结果短 | 自动拉取第三方源补充，prompt 明确要求补充 |
+| 官方源 VIP 章节只有预览 | 聚合结果短 | Stage 2 Agent 自动拉取第三方源补充 |
+| Agent 决策错误 | 选错源、过度补全 | tool 结果日志 + 人工重试 + 阈值约束 |
+| 书源搜索被封 IP | 无法获取第三方源 | 分级搜索 + 并发限制 + 缓存 TTL |
+| sourceMap 与第三方源过期 | 补全时 URL 失效 | 缓存 TTL + 搜索失败退避 + 按需刷新 |
 | 长章节 token 超限 | 成本/失败 | 分段策略 + 最大上下文使用比例限制 |
 | AI endpoint 不稳定 | 任务失败率高 | 最多重试 5 次 + 首次失败先写入可用 fallback 正文 |
 | API Key 泄露 | 安全 | Fernet 加密 + 接口脱敏 |
