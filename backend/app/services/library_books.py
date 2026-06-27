@@ -20,6 +20,7 @@ from app.services.aggregate_virtual_source import (
     primary_book_id_from_payload,
 )
 from app.services.live_acceptance import normalize_author_key, normalize_text
+from app.services.shared_book_storage import SharedBookStorage
 from app.source_plugins.id_codec import encode_book_id
 from app.source_plugins.loader import PluginLoader
 from app.storage.db import initialize_database
@@ -45,8 +46,9 @@ def _normalize_book_status_text(*values: object) -> str:
 
 
 class LibraryBooksService:
-    def __init__(self, db_path=DB_PATH):
+    def __init__(self, db_path=DB_PATH, *, shared_book_storage: SharedBookStorage | None = None):
         self.db_path = db_path
+        self.shared_book_storage = shared_book_storage or SharedBookStorage()
 
     def _conn(self) -> sqlite3.Connection:
         initialize_database(self.db_path)
@@ -74,6 +76,7 @@ class LibraryBooksService:
             "aiPurifyEnabled": True,
             "sourcePriorityMode": "auto",
             "sourcePriority": [],
+            "minReadableChaptersForDiscovery": 50,
         }
         merged.update(
             {
@@ -84,9 +87,16 @@ class LibraryBooksService:
                 "aiPurifyEnabled": bool(workflow.get("blockedWordRepair", True)),
                 "sourcePriorityMode": "manual" if workflow.get("primarySourcePriority") else "auto",
                 "sourcePriority": list(workflow.get("primarySourcePriority") or []),
+                "minReadableChaptersForDiscovery": max(
+                    0,
+                    int(workflow.get("minReadableChaptersForDiscovery", 50) or 50),
+                ),
             }
         )
         return merged
+
+    def discovery_min_readable_chapters(self) -> int:
+        return int(self._merged_book_settings().get("minReadableChaptersForDiscovery", 50) or 50)
 
     def _canonical_name(self, value: str) -> str:
         return normalize_text(value or "")
@@ -162,6 +172,86 @@ class LibraryBooksService:
             if isinstance(source, dict) and source.get("bookId", "") == primary_book_id:
                 return dict(source)
         return {}
+
+    def build_source_map_summary(self, shared_metadata: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return API-facing source summary from shared metadata only."""
+        source_map = shared_metadata.get("sourceMap")
+        items = None
+        if isinstance(source_map, dict):
+            items = source_map.get("summary")
+        if not isinstance(items, list):
+            items = shared_metadata.get("sourceMapSummary")
+        if not isinstance(items, list):
+            return []
+        summary: list[dict[str, Any]] = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            summary.append(
+                {
+                    "bookId": item.get("bookId", "") or "",
+                    "sourceId": item.get("sourceId", "") or "",
+                    "sourceName": item.get("sourceName", "") or "",
+                    "score": int(item.get("score", 0) or 0),
+                    "chapterCount": int(item.get("chapterCount", 0) or 0),
+                    "lastChapter": item.get("lastChapter", "") or "",
+                    "bookStatus": item.get("bookStatus", "") or "",
+                    "name": item.get("name", "") or "",
+                    "author": item.get("author", "") or "",
+                }
+            )
+        return summary
+
+    def load_shared_metadata(self, aggregate_book_id: str) -> dict[str, Any]:
+        book = self.get_book(aggregate_book_id) or {}
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        if not book_name:
+            return {}
+        path = self.shared_book_storage.metadata_path(book_name=book_name, author=author)
+        if not path.exists():
+            return {}
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def source_map_refresh_state(self, aggregate_book_id: str) -> dict[str, Any]:
+        """Return the persisted source-map refresh state for one shared book."""
+        metadata = self.load_shared_metadata(aggregate_book_id)
+        source_map = metadata.get("sourceMap") if isinstance(metadata.get("sourceMap"), dict) else {}
+        health = source_map.get("health") if isinstance(source_map.get("health"), dict) else {}
+        last_verified_at = str(health.get("lastVerifiedAt", "") or "").strip()
+        status = str(health.get("status", "") or "").strip()
+        return {
+            "completed": bool(last_verified_at),
+            "lastVerifiedAt": last_verified_at,
+            "status": status,
+            "missingCriticalSource": bool(health.get("missingCriticalSource")),
+        }
+
+    def save_payload_sources(self, aggregate_book_id: str, sources: list[dict[str, Any]]) -> None:
+        payload = self.load_payload(aggregate_book_id)
+        payload["sources"] = [dict(item) for item in sources if isinstance(item, dict)]
+        with self._conn() as conn:
+            conn.execute(
+                """
+                UPDATE aggregate_book_tasks
+                SET aggregate_payload_json = ?, updated_at = datetime('now')
+                WHERE aggregate_book_id = ?
+                """,
+                (json.dumps(payload, ensure_ascii=False), aggregate_book_id),
+            )
+            conn.commit()
+
+    def build_book_state_summary(self, shared_metadata: dict[str, Any]) -> dict[str, Any]:
+        """Return API-facing bookState summary from shared metadata only."""
+        chapter_count = 0
+        raw_state = shared_metadata.get("bookState")
+        if isinstance(raw_state, dict):
+            chapter_count = int(raw_state.get("chapterCount", 0) or 0)
+        return self.shared_book_storage.build_book_state_summary(raw_state, chapter_count=chapter_count)
 
     async def _hydrate_primary_source_payload(
         self,
@@ -582,7 +672,31 @@ class LibraryBooksService:
                 items.append(item)
         return items
 
-    def search_visible_books(self, keyword: str) -> list[dict[str, Any]]:
+    def _discovery_readable_chapter_count(self, book: dict[str, Any]) -> int:
+        if "visibleProcessedChapters" in book:
+            try:
+                return max(0, int(book.get("visibleProcessedChapters", 0) or 0))
+            except (TypeError, ValueError):
+                return 0
+        book_state = book.get("bookState")
+        if isinstance(book_state, dict):
+            try:
+                readable = int(book_state.get("readableChapterCount", 0) or 0)
+                preview = int(book_state.get("previewChapterCount", 0) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return max(0, readable - preview)
+        try:
+            return max(0, int(book.get("processedChapters", 0) or 0))
+        except (TypeError, ValueError):
+            return 0
+
+    def search_visible_books(
+        self,
+        keyword: str,
+        *,
+        min_readable_chapters: int | None = None,
+    ) -> list[dict[str, Any]]:
         normalized = self._canonical_name(keyword)
         author_norm = self._canonical_author(keyword)
         if not normalized and not author_norm:
@@ -600,11 +714,8 @@ class LibraryBooksService:
                        last_source_chapter_title, '', last_check_time, next_check_time, last_error,
                        archived_at, created_at, updated_at
                 FROM aggregate_book_tasks
-                WHERE (search_visibility_status = 'visible' OR status = 'archived')
-                  AND (
-                    canonical_name LIKE '%' || ? || '%'
-                    OR canonical_author LIKE '%' || ? || '%'
-                  )
+                WHERE canonical_name LIKE '%' || ? || '%'
+                   OR canonical_author LIKE '%' || ? || '%'
                 ORDER BY updated_at DESC, created_at DESC
                 """,
                 (normalized, author_norm or normalized),
@@ -612,15 +723,19 @@ class LibraryBooksService:
         items = []
         for row in rows:
             item = self._aggregate_book_row_to_dict(row)
-            if item and self._is_injectable_book(item):
+            if item and self._is_injectable_book(item, min_readable_chapters=min_readable_chapters):
                 item["addedByUsername"] = self.username_for_user_id(item.get("addedByUserId", ""))
                 items.append(item)
         return items
 
-    def _is_injectable_book(self, book: dict[str, Any]) -> bool:
-        status = str(book.get("status", "") or "").strip().lower()
-        visibility = str(book.get("searchVisibilityStatus", "") or "").strip().lower()
-        return visibility == "visible" or status == "archived"
+    def _is_injectable_book(
+        self,
+        book: dict[str, Any],
+        *,
+        min_readable_chapters: int | None = None,
+    ) -> bool:
+        threshold = self.discovery_min_readable_chapters() if min_readable_chapters is None else max(0, int(min_readable_chapters or 0))
+        return self._discovery_readable_chapter_count(book) >= threshold
 
     def library_match_score(self, book: dict[str, Any], keyword: str, *, bonus: int = 50) -> int:
         kw = normalize_text(keyword or "")
@@ -707,12 +822,13 @@ class LibraryBooksService:
         *,
         base_api: str | None = None,
         score_bonus: int = 50,
+        min_readable_chapters: int | None = None,
     ) -> list[dict[str, Any]]:
         seen: set[str] = set()
         items: list[dict[str, Any]] = []
         for group in groups:
             book = self.find_existing_book(group, visible_only=False)
-            if not book or not self._is_injectable_book(book):
+            if not book or not self._is_injectable_book(book, min_readable_chapters=min_readable_chapters):
                 continue
             aggregate_book_id = book["aggregateBookId"]
             if aggregate_book_id in seen:
@@ -734,8 +850,9 @@ class LibraryBooksService:
         *,
         base_api: str | None = None,
         score_bonus: int = 50,
+        min_readable_chapters: int | None = None,
     ) -> list[dict[str, Any]]:
-        books = self.search_visible_books(keyword)
+        books = self.search_visible_books(keyword, min_readable_chapters=min_readable_chapters)
         items = []
         for book in books:
             score = self.library_match_score(book, keyword, bonus=score_bonus)

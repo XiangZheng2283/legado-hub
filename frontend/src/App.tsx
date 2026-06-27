@@ -14,6 +14,7 @@ import { OfficialSourcesPage } from "@/routes/OfficialSourcesPage"
 import { SubscriptionDiscoveryPage } from "@/routes/SubscriptionDiscoveryPage"
 import { LibraryPage } from "@/routes/LibraryPage"
 import { LibraryBookDetailPage } from "@/routes/LibraryBookDetailPage"
+import { LibraryChapterDetailPage } from "@/routes/LibraryChapterDetailPage"
 
 function ProtectedLayout() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -47,6 +48,7 @@ function AuthRouter() {
             <Route path="subscription" element={<SubscriptionDiscoveryPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="library/:bookId" element={<LibraryBookDetailPage />} />
+            <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/console" replace />} />

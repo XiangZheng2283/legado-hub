@@ -1,0 +1,88 @@
+"""Canonical shared-book runtime error codes."""
+
+from __future__ import annotations
+
+import re
+from enum import StrEnum
+
+ERROR_FAMILY_PREFIXES = ("S1_", "S2_", "S3_", "SYS_")
+_ERROR_CODE_PATTERN = re.compile(r"^(S1_|S2_|S3_|SYS_)[A-Z0-9_]+$")
+
+
+class SharedBookErrorCode(StrEnum):
+    S1_SOURCE_FETCH_FAILED = "S1_SOURCE_FETCH_FAILED"
+    S1_SOURCE_CONTENT_DEFERRED = "S1_SOURCE_CONTENT_DEFERRED"
+    S1_SOURCE_AUTH_REQUIRED = "S1_SOURCE_AUTH_REQUIRED"
+    S1_SOURCE_CONFIGURATION_INVALID = "S1_SOURCE_CONFIGURATION_INVALID"
+    S2_SOURCE_MAP_MISSING = "S2_SOURCE_MAP_MISSING"
+    S3_OUTPUT_WRITE_FAILED = "S3_OUTPUT_WRITE_FAILED"
+    SYS_RUNTIME_STATE_INVALID = "SYS_RUNTIME_STATE_INVALID"
+
+
+class SharedBookRetryClass(StrEnum):
+    SHORT_RETRY = "short_retry"
+    LONG_RETRY_SCAN = "long_retry_scan"
+    NO_RETRY = "no_retry"
+
+
+_STAGE1_RETRY_CLASS_BY_CODE: dict[SharedBookErrorCode, SharedBookRetryClass] = {
+    SharedBookErrorCode.S1_SOURCE_FETCH_FAILED: SharedBookRetryClass.SHORT_RETRY,
+    SharedBookErrorCode.S1_SOURCE_CONTENT_DEFERRED: SharedBookRetryClass.LONG_RETRY_SCAN,
+    SharedBookErrorCode.S1_SOURCE_AUTH_REQUIRED: SharedBookRetryClass.LONG_RETRY_SCAN,
+    SharedBookErrorCode.S1_SOURCE_CONFIGURATION_INVALID: SharedBookRetryClass.NO_RETRY,
+}
+
+STAGE1_NO_RETRY_ERROR_CODES = frozenset(
+    code for code, retry_class in _STAGE1_RETRY_CLASS_BY_CODE.items()
+    if retry_class == SharedBookRetryClass.NO_RETRY
+)
+
+
+def is_valid_error_code(value: str | None) -> bool:
+    text = str(value or "")
+    return bool(_ERROR_CODE_PATTERN.fullmatch(text))
+
+
+def classify_stage1_error(exc: Exception) -> SharedBookErrorCode:
+    """Map a Stage 1 chapter-fetch failure to a canonical shared-book error code."""
+    from app.ai.client import AIProviderHTTPError, AIProviderNotConfiguredError
+
+    msg = str(exc).lower()
+
+    if isinstance(exc, ValueError) and "empty" in msg:
+        return SharedBookErrorCode.S1_SOURCE_CONTENT_DEFERRED
+
+    if isinstance(exc, TimeoutError):
+        return SharedBookErrorCode.S1_SOURCE_FETCH_FAILED
+
+    try:
+        import httpx
+
+        if isinstance(exc, httpx.TimeoutException):
+            return SharedBookErrorCode.S1_SOURCE_FETCH_FAILED
+    except ImportError:
+        pass
+
+    if isinstance(exc, AIProviderHTTPError):
+        if exc.status_code == 401:
+            return SharedBookErrorCode.S1_SOURCE_AUTH_REQUIRED
+        if exc.status_code == 400:
+            return SharedBookErrorCode.S1_SOURCE_CONFIGURATION_INVALID
+        return SharedBookErrorCode.S1_SOURCE_FETCH_FAILED
+
+    if isinstance(exc, AIProviderNotConfiguredError):
+        return SharedBookErrorCode.S1_SOURCE_CONFIGURATION_INVALID
+
+    if "timeout" in msg or "timed out" in msg:
+        return SharedBookErrorCode.S1_SOURCE_FETCH_FAILED
+
+    return SharedBookErrorCode.S1_SOURCE_FETCH_FAILED
+
+
+def classify_stage1_retry(error_code: SharedBookErrorCode | str) -> SharedBookRetryClass:
+    """Return the retry routing class for a canonical Stage 1 error code."""
+    try:
+        code = SharedBookErrorCode(str(error_code))
+    except ValueError:
+        return SharedBookRetryClass.SHORT_RETRY
+    return _STAGE1_RETRY_CLASS_BY_CODE.get(code, SharedBookRetryClass.SHORT_RETRY)

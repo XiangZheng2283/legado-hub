@@ -19,6 +19,7 @@ from app.config import DATA_DIR, DB_PATH
 from app.services.novel_file_cache import METADATA_FILE, SUBSCRIPTION_FOLDER
 
 METADATA_VERSION = 1
+SHARED_LIBRARY_SCHEMA_VERSION = 1
 CHAPTER_FILE_RE = re.compile(r"^(\d{6})\s+(.+)\.md$")
 
 
@@ -290,51 +291,189 @@ def _safe_int(value: Any) -> int:
         return 0
 
 
+def _append_shared_guard(
+    result: dict[str, Any],
+    *,
+    book_dir: Path,
+    mode: str,
+    state: str,
+    reason: str,
+    repair_needed: bool,
+    schema_version: int | None = None,
+    detail: str = "",
+) -> None:
+    entry = {
+        "folder": book_dir.name,
+        "path": str(book_dir),
+        "mode": mode,
+        "state": state,
+        "reason": reason,
+        "repairNeeded": repair_needed,
+        "schemaVersion": schema_version,
+    }
+    if detail:
+        entry["detail"] = detail
+        result["errors"].append(f"{book_dir.name}: {detail}")
+    result["sharedGuards"].append(entry)
+    if state == "readonly":
+        result["readonly"] += 1
+    if state == "corrupted":
+        result["corrupted"] += 1
+
+
+def _inspect_shared_library_guards(library_root: Path, result: dict[str, Any]) -> None:
+    if not library_root.exists():
+        return
+
+    for book_dir in sorted(library_root.iterdir()):
+        if not book_dir.is_dir():
+            continue
+        metadata_path = book_dir / "metadata.json"
+        if not metadata_path.exists():
+            continue
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            _append_shared_guard(
+                result,
+                book_dir=book_dir,
+                mode="readonly",
+                state="corrupted",
+                reason="invalid_metadata_json",
+                repair_needed=True,
+                detail=f"failed to read shared metadata: {exc}",
+            )
+            continue
+        if not isinstance(metadata, dict):
+            _append_shared_guard(
+                result,
+                book_dir=book_dir,
+                mode="readonly",
+                state="corrupted",
+                reason="invalid_metadata_shape",
+                repair_needed=True,
+                detail="shared metadata must decode to a JSON object",
+            )
+            continue
+
+        metadata_schema = _safe_int(metadata.get("schemaVersion") or SHARED_LIBRARY_SCHEMA_VERSION)
+        if metadata_schema > SHARED_LIBRARY_SCHEMA_VERSION:
+            _append_shared_guard(
+                result,
+                book_dir=book_dir,
+                mode="readonly",
+                state="readonly",
+                reason="unsupported_schema_version",
+                repair_needed=False,
+                schema_version=metadata_schema,
+                detail=(
+                    f"shared metadata schemaVersion {metadata_schema} is newer than supported "
+                    f"{SHARED_LIBRARY_SCHEMA_VERSION}"
+                ),
+            )
+            continue
+
+        chapter_index_path = book_dir / "chapter_index.json"
+        if not chapter_index_path.exists():
+            continue
+        try:
+            chapter_index = json.loads(chapter_index_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            _append_shared_guard(
+                result,
+                book_dir=book_dir,
+                mode="readonly",
+                state="corrupted",
+                reason="invalid_chapter_index_json",
+                repair_needed=True,
+                schema_version=metadata_schema,
+                detail=f"failed to read chapter index: {exc}",
+            )
+            continue
+        if not isinstance(chapter_index, dict):
+            _append_shared_guard(
+                result,
+                book_dir=book_dir,
+                mode="readonly",
+                state="corrupted",
+                reason="invalid_chapter_index_shape",
+                repair_needed=True,
+                schema_version=metadata_schema,
+                detail="chapter_index.json must decode to a JSON object",
+            )
+            continue
+
+        chapter_index_schema = _safe_int(chapter_index.get("schemaVersion") or metadata_schema)
+        if chapter_index_schema > SHARED_LIBRARY_SCHEMA_VERSION:
+            _append_shared_guard(
+                result,
+                book_dir=book_dir,
+                mode="readonly",
+                state="readonly",
+                reason="unsupported_schema_version",
+                repair_needed=False,
+                schema_version=chapter_index_schema,
+                detail=(
+                    f"chapter_index schemaVersion {chapter_index_schema} is newer than supported "
+                    f"{SHARED_LIBRARY_SCHEMA_VERSION}"
+                ),
+            )
+
+
 def scan_local_library(
     db_path: Path | None = None,
     novels_root: Path | None = None,
+    library_root: Path | None = None,
 ) -> dict[str, Any]:
     """Scan local novel folders and recreate library entries on startup."""
     db_path = db_path or DB_PATH
     novels_root = novels_root or DATA_DIR / "novels"
-    result: dict[str, Any] = {"recovered": 0, "chapters": 0, "skipped": 0, "errors": []}
+    library_root = library_root or DATA_DIR / "library"
+    result: dict[str, Any] = {
+        "recovered": 0,
+        "chapters": 0,
+        "skipped": 0,
+        "readonly": 0,
+        "corrupted": 0,
+        "errors": [],
+        "sharedGuards": [],
+    }
 
     subscription_root = novels_root / SUBSCRIPTION_FOLDER
-    if not subscription_root.exists():
-        return result
+    if subscription_root.exists():
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            for book_dir in sorted(subscription_root.iterdir()):
+                if not book_dir.is_dir():
+                    continue
+                metadata_path = book_dir / METADATA_FILE
+                if not metadata_path.exists():
+                    continue
+                try:
+                    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                except Exception as exc:
+                    result["errors"].append(f"{book_dir.name}: failed to read metadata: {exc}")
+                    continue
 
-    with sqlite3.connect(db_path) as conn:
-        conn.row_factory = sqlite3.Row
-        for book_dir in sorted(subscription_root.iterdir()):
-            if not book_dir.is_dir():
-                continue
-            metadata_path = book_dir / METADATA_FILE
-            if not metadata_path.exists():
-                continue
-            try:
-                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-            except Exception as exc:
-                result["errors"].append(f"{book_dir.name}: failed to read metadata: {exc}")
-                continue
+                book_id = metadata.get("bookId", "")
+                if not book_id:
+                    result["skipped"] += 1
+                    continue
 
-            book_id = metadata.get("bookId", "")
-            if not book_id:
-                result["skipped"] += 1
-                continue
+                existing = conn.execute(
+                    "SELECT aggregate_book_id FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                    (book_id,),
+                ).fetchone()
 
-            existing = conn.execute(
-                "SELECT aggregate_book_id FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
-                (book_id,),
-            ).fetchone()
+                try:
+                    if not existing:
+                        _insert_book(conn, metadata)
+                        result["recovered"] += 1
+                    chapters = _recover_chapters(conn, book_id, book_dir)
+                    result["chapters"] += chapters
+                    _update_book_stats(conn, book_id)
+                except Exception as exc:
+                    result["errors"].append(f"{book_id}: {exc}")
 
-            try:
-                if not existing:
-                    _insert_book(conn, metadata)
-                    result["recovered"] += 1
-                chapters = _recover_chapters(conn, book_id, book_dir)
-                result["chapters"] += chapters
-                _update_book_stats(conn, book_id)
-            except Exception as exc:
-                result["errors"].append(f"{book_id}: {exc}")
-
+    _inspect_shared_library_guards(Path(library_root), result)
     return result

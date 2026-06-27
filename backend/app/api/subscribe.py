@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException, Request
 from app.config import DB_PATH
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.library_books import library_books_service
+from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.subscription_search import subscription_search_service
 from app.services.user_auth import auth_service
 from app.storage.db import initialize_database
@@ -68,7 +69,14 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
     book = created["book"]
     processor = AggregateProcessor()
     processor.enqueue_book(book["aggregateBookId"], created["payload"])
-    asyncio.create_task(processor.bootstrap_book_until_visible(book["aggregateBookId"]))
+    scheduler = SharedBookScheduler(processor=processor)
+    scheduler.enqueue_initial_subscription(
+        book["aggregateBookId"],
+        payload=created["payload"],
+        book_name=book.get("name", ""),
+        author=book.get("author", ""),
+    )
+    asyncio.create_task(scheduler.run_periodic_once(wait_for_recovery=False, include_due_books=False))
     return {
         "ok": True,
         "created": True,
@@ -94,6 +102,19 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
             ),
         },
     }
+
+
+@router.post("/books/{aggregate_book_id}/source-map/refresh")
+async def refresh_library_book_source_map(request: Request, aggregate_book_id: str, payload: dict | None = None):
+    auth_service.require_admin(request)
+    from app.api.console import _manual_source_map_refresh
+
+    result = _manual_source_map_refresh(aggregate_book_id, payload=payload)
+    if asyncio.iscoroutine(result):
+        result = await result
+    if not result.get("ok") and result.get("error") == "书籍不存在":
+        raise HTTPException(status_code=404, detail="书籍不存在")
+    return result
 
 
 @router.get("/library")

@@ -891,6 +891,37 @@ class SearchCoordinator:
             for p in plugins
         ]
 
+    def resolve_third_party_source_ids(self, limit: int | None = None) -> list[str]:
+        plugins = self.scheduler._enabled_plugins()
+        plugins = self.scheduler._search_priority_plugins(plugins)
+        plugins = [plugin for plugin in plugins if not plugin.metadata.is_official_source()]
+        if limit is not None:
+            plugins = plugins[: max(1, int(limit))]
+        return [plugin.metadata.id for plugin in plugins]
+
+    async def search_source_map_candidates(
+        self,
+        keyword: str,
+        *,
+        source_ids: list[str] | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        job = self.submit(
+            keyword=keyword,
+            page=1,
+            source_ids=source_ids,
+            limit=limit,
+            search_mode="source",
+        )
+        deadline_at = time.perf_counter() + self._cfg.overall_timeout_seconds + 1.0
+        while job.status in {"pending", "running"} and time.perf_counter() < deadline_at:
+            await asyncio.sleep(0.05)
+        result = job.result if isinstance(job.result, dict) else {}
+        items = result.get("items")
+        if not isinstance(items, list):
+            return []
+        return [dict(item) for item in items if isinstance(item, dict)]
+
     def _classify_sources(self, sources: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
         fast: list[dict] = []
         normal: list[dict] = []
@@ -1772,6 +1803,7 @@ class SearchCoordinator:
         include_official_sources: bool = True,
     ) -> dict:
         score_threshold = self._score_filter_threshold()
+        library_discovery_threshold = library_books_service.discovery_min_readable_chapters()
         candidate_groups = self._filter_candidate_groups(job.candidate_groups)
         raw_items: list[dict] = []
         if job.result and job.result.get("items"):
@@ -1800,12 +1832,14 @@ class SearchCoordinator:
             candidate_groups,
             base_api=base_api,
             score_bonus=self._cfg.official_source_bonus,
+            min_readable_chapters=library_discovery_threshold,
         )
         if not injected_items:
             injected_items = library_books_service.build_search_injected_items_for_keyword(
                 job.keyword,
                 base_api=base_api,
                 score_bonus=self._cfg.official_source_bonus,
+                min_readable_chapters=library_discovery_threshold,
             )
         for item in injected_items:
             reading_item = self._reading_item(dict(item), base_api=base_api)
@@ -1823,6 +1857,7 @@ class SearchCoordinator:
             "elapsedMs": job.elapsed_ms,
             "partial": job.status in {"pending", "running"},
             "scoreFilter": score_threshold,
+            "libraryDiscoveryThreshold": library_discovery_threshold,
         }
         debug.update(official_debug)
         return {

@@ -64,7 +64,11 @@ function normalizeLibraryDetail(data: any): any {
 }
 
 function normalizeChapterList(data: any): any {
-  const chapters = data?.chapters || data?.items || []
+  const chapters = (data?.chapters || data?.items || []).map((chapter: any) => ({
+    ...chapter,
+    id: chapter?.chapterId ?? chapter?.id,
+    chapterId: chapter?.chapterId ?? chapter?.id,
+  }))
   return {
     ...data,
     chapters,
@@ -310,10 +314,18 @@ export const api = {
     const qs = params ? `?${new URLSearchParams(params)}` : ""
     return fetchJson(`/library-books${qs}`).then(normalizeLibraryList)
   },
+  libraryBookSummary: (bookId: string): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/summary`).then(normalizeLibraryDetail),
   libraryBook: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}`).then(normalizeLibraryDetail),
-  libraryBookChapters: (bookId: string): Promise<any> =>
-    fetchJson(`/library-books/${bookId}/chapters`).then(normalizeChapterList),
+  libraryBookChapters: (bookId: string, params?: Record<string, string>): Promise<any> => {
+    const qs = params ? `?${new URLSearchParams(params)}` : ""
+    return fetchJson(`/library-books/${bookId}/chapters${qs}`).then(normalizeChapterList)
+  },
+  libraryBookLogs: (bookId: string, limit = 20, offset = 0): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/logs?limit=${limit}&offset=${offset}`),
+  libraryBookChapterProgress: (bookId: string, chapterId: string): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/chapters/${chapterId}/progress`),
   pauseLibraryBook: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}/pause`, { method: "POST" }),
   resumeLibraryBook: (bookId: string): Promise<any> =>
@@ -326,6 +338,18 @@ export const api = {
     fetchJson(`/library-books/${bookId}/settings`, { method: "POST", body: JSON.stringify(payload) }),
   rebuildLibraryBook: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}/rebuild`, { method: "POST" }),
+  refreshLibraryBookSources: (bookId: string, payload?: Record<string, any>): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/source-map/refresh`, {
+      method: "POST",
+      body: JSON.stringify(payload || {}),
+    }),
+  repairLibraryBook: (bookId: string, payload?: Record<string, any>): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/repair`, {
+      method: "POST",
+      body: JSON.stringify(payload || {}),
+    }),
+  checkLibraryBookUpdate: (bookId: string): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/update-check`, { method: "POST" }),
   libraryBookProcessingLogs: (bookId: string, limit = 50, offset = 0): Promise<any> =>
     fetchJson(`/library-books/${bookId}/processing-logs?limit=${limit}&offset=${offset}`),
 

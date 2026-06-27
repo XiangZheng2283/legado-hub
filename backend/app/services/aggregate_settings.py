@@ -89,6 +89,16 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "deviationThreshold": 0.90,
     "promptTemplate": "",
     "systemPrompt": "",
+    "useSharedBookStorage": False,
+    "sharedBookStorageReadMode": "legacy",
+    "sharedBookStorageDualWrite": False,
+    "sharedBookCutoverBookIds": [],
+    "minReadableChaptersForDiscovery": 50,
+    "stage3MaxBacklogPerBook": 0,
+    "aiTokenBudgetPerHour": 0,
+    "aiFailureRateThreshold": 0.0,
+    "aiCircuitBreakerCooldownMinutes": 30,
+    "stage3PeakHourSkipEnabled": False,
 }
 
 
@@ -119,6 +129,80 @@ DEFAULT_AI_PROVIDER_CONFIG: dict[str, Any] = {
 }
 
 
+def shared_book_storage_contract(content_workflow: dict[str, Any]) -> dict[str, Any]:
+    """Return normalized shared-book cutover semantics for callers and docs."""
+    workflow = _normalize_content_workflow(content_workflow)
+    use_shared_storage = workflow["useSharedBookStorage"]
+    configured_dual_write = workflow["sharedBookStorageDualWrite"]
+    configured_read_mode = workflow["sharedBookStorageReadMode"]
+
+    if not use_shared_storage:
+        dual_write = False
+        read_mode = "legacy"
+        legacy_write_mode = "read_write"
+        shared_write_mode = "disabled"
+        shared_read_mode = "disabled"
+        rollback_allowed = True
+        rollback_note = (
+            "Legacy behavior is fully restored because shared-book storage is disabled "
+            "before legacy writes are turned off."
+        )
+    elif configured_dual_write:
+        dual_write = True
+        read_mode = configured_read_mode
+        legacy_write_mode = "read_write"
+        shared_write_mode = "read_write"
+        shared_read_mode = read_mode
+        rollback_allowed = True
+        rollback_note = (
+            "Rollback remains available: set useSharedBookStorage=false to stop all new "
+            "shared-book reads and writes while keeping legacy behavior."
+        )
+    else:
+        dual_write = False
+        read_mode = configured_read_mode
+        legacy_write_mode = "read_only"
+        shared_write_mode = "read_write"
+        shared_read_mode = read_mode
+        rollback_allowed = False
+        rollback_note = (
+            "Rollback to pure legacy mode is no longer guaranteed after legacy writes are "
+            "disabled; investigate with shared-book data as the write source of truth."
+        )
+
+    if not use_shared_storage:
+        api_read_targets = ["legacy"]
+        should_read_legacy = True
+        should_read_shared = False
+        should_compare_reads = False
+    else:
+        read_targets = {
+            "legacy": ["legacy"],
+            "shared": ["shared"],
+            "dual_verify": ["legacy", "shared"],
+        }
+        api_read_targets = list(read_targets.get(read_mode, ["legacy"]))
+        should_read_legacy = read_mode in {"legacy", "dual_verify"}
+        should_read_shared = read_mode in {"shared", "dual_verify"}
+        should_compare_reads = read_mode == "dual_verify"
+
+    return {
+        "useSharedBookStorage": use_shared_storage,
+        "dualWrite": dual_write,
+        "readMode": read_mode,
+        "legacyWriteMode": legacy_write_mode,
+        "sharedWriteMode": shared_write_mode,
+        "sharedReadMode": shared_read_mode,
+        "apiReadTargets": api_read_targets,
+        "shouldReadLegacy": should_read_legacy,
+        "shouldReadShared": should_read_shared,
+        "shouldCompareReads": should_compare_reads,
+        "rollbackToLegacyAvailable": rollback_allowed,
+        "rollbackToLegacyRule": rollback_note,
+        "cutoverBookIds": workflow.get("sharedBookCutoverBookIds", []),
+    }
+
+
 def runtime_contract() -> dict[str, Any]:
     return {
         "windowChapterLimit": WINDOW_CHAPTER_LIMIT,
@@ -132,6 +216,82 @@ def _merge_defaults(defaults: dict[str, Any], value: Any) -> dict[str, Any]:
     if isinstance(value, dict):
         merged.update(value)
     return merged
+
+
+def _shared_book_dual_write_value(
+    config: dict[str, Any],
+    *,
+    explicit_dual_write: bool,
+) -> bool:
+    if explicit_dual_write:
+        return bool(config.get("sharedBookStorageDualWrite", False))
+    if bool(config.get("useSharedBookStorage", False)):
+        return True
+    return False
+
+
+def _normalize_content_workflow(value: Any, *, explicit_dual_write: bool | None = None) -> dict[str, Any]:
+    raw = value if isinstance(value, dict) else {}
+    config = _merge_defaults(DEFAULT_CONTENT_WORKFLOW, raw)
+
+    config["useSharedBookStorage"] = bool(config.get("useSharedBookStorage", False))
+
+    read_mode = str(config.get("sharedBookStorageReadMode", "legacy") or "legacy").strip().lower()
+    if read_mode not in {"legacy", "shared", "dual_verify"}:
+        read_mode = "legacy"
+
+    if explicit_dual_write is None:
+        explicit_dual_write = "sharedBookStorageDualWrite" in raw
+    dual_write = _shared_book_dual_write_value(
+        config,
+        explicit_dual_write=explicit_dual_write,
+    )
+
+    if not config["useSharedBookStorage"]:
+        read_mode = "legacy"
+        dual_write = False
+
+    try:
+        min_readable_chapters = int(config.get("minReadableChaptersForDiscovery", 50) or 50)
+    except (TypeError, ValueError):
+        min_readable_chapters = 50
+    config["minReadableChaptersForDiscovery"] = max(0, min_readable_chapters)
+
+    try:
+        stage3_max_backlog = int(config.get("stage3MaxBacklogPerBook", 0) or 0)
+    except (TypeError, ValueError):
+        stage3_max_backlog = 0
+    config["stage3MaxBacklogPerBook"] = max(0, stage3_max_backlog)
+
+    try:
+        ai_token_budget = int(config.get("aiTokenBudgetPerHour", 0) or 0)
+    except (TypeError, ValueError):
+        ai_token_budget = 0
+    config["aiTokenBudgetPerHour"] = max(0, ai_token_budget)
+
+    try:
+        ai_failure_rate = float(config.get("aiFailureRateThreshold", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        ai_failure_rate = 0.0
+    config["aiFailureRateThreshold"] = min(max(ai_failure_rate, 0.0), 1.0)
+
+    try:
+        cooldown_minutes = int(config.get("aiCircuitBreakerCooldownMinutes", 30) or 30)
+    except (TypeError, ValueError):
+        cooldown_minutes = 30
+    config["aiCircuitBreakerCooldownMinutes"] = max(1, cooldown_minutes)
+    config["stage3PeakHourSkipEnabled"] = bool(config.get("stage3PeakHourSkipEnabled", False))
+
+    config["sharedBookStorageReadMode"] = read_mode
+    config["sharedBookStorageDualWrite"] = dual_write
+
+    raw_book_ids = config.get("sharedBookCutoverBookIds", [])
+    if isinstance(raw_book_ids, list):
+        config["sharedBookCutoverBookIds"] = [str(item) for item in raw_book_ids if str(item).strip()]
+    else:
+        config["sharedBookCutoverBookIds"] = []
+
+    return config
 
 
 def mask_api_key(value: str) -> str:
@@ -198,14 +358,18 @@ class AggregateSettingsRepository:
         self._cfg = AppConfig.get()
 
     def content_workflow(self) -> dict[str, Any]:
-        return _merge_defaults(DEFAULT_CONTENT_WORKFLOW, self._cfg.aggregate.content_workflow)
+        self._cfg.reload()
+        return _normalize_content_workflow(self._cfg.aggregate.content_workflow)
 
     def ai_provider_config(self) -> dict[str, Any]:
+        self._cfg.reload()
         return _provider_to_dict(self._cfg.ai_provider)
 
     def get_settings(self) -> dict[str, Any]:
+        workflow = self.content_workflow()
         return {
-            "contentWorkflow": self.content_workflow(),
+            "contentWorkflow": workflow,
+            "sharedBookStorageContract": shared_book_storage_contract(workflow),
             "aiProviderConfig": self.ai_provider_config(),
             "runtime": runtime_contract(),
         }
@@ -214,9 +378,17 @@ class AggregateSettingsRepository:
         if "contentWorkflow" in payload:
             value = payload.get("contentWorkflow")
             if isinstance(value, dict):
-                current_wf = _merge_defaults(DEFAULT_CONTENT_WORKFLOW, self._cfg.aggregate.content_workflow)
+                self._cfg.reload()
+                stored_wf = self._cfg.aggregate.content_workflow
+                current_wf = _merge_defaults(DEFAULT_CONTENT_WORKFLOW, stored_wf)
                 current_wf.update(value)
-                self._cfg.set("aggregate.contentWorkflow", current_wf)
+                self._cfg.set(
+                    "aggregate.contentWorkflow",
+                    _normalize_content_workflow(
+                        current_wf,
+                        explicit_dual_write=("sharedBookStorageDualWrite" in value),
+                    ),
+                )
 
         if "aiProviderConfig" in payload:
             value = payload.get("aiProviderConfig")

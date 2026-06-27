@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 
 from app import config
 from app.api import health, legado, console, auth, subscribe
-from app.services.aggregate_processor import AggregateProcessor
+from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.source_ping_scheduler import SourcePingScheduler
 from app.storage.db import initialize_database
 
@@ -75,7 +75,8 @@ async def lifespan(app: FastAPI):
         pass
 
     stop_event = asyncio.Event()
-    aggregate_task = asyncio.create_task(AggregateProcessor().run_forever(stop_event))
+    shared_book_scheduler = SharedBookScheduler()
+    aggregate_task = asyncio.create_task(shared_book_scheduler.run_forever(stop_event))
     ping_task = asyncio.create_task(SourcePingScheduler().run_forever(stop_event))
     try:
         yield

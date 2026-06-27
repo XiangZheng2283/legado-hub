@@ -8,6 +8,7 @@ import json
 import logging
 import re
 import sqlite3
+from collections import deque
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -27,14 +28,25 @@ from app.services.aggregate_settings import (
     RETRY_DELAYS_MINUTES,
     WINDOW_CHAPTER_LIMIT,
     AggregateSettingsRepository,
+    shared_book_storage_contract,
 )
 from app.services.novel_file_cache import NovelFileCache
+from app.services.shared_book_errors import (
+    STAGE1_NO_RETRY_ERROR_CODES,
+    SharedBookRetryClass,
+    classify_stage1_error,
+    classify_stage1_retry,
+)
+from app.services.shared_book_runtime import (
+    SharedBookProcessLogger,
+    SharedBookRuntimeStore,
+    SharedBookStage3DeferredItem,
+)
+from app.services.shared_book_storage import SharedBookStorage
 from app.services.library_books import library_books_service
 
 DEFAULT_WORKFLOW = DEFAULT_CONTENT_WORKFLOW
 
-# Error codes for chapter processing failures (plan §8.3.1).
-ERROR_CODES_NO_RETRY = frozenset({"AI_BAD_REQUEST"})
 TRACE_BLOCK_RE = re.compile(
     r"\n?LEGADOHUB_TRACE_BEGIN\s*```yaml.*?```\s*LEGADOHUB_TRACE_END\s*$",
     re.DOTALL,
@@ -42,49 +54,8 @@ TRACE_BLOCK_RE = re.compile(
 
 
 def classify_error(exc: Exception) -> str:
-    """Map an exception to a structured error code for retry decisions."""
-    from app.ai.client import AIProviderHTTPError, AIProviderNotConfiguredError
-
-    msg = str(exc).lower()
-
-    # Empty content from source
-    if isinstance(exc, ValueError) and "empty" in msg:
-        return "SOURCE_EMPTY_CONTENT"
-
-    # Timeout variants
-    if isinstance(exc, (TimeoutError,)):
-        return "SOURCE_TIMEOUT"
-    try:
-        import httpx
-        if isinstance(exc, httpx.TimeoutException):
-            return "SOURCE_TIMEOUT"
-    except ImportError:
-        pass
-
-    # AI provider HTTP errors
-    if isinstance(exc, AIProviderHTTPError):
-        code = exc.status_code
-        if code == 401:
-            return "SOURCE_AUTH_REQUIRED"
-        if code == 429:
-            return "AI_RATE_LIMITED"
-        if code == 400:
-            return "AI_BAD_REQUEST"
-        if code >= 500:
-            return "AI_TIMEOUT"
-        return "AI_TIMEOUT"
-
-    if isinstance(exc, AIProviderNotConfiguredError):
-        return "AI_BAD_REQUEST"
-
-    # Timeout in message
-    if "timeout" in msg or "timed out" in msg:
-        return "SOURCE_TIMEOUT"
-
-    if "ai_output_deviation" in msg:
-        return "AI_OUTPUT_DEVIATION"
-
-    return "AI_TIMEOUT"
+    """Map a Stage 1 exception to the canonical shared-book error code."""
+    return str(classify_stage1_error(exc))
 
 
 def compute_next_retry_time(retry_count: int) -> str | None:
@@ -111,6 +82,9 @@ class AggregateProcessor:
         self.db_path = Path(db_path or DB_PATH)
         self._ai_service = ai_service
         self._toc_cache: dict[str, dict] = {}
+        self._ai_circuit_breakers: dict[str, dict[str, Any]] = {}
+        self._ai_window_events: dict[str, deque[dict[str, Any]]] = {}
+        self._process_logger_cache: SharedBookProcessLogger | None = None
 
     def _conn(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
@@ -123,8 +97,14 @@ class AggregateProcessor:
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
 
+    def _now_dt(self) -> datetime:
+        return datetime.now(timezone.utc)
+
     def _workflow_settings(self) -> dict:
         return AggregateSettingsRepository(self.db_path).content_workflow()
+
+    def _shared_book_storage_contract(self) -> dict[str, Any]:
+        return shared_book_storage_contract(self._workflow_settings())
 
     def _book_workflow_settings(self, aggregate_book_id: str = "") -> dict:
         settings = dict(self._workflow_settings())
@@ -174,6 +154,120 @@ class AggregateProcessor:
 
     def return_only_aggregate_source(self) -> bool:
         return bool(self._workflow_settings().get("returnOnlyAggregateSource", False))
+
+    def stage3_backlog_state(self, aggregate_book_id: str) -> dict[str, Any]:
+        settings = self._book_workflow_settings(aggregate_book_id)
+        limit = max(0, int(settings.get("stage3MaxBacklogPerBook", 0) or 0))
+        backlog = self._pending_chapter_count(aggregate_book_id)
+        exceeded = limit > 0 and backlog > limit
+        return {
+            "bookId": aggregate_book_id,
+            "backlog": backlog,
+            "limit": limit,
+            "enabled": limit > 0,
+            "exceeded": exceeded,
+        }
+
+    def ai_circuit_breaker_state(self, aggregate_book_id: str) -> dict[str, Any]:
+        settings = self._book_workflow_settings(aggregate_book_id)
+        now = self._now_dt()
+        self._prune_ai_window_events(aggregate_book_id, now)
+        breaker = self._ai_circuit_breakers.get(aggregate_book_id) or {}
+        open_until = breaker.get("openUntil")
+        is_open = isinstance(open_until, datetime) and open_until > now
+        if not is_open and aggregate_book_id in self._ai_circuit_breakers:
+            self._ai_circuit_breakers.pop(aggregate_book_id, None)
+            breaker = {}
+
+        events = list(self._ai_window_events.get(aggregate_book_id, ()))
+        total_calls = len(events)
+        failed_calls = sum(1 for event in events if not bool(event.get("success", False)))
+        token_usage = sum(max(0, int(event.get("tokens", 0) or 0)) for event in events)
+        peak_hour_skip = self._is_stage3_peak_hour_blocked(settings=settings)
+        return {
+            "bookId": aggregate_book_id,
+            "isOpen": is_open,
+            "reason": str(breaker.get("reason", "") or ""),
+            "openUntil": open_until.isoformat() if isinstance(open_until, datetime) else None,
+            "totalCallsLastHour": total_calls,
+            "failedCallsLastHour": failed_calls,
+            "tokensLastHour": token_usage,
+            "peakHourBlocked": peak_hour_skip,
+            "cooldownMinutes": max(1, int(settings.get("aiCircuitBreakerCooldownMinutes", 30) or 30)),
+            "failureRateThreshold": float(settings.get("aiFailureRateThreshold", 0.0) or 0.0),
+            "tokenBudgetPerHour": max(0, int(settings.get("aiTokenBudgetPerHour", 0) or 0)),
+        }
+
+    def _prune_ai_window_events(self, aggregate_book_id: str, now: datetime | None = None) -> None:
+        now = now or self._now_dt()
+        cutoff = now - timedelta(hours=1)
+        events = self._ai_window_events.get(aggregate_book_id)
+        if not events:
+            return
+        while events and events[0]["at"] <= cutoff:
+            events.popleft()
+        if not events:
+            self._ai_window_events.pop(aggregate_book_id, None)
+
+    def _record_ai_window_event(
+        self,
+        aggregate_book_id: str,
+        *,
+        success: bool,
+        tokens: int = 0,
+        now: datetime | None = None,
+    ) -> None:
+        now = now or self._now_dt()
+        self._prune_ai_window_events(aggregate_book_id, now)
+        events = self._ai_window_events.setdefault(aggregate_book_id, deque())
+        events.append({
+            "at": now,
+            "success": bool(success),
+            "tokens": max(0, int(tokens or 0)),
+        })
+        self._maybe_open_ai_circuit_breaker(aggregate_book_id, now=now)
+
+    def _is_stage3_peak_hour_blocked(self, *, settings: dict[str, Any]) -> bool:
+        if not bool(settings.get("stage3PeakHourSkipEnabled", False)):
+            return False
+        local_hour = datetime.now().hour
+        return 19 <= local_hour < 23
+
+    def _maybe_open_ai_circuit_breaker(self, aggregate_book_id: str, *, now: datetime | None = None) -> None:
+        now = now or self._now_dt()
+        settings = self._book_workflow_settings(aggregate_book_id)
+        self._prune_ai_window_events(aggregate_book_id, now)
+        events = list(self._ai_window_events.get(aggregate_book_id, ()))
+        if not events:
+            return
+
+        cooldown_minutes = max(1, int(settings.get("aiCircuitBreakerCooldownMinutes", 30) or 30))
+        token_budget = max(0, int(settings.get("aiTokenBudgetPerHour", 0) or 0))
+        if token_budget > 0:
+            token_usage = sum(max(0, int(event.get("tokens", 0) or 0)) for event in events)
+            if token_usage >= token_budget:
+                self._ai_circuit_breakers[aggregate_book_id] = {
+                    "reason": "token_budget_exceeded",
+                    "openUntil": now + timedelta(minutes=cooldown_minutes),
+                }
+                return
+
+        failure_rate_threshold = float(settings.get("aiFailureRateThreshold", 0.0) or 0.0)
+        if 0.0 < failure_rate_threshold <= 1.0 and len(events) >= 3:
+            failed_calls = sum(1 for event in events if not bool(event.get("success", False)))
+            if failed_calls / len(events) >= failure_rate_threshold:
+                self._ai_circuit_breakers[aggregate_book_id] = {
+                    "reason": "failure_rate_threshold_exceeded",
+                    "openUntil": now + timedelta(minutes=cooldown_minutes),
+                }
+
+    def _should_skip_ai_processing(self, aggregate_book_id: str) -> tuple[bool, str]:
+        state = self.ai_circuit_breaker_state(aggregate_book_id)
+        if state["peakHourBlocked"]:
+            return True, "peak_hour_skip"
+        if state["isOpen"]:
+            return True, state["reason"] or "circuit_breaker_open"
+        return False, ""
 
     def enqueue_book(self, aggregate_book_id: str, payload: dict[str, Any]) -> dict:
         if not self.processing_enabled(aggregate_book_id):
@@ -463,6 +557,17 @@ class AggregateProcessor:
 
     async def run_book_task(self, aggregate_book_id: str, chapter_limit: int = WINDOW_CHAPTER_LIMIT) -> dict:
         from app.services.book_catalog import BookCatalog
+
+        backlog_state = self.stage3_backlog_state(aggregate_book_id)
+        if backlog_state["exceeded"]:
+            return {
+                "bookId": aggregate_book_id,
+                "success": False,
+                "skipped": True,
+                "reason": "stage3_backlog_limit_exceeded",
+                "stage3Backlog": backlog_state["backlog"],
+                "stage3BacklogLimit": backlog_state["limit"],
+            }
 
         with self._conn() as conn:
             row = conn.execute(
@@ -793,7 +898,7 @@ class AggregateProcessor:
         return parsed if parsed > 0 else default
 
     def _chapters_for_processing(self, aggregate_book_id: str, limit: int = WINDOW_CHAPTER_LIMIT) -> list[dict]:
-        terminal_codes = tuple(sorted(ERROR_CODES_NO_RETRY))
+        terminal_codes = tuple(sorted(str(code) for code in STAGE1_NO_RETRY_ERROR_CODES))
         placeholders = ",".join("?" for _ in terminal_codes) if terminal_codes else "''"
         now = self._now()
         with self._conn() as conn:
@@ -846,6 +951,29 @@ class AggregateProcessor:
                         (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), remaining_limit),
                     ).fetchall()
                 )
+            remaining_limit = max(0, requested_limit - len(rows))
+            if remaining_limit > 0:
+                due_stage3_ids = self._due_stage3_deferred_chapter_ids(aggregate_book_id)
+                existing_ids = {row[0] for row in rows}
+                due_stage3_ids = [chapter_id for chapter_id in due_stage3_ids if chapter_id not in existing_ids]
+                if due_stage3_ids:
+                    placeholders = ",".join("?" for _ in due_stage3_ids)
+                    rows.extend(
+                        conn.execute(
+                            f"""
+                            SELECT chapter_id, source_chapter_id, title, status, chapter_index, aggregate_book_id, placeholder
+                            FROM aggregate_chapter_tasks
+                            WHERE aggregate_book_id = ?
+                              AND chapter_id IN ({placeholders})
+                              AND status = 'fallback'
+                              AND processed_content IS NOT NULL
+                              AND processed_content != ''
+                            ORDER BY COALESCE(chapter_index, 999999), created_at
+                            LIMIT ?
+                            """,
+                            (aggregate_book_id, *due_stage3_ids, remaining_limit),
+                        ).fetchall()
+                    )
         return [
             {
                 "chapterId": row[0],
@@ -889,11 +1017,14 @@ class AggregateProcessor:
         primary_source_id: str,
         aggregate_book_id: str = "",
     ) -> list[dict]:
-        sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
-        candidates = [
-            s for s in sources
-            if isinstance(s, dict) and s.get("sourceId") and s.get("sourceId") != primary_source_id
-        ]
+        from app.services.shared_book_source_map import SharedBookSourceMapService
+
+        service = SharedBookSourceMapService(library_books=self._library_books())
+        candidates = service.load_current_source_map_refs(
+            aggregate_book_id,
+            payload=payload,
+            primary_source_id=primary_source_id,
+        )
         settings = self._book_workflow_settings(aggregate_book_id)
         priority = [str(x) for x in settings.get("primarySourcePriority", []) or []]
         if priority:
@@ -901,11 +1032,11 @@ class AggregateProcessor:
             candidates.sort(
                 key=lambda s: (
                     order_map.get(s.get("sourceId", ""), 9999),
-                    -int(s.get("score", 0) or 0),
+                    -int(s.get("priority", s.get("score", 0)) or 0),
                 )
             )
         else:
-            candidates.sort(key=lambda s: -int(s.get("score", 0) or 0))
+            candidates.sort(key=lambda s: -int(s.get("priority", s.get("score", 0)) or 0))
         return candidates
 
     def _get_ai_service(self, aggregate_book_id: str = ""):
@@ -1073,7 +1204,7 @@ class AggregateProcessor:
                 candidate_result = await self._try_candidate_content(
                     catalog, chapter, payload, primary_source_id
                 )
-                if candidate_result:
+                if candidate_result and candidate_result.get("content"):
                     # Candidate found with full content → treat as full.
                     return await self._process_full_content(
                         catalog=catalog, chapter=chapter,
@@ -1088,6 +1219,8 @@ class AggregateProcessor:
                         source_word_count=source_word_count,
                         primary_source_chapter_url=primary_source_chapter_url,
                     )
+                if candidate_result and candidate_result.get("all_sources_failed"):
+                    raise ValueError("empty supplement content from all current sources")
                 # No candidate → purified preview as fallback.
                 purified = self._purify_content(content) if self.purify_enabled(aggregate_book_id) else self._normalize_content_light(content)
                 alignment_json = build_source_alignment_json(
@@ -1117,7 +1250,7 @@ class AggregateProcessor:
             candidate_result = await self._try_candidate_content(
                 catalog, chapter, payload, primary_source_id
             )
-            if candidate_result:
+            if candidate_result and candidate_result.get("content"):
                 return await self._process_full_content(
                     catalog=catalog, chapter=chapter,
                     content=candidate_result["content"],
@@ -1131,6 +1264,8 @@ class AggregateProcessor:
                     source_word_count=source_word_count,
                     primary_source_chapter_url=primary_source_chapter_url,
                 )
+            if candidate_result and candidate_result.get("all_sources_failed"):
+                raise ValueError("empty supplement content from all current sources")
             raise ValueError("empty chapter content from all sources")
 
         except Exception as exc:
@@ -1163,40 +1298,70 @@ class AggregateProcessor:
         ai_total_tokens = 0
         ai_latency_ms = 0
         preview_only = False
+        stage3_deferred_reason = ""
+        stage3_retry_not_before = ""
+        stage3_attempt = self._stage3_deferred_attempt(aggregate_book_id, chapter_id)
 
         ai_service = self._get_ai_service(aggregate_book_id)
         if ai_service:
-            try:
-                book_name = self._aggregate_book_name_from_cache(aggregate_book_id)
-                prev_ctx = self._load_previous_chapters_context(
-                    aggregate_book_id, chapter_index or 999
+            should_skip_ai, skip_reason = self._should_skip_ai_processing(aggregate_book_id)
+            if should_skip_ai:
+                logger.info("Skipping AI Stage 3 processing for %s: %s", aggregate_book_id, skip_reason)
+                stage3_deferred_reason = skip_reason or "temporary_skip"
+                stage3_retry_not_before = self._stage3_retry_not_before(
+                    aggregate_book_id,
+                    stage3_deferred_reason,
+                    attempt=stage3_attempt,
                 )
-                if fallback_source_id:
-                    # Content came from a candidate source → use third-party AI path.
-                    ai_result = await ai_service.process_third_party_primary(
-                        book_name=book_name, author="", title=title,
-                        content=purified, source_id=fallback_source_id,
-                        previous_context=prev_ctx,
+                ai_service = None
+            else:
+                try:
+                    book_name = self._aggregate_book_name_from_cache(aggregate_book_id)
+                    prev_ctx = self._load_previous_chapters_context(
+                        aggregate_book_id, chapter_index or 999
                     )
-                else:
-                    # Content from primary source → use official AI path.
-                    ai_result = await ai_service.process_official_full(
-                        book_name=book_name, author="", title=title,
-                        content=purified,
+                    if fallback_source_id:
+                        # Content came from a candidate source → use third-party AI path.
+                        ai_result = await ai_service.process_third_party_primary(
+                            book_name=book_name, author="", title=title,
+                            content=purified, source_id=fallback_source_id,
+                            previous_context=prev_ctx,
+                        )
+                    else:
+                        # Content from primary source → use official AI path.
+                        ai_result = await ai_service.process_official_full(
+                            book_name=book_name, author="", title=title,
+                            content=purified,
+                        )
+                    if ai_result.get("status") in ("processed", "fallback"):
+                        selected_content = ai_result.get("content", purified)
+                        ai_model = ai_result.get("aiModel", "")
+                        ai_self_score = ai_result.get("selfScore", 0.0)
+                        ai_prompt_tokens = ai_result.get("promptTokens", 0)
+                        ai_completion_tokens = ai_result.get("completionTokens", 0)
+                        ai_total_tokens = ai_result.get("totalTokens", 0)
+                        ai_latency_ms = ai_result.get("latencyMs", 0)
+                    self._record_ai_window_event(
+                        aggregate_book_id,
+                        success=True,
+                        tokens=ai_total_tokens,
                     )
-                if ai_result.get("status") in ("processed", "fallback"):
-                    selected_content = ai_result.get("content", purified)
-                    ai_model = ai_result.get("aiModel", "")
-                    ai_self_score = ai_result.get("selfScore", 0.0)
-                    ai_prompt_tokens = ai_result.get("promptTokens", 0)
-                    ai_completion_tokens = ai_result.get("completionTokens", 0)
-                    ai_total_tokens = ai_result.get("totalTokens", 0)
-                    ai_latency_ms = ai_result.get("latencyMs", 0)
-            except Exception:
-                pass  # AI failed → keep purified content.
+                except Exception:
+                    self._record_ai_window_event(aggregate_book_id, success=False, tokens=0)
+                    stage3_deferred_reason = "infrastructure_retry"
+                    stage3_retry_not_before = self._stage3_retry_not_before(
+                        aggregate_book_id,
+                        stage3_deferred_reason,
+                        attempt=stage3_attempt,
+                    )
 
         # Step 3: Write result.
-        status = "fallback" if fallback_source_id else "processed"
+        if stage3_deferred_reason:
+            status = "fallback"
+        elif ai_model:
+            status = "processed"
+        else:
+            status = "fallback" if fallback_source_id else "processed"
         alignment_json = build_source_alignment_json(
             selected_content_source="official" if not fallback_source_id else "candidate",
             alignment_passed=True,
@@ -1206,6 +1371,10 @@ class AggregateProcessor:
         )
         if isinstance(classification.get("alignmentJson"), dict) and classification.get("alignmentJson"):
             alignment_json = dict(classification["alignmentJson"])
+        if stage3_deferred_reason:
+            alignment_json["stage3Deferred"] = True
+            alignment_json["stage3DeferredReason"] = stage3_deferred_reason
+            alignment_json["stage3RetryNotBefore"] = stage3_retry_not_before
         self._write_chapter_result(
             chapter_id=chapter_id, aggregate_book_id=aggregate_book_id,
             title=title, chapter_index=chapter_index,
@@ -1223,6 +1392,16 @@ class AggregateProcessor:
             primary_source_chapter_url=primary_source_chapter_url,
             preview_only=preview_only,
         )
+        if stage3_deferred_reason:
+            self._mark_stage3_deferred(
+                aggregate_book_id=aggregate_book_id,
+                chapter_id=chapter_id,
+                reason=stage3_deferred_reason,
+                retry_not_before=stage3_retry_not_before or self._now(),
+                attempt=stage3_attempt + 1,
+            )
+        else:
+            self._clear_stage3_deferred(aggregate_book_id, chapter_id)
         return {"chapterId": chapter_id, "success": True,
                 "contentLength": len(selected_content),
                 "fallback": bool(fallback_source_id)}
@@ -1257,11 +1436,14 @@ class AggregateProcessor:
         )
         official_preview = str(official_snapshot or "").strip()
 
-        for cand in candidates[:3]:
+        attempted_source_ids: list[str] = []
+
+        for cand in candidates:
             cand_source_id = cand.get("sourceId", "")
             cand_book_id = cand.get("bookId", "")
             if not cand_source_id or not cand_book_id:
                 continue
+            attempted_source_ids.append(cand_source_id)
             try:
                 cand_toc = await self._cached_toc(catalog, cand_book_id)
                 cand_chapters = [c for c in cand_toc.get("chapters", []) if isinstance(c, dict)]
@@ -1378,6 +1560,11 @@ class AggregateProcessor:
                         }
                     continue
 
+        if attempted_source_ids:
+            return {
+                "all_sources_failed": True,
+                "attempted_source_ids": attempted_source_ids,
+            }
         return None
 
     def _match_candidate_toc_entries(
@@ -1421,6 +1608,7 @@ class AggregateProcessor:
         chapter_id = chapter["chapterId"]
         aggregate_book_id = chapter.get("aggregateBookId", "")
         error_code = classify_error(exc)
+        retry_class = classify_stage1_retry(error_code)
         alignment_json = build_source_alignment_json(
             selected_content_source="none",
             alignment_passed=False,
@@ -1433,7 +1621,15 @@ class AggregateProcessor:
             ).fetchone()
             current_retry = (row[0] if row else 0) or 0
 
-            if error_code in ERROR_CODES_NO_RETRY or max_retries_reached(current_retry):
+            if retry_class == SharedBookRetryClass.NO_RETRY or max_retries_reached(current_retry):
+                conn.execute(
+                    """UPDATE aggregate_chapter_tasks
+                       SET status = 'error', error = ?, last_error_code = ?,
+                           source_alignment_json = ?, next_retry_time = NULL, updated_at = ?
+                       WHERE chapter_id = ?""",
+                    (str(exc), error_code, json.dumps(alignment_json, ensure_ascii=False), now, chapter_id),
+                )
+            elif retry_class == SharedBookRetryClass.LONG_RETRY_SCAN:
                 conn.execute(
                     """UPDATE aggregate_chapter_tasks
                        SET status = 'error', error = ?, last_error_code = ?,
@@ -1480,6 +1676,7 @@ class AggregateProcessor:
             source_word_count=source_word_count,
             primary_source_chapter_url=primary_source_chapter_url,
             preview_only=preview_only,
+            status=status,
         )
         trace_hash = hashlib.sha256(
             json.dumps(trace_meta, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -1527,10 +1724,87 @@ class AggregateProcessor:
                 )
             conn.commit()
         self._refresh_shared_book_state(aggregate_book_id)
+        self._log_chapter_result(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+            title=title,
+            status=status,
+            alignment_json=alignment_json,
+            fallback_source_id=fallback_source_id,
+            ai_model=ai_model,
+            preview_only=preview_only,
+        )
+
+    def _log_chapter_result(
+        self,
+        *,
+        aggregate_book_id: str,
+        chapter_index: int | None,
+        title: str,
+        status: str,
+        alignment_json: dict,
+        fallback_source_id: str,
+        ai_model: str,
+        preview_only: bool,
+    ) -> None:
+        contract = self._shared_book_storage_contract()
+        if not contract.get("useSharedBookStorage"):
+            return
+        try:
+            book_name = self._aggregate_book_name_from_cache(aggregate_book_id)
+            book_author = self._aggregate_book_author_from_cache(aggregate_book_id)
+            if not book_name:
+                return
+        except Exception:
+            return
+
+        event = "chapter_write"
+        error_code = None
+        error_message = None
+        if status in {"error", "failed"}:
+            event = "chapter_error"
+            error_code = "S3_PROCESSING_FAILED"
+            error_message = "chapter processing failed"
+
+        stage = "stage1"
+        if fallback_source_id:
+            stage = "stage2"
+        if ai_model:
+            stage = "stage3"
+
+        primary_source_id = ""
+        if isinstance(alignment_json, dict):
+            primary_source_id = alignment_json.get("primarySourceId") or alignment_json.get("selectedSource") or ""
+
+        try:
+            self._shared_book_process_logger().append(
+                book_name=book_name,
+                author=book_author,
+                event=event,
+                book_id=aggregate_book_id,
+                chapter_index=chapter_index,
+                stage=stage,
+                error_code=error_code,
+                error_message=error_message,
+                payload={
+                    "title": title,
+                    "status": status,
+                    "previewOnly": preview_only,
+                    "primarySourceId": primary_source_id,
+                    "supplementSourceId": fallback_source_id or None,
+                    "aiModel": ai_model or None,
+                },
+            )
+        except Exception:
+            logger.debug("Failed to write chapter process log", exc_info=True)
 
     def _aggregate_book_name_from_cache(self, aggregate_book_id: str) -> str:
         with self._conn() as conn:
             return self._aggregate_book_name(conn, aggregate_book_id)
+
+    def _aggregate_book_author_from_cache(self, aggregate_book_id: str) -> str:
+        with self._conn() as conn:
+            return self._aggregate_book_author(conn, aggregate_book_id)
 
     def aggregate_chapter_response(self, chapter_url: str, chapter_id: str = "") -> dict:
         try:
@@ -1684,6 +1958,13 @@ class AggregateProcessor:
                 chapter_url=chapter_url,
                 trace_meta=self._load_policy_snapshot(conn, chapter_id),
             )
+            self._dual_verify_chapter_output(
+                conn,
+                chapter_id=chapter_id,
+                aggregate_book_id=row[0] or "",
+                title=title,
+                content=content,
+            )
             conn.commit()
 
     def _write_aggregate_chapter_file(
@@ -1734,7 +2015,482 @@ class AggregateProcessor:
                 )
             except Exception:
                 logger.debug("Failed to write subscription metadata for %s", aggregate_book_id, exc_info=True)
+        self._write_shared_book_stage1_bundle(
+            conn,
+            aggregate_book_id=aggregate_book_id,
+            title=title,
+            chapter_index=chapter_index,
+            content=content,
+            trace_meta=trace_meta or {},
+        )
         return file_result
+
+    def _shared_book_storage(self) -> SharedBookStorage:
+        return SharedBookStorage(self.db_path.parent / "library")
+
+    def _shared_book_process_logger(self) -> SharedBookProcessLogger:
+        if self._process_logger_cache is None:
+            self._process_logger_cache = SharedBookProcessLogger(
+                storage=self._shared_book_storage()
+            )
+        return self._process_logger_cache
+
+    def _shared_book_runtime_store(self) -> SharedBookRuntimeStore:
+        return SharedBookRuntimeStore(storage=self._shared_book_storage())
+
+    def _shared_book_identity(self, aggregate_book_id: str) -> tuple[str, str]:
+        with self._conn() as conn:
+            return (
+                self._aggregate_book_name(conn, aggregate_book_id),
+                self._aggregate_book_author(conn, aggregate_book_id),
+            )
+
+    def _load_stage3_deferred_state(self, aggregate_book_id: str):
+        book_name, author = self._shared_book_identity(aggregate_book_id)
+        if not book_name:
+            return None, None, None
+        store = self._shared_book_runtime_store()
+        return store, book_name, store.load_state(book_name=book_name, author=author)
+
+    def _stage3_deferred_attempt(self, aggregate_book_id: str, chapter_id: str) -> int:
+        _, _, state = self._load_stage3_deferred_state(aggregate_book_id)
+        if state is None:
+            return 0
+        for item in state.stage3Deferred:
+            if item.chapterId == chapter_id:
+                return int(item.attempt or 0)
+        return 0
+
+    def _mark_stage3_deferred(
+        self,
+        *,
+        aggregate_book_id: str,
+        chapter_id: str,
+        reason: str,
+        retry_not_before: str,
+        attempt: int = 0,
+    ) -> None:
+        store, book_name, state = self._load_stage3_deferred_state(aggregate_book_id)
+        if store is None or state is None or not book_name:
+            return
+        book_name, author = self._shared_book_identity(aggregate_book_id)
+        items = [item for item in state.stage3Deferred if item.chapterId != chapter_id]
+        items.append(
+            SharedBookStage3DeferredItem(
+                chapterId=chapter_id,
+                reason=reason,
+                retryNotBefore=retry_not_before,
+                updatedAt=self._now(),
+                attempt=max(0, int(attempt or 0)),
+            )
+        )
+        state = state.model_copy(update={"updatedAt": self._now(), "stage3Deferred": items})
+        store.save_state(book_name=book_name, author=author, state=state)
+
+    def _clear_stage3_deferred(self, aggregate_book_id: str, chapter_id: str) -> None:
+        store, book_name, state = self._load_stage3_deferred_state(aggregate_book_id)
+        if store is None or state is None or not book_name:
+            return
+        book_name, author = self._shared_book_identity(aggregate_book_id)
+        items = [item for item in state.stage3Deferred if item.chapterId != chapter_id]
+        if len(items) == len(state.stage3Deferred):
+            return
+        state = state.model_copy(update={"updatedAt": self._now(), "stage3Deferred": items})
+        store.save_state(book_name=book_name, author=author, state=state)
+
+    def _due_stage3_deferred_chapter_ids(self, aggregate_book_id: str) -> list[str]:
+        _, _, state = self._load_stage3_deferred_state(aggregate_book_id)
+        if state is None:
+            return []
+        now = self._now_dt()
+        due: list[str] = []
+        for item in state.stage3Deferred:
+            try:
+                not_before = datetime.fromisoformat(item.retryNotBefore)
+            except Exception:
+                not_before = now
+            if not_before <= now:
+                due.append(item.chapterId)
+        return due
+
+    def _stage3_retry_not_before(self, aggregate_book_id: str, reason: str, attempt: int = 0) -> str:
+        if reason in {"peak_hour_skip", "token_budget_exceeded", "failure_rate_threshold_exceeded"}:
+            breaker_state = self.ai_circuit_breaker_state(aggregate_book_id)
+            if breaker_state.get("openUntil"):
+                return str(breaker_state["openUntil"])
+            return (self._now_dt() + timedelta(minutes=self.check_interval_minutes(aggregate_book_id))).isoformat()
+        next_time = compute_next_retry_time(max(0, int(attempt or 0)))
+        if next_time:
+            return next_time
+        return (self._now_dt() + timedelta(minutes=self.check_interval_minutes(aggregate_book_id))).isoformat()
+
+    def _shared_stage1_status(
+        self,
+        *,
+        status: str,
+        preview_only: bool,
+        trace_meta: dict[str, Any],
+        ai_model: str = "",
+        ai_total_tokens: int = 0,
+    ) -> str:
+        normalized = str(status or "").strip().lower()
+        has_ai = (
+            bool(ai_model)
+            or int(ai_total_tokens or 0) > 0
+            or bool(trace_meta.get("aiModel"))
+            or bool((trace_meta.get("aiCheck") or {}).get("model"))
+        )
+        if normalized == "processed":
+            return "proofread_complete" if has_ai else "supplemented"
+        if normalized == "fallback":
+            return "supplemented" if preview_only else "readable"
+        if normalized == "error":
+            return "failed"
+        if normalized in {"pending", "placeholder"}:
+            return "fetched" if preview_only else "processing"
+        return normalized or "unknown"
+
+    def _build_shared_trace_payload(
+        self,
+        *,
+        conn: sqlite3.Connection,
+        aggregate_book_id: str,
+        chapter_row: dict[str, Any],
+        trace_meta: dict[str, Any],
+    ) -> dict[str, Any]:
+        alignment = {}
+        try:
+            alignment = json.loads(chapter_row["source_alignment_json"] or "{}")
+        except Exception:
+            alignment = {}
+        snapshot_refs = []
+        try:
+            payload = json.loads(chapter_row["source_snapshot_refs_json"] or "[]")
+            if isinstance(payload, list):
+                snapshot_refs = payload
+        except Exception:
+            snapshot_refs = []
+        chapter_status = self._shared_stage1_status(
+            status=chapter_row["status"] or "",
+            preview_only=bool(chapter_row["preview_only"]),
+            trace_meta=trace_meta,
+            ai_model=chapter_row["ai_model"] or "",
+            ai_total_tokens=int(chapter_row["ai_total_tokens"] or 0),
+        )
+        primary_source_id = (
+            alignment.get("primarySourceId")
+            or trace_meta.get("primarySourceId")
+            or trace_meta.get("primarySource", "")
+            or ""
+        )
+        primary_source_url = (
+            trace_meta.get("primarySourceChapterUrl")
+            or chapter_row["primary_source_chapter_url"]
+            or ""
+        )
+        source_word_count = int(chapter_row["source_word_count"] or trace_meta.get("sourceWordCount", 0) or 0)
+        fetched_word_count = len(self._strip_trace_block(chapter_row["processed_content"] or ""))
+        ai_check = {
+            "model": chapter_row["ai_model"] or trace_meta.get("aiModel", "") or "",
+            "deviationScore": float(chapter_row["deviation_score"] or 0.0),
+            "selfScore": float(chapter_row["ai_self_score"] or 0.0),
+            "promptTokens": int(chapter_row["ai_prompt_tokens"] or 0),
+            "completionTokens": int(chapter_row["ai_completion_tokens"] or 0),
+            "totalTokens": int(chapter_row["ai_total_tokens"] or 0),
+            "latencyMs": int(chapter_row["ai_latency_ms"] or 0),
+        }
+        trace_payload: dict[str, Any] = {
+            "schemaVersion": 1,
+            "aggregateBookId": aggregate_book_id,
+            "chapterId": chapter_row["chapter_id"] or "",
+            "chapterIndex": int(chapter_row["chapter_index"] or 0),
+            "chapterTitle": chapter_row["title"] or "",
+            "chapterStatus": chapter_status,
+            "proofreadComplete": chapter_status == "proofread_complete",
+            "previewOnly": bool(chapter_row["preview_only"]),
+            "primarySource": {
+                "sourceId": primary_source_id,
+                "chapterId": chapter_row["source_chapter_id"] or "",
+                "chapterUrl": primary_source_url,
+                "wordCount": source_word_count,
+            },
+            "primarySourceId": primary_source_id,
+            "primarySourceUrl": primary_source_url,
+            "officialWordCount": source_word_count,
+            "fetchedWordCount": fetched_word_count,
+            "selectedContentSource": alignment.get("selectedContentSource", "") or trace_meta.get("selectedContentSource", ""),
+            "processedAt": chapter_row["last_processed_at"] or trace_meta.get("processedAt", "") or "",
+            "legacy": {
+                "legacyStatus": chapter_row["status"] or "",
+                "traceHash": chapter_row["trace_hash"] or "",
+                "contentFilePath": chapter_row["content_file_path"] or "",
+            },
+        }
+        if any(ai_check.values()):
+            trace_payload["aiCheck"] = ai_check
+            trace_payload["aiModel"] = ai_check["model"]
+            trace_payload["aiTokens"] = ai_check["totalTokens"]
+        if alignment:
+            trace_payload["alignment"] = alignment
+        supplement_source_id = chapter_row["fallback_source_id"] or alignment.get("candidateSourceId") or ""
+        if supplement_source_id and supplement_source_id != primary_source_id:
+            trace_payload["supplementSource"] = {
+                "sourceId": supplement_source_id,
+                "selected": True,
+            }
+        if snapshot_refs:
+            trace_payload["sourceSnapshotRefs"] = snapshot_refs
+        return trace_payload
+
+    def _build_shared_metadata_payload(
+        self,
+        *,
+        conn: sqlite3.Connection,
+        aggregate_book_id: str,
+        book_name: str,
+        book_author: str,
+    ) -> dict[str, Any]:
+        row = conn.execute(
+            """
+            SELECT aggregate_payload_json, cover_url, intro, word_count, primary_book_id,
+                   primary_source_id, primary_source_name, total_chapters_at_subscribe,
+                   book_status, status, search_visibility_status, visible_processed_chapters,
+                   last_check_time, total_chapters
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (aggregate_book_id,),
+        ).fetchone()
+        payload_json = row[0] if row else ""
+        try:
+            payload = json.loads(payload_json or "{}")
+        except Exception:
+            payload = {}
+        processed_count = int(
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM aggregate_chapter_tasks
+                WHERE aggregate_book_id = ?
+                  AND status IN ('processed', 'fallback')
+                """,
+                (aggregate_book_id,),
+            ).fetchone()[0]
+            or 0
+        )
+        failed_count = int(
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM aggregate_chapter_tasks
+                WHERE aggregate_book_id = ?
+                  AND status = 'error'
+                """,
+                (aggregate_book_id,),
+            ).fetchone()[0]
+            or 0
+        )
+        payload = {
+            "candidateId": aggregate_book_id,
+            "name": payload.get("name") or book_name,
+            "author": payload.get("author") or book_author,
+            "coverUrl": (row[1] if row else "") or payload.get("coverUrl") or "",
+            "intro": (row[2] if row else "") or payload.get("intro") or "",
+            "bookStatus": (row[8] if row else "") or payload.get("bookStatus") or "",
+            "wordCount": (row[3] if row else "") or payload.get("wordCount") or "",
+            "totalChaptersAtSubscribe": int((row[7] if row else 0) or payload.get("totalChaptersAtSubscribe", 0) or 0),
+            "primaryBookId": (row[4] if row else "") or payload.get("primaryBookId") or "",
+            "primarySourceId": (row[5] if row else "") or payload.get("primarySourceId") or "",
+            "primarySourceName": (row[6] if row else "") or payload.get("primarySourceName") or "",
+            "sources": payload.get("sources") or [],
+            "bookState": {
+                "status": (row[9] if row else "") or "active",
+                "searchVisibilityStatus": (row[10] if row else "") or "hidden",
+                "chapterCount": int((row[13] if row else 0) or 0),
+                "processedChapterCount": processed_count,
+                "readableChapterCount": processed_count,
+                "previewChapterCount": 0,
+                "proofreadCompleteCount": 0,
+                "suspectChapterCount": 0,
+                "failedChapterCount": failed_count,
+                "latestChapterIndex": 0,
+                "latestChapterTitle": "",
+                "lastUpdateCheckAt": (row[12] if row else "") or "",
+            },
+        }
+        return self._shared_book_storage().build_shared_metadata(payload)
+
+    def _write_shared_book_stage1_bundle(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        aggregate_book_id: str,
+        title: str,
+        chapter_index: int | None,
+        content: str,
+        trace_meta: dict[str, Any],
+    ) -> None:
+        contract = self._shared_book_storage_contract()
+        if not contract.get("dualWrite"):
+            return
+        if not aggregate_book_id or not chapter_index:
+            return
+
+        book_name = self._aggregate_book_name(conn, aggregate_book_id)
+        book_author = self._aggregate_book_author(conn, aggregate_book_id)
+        if not book_name:
+            return
+        storage = self._shared_book_storage()
+
+        chapter_rows = conn.execute(
+            """
+            SELECT chapter_id, source_chapter_id, chapter_index, title, status, source_word_count,
+                   preview_only, primary_source_chapter_url, processed_content, content_file_path,
+                   last_processed_at, source_snapshot_refs_json, fallback_source_id, source_alignment_json,
+                   trace_hash, ai_model, ai_prompt_tokens, ai_completion_tokens, ai_total_tokens,
+                   ai_latency_ms, deviation_score, ai_self_score
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ?
+              AND status IN ('processed', 'fallback')
+              AND processed_content IS NOT NULL
+              AND processed_content != ''
+            ORDER BY chapter_index ASC, created_at ASC
+            """,
+            (aggregate_book_id,),
+        ).fetchall()
+        chapter_files: list[tuple[Path, str]] = []
+        chapter_entries: list[dict[str, Any]] = []
+        for row in chapter_rows:
+            row_obj = {
+                "chapter_id": row[0],
+                "source_chapter_id": row[1],
+                "chapter_index": row[2],
+                "title": row[3],
+                "status": row[4],
+                "source_word_count": row[5],
+                "preview_only": row[6],
+                "primary_source_chapter_url": row[7],
+                "processed_content": row[8],
+                "content_file_path": row[9],
+                "last_processed_at": row[10],
+                "source_snapshot_refs_json": row[11],
+                "fallback_source_id": row[12],
+                "source_alignment_json": row[13],
+                "trace_hash": row[14],
+                "ai_model": row[15],
+                "ai_prompt_tokens": row[16],
+                "ai_completion_tokens": row[17],
+                "ai_total_tokens": row[18],
+                "ai_latency_ms": row[19],
+                "deviation_score": row[20],
+                "ai_self_score": row[21],
+            }
+            row_trace_meta = self._load_policy_snapshot(conn, row[0])
+            trace_payload = self._build_shared_trace_payload(
+                conn=conn,
+                aggregate_book_id=aggregate_book_id,
+                chapter_row=row_obj,
+                trace_meta=row_trace_meta,
+            )
+            clean_body = self._strip_trace_block(row[8] or "")
+            chapter_title = row[3] or title or f"第{int(row[2] or 0)}章"
+            chapter_path = storage.chapter_markdown_path(
+                book_name=book_name,
+                author=book_author,
+                chapter_index=int(row[2] or 0),
+                title=chapter_title,
+            )
+            markdown = storage.render_chapter_markdown(
+                title=chapter_title,
+                body=clean_body,
+                trace_payload=trace_payload,
+            )
+            chapter_files.append((chapter_path, markdown))
+            chapter_entries.append(
+                {
+                    "index": int(row[2] or 0),
+                    "title": chapter_title,
+                    "file": f"chapters/{chapter_path.name}",
+                    "status": trace_payload["chapterStatus"],
+                }
+            )
+
+        metadata_payload = self._build_shared_metadata_payload(
+            conn=conn,
+            aggregate_book_id=aggregate_book_id,
+            book_name=book_name,
+            book_author=book_author,
+        )
+        chapter_index_payload = {
+            "schemaVersion": 1,
+            "bookId": aggregate_book_id,
+            "chapters": chapter_entries,
+        }
+        storage.write_book_bundle(
+            metadata_path=storage.metadata_path(book_name=book_name, author=book_author),
+            metadata_payload=metadata_payload,
+            chapter_index_path=storage.chapter_index_path(book_name=book_name, author=book_author),
+            chapter_index_payload=chapter_index_payload,
+            chapter_files=chapter_files,
+        )
+
+    def _dual_verify_chapter_output(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        chapter_id: str,
+        aggregate_book_id: str,
+        title: str,
+        content: str,
+    ) -> None:
+        contract = self._shared_book_storage_contract()
+        if not contract.get("shouldCompareReads"):
+            return
+        row = conn.execute(
+            """
+            SELECT chapter_index
+            FROM aggregate_chapter_tasks
+            WHERE chapter_id = ?
+            """,
+            (chapter_id,),
+        ).fetchone()
+        if not row or not row[0]:
+            return
+        storage = self._shared_book_storage()
+        book_name = self._aggregate_book_name(conn, aggregate_book_id)
+        book_author = self._aggregate_book_author(conn, aggregate_book_id)
+        shared_path = storage.chapter_markdown_path(
+            book_name=book_name,
+            author=book_author,
+            chapter_index=int(row[0] or 0),
+            title=title,
+        )
+        if not shared_path.exists():
+            logger.warning(
+                "shared-book dual_verify mismatch for %s: shared chapter missing at %s",
+                chapter_id,
+                shared_path,
+            )
+            return
+        shared_markdown = shared_path.read_text(encoding="utf-8")
+        shared_content = self._strip_trace_block(shared_markdown)
+        legacy_content = self._strip_trace_block(content)
+        mismatches: list[str] = []
+        if shared_content != legacy_content:
+            mismatches.append("content")
+        try:
+            shared_trace = storage.parse_trace_block(shared_markdown)
+            shared_status = str(shared_trace.get("chapterStatus", "") or "")
+            if not shared_status:
+                mismatches.append("trace.chapterStatus")
+        except Exception as exc:
+            mismatches.append(f"trace:{exc}")
+        if mismatches:
+            logger.warning(
+                "shared-book dual_verify mismatch for %s: %s",
+                chapter_id,
+                ", ".join(mismatches),
+            )
 
     def _source_book_id_from_payload(self, payload: dict[str, Any], source_id: str) -> str:
         for source in payload.get("sources", []) if isinstance(payload.get("sources"), list) else []:
@@ -1832,6 +2588,7 @@ class AggregateProcessor:
         source_word_count: int = 0,
         primary_source_chapter_url: str = "",
         preview_only: bool = False,
+        status: str = "",
     ) -> dict[str, Any]:
         book = self._library_books().get_book(aggregate_book_id) or {}
         candidate_sources = []
@@ -1908,10 +2665,19 @@ class AggregateProcessor:
                 }
                 for row in rows
             ]
+        chapter_status = "proofread_complete" if status == "processed" and ai_model else (
+            "supplemented" if status == "fallback" and preview_only else
+            "readable" if status == "fallback" else
+            "supplemented" if status == "processed" else
+            "fetched" if preview_only else
+            status or "unknown"
+        )
         return {
             "aggregateBookId": aggregate_book_id,
             "chapterIndex": chapter_index,
             "chapterTitle": title,
+            "chapterStatus": chapter_status,
+            "proofreadComplete": chapter_status == "proofread_complete",
             "policyVersion": book.get("currentPolicyVersion", 1),
             "processedAt": self._now(),
             "startChapterIndex": book.get("startChapterIndex", 1),
@@ -1922,9 +2688,14 @@ class AggregateProcessor:
             "selectedSource": alignment_json.get("candidateSourceId", "") or alignment_json.get("primarySourceId", ""),
             "selectedContentSource": alignment_json.get("selectedContentSource", ""),
             "sourceWordCount": int(source_word_count or 0),
+            "officialWordCount": int(source_word_count or 0),
+            "fetchedWordCount": len(content or ""),
             "previewOnly": bool(preview_only),
+            "fallbackSourceId": fallback_source_id,
+            "primarySourceId": alignment_json.get("primarySourceId", "") or book.get("primarySourceId", ""),
             "aiAggregateEnabled": bool(settings.get("aiAggregateEnabled", True)),
             "aiPurifyEnabled": bool(settings.get("aiPurifyEnabled", True)),
+            "aiModel": ai_model,
             "modificationTrail": modification_trail,
             "sourceHashes": source_hashes,
             "finalContentHash": hashlib.sha256((content or "").encode("utf-8")).hexdigest() if content else "",

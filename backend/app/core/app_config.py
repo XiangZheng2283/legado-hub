@@ -231,6 +231,9 @@ class AppConfig:
         else:
             self._data = {}
 
+    def reload(self) -> None:
+        self._load()
+
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(

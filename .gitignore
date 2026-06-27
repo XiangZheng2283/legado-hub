@@ -43,3 +43,17 @@ plugins/sources/official/
 plugins/sources/**/Cookie.json
 docs/archive/**/data/sources/raw/by-site/legado/sub-yiove_collections.json
 dev-assets/
+!dev-assets/
+dev-assets/*
+!dev-assets/tests/
+dev-assets/tests/*
+!dev-assets/tests/test_shared_book_recovery.py
+!dev-assets/tests/test_shared_book_storage.py
+!dev-assets/tests/test_shared_book_lock.py
+!dev-assets/tests/test_shared_book_runtime.py
+!dev-assets/tests/test_shared_book_scheduler.py
+!dev-assets/tests/test_retry_logic.py
+!dev-assets/tests/test_shared_book_source_map.py
+!dev-assets/tests/test_aggregate_processor_state_machine.py
+!dev-assets/tests/test_aggregate_settings.py
+!dev-assets/tests/test_plugin_console_api.py
