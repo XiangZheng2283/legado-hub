@@ -252,7 +252,7 @@ def _list_shared_library_book_chapters(
             f"""
             SELECT chapter_id, source_chapter_id, chapter_index, title, status, placeholder,
                    content_length, processed_content, last_processed_at, source_word_count,
-                   preview_only, primary_source_chapter_url
+                   preview_only
             FROM aggregate_chapter_tasks
             {where_sql}
             ORDER BY COALESCE(chapter_index, 999999), created_at
@@ -273,7 +273,6 @@ def _list_shared_library_book_chapters(
             "processedAt": row[8] or "",
             "sourceWordCount": int(row[9] or 0),
             "previewOnly": bool(row[10]),
-            "primarySourceChapterUrl": row[11] or "",
         }
         for row in rows
     ]
@@ -455,13 +454,47 @@ def _load_shared_library_book_chapter_progress(book_id: str, chapter_id: str) ->
         limit=20,
     )["items"]
 
-    return build_chapter_progress_payload(
+    payload = build_chapter_progress_payload(
         book_id=book_id,
         chapter_index=chapter_index_value,
         chapter_title=chapter_title,
         chapter_trace=trace,
         logs=logs,
     )
+    return _sanitize_chapter_progress_payload(payload)
+
+
+def _sanitize_chapter_progress_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Remove private source URLs from shared chapter progress payload."""
+    payload = dict(payload)
+    trace = payload.get("chapterTrace") or payload.get("traceSummary") or {}
+    if isinstance(trace, dict):
+        trace.pop("primarySourceUrl", None)
+        trace.pop("primarySourceChapterUrl", None)
+        primary = trace.get("primarySource")
+        if isinstance(primary, dict):
+            primary.pop("chapterUrl", None)
+            primary.pop("bookUrl", None)
+            primary.pop("tocUrl", None)
+        supplement = trace.get("supplementSource")
+        if isinstance(supplement, dict):
+            supplement.pop("chapterUrl", None)
+            supplement.pop("bookUrl", None)
+            supplement.pop("tocUrl", None)
+    sanitized_logs = []
+    for log in payload.get("logs", []):
+        if not isinstance(log, dict):
+            sanitized_logs.append(log)
+            continue
+        safe_log = dict(log)
+        safe_payload = safe_log.get("payload")
+        if isinstance(safe_payload, dict):
+            for key in list(safe_payload.keys()):
+                if "url" in key.lower() or "chapterurl" in key.lower():
+                    safe_payload.pop(key, None)
+        sanitized_logs.append(safe_log)
+    payload["logs"] = sanitized_logs
+    return payload
 
 
 async def _manual_source_map_refresh(book_id: str, payload: dict | None = None) -> dict:

@@ -36,6 +36,10 @@ from app.services.shared_book_errors import (
     SharedBookRetryClass,
     classify_stage1_error,
     classify_stage1_retry,
+    classify_stage2_error,
+    classify_stage2_retry,
+    classify_stage3_error,
+    classify_stage3_retry,
 )
 from app.services.shared_book_runtime import (
     SharedBookProcessLogger,
@@ -48,7 +52,7 @@ from app.services.library_books import library_books_service
 DEFAULT_WORKFLOW = DEFAULT_CONTENT_WORKFLOW
 
 TRACE_BLOCK_RE = re.compile(
-    r"\n?LEGADOHUB_TRACE_BEGIN\s*```yaml.*?```\s*LEGADOHUB_TRACE_END\s*$",
+    r"(?:\n|^)(?:<!--\s*)?LEGADOHUB_TRACE_BEGIN\s*(?:```yaml\s*)?\n.*?\n(?:\s*```\s*)?LEGADOHUB_TRACE_END(?:\s*-->)?\s*$",
     re.DOTALL,
 )
 
@@ -1152,6 +1156,7 @@ class AggregateProcessor:
         if not primary_source_id:
             primary_source_id = source_chapter_id.split(":")[0] if ":" in source_chapter_id else ""
 
+        current_stage = "stage1"
         try:
             result = await catalog.chapter(source_chapter_id)
             content = result.get("content", "")
@@ -1196,6 +1201,7 @@ class AggregateProcessor:
                 )
 
             # ── Path 2: preview content → try candidates ────────────────
+            current_stage = "stage2"
             if classification["classification"] == "preview":
                 payload = await self._ensure_candidate_sources_for_book(
                     aggregate_book_id,
@@ -1243,6 +1249,7 @@ class AggregateProcessor:
                         "contentLength": len(purified), "fallback": True}
 
             # ── Path 3: empty → try candidates ──────────────────────────
+            current_stage = "stage2"
             payload = await self._ensure_candidate_sources_for_book(
                 aggregate_book_id,
                 payload,
@@ -1269,7 +1276,7 @@ class AggregateProcessor:
             raise ValueError("empty chapter content from all sources")
 
         except Exception as exc:
-            return self._handle_processing_error(exc, chapter, source_chapter_id)
+            return self._handle_processing_error(exc, chapter, source_chapter_id, stage=current_stage)
 
     async def _process_full_content(
         self, *, catalog, chapter: dict, content: str,
@@ -1362,8 +1369,13 @@ class AggregateProcessor:
             status = "processed"
         else:
             status = "fallback" if fallback_source_id else "processed"
+        selected_content_source = fallback_source_id or primary_source_id or "unknown"
+        if not fallback_source_id and self._is_official_source(primary_source_id):
+            selected_content_source = "official"
+        elif not fallback_source_id:
+            selected_content_source = "third_party"
         alignment_json = build_source_alignment_json(
-            selected_content_source="official" if not fallback_source_id else "candidate",
+            selected_content_source=selected_content_source,
             alignment_passed=True,
             alignment_reason="full_content_processed",
             primary_source_id=primary_source_id,
@@ -1601,14 +1613,30 @@ class AggregateProcessor:
         )
         return [item[1] for item in scored[:3]]
 
-    def _handle_processing_error(self, exc: Exception, chapter: dict, source_chapter_id: str) -> dict:
+    def _handle_processing_error(
+        self,
+        exc: Exception,
+        chapter: dict,
+        source_chapter_id: str,
+        *,
+        stage: str = "stage1",
+    ) -> dict:
         from app.services.aggregate_alignment import build_source_alignment_json
 
         now = self._now()
         chapter_id = chapter["chapterId"]
         aggregate_book_id = chapter.get("aggregateBookId", "")
-        error_code = classify_error(exc)
-        retry_class = classify_stage1_retry(error_code)
+
+        if stage == "stage2":
+            error_code = str(classify_stage2_error(exc))
+            retry_class = classify_stage2_retry(error_code)
+        elif stage == "stage3":
+            error_code = str(classify_stage3_error(exc))
+            retry_class = classify_stage3_retry(error_code)
+        else:
+            error_code = classify_error(exc)
+            retry_class = classify_stage1_retry(error_code)
+
         alignment_json = build_source_alignment_json(
             selected_content_source="none",
             alignment_passed=False,
@@ -1681,6 +1709,7 @@ class AggregateProcessor:
         trace_hash = hashlib.sha256(
             json.dumps(trace_meta, ensure_ascii=False, sort_keys=True).encode("utf-8")
         ).hexdigest()
+        contract = self._shared_book_storage_contract()
         with self._conn() as conn:
             conn.execute(
                 """UPDATE aggregate_chapter_tasks
@@ -1979,6 +2008,9 @@ class AggregateProcessor:
         chapter_url: str = "",
         trace_meta: dict | None = None,
     ) -> dict[str, Any] | None:
+        contract = self._shared_book_storage_contract()
+        if not contract.get("dualWrite"):
+            return None
         if not chapter_url:
             try:
                 _, chapter_url = decode_chapter_id(chapter_id)
@@ -2183,11 +2215,6 @@ class AggregateProcessor:
             or trace_meta.get("primarySource", "")
             or ""
         )
-        primary_source_url = (
-            trace_meta.get("primarySourceChapterUrl")
-            or chapter_row["primary_source_chapter_url"]
-            or ""
-        )
         source_word_count = int(chapter_row["source_word_count"] or trace_meta.get("sourceWordCount", 0) or 0)
         fetched_word_count = len(self._strip_trace_block(chapter_row["processed_content"] or ""))
         ai_check = {
@@ -2211,11 +2238,9 @@ class AggregateProcessor:
             "primarySource": {
                 "sourceId": primary_source_id,
                 "chapterId": chapter_row["source_chapter_id"] or "",
-                "chapterUrl": primary_source_url,
                 "wordCount": source_word_count,
             },
             "primarySourceId": primary_source_id,
-            "primarySourceUrl": primary_source_url,
             "officialWordCount": source_word_count,
             "fetchedWordCount": fetched_word_count,
             "selectedContentSource": alignment.get("selectedContentSource", "") or trace_meta.get("selectedContentSource", ""),
@@ -2266,30 +2291,42 @@ class AggregateProcessor:
             payload = json.loads(payload_json or "{}")
         except Exception:
             payload = {}
-        processed_count = int(
-            conn.execute(
+        chapter_stats = conn.execute(
+            """
+            SELECT status, preview_only, ai_model
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (aggregate_book_id,),
+        ).fetchall()
+        total_count = len(chapter_stats)
+        processed_count = sum(1 for s, _, _ in chapter_stats if s in {"processed", "fallback"})
+        failed_count = sum(1 for s, _, _ in chapter_stats if s == "error")
+        preview_count = sum(
+            1 for s, p, _ in chapter_stats
+            if s in {"processed", "fallback"} and p
+        )
+        proofread_count = sum(
+            1 for s, _, m in chapter_stats
+            if s in {"processed", "fallback"} and bool(m)
+        )
+        latest_index = 0
+        latest_title = ""
+        if chapter_stats:
+            latest = conn.execute(
                 """
-                SELECT COUNT(*)
+                SELECT chapter_index, title
                 FROM aggregate_chapter_tasks
                 WHERE aggregate_book_id = ?
                   AND status IN ('processed', 'fallback')
+                ORDER BY chapter_index DESC
+                LIMIT 1
                 """,
                 (aggregate_book_id,),
-            ).fetchone()[0]
-            or 0
-        )
-        failed_count = int(
-            conn.execute(
-                """
-                SELECT COUNT(*)
-                FROM aggregate_chapter_tasks
-                WHERE aggregate_book_id = ?
-                  AND status = 'error'
-                """,
-                (aggregate_book_id,),
-            ).fetchone()[0]
-            or 0
-        )
+            ).fetchone()
+            if latest:
+                latest_index = int(latest[0] or 0)
+                latest_title = str(latest[1] or "")
         payload = {
             "candidateId": aggregate_book_id,
             "name": payload.get("name") or book_name,
@@ -2306,15 +2343,15 @@ class AggregateProcessor:
             "bookState": {
                 "status": (row[9] if row else "") or "active",
                 "searchVisibilityStatus": (row[10] if row else "") or "hidden",
-                "chapterCount": int((row[13] if row else 0) or 0),
+                "chapterCount": total_count,
                 "processedChapterCount": processed_count,
                 "readableChapterCount": processed_count,
-                "previewChapterCount": 0,
-                "proofreadCompleteCount": 0,
+                "previewChapterCount": preview_count,
+                "proofreadCompleteCount": proofread_count,
                 "suspectChapterCount": 0,
                 "failedChapterCount": failed_count,
-                "latestChapterIndex": 0,
-                "latestChapterTitle": "",
+                "latestChapterIndex": latest_index,
+                "latestChapterTitle": latest_title,
                 "lastUpdateCheckAt": (row[12] if row else "") or "",
             },
         }
@@ -2331,7 +2368,7 @@ class AggregateProcessor:
         trace_meta: dict[str, Any],
     ) -> None:
         contract = self._shared_book_storage_contract()
-        if not contract.get("dualWrite"):
+        if not contract.get("useSharedBookStorage"):
             return
         if not aggregate_book_id or not chapter_index:
             return
@@ -2351,9 +2388,6 @@ class AggregateProcessor:
                    ai_latency_ms, deviation_score, ai_self_score
             FROM aggregate_chapter_tasks
             WHERE aggregate_book_id = ?
-              AND status IN ('processed', 'fallback')
-              AND processed_content IS NOT NULL
-              AND processed_content != ''
             ORDER BY chapter_index ASC, created_at ASC
             """,
             (aggregate_book_id,),
@@ -2385,35 +2419,46 @@ class AggregateProcessor:
                 "deviation_score": row[20],
                 "ai_self_score": row[21],
             }
-            row_trace_meta = self._load_policy_snapshot(conn, row[0])
-            trace_payload = self._build_shared_trace_payload(
-                conn=conn,
-                aggregate_book_id=aggregate_book_id,
-                chapter_row=row_obj,
-                trace_meta=row_trace_meta,
-            )
-            clean_body = self._strip_trace_block(row[8] or "")
             chapter_title = row[3] or title or f"第{int(row[2] or 0)}章"
-            chapter_path = storage.chapter_markdown_path(
-                book_name=book_name,
-                author=book_author,
-                chapter_index=int(row[2] or 0),
-                title=chapter_title,
-            )
-            markdown = storage.render_chapter_markdown(
-                title=chapter_title,
-                body=clean_body,
-                trace_payload=trace_payload,
-            )
-            chapter_files.append((chapter_path, markdown))
-            chapter_entries.append(
-                {
-                    "index": int(row[2] or 0),
-                    "title": chapter_title,
-                    "file": f"chapters/{chapter_path.name}",
-                    "status": trace_payload["chapterStatus"],
-                }
-            )
+            has_content = bool(row[8]) and str(row[4]) in {"processed", "fallback"}
+            if has_content:
+                row_trace_meta = self._load_policy_snapshot(conn, row[0])
+                trace_payload = self._build_shared_trace_payload(
+                    conn=conn,
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_row=row_obj,
+                    trace_meta=row_trace_meta,
+                )
+                clean_body = self._strip_trace_block(row[8] or "")
+                chapter_path = storage.chapter_markdown_path(
+                    book_name=book_name,
+                    author=book_author,
+                    chapter_index=int(row[2] or 0),
+                    title=chapter_title,
+                )
+                markdown = storage.render_chapter_markdown(
+                    title=chapter_title,
+                    body=clean_body,
+                    trace_payload=trace_payload,
+                )
+                chapter_files.append((chapter_path, markdown))
+                chapter_entries.append(
+                    {
+                        "index": int(row[2] or 0),
+                        "title": chapter_title,
+                        "file": f"chapters/{chapter_path.name}",
+                        "status": trace_payload["chapterStatus"],
+                    }
+                )
+            else:
+                chapter_entries.append(
+                    {
+                        "index": int(row[2] or 0),
+                        "title": chapter_title,
+                        "file": None,
+                        "status": self._shared_stage1_status(str(row[4]), bool(row[6])),
+                    }
+                )
 
         metadata_payload = self._build_shared_metadata_payload(
             conn=conn,

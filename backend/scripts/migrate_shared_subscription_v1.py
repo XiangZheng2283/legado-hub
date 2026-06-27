@@ -663,12 +663,106 @@ def scan_legacy_shared_subscription(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Read-only shared-subscription migration scanner")
+    parser = argparse.ArgumentParser(
+        description="Shared-subscription migration scanner. Default is read-only; use --write to persist."
+    )
     parser.add_argument("--db-path", type=Path, default=DATA_DIR / "app.db")
     parser.add_argument("--novels-root", type=Path, default=DATA_DIR / "novels")
+    parser.add_argument("--library-root", type=Path, default=DATA_DIR / "library")
     parser.add_argument("--aggregate-book-id", default="")
     parser.add_argument("--pretty", action="store_true")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Write proposed files to --library-root. This is irreversible; run without --write first to preview.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip interactive confirmation when --write is used.",
+    )
     return parser.parse_args()
+
+
+def write_migrated_books(
+    result: dict[str, Any],
+    *,
+    library_root: Path,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Persist proposed migration files to the shared library root.
+
+    Returns a report with written/skipped/failed counts and paths.
+    """
+    storage = SharedBookStorage(root=library_root)
+    report: dict[str, Any] = {
+        "dryRun": dry_run,
+        "writtenBooks": 0,
+        "writtenChapters": 0,
+        "failedBooks": 0,
+        "errors": [],
+        "paths": [],
+    }
+    for book in result.get("books", []):
+        book_id = book.get("proposedBookId") or book.get("legacyBookId") or "unknown"
+        try:
+            proposed = book.get("proposedFiles", {})
+            metadata = proposed.get("metadata.json")
+            chapter_index = proposed.get("chapter_index.json")
+            source_refs = proposed.get("source_refs.json")
+            chapters = proposed.get("chapters", [])
+
+            if not metadata or not chapter_index:
+                report["errors"].append(f"{book_id}: missing metadata or chapter_index")
+                report["failedBooks"] += 1
+                continue
+
+            book_name = metadata.get("name", "")
+            author = metadata.get("author", "")
+            if not book_name:
+                report["errors"].append(f"{book_id}: missing book name")
+                report["failedBooks"] += 1
+                continue
+
+            metadata_path = storage.metadata_path(book_name=book_name, author=author)
+            chapter_index_path = storage.chapter_index_path(book_name=book_name, author=author)
+            source_refs_path = storage.source_refs_path(book_name=book_name, author=author)
+
+            chapter_files: list[tuple[Path, str]] = []
+            for chapter in chapters:
+                target_rel = chapter.get("targetPath", "")
+                if not target_rel:
+                    continue
+                target_path = library_root / target_rel
+                if dry_run:
+                    report["paths"].append(str(target_path))
+                    continue
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                target_path.write_text(chapter.get("content", ""), encoding="utf-8", newline="\n")
+                chapter_files.append((target_path, chapter.get("content", "")))
+
+            if dry_run:
+                report["paths"].extend([str(metadata_path), str(chapter_index_path), str(source_refs_path)])
+                report["writtenBooks"] += 1
+                report["writtenChapters"] += len(chapters)
+                continue
+
+            storage.atomic_write_json(metadata_path, metadata)
+            storage.atomic_write_json(chapter_index_path, chapter_index)
+            if source_refs:
+                storage.atomic_write_json(source_refs_path, source_refs)
+
+            report["writtenBooks"] += 1
+            report["writtenChapters"] += len(chapters)
+            report["paths"].extend([
+                str(metadata_path),
+                str(chapter_index_path),
+                *[str(p[0]) for p in chapter_files],
+            ])
+        except Exception as exc:
+            report["errors"].append(f"{book_id}: {exc}")
+            report["failedBooks"] += 1
+    return report
 
 
 def main() -> int:
@@ -678,6 +772,21 @@ def main() -> int:
         novels_root=args.novels_root,
         aggregate_book_id=args.aggregate_book_id or None,
     )
+
+    if args.write:
+        if not args.yes:
+            books = result.get("summary", {}).get("booksRecovered", 0)
+            chapters = result.get("summary", {}).get("chaptersRecovered", 0)
+            confirm = input(
+                f"This will write {books} books and {chapters} chapters to {args.library_root}. "
+                f"Type 'migrate' to proceed: "
+            )
+            if confirm.strip().lower() != "migrate":
+                print("Aborted.")
+                return 1
+        write_report = write_migrated_books(result, library_root=args.library_root, dry_run=False)
+        result["writeReport"] = write_report
+
     if args.pretty:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
