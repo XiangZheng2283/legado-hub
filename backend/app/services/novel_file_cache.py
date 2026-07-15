@@ -1,15 +1,12 @@
-"""Filesystem cache for readable novel chapter files.
+"""Filesystem cache for temporary source chapter files.
 
-Directory layout:
-- Subscription books (source_id == "legadohub_ai_aggregate"):
-    data/novels/legadohub_ai_aggregate/{书名}_{作者}/
-        ├── metadata.json
-        ├── 000001 第一章.md
+Subscription books are persisted in the shared library storage
+(``backend/data/library``).
+
+This cache only stores temporary third-party source chapters:
+    data/cache/{source-domain}/{encoded-book-key}/
         └── ...
-- Third-party source caches (everything else):
-    data/novels/{source-domain}/{encoded-book-key}/
-        └── ...
-  These folders are temporary and can be cleaned up by a periodic job.
+These folders are temporary and can be cleaned up by a periodic job.
 """
 
 from __future__ import annotations
@@ -34,16 +31,30 @@ RESERVED_WINDOWS_NAMES = {
     *(f"LPT{i}" for i in range(1, 10)),
 }
 
-SUBSCRIPTION_SOURCE_ID = "legadohub_ai_aggregate"
-SUBSCRIPTION_FOLDER = "legadohub"
-METADATA_FILE = "metadata.json"
 
+def looks_like_garbled_text(content: str) -> bool:
+    if not content:
+        return False
+    sample = content[:2000]
+    replacement_count = sample.count("\ufffd")
+    control_count = sum(1 for char in sample if ord(char) < 32 and char not in "\t\r\n")
+    if replacement_count >= 3 or control_count >= 8:
+        return True
+    visible = [char for char in sample if not char.isspace()]
+    if len(visible) < 80:
+        return False
+    cjk_count = sum(1 for char in visible if "\u4e00" <= char <= "\u9fff")
+    return cjk_count == 0 and replacement_count > 0
 
 class NovelFileCache:
-    """Write chapter content under data/novels/source-domain/book-folder."""
+    """Write chapter content under data/cache/source-domain/book-folder.
+
+    This cache only stores temporary third-party source chapters. Subscription
+    books are persisted in the shared library storage, not here.
+    """
 
     def __init__(self, root: Path | None = None):
-        self.root = root or DATA_DIR / "novels"
+        self.root = root or DATA_DIR / "cache"
 
     def write_chapter(
         self,
@@ -62,6 +73,8 @@ class NovelFileCache:
     ) -> dict[str, Any]:
         if not content:
             return {"written": False, "reason": "empty content"}
+        if looks_like_garbled_text(content):
+            raise ValueError("garbled chapter content")
 
         context = self._chapter_context(
             conn,
@@ -89,14 +102,6 @@ class NovelFileCache:
         text = self._markdown_content(chapter_title, content, trace_meta=trace_meta or {})
         target_path.write_text(text, encoding="utf-8", newline="\n")
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-
-        if source_id == SUBSCRIPTION_SOURCE_ID:
-            self._write_subscription_metadata(
-                target_dir,
-                book_id=book_id or context["bookId"],
-                book_name=context["bookName"] or book_name,
-                author=author,
-            )
 
         return {
             "written": True,
@@ -174,8 +179,6 @@ class NovelFileCache:
             return ""
 
     def _source_folder(self, source_id: str, chapter_url: str) -> str:
-        if source_id == SUBSCRIPTION_SOURCE_ID:
-            return self._safe_segment(SUBSCRIPTION_FOLDER)
         parsed = urlparse(chapter_url or "")
         host = parsed.netloc.lower()
         if "@" in host:
@@ -193,61 +196,12 @@ class NovelFileCache:
         author: str,
         chapter_url: str,
     ) -> str:
-        if source_id == SUBSCRIPTION_SOURCE_ID:
-            name = self._safe_segment(book_name or "unknown-book", max_length=80)
-            author_part = self._safe_segment(author or "", max_length=40)
-            if author_part:
-                return f"{name}_{author_part}"
-            return name
-
         # Third-party caches use an opaque encoded key so they stay temporary
-        # and can be safely cleaned up without colliding with subscription books.
+        # and can be safely cleaned up without colliding with other books.
         key = book_id or f"{source_id}:{chapter_url}"
         if not key:
             return "unknown-book"
         return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
-
-    def _write_subscription_metadata(
-        self,
-        book_dir: Path,
-        *,
-        book_id: str,
-        book_name: str,
-        author: str,
-        extra: dict[str, Any] | None = None,
-    ) -> None:
-        metadata_path = book_dir / METADATA_FILE
-        now = datetime.now(timezone.utc).isoformat()
-        existing: dict[str, Any] = {}
-        if metadata_path.exists():
-            try:
-                existing = json.loads(metadata_path.read_text(encoding="utf-8"))
-            except Exception:
-                existing = {}
-
-        chapter_files = sorted(
-            p for p in book_dir.glob("*.md") if p.is_file() and p.name != METADATA_FILE
-        )
-
-        metadata: dict[str, Any] = {
-            "bookId": book_id or existing.get("bookId", ""),
-            "bookName": book_name or existing.get("bookName", ""),
-            "author": author or existing.get("author", ""),
-            "sourceId": SUBSCRIPTION_SOURCE_ID,
-            "createdAt": existing.get("createdAt") or now,
-            "updatedAt": now,
-            "chapterCount": len(chapter_files),
-        }
-        # Merge persistent extra fields (cover, primary source, etc.) so the
-        # directory can be rebuilt on a fresh start without the database.
-        for key, value in (extra or {}).items():
-            if key not in ("bookId", "bookName", "author", "sourceId", "createdAt", "updatedAt", "chapterCount"):
-                metadata[key] = value
-
-        metadata_path.write_text(
-            json.dumps(metadata, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
 
     def cleanup_temp_cache(
         self,
@@ -255,10 +209,7 @@ class NovelFileCache:
         max_age_hours: int = 24,
         dry_run: bool = False,
     ) -> list[Path]:
-        """Remove third-party source cache folders older than max_age_hours.
-
-        Subscription books under legadohub_ai_aggregate are never touched.
-        """
+        """Remove third-party source cache folders older than max_age_hours."""
         removed: list[Path] = []
         if not self.root.exists():
             return removed
@@ -268,8 +219,6 @@ class NovelFileCache:
 
         for source_dir in self.root.iterdir():
             if not source_dir.is_dir():
-                continue
-            if source_dir.name == self._safe_segment(SUBSCRIPTION_FOLDER):
                 continue
             for book_dir in source_dir.iterdir():
                 if not book_dir.is_dir():

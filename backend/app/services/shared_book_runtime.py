@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -276,6 +277,7 @@ class SharedBookProcessLogger:
         event: str | None = None,
         chapter_index: int | None = None,
         stage: str | None = None,
+        newest_first: bool = False,
     ) -> dict[str, Any]:
         log_path = self.storage.logs_dir(book_name=book_name, author=author) / "process.jsonl"
         if not log_path.exists():
@@ -302,9 +304,48 @@ class SharedBookProcessLogger:
             items.append(record)
 
         total = len(items)
+        if newest_first:
+            items = list(reversed(items))
         start = max(0, offset)
         end = start + max(1, limit)
         return {"items": items[start:end], "total": total, "limit": limit, "offset": offset}
+
+    async def tail_stream(
+        self,
+        *,
+        book_name: str,
+        author: str,
+        poll_interval_seconds: float = 0.5,
+        from_end: bool = True,
+    ):
+        """Asynchronously yield new log records like `tail -f`.
+
+        Waits for the log file to appear if it does not yet exist, then streams
+        lines appended after the initial seek position.
+        """
+        log_path = self.storage.logs_dir(book_name=book_name, author=author) / "process.jsonl"
+        while not log_path.exists():
+            await asyncio.sleep(poll_interval_seconds)
+        position = log_path.stat().st_size if from_end else 0
+        while True:
+            await asyncio.sleep(poll_interval_seconds)
+            if not log_path.exists():
+                continue
+            text = log_path.read_text(encoding="utf-8")
+            if len(text) < position:
+                position = 0
+            new_text = text[position:]
+            position = len(text)
+            for line in new_text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(record, dict):
+                    yield record
 
 
 def build_chapter_progress_payload(
@@ -319,6 +360,53 @@ def build_chapter_progress_payload(
     trace = dict(chapter_trace) if chapter_trace else {}
     status = str(trace.get("chapterStatus", "") or "pending")
     preview_only = bool(trace.get("previewOnly", False))
+    stage3_verdict = str(trace.get("stage3Verdict", "") or "").strip()
+    stage3_reason = str(trace.get("stage3Reason", "") or "").strip()
+    logs = [item for item in (logs or []) if isinstance(item, dict)]
+    last_event = logs[-1] if logs else {}
+    current_step = "等待调度"
+    next_step = "等待下一章"
+    stage = str(last_event.get("stage", "") or "").strip()
+    if last_event:
+        event = str(last_event.get("event", "") or "").strip()
+        payload = last_event.get("payload") if isinstance(last_event.get("payload"), dict) else {}
+        trigger = str((payload or {}).get("trigger", "") or "").strip()
+        if event == "job_start":
+            if trigger == "book_source_map_refresh":
+                current_step = "正在刷新源映射"
+                next_step = "继续补齐章节"
+            elif trigger == "book_bootstrap":
+                current_step = "正在补齐首批章节"
+                next_step = "继续处理下一章"
+            elif trigger == "book_update_check":
+                current_step = "正在检查更新"
+                next_step = "继续处理下一章"
+            else:
+                current_step = "正在处理章节"
+                next_step = "继续处理下一章"
+        elif event == "job_complete":
+            current_step = "本轮处理完成"
+            next_step = "等待下一轮调度"
+        elif event == "job_error":
+            current_step = "处理失败"
+            next_step = "等待修复后重试"
+        elif event == "job_skipped":
+            current_step = "处理被跳过"
+            next_step = "等待锁释放"
+        elif event == "chapter_write":
+            current_step = f"已写入第{chapter_index}章"
+            next_step = f"下一章：第{chapter_index + 1}章"
+        elif event == "chapter_error":
+            current_step = f"第{chapter_index}章处理失败"
+            next_step = "等待重试"
+        elif event:
+            current_step = event
+        if stage == "stage1" and current_step == "等待调度" and status in {"processed", "fallback"}:
+            current_step = "章节已完成"
+        if status == "pending":
+            next_step = f"下一章：第{chapter_index}章"
+
+    next_chapter_index = chapter_index + 1
 
     stage1_complete = status not in {"", "pending"}
     stage2_complete = status in {"supplemented", "readable", "proofread_complete", "suspect", "failed"}
@@ -343,7 +431,11 @@ def build_chapter_progress_payload(
         "stage": "stage3",
         "label": "AI 校对",
         "complete": stage3_complete,
-        "status": "proofread_complete" if stage3_complete else ("pending" if stage2_complete else "waiting"),
+        "status": (
+            "proofread_complete"
+            if stage3_complete
+            else (stage3_verdict or ("pending" if stage2_complete else "waiting"))
+        ),
         "aiProcessedAt": trace.get("aiProcessedAt"),
     }
 
@@ -351,7 +443,16 @@ def build_chapter_progress_payload(
         "bookId": book_id,
         "chapterIndex": chapter_index,
         "chapterTitle": chapter_title,
+        "stage": stage,
+        "currentStep": current_step,
+        "nextStep": next_step,
+        "currentChapterIndex": chapter_index,
+        "currentChapterTitle": chapter_title,
+        "nextChapterIndex": next_chapter_index,
+        "nextChapterTitle": "",
         "chapterStatus": status,
+        "stage3Verdict": stage3_verdict,
+        "stage3Reason": stage3_reason,
         "nodes": [stage1, stage2, stage3],
-        "logs": logs or [],
+        "logs": logs,
     }

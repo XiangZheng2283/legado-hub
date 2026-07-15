@@ -112,7 +112,7 @@ class PublicCookieTools:
             "_csrfToken": "CSRF Token",
         }
         found = {k: login_markers[k] for k in login_markers if all_cookies.get(k)}
-        has_critical = bool(all_cookies.get("ywguid") or all_cookies.get("ywkey"))
+        has_critical = bool(all_cookies.get("ywguid") and all_cookies.get("ywkey"))
 
         if not has_critical:
             return {
@@ -121,12 +121,40 @@ class PublicCookieTools:
                 "message": "Cookie 不完整，缺少关键登录态字段（ywguid / ywkey）",
             }
 
+        account_name = PublicCookieTools._explicit_account_name(all_cookies)
         marker_names = ", ".join(found.keys())
+        if account_name:
+            return {
+                "authenticated": True,
+                "accountName": account_name,
+                "message": f"Cookie 格式正确（{marker_names}）",
+            }
+
         return {
-            "authenticated": True,
+            "authenticated": False,
+            "authStatus": "pending",
             "accountName": "",
-            "message": f"Cookie 格式正确（{marker_names}）",
+            "message": f"Cookie 格式正确（{marker_names}），需账户页确认用户名或手机号",
         }
+
+    @staticmethod
+    def _explicit_account_name(all_cookies: dict[str, str]) -> str:
+        for key in (
+            "nickName",
+            "userName",
+            "accountName",
+            "mobilePhone",
+            "mobile",
+            "phone",
+            "bindPhone",
+            "phoneNumber",
+            "phoneMasked",
+            "mobileMasked",
+        ):
+            value = all_cookies.get(key)
+            if value:
+                return str(value).strip()
+        return ""
 
 
 class OfficialAuthManager:
@@ -282,6 +310,7 @@ class OfficialAuthManager:
         if not plugin or "auth" not in plugin.capabilities:
             return None
 
+        ctx = None
         try:
             ctx = scheduler._make_ctx(plugin_id)
             for domain, cookies in cookie_jar.items():
@@ -290,15 +319,25 @@ class OfficialAuthManager:
                         ctx._fetcher.set_cookie(domain, name, value)
 
             result = await plugin.source.auth_status(ctx)
+            account_name = PublicCookieTools._explicit_account_name(result)
+            authenticated = bool(result.get("authenticated")) and bool(account_name)
+            auth_status = result.get("authStatus", "")
+            message = result.get("message", "")
+            if result.get("authenticated") and not account_name:
+                auth_status = "pending"
+                message = "登录态未返回明确账号或手机号，暂不判定为成功"
             return {
-                "authenticated": result.get("authenticated", False),
-                "accountName": result.get("accountName", ""),
-                "message": result.get("message", ""),
-                "authStatus": result.get("authStatus", ""),
+                "authenticated": authenticated,
+                "accountName": account_name,
+                "message": message,
+                "authStatus": auth_status,
                 "requiredActions": result.get("requiredActions", []),
             }
         except Exception:
             return None
+        finally:
+            if ctx is not None:
+                await ctx._fetcher.close()
 
     async def save_cookies_and_probe(self, plugin_id: str, cookie_jar: dict) -> dict:
         """Public entry to persist a cookie jar and immediately probe auth status."""
@@ -322,7 +361,9 @@ class OfficialAuthManager:
     async def _save_cookie_jar_and_probe(self, plugin_id: str, cookie_jar: dict) -> dict:
         """Persist cookie jar to the host store, then run a real auth_status probe."""
         if self._plugin_declares_cookies(plugin_id):
-            self._cookie_store.save(plugin_id, {"cookies": cookie_jar})
+            payload = self._cookie_store.load(plugin_id)
+            merged = self._merge_cookie_jars(self._extract_jar(payload), cookie_jar)
+            self._cookie_store.save(plugin_id, {"cookies": merged})
         return await self._probe_cookie_jar(plugin_id, cookie_jar)
 
     async def _probe_cookie_jar(self, plugin_id: str, cookie_jar: dict) -> dict:
@@ -364,6 +405,26 @@ class OfficialAuthManager:
                 if isinstance(jar, dict)
             }
         return {}
+
+    @staticmethod
+    def _merge_cookie_jars(
+        existing: dict[str, dict[str, str]],
+        incoming: dict[str, dict[str, str]],
+    ) -> dict[str, dict[str, str]]:
+        """Merge incoming cookies without dropping unrelated existing tokens."""
+        merged = {
+            str(domain): dict(jar)
+            for domain, jar in (existing or {}).items()
+            if isinstance(jar, dict)
+        }
+        for domain, jar in (incoming or {}).items():
+            if not isinstance(jar, dict):
+                continue
+            bucket = merged.setdefault(str(domain), {})
+            for name, value in jar.items():
+                if value is not None:
+                    bucket[str(name)] = str(value)
+        return {domain: jar for domain, jar in merged.items() if jar}
 
     # ------------------------------------------------------------------
     # Phone auth helpers

@@ -270,6 +270,8 @@ class SharedBookSourceMapService:
                     "sourceBookId": item.get("bookId", "") or "",
                     "bookUrl": item.get("bookUrl", "") or "",
                     "tocUrl": item.get("tocUrl", "") or "",
+                    "lastChapter": item.get("lastChapter", "") or "",
+                    "chapterCount": int(item.get("chapterCount", 0) or 0),
                     "lastVerifiedAt": verified_at,
                     "status": "healthy",
                     "priority": int(item.get("score", 0) or 0),
@@ -304,11 +306,22 @@ class SharedBookSourceMapService:
                     refs = [item for item in items if isinstance(item, dict)]
 
         normalized: list[dict[str, Any]] = []
+        fallback_payload = payload if isinstance(payload, dict) else {}
+        payload_sources = fallback_payload.get("sources") if isinstance(fallback_payload.get("sources"), list) else []
+        payload_by_key = {
+            (
+                str(item.get("sourceId", "") or "").strip(),
+                str(item.get("bookId", "") or "").strip(),
+            ): item
+            for item in payload_sources
+            if isinstance(item, dict)
+        }
         for item in refs:
             source_id = str(item.get("sourceId", "") or "").strip()
             source_book_id = str(item.get("sourceBookId", "") or item.get("bookId", "") or "").strip()
             if not source_id or not source_book_id or source_id == primary_source_id:
                 continue
+            payload_item = payload_by_key.get((source_id, source_book_id), {})
             normalized.append(
                 {
                     "sourceId": source_id,
@@ -318,6 +331,8 @@ class SharedBookSourceMapService:
                     "tocUrl": item.get("tocUrl", "") or "",
                     "score": int(item.get("priority", item.get("score", 0)) or 0),
                     "priority": int(item.get("priority", item.get("score", 0)) or 0),
+                    "lastChapter": item.get("lastChapter", "") or payload_item.get("lastChapter", "") or "",
+                    "chapterCount": int(item.get("chapterCount", payload_item.get("chapterCount", 0)) or 0),
                 }
             )
 
@@ -325,8 +340,6 @@ class SharedBookSourceMapService:
             normalized.sort(key=lambda item: (-int(item.get("priority", 0) or 0), item.get("sourceId", "")))
             return normalized
 
-        fallback_payload = payload if isinstance(payload, dict) else {}
-        payload_sources = fallback_payload.get("sources") if isinstance(fallback_payload.get("sources"), list) else []
         fallback_rows: list[dict[str, Any]] = []
         for item in payload_sources:
             if not isinstance(item, dict):

@@ -16,8 +16,20 @@ function formatLoginError(message?: string, code?: number | string): string {
   return "登录请求失败"
 }
 
+function explicitLoginIdentity(result: any): string {
+  return String(
+    result?.accountName
+      || result?.phoneMasked
+      || result?.mobileMasked
+      || result?.mobilePhone
+      || result?.phoneNumber
+      || result?.phone
+      || ""
+  ).trim()
+}
+
 function isLoginAccepted(result: any): boolean {
-  return Boolean(result?.ok) && (Boolean(result?.authenticated) || result?.authStatus === "pending")
+  return Boolean(result?.ok) && Boolean(result?.authenticated) && Boolean(explicitLoginIdentity(result))
 }
 
 // Types from backend login-capabilities response
@@ -59,7 +71,6 @@ export function OfficialSourceLoginDialog({
   const [sendingSms, setSendingSms] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [challengeData, setChallengeData] = useState<any>(null)
 
   // Cookie login state
   const [cookieText, setCookieText] = useState("")
@@ -70,29 +81,43 @@ export function OfficialSourceLoginDialog({
   const [success, setSuccess] = useState("")
 
   // Load capabilities when dialog opens
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return
+    let cancelled = false
+    setCaps(null)
     setLoadingCaps(true)
+    setActiveMethod("")
     setError("")
     setSuccess("")
     setPhone("")
     setSmsCode("")
     setSessionId("")
     setCookieText("")
-    setChallengeData(null)
+    setSendingSms(false)
+    setVerifying(false)
+    setVerifyingCookie(false)
     setCountdown(0)
 
     api
       .loginCapabilities(pluginId)
       .then((data) => {
+        if (cancelled) return
         setCaps(data)
         setActiveMethod(data.defaultMethod || data.methods[0] || "")
       })
       .catch((err) => {
+        if (cancelled) return
         setError(`获取登录能力失败: ${err.message}`)
       })
-      .finally(() => setLoadingCaps(false))
+      .finally(() => {
+        if (!cancelled) setLoadingCaps(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [open, pluginId])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Countdown timer for SMS resend
   useEffect(() => {
@@ -105,7 +130,6 @@ export function OfficialSourceLoginDialog({
   const showTencentCaptcha = useCallback(
     (appId: string, callback: (ticket: string, randstr: string) => void) => {
       const win = window as any
-      console.log("[captcha] existing TencentCaptcha:", !!win.TencentCaptcha)
 
       // Use a hidden body anchor so the popup is not tied to the dialog DOM.
       let container = document.getElementById("tencent-captcha-anchor")
@@ -123,17 +147,14 @@ export function OfficialSourceLoginDialog({
       const createCaptcha = () => {
         try {
           const captcha = new win.TencentCaptcha(container, appId, (res: any) => {
-            console.log("[captcha] result:", res)
             if (res.ret === 0) {
               callback(res.ticket, res.randstr)
             } else {
               setError("滑块验证未完成")
             }
           })
-          console.log("[captcha] calling show()")
           captcha.show()
         } catch (err: any) {
-          console.error("[captcha] constructor/show failed:", err)
           setError(`滑块验证初始化失败: ${err.message || "未知错误"}`)
         }
       }
@@ -144,20 +165,17 @@ export function OfficialSourceLoginDialog({
       }
 
       // Fallback: load Tencent Captcha JS dynamically
-      console.log("[captcha] loading script...")
       const script = document.createElement("script")
       script.src = "https://turing.captcha.qcloud.com/TCaptcha.js"
       script.async = true
       script.onload = () => {
-        console.log("[captcha] script loaded, TencentCaptcha:", !!win.TencentCaptcha)
         if (win.TencentCaptcha) {
           createCaptcha()
         } else {
           setError("滑块验证组件加载后未找到构造函数")
         }
       }
-      script.onerror = (err) => {
-        console.error("[captcha] script load error:", err)
+      script.onerror = () => {
         setError("滑块验证组件加载失败，请检查网络或改用浏览器/Cookie 登录")
       }
       document.body.appendChild(script)
@@ -172,17 +190,16 @@ export function OfficialSourceLoginDialog({
       return
     }
     setError("")
+    setSuccess("")
     setSendingSms(true)
 
     try {
       const result = await api.loginPhoneRequestCode(pluginId, { phone })
-      console.log("[login] request-code result:", result)
 
       if (!result.ok) {
         // Check if challenge required
         if (result.nextAction === "complete_challenge" && result.challenge) {
           const challenge = result.challenge
-          console.log("[login] challenge:", challenge)
           // Reject challenges without usable captcha data
           const captchaUrl = challenge.captchaUrl || challenge.url || ""
           const isTencentCaptcha =
@@ -191,17 +208,14 @@ export function OfficialSourceLoginDialog({
             captchaUrl.includes("TCaptcha.js")
           if (!captchaUrl && !isTencentCaptcha) {
             const msg = result.error || "无法加载滑块验证，请稍后重试或使用其他登录方式"
-            console.warn("[login] challenge has no usable captcha data")
             setError(msg)
             setSendingSms(false)
             return
           }
-          setChallengeData(challenge)
           const appId = challenge.appId || "1600000770"
-          console.log("[login] showing tencent captcha, appId:", appId)
           showTencentCaptcha(appId, async (ticket, randstr) => {
-            console.log("[login] captcha completed, retrying request-code")
             // After captcha, retry request with challenge token
+            setSendingSms(true)
             try {
               const retryResult = await api.loginPhoneRequestCode(pluginId, {
                 phone,
@@ -209,7 +223,6 @@ export function OfficialSourceLoginDialog({
                 challengeRandstr: randstr,
                 sessionId: result.sessionId,
               })
-              console.log("[login] retry request-code result:", retryResult)
               if (retryResult.ok) {
                 setSessionId(retryResult.sessionId)
                 setCountdown(60)
@@ -218,12 +231,12 @@ export function OfficialSourceLoginDialog({
                 setError(formatLoginError(retryResult.error, retryResult.errorCode))
               }
             } catch (err: any) {
-              console.error("[login] retry request-code failed:", err)
               setError(`发送失败: ${err.message}`)
+            } finally {
+              setSendingSms(false)
             }
           })
         } else {
-          console.warn("[login] request-code failed:", result.error)
           setError(formatLoginError(result.error, result.errorCode))
         }
         return
@@ -233,7 +246,6 @@ export function OfficialSourceLoginDialog({
       setCountdown(60)
       setSuccess("验证码已发送")
     } catch (err: any) {
-      console.error("[login] request-code exception:", err)
       setError(`发送失败: ${err.message}`)
     } finally {
       setSendingSms(false)
@@ -251,6 +263,7 @@ export function OfficialSourceLoginDialog({
       return
     }
     setError("")
+    setSuccess("")
     setVerifying(true)
 
     try {
@@ -261,12 +274,12 @@ export function OfficialSourceLoginDialog({
       })
 
       if (isLoginAccepted(result)) {
-        const suffix = result.accountName ? ` - ${result.accountName}` : ""
-        setSuccess(`${result.authenticated ? "登录成功" : "登录态待确认"}${suffix}`)
+        const accountName = explicitLoginIdentity(result)
+        setSuccess(`登录成功 - ${accountName}`)
         onSuccess?.()
         setTimeout(() => onOpenChange(false), 1500)
       } else {
-        setError(result.message || result.error || "登录失败")
+        setError(result.message || result.error || "登录未返回用户名或登录手机号，暂不判定为成功")
       }
     } catch (err: any) {
       setError(`登录失败: ${err.message}`)
@@ -282,18 +295,19 @@ export function OfficialSourceLoginDialog({
       return
     }
     setError("")
+    setSuccess("")
     setVerifyingCookie(true)
 
     try {
       const result = await api.loginCookieVerify(pluginId, { cookieText: cookieText.trim() })
 
       if (isLoginAccepted(result)) {
-        const prefix = result.authenticated ? "Cookie 验证通过" : "Cookie 已保存，等待确认"
-        setSuccess(`${prefix}${result.accountName ? ` - ${result.accountName}` : ""}`)
+        const accountName = explicitLoginIdentity(result)
+        setSuccess(`Cookie 验证通过 - ${accountName}`)
         onSuccess?.()
         setTimeout(() => onOpenChange(false), 1500)
       } else {
-        setError(result.message || result.error || "Cookie 验证失败")
+        setError(result.message || result.error || "Cookie 未返回用户名或登录手机号，暂不判定为成功")
       }
     } catch (err: any) {
       setError(`验证失败: ${err.message}`)
@@ -346,9 +360,9 @@ export function OfficialSourceLoginDialog({
             )}
 
             {success && (
-              <Alert className="bg-green-50 border-green-200 text-sm">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <AlertDescription className="text-green-700">{success}</AlertDescription>
+              <Alert className="border-primary/30 bg-primary/10 text-sm">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-primary">{success}</AlertDescription>
               </Alert>
             )}
 

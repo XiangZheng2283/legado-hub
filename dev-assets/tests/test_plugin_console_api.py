@@ -1,5 +1,7 @@
 """Tests for plugin console API endpoints."""
 
+import asyncio
+import sqlite3
 from types import SimpleNamespace
 
 import pytest
@@ -21,6 +23,19 @@ def admin_client():
     res = test_client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
     if res.status_code != 200:
         pytest.skip(f"admin login unavailable: {res.status_code} {res.text}")
+    return test_client
+
+
+@pytest.fixture
+def user_client():
+    """Return an authenticated non-admin client."""
+    from app.services.user_auth import auth_service
+
+    if not auth_service.get_user_by_username("reader"):
+        auth_service.create_user("reader", "reader123", role="user")
+    test_client = TestClient(app)
+    res = test_client.post("/api/auth/login", json={"username": "reader", "password": "reader123"})
+    assert res.status_code == 200
     return test_client
 
 
@@ -78,8 +93,8 @@ def test_smoke_plugin():
     assert "pass" in res.json()
 
 
-def test_plugin_auth():
-    list_res = client.get("/api/console/plugins")
+def test_plugin_auth(admin_client):
+    list_res = admin_client.get("/api/console/plugins")
     items = list_res.json().get("items", [])
     if not items:
         pytest.skip("No plugins installed")
@@ -90,13 +105,21 @@ def test_plugin_auth():
     if candidate is None:
         pytest.skip("No ordinary no-auth plugin found")
     plugin_id = candidate["pluginId"]
-    res = client.get(f"/api/console/plugins/{plugin_id}/auth")
+    res = admin_client.get(f"/api/console/plugins/{plugin_id}/auth")
     assert res.status_code == 200
     assert "authenticated" in res.json()
     assert res.json()["mode"] == "none"
 
 
-def test_browser_required_plugin_auth_returns_bypass_required(monkeypatch, tmp_path):
+def test_batch_delete_plugins_is_disabled_and_admin_only(admin_client, user_client):
+    user_response = user_client.post("/api/console/plugins/batch-delete", json={"pluginIds": []})
+    assert user_response.status_code == 403
+
+    admin_response = admin_client.post("/api/console/plugins/batch-delete", json={"pluginIds": []})
+    assert admin_response.status_code == 501
+
+
+def test_browser_required_plugin_auth_returns_bypass_required(admin_client, monkeypatch, tmp_path):
     import app.api.console as console_api
     from app.services.cookie_store import CookieStore
 
@@ -104,7 +127,7 @@ def test_browser_required_plugin_auth_returns_bypass_required(monkeypatch, tmp_p
     cookie_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(console_api, "CookieStore", lambda: CookieStore(base_dir=cookie_dir))
 
-    res = client.get("/api/console/plugins/69shuba_com/auth")
+    res = admin_client.get("/api/console/plugins/69shuba_com/auth")
 
     assert res.status_code == 200
     data = res.json()
@@ -114,7 +137,7 @@ def test_browser_required_plugin_auth_returns_bypass_required(monkeypatch, tmp_p
     assert "browserChallenges" not in data
 
 
-def test_plugin_auth_reports_saved_cookies_for_no_auth_plugin(monkeypatch, tmp_path):
+def test_plugin_auth_reports_saved_cookies_for_no_auth_plugin(admin_client, monkeypatch, tmp_path):
     import app.api.console as console_api
     from app.services.cookie_store import CookieStore
 
@@ -124,7 +147,7 @@ def test_plugin_auth_reports_saved_cookies_for_no_auth_plugin(monkeypatch, tmp_p
     store.save("69shuba_com", {"cookies": {"69shuba.com": {"cf_clearance": "ok"}}})
     monkeypatch.setattr(console_api, "CookieStore", lambda: CookieStore(base_dir=cookie_dir))
 
-    res = client.post("/api/console/plugins/69shuba_com/auth/check")
+    res = admin_client.post("/api/console/plugins/69shuba_com/auth/check")
 
     assert res.status_code == 200
     data = res.json()
@@ -134,24 +157,24 @@ def test_plugin_auth_reports_saved_cookies_for_no_auth_plugin(monkeypatch, tmp_p
     assert "browserChallenges" not in data
 
 
-def test_plugin_login_and_cookie_clear():
-    list_res = client.get("/api/console/plugins")
+def test_plugin_login_and_cookie_clear(admin_client):
+    list_res = admin_client.get("/api/console/plugins")
     items = list_res.json().get("items", [])
     if not items:
         pytest.skip("No plugins installed")
     plugin_id = items[0]["pluginId"]
 
-    login_res = client.post(f"/api/console/plugins/{plugin_id}/login")
+    login_res = admin_client.post(f"/api/console/plugins/{plugin_id}/login")
     assert login_res.status_code == 200
     assert login_res.json()["mode"] == "manual_browser"
 
-    clear_res = client.post(f"/api/console/plugins/{plugin_id}/cookies/clear")
+    clear_res = admin_client.post(f"/api/console/plugins/{plugin_id}/cookies/clear")
     assert clear_res.status_code == 200
     assert clear_res.json()["cleared"] is True
 
 
-def test_official_sources_endpoint_lists_qidian():
-    res = client.get("/api/console/official-sources")
+def test_official_sources_endpoint_lists_qidian(admin_client):
+    res = admin_client.get("/api/console/official-sources")
     assert res.status_code == 200
     data = res.json()
     assert "items" in data
@@ -227,6 +250,47 @@ def test_settings_endpoint():
     assert "contentWorkflow" in res.json()
 
 
+def test_book_source_priority_settings_accept_new_and_legacy_names():
+    import app.api.console as console_api
+
+    settings = {}
+
+    assert console_api._apply_book_source_priority_settings(
+        settings,
+        {"primarySourcePriority": ["qidian_com_app", "qidian_com_web"]},
+    ) is True
+    assert settings["sourcePriority"] == ["qidian_com_app", "qidian_com_web"]
+    assert settings["sourcePriorityMode"] == "manual"
+
+    assert console_api._apply_book_source_priority_settings(settings, {"sourcePriority": []}) is True
+    assert settings["sourcePriority"] == []
+    assert settings["sourcePriorityMode"] == "auto"
+
+
+def test_processing_event_sanitizer_exposes_candidate_lag_details():
+    import app.api.console as console_api
+
+    event = console_api._sanitize_library_processing_event(
+        {
+            "ts": "2026-07-02T00:00:00",
+            "event": "candidate_source_behind_target",
+            "stage": "stage2",
+            "chapterIndex": 814,
+            "payload": {
+                "sourceId": "69hsw_com",
+                "targetChapterNumber": 806,
+                "latestCandidateChapterNumber": 790,
+                "attemptedSourceIds": ["69hsw_com"],
+            },
+        }
+    )
+
+    assert event["message"] == "候选源最新章节落后，已跳过"
+    assert event["targetChapterNumber"] == 806
+    assert event["latestCandidateChapterNumber"] == 790
+    assert event["attemptedSourceIds"] == ["69hsw_com"]
+
+
 def test_update_settings_persists_source_pool_and_refreshes_runtime(admin_client, monkeypatch, tmp_path):
     import json
     from types import SimpleNamespace
@@ -269,13 +333,6 @@ def test_update_settings_persists_source_pool_and_refreshes_runtime(admin_client
     assert search_service.scheduler.config["browser_source_timeout_seconds"] == 150.0
 
 
-def test_aggregate_source_endpoint():
-    res = client.get("/api/console/aggregate-source")
-    assert res.status_code == 200
-    data = res.json()
-    assert "generated_path" in data
-
-
 def test_aggregate_settings_endpoint_returns_masked_contract():
     res = client.get("/api/console/aggregate-settings")
     assert res.status_code == 200
@@ -288,79 +345,175 @@ def test_aggregate_settings_endpoint_returns_masked_contract():
     assert "hasApiKey" in data["aiProviderConfig"]
 
 
-def test_aggregate_books_endpoint_is_paginated(admin_client):
-    res = admin_client.get("/api/console/aggregate-books?page=1&pageSize=2")
-    assert res.status_code == 200
-    data = res.json()
-    assert set(["items", "page", "pageSize", "total"]).issubset(data)
-    assert data["page"] == 1
-    assert data["pageSize"] == 2
-    assert isinstance(data["items"], list)
+def test_aggregate_provider_endpoints_are_disabled(monkeypatch):
+    class BoomClient:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("AI client should not be constructed while runtime is disabled")
 
+    monkeypatch.setattr("app.ai.client.OpenAICompatibleClient", BoomClient)
 
-def test_aggregate_book_chapters_endpoint_is_paginated(admin_client):
-    res = admin_client.get("/api/console/aggregate-books/nonexistent/chapters?page=1&pageSize=2")
-    assert res.status_code == 200
-    data = res.json()
-    assert set(["items", "page", "pageSize", "total"]).issubset(data)
-    assert data["page"] == 1
-    assert data["pageSize"] == 2
-    assert data["items"] == []
+    payload = {"baseUrl": "https://api.example.com/v1", "apiKey": "sk-test", "model": "x"}
+    test_res = client.post("/api/console/aggregate-settings/test-provider", json=payload)
+    models_res = client.post("/api/console/aggregate-settings/fetch-models", json=payload)
 
-
-def test_aggregate_chapter_reviews_endpoint_keeps_review_contract(admin_client):
-    res = admin_client.get("/api/console/aggregate-books/nonexistent/chapters/chapter-1/reviews")
-    assert res.status_code == 200
-    data = res.json()
-    assert "chapterEndHot" in data
-    assert "chapterEnd" in data
-    assert "authorReviews" in data
-    assert "hotParagraphReviews" in data
-    assert "paragraphs" in data
-    assert "summary" in data
-
-
-def test_aggregate_chapter_list_does_not_include_content(admin_client):
-    """Chapter list must not include processed_content — only metadata."""
-    res = admin_client.get("/api/console/aggregate-books/nonexistent/chapters?page=1&pageSize=5")
-    assert res.status_code == 200
-    data = res.json()
-    for item in data.get("items", []):
-        assert "content" not in item, "Chapter list items must not include 'content'"
-
-
-def test_aggregate_chapter_detail_includes_source_alignment(admin_client):
-    """Single chapter detail must include source.alignment and fallbackSourceId."""
-    # With a nonexistent book/chapter, we get found=False — that's fine;
-    # we're testing that the response structure is correct.
-    res = admin_client.get("/api/console/aggregate-books/nonexistent/chapters/nonexistent-ch")
-    assert res.status_code == 200
-    data = res.json()
-    if data.get("found", True):
-        # Only check structure if the chapter was found.
-        assert "source" in data
-        assert "alignment" in data.get("source", {})
-        assert "fallbackSourceId" in data.get("source", {})
-
-
-def test_aggregate_chapter_detail_fallback_has_content_field(admin_client):
-    """A found chapter detail must include a content field (even if empty)."""
-    res = admin_client.get("/api/console/aggregate-books/nonexistent/chapters/nonexistent-ch")
-    assert res.status_code == 200
-    data = res.json()
-    # For found chapters, content should be present.
-    if data.get("found", True):
-        assert "content" in data
+    assert test_res.status_code == 200
+    assert test_res.json()["status"] == "disabled"
+    assert models_res.status_code == 200
+    assert models_res.json()["status"] == "disabled"
+    assert models_res.json()["models"] == []
 
 
 # ------------------------------------------------------------------
 # Official Source Login API tests (mocked, no real private package)
 # ------------------------------------------------------------------
 
+
+def test_public_cookie_basic_verify_requires_both_qidian_markers():
+    from app.services.official_auth.manager import PublicCookieTools
+
+    result = PublicCookieTools.basic_verify({
+        "qidian.com": {"ywguid": "abc", "accountName": "reader"},
+    })
+
+    assert result["authenticated"] is False
+    assert "Cookie 不完整" in result["message"]
+
+
+@pytest.mark.parametrize(
+    ("method", "path", "payload"),
+    [
+        ("get", "/api/console/official-sources", None),
+        ("get", "/api/console/plugins/qidian_com/auth", None),
+        ("post", "/api/console/plugins/qidian_com/auth/check", None),
+        ("post", "/api/console/plugins/qidian_com/login", None),
+        ("post", "/api/console/plugins/qidian_com/cookies/clear", None),
+        ("post", "/api/console/plugins/qidian_com/login-browser", None),
+        ("get", "/api/console/plugins/qidian_com/login-browser/status", None),
+        ("delete", "/api/console/plugins/qidian_com/login-browser", None),
+        ("get", "/api/console/official-sources/qidian_com/login-capabilities", None),
+        ("post", "/api/console/official-sources/qidian_com/login/phone/request-code", {"phone": "13800138000"}),
+        ("post", "/api/console/official-sources/qidian_com/login/phone/verify", {}),
+        ("post", "/api/console/official-sources/qidian_com/login/cookie/verify", {"cookieText": "a=b"}),
+        ("post", "/api/console/official-sources/qidian_com/login/logout", None),
+        ("get", "/api/console/official-sources/qidian_com/login/debug-trace", None),
+    ],
+)
+def test_official_source_management_requires_admin(user_client, method, path, payload):
+    response = user_client.request(method, path, json=payload)
+    assert response.status_code == 403
+
+
+def test_official_source_management_requires_login():
+    response = TestClient(app).get("/api/console/official-sources")
+    assert response.status_code == 401
+
+
+def test_browser_login_success_requires_authenticated_probe(admin_client, monkeypatch):
+    import app.api.console as console_api
+
+    session = SimpleNamespace(
+        status="success",
+        message="登录成功，Cookie 已提取",
+        cookies={"qidian.com": {"ywguid": "abc", "ywkey": "def"}},
+    )
+
+    async def get_session(_plugin_id):
+        return session
+
+    async def cleanup(_plugin_id):
+        return None
+
+    async def save_and_probe(_plugin_id, _cookies):
+        return {
+            "authenticated": False,
+            "accountName": "",
+            "authStatus": "pending",
+            "message": "Cookie 已保存，但用户中心未识别登录态",
+        }
+
+    monkeypatch.setattr(console_api.login_browser_service, "get", get_session)
+    monkeypatch.setattr(console_api.login_browser_service, "cleanup", cleanup)
+    monkeypatch.setattr(console_api.official_auth_manager, "save_cookies_and_probe", save_and_probe)
+
+    response = admin_client.get("/api/console/plugins/qidian_com/login-browser/status")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "pending"
+    assert response.json()["authenticated"] is False
+    assert response.json()["accountName"] == ""
+    assert "未识别登录态" in response.json()["message"]
+
+
+def test_browser_login_accepts_masked_phone_identity(admin_client, monkeypatch):
+    import app.api.console as console_api
+
+    session = SimpleNamespace(
+        status="success",
+        message="登录成功，Cookie 已提取",
+        cookies={"qidian.com": {"ywguid": "abc", "ywkey": "def"}},
+    )
+
+    async def get_session(_plugin_id):
+        return session
+
+    async def cleanup(_plugin_id):
+        return None
+
+    async def save_and_probe(_plugin_id, _cookies):
+        return {
+            "authenticated": True,
+            "accountName": "",
+            "phoneMasked": "138****8000",
+            "authStatus": "authenticated",
+            "message": "登录态有效",
+        }
+
+    monkeypatch.setattr(console_api.login_browser_service, "get", get_session)
+    monkeypatch.setattr(console_api.login_browser_service, "cleanup", cleanup)
+    monkeypatch.setattr(console_api.official_auth_manager, "save_cookies_and_probe", save_and_probe)
+
+    response = admin_client.get("/api/console/plugins/qidian_com/login-browser/status")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["authenticated"] is True
+    assert response.json()["accountName"] == "138****8000"
+
+
+def test_browser_login_start_normalizes_initial_pending_to_running(admin_client, monkeypatch):
+    import app.api.console as console_api
+
+    async def start(**_kwargs):
+        return SimpleNamespace(status="pending", message="")
+
+    monkeypatch.setattr(console_api.login_browser_service, "start", start)
+    plugin_id = next(iter(console_api._plugin_scheduler._plugins))
+
+    response = admin_client.post(f"/api/console/plugins/{plugin_id}/login-browser")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "running"
+    assert "启动" in response.json()["message"]
+
+
+def test_browser_login_poll_normalizes_initial_pending_to_running(admin_client, monkeypatch):
+    import app.api.console as console_api
+
+    async def get_session(_plugin_id):
+        return SimpleNamespace(status="pending", message="", cookies={})
+
+    monkeypatch.setattr(console_api.login_browser_service, "get", get_session)
+
+    response = admin_client.get("/api/console/plugins/qidian_com/login-browser/status")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "running"
+
+
 class TestOfficialSourceLoginCapabilities:
     """GET /api/console/official-sources/{plugin_id}/login-capabilities"""
 
-    def test_no_private_package(self, monkeypatch):
+    def test_no_private_package(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         monkeypatch.setattr(
@@ -379,7 +532,7 @@ class TestOfficialSourceLoginCapabilities:
             },
         )
 
-        res = client.get("/api/console/official-sources/qidian_com/login-capabilities")
+        res = admin_client.get("/api/console/official-sources/qidian_com/login-capabilities")
         assert res.status_code == 200
         data = res.json()
         assert "cookie" in data["methods"]
@@ -388,7 +541,7 @@ class TestOfficialSourceLoginCapabilities:
         assert data["privateFeatures"]["cookieAuth"] is False
         assert data["hasPrivatePackage"] is False
 
-    def test_with_phone_auth(self, monkeypatch):
+    def test_with_phone_auth(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         monkeypatch.setattr(
@@ -407,7 +560,7 @@ class TestOfficialSourceLoginCapabilities:
             },
         )
 
-        res = client.get("/api/console/official-sources/qidian_com/login-capabilities")
+        res = admin_client.get("/api/console/official-sources/qidian_com/login-capabilities")
         assert res.status_code == 200
         data = res.json()
         assert data["methods"][0] == "phone"
@@ -415,7 +568,7 @@ class TestOfficialSourceLoginCapabilities:
         assert data["defaultMethod"] == "phone"
         assert data["privateFeatures"]["phoneAuth"] is True
 
-    def test_qidian_public_fallback_capability_shape(self, monkeypatch):
+    def test_qidian_public_fallback_capability_shape(self, admin_client, monkeypatch):
         """Phone can be exposed via public fallback while privateFeatures.phoneAuth stays false."""
         import app.api.console as console_api
 
@@ -435,7 +588,7 @@ class TestOfficialSourceLoginCapabilities:
             },
         )
 
-        res = client.get("/api/console/official-sources/qidian_com/login-capabilities")
+        res = admin_client.get("/api/console/official-sources/qidian_com/login-capabilities")
         assert res.status_code == 200
         data = res.json()
         assert data["methods"][0] == "phone"
@@ -448,14 +601,14 @@ class TestOfficialSourceLoginCapabilities:
 class TestOfficialSourceCookieVerify:
     """POST /api/console/official-sources/{plugin_id}/login/cookie/verify"""
 
-    def test_missing_cookie_text(self):
-        res = client.post("/api/console/official-sources/qidian_com/login/cookie/verify", json={})
+    def test_missing_cookie_text(self, admin_client):
+        res = admin_client.post("/api/console/official-sources/qidian_com/login/cookie/verify", json={})
         assert res.status_code == 200
         data = res.json()
         assert data["ok"] is False
         assert "缺少 Cookie 文本" in data["error"]
 
-    def test_verify_cookie_calls_manager(self, monkeypatch):
+    def test_verify_cookie_calls_manager(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         calls = []
@@ -473,7 +626,7 @@ class TestOfficialSourceCookieVerify:
 
         monkeypatch.setattr(console_api.official_auth_manager, "verify_cookie", mock_verify_cookie)
 
-        res = client.post(
+        res = admin_client.post(
             "/api/console/official-sources/qidian_com/login/cookie/verify",
             json={"cookieText": "ywguid=abc; ywkey=def"},
         )
@@ -491,8 +644,8 @@ class TestOfficialSourceCookieVerify:
 class TestOfficialSourcePhoneRequestCode:
     """POST /api/console/official-sources/{plugin_id}/login/phone/request-code"""
 
-    def test_missing_phone(self):
-        res = client.post(
+    def test_missing_phone(self, admin_client):
+        res = admin_client.post(
             "/api/console/official-sources/qidian_com/login/phone/request-code",
             json={},
         )
@@ -501,7 +654,7 @@ class TestOfficialSourcePhoneRequestCode:
         assert data["ok"] is False
         assert "缺少手机号" in data["error"]
 
-    def test_full_payload_forwarded(self, monkeypatch):
+    def test_full_payload_forwarded(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         captured = []
@@ -514,7 +667,7 @@ class TestOfficialSourcePhoneRequestCode:
             console_api.official_auth_manager, "request_phone_code", mock_request_phone_code
         )
 
-        res = client.post(
+        res = admin_client.post(
             "/api/console/official-sources/qidian_com/login/phone/request-code",
             json={
                 "phone": "13800138000",
@@ -533,7 +686,7 @@ class TestOfficialSourcePhoneRequestCode:
         assert payload["challengeToken"] == "ticket123"
         assert payload["challengeRandstr"] == "@rand"
 
-    def test_challenge_response_passed_through(self, monkeypatch):
+    def test_challenge_response_passed_through(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         monkeypatch.setattr(
@@ -547,7 +700,7 @@ class TestOfficialSourcePhoneRequestCode:
             },
         )
 
-        res = client.post(
+        res = admin_client.post(
             "/api/console/official-sources/qidian_com/login/phone/request-code",
             json={"phone": "13800138000"},
         )
@@ -562,7 +715,7 @@ class TestOfficialSourcePhoneRequestCode:
 class TestOfficialSourcePhoneVerify:
     """POST /api/console/official-sources/{plugin_id}/login/phone/verify"""
 
-    def test_verify_phone(self, monkeypatch):
+    def test_verify_phone(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         calls = []
@@ -581,7 +734,7 @@ class TestOfficialSourcePhoneVerify:
             console_api.official_auth_manager, "verify_phone_code", mock_verify_phone_code
         )
 
-        res = client.post(
+        res = admin_client.post(
             "/api/console/official-sources/qidian_com/login/phone/verify",
             json={"sessionId": "sess_123", "phone": "13800138000", "code": "123456"},
         )
@@ -598,7 +751,7 @@ class TestOfficialSourcePhoneVerify:
 class TestOfficialSourceLogout:
     """POST /api/console/official-sources/{plugin_id}/login/logout"""
 
-    def test_logout(self, monkeypatch):
+    def test_logout(self, admin_client, monkeypatch):
         import app.api.console as console_api
 
         calls = []
@@ -609,7 +762,7 @@ class TestOfficialSourceLogout:
 
         monkeypatch.setattr(console_api.official_auth_manager, "logout", mock_logout)
 
-        res = client.post("/api/console/official-sources/qidian_com/login/logout")
+        res = admin_client.post("/api/console/official-sources/qidian_com/login/logout")
 
         assert res.status_code == 200
         data = res.json()
@@ -677,42 +830,50 @@ def test_library_book_summary_shared_mode_sanitizes_source_map_for_non_admin(mon
     assert data["mode"] == "shared"
     assert data["book"]["aggregateBookId"] == "book-1"
     assert data["sourceMap"]["summary"][0]["sourceId"] == "src-a"
+    assert data["sourceMap"]["summary"][0]["bookStatus"] == "连载中"
     assert "bookUrl" not in data["sourceMap"]["summary"][0]
     assert data["bookState"]["processedChapterCount"] == 45
 
 
-def test_library_book_summary_legacy_mode_returns_legacy_shape(monkeypatch):
+def test_delete_library_book_removes_shared_and_private_files(monkeypatch, tmp_path):
     import app.api.console as console_api
+    import app.config as app_config
+    from app.services.library_books import LibraryBooksService
+    from app.services.shared_book_storage import SharedBookStorage
+    from app.storage.db import initialize_database
 
-    monkeypatch.setattr(
-        console_api.auth_service,
-        "require_user",
-        lambda _request: SimpleNamespace(user_id="admin-1", role="admin"),
-    )
-    monkeypatch.setattr(
-        console_api.AggregateSettingsRepository,
-        "content_workflow",
-        lambda self: {"useSharedBookStorage": False, "sharedBookStorageReadMode": "legacy"},
-    )
-    monkeypatch.setattr(
-        console_api,
-        "_load_legacy_library_book_summary",
-        lambda _book_id: {
-            "aggregateBookId": "book-legacy",
-            "name": "旧格式小说",
-            "status": "active",
-            "found": True,
-        },
-    )
+    db_path = tmp_path / "app.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    service = LibraryBooksService(db_path=db_path, shared_book_storage=storage)
+    monkeypatch.setattr(app_config, "DB_PATH", db_path)
+    monkeypatch.setattr(console_api, "library_books_service", service)
 
-    res = client.get("/api/console/library-books/book-legacy/summary")
+    initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_tasks (
+                aggregate_book_id, canonical_name, canonical_author, name, author,
+                aggregate_payload_json, primary_book_id, primary_source_id,
+                status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, '{}', 'src-book', 'src-a', 'active', datetime('now'), datetime('now'))
+            """,
+            ("book-delete", service._canonical_name("测试小说"), service._canonical_author("作者甲"), "测试小说", "作者甲"),
+        )
+        conn.commit()
 
-    assert res.status_code == 200
-    data = res.json()
-    assert data["mode"] == "legacy"
-    assert data["aggregateBookId"] == "book-legacy"
-    assert data["found"] is True
-    assert "sourceMap" not in data
+    shared_dir = storage.shared_book_dir(book_name="测试小说", author="作者甲")
+    private_dir = storage.runtime_dir(book_name="测试小说", author="作者甲").parent
+    (shared_dir / "chapters").mkdir(parents=True)
+    (shared_dir / "chapters" / "0001-第一章.md").write_text("正文", encoding="utf-8")
+    (private_dir / "runtime").mkdir(parents=True)
+    (private_dir / "runtime" / "state.json").write_text("{}", encoding="utf-8")
+
+    result = console_api._delete_aggregate_book_impl("book-delete")
+
+    assert result == {"bookId": "book-delete", "deleted": True}
+    assert not shared_dir.exists()
+    assert not private_dir.exists()
 
 
 def test_library_book_chapter_progress_route_sanitizes_trace_by_default(monkeypatch):
@@ -747,6 +908,32 @@ def test_library_book_chapter_progress_route_sanitizes_trace_by_default(monkeypa
     assert data["traceSummary"]["selectedSource"] == "src-a"
     assert "sourceSnapshotRefs" not in data["traceSummary"]
     assert "sourceChapterUrl" not in data["traceSummary"]
+
+
+def test_console_sanitize_trace_summary_keeps_stage3_verdict_fields():
+    from app.api.console import _sanitize_trace_summary
+
+    payload = _sanitize_trace_summary(
+        {
+            "chapterStatus": "suspect",
+            "selectedSource": "src-a",
+            "selectedContentSource": "candidate",
+            "fallbackSourceId": "src-b",
+            "alignmentPassed": False,
+            "alignmentReason": "suspect_content",
+            "titleSimilarity": 0.91,
+            "previewSimilarity": 0.83,
+            "aiModel": "",
+            "aiTokens": 0,
+            "processedAt": "2026-06-29T10:00:00+08:00",
+            "traceHash": "hash-1",
+            "stage3Verdict": "waiting_for_candidates",
+            "stage3Reason": "content_candidate_untrusted",
+        }
+    )
+
+    assert payload["stage3Verdict"] == "waiting_for_candidates"
+    assert payload["stage3Reason"] == "content_candidate_untrusted"
 
 
 def test_library_book_chapters_shared_mode_returns_paginated_shared_shape(monkeypatch):
@@ -791,6 +978,133 @@ def test_library_book_chapters_shared_mode_returns_paginated_shared_shape(monkey
     assert data["total"] == 21
     assert data["items"][0]["chapterId"] == "chapter-1"
     assert "content" not in data["items"][0]
+
+
+def test_library_book_chapters_reads_from_shared_files(admin_client, monkeypatch, tmp_path):
+    import app.api.console as console_api
+    from app.services.shared_book_storage import SharedBookStorage
+
+    storage = SharedBookStorage(tmp_path / "library")
+    book_name = "共享测试书"
+    author = "作者甲"
+    book_id = "book-shared-1"
+    chapter_path = storage.chapter_markdown_path(
+        book_name=book_name,
+        author=author,
+        chapter_index=1,
+        title="第一章",
+    )
+    preview_chapter_path = storage.chapter_markdown_path(
+        book_name=book_name,
+        author=author,
+        chapter_index=2,
+        title="第二章",
+    )
+    markdown = storage.render_chapter_markdown(
+        title="第一章",
+        body="这里是正文",
+        trace_payload={
+            "chapterIndex": 1,
+            "chapterStatus": "readable",
+            "sourceWordCount": 1234,
+            "previewOnly": False,
+            "selectedContentSource": "candidate",
+            "supplementSource": {"sourceId": "third-src"},
+        },
+    )
+    preview_markdown = storage.render_chapter_markdown(
+        title="第二章",
+        body="这里是预览",
+        trace_payload={
+            "chapterIndex": 2,
+            "chapterStatus": "supplemented",
+            "sourceWordCount": 4321,
+            "previewOnly": True,
+        },
+    )
+    storage.write_book_bundle(
+        metadata_path=storage.metadata_path(book_name=book_name, author=author),
+        metadata_payload={"bookId": book_id, "name": book_name, "author": author, "bookState": {"chapterCount": 2}},
+        chapter_index_path=storage.chapter_index_path(book_name=book_name, author=author),
+        chapter_index_payload={
+            "schemaVersion": 1,
+            "bookId": book_id,
+            "chapters": [
+                {"index": 1, "title": "第一章", "file": f"chapters/{chapter_path.name}", "status": "readable"},
+                {"index": 2, "title": "第二章", "file": f"chapters/{preview_chapter_path.name}", "status": "supplemented"},
+            ],
+        },
+        chapter_files=[(chapter_path, markdown), (preview_chapter_path, preview_markdown)],
+    )
+
+    monkeypatch.setattr(console_api.library_books_service, "shared_book_storage", storage)
+    monkeypatch.setattr(
+        console_api.library_books_service,
+        "get_book",
+        lambda aggregate_book_id: {
+            "aggregateBookId": aggregate_book_id,
+            "name": book_name,
+            "author": author,
+        }
+        if aggregate_book_id == book_id
+        else None,
+    )
+
+    res = admin_client.get(f"/api/console/library-books/{book_id}/chapters")
+
+    assert res.status_code == 200
+    data = res.json()
+    assert data["items"] == [
+        {
+            "chapterId": "1",
+            "taskChapterId": "",
+            "sourceChapterId": "",
+            "readChapterId": "",
+            "chapterIndex": 1,
+            "title": "第一章",
+            "status": "readable",
+            "taskStatus": "pending",
+            "sourceId": "third-src",
+            "alignedWith": "candidate",
+            "placeholder": False,
+            "contentLength": len("这里是正文"),
+            "hasContent": True,
+            "processedAt": "",
+            "sourceWordCount": 1234,
+            "previewOnly": False,
+            "isVip": False,
+            "file": f"chapters/{chapter_path.name}",
+            "error": "",
+        },
+        {
+            "chapterId": "2",
+            "taskChapterId": "",
+            "sourceChapterId": "",
+            "readChapterId": "",
+            "chapterIndex": 2,
+            "title": "第二章",
+            "status": "fetched",
+            "taskStatus": "pending",
+            "sourceId": "",
+            "alignedWith": "",
+            "placeholder": False,
+            "contentLength": len("这里是预览"),
+            "hasContent": True,
+            "processedAt": "",
+            "sourceWordCount": 4321,
+            "previewOnly": True,
+            "isVip": False,
+            "file": f"chapters/{preview_chapter_path.name}",
+            "error": "",
+        },
+    ]
+
+    filtered = admin_client.get(f"/api/console/library-books/{book_id}/chapters?status=readable")
+    assert filtered.status_code == 200
+    assert filtered.json()["total"] == 1
+    preview_filtered = admin_client.get(f"/api/console/library-books/{book_id}/chapters?status=fetched")
+    assert preview_filtered.status_code == 200
+    assert preview_filtered.json()["total"] == 1
 
 
 def test_library_book_logs_route_uses_console_shape(monkeypatch):
@@ -857,3 +1171,35 @@ def test_library_book_manual_console_routes_exist(monkeypatch):
     assert repair_res.json()["action"] == "repair"
     assert update_res.status_code == 200
     assert update_res.json()["action"] == "update-check"
+
+
+@pytest.mark.asyncio
+async def test_manual_library_book_update_check_queues_without_waiting(monkeypatch):
+    import app.api.console as console_api
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+    events: list[tuple[str, str]] = []
+
+    class FakeProcessor:
+        def enqueue_book(self, book_id, payload):
+            events.append(("enqueue", book_id))
+
+        async def run_book_task(self, book_id):
+            events.append(("run", book_id))
+            started.set()
+            await release.wait()
+            events.append(("done", book_id))
+            return {"success": True}
+
+    monkeypatch.setattr(console_api.library_books_service, "load_payload", lambda _book_id: {"name": "测试小说"})
+    monkeypatch.setattr(console_api, "AggregateProcessor", FakeProcessor)
+
+    result = await asyncio.wait_for(console_api._manual_library_book_update_check("book-1"), timeout=0.2)
+
+    assert result == {"bookId": "book-1", "success": True, "queued": True}
+    assert ("enqueue", "book-1") in events
+    await asyncio.wait_for(started.wait(), timeout=1)
+    assert ("done", "book-1") not in events
+    release.set()
+    await asyncio.sleep(0)

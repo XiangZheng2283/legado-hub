@@ -19,6 +19,7 @@ class SharedBookErrorCode(StrEnum):
     S2_ALIGNMENT_FAILED = "S2_ALIGNMENT_FAILED"
     S3_AI_FAILED = "S3_AI_FAILED"
     S3_AI_BUDGET_EXCEEDED = "S3_AI_BUDGET_EXCEEDED"
+    S3_CONTENT_CANDIDATE_UNTRUSTED = "S3_CONTENT_CANDIDATE_UNTRUSTED"
     S3_OUTPUT_WRITE_FAILED = "S3_OUTPUT_WRITE_FAILED"
     SYS_RUNTIME_STATE_INVALID = "SYS_RUNTIME_STATE_INVALID"
 
@@ -45,6 +46,7 @@ _STAGE2_RETRY_CLASS_BY_CODE: dict[SharedBookErrorCode, SharedBookRetryClass] = {
 _STAGE3_RETRY_CLASS_BY_CODE: dict[SharedBookErrorCode, SharedBookRetryClass] = {
     SharedBookErrorCode.S3_AI_FAILED: SharedBookRetryClass.SHORT_RETRY,
     SharedBookErrorCode.S3_AI_BUDGET_EXCEEDED: SharedBookRetryClass.LONG_RETRY_SCAN,
+    SharedBookErrorCode.S3_CONTENT_CANDIDATE_UNTRUSTED: SharedBookRetryClass.LONG_RETRY_SCAN,
     SharedBookErrorCode.S3_OUTPUT_WRITE_FAILED: SharedBookRetryClass.SHORT_RETRY,
 }
 
@@ -157,6 +159,14 @@ def classify_stage3_error(exc: Exception) -> SharedBookErrorCode:
     from app.ai.client import AIProviderHTTPError, AIProviderNotConfiguredError
 
     msg = str(exc).lower()
+
+    if isinstance(exc, ValueError) and (
+        "no usable candidate" in msg
+        or "all candidates untrusted" in msg
+        or "content candidate untrusted" in msg
+        or "current正文不可信" in msg
+    ):
+        return SharedBookErrorCode.S3_CONTENT_CANDIDATE_UNTRUSTED
 
     if isinstance(exc, AIProviderNotConfiguredError):
         return SharedBookErrorCode.S3_AI_BUDGET_EXCEEDED

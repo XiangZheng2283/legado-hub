@@ -10,8 +10,11 @@ from app.config import HOST, PORT
 from app.source_plugins.id_codec import encode_book_id
 from app.source_plugins.loader import PluginLoader
 
+# Compatibility: "legadohub_ai_aggregate" is the historical source ID exposed to
+# Reading/Legado clients. It must remain stable so existing subscriptions keep
+# resolving to the shared library; the shared files are now the truth source.
 VIRTUAL_SOURCE_ID = "legadohub_ai_aggregate"
-VIRTUAL_SOURCE_NAME = "LegadoHub AI聚合"
+VIRTUAL_SOURCE_NAME = "LegadoHub 订阅聚合"
 LIBRARY_BOOK_PREFIX = "legadohub://aggregate/library/"
 
 
@@ -159,8 +162,8 @@ def make_aggregate_search_item(
         "name": group.get("name") or best.get("name", ""),
         "author": author,
         "coverUrl": best.get("coverUrl", ""),
-        "intro": f"聚合源：基于 {actual_source_count} 个候选书源，后续在此链路执行 AI 聚合、正文净化和屏蔽词修复。",
-        "kind": "AI聚合",
+        "intro": f"订阅聚合源：基于 {actual_source_count} 个候选书源，后续在此链路执行正文净化和敏感词修复。",
+        "kind": "订阅聚合",
         "lastChapter": latest,
         "readingLastChapter": " · ".join(reading_parts),
         "wordCount": best.get("wordCount", ""),
@@ -240,4 +243,3 @@ def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any
         reverse=True,
     )
     return ranked[0]["bookId"] if ranked else ""
-

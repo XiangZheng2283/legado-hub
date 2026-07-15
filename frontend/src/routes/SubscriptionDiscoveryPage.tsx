@@ -1,26 +1,15 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
-import {
-  BookOpen,
-  Check,
-  Loader2,
-  Plus,
-  Search,
-  User,
-  Library,
-  AlertCircle,
-} from "lucide-react"
+import { SearchIcon, Loader2, ArrowRight, Activity } from "lucide-react"
 import { api } from "@/lib/api"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface SearchCard {
   candidateId: string
@@ -32,289 +21,250 @@ interface SearchCard {
   chapterCount?: number
   completed?: boolean
   status?: string
-  sourceSummary?: Array<{ sourceId?: string; sourceName?: string; official?: boolean }>
-  sourceSummaryText?: string
   alreadyIngested?: boolean
   aggregateBookId?: string
-  addedBy?: string
-}
-
-interface SearchProgress {
-  sourceCount?: number
-  completedCount?: number
-  foregroundSourceCount?: number
-  foregroundCompletedCount?: number
-  officialSourceCount?: number
-  officialCompletedCount?: number
-  successCount?: number
-  errorCount?: number
-  timeoutCount?: number
-  officialSourcesDone?: boolean
+  sourceSummaryText?: string
 }
 
 interface SearchJobData {
   status?: string
-  mode?: "official-primary" | "no-official-source" | string
-  officialStatus?: string
-  message?: string
+  liveSearchPending?: boolean
   error?: string
-  progress?: SearchProgress
   cards?: SearchCard[]
+  events?: Array<{ type: string; sourceId?: string; count?: number; error?: string; message?: string; ts: number }>
 }
 
-function statusBadge(status?: string, alreadyIngested?: boolean) {
-  if (alreadyIngested) return <Badge variant="secondary">已入库</Badge>
-  if (status === "completed") return <Badge variant="success">可订阅</Badge>
-  if (status === "running") return <Badge variant="info">搜索中</Badge>
-  if (status === "failed") return <Badge variant="destructive">失败</Badge>
-  return <Badge variant="outline">待处理</Badge>
+interface SubscriptionDiscoveryPageProps {
+  mode?: "user" | "admin"
 }
 
-export function SubscriptionDiscoveryPage() {
+export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscoveryPageProps) {
   const navigate = useNavigate()
-  const [keyword, setKeyword] = useState("")
+  const { user } = useAuth()
+  const isAdmin = user?.role === "admin" || mode === "admin"
+
+  const [query, setQuery] = useState("")
   const [jobId, setJobId] = useState<string | null>(null)
+  const [showLogs, setShowLogs] = useState(false)
   const [selectedCard, setSelectedCard] = useState<SearchCard | null>(null)
-  const [startChapterIndex, setStartChapterIndex] = useState(1)
-  const [autoArchive, setAutoArchive] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const searchMutation = useMutation({
-    mutationFn: api.subscribe.search,
-    onSuccess: (data) => {
-      setJobId(data.jobId)
-      setError(null)
-    },
-    onError: (err: any) => setError(err?.message || "搜索失败"),
+    mutationFn: (keyword: string) => api.subscribe.search({ keyword, page: 1 }),
+    onSuccess: (data) => setJobId(data.jobId),
   })
 
-  const { data: jobData } = useQuery<SearchJobData | null>({
+  const { data: jobData, error: jobError } = useQuery<SearchJobData | null>({
     queryKey: ["subscribe", "search", jobId],
     queryFn: () => (jobId ? api.subscribe.searchJob(jobId) : Promise.resolve(null)),
     enabled: !!jobId,
-    refetchInterval: (query) => {
-      const data = query.state.data as SearchJobData | null
-      if (!data || ["completed", "failed", "cancelled"].includes(data.status || "")) return false
-      return data.cards?.length ? 400 : 200
+    refetchInterval: (q) => {
+      const d = q.state.data as SearchJobData | null
+      if (q.state.error || !d || d.liveSearchPending === false || ["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(d.status || "")) return false
+      return 500
     },
   })
 
   const subscribeMutation = useMutation({
-    mutationFn: (card: SearchCard) =>
-      api.subscribe.subscribeCard(jobId!, card.candidateId, {
-        startChapterIndex,
-        autoArchiveOnComplete: autoArchive,
-      }),
+    mutationFn: (card: SearchCard) => api.subscribe.subscribeCard(jobId!, card.candidateId, { startChapterIndex: 1, autoArchiveOnComplete: true }),
     onSuccess: (data) => {
       setSelectedCard(null)
-      const aggregateBookId = data.aggregateBookId || data.book?.aggregateBookId
-      if (aggregateBookId) {
-        navigate(`/console/library/${aggregateBookId}`)
-      }
+      const bid = data.aggregateBookId || data.book?.aggregateBookId
+      if (bid) navigate(`/console/library/${bid}`)
     },
-    onError: (err: any) => setError(err?.message || "入库失败"),
   })
 
-  useEffect(() => {
-    if (jobData?.status === "failed" && jobData?.error) {
-      setError(jobData.error)
-    }
-  }, [jobData])
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!keyword.trim()) return
+  const handleSearch = () => {
+    if (!query.trim() || searchMutation.isPending || isSearching) return
     setJobId(null)
-    setError(null)
-    searchMutation.mutate({ keyword: keyword.trim(), page: 1 })
+    setSelectedCard(null)
+    searchMutation.mutate(query.trim())
   }
 
+  const isSearching = searchMutation.isPending || (!!jobData && jobData.liveSearchPending !== false && !["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(jobData.status || ""))
   const cards: SearchCard[] = jobData?.cards || []
-  const isRunning = !!jobData && !["completed", "failed", "cancelled", "unknown"].includes(jobData.status || "")
-  const progress = jobData?.progress || {}
-  const sourceCount = Number(progress.foregroundSourceCount ?? progress.officialSourceCount ?? 0)
-  const completedCount = Number(progress.foregroundCompletedCount ?? progress.officialCompletedCount ?? 0)
-  const progressPercent = sourceCount > 0 ? Math.min(100, Math.round((completedCount / sourceCount) * 100)) : 0
-  const officialCompleted = Number(progress.officialCompletedCount || 0)
-  const officialTotal = Number(progress.officialSourceCount || 0)
-  const modeText =
-    jobData?.mode === "no-official-source"
-      ? "未检测到可用官方源"
-      : "仅搜索官方源，第三方源在订阅阶段不参与发现"
+  const events = jobData?.events || []
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">共享订阅</h1>
-        <Badge variant="outline">一书一卡片</Badge>
+    <div className="space-y-8 max-w-6xl mx-auto">
+      <div className="text-center pt-8 pb-4">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">发现新书</h1>
+        <p className="text-slate-500 max-w-2xl mx-auto mb-8">
+          输入你想看的小说、作者或者相关关键字，我们将自动在全网为你寻找最佳的书源并提供纯净阅读体验。
+        </p>
+
+        <div className="max-w-2xl mx-auto">
+          <div className="w-full relative group shadow-sm hover:shadow transition-shadow duration-300 rounded-full bg-white border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10">
+            <div className="flex items-center w-full px-1 py-1">
+              <div className="pl-4 pr-2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <SearchIcon className="h-4 w-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="搜索你想看的小说或作者..."
+                className="flex-1 bg-transparent border-0 py-2 md:py-2.5 text-sm focus:outline-none focus:ring-0 text-slate-800 placeholder:text-slate-400"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    handleSearch()
+                  }
+                }}
+              />
+              <div className="pr-1 flex items-center gap-2 text-slate-400">
+                <button
+                  onClick={handleSearch}
+                  disabled={!query || isSearching}
+                  className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-700 w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+                >
+                  {isSearching ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowRight className="h-3 w-3" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <Input
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          placeholder="搜索书名或作者..."
-          className="max-w-md"
-        />
-        <Button type="submit" disabled={searchMutation.isPending || isRunning}>
-          {(searchMutation.isPending || isRunning) && (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          )}
-          <Search className="w-4 h-4 mr-2" />
-          搜索
-        </Button>
-      </form>
-
-      {error && (
+      {(searchMutation.error || jobError || subscribeMutation.error || ["failed", "timed_out", "unknown"].includes(jobData?.status || "")) && (
         <Alert variant="destructive">
-          <AlertCircle className="w-4 h-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {searchMutation.error?.message || (jobError as Error)?.message || subscribeMutation.error?.message || jobData?.error || (jobData?.status === "unknown" ? "搜索任务已过期，请重新搜索。" : jobData?.status === "timed_out" ? "搜索超时，请查看已返回的结果或重新搜索。" : "操作失败，请稍后重试。")}
+          </AlertDescription>
         </Alert>
       )}
 
-      {jobData && (
-        <div className="rounded-md border bg-card px-4 py-3">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {isRunning ? "搜索中" : "搜索完成"} · 官方已完成 {completedCount}/{sourceCount || "-"} 个书源
-            </span>
-            <span className="text-xs text-muted-foreground">
-              成功 {progress.successCount || 0} · 失败 {progress.errorCount || 0} · 超时 {progress.timeoutCount || 0}
-            </span>
-          </div>
-          <Progress value={progressPercent} />
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span>官方源 {officialCompleted}/{officialTotal}</span>
-            <span>官方阶段：{jobData.officialStatus || "-"}</span>
-          </div>
-          <div className={jobData.mode === "no-official-source" ? "mt-2 text-xs text-destructive" : "mt-2 text-xs text-muted-foreground"}>
-            {jobData.message || modeText}
+      {isSearching && (
+        <div className="flex flex-col items-center justify-center py-10">
+          <div className="w-full max-w-md space-y-4">
+            <div className="flex justify-between text-sm text-slate-500">
+              <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> 正在搜索...</span>
+            </div>
+            <Progress value={undefined} className="h-1 w-full bg-slate-100 [&>div]:bg-blue-500 animate-pulse" />
           </div>
         </div>
       )}
 
-      {jobData && !isRunning && cards.length === 0 && !error && (
-        <div className="text-sm text-muted-foreground">未找到匹配书籍。</div>
+      {!isSearching && cards.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm text-slate-500 gap-2">
+            <span>找到 {cards.length} 本相关书籍</span>
+            {isAdmin && events.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => setShowLogs(!showLogs)} className="h-8">
+                <Activity className="h-4 w-4 mr-2" />
+                {showLogs ? "隐藏事件日志" : "查看事件日志"}
+              </Button>
+            )}
+          </div>
+
+          {isAdmin && showLogs && events.length > 0 && (
+            <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 space-y-1 h-32 overflow-y-auto">
+              {events.map((e, i) => {
+                const time = new Date((e.ts || 0) * 1000).toLocaleTimeString()
+                return (
+                  <div key={i}>
+                    [{time}] {e.sourceId || "system"}: {e.type === "source_complete" ? `完成 (${e.count ?? 0} 条)` : e.type === "source_error" ? `错误: ${e.error || ""}` : e.type === "source_timeout" ? "超时" : e.type === "source_empty" ? "无结果" : e.message || e.type}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {cards.map((card) => (
+              <Card
+                key={card.candidateId}
+                className="overflow-hidden flex flex-col hover:shadow-lg transition-all duration-200 cursor-pointer relative group"
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (card.alreadyIngested && card.aggregateBookId) {
+                    navigate(`/console/library/${card.aggregateBookId}`)
+                  } else {
+                    setSelectedCard(card)
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault()
+                    if (card.alreadyIngested && card.aggregateBookId) {
+                      navigate(`/console/library/${card.aggregateBookId}`)
+                    } else {
+                      setSelectedCard(card)
+                    }
+                  }
+                }}
+              >
+                <div className="flex p-5 gap-4">
+                  <div className="relative w-20 h-28 bg-slate-200 rounded-md overflow-hidden flex-shrink-0 shadow-sm">
+                    {card.coverUrl ? (
+                      <img src={card.coverUrl} alt={card.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-slate-400">
+                        <SearchIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                    {card.sourceSummaryText && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm py-1 px-1.5">
+                        <p className="text-[9px] text-white/90 text-center truncate">{card.sourceSummaryText}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 truncate text-base">{card.name}</h3>
+                    <p className="text-sm text-slate-500 truncate mt-0.5">{card.author || "未知作者"}</p>
+                    <div className="mt-2.5 text-xs text-slate-500 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                      <span className={card.completed ? "text-slate-600" : "text-emerald-600"}>{card.completed ? "已完结" : "连载中"}</span>
+                      <span className="text-slate-300">·</span>
+                      <span>{card.wordCount || ""}</span>
+                    </div>
+                    {card.chapterCount != null && card.chapterCount > 0 && (
+                      <div className="mt-auto pt-2 text-xs text-slate-400">{card.chapterCount} 章</div>
+                    )}
+                  </div>
+                </div>
+                {card.intro && (
+                  <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 flex-1 flex flex-col">
+                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed flex-1">{card.intro}</p>
+                  </div>
+                )}
+                <div className="p-4 border-t border-slate-100 mt-auto flex items-center justify-between">
+                  {card.alreadyIngested ? (
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-transparent hover:bg-slate-100 font-normal">已入库</Badge>
+                  ) : (
+                    <Badge variant="success" className="font-normal">可订阅</Badge>
+                  )}
+                  {card.alreadyIngested && (
+                    <span className="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">查看详情 &rarr;</span>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
-      <div className="space-y-3">
-        {cards.map((card) => (
-          <Card key={card.candidateId} className="overflow-hidden">
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-[96px_1fr_auto]">
-              <div className="h-32 w-24 overflow-hidden rounded-md bg-muted">
-                {card.coverUrl ? (
-                  <img
-                    src={card.coverUrl}
-                    alt={card.name}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none"
-                    }}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                    <BookOpen className="h-8 w-8 opacity-20" />
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-base font-semibold line-clamp-1" title={card.name}>{card.name}</h3>
-                  {statusBadge(card.status, card.alreadyIngested)}
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-1">{card.author || "未知作者"}</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{card.intro || "暂无简介"}</p>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  {card.wordCount && <span>{card.wordCount}</span>}
-                  {card.chapterCount !== undefined && <span>{card.chapterCount} 章</span>}
-                  {card.completed ? <span>已完结</span> : <span>连载中</span>}
-                </div>
-                {card.sourceSummaryText && (
-                  <p className="text-xs text-muted-foreground line-clamp-1">
-                    来源：{card.sourceSummaryText}
-                  </p>
-                )}
-                {card.alreadyIngested && card.addedBy && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <User className="w-3 h-3" />
-                    <span>{card.addedBy}</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center sm:w-28">
-                {card.alreadyIngested && card.aggregateBookId ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => navigate(`/console/library/${card.aggregateBookId}`)}
-                  >
-                    <Library className="w-3 h-3 mr-1" />
-                    查看书库
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      setSelectedCard(card)
-                      setStartChapterIndex(1)
-                      setAutoArchive(true)
-                    }}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    订阅入库
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {!isSearching && jobData?.status === "completed" && cards.length === 0 && (
+        <div className="py-12 text-center text-sm text-slate-500">未找到匹配的书籍。</div>
+      )}
 
-      <Dialog open={!!selectedCard} onOpenChange={(open) => !open && setSelectedCard(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>订阅入库</DialogTitle>
+      <Dialog open={!!selectedCard} onOpenChange={(open) => { if (!open) setSelectedCard(null) }}>
+        <DialogContent className="max-w-md p-0 overflow-hidden sm:rounded-xl gap-0">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-2xl">{selectedCard?.name}</DialogTitle>
+            <p className="text-base text-slate-500 mt-1">{selectedCard?.author || "未知作者"}</p>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <p className="font-medium">{selectedCard?.name}</p>
-              <p className="text-sm text-muted-foreground">{selectedCard?.author}</p>
+          {selectedCard?.intro && (
+            <div className="px-6 py-5">
+              <p className="text-sm text-slate-600 leading-relaxed">{selectedCard.intro}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="startIndex">开始处理章节序号</Label>
-              <Input
-                id="startIndex"
-                type="number"
-                min={1}
-                value={startChapterIndex}
-                onChange={(e) => setStartChapterIndex(parseInt(e.target.value || "1", 10))}
-              />
-              <p className="text-xs text-muted-foreground">
-                从该章节开始向后处理，之前的章节标记为占位。
-              </p>
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="autoArchive">完本自动归档</Label>
-              <Switch id="autoArchive" checked={autoArchive} onCheckedChange={setAutoArchive} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedCard(null)}>
-              取消
-            </Button>
-            <Button
-              onClick={() => selectedCard && subscribeMutation.mutate(selectedCard)}
-              disabled={subscribeMutation.isPending}
-            >
-              {subscribeMutation.isPending && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              <Check className="w-4 h-4 mr-2" />
+          )}
+          <div className="px-6 py-4 border-t border-slate-100 mt-auto flex justify-end gap-3 bg-white">
+            <Button variant="outline" onClick={() => setSelectedCard(null)}>取消</Button>
+            <Button onClick={() => selectedCard && subscribeMutation.mutate(selectedCard)} disabled={subscribeMutation.isPending}>
+              {subscribeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               确认订阅
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

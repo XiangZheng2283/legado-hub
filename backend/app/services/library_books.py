@@ -17,11 +17,12 @@ from app.services.aggregate_settings import AggregateSettingsRepository
 from app.services.aggregate_virtual_source import (
     VIRTUAL_SOURCE_ID,
     VIRTUAL_SOURCE_NAME,
+    make_aggregate_chapter_url,
     primary_book_id_from_payload,
 )
 from app.services.live_acceptance import normalize_author_key, normalize_text
-from app.services.shared_book_storage import SharedBookStorage
-from app.source_plugins.id_codec import encode_book_id
+from app.services.shared_book_storage import SharedBookStorage, TRACE_BEGIN
+from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
 from app.source_plugins.loader import PluginLoader
 from app.storage.db import initialize_database
 
@@ -72,7 +73,7 @@ class LibraryBooksService:
             "autoTrackUpdates": True,
             "updateIntervalMinutes": 60,
             "primarySourceMode": "official",
-            "aiAggregateEnabled": True,
+            "aiAggregateEnabled": False,
             "aiPurifyEnabled": True,
             "sourcePriorityMode": "auto",
             "sourcePriority": [],
@@ -83,7 +84,7 @@ class LibraryBooksService:
                 "autoTrackUpdates": bool(workflow.get("autoAggregate", True)),
                 "updateIntervalMinutes": int(workflow.get("aggregateCheckIntervalMinutes") or 60),
                 "primarySourceMode": workflow.get("primarySourceMode", "official"),
-                "aiAggregateEnabled": bool(workflow.get("aiEnabled", True)),
+                "aiAggregateEnabled": bool(workflow.get("aiEnabled", False)),
                 "aiPurifyEnabled": bool(workflow.get("blockedWordRepair", True)),
                 "sourcePriorityMode": "manual" if workflow.get("primarySourcePriority") else "auto",
                 "sourcePriority": list(workflow.get("primarySourcePriority") or []),
@@ -189,7 +190,6 @@ class LibraryBooksService:
                 continue
             summary.append(
                 {
-                    "bookId": item.get("bookId", "") or "",
                     "sourceId": item.get("sourceId", "") or "",
                     "sourceName": item.get("sourceName", "") or "",
                     "score": int(item.get("score", 0) or 0),
@@ -230,6 +230,126 @@ class LibraryBooksService:
             "status": status,
             "missingCriticalSource": bool(health.get("missingCriticalSource")),
         }
+
+    def get_shared_book_detail(self, aggregate_book_id: str) -> dict[str, Any]:
+        """Return the shared-file truth view for a single library book.
+
+        This intentionally does not expose private source URLs; it returns the
+        sanitized source-map summary and shared bookState only.
+        """
+        book = self.get_book(aggregate_book_id)
+        if not book:
+            return {"bookId": aggregate_book_id, "found": False}
+        shared_metadata = self.load_shared_metadata(aggregate_book_id)
+        source_summary = self.build_source_map_summary(shared_metadata)
+        source_map = shared_metadata.get("sourceMap") if isinstance(shared_metadata.get("sourceMap"), dict) else {}
+        health = source_map.get("health") if isinstance(source_map.get("health"), dict) else {}
+        return {
+            "bookId": aggregate_book_id,
+            "found": True,
+            "book": book,
+            "bookState": self.build_book_state_summary(shared_metadata),
+            "sources": source_summary,
+            "sourceMap": {
+                "summary": source_summary,
+                "health": {
+                    "status": str(health.get("status", "") or ""),
+                    "lastVerifiedAt": str(health.get("lastVerifiedAt", "") or ""),
+                    "missingCriticalSource": bool(health.get("missingCriticalSource")),
+                },
+            },
+            "sourceMapRefresh": self.source_map_refresh_state(aggregate_book_id),
+        }
+
+    def list_shared_chapters(
+        self,
+        aggregate_book_id: str,
+        *,
+        page: int = 1,
+        pageSize: int = 50,
+        status: str = "all",
+        keyword: str = "",
+    ) -> dict[str, Any]:
+        """List chapters from the shared-file truth, not from DB rows."""
+        book = self.get_book(aggregate_book_id)
+        if not book:
+            return {"items": [], "page": page, "pageSize": pageSize, "total": 0}
+
+        page = max(1, int(page or 1))
+        page_size = max(1, min(int(pageSize or 50), 200))
+        storage = self.shared_book_storage
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        chapter_index_payload = storage._read_json(storage.chapter_index_path(book_name=book_name, author=author)) or {}
+        chapter_entries = chapter_index_payload.get("chapters")
+        if not isinstance(chapter_entries, list):
+            chapter_entries = []
+
+        normalized_status = str(status or "all").strip().lower()
+        normalized_keyword = str(keyword or "").strip().lower()
+        items: list[dict[str, Any]] = []
+        for entry in chapter_entries:
+            if not isinstance(entry, dict):
+                continue
+            chapter_status = str(entry.get("status", "") or "pending")
+            chapter_title = str(entry.get("title", "") or "")
+            if normalized_status != "all" and chapter_status != normalized_status:
+                continue
+            if normalized_keyword and normalized_keyword not in chapter_title.lower():
+                continue
+
+            chapter_index = int(entry.get("index", 0) or 0)
+            file_name = str(entry.get("file", "") or "").strip()
+            trace: dict[str, Any] = {}
+            content_length = 0
+            has_content = False
+            preview_only = False
+            source_word_count = 0
+            processed_at = ""
+            if file_name:
+                chapter_path = storage.shared_book_dir(book_name=book_name, author=author) / file_name
+                if chapter_path.exists():
+                    markdown = chapter_path.read_text(encoding="utf-8")
+                    has_content = True
+                    body, _, _ = markdown.partition(f"<!-- {TRACE_BEGIN}")
+                    content_length = len(body.replace(f"# {chapter_title}", "", 1).strip())
+                    try:
+                        trace = storage.parse_trace_block(markdown)
+                    except ValueError:
+                        trace = {}
+            preview_only = bool(trace.get("previewOnly", False))
+            source_word_count = int(trace.get("sourceWordCount", 0) or 0)
+            processed_at = str(trace.get("processedAt", "") or "")
+            source_chapter_id = str(entry.get("sourceChapterId") or "")
+            if source_chapter_id:
+                agg_url = make_aggregate_chapter_url(
+                    aggregate_book_id=aggregate_book_id,
+                    source_chapter_id=source_chapter_id,
+                    title=chapter_title,
+                    index=chapter_index,
+                )
+                read_chapter_id = encode_chapter_id(VIRTUAL_SOURCE_ID, agg_url)
+            else:
+                read_chapter_id = ""
+            items.append(
+                {
+                    "chapterId": str(chapter_index),
+                    "chapterIndex": chapter_index,
+                    "readChapterId": read_chapter_id,
+                    "title": chapter_title,
+                    "status": chapter_status,
+                    "contentLength": content_length,
+                    "hasContent": has_content,
+                    "processedAt": processed_at,
+                    "sourceWordCount": source_word_count,
+                    "previewOnly": preview_only,
+                    "file": file_name or None,
+                }
+            )
+
+        total = len(items)
+        offset = (page - 1) * page_size
+        return {"items": items[offset : offset + page_size], "page": page, "pageSize": page_size, "total": total}
 
     def save_payload_sources(self, aggregate_book_id: str, sources: list[dict[str, Any]]) -> None:
         payload = self.load_payload(aggregate_book_id)
@@ -632,6 +752,23 @@ class LibraryBooksService:
         book = self._book_lookup_row(aggregate_book_id)
         return {"created": True, "book": book, "payload": payload}
 
+    def _attach_book_state_summary(self, item: dict[str, Any]) -> None:
+        """Hydrate item with shared bookState counts from filesystem metadata."""
+        name = str(item.get("name", "") or "").strip()
+        author = str(item.get("author", "") or "").strip()
+        if not name:
+            return
+        path = self.shared_book_storage.metadata_path(book_name=name, author=author)
+        if not path.exists():
+            return
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return
+        if not isinstance(payload, dict):
+            return
+        item["bookState"] = self.build_book_state_summary(payload.get("bookState"))
+
     def list_books(self, *, added_by_user_id: str | None = None, keyword: str = "", include_hidden: bool = True) -> list[dict[str, Any]]:
         where = []
         params: list[Any] = []
@@ -669,6 +806,7 @@ class LibraryBooksService:
             item = self._aggregate_book_row_to_dict(row)
             if item:
                 item["addedByUsername"] = self.username_for_user_id(item.get("addedByUserId", ""))
+                self._attach_book_state_summary(item)
                 items.append(item)
         return items
 
@@ -725,6 +863,7 @@ class LibraryBooksService:
             item = self._aggregate_book_row_to_dict(row)
             if item and self._is_injectable_book(item, min_readable_chapters=min_readable_chapters):
                 item["addedByUsername"] = self.username_for_user_id(item.get("addedByUserId", ""))
+                self._attach_book_state_summary(item)
                 items.append(item)
         return items
 

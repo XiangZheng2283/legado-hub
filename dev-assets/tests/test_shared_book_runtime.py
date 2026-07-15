@@ -138,7 +138,7 @@ def test_shared_book_runtime_paths_resolve_queue_files(tmp_path: Path, stage_nam
 
     paths = runtime_paths.for_book(book_name="测试小说", author="作者甲")
 
-    assert paths.state_path == tmp_path / "library" / "测试小说_作者甲" / "runtime" / "state.json"
+    assert paths.state_path == tmp_path / "library_private" / "测试小说_作者甲" / "runtime" / "state.json"
     assert paths.queue_paths[stage_name].name == expected_filename
     assert paths.queue_paths[stage_name].parent.name == "queues"
 
@@ -190,10 +190,10 @@ def test_shared_book_runtime_store_load_save_round_trip(tmp_path: Path):
     assert loaded_queue == queue
 
     state_payload = json.loads(
-        (tmp_path / "library" / "测试小说_作者甲" / "runtime" / "state.json").read_text(encoding="utf-8")
+        (tmp_path / "library_private" / "测试小说_作者甲" / "runtime" / "state.json").read_text(encoding="utf-8")
     )
     queue_payload = json.loads(
-        (tmp_path / "library" / "测试小说_作者甲" / "runtime" / "queues" / "stage1.json").read_text(encoding="utf-8")
+        (tmp_path / "library_private" / "测试小说_作者甲" / "runtime" / "queues" / "stage1.json").read_text(encoding="utf-8")
     )
     assert state_payload["version"] == RUNTIME_FILE_VERSION
     assert queue_payload["version"] == RUNTIME_FILE_VERSION
@@ -341,3 +341,77 @@ def test_build_chapter_progress_payload_proofread_complete():
     assert payload["nodes"][2]["status"] == "proofread_complete"
     assert payload["nodes"][2]["aiProcessedAt"] == "2026-06-26T10:00:00+08:00"
 
+
+def test_build_chapter_progress_payload_includes_stage3_verdict_for_suspect():
+    payload = build_chapter_progress_payload(
+        book_id="book-1",
+        chapter_index=3,
+        chapter_title="第三章",
+        chapter_trace={
+            "chapterStatus": "suspect",
+            "stage3Verdict": "suspect",
+            "stage3Reason": "suspect_content",
+            "previewOnly": False,
+        },
+    )
+
+    assert payload["chapterStatus"] == "suspect"
+    assert payload["stage3Verdict"] == "suspect"
+    assert payload["stage3Reason"] == "suspect_content"
+    assert payload["nodes"][2]["status"] == "suspect"
+    assert payload["nodes"][2]["complete"] is False
+
+
+def test_build_chapter_progress_payload_includes_waiting_for_candidates_verdict():
+    payload = build_chapter_progress_payload(
+        book_id="book-1",
+        chapter_index=4,
+        chapter_title="第四章",
+        chapter_trace={
+            "chapterStatus": "readable",
+            "stage3Verdict": "waiting_for_candidates",
+            "stage3Reason": "content_candidate_untrusted",
+            "previewOnly": False,
+        },
+    )
+
+    assert payload["chapterStatus"] == "readable"
+    assert payload["stage3Verdict"] == "waiting_for_candidates"
+    assert payload["stage3Reason"] == "content_candidate_untrusted"
+    assert payload["nodes"][2]["status"] == "waiting_for_candidates"
+    assert payload["nodes"][2]["complete"] is False
+
+
+def test_build_chapter_progress_payload_keeps_specific_stage3_reason():
+    payload = build_chapter_progress_payload(
+        book_id="book-1",
+        chapter_index=5,
+        chapter_title="第五章",
+        chapter_trace={
+            "chapterStatus": "suspect",
+            "stage3Verdict": "suspect",
+            "stage3Reason": "mixed_book_content",
+            "previewOnly": False,
+        },
+    )
+
+    assert payload["stage3Verdict"] == "suspect"
+    assert payload["stage3Reason"] == "mixed_book_content"
+    assert payload["nodes"][2]["status"] == "suspect"
+
+
+def test_build_chapter_progress_payload_keeps_repeated_body_reason():
+    payload = build_chapter_progress_payload(
+        book_id="book-1",
+        chapter_index=6,
+        chapter_title="第六章",
+        chapter_trace={
+            "chapterStatus": "suspect",
+            "stage3Verdict": "suspect",
+            "stage3Reason": "repeated_body",
+            "previewOnly": False,
+        },
+    )
+
+    assert payload["stage3Verdict"] == "suspect"
+    assert payload["stage3Reason"] == "repeated_body"

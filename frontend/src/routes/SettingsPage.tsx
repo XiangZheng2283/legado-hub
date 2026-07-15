@@ -1,500 +1,324 @@
+import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Save, RefreshCw, CheckCircle2, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
-import {
-  Bot, Save, ShieldCheck, Wand2, Zap, RefreshCw, X, Plus,
-  Loader2, CheckCircle2, XCircle, ChevronUp, ChevronDown,
-} from "lucide-react"
-import { useState, useEffect, type FormEvent } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select"
 
-// ── provider presets with plans ─────────────────────────────────────────────
+const settingsCardClass = "border-slate-200 bg-white shadow-sm"
+const settingsInputClass = "h-10 border-slate-200 bg-white shadow-none"
+const settingsTabTriggerClass = "data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow"
 
-const PROVIDER_PRESETS = [
-  // DeepSeek
-  { id: "deepseek", name: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", plan: "" },
-  { id: "deepseek-coder", name: "DeepSeek Coder", baseUrl: "https://api.deepseek.com/v1", plan: "coder" },
-  // OpenAI
-  { id: "openai", name: "OpenAI", baseUrl: "https://api.openai.com/v1", plan: "" },
-  { id: "openai-azure", name: "OpenAI Azure", baseUrl: "https://YOUR_RESOURCE.openai.azure.com/openai", plan: "azure" },
-  // Anthropic
-  { id: "anthropic", name: "Anthropic (Claude)", baseUrl: "https://api.anthropic.com/v1", plan: "" },
-  // Moonshot / Kimi
-  { id: "moonshot", name: "Moonshot / Kimi", baseUrl: "https://api.moonshot.cn/v1", plan: "" },
-  { id: "moonshot-explorer", name: "Moonshot 探索版", baseUrl: "https://api.moonshot.cn/v1", plan: "explorer" },
-  { id: "moonshot-pro", name: "Moonshot 旗舰版", baseUrl: "https://api.moonshot.cn/v1", plan: "pro" },
-  // 硅基流动
-  { id: "siliconflow", name: "硅基流动 SiliconFlow", baseUrl: "https://api.siliconflow.cn/v1", plan: "" },
-  { id: "siliconflow-pro", name: "硅基流动 Pro", baseUrl: "https://api.siliconflow.cn/v1", plan: "pro" },
-  // 通义千问
-  { id: "qwen", name: "通义千问 (DashScope)", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", plan: "" },
-  { id: "qwen-turbo", name: "千问 Turbo 套餐", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", plan: "turbo" },
-  { id: "qwen-plus", name: "千问 Plus 套餐", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", plan: "plus" },
-  { id: "qwen-max", name: "千问 Max 套餐", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", plan: "max" },
-  // 智谱 GLM
-  { id: "zhipu", name: "智谱 GLM", baseUrl: "https://open.bigmodel.cn/api/paas/v4", plan: "" },
-  { id: "zhipu-flash", name: "智谱 Flash 免费", baseUrl: "https://open.bigmodel.cn/api/paas/v4", plan: "flash" },
-  { id: "zhipu-air", name: "智谱 Air", baseUrl: "https://open.bigmodel.cn/api/paas/v4", plan: "air" },
-  { id: "zhipu-pro", name: "智谱 Pro", baseUrl: "https://open.bigmodel.cn/api/paas/v4", plan: "pro" },
-  // MiniMax
-  { id: "minimax", name: "MiniMax", baseUrl: "https://api.minimax.chat/v1", plan: "" },
-  { id: "minimax-abab7", name: "MiniMax abab7", baseUrl: "https://api.minimax.chat/v1", plan: "abab7" },
-  // Mistral
-  { id: "mistral", name: "Mistral AI", baseUrl: "https://api.mistral.ai/v1", plan: "" },
-  { id: "mistral-free", name: "Mistral 免费 (Le Chat)", baseUrl: "https://api.mistral.ai/v1", plan: "free" },
-  { id: "mistral-pro", name: "Mistral Pro", baseUrl: "https://api.mistral.ai/v1", plan: "pro" },
-  // OpenRouter
-  { id: "openrouter", name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", plan: "" },
-  { id: "openrouter-free", name: "OpenRouter 免费模型", baseUrl: "https://openrouter.ai/api/v1", plan: "free" },
-  // 百川
-  { id: "baichuan", name: "百川大模型", baseUrl: "https://api.baichuan-ai.com/v1", plan: "" },
-  { id: "baichuan-turbo", name: "百川 Turbo", baseUrl: "https://api.baichuan-ai.com/v1", plan: "turbo" },
-  // 讯飞星火
-  { id: "spark", name: "讯飞星火", baseUrl: "https://spark-api-open.xf-yun.com/v1", plan: "" },
-  { id: "spark-pro", name: "星火 Pro", baseUrl: "https://spark-api-open.xf-yun.com/v1", plan: "pro" },
-  { id: "spark-max", name: "星火 Max", baseUrl: "https://spark-api-open.xf-yun.com/v1", plan: "max" },
-  { id: "spark-ultra", name: "星火 Ultra 4.0", baseUrl: "https://spark-api-open.xf-yun.com/v1", plan: "ultra" },
-  // 豆包
-  { id: "doubao", name: "字节豆包", baseUrl: "https://ark.cn-beijing.volces.com/api/v3", plan: "" },
-  { id: "doubao-lite", name: "豆包 Lite", baseUrl: "https://ark.cn-beijing.volces.com/api/v3", plan: "lite" },
-  { id: "doubao-pro", name: "豆包 Pro", baseUrl: "https://ark.cn-beijing.volces.com/api/v3", plan: "pro" },
-  // 零一万物
-  { id: "yi", name: "零一万物 Yi", baseUrl: "https://api.lingyiwanwu.com/v1", plan: "" },
-  { id: "yi-spark", name: "Yi Spark", baseUrl: "https://api.lingyiwanwu.com/v1", plan: "spark" },
-  { id: "yi-large", name: "Yi Large", baseUrl: "https://api.lingyiwanwu.com/v1", plan: "large" },
-  // 阶跃星辰
-  { id: "stepfun", name: "阶跃星辰 Step", baseUrl: "https://api.stepfun.com/v1", plan: "" },
-  { id: "stepfun-pro", name: "Step Pro", baseUrl: "https://api.stepfun.com/v1", plan: "pro" },
-  // 腾讯混元
-  { id: "hunyuan", name: "腾讯混元", baseUrl: "https://api.hunyuan.cloud.tencent.com/v1", plan: "" },
-  { id: "hunyuan-pro", name: "混元 Pro", baseUrl: "https://api.hunyuan.cloud.tencent.com/v1", plan: "pro" },
-  { id: "hunyuan-standard", name: "混元 Standard", baseUrl: "https://api.hunyuan.cloud.tencent.com/v1", plan: "standard" },
-  // 天工
-  { id: "tiangong", name: "昆仑万维 天工", baseUrl: "https://api.tiangong.cn/v1", plan: "" },
-  // 商汤
-  { id: "sensechat", name: "商汤日日新", baseUrl: "https://api.sensenova.cn/v1", plan: "" },
-  // 小米
-  { id: "mimo", name: "小米 MiMo", baseUrl: "https://api.xiaomimimo.com/v1", plan: "" },
-  { id: "mimo-token-plan", name: "MiMo Token Plan 套餐", baseUrl: "https://token-plan-cn.xiaomimimo.com/v1", plan: "token-plan" },
-  // Groq
-  { id: "groq", name: "Groq", baseUrl: "https://api.groq.com/openai/v1", plan: "" },
-  // Together
-  { id: "together", name: "Together AI", baseUrl: "https://api.together.xyz/v1", plan: "" },
-  // NVIDIA
-  { id: "nvidia", name: "NVIDIA NIM", baseUrl: "https://integrate.api.nvidia.com/v1", plan: "" },
-  // 本地
-  { id: "ollama", name: "Ollama (本地)", baseUrl: "http://localhost:11434/v1", plan: "" },
-  { id: "lmstudio", name: "LM Studio (本地)", baseUrl: "http://localhost:1234/v1", plan: "" },
-  // 自定义
-  { id: "custom", name: "自定义", baseUrl: "", plan: "" },
-] as const
+function secondsToMilliseconds(value: unknown, fallbackSeconds: number) {
+  const seconds = Number(value ?? fallbackSeconds)
+  return Number.isFinite(seconds) ? Math.round(seconds * 1000) : fallbackSeconds * 1000
+}
 
-function parseSettingObject(value: any) {
-  if (!value) return {}
-  if (typeof value !== "string") return value
-  try {
-    const parsed = JSON.parse(value)
-    return parsed && typeof parsed === "object" ? parsed : {}
-  } catch {
-    return {}
+function millisecondsToSeconds(value: string) {
+  const milliseconds = Number(value)
+  return Number.isFinite(milliseconds) ? milliseconds / 1000 : 0
+}
+
+function parseRecord(value: unknown): Record<string, any> {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value)
+      return parsed && typeof parsed === "object" ? parsed : {}
+    } catch {
+      return {}
+    }
   }
+  return value && typeof value === "object" ? value as Record<string, any> : {}
+}
+
+function SettingRow({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-slate-100 last:border-0 gap-4">
+      <div className="flex-1 pr-4">
+        <h4 className="text-sm font-medium text-slate-900">{title}</h4>
+        <p className="text-sm text-slate-500 mt-1">{description}</p>
+      </div>
+      <div className="sm:w-64 flex-shrink-0">{children}</div>
+    </div>
+  )
 }
 
 export function SettingsPage() {
   const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState("pool")
+  const [isSaving, setIsSaving] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Generic settings
-  const { data: settingsData, isLoading } = useQuery({
-    queryKey: ["settings"],
-    queryFn: api.settings,
-  })
-  // Aggregate settings (separate API)
-  const { data: aggData } = useQuery({
-    queryKey: ["aggregateSettings"],
-    queryFn: api.aggregateSettings,
-  })
-  // Plugins list for source selector
-  const { data: pluginsData } = useQuery({
-    queryKey: ["plugins"],
-    queryFn: api.plugins,
-  })
-
-  const [editedSettings, setEditedSettings] = useState<Record<string, any> | null>(null)
-  const [aggForm, setAggForm] = useState<Record<string, any> | null>(null)
-  const [saved, setSaved] = useState(false)
-  const [testResult, setTestResult] = useState<any>(null)
-  const [testing, setTesting] = useState(false)
-  const [fetchingModels, setFetchingModels] = useState(false)
-  const [selectedPreset, setSelectedPreset] = useState("custom")
-  const [sourceDropdownOpen, setSourceDropdownOpen] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordOk, setPasswordOk] = useState(false)
 
-  useEffect(() => {
-    if (aggData && aggForm === null) {
-      setAggForm(aggData)
-      const url = aggData?.aiProviderConfig?.baseUrl || ""
-      const match = PROVIDER_PRESETS.find((p) => p.baseUrl && url.startsWith(p.baseUrl))
-      if (match) setSelectedPreset(match.id)
-    }
-  }, [aggData])
+  const { data: settingsData, error: settingsError } = useQuery({ queryKey: ["settings"], queryFn: api.settings })
+  const { data: aggData, error: aggError } = useQuery({ queryKey: ["aggregateSettings"], queryFn: api.aggregateSettings })
+  const { data: lexiconData, error: lexiconError, refetch: refetchLexicon } = useQuery({ queryKey: ["lexiconStatus"], queryFn: api.lexiconStatus })
+
+  const [editedSettings, setEditedSettings] = useState<Record<string, any> | null>(null)
+  const [aggForm, setAggForm] = useState<Record<string, any> | null>(null)
 
   useEffect(() => {
-    if (!saved) return
-    const t = setTimeout(() => setSaved(false), 2000)
-    return () => clearTimeout(t)
-  }, [saved])
-
-  const saveSettings = useMutation({
-    mutationFn: api.updateSettings,
-    onSuccess: () => {
-      setSaved(true)
-      queryClient.invalidateQueries({ queryKey: ["settings"] })
-    },
-  })
-  const saveAgg = useMutation({
-    mutationFn: api.updateAggregateSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["aggregateSettings"] })
-    },
-  })
-  const changePassword = useMutation({
-    mutationFn: api.auth.changePassword,
-    onSuccess: () => {
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
-      setPasswordError(null)
-      setPasswordOk(true)
-    },
-    onError: (err: any) => {
-      setPasswordOk(false)
-      setPasswordError(err?.message || "修改密码失败")
-    },
-  })
-
-  const handleSaveAll = async () => {
-    await Promise.all([
-      saveSettings.mutateAsync(local),
-      saveAgg.mutateAsync(agg),
-    ])
-    setSaved(true)
-  }
-
-  const handleTestProvider = async () => {
-    setTesting(true); setTestResult(null)
-    try {
-      const p = agg?.aiProviderConfig || {}
-      setTestResult(await api.testAggregateProvider({ baseUrl: p.baseUrl, apiKey: p.apiKey, model: p.model }))
-    } catch (e: any) {
-      setTestResult({ ok: false, error: e.message })
-    } finally { setTesting(false) }
-  }
-  const handleFetchModels = async () => {
-    setFetchingModels(true)
-    try {
-      const p = agg?.aiProviderConfig || {}
-      const r = await api.fetchAggregateModels({ baseUrl: p.baseUrl, apiKey: p.apiKey })
-      updateAggProvider({ availableModels: r?.models || [] })
-    } catch { /* */ }
-    finally { setFetchingModels(false) }
-  }
-  const handlePresetChange = (id: string) => {
-    setSelectedPreset(id)
-    const pre = PROVIDER_PRESETS.find((p) => p.id === id)
-    if (pre?.baseUrl) updateAggProvider({ baseUrl: pre.baseUrl })
-  }
-  const handlePasswordSubmit = (event: FormEvent) => {
-    event.preventDefault()
-    setPasswordError(null)
-    setPasswordOk(false)
-    if (!currentPassword || !newPassword) {
-      setPasswordError("请输入当前密码和新密码")
-      return
+    if (isSaved) {
+      savedTimer.current = setTimeout(() => setIsSaved(false), 2000)
+      return () => { if (savedTimer.current) clearTimeout(savedTimer.current) }
     }
-    if (newPassword !== confirmPassword) {
-      setPasswordError("两次输入的新密码不一致")
-      return
-    }
-    changePassword.mutate({ currentPassword, newPassword })
-  }
-
-  if (isLoading || !settingsData) return <div className="text-muted-foreground">加载中...</div>
+  }, [isSaved])
 
   const local = editedSettings || settingsData || {}
   const sp = local.sourcePool || {}
-  const cw = parseSettingObject(local.contentWorkflow)
-  const agg = aggForm || {}
-  const prov = agg.aiProviderConfig || {}
-  const wf = agg.contentWorkflow || {}
-  const priority: string[] = agg.primarySourcePriority || ["qidian_com_web"]
+  const agg = aggForm ?? aggData ?? {}
+  const wf = parseRecord(agg.contentWorkflow)
 
-  const setLocal = (patch: any) => setEditedSettings({ ...local, ...patch })
-  const updateCw = (patch: any) => setLocal({ contentWorkflow: { ...cw, ...patch } })
-  const setAgg = (patch: any) => setAggForm({ ...agg, ...patch })
-  const updateAggProvider = (patch: any) => setAgg({ aiProviderConfig: { ...prov, ...patch } })
-  const updateAggWorkflow = (patch: any) => setAgg({ contentWorkflow: { ...wf, ...patch } })
-
-  const plugins: any[] = pluginsData?.items || []
-  const sources = plugins
-    .filter((p: any) => p.enabled)
-    .map((p: any) => ({ id: p.pluginId, name: p.name || p.pluginId, official: p.official }))
-    .sort((a: any, b: any) => (a.official !== b.official ? (a.official ? -1 : 1) : a.name.localeCompare(b.name)))
-  const addSource = (id: string) => {
-    if (!id || priority.includes(id)) return
-    setAgg({ primarySourcePriority: [...priority, id] })
-    setSourceDropdownOpen(false)
+  const setLocal = (patch: any) => {
+    setHasChanges(true)
+    setEditedSettings((previous) => ({ ...(previous ?? settingsData ?? {}), ...patch }))
   }
-  const removeSource = (id: string) => setAgg({ primarySourcePriority: priority.filter((s) => s !== id) })
-  const moveSource = (i: number, d: -1 | 1) => {
-    const t = i + d; if (t < 0 || t >= priority.length) return
-    const arr = [...priority]; [arr[i], arr[t]] = [arr[t], arr[i]]
-    setAgg({ primarySourcePriority: arr })
+  const setAgg = (patch: any) => {
+    setHasChanges(true)
+    setAggForm((previous) => ({ ...(previous ?? aggData ?? {}), ...patch }))
+  }
+
+  const saveSettings = useMutation({
+    mutationFn: api.updateSettings,
+  })
+  const saveAgg = useMutation({ mutationFn: api.updateAggregateSettings })
+
+  const changePassword = useMutation({
+    mutationFn: api.auth.changePassword,
+    onSuccess: () => { setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); setPasswordError(null); setPasswordOk(true) },
+    onError: (err: any) => { setPasswordError(err?.message || "修改失败") },
+  })
+
+  const updateLexicon = useMutation({ mutationFn: api.updateLexicon, onSuccess: () => refetchLexicon() })
+
+  const handleSave = async () => {
+    if (!hasChanges || isSaving) return
+    setIsSaving(true)
+    setSaveError(null)
+    setIsSaved(false)
+    try {
+      // Both endpoints persist app_config.json. Keep the writes ordered and
+      // exclude the workflow from the general payload so an older snapshot
+      // cannot overwrite the aggregate settings.
+      const invalidations: Promise<unknown>[] = []
+      if (editedSettings) {
+        const localPayload = { ...local }
+        delete localPayload.contentWorkflow
+        await saveSettings.mutateAsync(localPayload)
+        invalidations.push(queryClient.invalidateQueries({ queryKey: ["settings"] }))
+      }
+      if (aggForm) {
+        await saveAgg.mutateAsync(agg)
+        invalidations.push(queryClient.invalidateQueries({ queryKey: ["aggregateSettings"] }))
+      }
+      await Promise.all(invalidations)
+      setEditedSettings(null)
+      setAggForm(null)
+      setIsSaved(true)
+      setHasChanges(false)
+    } catch (error: any) {
+      setSaveError(error?.message || "保存配置失败，请稍后重试。")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError(null); setPasswordOk(false)
+    if (!currentPassword || !newPassword) { setPasswordError("请输入当前密码和新密码"); return }
+    if (newPassword !== confirmPassword) { setPasswordError("两次输入的新密码不一致"); return }
+    changePassword.mutate({ currentPassword, newPassword })
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="lg:col-span-2 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">设置</h1>
-        <Button size="sm" onClick={handleSaveAll} disabled={saveSettings.isPending || saveAgg.isPending || saved}>
-          <Save className="w-4 h-4 mr-1" />
-          {saved ? "已保存" : "保存"}
-        </Button>
+    <div className="space-y-6 max-w-4xl pb-24">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">系统设置</h1>
+        <p className="mt-1 text-sm text-slate-500">配置 LegadoHub 的核心运行参数。</p>
       </div>
 
-      <Card className="lg:col-span-2">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">账户安全</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="space-y-1">
-              <Label htmlFor="current-password">当前密码</Label>
-              <Input id="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="new-password">新密码</Label>
-              <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="confirm-password">确认新密码</Label>
-              <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
-            </div>
-            <Button type="submit" disabled={changePassword.isPending}>
-              {changePassword.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
-              修改密码
-            </Button>
-          </form>
-          {passwordError && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertDescription>{passwordError}</AlertDescription>
-            </Alert>
-          )}
-          {passwordOk && (
-            <Alert className="mt-4">
-              <AlertDescription>密码已修改。</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      {(settingsError || aggError || saveError) && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {saveError || (settingsError as Error)?.message || (aggError as Error)?.message || "设置加载失败，请刷新后重试。"}
+          </AlertDescription>
+        </Alert>
+      )}
 
-      {/* ── 书源池 ────────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">书源池</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>最大并发</Label><Input type="number" value={sp.max_concurrency || 3} onChange={(e) => setLocal({ sourcePool: { ...sp, max_concurrency: +e.target.value } })} /></div>
-            <div className="space-y-1"><Label>批次大小</Label><Input type="number" value={sp.source_batch_size || 20} onChange={(e) => setLocal({ sourcePool: { ...sp, source_batch_size: +e.target.value } })} /></div>
-            <div className="space-y-1"><Label>源超时(秒)</Label><Input type="number" value={sp.source_timeout_seconds || 20} onChange={(e) => setLocal({ sourcePool: { ...sp, source_timeout_seconds: +e.target.value } })} /></div>
-            <div className="space-y-1"><Label>整体超时(秒)</Label><Input type="number" value={sp.overall_search_timeout_seconds || 60} onChange={(e) => setLocal({ sourcePool: { ...sp, overall_search_timeout_seconds: +e.target.value } })} /></div>
-            <div className="space-y-1"><Label>浏览器搜索超时</Label><Input type="number" value={sp.browser_search_timeout_seconds || 60} onChange={(e) => setLocal({ sourcePool: { ...sp, browser_search_timeout_seconds: +e.target.value } })} /></div>
-            <div className="space-y-1"><Label>浏览器读取超时</Label><Input type="number" value={sp.browser_source_timeout_seconds || 120} onChange={(e) => setLocal({ sourcePool: { ...sp, browser_source_timeout_seconds: +e.target.value } })} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="space-y-1"><Label>搜索评分过滤</Label><Input type="number" min={0} max={500} value={local.searchScoreFilter ?? 100} onChange={(e) => setLocal({ searchScoreFilter: +e.target.value })} /><p className="text-xs text-muted-foreground">低于此值的结果被过滤</p></div>
-            <div className="space-y-1"><Label>默认 User-Agent</Label><Input value={sp.default_user_agent || ""} placeholder="留空使用系统默认" onChange={(e) => setLocal({ sourcePool: { ...sp, default_user_agent: e.target.value } })} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="space-y-1"><Label>代理 URL</Label><Input value={sp.proxy?.url || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), url: e.target.value } } })} /></div>
-            <div className="flex items-end gap-2 pb-1"><Switch checked={sp.proxy?.enabled || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), enabled: c } } })} /><Label>启用代理</Label></div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={sp.officialSourceInNormalSearch || false}
-                onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, officialSourceInNormalSearch: c } })}
-              />
-              <Label>启用官方源参与普通搜索</Label>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">开启后普通搜索同时搜第三方源和官方源，官方源命中额外 +50 分</p>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4 flex-wrap h-auto gap-2 p-2 w-full justify-start overflow-x-auto bg-slate-100 text-slate-500">
+          <TabsTrigger className={settingsTabTriggerClass} value="general">通用</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="security">账户安全</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="pool">书源池</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="agg">聚合策略</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="priority">优先级</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="dict">词库</TabsTrigger>
+        </TabsList>
 
-      {/* ── 聚合开关 ──────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">聚合与内容处理</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="space-y-1"><Label>聚合模式</Label>
-              <Select value={cw.aggregationMode || "balanced"} onValueChange={(v) => updateCw({ aggregationMode: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="fast">速度优先</SelectItem><SelectItem value="balanced">均衡</SelectItem><SelectItem value="quality">质量优先</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1"><Label>候选书源数</Label><Input type="number" min={1} max={30} value={cw.sourceCandidateLimit || 6} onChange={(e) => updateCw({ sourceCandidateLimit: +e.target.value })} /></div>
-            <div className="space-y-1"><Label>净化强度</Label>
-              <Select value={cw.purifyMode || "conservative"} onValueChange={(v) => updateCw({ purifyMode: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="off">关闭</SelectItem><SelectItem value="conservative">保守</SelectItem><SelectItem value="aggressive">强净化</SelectItem></SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { icon: ShieldCheck, label: "自动聚合同名", desc: "统一比对详情", key: "autoAggregate", val: cw.autoAggregate ?? true },
-              { icon: Wand2, label: "屏蔽词修复", desc: "标记缺口进 AI 队列", key: "blockedWordRepair", val: cw.blockedWordRepair || false },
-              { icon: Bot, label: "AI 处理", desc: "下方配置 Provider", key: "aiEnabled", val: cw.aiEnabled || false },
-              { icon: Bot, label: "阅读时处理", desc: "自动加入处理队列", key: "processAggregateOnRead", val: cw.processAggregateOnRead ?? true },
-              { icon: ShieldCheck, label: "只返回聚合源", desc: "隐藏原始站点", key: "returnOnlyAggregateSource", val: cw.returnOnlyAggregateSource || false },
-            ].map(({ icon: Icon, label, desc, key, val }) => (
-              <div key={key} className="flex items-center gap-2 rounded-md border p-2.5">
-                <Icon className="h-4 w-4 text-[#d4812a] shrink-0" />
-                <div className="flex-1 min-w-0"><Label className="text-xs">{label}</Label><p className="text-[10px] text-muted-foreground truncate">{desc}</p></div>
-                <Switch checked={val} onCheckedChange={(c) => updateCw({ [key]: c })} />
+        <TabsContent value="general">
+          <Card>
+            <CardHeader><CardTitle>通用设置</CardTitle></CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 text-blue-600 font-bold text-2xl">LH</div>
+                <h3 className="text-xl font-bold text-slate-800">LegadoHub</h3>
+                <p className="text-slate-500 text-sm mt-2 max-w-md">
+                  一个专注于提供无缝、纯净小说阅读体验的聚合服务端。
+                </p>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* ── AI 服务商 ──────────────────────────────────────────────── */}
-      <Card className="lg:col-span-2">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">AI 服务商配置</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-1"><Label>服务商</Label>
-              <Select value={selectedPreset} onValueChange={handlePresetChange}>
-                <SelectTrigger><SelectValue placeholder="选择服务商" /></SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {PROVIDER_PRESETS.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}{p.plan ? ` · ${p.plan}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1"><Label>Base URL</Label>
-              <Input value={prov.baseUrl || ""} onChange={(e) => { updateAggProvider({ baseUrl: e.target.value }); setSelectedPreset("custom") }} placeholder="https://api.example.com/v1" />
-            </div>
-            <div className="space-y-1"><Label>API Key</Label>
-              <Input type="password" value={prov.apiKey || ""} onChange={(e) => updateAggProvider({ apiKey: e.target.value })} placeholder="sk-..." />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            <div className="space-y-1"><Label>模型</Label>
-              {prov.availableModels?.length > 0 ? (
-                <Select value={prov.model || ""} onValueChange={(v) => updateAggProvider({ model: v })}>
-                  <SelectTrigger><SelectValue placeholder="选择模型" /></SelectTrigger>
-                  <SelectContent className="max-h-72">{prov.availableModels.map((m: string) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input value={prov.model || ""} onChange={(e) => updateAggProvider({ model: e.target.value })} placeholder="gpt-4o" />
-              )}
-            </div>
-            <div className="space-y-1"><Label>偏差阈值</Label>
-              <Select value={String(wf.deviationThreshold ?? 0.9)} onValueChange={(v) => updateAggWorkflow({ deviationThreshold: +v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0.95">0.95 严格</SelectItem>
-                  <SelectItem value="0.9">0.90 标准</SelectItem>
-                  <SelectItem value="0.8">0.80 宽松</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1"><Label>检查间隔（分钟）</Label>
-              <Input type="number" value={wf.aggregateCheckIntervalMinutes ?? 30} onChange={(e) => updateAggWorkflow({ aggregateCheckIntervalMinutes: +e.target.value })} />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <Button variant="outline" size="sm" onClick={handleFetchModels} disabled={fetchingModels}>
-              {fetchingModels ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}获取模型
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleTestProvider} disabled={testing}>
-              {testing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Zap className="w-4 h-4 mr-1" />}测试连接
-            </Button>
-            {testResult && (
-              <span className="flex items-center gap-1.5 text-sm">
-                {testResult.ok !== false ? (
-                  <><CheckCircle2 className="w-4 h-4 text-green-600" /><span className="text-green-700">成功</span>
-                    {testResult.latencyMs != null && <Badge variant="outline">{testResult.latencyMs}ms</Badge>}
-                    {testResult.modelCount != null && <Badge variant="outline">{testResult.modelCount} 模型</Badge>}
-                  </>
-                ) : (
-                  <><XCircle className="w-4 h-4 text-red-600" /><span className="text-red-700">{testResult.error || testResult.message || "失败"}</span></>
-                )}
-              </span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── 主源优先级 ────────────────────────────────────────────── */}
-      <Card className="lg:col-span-2">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">主源优先级</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">排在前面的优先使用，不匹配时自动降级。</p>
-          <div className="space-y-1">
-            {priority.map((id, i) => {
-              const src = sources.find((s: any) => s.id === id)
-              return (
-                <div key={id} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                  <div className="flex flex-col gap-0.5">
-                    <button className="p-0 hover:bg-muted rounded disabled:opacity-30" disabled={i === 0} onClick={() => moveSource(i, -1)}>
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
-                    <button className="p-0 hover:bg-muted rounded disabled:opacity-30" disabled={i === priority.length - 1} onClick={() => moveSource(i, 1)}>
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <Badge variant={src?.official ? "default" : "secondary"} className="text-xs shrink-0">{i + 1}</Badge>
-                  <span className="flex-1 truncate">{src ? src.name : id}{src?.official && <span className="ml-1 text-xs text-muted-foreground">(官方)</span>}</span>
-                  <button className="rounded-sm hover:bg-muted p-0.5" onClick={() => removeSource(id)}><X className="w-3.5 h-3.5" /></button>
+        <TabsContent value="security">
+          <Card>
+            <CardHeader><CardTitle>修改密码</CardTitle><CardDescription>定期修改密码有助于保护您的账户安全。</CardDescription></CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="space-y-2 max-w-md">
+                  <Label>当前密码</Label>
+                  <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                 </div>
-              )
-            })}
-          </div>
-          <div className="relative">
-            <Button variant="outline" size="sm" onClick={() => setSourceDropdownOpen(!sourceDropdownOpen)}>
-              <Plus className="w-4 h-4 mr-1" />添加书源
-            </Button>
-            {sourceDropdownOpen && (
-              <div className="absolute z-50 mt-1 w-80 max-h-64 overflow-y-auto rounded-md border bg-popover shadow-md">
-                {sources.filter((s: any) => !priority.includes(s.id)).length === 0
-                  ? <div className="px-3 py-2 text-sm text-muted-foreground">无更多可用书源</div>
-                  : sources.filter((s: any) => !priority.includes(s.id)).map((s: any) => (
-                    <button key={s.id} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent text-left" onClick={() => addSource(s.id)}>
-                      <Badge variant={s.official ? "default" : "secondary"} className="text-xs shrink-0">{s.official ? "官方" : "三方"}</Badge>
-                      <span className="truncate">{s.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground truncate">{s.id}</span>
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                <div className="space-y-2 max-w-md">
+                  <Label>新密码</Label>
+                  <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                </div>
+                <div className="space-y-2 max-w-md">
+                  <Label>确认新密码</Label>
+                  <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                </div>
+                {passwordError && <Alert variant="destructive"><AlertDescription>{passwordError}</AlertDescription></Alert>}
+                {passwordOk && <Alert><AlertDescription>密码已修改。</AlertDescription></Alert>}
+                <div className="pt-2">
+                  <Button type="submit" variant="secondary" disabled={changePassword.isPending}>
+                    {changePassword.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                    更新密码
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
+        <TabsContent value="pool">
+          <Card className={settingsCardClass}>
+            <CardHeader><CardTitle>并发与超时</CardTitle><CardDescription>控制搜索和解析时的并发数量与超时熔断时间。</CardDescription></CardHeader>
+            <CardContent>
+              <SettingRow title="最大并发搜索数" description="同时向多少个书源发起搜索请求。过高可能导致内存溢出。"><Input className={settingsInputClass} type="number" value={sp.max_concurrency || 3} onChange={(e) => setLocal({ sourcePool: { ...sp, max_concurrency: +e.target.value } })} /></SettingRow>
+              <SettingRow title="单源超时 (ms)" description="等待一个普通源响应的最长时间。"><Input className={settingsInputClass} type="number" value={secondsToMilliseconds(sp.source_timeout_seconds, 20)} onChange={(e) => setLocal({ sourcePool: { ...sp, source_timeout_seconds: millisecondsToSeconds(e.target.value) } })} /></SettingRow>
+              <SettingRow title="浏览器模式搜索超时 (ms)" description="等待 Headless 浏览器搜索结果。"><Input className={settingsInputClass} type="number" value={secondsToMilliseconds(sp.browser_search_timeout_seconds, 60)} onChange={(e) => setLocal({ sourcePool: { ...sp, browser_search_timeout_seconds: millisecondsToSeconds(e.target.value) } })} /></SettingRow>
+              <SettingRow title="搜索评分过滤" description="低于此分数的搜索结果会被直接丢弃。"><Input className={settingsInputClass} type="number" value={local.searchScoreFilter ?? 40} onChange={(e) => setLocal({ searchScoreFilter: +e.target.value })} /></SettingRow>
+            </CardContent>
+          </Card>
+          <Card className={`mt-6 ${settingsCardClass}`}>
+            <CardHeader><CardTitle>网络代理与标识</CardTitle></CardHeader>
+            <CardContent>
+              <SettingRow title="默认 User-Agent" description="向第三方书源发起 HTTP 请求时使用的标识。"><Input className={settingsInputClass} value={sp.default_user_agent || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, default_user_agent: e.target.value } })} /></SettingRow>
+              <SettingRow title="代理 URL (Proxy)" description="配置 HTTP/SOCKS 代理用于访问受限书源。"><Input className={settingsInputClass} value={sp.proxy?.url || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), url: e.target.value } } })} /></SettingRow>
+              <SettingRow title="官方源参与普通搜索" description="是否在常规聚合搜索中包含官方书源。">
+                <div className="flex items-center gap-2">
+                  <Switch checked={sp.officialSourceInNormalSearch || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, officialSourceInNormalSearch: c } })} />
+                  <span className="text-sm text-slate-600">启用</span>
+                </div>
+              </SettingRow>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="agg">
+          <Card>
+            <CardHeader><CardTitle>聚合策略</CardTitle><CardDescription>配置候选源数量、检查间隔和源优先级。</CardDescription></CardHeader>
+            <CardContent>
+              <SettingRow title="候选书源数量" description="为每本书保留最多几个高质量备选源用于容灾。"><Input type="number" value={wf.sourceCandidateLimit || 6} onChange={(e) => setAgg({ contentWorkflow: { ...wf, sourceCandidateLimit: +e.target.value } })} /></SettingRow>
+              <SettingRow title="自动更新间隔(分钟)" description="后台自动检查书籍更新的频率。"><Input type="number" value={wf.aggregateCheckIntervalMinutes ?? 30} onChange={(e) => setAgg({ contentWorkflow: { ...wf, aggregateCheckIntervalMinutes: +e.target.value } })} /></SettingRow>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="priority">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-base">官方主源优先级</CardTitle>
+                <CardDescription>用于目录对齐和元数据抓取，每行一个源 ID。</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <textarea
+                  aria-label="官方主源优先级"
+                  className="min-h-32 w-full rounded-md border border-slate-200 bg-white p-3 text-sm font-mono"
+                  value={Array.isArray(wf.primarySourcePriority) ? wf.primarySourcePriority.join("\n") : ""}
+                  onChange={(e) => setAgg({ contentWorkflow: { ...wf, primarySourcePriority: e.target.value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean) } })}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-base">补全源优先级</CardTitle>
+                <CardDescription>VIP或错误章节的替补内容来源，每行一个源 ID。</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <textarea
+                  aria-label="补全源优先级"
+                  className="min-h-32 w-full rounded-md border border-slate-200 bg-white p-3 text-sm font-mono"
+                  value={Array.isArray(wf.candidateSourcePriority) ? wf.candidateSourcePriority.join("\n") : ""}
+                  onChange={(e) => setAgg({ contentWorkflow: { ...wf, candidateSourcePriority: e.target.value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean) } })}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="dict">
+          <Card>
+            <CardHeader><CardTitle>净化词库管理</CardTitle><CardDescription>用于修复乱码、屏蔽词和谐以及统一内容格式。</CardDescription></CardHeader>
+            <CardContent>
+                <div className="bg-slate-50 p-4 rounded-lg mt-2 border border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">当前词库状态</h4>
+                    {lexiconData?.commitSha && <p className="text-xs text-slate-500 mt-1 font-mono">Commit: {lexiconData.commitSha.slice(0, 7)}</p>}
+                  </div>
+                  <Button variant="outline" size="sm" className="bg-white" onClick={() => updateLexicon.mutate()} disabled={updateLexicon.isPending}>
+                    {updateLexicon.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    <RefreshCw className="h-4 w-4 mr-2" /> 强制同步
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-slate-200">
+                  <div><div className="text-xs text-slate-400">版本</div><div className="text-sm font-medium text-slate-800 mt-0.5">{lexiconData?.commitSha ? lexiconData.commitSha.slice(0, 7) : "未安装"}</div></div>
+                  <div><div className="text-xs text-slate-400">规则文件数</div><div className="text-sm font-medium text-slate-800 mt-0.5">{lexiconData?.fileCount ?? "-"}</div></div>
+                  <div><div className="text-xs text-slate-400">词条总数</div><div className="text-sm font-medium text-slate-800 mt-0.5">{lexiconData?.wordCount ?? "-"}</div></div>
+                  <div><div className="text-xs text-slate-400">最后更新</div><div className="text-sm font-medium text-slate-800 mt-0.5">{lexiconData?.updatedAt ? new Date(lexiconData.updatedAt).toLocaleString() : "-"}</div></div>
+                </div>
+                {lexiconError && <p className="mt-3 text-sm text-rose-600">词库状态加载失败：{(lexiconError as Error).message}</p>}
+                {updateLexicon.error && <p className="mt-3 text-sm text-rose-600">词库同步失败：{(updateLexicon.error as Error).message}</p>}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="fixed bottom-0 left-0 right-0 md:left-64 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex justify-end z-20">
+        <div className="max-w-4xl w-full mx-auto flex justify-end gap-3 items-center px-4 md:px-0">
+          {isSaved && <span className="text-sm text-emerald-600 flex items-center"><CheckCircle2 className="h-4 w-4 mr-1.5" /> 已保存</span>}
+          <Button onClick={handleSave} disabled={!hasChanges || isSaving} className={`min-w-[120px] ${hasChanges ? "bg-blue-600 shadow-md hover:bg-blue-700" : "bg-slate-800"}`}>
+            {isSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> 保存中</> : <><Save className="h-4 w-4 mr-2" /> 保存配置</>}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

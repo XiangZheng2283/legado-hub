@@ -167,6 +167,10 @@ sourceSeed:
   upstreamId: qidian
   upstreamFile: bundle/rules/main.json
   upstreamCommit: ""
+
+adPatterns:
+  - "regex pattern 1"
+  - "regex pattern 2"
 ```
 
 `enabled`: whether the source is enabled by default after loading. The console can toggle this per-source.
@@ -258,6 +262,22 @@ async def after_login(self, ctx) -> dict:
 ```
 
 Do not require official-source login in Stage 1 plugins unless the user explicitly selects that plugin for login support. Stage 1 should define the contract and console UI hooks for login.
+
+## Optional content-purification methods
+
+```python
+@classmethod
+def get_ad_patterns(cls) -> list[str]:
+    """Return source-specific ad/watermark regex patterns.
+
+    These patterns supplement (not replace) the host's global fallback patterns.
+    Patterns are compiled with re.IGNORECASE | re.MULTILINE and applied line-wise.
+    """
+    return [
+        r"advertisement pattern 1",
+        r"advertisement pattern 2",
+    ]
+```
 
 ## Smoke Fixture Contract
 

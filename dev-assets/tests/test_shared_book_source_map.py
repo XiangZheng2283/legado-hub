@@ -189,6 +189,8 @@ async def test_source_map_refresh_writes_sanitized_metadata_and_private_refs(tmp
     assert source_refs["primarySource"]["sourceId"] == "official-src"
     assert {item["sourceId"] for item in source_refs["sourceMapRefs"]} == {"official-src", "third-src"}
     assert source_refs["sourceMapRefs"][1]["bookUrl"] == "https://third.example/book/9"
+    assert source_refs["sourceMapRefs"][1]["lastChapter"] == "第101章"
+    assert source_refs["sourceMapRefs"][1]["chapterCount"] == 101
 
     refreshed_payload = LibraryBooksService(db_path=db_path, shared_book_storage=storage).load_payload("book-1")
     assert {item["sourceId"] for item in refreshed_payload["sources"]} == {"official-src", "third-src"}
@@ -331,3 +333,64 @@ async def test_scheduler_uses_book_source_map_refresh_trigger_when_book_needs_re
         "book_source_map_refresh",
         "book_update_check",
     ]
+
+
+@pytest.mark.asyncio
+async def test_source_map_refresh_persists_new_payload_sources_for_following_stage2_reads(tmp_path: Path):
+    db_path = tmp_path / "library.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    payload = _insert_book(db_path)
+
+    metadata_path = storage.metadata_path(book_name="测试小说", author="作者甲")
+    storage.atomic_write_json(
+        metadata_path,
+        {
+            **storage.build_shared_metadata(payload),
+            "bookState": {
+                "status": "active",
+                "searchVisibilityStatus": "visible",
+                "chapterCount": 0,
+                "processedChapterCount": 0,
+                "readableChapterCount": 0,
+                "previewChapterCount": 0,
+                "proofreadCompleteCount": 0,
+                "suspectChapterCount": 0,
+                "failedChapterCount": 0,
+                "latestChapterIndex": 0,
+                "latestChapterTitle": "",
+                "lastUpdateCheckAt": "",
+            },
+        },
+    )
+
+    from app.services.shared_book_source_map import SharedBookSourceMapService
+
+    service = SharedBookSourceMapService(
+        library_books=LibraryBooksService(db_path=db_path, shared_book_storage=storage),
+        search_coordinator=FakeSearchCoordinator(
+            [
+                {
+                    "sourceId": "third-src",
+                    "sourceName": "第三方源",
+                    "bookId": "third-src:book-10",
+                    "rawBookUrl": "https://third.example/book/10",
+                    "bookUrl": "https://third.example/book/10",
+                    "tocUrl": "https://third.example/book/10/toc",
+                    "name": "测试小说",
+                    "author": "作者甲",
+                    "score": 160,
+                    "lastChapter": "第102章",
+                    "chapterCount": 102,
+                    "status": "ongoing",
+                }
+            ]
+        ),
+        storage=storage,
+    )
+
+    result = await service.refresh_for_book("book-1", payload=payload, force=True)
+
+    assert result["success"] is True
+    refreshed_payload = LibraryBooksService(db_path=db_path, shared_book_storage=storage).load_payload("book-1")
+    assert [item["sourceId"] for item in refreshed_payload["sources"]] == ["official-src", "third-src"]
+    assert refreshed_payload["sources"][1]["bookId"] == "third-src:book-10"

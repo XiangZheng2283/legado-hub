@@ -361,6 +361,11 @@ class SharedBookScheduler:
         author = book_context["author"]
         lease = self.lock_service.acquire(book_name=book_name, author=author)
         if lease is None:
+            if trigger in {
+                SharedBookJobType.BOOK_SOURCE_MAP_REFRESH.value,
+                SharedBookJobType.BOOK_BOOTSTRAP.value,
+            }:
+                self._requeue_manual_entry(aggregate_book_id, trigger, payload)
             self._log(
                 book_name=book_name,
                 author=author,
@@ -376,6 +381,8 @@ class SharedBookScheduler:
                 "reason": "lock_busy",
             }
 
+        renewal_stop = asyncio.Event()
+        renewal_task = asyncio.create_task(self._renew_lease_until_stopped(lease, renewal_stop))
         self._log(
             book_name=book_name,
             author=author,
@@ -421,7 +428,17 @@ class SharedBookScheduler:
                     "skipped": False,
                     "result": result,
                 }
-            result = await self.processor.run_book_task(aggregate_book_id)
+            chapter_limit = None
+            if trigger == SharedBookJobType.BOOK_UPDATE_CHECK.value:
+                pending_count = self._pending_chapter_count(aggregate_book_id)
+                if pending_count > 0:
+                    limit_resolver = getattr(self.processor, "backlog_chapter_limit", None)
+                    if callable(limit_resolver):
+                        chapter_limit = int(limit_resolver(aggregate_book_id))
+            if chapter_limit:
+                result = await self.processor.run_book_task(aggregate_book_id, chapter_limit=chapter_limit)
+            else:
+                result = await self.processor.run_book_task(aggregate_book_id)
             if trigger == SharedBookJobType.STARTUP_RECOVERY_SCAN.value and not result.get("skipped", False):
                 self._startup_recovery_processed_books.add(aggregate_book_id)
             self._log(
@@ -448,7 +465,28 @@ class SharedBookScheduler:
             )
             raise
         finally:
+            renewal_stop.set()
+            try:
+                await renewal_task
+            except asyncio.CancelledError:
+                pass
             lease.release()
+
+    async def _renew_lease_until_stopped(self, lease: Any, stop_event: asyncio.Event) -> None:
+        interval = max(1.0, float(getattr(lease, "renewal_interval_seconds", 10.0) or 10.0))
+        while not stop_event.is_set():
+            try:
+                await asyncio.wait_for(stop_event.wait(), timeout=interval)
+                break
+            except asyncio.TimeoutError:
+                renew = getattr(lease, "renew", None)
+                try:
+                    if callable(renew) and not renew():
+                        logger.warning("Shared-book lease renewal failed for %s", getattr(lease, "book_name", ""))
+                        break
+                except Exception:
+                    logger.warning("Shared-book lease renewal raised for %s", getattr(lease, "book_name", ""), exc_info=True)
+                    break
 
     def _default_recovery_scanner(self) -> list[BookItem]:
         return list(self.processor.list_due_books(limit=self.recovery_limit) or [])
@@ -610,3 +648,13 @@ class SharedBookScheduler:
             "enabled": False,
             "exceeded": False,
         }
+
+    def _pending_chapter_count(self, aggregate_book_id: str) -> int:
+        resolver = getattr(self.processor, "_pending_chapter_count", None)
+        if not callable(resolver):
+            return 0
+        try:
+            return max(0, int(resolver(aggregate_book_id) or 0))
+        except Exception:
+            logger.debug("Failed to resolve pending chapter count for %s", aggregate_book_id, exc_info=True)
+            return 0

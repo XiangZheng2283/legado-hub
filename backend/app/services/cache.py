@@ -18,7 +18,7 @@ from app.services.novel_file_cache import NovelFileCache
 class Cache:
     def __init__(self, db_path: Path | None = None):
         self.db_path = db_path or DB_PATH
-        self.file_cache = NovelFileCache(root=self.db_path.parent / "novels")
+        self.file_cache = NovelFileCache(root=self.db_path.parent / "cache")
 
     def _conn(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
@@ -110,6 +110,5 @@ class Cache:
                 ),
             )
             conn.commit()
-
 
 

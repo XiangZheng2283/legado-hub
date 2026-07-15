@@ -1,30 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(0 0% 3.9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(0 0% 3.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(0 0% 3.9%);
-  --color-primary: hsl(0 0% 9%);
-  --color-primary-foreground: hsl(0 0% 98%);
-  --color-secondary: hsl(0 0% 96.1%);
-  --color-secondary-foreground: hsl(0 0% 9%);
-  --color-muted: hsl(0 0% 96.1%);
-  --color-muted-foreground: hsl(0 0% 45.1%);
-  --color-accent: hsl(0 0% 96.1%);
-  --color-accent-foreground: hsl(0 0% 9%);
-  --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  --color-border: hsl(0 0% 89.8%);
-  --color-input: hsl(0 0% 89.8%);
-  --color-ring: hsl(0 0% 3.9%);
-  --radius: 0.5rem;
+  --color-background: #f7f8fa;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-primary: #3b82f6;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #3b82f6;
+  --color-pink: #cfa2ad;
+  --color-pink-foreground: #ffffff;
+  --radius: 0.75rem;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
@@ -32,125 +33,4 @@ body {
 #root {
   width: 100%;
   min-height: 100svh;
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@keyframes zoom-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes zoom-out {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.95); }
-}
-
-@keyframes slide-in-from-top-2 {
-  from { opacity: 0; transform: translateY(-0.5rem); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-in-from-bottom-2 {
-  from { opacity: 0; transform: translateY(0.5rem); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-in-from-left-2 {
-  from { opacity: 0; transform: translateX(-0.5rem); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slide-in-from-right-2 {
-  from { opacity: 0; transform: translateX(0.5rem); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slide-over {
-  0% {
-    transform: scaleX(0);
-    opacity: 0.9;
-  }
-  70% {
-    transform: scaleX(1);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scaleX(1);
-    opacity: 0;
-  }
-}
-
-.animate-slide-over {
-  animation: slide-over 1.2s ease-out forwards;
-  transform-origin: left;
-  pointer-events: none;
-}
-
-.animate-in {
-  animation: fade-in 0.15s ease-out;
-}
-
-.fade-in-0 {
-  animation-name: fade-in;
-}
-
-.fade-out-0 {
-  animation-name: fade-out;
-}
-
-.zoom-in-95 {
-  animation-name: zoom-in;
-}
-
-.zoom-out-95 {
-  animation-name: zoom-out;
-}
-
-.data-\[state\=open\]\:animate-in[data-state="open"] {
-  animation: fade-in 0.15s ease-out;
-}
-
-.data-\[state\=closed\]\:animate-out[data-state="closed"] {
-  animation: fade-out 0.15s ease-out;
-}
-
-.data-\[state\=open\]\:fade-in-0[data-state="open"] {
-  animation-name: fade-in;
-}
-
-.data-\[state\=closed\]\:fade-out-0[data-state="closed"] {
-  animation-name: fade-out;
-}
-
-.data-\[state\=open\]\:zoom-in-95[data-state="open"] {
-  animation-name: zoom-in;
-}
-
-.data-\[state\=closed\]\:zoom-out-95[data-state="closed"] {
-  animation-name: zoom-out;
-}
-
-.data-\[side\=bottom\]\:slide-in-from-top-2[data-side="bottom"] {
-  animation-name: slide-in-from-top-2;
-}
-
-.data-\[side\=top\]\:slide-in-from-bottom-2[data-side="top"] {
-  animation-name: slide-in-from-bottom-2;
-}
-
-.data-\[side\=left\]\:slide-in-from-right-2[data-side="left"] {
-  animation-name: slide-in-from-right-2;
-}
-
-.data-\[side\=right\]\:slide-in-from-left-2[data-side="right"] {
-  animation-name: slide-in-from-left-2;
 }

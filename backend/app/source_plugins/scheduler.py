@@ -518,6 +518,8 @@ class PluginScheduler:
                     "content": raw.get("content", ""),
                     "chapterUrl": raw.get("chapterUrl", ""),
                     "rawChapterUrl": raw.get("rawChapterUrl", "") or raw.get("chapterUrl", ""),
+                    "authRequired": bool(raw.get("authRequired", False)),
+                    "isPaid": bool(raw.get("isPaid", False)),
                     "extra": raw.get("extra", {}) if isinstance(raw.get("extra", {}), dict) else {},
                     "debug": debug,
                 }

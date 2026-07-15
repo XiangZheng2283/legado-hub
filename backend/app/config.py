@@ -9,6 +9,7 @@ PROJECT_ROOT = BACKEND_ROOT.parent
 CONFIG_DIR = BACKEND_ROOT / "config"
 DATA_DIR = BACKEND_ROOT / "data"
 GENERATED_DIR = BACKEND_ROOT / "generated"
+RUNTIME_DIR = BACKEND_ROOT / "runtime"
 DB_PATH = DATA_DIR / "app.db"
 PLUGINS_DIR = PROJECT_ROOT / "plugins" / "sources"
 SOURCE_SEEDS_DIR = PROJECT_ROOT / "plugins" / "seeds"
@@ -48,6 +49,7 @@ def get_app_info() -> dict:
             "config_dir": str(CONFIG_DIR),
             "data_dir": str(DATA_DIR),
             "generated_dir": str(GENERATED_DIR),
+            "runtime_dir": str(RUNTIME_DIR),
             "db_path": str(DB_PATH),
             "plugins_dir": str(PLUGINS_DIR),
             "source_seeds_dir": str(SOURCE_SEEDS_DIR),

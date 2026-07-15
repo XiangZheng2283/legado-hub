@@ -1,78 +1,165 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom"
 import {
-  LayoutDashboard,
-  Puzzle,
-  Search,
-  HardDrive,
-  Settings,
-  KeyRound,
-  BookOpen,
-  Rss,
-  LogOut,
+  KeyRound, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Library, ShieldAlert, Server,
 } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
+import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-const navItems = [
-  { to: "/console", label: "仪表盘", icon: LayoutDashboard, end: true },
-  { to: "/console/plugins", label: "书源", icon: Puzzle },
-  { to: "/console/search", label: "搜索", icon: Search },
-  { to: "/console/subscription", label: "共享订阅", icon: Rss },
-  { to: "/console/library", label: "共享书库", icon: BookOpen },
-  { to: "/console/official-sources", label: "官方源", icon: KeyRound },
-  { to: "/console/cache", label: "缓存", icon: HardDrive },
-  { to: "/console/settings", label: "设置", icon: Settings },
+interface NavItem {
+  name: string
+  href: string
+  icon: React.ElementType
+  adminOnly?: boolean
+  aliases?: string[]
+}
+
+const mainNav: NavItem[] = [
+  { name: "仪表盘", href: "/console", icon: LayoutDashboard },
+  { name: "订阅", href: "/console/subscription", icon: Search, aliases: ["/console/admin/subscription"] },
+  { name: "书库", href: "/console/library", icon: Library, aliases: ["/console/admin/library"] },
 ]
+
+const adminNav: NavItem[] = [
+  { name: "搜索工作台", href: "/console/search", icon: ShieldAlert, adminOnly: true },
+  { name: "书源管理", href: "/console/plugins", icon: Server, adminOnly: true },
+  { name: "官方源管理", href: "/console/official-sources", icon: KeyRound, adminOnly: true },
+  { name: "系统设置", href: "/console/settings", icon: Settings, adminOnly: true },
+]
+
+function isPathActive(pathname: string, path: string) {
+  return path === "/console"
+    ? pathname === path
+    : pathname === path || pathname.startsWith(`${path}/`)
+}
+
+function isNavItemActive(item: NavItem, pathname: string) {
+  return [item.href, ...(item.aliases || [])].some((path) => isPathActive(pathname, path))
+}
 
 export function Layout() {
   const location = useLocation()
   const { user, logout } = useAuth()
+  const isAdmin = user?.role === "admin"
+
+  const renderNavItem = (item: NavItem, mobile = false) => {
+    if (item.adminOnly && !isAdmin) return null
+    const active = isNavItemActive(item, location.pathname)
+    return (
+      <NavLink
+        key={item.name}
+        to={item.href}
+        end={item.href === "/console"}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "group flex w-full items-center rounded-md py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98]",
+          mobile ? "px-2" : "px-3",
+          active
+            ? "bg-slate-100 text-slate-900"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+        )}
+      >
+        <item.icon
+          className={cn(
+            "mr-3 h-5 w-5 flex-shrink-0",
+            active
+              ? "text-slate-900"
+              : "text-slate-400 group-hover:text-slate-500"
+          )}
+        />
+        {item.name}
+      </NavLink>
+    )
+  }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-56 bg-card border-r flex flex-col sticky top-0 h-screen">
-        <div className="h-14 flex items-center px-4 border-b">
-          <span className="font-semibold">LegadoHub 控制台</span>
+    <div className="flex min-h-screen bg-slate-50">
+      <aside className="hidden w-64 flex-col bg-white border-r border-slate-200 md:flex">
+        <div className="flex h-16 flex-shrink-0 items-center px-6">
+          <BookOpen className="h-6 w-6 text-slate-800" />
+          <span className="ml-3 text-lg font-bold tracking-tight text-slate-900">LegadoHub</span>
         </div>
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const active = item.end
-              ? location.pathname === item.to
-              : location.pathname.startsWith(item.to)
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={() =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  }`
-                }
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </NavLink>
-            )
-          })}
-        </nav>
-        <Separator />
-        <div className="p-3 space-y-2">
-          <div className="text-xs text-muted-foreground truncate">
-            {user?.username || "管理员"}
+        <div className="flex flex-1 flex-col overflow-y-auto px-4 py-4">
+          <nav className="flex-1 space-y-1">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 px-3">发现 & 阅读</div>
+            {mainNav.map((item) => renderNavItem(item))}
+            {isAdmin && (
+              <>
+                <div className="mt-8 mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 px-3">管理员工具</div>
+                {adminNav.map((item) => renderNavItem(item))}
+              </>
+            )}
+          </nav>
+        </div>
+        <div className="border-t border-slate-200 p-4">
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 p-3">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200">
+                <UserCog className="h-4 w-4 text-slate-600" />
+              </div>
+              <div className="text-sm font-medium text-slate-900">{user?.username || (isAdmin ? "管理员" : "普通用户")}</div>
+            </div>
+            <button type="button" onClick={logout} className="text-xs text-slate-500 hover:text-slate-900 underline">
+              退出登录
+            </button>
           </div>
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => logout()}>
-            <LogOut className="w-3 h-3" />
-            退出登录
-          </Button>
         </div>
       </aside>
-      <main className="flex-1 p-6 overflow-y-auto bg-background">
-        <Outlet />
-      </main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm md:hidden">
+          <div className="flex items-center">
+            <BookOpen className="h-6 w-6 text-slate-800" />
+            <span className="ml-3 text-lg font-bold tracking-tight text-slate-900">LegadoHub</span>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="打开导航菜单"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+              >
+                <Menu className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>{user?.username || (isAdmin ? "管理员" : "普通用户")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {mainNav.map((item) => (
+                <DropdownMenuItem key={item.name} asChild>
+                  {renderNavItem(item, true)}
+                </DropdownMenuItem>
+              ))}
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  {adminNav.map((item) => (
+                    <DropdownMenuItem key={item.name} asChild>
+                      {renderNavItem(item, true)}
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => { void logout() }}>
+                <LogOut className="mr-3 h-5 w-5 text-slate-400" aria-hidden="true" />
+                退出登录
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main className="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 flex flex-col">
+          <div className="mx-auto max-w-6xl w-full flex-1">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

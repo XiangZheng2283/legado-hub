@@ -2,8 +2,8 @@
 
 Source repository: https://github.com/konsheng/Sensitive-lexicon
 
-This module does NOT perform any network I/O at import time or server startup.
-Updates are triggered explicitly via ``LexiconUpdater.check_and_update()``.
+This module does NOT perform network I/O at import time. Startup and manual
+updates both call ``LexiconUpdater.check_and_update()`` explicitly.
 """
 
 from __future__ import annotations

@@ -22,9 +22,9 @@ RESERVED_WINDOWS_NAMES = {
 
 TRACE_BEGIN = "LEGADOHUB_TRACE_BEGIN"
 TRACE_END = "LEGADOHUB_TRACE_END"
-CHAPTER_STATUS_PROCESSED = {"proofread_complete", "supplemented", "readable", "suspect"}
+CHAPTER_STATUS_PROCESSED = {"proofread_complete", "supplemented", "readable", "suspect", "fetched"}
 CHAPTER_STATUS_READABLE = {"proofread_complete", "supplemented", "readable", "suspect"}
-CHAPTER_STATUS_PREVIEW = {"fetched", "supplemented"}
+CHAPTER_STATUS_PREVIEW = {"fetched"}
 CHAPTER_STATUS_FAILED = {"failed"}
 
 
@@ -57,6 +57,7 @@ class SharedBookStorage:
 
     def __init__(self, root: Path | None = None):
         self.root = Path(root) if root is not None else DATA_DIR / "library"
+        self.private_root = self.root.parent / "library_private"
 
     def shared_book_dir(self, *, book_name: str, author: str) -> Path:
         return self.root / _book_folder_name(book_name, author)
@@ -74,13 +75,13 @@ class SharedBookStorage:
         return self.chapters_dir(book_name=book_name, author=author) / _chapter_file_name(chapter_index, title)
 
     def runtime_dir(self, *, book_name: str, author: str) -> Path:
-        return self.shared_book_dir(book_name=book_name, author=author) / "runtime"
+        return self.private_root / _book_folder_name(book_name, author) / "runtime"
 
     def logs_dir(self, *, book_name: str, author: str) -> Path:
-        return self.shared_book_dir(book_name=book_name, author=author) / "logs"
+        return self.private_root / _book_folder_name(book_name, author) / "logs"
 
     def source_refs_path(self, *, book_name: str, author: str) -> Path:
-        return self.shared_book_dir(book_name=book_name, author=author) / "source_refs.json"
+        return self.private_root / _book_folder_name(book_name, author) / "source_refs.json"
 
     def build_shared_metadata(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Build API-safe shared metadata without private source URLs."""
@@ -133,6 +134,82 @@ class SharedBookStorage:
         if not normalized.endswith("\n"):
             normalized = f"{normalized}\n"
         self._atomic_write_text(path, normalized)
+
+    def write_chapter_file(self, *, path: Path, title: str, body: str, trace_payload: dict[str, Any]) -> None:
+        """Write a single chapter .md file with heading and trace block."""
+        markdown = self.render_chapter_markdown(title=title, body=body, trace_payload=trace_payload)
+        self.atomic_write_markdown(path, markdown)
+
+    def update_chapter_index_entry(
+        self,
+        *,
+        chapter_index_path: Path,
+        metadata_path: Path,
+        metadata_payload: dict[str, Any],
+        entry: dict[str, Any],
+        chapter_trace: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Update one chapter entry and refresh metadata counts."""
+        payload = self._read_json(chapter_index_path) or {}
+        chapters = payload.get("chapters")
+        if not isinstance(chapters, list):
+            chapters = []
+
+        chapter_index = int(entry.get("index", 0) or 0)
+        replaced = False
+        updated_chapters: list[dict[str, Any]] = []
+        for item in chapters:
+            if not isinstance(item, dict):
+                continue
+            if int(item.get("index", 0) or 0) == chapter_index:
+                updated_chapters.append(self._normalize_chapter_index_entry({**item, **entry}))
+                replaced = True
+            else:
+                updated_chapters.append(self._normalize_chapter_index_entry(item))
+        if not replaced:
+            updated_chapters.append(self._normalize_chapter_index_entry(entry))
+        updated_chapters.sort(key=lambda item: int(item.get("index", 0) or 0))
+
+        payload["schemaVersion"] = 2
+        payload["chapters"] = updated_chapters
+        if "bookId" not in payload and metadata_payload.get("candidateId"):
+            payload["bookId"] = metadata_payload.get("candidateId", "")
+
+        chapter_traces = {chapter_index: chapter_trace}
+        book_dir = chapter_index_path.parent
+        for item in updated_chapters:
+            if not isinstance(item, dict):
+                continue
+            item_index = int(item.get("index", 0) or 0)
+            if item_index <= 0 or item_index == chapter_index:
+                continue
+            file_name = str(item.get("file", "") or "").strip()
+            if not file_name:
+                continue
+            try:
+                chapter_traces[item_index] = self.parse_trace_block((book_dir / file_name).read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+
+        self.atomic_write_json(chapter_index_path, payload)
+        rebuilt_metadata = self.rebuild_metadata_summary(
+            metadata_payload,
+            chapter_index_payload=payload,
+            chapter_traces=chapter_traces,
+        )
+        self.atomic_write_json(metadata_path, rebuilt_metadata)
+        return rebuilt_metadata
+
+    def _normalize_chapter_index_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
+        normalized = dict(entry)
+        normalized.setdefault("isVip", False)
+        normalized.setdefault("officialWordCount", 0)
+        normalized.setdefault("officialPreviewWords", None)
+        normalized.setdefault("sourceId", "")
+        normalized.setdefault("sourceChapterId", "")
+        normalized.setdefault("alignedWith", "")
+        normalized.setdefault("alignmentScore", None)
+        return normalized
 
     def render_trace_block(self, trace_payload: dict[str, Any]) -> str:
         payload = json.dumps(trace_payload or {}, ensure_ascii=False, indent=2)
@@ -308,6 +385,20 @@ class SharedBookStorage:
                 return True
         return False
 
+    def update_free_chapter_end_index(
+        self, *, book_name: str, author: str, free_chapter_end_index: int
+    ) -> None:
+        """更新 metadata.json 中的 freeChapterEndIndex 字段（书级元数据）。
+
+        如果 metadata.json 不存在则跳过（等章节处理时创建）。
+        """
+        path = self.metadata_path(book_name=book_name, author=author)
+        if not path.exists():
+            return
+        payload = self._read_json(path) or {}
+        payload["freeChapterEndIndex"] = int(free_chapter_end_index)
+        self.atomic_write_json(path, payload)
+
     def rebuild_metadata_summary(
         self,
         metadata_payload: dict[str, Any] | None,
@@ -354,6 +445,12 @@ class SharedBookStorage:
         return rebuilt_metadata
 
     def _build_shared_source_map_summary(self, raw_sources: Any) -> list[dict[str, Any]]:
+        """Build API-safe source summary without private source URLs or book IDs.
+
+        The ``bookId`` value produced by the id codec embeds the source book URL,
+        so it must not be included in the shared metadata that may be served to
+        anonymous readers.
+        """
         if not isinstance(raw_sources, list):
             return []
         summary: list[dict[str, Any]] = []
@@ -362,7 +459,6 @@ class SharedBookStorage:
                 continue
             summary.append(
                 {
-                    "bookId": item.get("bookId", "") or "",
                     "sourceId": item.get("sourceId", "") or "",
                     "sourceName": item.get("sourceName", "") or "",
                     "score": int(item.get("score", 0) or 0),

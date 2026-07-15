@@ -18,8 +18,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface TraceSummary {
+  stage?: string
+  currentStep?: string
+  nextStep?: string
   chapterStatus?: string
   selectedSource?: string
   selectedContentSource?: string
@@ -28,10 +32,14 @@ interface TraceSummary {
   alignmentReason?: string
   titleSimilarity?: number | null
   previewSimilarity?: number | null
-  aiModel?: string
-  aiTokens?: number
   processedAt?: string
   traceHash?: string
+  stage3Verdict?: string
+  stage3Reason?: string
+  currentChapterIndex?: number | null
+  currentChapterTitle?: string
+  nextChapterIndex?: number | null
+  nextChapterTitle?: string
 }
 
 interface ChapterProgressDetail {
@@ -76,40 +84,63 @@ function formatDecimal(value?: number | null) {
   return value == null ? "-" : value.toFixed(3)
 }
 
+function processingVerdictText(verdict?: string, reason?: string) {
+  if (verdict === "trusted_current") return "当前正文可信"
+  if (verdict === "trusted_candidate") return "候选正文可信"
+  if (verdict === "waiting_for_candidates") return "等待候选更新"
+  if (verdict === "suspect") return "正文存疑"
+  if (reason === "content_candidate_untrusted") return "等待候选更新"
+  if (reason === "suspect_content") return "正文存疑"
+  if (reason === "mixed_book_content") return "疑似串书正文"
+  if (reason === "repeated_body") return "疑似重复正文"
+  if (reason === "wrong_chapter_order") return "疑似章节错位"
+  return verdict || reason || "-"
+}
+
 function deriveStageState(progress?: ChapterProgressDetail) {
   const trace = progress?.traceSummary || {}
   const status = progress?.status || trace.chapterStatus || ""
   const hasSelection = Boolean(trace.selectedSource || trace.selectedContentSource)
-  const hasAiResult = Boolean(trace.aiModel || (trace.aiTokens || 0) > 0 || trace.processedAt)
+  const hasProcessedResult = Boolean(trace.processedAt)
   const isDone = status === "processed" || status === "fallback" || status === "completed"
   const isError = status === "error"
 
-  const currentStage = isDone ? "Stage 3" : hasAiResult ? "Stage 3" : hasSelection ? "Stage 2" : "Stage 1"
+  const currentStage = isDone ? "Stage 3" : hasProcessedResult ? "Stage 3" : hasSelection ? "Stage 2" : "Stage 1"
   const failureReason =
+    processingVerdictText(trace.stage3Verdict, trace.stage3Reason) !== "-"
+      ? processingVerdictText(trace.stage3Verdict, trace.stage3Reason)
+      : (
     trace.alignmentReason ||
     (isError ? "处理失败" : status === "fallback" ? "已回退到备用结果" : "")
+        )
 
   return {
     currentStage,
     failureReason,
+    currentStep: trace.currentStep || processingVerdictText(trace.stage3Verdict, trace.stage3Reason) || statusBadgeText(status),
+    nextStep: trace.nextStep || (isDone ? "等待下一次调度" : "继续处理下一章"),
+    currentChapterIndex: trace.currentChapterIndex ?? progress?.chapterIndex,
+    currentChapterTitle: trace.currentChapterTitle || progress?.title || "",
+    nextChapterIndex: trace.nextChapterIndex ?? ((progress?.chapterIndex || 0) + 1),
+    nextChapterTitle: trace.nextChapterTitle || "",
     nodes: [
       {
         id: "stage1",
         label: "Stage 1",
-        state: hasSelection || hasAiResult || isDone ? "done" : "current",
+        state: hasSelection || hasProcessedResult || isDone ? "done" : "current",
         detail: trace.selectedSource || "选源中",
       },
       {
         id: "stage2",
         label: "Stage 2",
-        state: hasAiResult || isDone ? "done" : hasSelection ? "current" : "waiting",
-        detail: trace.selectedContentSource || trace.aiModel || "处理中",
+        state: hasProcessedResult || isDone ? "done" : hasSelection ? "current" : "waiting",
+        detail: trace.selectedContentSource || "处理中",
       },
       {
         id: "stage3",
         label: "Stage 3",
-        state: isDone ? "done" : hasAiResult ? "current" : "waiting",
-        detail: statusBadgeText(status),
+        state: isDone ? "done" : hasProcessedResult ? "current" : "waiting",
+        detail: processingVerdictText(trace.stage3Verdict, trace.stage3Reason) || statusBadgeText(status),
       },
     ] as const,
   }
@@ -124,9 +155,18 @@ function statusBadgeText(status?: string) {
 }
 
 function stageNodeClass(state: string) {
-  if (state === "done") return "border-green-200 bg-green-50 text-green-800"
-  if (state === "current") return "border-blue-200 bg-blue-50 text-blue-800"
+  if (state === "done") return "border-primary/20 bg-primary/10 text-primary"
+  if (state === "current") return "border-pink/20 bg-pink/10 text-pink"
   return "border-border bg-muted/40 text-muted-foreground"
+}
+
+function MetaItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-sm font-medium">{value}</div>
+    </div>
+  )
 }
 
 export function LibraryChapterDetailPage() {
@@ -159,30 +199,52 @@ export function LibraryChapterDetailPage() {
     )
   }
 
+  if (progressQuery.error) {
+    return <Alert variant="destructive"><AlertDescription>章节状态加载失败：{(progressQuery.error as Error).message}</AlertDescription></Alert>
+  }
+
   if (!chapter || chapter.found === false) {
-    return <div className="text-muted-foreground">章节不存在或已删除。</div>
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border py-16 text-center">
+        <p className="text-base font-semibold">这章好像走丢了</p>
+        <p className="text-sm text-muted-foreground">回书籍详情页再找找吧～</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={() => navigate(`/console/library/${bookId}`)}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          返回书籍详情
+        </Button>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <Button
-        variant="outline"
-        size="sm"
+    <div className="space-y-5">
+      <button
+        type="button"
         onClick={() => navigate(`/console/library/${bookId}`)}
+        className="inline-flex items-center gap-1.5 rounded-xl bg-card/80 px-3 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur hover:text-foreground hover:bg-card transition-colors"
       >
-        <ChevronLeft className="mr-1 h-4 w-4" />
-        返回章节列表
-      </Button>
+        <ChevronLeft className="h-4 w-4" />
+        返回书籍详情
+      </button>
 
       <div className="flex items-center gap-3">
-        <div className="space-y-1">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+          <ScrollText className="h-5 w-5 text-primary" />
+        </div>
+        <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold">{chapter.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{chapter.title}</h1>
             {statusBadge(chapter.status)}
           </div>
-          <div className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
             {bookQuery.data?.displayName || bookId} / 第 {chapter.chapterIndex} 章
-          </div>
+          </p>
+          {bookQuery.error && <p className="mt-1 text-xs text-amber-600">书籍摘要暂时不可用</p>}
         </div>
       </div>
 
@@ -193,34 +255,30 @@ export function LibraryChapterDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 text-sm md:grid-cols-2">
-              <div>
-                <div className="text-xs text-muted-foreground">当前阶段</div>
-                <div className="font-medium">{stageState.currentStage}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">失败原因</div>
-                <div className="font-medium">{stageState.failureReason || "-"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">内容长度</div>
-                <div className="font-medium">{chapter.contentLength || 0}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">来源字数</div>
-                <div className="font-medium">{chapter.sourceWordCount || 0}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">预览模式</div>
-                <div className="font-medium">{chapter.previewOnly ? "是" : "否"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">处理时间</div>
-                <div className="font-medium">{formatDate(trace.processedAt)}</div>
-              </div>
+              <MetaItem label="当前阶段" value={stageState.currentStage} />
+              <MetaItem label="当前步骤" value={stageState.currentStep || "-"} />
+              <MetaItem label="下一步骤" value={stageState.nextStep || "-"} />
+              <MetaItem label="失败原因" value={stageState.failureReason || "-"} />
+              <MetaItem
+                label="当前章节"
+                value={`第 ${stageState.currentChapterIndex || chapter.chapterIndex} 章 ${stageState.currentChapterTitle || chapter.title}`}
+              />
+              <MetaItem
+                label="下一章节"
+                value={
+                  stageState.nextChapterIndex
+                    ? `第 ${stageState.nextChapterIndex} 章 ${stageState.nextChapterTitle || ""}`
+                    : "-"
+                }
+              />
+              <MetaItem label="内容长度" value={chapter.contentLength || 0} />
+              <MetaItem label="来源字数" value={chapter.sourceWordCount || 0} />
+              <MetaItem label="预览模式" value={chapter.previewOnly ? "是" : "否"} />
+              <MetaItem label="处理时间" value={formatDate(trace.processedAt)} />
             </div>
             <div className="mt-4">
               <Button variant="outline" size="sm" onClick={() => setProgressOpen(true)}>
-                <Waypoints className="h-4 w-4" />
+                <Waypoints className="mr-1.5 h-4 w-4" />
                 查看进度
               </Button>
             </div>
@@ -231,33 +289,13 @@ export function LibraryChapterDetailPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Trace 摘要</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 text-sm">
-              <div>
-                <div className="text-xs text-muted-foreground">选中来源</div>
-                <div className="font-medium">{trace.selectedSource || "-"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">内容来源</div>
-                <div className="font-medium">{trace.selectedContentSource || "-"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">回退来源</div>
-                <div className="font-medium">{trace.fallbackSourceId || "-"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">AI 模型</div>
-                <div className="font-medium">{trace.aiModel || "-"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">AI Tokens</div>
-                <div className="font-medium">{trace.aiTokens?.toLocaleString() || 0}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Trace Hash</div>
-                <div className="break-all font-medium">{trace.traceHash || "-"}</div>
-              </div>
-            </div>
+          <CardContent className="space-y-3">
+            <MetaItem label="选中来源" value={trace.selectedSource || "-"} />
+            <MetaItem label="内容来源" value={trace.selectedContentSource || "-"} />
+            <MetaItem label="回退来源" value={trace.fallbackSourceId || "-"} />
+            <MetaItem label="处理结论" value={processingVerdictText(trace.stage3Verdict, trace.stage3Reason)} />
+            <MetaItem label="处理说明" value={trace.stage3Reason || "-"} />
+            <MetaItem label="Trace Hash" value={trace.traceHash || "-"} />
           </CardContent>
         </Card>
       </div>
@@ -268,24 +306,13 @@ export function LibraryChapterDetailPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 text-sm md:grid-cols-2">
-            <div>
-              <div className="text-xs text-muted-foreground">对齐结果</div>
-              <div className="font-medium">
-                {trace.alignmentPassed == null ? "-" : trace.alignmentPassed ? "通过" : "未通过"}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">对齐原因</div>
-              <div className="font-medium">{trace.alignmentReason || "-"}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">标题相似度</div>
-              <div className="font-medium">{formatDecimal(trace.titleSimilarity)}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">预览相似度</div>
-              <div className="font-medium">{formatDecimal(trace.previewSimilarity)}</div>
-            </div>
+            <MetaItem
+              label="对齐结果"
+              value={trace.alignmentPassed == null ? "-" : trace.alignmentPassed ? "通过" : "未通过"}
+            />
+            <MetaItem label="对齐原因" value={trace.alignmentReason || "-"} />
+            <MetaItem label="标题相似度" value={formatDecimal(trace.titleSimilarity)} />
+            <MetaItem label="预览相似度" value={formatDecimal(trace.previewSimilarity)} />
           </div>
         </CardContent>
       </Card>
@@ -293,7 +320,10 @@ export function LibraryChapterDetailPage() {
       <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>章节进度</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <ScrollText className="h-4 w-4" />
+              章节进度
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
             <div className="space-y-3">
@@ -332,36 +362,20 @@ export function LibraryChapterDetailPage() {
               <CardContent>
                 <ScrollArea className="h-[320px] pr-4">
                   <div className="space-y-3 text-sm">
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">阶段</div>
-                      <div className="font-medium">{stageState.currentStage}</div>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">失败原因</div>
-                      <div className="font-medium">{stageState.failureReason || "-"}</div>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">选中来源</div>
-                      <div className="font-medium">{trace.selectedSource || "-"}</div>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">内容来源</div>
-                      <div className="font-medium">{trace.selectedContentSource || "-"}</div>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">处理时间</div>
-                      <div className="font-medium">{formatDate(trace.processedAt)}</div>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">AI</div>
-                      <div className="font-medium">
-                        {trace.aiModel || "-"} / {(trace.aiTokens || 0).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <div className="text-xs text-muted-foreground">Trace Hash</div>
-                      <div className="break-all font-medium">{trace.traceHash || "-"}</div>
-                    </div>
+                    <MetaItem label="阶段" value={stageState.currentStage} />
+                    <MetaItem label="当前步骤" value={stageState.currentStep || "-"} />
+                    <MetaItem label="下一步骤" value={stageState.nextStep || "-"} />
+                    <MetaItem label="失败原因" value={stageState.failureReason || "-"} />
+                    <MetaItem
+                      label="当前章节"
+                      value={`第 ${stageState.currentChapterIndex || chapter.chapterIndex} 章`}
+                    />
+                    <MetaItem label="选中来源" value={trace.selectedSource || "-"} />
+                    <MetaItem label="内容来源" value={trace.selectedContentSource || "-"} />
+                    <MetaItem label="处理结论" value={processingVerdictText(trace.stage3Verdict, trace.stage3Reason)} />
+                    <MetaItem label="处理说明" value={trace.stage3Reason || "-"} />
+                    <MetaItem label="处理时间" value={formatDate(trace.processedAt)} />
+                    <MetaItem label="Trace Hash" value={trace.traceHash || "-"} />
                   </div>
                 </ScrollArea>
               </CardContent>

@@ -224,3 +224,36 @@ class SensitiveLexiconScanner:
             occupied |= positions
             result.append(c)
         return result
+
+    # ── masking recovery ─────────────────────────────────────────────────
+
+    def restore_masked(
+        self, text: str
+    ) -> tuple[str, list[BlockedWordCandidate]]:
+        """Restore masked sensitive words in *text* when the context is precise.
+
+        Returns a tuple of ``(restored_text, remaining_candidates)``.
+        ``remaining_candidates`` lists masked words that could not be restored
+        (currently always empty because all candidates are restored in-place).
+        """
+        if not text or self.word_count == 0:
+            return text, []
+
+        candidates = self.scan(text)
+        if not candidates:
+            return text, []
+
+        # Only restore candidates that actually contain mask characters.
+        masked = [c for c in candidates if any(ch in MASK_CHARS for ch in c.masked_text)]
+        if not masked:
+            return text, []
+
+        # Replace from the end of the text towards the start so offsets stay valid.
+        chars = list(text)
+        for c in reversed(masked):
+            if not c.candidates:
+                continue
+            replacement = c.candidates[0]
+            chars[c.offset : c.offset + len(c.masked_text)] = list(replacement)
+
+        return "".join(chars), []

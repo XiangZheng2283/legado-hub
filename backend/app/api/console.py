@@ -5,15 +5,17 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from starlette.concurrency import run_in_threadpool
 
 from app.config import APP_PHASE
 from app.core.app_config import AppConfig
-from app.core.aggregate_config import load_aggregate_config, save_aggregate_config, update_progress
-from app.core.source_generator import write_aggregate_source
+from app.core.aggregate_config import load_aggregate_config, update_progress
 from app.services.catalog import Catalog
 from app.services.book_catalog import BookCatalog
 from app.services.cookie_store import CookieStore
@@ -25,12 +27,16 @@ from app.services.cache import Cache
 from app.services.source_ping import SourcePingService
 from app.services.login_browser_service import login_browser_service
 from app.services.official_auth.manager import official_auth_manager
-from app.services.aggregate_reviews import empty_aggregate_reviews
 from app.services.aggregate_processor import AggregateProcessor
-from app.services.aggregate_settings import AggregateSettingsRepository
+from app.services.aggregate_settings import AI_RUNTIME_ENABLED, AggregateSettingsRepository
+from app.services.lexicon_updater import LexiconUpdater
 from app.services.library_books import library_books_service
+from app.services.shared_book_scheduler import SharedBookScheduler
+from app.services.shared_book_storage import TRACE_BEGIN
 from app.source_plugins.loader import PluginLoader
 from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
+from app.source_plugins.id_codec import encode_chapter_id
+from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, make_aggregate_chapter_url
 from app.services.user_auth import auth_service
 
 console_router = APIRouter(prefix="/api/console")
@@ -39,14 +45,6 @@ console_router = APIRouter(prefix="/api/console")
 def console_route(method: str, path: str, **kwargs):
     """Register a console API route."""
     return getattr(console_router, method)(path, **kwargs)
-
-
-def _legacy_archived(feature: str) -> dict:
-    return {
-        "archived": True,
-        "feature": feature,
-        "message": "旧 Reading/Legado 规则引擎能力已归档，后续按 Python source plugin 体系重建。",
-    }
 
 
 def _read_json(path: Path, default: dict) -> dict:
@@ -66,14 +64,86 @@ def _aggregate_book_settings(payload: str) -> dict:
         return {}
 
 
+def _apply_book_source_priority_settings(settings: dict, payload: dict) -> bool:
+    changed = False
+    if "sourcePriorityMode" in payload:
+        settings["sourcePriorityMode"] = str(payload["sourcePriorityMode"] or "auto")
+        changed = True
+    priority = payload.get("primarySourcePriority", payload.get("sourcePriority"))
+    if isinstance(priority, list):
+        settings["sourcePriority"] = [str(x) for x in priority]
+        settings["sourcePriorityMode"] = "manual" if priority else "auto"
+        changed = True
+    return changed
+
+
 def _shared_book_storage_read_mode() -> str:
     workflow = AggregateSettingsRepository().content_workflow()
-    mode = str(workflow.get("sharedBookStorageReadMode", "legacy") or "legacy").strip().lower()
-    return "legacy" if mode == "legacy" else "shared"
+    if not bool(workflow.get("useSharedBookStorage", False)):
+        return "legacy"
+    return str(workflow.get("sharedBookStorageReadMode", "shared") or "shared").strip().lower()
 
 
 def _is_admin_role(user) -> bool:
     return str(getattr(user, "role", "") or "").strip().lower() == "admin"
+
+
+def _explicit_auth_identity(payload: dict | None) -> str:
+    """Return an explicit account name or phone identity from auth output."""
+    if not isinstance(payload, dict):
+        return ""
+    for key in (
+        "accountName",
+        "nickName",
+        "userName",
+        "mobilePhone",
+        "mobile",
+        "phone",
+        "bindPhone",
+        "phoneNumber",
+        "phoneMasked",
+        "mobileMasked",
+    ):
+        value = str(payload.get(key, "") or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _normalize_auth_identity(payload: dict | None) -> dict:
+    """Reject authenticated results that do not carry an explicit identity."""
+    result = dict(payload or {})
+    identity = _explicit_auth_identity(result)
+    if identity and not str(result.get("accountName", "") or "").strip():
+        result["accountName"] = identity
+    if result.get("authenticated") and not identity:
+        result["authenticated"] = False
+        result["authStatus"] = "pending"
+        result["requiredActions"] = result.get("requiredActions") or ["check_auth_status"]
+        result["message"] = "登录态未返回明确账号或手机号，暂不判定为成功"
+    return result
+
+
+def _display_book_status(value: object) -> str:
+    raw = str(value or "").strip()
+    normalized = raw.lower()
+    if not normalized:
+        return "未知"
+    if any(key in normalized for key in ("completed", "finished", "finish", "done", "end")):
+        return "已完结"
+    if any(key in raw for key in ("完结", "完本", "已完结")):
+        return "已完结"
+    if any(key in normalized for key in ("ongoing", "serial", "updating", "active")):
+        return "连载中"
+    if any(key in raw for key in ("连载", "连载中", "更新中")):
+        return "连载中"
+    if any(key in normalized for key in ("paused", "hiatus", "stopped")):
+        return "暂停"
+    if any(key in raw for key in ("暂停", "停更", "断更")):
+        return "暂停"
+    if normalized == "unknown":
+        return "未知"
+    return raw
 
 
 def _sanitize_source_map_summary(items: list[dict] | None) -> list[dict]:
@@ -81,15 +151,22 @@ def _sanitize_source_map_summary(items: list[dict] | None) -> list[dict]:
     for item in items or []:
         if not isinstance(item, dict):
             continue
+        last_chapter = item.get("lastChapter", "") or ""
+        chapter_count = int(item.get("chapterCount", 0) or 0)
+        if chapter_count <= 0:
+            import re
+
+            match = re.search(r"第\s*(\d+)\s*章", str(last_chapter))
+            if match:
+                chapter_count = int(match.group(1))
         sanitized.append(
             {
-                "bookId": item.get("bookId", "") or "",
                 "sourceId": item.get("sourceId", "") or "",
                 "sourceName": item.get("sourceName", "") or "",
                 "score": int(item.get("score", 0) or 0),
-                "chapterCount": int(item.get("chapterCount", 0) or 0),
-                "lastChapter": item.get("lastChapter", "") or "",
-                "bookStatus": item.get("bookStatus", "") or "",
+                "chapterCount": chapter_count,
+                "lastChapter": last_chapter,
+                "bookStatus": _display_book_status(item.get("bookStatus", "")),
                 "name": item.get("name", "") or "",
                 "author": item.get("author", "") or "",
             }
@@ -100,6 +177,9 @@ def _sanitize_source_map_summary(items: list[dict] | None) -> list[dict]:
 def _sanitize_trace_summary(summary: dict | None) -> dict:
     payload = summary if isinstance(summary, dict) else {}
     return {
+        "stage": payload.get("stage", "") or "",
+        "currentStep": payload.get("currentStep", "") or "",
+        "nextStep": payload.get("nextStep", "") or "",
         "chapterStatus": payload.get("chapterStatus", "") or "",
         "selectedSource": payload.get("selectedSource", "") or "",
         "selectedContentSource": payload.get("selectedContentSource", "") or "",
@@ -112,22 +192,13 @@ def _sanitize_trace_summary(summary: dict | None) -> dict:
         "aiTokens": int(payload.get("aiTokens", 0) or 0),
         "processedAt": payload.get("processedAt", "") or "",
         "traceHash": payload.get("traceHash", "") or "",
+        "stage3Verdict": payload.get("stage3Verdict", "") or "",
+        "stage3Reason": payload.get("stage3Reason", "") or "",
+        "currentChapterIndex": payload.get("currentChapterIndex"),
+        "currentChapterTitle": payload.get("currentChapterTitle", "") or "",
+        "nextChapterIndex": payload.get("nextChapterIndex"),
+        "nextChapterTitle": payload.get("nextChapterTitle", "") or "",
     }
-
-
-def _load_legacy_library_book_summary(book_id: str) -> dict:
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        row = _fetch_aggregate_book_row(conn, book_id)
-    if not row:
-        return {"bookId": book_id, "found": False}
-    payload = _serialize_aggregate_book_row(row)
-    payload["found"] = True
-    return payload
 
 
 def _load_shared_library_book_summary(book_id: str, *, admin_view: bool = False) -> dict:
@@ -155,70 +226,11 @@ def _load_shared_library_book_summary(book_id: str, *, admin_view: bool = False)
         },
         "sourceMapSummary": source_summary,
         "sourceMapRefresh": library_books_service.source_map_refresh_state(book_id),
+        "freeChapterEndIndex": int(shared_metadata.get("freeChapterEndIndex", 0) or 0),
     }
     if admin_view:
         payload["payload"] = library_books_service.load_payload(book_id)
     return payload
-
-
-def _list_legacy_library_book_chapters(
-    book_id: str,
-    *,
-    page: int = 1,
-    pageSize: int = 50,
-    status: str = "all",
-    keyword: str = "",
-) -> dict:
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    page = _bounded_page(page, 1, 1000000)
-    page_size = _bounded_page(pageSize, 50, 200)
-    where = ["aggregate_book_id = ?"]
-    params: list = [book_id]
-    if status and status != "all":
-        where.append("status = ?")
-        params.append(status)
-    if keyword:
-        where.append("title LIKE ?")
-        params.append(f"%{keyword}%")
-    where_sql = "WHERE " + " AND ".join(where)
-    offset = (page - 1) * page_size
-    with sqlite3.connect(DB_PATH) as conn:
-        total = conn.execute(f"SELECT COUNT(*) FROM aggregate_chapter_tasks {where_sql}", params).fetchone()[0]
-        rows = conn.execute(
-            f"""
-            SELECT chapter_id, chapter_index, title, status, content_length, ai_model,
-                   ai_total_tokens, deviation_score, ai_self_score, fallback_source_id, retry_count,
-                   last_processed_at, error
-            FROM aggregate_chapter_tasks
-            {where_sql}
-            ORDER BY COALESCE(chapter_index, 999999), created_at
-            LIMIT ? OFFSET ?
-            """,
-            [*params, page_size, offset],
-        ).fetchall()
-    items = [
-        {
-            "chapterId": row[0],
-            "chapterIndex": row[1] or 0,
-            "title": row[2] or "",
-            "status": row[3] or "pending",
-            "contentLength": int(row[4] or 0),
-            "aiModel": row[5] or "",
-            "aiTotalTokens": int(row[6] or 0),
-            "deviationScore": float(row[7] or 0.0),
-            "aiSelfScore": float(row[8] or 0.0),
-            "fallbackSourceId": row[9] or "",
-            "retryCount": int(row[10] or 0),
-            "lastProcessedAt": row[11] or "",
-            "error": row[12] or "",
-        }
-        for row in rows
-    ]
-    return {"items": items, "page": page, "pageSize": page_size, "total": total}
 
 
 def _list_shared_library_book_chapters(
@@ -229,101 +241,147 @@ def _list_shared_library_book_chapters(
     status: str = "all",
     keyword: str = "",
 ) -> dict:
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
+    from app.services.library_books import library_books_service
 
-    initialize_database(DB_PATH)
+    book = library_books_service.get_book(book_id)
+    if not book:
+        return {"items": [], "page": page, "pageSize": pageSize, "total": 0}
+
     page = _bounded_page(page, 1, 1000000)
     page_size = _bounded_page(pageSize, 50, 200)
-    where = ["aggregate_book_id = ?"]
-    params: list = [book_id]
-    if status and status != "all":
-        where.append("status = ?")
-        params.append(status)
-    if keyword:
-        where.append("title LIKE ?")
-        params.append(f"%{keyword}%")
-    where_sql = "WHERE " + " AND ".join(where)
+    storage = library_books_service.shared_book_storage
+    book_name = str(book.get("name", "") or "").strip()
+    author = str(book.get("author", "") or "").strip()
+    chapter_index_payload = storage._read_json(storage.chapter_index_path(book_name=book_name, author=author)) or {}
+    chapter_entries = chapter_index_payload.get("chapters")
+    if not isinstance(chapter_entries, list):
+        chapter_entries = []
+
+    normalized_status = str(status or "all").strip().lower()
+    normalized_keyword = str(keyword or "").strip().lower()
+    db_rows: dict[int, dict[str, Any]] = {}
+    try:
+        import sqlite3
+        from app.config import DB_PATH
+        from app.storage.db import initialize_database
+
+        initialize_database(DB_PATH)
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            for row in conn.execute(
+                """
+                SELECT chapter_id, chapter_index, title, status, content_length,
+                       source_word_count, preview_only, last_processed_at, updated_at,
+                       error
+                FROM aggregate_chapter_tasks
+                WHERE aggregate_book_id = ?
+                """,
+                (book_id,),
+            ).fetchall():
+                db_rows[int(row["chapter_index"] or 0)] = dict(row)
+    except Exception:
+        db_rows = {}
+
+    items: list[dict[str, Any]] = []
+    entries_by_index = {
+        int(entry.get("index", 0) or 0): entry
+        for entry in chapter_entries
+        if isinstance(entry, dict) and int(entry.get("index", 0) or 0) > 0
+    }
+    for chapter_index in sorted(set(entries_by_index) | set(db_rows)):
+        entry = entries_by_index.get(chapter_index, {})
+        db_row = db_rows.get(chapter_index, {})
+        if not isinstance(entry, dict):
+            entry = {}
+        if not isinstance(db_row, dict):
+            db_row = {}
+        if not entry and not db_row:
+            continue
+        task_status = str(db_row.get("status") or "pending")
+        chapter_status = str(entry.get("status") or task_status)
+        chapter_title = str(entry.get("title") or db_row.get("title") or "")
+        if normalized_keyword and normalized_keyword not in chapter_title.lower():
+            continue
+
+        file_name = str(entry.get("file", "") or "").strip()
+        trace = {}
+        content_length = int(db_row.get("content_length") or 0)
+        has_content = False
+        preview_only = bool(db_row.get("preview_only") or False)
+        source_word_count = int(db_row.get("source_word_count") or 0)
+        processed_at = str(db_row.get("last_processed_at") or db_row.get("updated_at") or "")
+        if file_name:
+            chapter_path = storage.shared_book_dir(book_name=book_name, author=author) / file_name
+            if chapter_path.exists():
+                markdown = chapter_path.read_text(encoding="utf-8")
+                has_content = True
+                body, _, _ = markdown.partition(f"<!-- {TRACE_BEGIN}")
+                content_length = content_length or len(body.replace(f"# {chapter_title}", "", 1).strip())
+                try:
+                    trace = storage.parse_trace_block(markdown)
+                except ValueError:
+                    trace = {}
+        preview_only = preview_only or bool(trace.get("previewOnly", False))
+        if preview_only and chapter_status == "supplemented":
+            chapter_status = "fetched"
+        if normalized_status != "all" and chapter_status != normalized_status:
+            continue
+        source_word_count = source_word_count or int(trace.get("sourceWordCount", 0) or 0)
+        processed_at = processed_at or str(trace.get("processedAt", "") or "")
+        is_vip = bool(entry.get("isVip", False))
+        source_id = str(
+            entry.get("sourceId")
+            or trace.get("fallbackSourceId")
+            or ((trace.get("supplementSource") or {}).get("sourceId") if isinstance(trace.get("supplementSource"), dict) else "")
+            or trace.get("primarySourceId")
+            or ((trace.get("primarySource") or {}).get("sourceId") if isinstance(trace.get("primarySource"), dict) else "")
+            or ""
+        )
+        aligned_with = str(entry.get("alignedWith") or trace.get("alignedWith") or trace.get("selectedContentSource") or "")
+        task_db_chapter_id = str(db_row.get("chapter_id") or "")
+        if task_db_chapter_id:
+            read_chapter_id = task_db_chapter_id
+        elif entry.get("sourceChapterId"):
+            source_chapter_id = str(entry["sourceChapterId"])
+            agg_url = make_aggregate_chapter_url(
+                aggregate_book_id=book_id,
+                source_chapter_id=source_chapter_id,
+                title=chapter_title,
+                index=chapter_index,
+            )
+            read_chapter_id = encode_chapter_id(VIRTUAL_SOURCE_ID, agg_url)
+        else:
+            read_chapter_id = ""
+        items.append(
+            {
+                "chapterId": str(chapter_index),
+                "taskChapterId": task_db_chapter_id,
+                "sourceChapterId": str(entry.get("sourceChapterId") or ""),
+                "readChapterId": read_chapter_id,
+                "chapterIndex": chapter_index,
+                "title": chapter_title,
+                "status": chapter_status,
+                "taskStatus": task_status,
+                "sourceId": source_id,
+                "alignedWith": aligned_with,
+                "placeholder": False,
+                "contentLength": content_length,
+                "hasContent": has_content,
+                "processedAt": processed_at,
+                "sourceWordCount": source_word_count,
+                "previewOnly": preview_only,
+                "isVip": is_vip,
+                "file": file_name or None,
+                "error": db_row.get("error") or "",
+            }
+        )
+
+    total = len(items)
     offset = (page - 1) * page_size
-    with sqlite3.connect(DB_PATH) as conn:
-        total = conn.execute(f"SELECT COUNT(*) FROM aggregate_chapter_tasks {where_sql}", params).fetchone()[0]
-        rows = conn.execute(
-            f"""
-            SELECT chapter_id, source_chapter_id, chapter_index, title, status, placeholder,
-                   content_length, processed_content, last_processed_at, source_word_count,
-                   preview_only
-            FROM aggregate_chapter_tasks
-            {where_sql}
-            ORDER BY COALESCE(chapter_index, 999999), created_at
-            LIMIT ? OFFSET ?
-            """,
-            [*params, page_size, offset],
-        ).fetchall()
-    items = [
-        {
-            "chapterId": row[0],
-            "sourceChapterId": row[1] or "",
-            "chapterIndex": int(row[2] or 0),
-            "title": row[3] or "",
-            "status": row[4] or "pending",
-            "placeholder": bool(row[5]),
-            "contentLength": int(row[6] or 0),
-            "hasContent": bool(row[7]),
-            "processedAt": row[8] or "",
-            "sourceWordCount": int(row[9] or 0),
-            "previewOnly": bool(row[10]),
-        }
-        for row in rows
-    ]
-    return {"items": items, "page": page, "pageSize": page_size, "total": total}
+    return {"items": items[offset: offset + page_size], "page": page, "pageSize": page_size, "total": total}
 
 
 def _list_library_book_logs(book_id: str, *, limit: int = 50, offset: int = 0, admin_view: bool = False) -> dict:
-    read_mode = _shared_book_storage_read_mode()
-    if read_mode == "shared":
-        return _list_shared_library_book_logs(book_id, limit=limit, offset=offset, admin_view=admin_view)
-    return _list_legacy_library_book_logs(book_id, limit=limit, offset=offset, admin_view=admin_view)
-
-
-def _list_legacy_library_book_logs(book_id: str, *, limit: int = 50, offset: int = 0, admin_view: bool = False) -> dict:
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        total = conn.execute(
-            "SELECT COUNT(*) FROM aggregate_operation_logs WHERE aggregate_book_id = ?",
-            (book_id,),
-        ).fetchone()[0]
-        rows = conn.execute(
-            """
-            SELECT id, operation_type, actor_role, actor_user_id, created_at, before_json, after_json
-            FROM aggregate_operation_logs
-            WHERE aggregate_book_id = ?
-            ORDER BY id DESC
-            LIMIT ? OFFSET ?
-            """,
-            (book_id, max(1, int(limit or 50)), max(0, int(offset or 0))),
-        ).fetchall()
-    items = []
-    for row in rows:
-        item = {
-            "id": int(row[0]),
-            "operationType": row[1] or "",
-            "actorRole": row[2] or "",
-            "createdAt": row[4] or "",
-        }
-        if admin_view:
-            item["actorUserId"] = row[3] or ""
-            item["beforeJson"] = row[5] or ""
-            item["afterJson"] = row[6] or ""
-        items.append(item)
-    return {"bookId": book_id, "items": items, "limit": max(1, int(limit or 50)), "offset": max(0, int(offset or 0)), "total": total}
-
-
-def _list_shared_library_book_logs(book_id: str, *, limit: int = 50, offset: int = 0, admin_view: bool = False) -> dict:
     from app.services.library_books import library_books_service
     from app.services.shared_book_runtime import SharedBookProcessLogger
 
@@ -348,68 +406,6 @@ def _list_shared_library_book_logs(book_id: str, *, limit: int = 50, offset: int
 
 
 def _load_library_book_chapter_progress(book_id: str, chapter_id: str) -> dict:
-    read_mode = _shared_book_storage_read_mode()
-    if read_mode == "shared":
-        return _load_shared_library_book_chapter_progress(book_id, chapter_id)
-    return _load_legacy_library_book_chapter_progress(book_id, chapter_id)
-
-
-def _load_legacy_library_book_chapter_progress(book_id: str, chapter_id: str) -> dict:
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        row = conn.execute(
-            """
-            SELECT act.chapter_id, act.chapter_index, act.title, act.status, act.preview_only,
-                   act.content_length, act.source_word_count, act.last_processed_at, act.updated_at,
-                   act.fallback_source_id, abt.primary_source_id, act.source_alignment_json,
-                   act.ai_model, act.ai_total_tokens, act.trace_hash
-            FROM aggregate_chapter_tasks act
-            LEFT JOIN aggregate_book_tasks abt ON act.aggregate_book_id = abt.aggregate_book_id
-            WHERE act.aggregate_book_id = ? AND act.chapter_id = ?
-            """,
-            (book_id, chapter_id),
-        ).fetchone()
-    if not row:
-        return {"bookId": book_id, "chapterId": chapter_id, "found": False}
-    try:
-        alignment = json.loads(row[11] or "{}")
-    except Exception:
-        alignment = {}
-    trace_summary = _sanitize_trace_summary(
-        {
-            "chapterStatus": row[3] or "pending",
-            "selectedSource": alignment.get("selectedSource", "") or row[10] or "",
-            "selectedContentSource": alignment.get("selectedContentSource", "") or "",
-            "fallbackSourceId": row[9] or "",
-            "alignmentPassed": alignment.get("alignmentPassed"),
-            "alignmentReason": alignment.get("alignmentReason", "") or "",
-            "titleSimilarity": alignment.get("titleSimilarity"),
-            "previewSimilarity": alignment.get("previewSimilarity"),
-            "aiModel": row[12] or "",
-            "aiTokens": int(row[13] or 0),
-            "processedAt": row[7] or row[8] or "",
-            "traceHash": row[14] or "",
-        }
-    )
-    return {
-        "bookId": book_id,
-        "chapterId": row[0],
-        "chapterIndex": int(row[1] or 0),
-        "title": row[2] or "",
-        "status": row[3] or "pending",
-        "previewOnly": bool(row[4]),
-        "contentLength": int(row[5] or 0),
-        "sourceWordCount": int(row[6] or 0),
-        "found": True,
-        "traceSummary": trace_summary,
-    }
-
-
-def _load_shared_library_book_chapter_progress(book_id: str, chapter_id: str) -> dict:
     from app.services.library_books import library_books_service
     from app.services.shared_book_runtime import SharedBookProcessLogger, build_chapter_progress_payload
 
@@ -464,6 +460,53 @@ def _load_shared_library_book_chapter_progress(book_id: str, chapter_id: str) ->
     return _sanitize_chapter_progress_payload(payload)
 
 
+def _reprocess_library_book_chapter(book_id: str, chapter_id: str) -> dict:
+    import sqlite3
+
+    from app.services.aggregate_processor import AggregateProcessor
+    from app.services.library_books import library_books_service
+
+    book = library_books_service.get_book(book_id)
+    if not book:
+        return {"ok": False, "bookId": book_id, "chapterId": chapter_id, "error": "书籍不存在"}
+
+    book_name = str(book.get("name", "") or "").strip()
+    author = str(book.get("author", "") or "").strip()
+    storage = library_books_service.shared_book_storage
+    chapter_index_path = storage.chapter_index_path(book_name=book_name, author=author)
+    chapter_index = storage._read_json(chapter_index_path) or {"chapters": []}
+    target_entry = None
+    for entry in chapter_index.get("chapters", []):
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("index") == int(chapter_id) or str(entry.get("index", "")) == chapter_id:
+            target_entry = entry
+            break
+    if target_entry is None:
+        return {"ok": False, "bookId": book_id, "chapterId": chapter_id, "error": "章节不存在"}
+
+    processor = AggregateProcessor()
+    chapter_row = None
+    with processor._conn() as conn:
+        conn.row_factory = sqlite3.Row
+        chapter_row = conn.execute(
+            """
+            SELECT chapter_id, source_chapter_id, chapter_index, title, aggregate_book_id
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ? AND chapter_index = ?
+            """,
+            (book_id, int(target_entry.get("index", 0) or 0)),
+        ).fetchone()
+    if not chapter_row:
+        return {"ok": False, "bookId": book_id, "chapterId": chapter_id, "error": "章节任务不存在"}
+
+    from app.services.book_catalog import BookCatalog
+
+    catalog = BookCatalog()
+    result = asyncio.run(processor._process_chapter(catalog, dict(chapter_row)))
+    return {"ok": True, "bookId": book_id, "chapterId": chapter_id, "result": result}
+
+
 def _sanitize_chapter_progress_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Remove private source URLs from shared chapter progress payload."""
     payload = dict(payload)
@@ -495,6 +538,141 @@ def _sanitize_chapter_progress_payload(payload: dict[str, Any]) -> dict[str, Any
         sanitized_logs.append(safe_log)
     payload["logs"] = sanitized_logs
     return payload
+
+
+def _build_chapter_runtime_summary(book_id: str, chapter_index: int, chapter_title: str) -> dict[str, Any]:
+    from app.services.library_books import library_books_service
+    from app.services.shared_book_runtime import SharedBookProcessLogger
+
+    book = library_books_service.get_book(book_id)
+    if not book:
+        return {}
+    storage = library_books_service.shared_book_storage
+    logger = SharedBookProcessLogger(storage)
+    logs = logger.read(
+        book_name=str(book.get("name", "") or ""),
+        author=str(book.get("author", "") or ""),
+        chapter_index=chapter_index,
+        limit=20,
+    )["items"]
+    last_event = logs[-1] if logs else {}
+    next_step = "等待下一轮调度"
+    current_step = "待处理"
+    stage = ""
+    if isinstance(last_event, dict):
+        event = str(last_event.get("event", "") or "")
+        stage = str(last_event.get("stage", "") or "")
+        payload = last_event.get("payload") if isinstance(last_event.get("payload"), dict) else {}
+        title = str(payload.get("title", "") or chapter_title).strip()
+        status = str(payload.get("status", "") or "").strip()
+        if event == "job_start":
+            trigger = str((last_event.get("payload") or {}).get("trigger", "") or "")
+            if trigger == "book_source_map_refresh":
+                current_step = "正在刷新源映射"
+                next_step = "继续处理章节队列"
+            elif trigger == "book_bootstrap":
+                current_step = "正在补齐首批章节"
+                next_step = "继续处理下一章"
+            elif trigger == "book_update_check":
+                current_step = "正在检查更新"
+                next_step = "继续处理下一章"
+            else:
+                current_step = "正在处理章节"
+                next_step = "继续处理下一章"
+        elif event == "job_complete":
+            current_step = "章节处理完成"
+            next_step = "等待下一轮调度"
+        elif event == "job_error":
+            current_step = "处理失败"
+            next_step = "等待修复后重试"
+        elif event == "job_skipped":
+            current_step = "处理被跳过"
+            next_step = "等待锁释放"
+        elif event == "chapter_write":
+            current_step = f"已写入 {title or chapter_title}"
+            next_step = "继续处理下一章"
+        elif event == "chapter_error":
+            current_step = f"{title or chapter_title} 处理失败"
+            next_step = "等待重试"
+        elif status:
+            current_step = status
+    return {
+        "stage": stage,
+        "currentStep": current_step,
+        "nextStep": next_step,
+        "currentChapterIndex": chapter_index,
+        "currentChapterTitle": chapter_title,
+        "nextChapterIndex": chapter_index + 1,
+        "nextChapterTitle": "",
+    }
+
+
+def _library_processing_event_message(record: dict[str, Any]) -> str:
+    payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+    step = str(payload.get("step", "") or "").strip()
+    if step:
+        return step
+    labels = {
+        "chapter_start": "开始处理章节",
+        "official_fetch_start": "正在拉取官方源",
+        "official_fetch_complete": "官方源拉取完成",
+        "official_snapshot_used": "使用官方源本地快照",
+        "official_classified": "官方源内容识别完成",
+        "candidate_discovery_start": "正在准备候选源",
+        "candidate_merge_start": "正在从候选源补全章节",
+        "candidate_toc_start": "正在加载候选源目录",
+        "candidate_toc_complete": "候选源目录加载完成",
+        "candidate_toc_error": "候选源目录加载失败",
+        "candidate_source_behind_target": "候选源最新章节落后，已跳过",
+        "candidate_toc_behind_target": "候选源目录落后，已跳过",
+        "candidate_no_match": "候选源没有匹配章节",
+        "candidate_match_found": "候选源找到可能章节",
+        "candidate_fetch_start": "正在拉取候选章节",
+        "candidate_fetch_error": "候选章节拉取失败",
+        "candidate_snapshot_used": "使用候选源本地快照",
+        "candidate_rejected": "候选章节未通过",
+        "candidate_accepted": "候选章节通过校验",
+        "candidate_selected": "候选源补全成功",
+        "candidate_all_failed": "所有候选源都未补全",
+        "candidate_none": "没有可用候选源",
+        "preview_fallback": "写入官方预览内容",
+        "ai_proofread_start": "正在校对正文",
+        "ai_proofread_complete": "AI 校对完成",
+        "ai_proofread_error": "AI 校对失败",
+        "ai_deferred": "AI 校对暂缓",
+        "chapter_write_start": "正在写入处理结果",
+        "chapter_write": "章节写入完成",
+        "chapter_error": "章节处理失败",
+    }
+    return labels.get(str(record.get("event", "") or ""), str(record.get("event", "") or ""))
+
+
+def _sanitize_library_processing_event(record: dict[str, Any]) -> dict[str, Any]:
+    payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+    return {
+        "ts": record.get("ts", "") or "",
+        "event": record.get("event", "") or "",
+        "stage": record.get("stage", "") or "",
+        "chapterIndex": record.get("chapterIndex"),
+        "title": payload.get("title", "") or "",
+        "message": _library_processing_event_message(record),
+        "sourceId": (
+            payload.get("sourceId", "")
+            or payload.get("primarySourceId", "")
+            or payload.get("supplementSourceId", "")
+            or ""
+        ),
+        "status": payload.get("status", "") or "",
+        "classification": payload.get("classification", "") or "",
+        "reason": payload.get("reason", "") or record.get("errorCode", "") or "",
+        "error": record.get("errorMessage", "") or "",
+        "contentLength": int(payload.get("contentLength", 0) or 0),
+        "aiModel": payload.get("aiModel", "") or "",
+        "aiTokens": int(payload.get("aiTokens", 0) or 0),
+        "targetChapterNumber": payload.get("targetChapterNumber"),
+        "latestCandidateChapterNumber": payload.get("latestCandidateChapterNumber"),
+        "attemptedSourceIds": payload.get("attemptedSourceIds", []),
+    }
 
 
 async def _manual_source_map_refresh(book_id: str, payload: dict | None = None) -> dict:
@@ -556,7 +734,13 @@ def _manual_library_book_repair(book_id: str, payload: dict | None = None) -> di
 
 
 async def _manual_library_book_update_check(book_id: str) -> dict:
-    return await UpdateScheduler().run_check(book_id)
+    payload = library_books_service.load_payload(book_id)
+    if not payload:
+        return {"bookId": book_id, "success": False, "error": "书籍不存在或没有订阅载荷"}
+    processor = AggregateProcessor()
+    processor.enqueue_book(book_id, payload)
+    asyncio.create_task(processor.run_book_task(book_id))
+    return {"bookId": book_id, "success": True, "queued": True}
 
 
 # ---- Plugins ----
@@ -635,7 +819,8 @@ def list_plugins():
 
 
 @console_route("get", "/official-sources")
-async def list_official_sources():
+async def list_official_sources(request: Request):
+    auth_service.require_admin(request)
     plugins = _plugin_scheduler._plugins
     cookie_store = CookieStore()
     items = []
@@ -659,7 +844,7 @@ async def list_official_sources():
         if "auth" in plugin.capabilities:
             ctx = _plugin_scheduler._make_ctx(plugin.metadata.id)
             try:
-                result = await plugin.source.auth_status(ctx)
+                result = _normalize_auth_identity(await plugin.source.auth_status(ctx))
                 auth_status = {
                     **auth_status,
                     **result,
@@ -770,25 +955,10 @@ def batch_enable_plugins(payload: dict):
 
 
 @console_route("post", "/plugins/batch-delete")
-def batch_delete_plugins(payload: dict):
-    plugin_ids = payload.get("pluginIds", [])
-    cfg = AppConfig.get()
-    results = []
-    for plugin_id in plugin_ids:
-        plugin = _plugin_scheduler._plugins.get(plugin_id)
-        if plugin:
-            plugin.metadata.enabled = False
-        cfg.set_plugin_enabled(plugin_id, False)
-        # Remove from filesystem
-        source_dir = Path("plugins/sources") / plugin_id
-        if source_dir.exists():
-            import shutil
-            shutil.rmtree(source_dir)
-        # Remove from in-memory scheduler
-        if plugin_id in _plugin_scheduler._plugins:
-            del _plugin_scheduler._plugins[plugin_id]
-        results.append({"pluginId": plugin_id, "deleted": True})
-    return {"results": results}
+def batch_delete_plugins(request: Request, payload: dict):
+    """Keep the legacy endpoint inert until plugin ownership is explicit."""
+    auth_service.require_admin(request)
+    raise HTTPException(status_code=501, detail="批量删除书源尚未实现，请使用禁用功能")
 
 
 @console_route("post", "/plugins/ping")
@@ -828,7 +998,8 @@ async def smoke_plugin(plugin_id: str, payload: dict | None = None):
 
 
 @console_route("get", "/plugins/{plugin_id}/auth")
-async def get_plugin_auth(plugin_id: str):
+async def get_plugin_auth(plugin_id: str, request: Request):
+    auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
@@ -888,7 +1059,7 @@ async def get_plugin_auth(plugin_id: str):
         }
     ctx = _plugin_scheduler._make_ctx(plugin_id)
     try:
-        result = await plugin.source.auth_status(ctx)
+        result = _normalize_auth_identity(await plugin.source.auth_status(ctx))
         result.setdefault("mode", auth_meta.get("mode", "optional"))
         if not result.get("authenticated") and has_cookies:
             result.setdefault("requiredActions", ["check_auth_status"])
@@ -912,7 +1083,8 @@ async def get_plugin_auth(plugin_id: str):
 
 
 @console_route("post", "/plugins/{plugin_id}/login")
-async def prepare_plugin_login(plugin_id: str):
+async def prepare_plugin_login(plugin_id: str, request: Request):
+    auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
@@ -935,12 +1107,13 @@ async def prepare_plugin_login(plugin_id: str):
 
 
 @console_route("post", "/plugins/{plugin_id}/auth/check")
-async def check_plugin_auth(plugin_id: str):
-    return await get_plugin_auth(plugin_id)
+async def check_plugin_auth(plugin_id: str, request: Request):
+    return await get_plugin_auth(plugin_id, request)
 
 
 @console_route("post", "/plugins/{plugin_id}/cookies/clear")
-def clear_plugin_cookies(plugin_id: str):
+def clear_plugin_cookies(plugin_id: str, request: Request):
+    auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
@@ -951,13 +1124,14 @@ def clear_plugin_cookies(plugin_id: str):
 
 
 @console_route("post", "/plugins/{plugin_id}/login-browser")
-async def start_login_browser(plugin_id: str):
+async def start_login_browser(plugin_id: str, request: Request):
     """Launch a headed browser window for the user to complete manual login.
 
     The browser opens the plugin's configured login URL. The user interacts
     with the page (SMS code, captcha, etc.) manually. The backend polls for
     login-success indicators and extracts cookies automatically.
     """
+    auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         return {"error": "插件不存在"}
@@ -976,38 +1150,60 @@ async def start_login_browser(plugin_id: str):
     )
     return {
         "pluginId": plugin_id,
-        "status": session.status,
-        "message": session.message,
+        "status": "running" if session.status == "pending" else session.status,
+        "message": session.message or "正在启动浏览器...",
     }
 
 
 @console_route("get", "/plugins/{plugin_id}/login-browser/status")
-async def get_login_browser_status(plugin_id: str):
+async def get_login_browser_status(plugin_id: str, request: Request):
     """Poll the status of an active login-browser session."""
+    auth_service.require_admin(request)
     session = await login_browser_service.get(plugin_id)
     if not session:
         return {"pluginId": plugin_id, "status": "none", "message": "没有活跃的登录会话"}
 
     result = {
         "pluginId": plugin_id,
-        "status": session.status,
+        "status": "running" if session.status == "pending" else session.status,
         "message": session.message,
+        "authenticated": False,
+        "accountName": "",
         "hasCookies": session.status == "success" and bool(session.cookies),
         "cookieDomains": list(session.cookies.keys()) if session.cookies else [],
     }
 
     # If completed, persist cookies and clean up
     if session.status in ("success", "failed", "timeout", "cancelled"):
-        if session.status == "success" and session.cookies:
-            await official_auth_manager.save_cookies_and_probe(plugin_id, session.cookies)
-        await login_browser_service.cleanup(plugin_id)
+        try:
+            if session.status == "success" and session.cookies:
+                probe = _normalize_auth_identity(
+                    await official_auth_manager.save_cookies_and_probe(plugin_id, session.cookies)
+                )
+                account_name = _explicit_auth_identity(probe)
+                authenticated = bool(probe.get("authenticated")) and bool(account_name)
+                result.update({
+                    "status": "success" if authenticated else "pending",
+                    "message": probe.get("message") or session.message,
+                    "authenticated": authenticated,
+                    "accountName": account_name,
+                    "authStatus": probe.get("authStatus", "unknown"),
+                    "requiredActions": probe.get("requiredActions", []),
+                })
+            elif session.status == "success":
+                result.update({"status": "failed", "message": "登录完成，但未提取到 Cookie"})
+        except Exception as exc:
+            result.update({"status": "failed", "message": f"登录态校验失败: {exc}"})
+        finally:
+            await login_browser_service.cleanup(plugin_id)
 
     return result
 
 
 @console_route("delete", "/plugins/{plugin_id}/login-browser")
-async def cancel_login_browser(plugin_id: str):
+async def cancel_login_browser(plugin_id: str, request: Request):
     """Cancel an active login-browser session."""
+    auth_service.require_admin(request)
     ok = await login_browser_service.cancel(plugin_id)
     await login_browser_service.cleanup(plugin_id)
     return {"pluginId": plugin_id, "cancelled": ok}
@@ -1016,57 +1212,67 @@ async def cancel_login_browser(plugin_id: str):
 # ---- Official Source Login (通用登录协议层) ----
 
 @console_route("get", "/official-sources/{plugin_id}/login-capabilities")
-def get_login_capabilities(plugin_id: str):
+def get_login_capabilities(plugin_id: str, request: Request):
     """Get available login methods for an official source."""
+    auth_service.require_admin(request)
     return official_auth_manager.capabilities(plugin_id)
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/phone/request-code")
-async def official_login_phone_request(plugin_id: str, payload: dict):
+async def official_login_phone_request(plugin_id: str, payload: dict, request: Request):
     """Step 1 of phone login: request SMS verification code.
 
     Payload: {"phone": "13800138000", "sessionId": "", "challengeToken": "", "challengeRandstr": ""}
     Full payload is forwarded to private auth_api, including challenge params.
     """
+    auth_service.require_admin(request)
     if not payload.get("phone"):
         return {"ok": False, "error": "缺少手机号"}
     return official_auth_manager.request_phone_code(plugin_id, payload)
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/phone/verify")
-async def official_login_phone_verify(plugin_id: str, payload: dict):
+async def official_login_phone_verify(plugin_id: str, payload: dict, request: Request):
     """Step 2 of phone login: verify SMS code and complete login.
 
     Payload: {"sessionId": "xxx", "phone": "13800138000", "code": "123456", "challengeToken": ""}
     """
-    return await official_auth_manager.verify_phone_code(plugin_id, payload)
+    auth_service.require_admin(request)
+    return _normalize_auth_identity(
+        await official_auth_manager.verify_phone_code(plugin_id, payload)
+    )
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/cookie/verify")
-async def official_login_cookie_verify(plugin_id: str, payload: dict):
+async def official_login_cookie_verify(plugin_id: str, payload: dict, request: Request):
     """Verify pasted cookies for an official source.
 
     Payload: {"cookieText": "ywguid=...; ywkey=..."}
     """
+    auth_service.require_admin(request)
     cookie_text = payload.get("cookieText", "")
     if not cookie_text:
         return {"ok": False, "error": "缺少 Cookie 文本"}
-    return await official_auth_manager.verify_cookie(plugin_id, cookie_text)
+    return _normalize_auth_identity(
+        await official_auth_manager.verify_cookie(plugin_id, cookie_text)
+    )
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/logout")
-async def official_login_logout(plugin_id: str):
+async def official_login_logout(plugin_id: str, request: Request):
     """Clear auth state for an official source."""
+    auth_service.require_admin(request)
     return official_auth_manager.logout(plugin_id)
 
 
 @console_route("get", "/official-sources/{plugin_id}/login/debug-trace")
-def official_login_debug_trace(plugin_id: str):
+def official_login_debug_trace(plugin_id: str, request: Request):
     """Return recent login step traces for an official source.
 
     Traces include the payload sent to the private auth_api and the raw result
     returned by it, which is useful when comparing Web vs App identity params.
     """
+    auth_service.require_admin(request)
     from app.services.official_auth.sessions import login_trace_store
     from app.services.official_auth.manager import official_auth_manager
 
@@ -1122,7 +1328,12 @@ def list_sources(
             "browser": plugin.metadata.browser,
             "lastModified": _plugin_last_modified(plugin),
         })
-    return {"items": items, "limit": limit, "offset": offset, "total": total}
+    stats = {
+        "total": len(_plugin_scheduler._plugins),
+        "enabled": sum(1 for p in _plugin_scheduler._plugins.values() if p.metadata.enabled),
+        "filtered": total,
+    }
+    return {"items": items, "limit": limit, "offset": offset, "total": total, "stats": stats}
 
 
 @console_route("get", "/sources/{source_id}")
@@ -1232,17 +1443,8 @@ async def create_search_job(request: Request, payload: dict):
         "elapsedMs": 0,
         "result": {"items": [], "candidateGroups": []},
         "candidateGroups": [],
-        "events": [],
+        "events": _search_service.get_events(job.job_id),
         "liveSearchPending": True,
-    }
-
-
-@console_route("post", "/search/aggregate")
-async def create_aggregate_search(request: Request, payload: dict):
-    auth_service.require_admin(request)
-    return {
-        "deprecated": True,
-        "message": "即时聚合搜索入口已废弃，请改用 /api/subscribe/search 做订阅发现，或使用普通搜索查看本地书库注入效果。",
     }
 
 
@@ -1421,8 +1623,20 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
     )
     if created.get("created"):
         processor = AggregateProcessor()
-        processor.enqueue_book(created["book"]["aggregateBookId"], created["payload"])
-        asyncio.create_task(processor.bootstrap_book_until_visible(created["book"]["aggregateBookId"]))
+        book_id = created["book"]["aggregateBookId"]
+        initial_next_check = (
+            datetime.now(timezone.utc)
+            + timedelta(minutes=processor.check_interval_minutes(book_id))
+        ).isoformat()
+        processor.enqueue_book(book_id, created["payload"], next_check_time=initial_next_check)
+        scheduler = SharedBookScheduler(processor=processor)
+        scheduler.enqueue_initial_subscription(
+            book_id,
+            payload=created["payload"],
+            book_name=created["book"].get("name", ""),
+            author=created["book"].get("author", ""),
+        )
+        asyncio.create_task(scheduler.run_periodic_once(wait_for_recovery=False, include_due_books=False))
     return {
         "ok": True,
         "created": bool(created.get("created")),
@@ -1810,10 +2024,6 @@ def get_settings():
             "cacheTtlSeconds": cfg.search.cache_ttl_seconds,
         },
         "contentWorkflow": cfg.aggregate.content_workflow,
-        "legacy": {
-            "ruleEngines": _legacy_archived("rule_engines"),
-            "sourceSubscriptions": _legacy_archived("source_subscriptions"),
-        },
     }
     return settings
 
@@ -1836,25 +2046,6 @@ def update_settings(payload: dict):
     _plugin_scheduler.refresh_config()
     _search_service.scheduler.refresh_config()
     return {"saved": True}
-
-
-# ---- Aggregate Source ----
-
-@console_route("get", "/aggregate-source")
-def get_aggregate_source():
-    config = load_aggregate_config()
-    path = write_aggregate_source()
-    config["generated_path"] = path
-    return config
-
-
-@console_route("post", "/aggregate-source/regenerate")
-def regenerate_aggregate_source():
-    path = write_aggregate_source()
-    config = load_aggregate_config()
-    config["last_generated_at"] = _now()
-    save_aggregate_config(config)
-    return {"path": path, "config": config}
 
 
 # ---- Aggregate Settings ----
@@ -1880,6 +2071,9 @@ def update_aggregate_settings(payload: dict):
 
 @console_route("post", "/aggregate-settings/test-provider")
 async def test_aggregate_provider(payload: dict):
+    if not AI_RUNTIME_ENABLED:
+        return {"ok": False, "status": "disabled", "message": "AI 链路已暂时停用"}
+
     from app.ai.client import OpenAICompatibleClient
 
     config = payload.get("aiProviderConfig") if isinstance(payload.get("aiProviderConfig"), dict) else payload
@@ -1892,6 +2086,9 @@ async def test_aggregate_provider(payload: dict):
 
 @console_route("post", "/aggregate-settings/fetch-models")
 async def fetch_aggregate_models(payload: dict):
+    if not AI_RUNTIME_ENABLED:
+        return {"ok": False, "models": [], "status": "disabled", "message": "AI 链路已暂时停用"}
+
     from app.ai.client import OpenAICompatibleClient
 
     config = payload.get("aiProviderConfig") if isinstance(payload.get("aiProviderConfig"), dict) else payload
@@ -1916,64 +2113,13 @@ def _bounded_page(value: int | str | None, default: int, maximum: int) -> int:
     return min(max(parsed, 1), maximum)
 
 
-def _serialize_aggregate_book_row(row: tuple) -> dict:
-    total_chapters = int(row[6] or 0)
-    processed_chapters = int(row[7] or 0)
-    visible_processed_chapters = int(row[8] or 0)
-    settings = _aggregate_book_settings(row[21] or "")
-    return {
-        "id": row[0],
-        "bookId": row[0],
-        "aggregateBookId": row[0],
-        "name": row[1] or "",
-        "author": row[2] or "",
-        "status": row[3] or "active",
-        "bookStatus": row[4] or "unknown",
-        "primarySourceId": row[5] or "",
-        "totalChapters": total_chapters,
-        "processedChapters": processed_chapters,
-        "visibleProcessedChapters": visible_processed_chapters,
-        "failedChapters": int(row[9] or 0),
-        "progress": processed_chapters / total_chapters if total_chapters else 0,
-        "totalTokens": int(row[10] or 0),
-        "lastProcessedAt": row[11] or "",
-        "nextCheckTime": row[12] or "",
-        "lastError": row[13] or "",
-        "addedByUserId": row[14] or "",
-        "addedByUsername": library_books_service.username_for_user_id(row[14] or ""),
-        "coverUrl": row[15] or "",
-        "intro": row[16] or "",
-        "wordCount": row[17] or "",
-        "searchVisibilityStatus": row[18] or "hidden",
-        "startChapterIndex": int(row[19] or 1),
-        "autoArchiveOnComplete": bool(row[20]),
-        "settings": settings,
-        "currentPolicyVersion": int(row[22] or 1),
-    }
-
-
-def _fetch_aggregate_book_row(conn: sqlite3.Connection, book_id: str):
-    return conn.execute(
-        """
-        SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
-               total_chapters, processed_chapters, visible_processed_chapters, failed_chapters, total_tokens,
-               last_processed_at, next_check_time, last_error, added_by_user_id, cover_url, intro,
-               word_count, search_visibility_status, start_chapter_index, auto_archive_on_complete,
-               settings_json, current_policy_version
-        FROM aggregate_book_tasks
-        WHERE aggregate_book_id = ?
-        """,
-        (book_id,),
-    ).fetchone()
-
-
 def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_role: str = "admin") -> dict:
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
 
     initialize_database(DB_PATH)
-    base_dir = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
+    book = library_books_service.get_book(book_id)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
@@ -1988,91 +2134,25 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
         conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
         cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
         conn.commit()
-    if base_dir.exists():
-        shutil.rmtree(base_dir, ignore_errors=True)
+
+    # Clean up both the shared library directory and the private runtime directory.
+    if book:
+        storage = library_books_service.shared_book_storage
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        if book_name:
+            shared_dir = storage.shared_book_dir(book_name=book_name, author=author)
+            private_dir = storage.runtime_dir(book_name=book_name, author=author).parent
+            if shared_dir.exists():
+                shutil.rmtree(shared_dir, ignore_errors=True)
+            if private_dir.exists():
+                shutil.rmtree(private_dir, ignore_errors=True)
+
+    # Legacy path cleanup (no longer the active storage location).
+    legacy_dir = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
+    if legacy_dir.exists():
+        shutil.rmtree(legacy_dir, ignore_errors=True)
     return {"bookId": book_id, "deleted": cursor.rowcount > 0}
-
-
-@console_route("get", "/aggregate-books")
-def list_aggregate_books(request: Request, page: int = 1, pageSize: int = 20, status: str = "all", keyword: str = "", sort: str = "updated_desc"):
-    auth_service.require_admin(request)
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    page = _bounded_page(page, 1, 1000000)
-    page_size = _bounded_page(pageSize, 20, 100)
-    where = []
-    params: list = []
-    if status and status != "all":
-        where.append("status = ?")
-        params.append(status)
-    if keyword:
-        where.append("(name LIKE ? OR author LIKE ?)")
-        params.extend([f"%{keyword}%", f"%{keyword}%"])
-    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
-    sort_sql = {
-        "created_desc": "created_at DESC",
-        "progress_desc": "processed_chapters DESC",
-        "tokens_desc": "total_tokens DESC",
-    }.get(sort, "updated_at DESC")
-    offset = (page - 1) * page_size
-    with sqlite3.connect(DB_PATH) as conn:
-        total = conn.execute(f"SELECT COUNT(*) FROM aggregate_book_tasks {where_sql}", params).fetchone()[0]
-        rows = conn.execute(
-            f"""
-            SELECT aggregate_book_id, name, author, status, book_status, primary_source_id,
-                   total_chapters, processed_chapters, visible_processed_chapters, failed_chapters, total_tokens,
-                   last_processed_at, next_check_time, last_error, added_by_user_id, cover_url, intro,
-                   word_count, search_visibility_status, start_chapter_index, auto_archive_on_complete,
-                   settings_json, current_policy_version
-            FROM aggregate_book_tasks
-            {where_sql}
-            ORDER BY {sort_sql}
-            LIMIT ? OFFSET ?
-            """,
-            [*params, page_size, offset],
-        ).fetchall()
-    items = [_serialize_aggregate_book_row(row) for row in rows]
-    return {"items": items, "page": page, "pageSize": page_size, "total": total}
-
-
-@console_route("get", "/aggregate-books/{book_id}")
-def get_aggregate_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        row = _fetch_aggregate_book_row(conn, book_id)
-    if not row:
-        return {"bookId": book_id, "found": False}
-    data = _serialize_aggregate_book_row(row)
-    data["found"] = True
-    return data
-
-
-@console_route("post", "/aggregate-books/{book_id}/run")
-async def run_aggregate_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    from app.services.aggregate_processor import AggregateProcessor
-
-    return await AggregateProcessor().run_book_task(book_id)
-
-
-@console_route("post", "/aggregate-books/{book_id}/pause")
-def pause_aggregate_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    return _update_aggregate_book_status(book_id, "paused")
-
-
-@console_route("post", "/aggregate-books/{book_id}/resume")
-def resume_aggregate_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    return _update_aggregate_book_status(book_id, "active")
 
 
 def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: str = "", actor_role: str = "admin"):
@@ -2116,270 +2196,9 @@ def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: s
     return {"bookId": book_id, "status": status, "updated": cursor.rowcount > 0}
 
 
-@console_route("delete", "/aggregate-books/{book_id}")
 def delete_aggregate_book(request: Request, book_id: str):
     auth_service.require_admin(request)
     return _delete_aggregate_book_impl(book_id)
-
-
-@console_route("get", "/aggregate-books/{book_id}/chapters")
-def list_aggregate_chapters(request: Request, book_id: str, page: int = 1, pageSize: int = 50, status: str = "all", keyword: str = ""):
-    auth_service.require_admin(request)
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    page = _bounded_page(page, 1, 1000000)
-    page_size = _bounded_page(pageSize, 50, 200)
-    where = ["aggregate_book_id = ?"]
-    params: list = [book_id]
-    if status and status != "all":
-        where.append("status = ?")
-        params.append(status)
-    if keyword:
-        where.append("title LIKE ?")
-        params.append(f"%{keyword}%")
-    where_sql = "WHERE " + " AND ".join(where)
-    offset = (page - 1) * page_size
-    with sqlite3.connect(DB_PATH) as conn:
-        total = conn.execute(f"SELECT COUNT(*) FROM aggregate_chapter_tasks {where_sql}", params).fetchone()[0]
-        rows = conn.execute(
-            f"""
-            SELECT chapter_id, chapter_index, title, status, content_length, ai_model,
-                   ai_total_tokens, deviation_score, ai_self_score, fallback_source_id, retry_count,
-                   last_processed_at, error
-            FROM aggregate_chapter_tasks
-            {where_sql}
-            ORDER BY COALESCE(chapter_index, 999999), created_at
-            LIMIT ? OFFSET ?
-            """,
-            [*params, page_size, offset],
-        ).fetchall()
-    items = [
-        {
-            "chapterId": row[0],
-            "chapterIndex": row[1] or 0,
-            "title": row[2] or "",
-            "status": row[3] or "pending",
-            "contentLength": int(row[4] or 0),
-            "aiModel": row[5] or "",
-            "aiTotalTokens": int(row[6] or 0),
-            "deviationScore": float(row[7] or 0.0),
-            "aiSelfScore": float(row[8] or 0.0),
-            "fallbackSourceId": row[9] or "",
-            "retryCount": int(row[10] or 0),
-            "lastProcessedAt": row[11] or "",
-            "error": row[12] or "",
-        }
-        for row in rows
-    ]
-    return {"items": items, "page": page, "pageSize": page_size, "total": total}
-
-
-@console_route("get", "/aggregate-books/{book_id}/chapters/{chapter_id}")
-def get_aggregate_chapter(request: Request, book_id: str, chapter_id: str):
-    auth_service.require_admin(request)
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        row = conn.execute(
-            """
-            SELECT act.chapter_id, act.chapter_index, act.title, act.status, act.processed_content, abt.primary_source_id,
-                   act.fallback_source_id, act.source_alignment_json, act.ai_model, act.ai_prompt_tokens,
-                   act.ai_completion_tokens, act.ai_total_tokens, act.ai_latency_ms, act.deviation_score,
-                   act.ai_self_score, act.error
-            FROM aggregate_chapter_tasks act
-            LEFT JOIN aggregate_book_tasks abt ON act.aggregate_book_id = abt.aggregate_book_id
-            WHERE act.aggregate_book_id = ? AND act.chapter_id = ?
-            """,
-            (book_id, chapter_id),
-        ).fetchone()
-    if not row:
-        return {"chapterId": chapter_id, "bookId": book_id, "found": False}
-    try:
-        alignment = json.loads(row[7] or "{}")
-    except Exception:
-        alignment = {}
-    content = row[4] or ""
-    ai_enabled = bool(row[8])
-    ai_model = row[8] or ""
-    ai_prompt = int(row[9] or 0)
-    ai_completion = int(row[10] or 0)
-    ai_total = int(row[11] or 0)
-    ai_latency = int(row[12] or 0)
-    deviation = float(row[13] or 0.0)
-    ai_self_score = float(row[14] or 0.0)
-    fallback_source_id = row[6] or ""
-    error = row[15] or ""
-    return {
-        "chapterId": row[0],
-        "chapterIndex": row[1] or 0,
-        "title": row[2] or "",
-        "status": row[3] or "pending",
-        "content": content,
-        "contentLength": len(content),
-        "contentPreview": content[:500],
-        "source": {
-            "primarySourceId": row[5] or "",
-            "fallbackSourceId": fallback_source_id,
-            "alignment": alignment,
-        },
-        "sourceAlignment": alignment,
-        "fallbackInfo": {
-            "fallbackSourceId": fallback_source_id,
-            "error": error,
-        },
-        "ai": {
-            "enabled": ai_enabled,
-            "model": ai_model,
-            "promptTokens": ai_prompt,
-            "completionTokens": ai_completion,
-            "totalTokens": ai_total,
-            "latencyMs": ai_latency,
-            "deviationScore": deviation,
-            "aiSelfScore": ai_self_score,
-        },
-        "aiInfo": {
-            "enabled": ai_enabled,
-            "model": ai_model,
-            "promptTokens": ai_prompt,
-            "completionTokens": ai_completion,
-            "totalTokens": ai_total,
-            "latencyMs": ai_latency,
-            "deviationScore": deviation,
-            "aiSelfScore": ai_self_score,
-        },
-        "aiModel": ai_model,
-        "tokens": ai_total,
-        "deviationScore": deviation,
-        "aiSelfScore": ai_self_score,
-        "fallbackSourceId": fallback_source_id,
-        "errorMessage": error,
-        "error": error,
-    }
-
-
-@console_route("post", "/aggregate-books/{book_id}/chapters/{chapter_id}/retry")
-def retry_aggregate_chapter(request: Request, book_id: str, chapter_id: str):
-    auth_service.require_admin(request)
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.execute(
-            """
-            UPDATE aggregate_chapter_tasks
-            SET status = 'pending', error = '', next_retry_time = NULL, updated_at = datetime('now')
-            WHERE aggregate_book_id = ? AND chapter_id = ?
-            """,
-            (book_id, chapter_id),
-        )
-        conn.commit()
-    return {"bookId": book_id, "chapterId": chapter_id, "queued": cursor.rowcount > 0}
-
-
-@console_route("get", "/aggregate-books/{book_id}/chapters/{chapter_id}/reviews")
-async def get_aggregate_chapter_reviews(request: Request, book_id: str, chapter_id: str):
-    auth_service.require_admin(request)
-    import sqlite3
-    from app.config import DB_PATH
-    from app.storage.db import initialize_database
-    from app.services.aggregate_reviews import (
-        empty_aggregate_reviews, summarize_reviews, hot_review_bubble_label,
-    )
-
-    initialize_database(DB_PATH)
-    mapped_chapter_id = ""
-    mapped_source_id = ""
-    reason = "not_mapped"
-    with sqlite3.connect(DB_PATH) as conn:
-        row = conn.execute(
-            """
-            SELECT act.source_chapter_id, abt.primary_source_id
-            FROM aggregate_chapter_tasks act
-            LEFT JOIN aggregate_book_tasks abt ON act.aggregate_book_id = abt.aggregate_book_id
-            WHERE act.aggregate_book_id = ? AND act.chapter_id = ?
-            """,
-            (book_id, chapter_id),
-        ).fetchone()
-    if row:
-        mapped_chapter_id = row[0] or ""
-        mapped_source_id = row[1] or ""
-        reason = "primary_source" if mapped_chapter_id else "not_mapped"
-
-    if not mapped_chapter_id or not mapped_source_id:
-        return empty_aggregate_reviews(
-            chapter_id=chapter_id,
-            mapped_chapter_id=mapped_chapter_id,
-            mapped_source_id=mapped_source_id,
-            mapping_reason=reason,
-        )
-
-    # Try to fetch real reviews from the source plugin.
-    try:
-        from app.source_plugins.id_codec import decode_chapter_id
-        _, chapter_url = decode_chapter_id(mapped_chapter_id)
-        if not chapter_url:
-            raise ValueError("could not decode chapter URL")
-
-        has_capability = False
-        plugin = _plugin_scheduler._plugins.get(mapped_source_id)
-        if plugin:
-            caps = plugin.capabilities if isinstance(plugin.capabilities, (list, set)) else []
-            has_capability = "chapter_reviews" in caps
-
-        if not has_capability:
-            return empty_aggregate_reviews(
-                chapter_id=chapter_id,
-                mapped_chapter_id=mapped_chapter_id,
-                mapped_source_id=mapped_source_id,
-                mapping_reason="source_no_review_capability",
-            )
-
-        raw_reviews = await _plugin_scheduler.chapter_reviews(mapped_source_id, chapter_url)
-
-        # Normalize into aggregate contract.
-        paragraphs = raw_reviews.get("paragraphs") or {}
-        chapter_end = raw_reviews.get("chapterEnd") or []
-        chapter_end_hot = raw_reviews.get("chapterEndHot") or []
-        author_reviews = raw_reviews.get("authorReviews") or []
-
-        # Add hot_review_bubble_label to hot reviews.
-        for i, review in enumerate(chapter_end_hot):
-            if isinstance(review, dict) and "bubbleLabel" not in review:
-                review["bubbleLabel"] = hot_review_bubble_label(i + 1)
-
-        payload = {
-            "chapterId": chapter_id,
-            "mappedChapterId": mapped_chapter_id,
-            "mappedSourceId": mapped_source_id,
-            "mappingReason": reason,
-            "chapterEndHot": chapter_end_hot,
-            "chapterEnd": chapter_end,
-            "authorReviews": author_reviews,
-            "hotParagraphReviews": raw_reviews.get("hotParagraphReviews") or [],
-            "paragraphs": paragraphs,
-            "summary": {},
-            "debug": raw_reviews.get("debug") or {"aggregate": True, "reviewSource": reason},
-        }
-        payload["summary"] = summarize_reviews(payload)
-        return payload
-
-    except Exception as exc:
-        result = empty_aggregate_reviews(
-            chapter_id=chapter_id,
-            mapped_chapter_id=mapped_chapter_id,
-            mapped_source_id=mapped_source_id,
-            mapping_reason=f"fetch_error: {exc}",
-        )
-        result["debug"]["error"] = str(exc)
-        return result
 
 
 # ---- Shared Library / Users ----
@@ -2394,10 +2213,6 @@ def list_library_books(request: Request, keyword: str = ""):
 @console_route("get", "/library-books/{book_id}/summary")
 def get_library_book_summary(request: Request, book_id: str):
     user = auth_service.require_user(request)
-    if _shared_book_storage_read_mode() == "legacy":
-        payload = _load_legacy_library_book_summary(book_id)
-        payload["mode"] = "legacy"
-        return payload
     payload = _load_shared_library_book_summary(book_id, admin_view=_is_admin_role(user))
     payload["mode"] = "shared"
     return payload
@@ -2406,10 +2221,6 @@ def get_library_book_summary(request: Request, book_id: str):
 @console_route("get", "/library-books/{book_id}")
 def get_library_book_admin(request: Request, book_id: str):
     auth_service.require_admin(request)
-    if _shared_book_storage_read_mode() == "legacy":
-        payload = _load_legacy_library_book_summary(book_id)
-        payload["mode"] = "legacy"
-        return payload
     payload = _load_shared_library_book_summary(book_id, admin_view=True)
     payload["mode"] = "shared"
     return payload
@@ -2425,16 +2236,6 @@ def list_library_book_chapters_admin(
     keyword: str = "",
 ):
     user = auth_service.require_user(request)
-    if _shared_book_storage_read_mode() == "legacy":
-        payload = _list_legacy_library_book_chapters(
-            book_id,
-            page=page,
-            pageSize=pageSize,
-            status=status,
-            keyword=keyword,
-        )
-        payload["mode"] = "legacy"
-        return payload
     payload = _list_shared_library_book_chapters(
         book_id,
         page=page,
@@ -2460,6 +2261,12 @@ def get_library_book_chapter_progress(request: Request, book_id: str, chapter_id
     if payload.get("found", True) and isinstance(payload.get("traceSummary"), dict):
         payload["traceSummary"] = _sanitize_trace_summary(payload["traceSummary"])
     return payload
+
+
+@console_route("post", "/library-books/{book_id}/chapters/{chapter_id}/process")
+def process_library_book_chapter(request: Request, book_id: str, chapter_id: str):
+    auth_service.require_admin(request)
+    return _reprocess_library_book_chapter(book_id, chapter_id)
 
 
 @console_route("post", "/library-books/{book_id}/pause")
@@ -2528,11 +2335,7 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
         if "primarySourceMode" in payload:
             settings["primarySourceMode"] = str(payload["primarySourceMode"] or "official")
             policy_changed = True
-        if "sourcePriorityMode" in payload:
-            settings["sourcePriorityMode"] = str(payload["sourcePriorityMode"] or "auto")
-            policy_changed = True
-        if "sourcePriority" in payload and isinstance(payload["sourcePriority"], list):
-            settings["sourcePriority"] = [str(x) for x in payload["sourcePriority"]]
+        if _apply_book_source_priority_settings(settings, payload):
             policy_changed = True
         if "autoArchiveOnComplete" in payload:
             auto_archive = bool(payload["autoArchiveOnComplete"])
@@ -2606,10 +2409,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
             settings["aiPurifyEnabled"] = bool(payload["aiPurifyEnabled"])
         if "primarySourceMode" in payload:
             settings["primarySourceMode"] = str(payload["primarySourceMode"] or "official")
-        if "sourcePriorityMode" in payload:
-            settings["sourcePriorityMode"] = str(payload["sourcePriorityMode"] or "auto")
-        if "sourcePriority" in payload and isinstance(payload["sourcePriority"], list):
-            settings["sourcePriority"] = [str(x) for x in payload["sourcePriority"]]
+        _apply_book_source_priority_settings(settings, payload)
 
         conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
         conn.execute(
@@ -2641,9 +2441,26 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         )
         conn.commit()
 
-    library_root = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
-    if library_root.exists():
-        shutil.rmtree(library_root, ignore_errors=True)
+    # Clear stale shared chapter files so the bootstrap starts from a clean slate,
+    # while keeping metadata (sourceMap, identity) intact.
+    book = library_books_service.get_book(book_id)
+    if book:
+        storage = library_books_service.shared_book_storage
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        if book_name:
+            shared_dir = storage.shared_book_dir(book_name=book_name, author=author)
+            chapters_dir = shared_dir / "chapters"
+            chapter_index_path = shared_dir / "chapter_index.json"
+            if chapters_dir.exists():
+                shutil.rmtree(chapters_dir, ignore_errors=True)
+            if chapter_index_path.exists():
+                chapter_index_path.unlink()
+
+    # Legacy path cleanup (no longer the active storage location).
+    legacy_dir = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
+    if legacy_dir.exists():
+        shutil.rmtree(legacy_dir, ignore_errors=True)
 
     aggregate_payload = json.loads(aggregate_payload_json or "{}")
     processor = AggregateProcessor()
@@ -2696,6 +2513,7 @@ def list_library_book_processing_logs(
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
+    from app.services.shared_book_runtime import SharedBookProcessLogger
 
     initialize_database(DB_PATH)
     with sqlite3.connect(DB_PATH) as conn:
@@ -2703,7 +2521,7 @@ def list_library_book_processing_logs(
         cur = conn.cursor()
         book = cur.execute(
             """
-            SELECT status, search_visibility_status
+            SELECT status, search_visibility_status, name, author
             FROM aggregate_book_tasks
             WHERE aggregate_book_id = ?
             """,
@@ -2789,10 +2607,86 @@ def list_library_book_processing_logs(
                 }
             )
 
+        current = cur.execute(
+            """
+            SELECT chapter_index, title, status, error, updated_at
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ?
+              AND status IN ('pending', 'error')
+            ORDER BY chapter_index ASC
+            LIMIT 1
+            """,
+            (book_id,),
+        ).fetchone()
+        latest = cur.execute(
+            """
+            SELECT chapter_index, title, status, updated_at
+            FROM aggregate_chapter_tasks
+            WHERE aggregate_book_id = ?
+              AND status IN ('processed', 'fallback')
+            ORDER BY chapter_index DESC
+            LIMIT 1
+            """,
+            (book_id,),
+        ).fetchone()
+
+        recent_events: list[dict[str, Any]] = []
+        latest_event: dict[str, Any] | None = None
+        try:
+            logger = SharedBookProcessLogger(library_books_service.shared_book_storage)
+            raw_events = logger.read(
+                book_name=str(book["name"] or ""),
+                author=str(book["author"] or ""),
+                limit=max(1, min(int(limit or 50), 200)),
+                offset=max(0, int(offset or 0)),
+                newest_first=True,
+            )["items"]
+            recent_events = [_sanitize_library_processing_event(item) for item in raw_events]
+            latest_event = recent_events[0] if recent_events else None
+        except Exception:
+            recent_events = []
+            latest_event = None
+
+        current_step = (
+            "处理失败，等待重试或手动处理"
+            if current and current["status"] == "error"
+            else ("等待处理" if current else "当前没有待处理章节")
+        )
+        current_index = current["chapter_index"] if current else None
+        current_title = current["title"] if current else ""
+        current_status = current["status"] if current else "idle"
+        current_error = current["error"] if current else ""
+        current_updated_at = current["updated_at"] if current else ""
+        if latest_event:
+            current_step = latest_event.get("message") or current_step
+            current_index = latest_event.get("chapterIndex") or current_index
+            current_title = latest_event.get("title") or current_title
+            current_status = latest_event.get("status") or current_status
+            current_error = latest_event.get("error") or current_error
+            current_updated_at = latest_event.get("ts") or current_updated_at
+
         return {
             "bookId": book_id,
             "bookStatus": book["status"],
             "searchVisibilityStatus": book["search_visibility_status"],
+            "current": {
+                "chapterIndex": current_index,
+                "title": current_title,
+                "status": current_status,
+                "step": current_step,
+                "error": current_error,
+                "updatedAt": current_updated_at,
+            },
+            "next": {
+                "chapterIndex": current["chapter_index"] if current else None,
+                "title": current["title"] if current else "",
+            },
+            "latestCompleted": {
+                "chapterIndex": latest["chapter_index"] if latest else None,
+                "title": latest["title"] if latest else "",
+                "status": latest["status"] if latest else "",
+                "updatedAt": latest["updated_at"] if latest else "",
+            },
             "stats": {
                 "total": stats["total"] or 0,
                 "processed": stats["processed"] or 0,
@@ -2802,9 +2696,40 @@ def list_library_book_processing_logs(
                 "failed": stats["failed"] or 0,
             },
             "items": items,
+            "recentEvents": recent_events,
             "limit": limit,
             "offset": offset,
         }
+
+
+@console_route("get", "/library-books/{book_id}/logs/stream")
+async def stream_library_book_logs(request: Request, book_id: str):
+    """SSE stream of shared-book processing logs (tail -f style)."""
+    auth_service.require_admin(request)
+    from app.services.shared_book_runtime import SharedBookProcessLogger
+
+    book = library_books_service.get_book(book_id)
+    if not book:
+        return {"error": "书籍不存在", "bookId": book_id}
+
+    book_name = str(book.get("name", "") or "").strip()
+    author = str(book.get("author", "") or "").strip()
+    storage = library_books_service.shared_book_storage
+    logger = SharedBookProcessLogger(storage)
+
+    async def event_generator():
+        async for record in logger.tail_stream(book_name=book_name, author=author):
+            yield f"data: {json.dumps(record, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @console_route("get", "/users")
@@ -2888,34 +2813,8 @@ def get_progress():
     }
 
 
-# ---- Subscriptions ----
+# ---- Rule Engines ----
 
-@console_route("get", "/source-subscriptions")
-def list_source_subscriptions():
-    return {"subscriptions": [], **_legacy_archived("source_subscriptions")}
-
-
-@console_route("post", "/source-subscriptions")
-def add_source_subscription(payload: dict):
-    return {"saved": False, **_legacy_archived("source_subscriptions")}
-
-
-@console_route("post", "/source-subscriptions/sync-all")
-async def sync_all_source_subscriptions(payload: dict | None = None):
-    return {"synced": False, **_legacy_archived("source_subscriptions")}
-
-
-@console_route("post", "/source-subscriptions/{subscription_id}")
-def update_source_subscription(subscription_id: str, payload: dict):
-    return {"saved": False, "subscriptionId": subscription_id, **_legacy_archived("source_subscriptions")}
-
-
-@console_route("post", "/source-subscriptions/{subscription_id}/sync")
-async def sync_source_subscription(subscription_id: str):
-    return {"synced": False, "subscriptionId": subscription_id, **_legacy_archived("source_subscriptions")}
-
-
-# ---- Rule Audit (legacy) ----
 
 @console_route("get", "/rule-engines")
 def list_rule_engines():
@@ -2932,16 +2831,6 @@ def list_rule_engines():
             for p in plugins.values()
         ]
     }
-
-
-@console_route("get", "/rule-audit")
-def audit_rules(limit: int = 200, offset: int = 0):
-    return {"items": [], "limit": limit, "offset": offset, **_legacy_archived("rule_audit")}
-
-
-@console_route("get", "/sources/{source_id}/rule-audit")
-def audit_source_rule(source_id: str):
-    return {"sourceId": source_id, **_legacy_archived("rule_audit")}
 
 
 # ---- Verification ----
@@ -2979,8 +2868,8 @@ def get_verification():
         "summary": {"passed": passed, "failed": failed, "total": len(items)},
         "items": items,
         "readingLoop": {
-            "source": "/api/legado/source",
-            "search": "/api/legado/search?keyword=凡人修仙传&page=1",
+            "source": "/api/subscribe/legado/source",
+            "search": "/api/subscribe/legado/search?keyword=凡人修仙传&page=1",
             "detail": "/api/legado/book/{book_id}",
             "toc": "/api/legado/book/{book_id}/toc",
             "chapter": "/api/legado/chapter/{chapter_id}",
@@ -3012,6 +2901,39 @@ async def run_verification(payload: dict | None = None):
     passed = sum(1 for item in items if item["pass"])
     failed = len(items) - passed
     return {"summary": {"passed": passed, "failed": failed, "total": len(items)}, "items": items, "archived": False}
+
+
+# ---- Lexicon ----
+
+@console_route("post", "/lexicon/update")
+async def update_lexicon(request: Request):
+    """Download/update the sensitive-word lexicon from the upstream repository."""
+    auth_service.require_admin(request)
+    updater = LexiconUpdater()
+    result = await run_in_threadpool(updater.check_and_update)
+    return {
+        "success": result.success,
+        "fileCount": result.file_count,
+        "wordCount": result.word_count,
+        "commitSha": result.commit_sha,
+        "error": result.error,
+    }
+
+
+@console_route("get", "/lexicon/status")
+async def get_lexicon_status(request: Request):
+    """Return the currently installed sensitive-word lexicon metadata."""
+    auth_service.require_admin(request)
+    meta = LexiconUpdater().load_meta()
+    return {
+        "sourceRepo": meta.source_repo,
+        "branch": meta.branch,
+        "commitSha": meta.commit_sha,
+        "updatedAt": meta.updated_at,
+        "fileCount": meta.file_count,
+        "wordCount": meta.word_count,
+        "lastError": meta.last_error,
+    }
 
 
 # ---- Status (for console dashboard) ----

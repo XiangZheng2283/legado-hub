@@ -13,14 +13,22 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from app.config import BACKEND_ROOT
 from app.core.app_config import AppConfig
 
 logger = logging.getLogger(__name__)
 
 PROCESSING_PLACEHOLDER = "聚合处理中……请先查看其他源或稍后刷新。"
+AI_RUNTIME_ENABLED = False
 WINDOW_CHAPTER_LIMIT = 5
+BACKLOG_CHAPTER_LIMIT = 25
+BACKLOG_RECHECK_MINUTES = 1
 RETRY_DELAYS_MINUTES = [5, 15, 30, 60, 120]
+PREVIEW_RETRY_DELAYS_MINUTES = [30, 60, 120, 240, 480]
+CANDIDATE_SOURCE_CACHE_TTL_SECONDS = 300
+CHAPTER_PARALLELISM_LIMIT = 8
+PER_SOURCE_CONCURRENCY = 2
+WORD_COUNT_TOLERANCE_LOWER = 0.9
+WORD_COUNT_TOLERANCE_UPPER = 1.2
 
 # Default lexicon path relative to backend/ (e.g. backend/data/lexicons/Sensitive-lexicon).
 # The resolve_sensitive_lexicon_path() function handles CWD differences at runtime.
@@ -42,6 +50,7 @@ def resolve_sensitive_lexicon_path(raw_path: str | Path | None) -> Path:
        when the runtime CWD is the repo root or ``backend/``.)
     4. Otherwise resolve against ``BACKEND_ROOT``.
     """
+    from app.config import BACKEND_ROOT
     if not raw_path:
         return (BACKEND_ROOT / DEFAULT_LEXICON_PATH).resolve()
 
@@ -79,9 +88,10 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "sourceCandidateLimit": 6,
     "purifyMode": "conservative",
     "primarySourceMode": "official",
-    "primarySourcePriority": ["qidian_com_web"],  # Ordered list of preferred primary source IDs.
+    "primarySourcePriority": ["qidian_com_app"],  # Ordered list of preferred primary source IDs.
+    "candidateSourcePriority": [],  # Ordered list of third-party source IDs for VIP completion.
     "minSourceScore": 100,
-    "aiEnabled": True,
+    "aiEnabled": False,
     "blockedWordRepair": True,
     "sensitiveLexiconEnabled": True,
     "sensitiveLexiconPath": DEFAULT_LEXICON_PATH,
@@ -89,9 +99,9 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "deviationThreshold": 0.90,
     "promptTemplate": "",
     "systemPrompt": "",
-    "useSharedBookStorage": False,
-    "sharedBookStorageReadMode": "legacy",
-    "sharedBookStorageDualWrite": False,
+    "useSharedBookStorage": True,
+    "sharedBookStorageReadMode": "shared",
+    "sharedBookStorageDualWrite": True,
     "sharedBookCutoverBookIds": [],
     "minReadableChaptersForDiscovery": 50,
     "stage3MaxBacklogPerBook": 0,
@@ -130,25 +140,31 @@ DEFAULT_AI_PROVIDER_CONFIG: dict[str, Any] = {
 
 
 def shared_book_storage_contract(content_workflow: dict[str, Any]) -> dict[str, Any]:
-    """Return normalized shared-book cutover semantics for callers and docs."""
+    """Return normalized shared-book cutover semantics for callers and docs.
+
+    This mirrors the contract documented in the shared-subscription rewrite plan:
+    - ``useSharedBookStorage=false`` keeps the legacy path read/write.
+    - ``useSharedBookStorage=true, dualWrite=true`` is the only rollback-safe
+      migration state.
+    - ``useSharedBookStorage=true, dualWrite=false`` stops legacy writes and
+      makes shared files the source of truth.
+    """
     workflow = _normalize_content_workflow(content_workflow)
     use_shared_storage = workflow["useSharedBookStorage"]
-    configured_dual_write = workflow["sharedBookStorageDualWrite"]
     configured_read_mode = workflow["sharedBookStorageReadMode"]
+    dual_write = workflow["sharedBookStorageDualWrite"]
 
     if not use_shared_storage:
-        dual_write = False
         read_mode = "legacy"
         legacy_write_mode = "read_write"
         shared_write_mode = "disabled"
         shared_read_mode = "disabled"
-        rollback_allowed = True
+        rollback_allowed = False
         rollback_note = (
-            "Legacy behavior is fully restored because shared-book storage is disabled "
-            "before legacy writes are turned off."
+            "Legacy subscription implementation has been removed; shared-book storage is "
+            "the only persistence layer for subscription books."
         )
-    elif configured_dual_write:
-        dual_write = True
+    elif dual_write:
         read_mode = configured_read_mode
         legacy_write_mode = "read_write"
         shared_write_mode = "read_write"
@@ -159,7 +175,6 @@ def shared_book_storage_contract(content_workflow: dict[str, Any]) -> dict[str, 
             "shared-book reads and writes while keeping legacy behavior."
         )
     else:
-        dual_write = False
         read_mode = configured_read_mode
         legacy_write_mode = "read_only"
         shared_write_mode = "read_write"
@@ -181,7 +196,7 @@ def shared_book_storage_contract(content_workflow: dict[str, Any]) -> dict[str, 
             "shared": ["shared"],
             "dual_verify": ["legacy", "shared"],
         }
-        api_read_targets = list(read_targets.get(read_mode, ["legacy"]))
+        api_read_targets = list(read_targets.get(read_mode, ["shared"]))
         should_read_legacy = read_mode in {"legacy", "dual_verify"}
         should_read_shared = read_mode in {"shared", "dual_verify"}
         should_compare_reads = read_mode == "dual_verify"
@@ -205,7 +220,10 @@ def shared_book_storage_contract(content_workflow: dict[str, Any]) -> dict[str, 
 
 def runtime_contract() -> dict[str, Any]:
     return {
+        "aiRuntimeEnabled": AI_RUNTIME_ENABLED,
         "windowChapterLimit": WINDOW_CHAPTER_LIMIT,
+        "backlogChapterLimit": BACKLOG_CHAPTER_LIMIT,
+        "backlogRecheckMinutes": BACKLOG_RECHECK_MINUTES,
         "processingPlaceholder": PROCESSING_PLACEHOLDER,
         "retryDelaysMinutes": list(RETRY_DELAYS_MINUTES),
     }
@@ -223,11 +241,16 @@ def _shared_book_dual_write_value(
     *,
     explicit_dual_write: bool,
 ) -> bool:
+    """Return the effective dual-write flag.
+
+    When the operator explicitly set the flag, honor it. Otherwise default to
+    dual-write=true while shared storage is enabled (the rollback-safe migration
+    state) and false when shared storage is disabled.
+    """
+    use_shared = bool(config.get("useSharedBookStorage", False))
     if explicit_dual_write:
         return bool(config.get("sharedBookStorageDualWrite", False))
-    if bool(config.get("useSharedBookStorage", False)):
-        return True
-    return False
+    return use_shared
 
 
 def _normalize_content_workflow(value: Any, *, explicit_dual_write: bool | None = None) -> dict[str, Any]:
@@ -236,9 +259,16 @@ def _normalize_content_workflow(value: Any, *, explicit_dual_write: bool | None 
 
     config["useSharedBookStorage"] = bool(config.get("useSharedBookStorage", False))
 
-    read_mode = str(config.get("sharedBookStorageReadMode", "legacy") or "legacy").strip().lower()
+    # When shared storage is enabled the default read mode is "shared"; when disabled
+    # it falls back to "legacy". Invalid values are normalized to the default for the
+    # current mode.
+    if config["useSharedBookStorage"]:
+        default_read_mode = "shared"
+    else:
+        default_read_mode = "legacy"
+    read_mode = str(config.get("sharedBookStorageReadMode", default_read_mode) or default_read_mode).strip().lower()
     if read_mode not in {"legacy", "shared", "dual_verify"}:
-        read_mode = "legacy"
+        read_mode = default_read_mode
 
     if explicit_dual_write is None:
         explicit_dual_write = "sharedBookStorageDualWrite" in raw
@@ -247,7 +277,10 @@ def _normalize_content_workflow(value: Any, *, explicit_dual_write: bool | None 
         explicit_dual_write=explicit_dual_write,
     )
 
-    if not config["useSharedBookStorage"]:
+    if config["useSharedBookStorage"]:
+        # Keep the configured read mode; dual-write defaults to true unless explicitly false.
+        pass
+    else:
         read_mode = "legacy"
         dual_write = False
 
@@ -281,6 +314,12 @@ def _normalize_content_workflow(value: Any, *, explicit_dual_write: bool | None 
         cooldown_minutes = 30
     config["aiCircuitBreakerCooldownMinutes"] = max(1, cooldown_minutes)
     config["stage3PeakHourSkipEnabled"] = bool(config.get("stage3PeakHourSkipEnabled", False))
+    for key in ("primarySourcePriority", "candidateSourcePriority"):
+        raw_priority = config.get(key, [])
+        if isinstance(raw_priority, list):
+            config[key] = [str(item).strip() for item in raw_priority if str(item).strip()]
+        else:
+            config[key] = []
 
     config["sharedBookStorageReadMode"] = read_mode
     config["sharedBookStorageDualWrite"] = dual_write

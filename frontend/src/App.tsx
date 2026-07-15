@@ -8,7 +8,6 @@ import { Dashboard } from "@/routes/Dashboard"
 import { Plugins } from "@/routes/Plugins"
 import { PluginDetail } from "@/routes/PluginDetail"
 import { SearchJobs } from "@/routes/SearchJobs"
-import { CachePage } from "@/routes/CachePage"
 import { SettingsPage } from "@/routes/SettingsPage"
 import { OfficialSourcesPage } from "@/routes/OfficialSourcesPage"
 import { SubscriptionDiscoveryPage } from "@/routes/SubscriptionDiscoveryPage"
@@ -31,6 +30,14 @@ function ProtectedLayout() {
   return <Outlet />
 }
 
+function AdminOnly() {
+  const { user } = useAuth()
+  if (user?.role !== "admin") {
+    return <Navigate to="/console" replace />
+  }
+  return <Outlet />
+}
+
 function AuthRouter() {
   return (
     <BrowserRouter>
@@ -39,16 +46,19 @@ function AuthRouter() {
         <Route element={<ProtectedLayout />}>
           <Route path="/console" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="plugins" element={<Plugins />} />
-            <Route path="plugins/:pluginId" element={<PluginDetail />} />
-            <Route path="search" element={<SearchJobs />} />
-            <Route path="official-sources" element={<OfficialSourcesPage />} />
-            <Route path="cache" element={<CachePage />} />
-            <Route path="settings" element={<SettingsPage />} />
             <Route path="subscription" element={<SubscriptionDiscoveryPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="library/:bookId" element={<LibraryBookDetailPage />} />
             <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />
+            <Route element={<AdminOnly />}>
+              <Route path="plugins" element={<Plugins />} />
+              <Route path="plugins/:pluginId" element={<PluginDetail />} />
+              <Route path="search" element={<SearchJobs />} />
+              <Route path="official-sources" element={<OfficialSourcesPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="admin/subscription" element={<SubscriptionDiscoveryPage />} />
+              <Route path="admin/library" element={<LibraryPage />} />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/console" replace />} />

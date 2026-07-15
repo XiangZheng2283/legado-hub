@@ -6,19 +6,30 @@ Copyright (c) 2026 moo. All rights reserved.
 from __future__ import annotations
 
 import asyncio
-import sqlite3
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
-from app.config import DB_PATH
+from app.core.app_config import AppConfig
+from app.core.legado_source import generate_legado_source
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.library_books import library_books_service
+from app.services.search_jobs import SearchJobService
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.subscription_search import subscription_search_service
 from app.services.user_auth import auth_service
-from app.storage.db import initialize_database
 
 router = APIRouter(prefix="/api/subscribe")
+
+_TERMINAL_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
+_legado_search_service: SearchJobService | None = None
+
+
+def _get_legado_search_service() -> SearchJobService:
+    global _legado_search_service
+    if _legado_search_service is None:
+        _legado_search_service = SearchJobService()
+    return _legado_search_service
 
 
 @router.post("/search")
@@ -68,7 +79,15 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
         raise HTTPException(status_code=409, detail="该书已入库，不能重复添加")
     book = created["book"]
     processor = AggregateProcessor()
-    processor.enqueue_book(book["aggregateBookId"], created["payload"])
+    initial_next_check = (
+        datetime.now(timezone.utc)
+        + timedelta(minutes=processor.check_interval_minutes(book["aggregateBookId"]))
+    ).isoformat()
+    processor.enqueue_book(
+        book["aggregateBookId"],
+        created["payload"],
+        next_check_time=initial_next_check,
+    )
     scheduler = SharedBookScheduler(processor=processor)
     scheduler.enqueue_initial_subscription(
         book["aggregateBookId"],
@@ -93,8 +112,6 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
             "primarySourceId": book.get("primarySourceId", ""),
             "primarySourceName": book.get("primarySourceName", ""),
             "primaryBookId": book.get("primaryBookId", ""),
-            "primaryBookUrl": book.get("primaryBookUrl", ""),
-            "primaryTocUrl": book.get("primaryTocUrl", ""),
             "supplementSourceConfig": (
                 __import__("json").loads(book.get("settingsJson", "") or "{}").get("supplementSourceConfig", {})
                 if book.get("settingsJson", "")
@@ -136,70 +153,124 @@ def list_my_library(request: Request, keyword: str = ""):
 @router.get("/books/{aggregate_book_id}")
 def get_library_book(request: Request, aggregate_book_id: str):
     auth_service.require_user(request)
-    book = library_books_service.get_book(aggregate_book_id)
-    if not book:
+    detail = library_books_service.get_shared_book_detail(aggregate_book_id)
+    if not detail.get("found"):
         raise HTTPException(status_code=404, detail="书籍不存在")
-    payload = library_books_service.load_payload(aggregate_book_id)
-    with sqlite3.connect(DB_PATH) as conn:
-        sources = conn.execute(
-            """
-            SELECT source_id, source_book_id, source_name, source_book_url, role, score, enabled, last_chapter_title, chapter_count
-            FROM aggregate_book_sources
-            WHERE aggregate_book_id = ?
-            ORDER BY CASE role WHEN 'primary' THEN 0 ELSE 1 END, score DESC, source_id ASC
-            """,
-            (aggregate_book_id,),
-        ).fetchall()
-    source_items = [
-        {
-            "sourceId": row[0],
-            "sourceBookId": row[1],
-            "sourceName": row[2],
-            "sourceBookUrl": row[3],
-            "role": row[4],
-            "score": int(row[5] or 0),
-            "enabled": bool(row[6]),
-            "lastChapterTitle": row[7] or "",
-            "chapterCount": int(row[8] or 0),
-        }
-        for row in sources
-    ]
-    return {"book": book, "payload": payload, "sources": source_items}
+    return detail
 
 
 @router.get("/books/{aggregate_book_id}/chapters")
-def list_library_book_chapters(request: Request, aggregate_book_id: str, limit: int = 200):
+def list_library_book_chapters(
+    request: Request,
+    aggregate_book_id: str,
+    page: int = 1,
+    pageSize: int = 200,
+    status: str = "all",
+):
     auth_service.require_user(request)
-    initialize_database(DB_PATH)
-    with sqlite3.connect(DB_PATH) as conn:
-        rows = conn.execute(
-            """
-            SELECT chapter_id, source_chapter_id, chapter_index, title, status, placeholder,
-                   content_length, content_file_path, processed_content, last_processed_at,
-                   source_word_count, preview_only, primary_source_chapter_url
-            FROM aggregate_chapter_tasks
-            WHERE aggregate_book_id = ?
-            ORDER BY COALESCE(chapter_index, 999999), created_at
-            LIMIT ?
-            """,
-            (aggregate_book_id, max(1, min(int(limit or 200), 1000))),
-        ).fetchall()
-    items = [
-        {
-            "chapterId": row[0],
-            "sourceChapterId": row[1],
-            "chapterIndex": int(row[2] or 0),
-            "title": row[3] or "",
-            "status": row[4] or "pending",
-            "placeholder": bool(row[5]),
-            "contentLength": int(row[6] or 0),
-            "contentFilePath": row[7] or "",
-            "hasContent": bool(row[8]),
-            "processedAt": row[9] or "",
-            "sourceWordCount": int(row[10] or 0),
-            "previewOnly": bool(row[11]),
-            "primarySourceChapterUrl": row[12] or "",
+    return library_books_service.list_shared_chapters(
+        aggregate_book_id,
+        page=page,
+        pageSize=pageSize,
+        status=status,
+    )
+
+
+# ---- Legado virtual source (migrated from /api/legado) ----
+
+@router.get("/legado/source")
+def get_legado_source(request: Request) -> list[dict]:
+    base_api = str(request.base_url).rstrip("/")
+    return generate_legado_source(base_api)
+
+
+@router.get("/legado/search")
+async def legado_search(
+    request: Request,
+    keyword: str = "",
+    page: int = 1,
+    waitMs: int = 120000,
+) -> dict:
+    if not keyword.strip():
+        return {
+            "implemented": True,
+            "keyword": keyword,
+            "page": page,
+            "items": [],
+            "jobId": "",
+            "status": "completed",
+            "liveSearchPending": False,
+            "debug": {"sourceCount": 0},
         }
-        for row in rows
-    ]
-    return {"items": items, "total": len(items)}
+
+    search_service = _get_legado_search_service()
+    base_api = str(request.base_url).rstrip("/")
+    wait_seconds = max(0, min(waitMs, 180000)) / 1000
+
+    job = search_service.create_job(keyword=keyword, page=page, search_mode="source")
+
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + wait_seconds
+    next_poll = loop.time() + 0.5
+    while loop.time() < deadline:
+        session = search_service.get_session(job.job_id)
+        if session and session.status in _TERMINAL_STATUSES:
+            break
+        if loop.time() >= next_poll:
+            next_poll = loop.time() + 0.5
+        await asyncio.sleep(0.1)
+
+    include_official = AppConfig.get().search.official_source_in_normal_search
+    result = search_service.session_snapshot(
+        job.job_id, base_api=base_api, include_official_sources=include_official
+    )
+    if result:
+        result["debug"] = {
+            **(result.get("debug") or {}),
+            "timeoutSeconds": int(wait_seconds),
+        }
+        return result
+
+    return {
+        "implemented": True,
+        "keyword": keyword,
+        "page": page,
+        "items": [],
+        "jobId": job.job_id,
+        "status": "failed",
+        "liveSearchPending": False,
+        "debug": {"timeoutSeconds": int(wait_seconds)},
+    }
+
+
+@router.get("/legado/search/{job_id}")
+async def get_legado_search_status(request: Request, job_id: str) -> dict:
+    search_service = _get_legado_search_service()
+    base_api = str(request.base_url).rstrip("/")
+    include_official = AppConfig.get().search.official_source_in_normal_search
+    result = search_service.session_snapshot(
+        job_id, base_api=base_api, include_official_sources=include_official
+    )
+    if result:
+        return result
+    return {
+        "implemented": True,
+        "jobId": job_id,
+        "status": "unknown",
+        "items": [],
+        "liveSearchPending": False,
+        "debug": {"message": "任务不存在或已过期"},
+    }
+
+
+@router.post("/legado/search/{job_id}/cancel")
+async def cancel_legado_search(job_id: str) -> dict:
+    ok = _get_legado_search_service().cancel_job(job_id)
+    return {"jobId": job_id, "cancelled": ok}
+
+
+@router.get("/legado/explore")
+async def legado_explore(request: Request, sourceId: str = "", groupId: str = "", page: int = 1) -> dict:
+    from app.services.catalog import Catalog
+    catalog = Catalog(base_api=str(request.base_url).rstrip("/"))
+    return await catalog.explore(source_id=sourceId, group_id=groupId, page=page)

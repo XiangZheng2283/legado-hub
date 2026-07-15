@@ -16,6 +16,16 @@ from app.storage.db import initialize_database
 FRONTEND_DIST = config.FRONTEND_DIST_DIR
 
 
+async def _update_lexicon_on_startup() -> None:
+    try:
+        from app.services.lexicon_updater import LexiconUpdater
+
+        await asyncio.to_thread(LexiconUpdater().check_and_update)
+    except Exception:
+        # Startup should never fail because the optional upstream lexicon is unavailable.
+        pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_database()
@@ -63,33 +73,28 @@ async def lifespan(app: FastAPI):
         # Startup should stay resilient even if the probe fails.
         pass
 
-    # Recover library entries from local novel folders on startup.
-    try:
-        from app.services.startup_library_scanner import scan_local_library
-
-        scan_result = scan_local_library()
-        if scan_result.get("recovered") or scan_result.get("chapters"):
-            print(f"Startup library scan: recovered {scan_result['recovered']} books, {scan_result['chapters']} chapters")
-    except Exception:
-        # Startup should not fail because of a scan error.
-        pass
-
     stop_event = asyncio.Event()
     shared_book_scheduler = SharedBookScheduler()
     aggregate_task = asyncio.create_task(shared_book_scheduler.run_forever(stop_event))
     ping_task = asyncio.create_task(SourcePingScheduler().run_forever(stop_event))
+    lexicon_task = asyncio.create_task(_update_lexicon_on_startup())
     try:
         yield
     finally:
         stop_event.set()
         aggregate_task.cancel()
         ping_task.cancel()
+        lexicon_task.cancel()
         try:
             await aggregate_task
         except asyncio.CancelledError:
             pass
         try:
             await ping_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await lexicon_task
         except asyncio.CancelledError:
             pass
 

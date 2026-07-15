@@ -173,9 +173,11 @@ def classify_source_content(
     preview_only_hint: bool = False,
     extra: dict[str, Any] | None = None,
     is_paid: bool = False,
+    is_vip: bool = False,
 ) -> dict[str, Any]:
     """Classify fetched chapter content as ``full`` / ``preview`` / ``empty``.
 
+    基于 is_vip + previewOnly 判断，而非硬编码字数阈值。
     Returns a dict with keys: classification, contentLength, previewText,
     isOfficial, reason.
     """
@@ -206,6 +208,7 @@ def classify_source_content(
     except (TypeError, ValueError):
         source_word_count = 0
 
+    # 1. 显式预览信号 → preview
     if explicit_preview:
         return {
             "classification": "preview",
@@ -217,6 +220,19 @@ def classify_source_content(
             "sourceWordCount": source_word_count,
         }
 
+    # 2. VIP 章且未付费 → preview（官方 VIP 预览）
+    if is_vip and not is_paid:
+        return {
+            "classification": "preview",
+            "contentLength": length,
+            "previewText": preview_text,
+            "isOfficial": is_official,
+            "sourceId": source_id,
+            "reason": "vip_chapter_not_paid",
+            "sourceWordCount": source_word_count,
+        }
+
+    # 3. 内容明显短于官方字数 → preview
     if source_word_count > 0 and length > 0 and length + 80 < source_word_count:
         return {
             "classification": "preview",
@@ -228,25 +244,26 @@ def classify_source_content(
             "sourceWordCount": source_word_count,
         }
 
-    if length >= FULL_CONTENT_MIN_LENGTH:
+    # 4. 极短内容且无任何元数据 → preview（安全网，<40 字几乎不可能是完整章节）
+    if length < PREVIEW_MIN_LENGTH and not source_word_count:
         return {
-            "classification": "full",
+            "classification": "preview",
             "contentLength": length,
             "previewText": preview_text,
             "isOfficial": is_official,
             "sourceId": source_id,
-            "reason": "content_length_sufficient",
+            "reason": "content_too_short_no_metadata",
             "sourceWordCount": source_word_count,
         }
 
-    # Short content — likely a VIP preview.
+    # 5. 有内容 → full（免费章、已付费 VIP、第三方补全的完整正文）
     return {
-        "classification": "preview",
+        "classification": "full",
         "contentLength": length,
         "previewText": preview_text,
         "isOfficial": is_official,
         "sourceId": source_id,
-        "reason": "content_too_short_likely_preview",
+        "reason": "content_present",
         "sourceWordCount": source_word_count,
     }
 

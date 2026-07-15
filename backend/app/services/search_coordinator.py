@@ -542,6 +542,13 @@ class SearchCoordinator:
         self._sessions[job.job_id] = session
 
         # Always start live search in the background.
+        self._emit_event(
+            job,
+            {
+                "type": "queued",
+                "sourceCount": len(session.sources),
+            },
+        )
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -895,6 +902,15 @@ class SearchCoordinator:
         plugins = self.scheduler._enabled_plugins()
         plugins = self.scheduler._search_priority_plugins(plugins)
         plugins = [plugin for plugin in plugins if not plugin.metadata.is_official_source()]
+        try:
+            preferred = AppConfig.get().aggregate.content_workflow.get("candidateSourcePriority") or []
+        except Exception:
+            preferred = []
+        preferred = [str(source_id).strip() for source_id in preferred if str(source_id).strip()]
+        if preferred:
+            order = {source_id: index for index, source_id in enumerate(preferred)}
+            plugins = [plugin for plugin in plugins if plugin.metadata.id in order]
+            plugins.sort(key=lambda plugin: order.get(plugin.metadata.id, 9999))
         if limit is not None:
             plugins = plugins[: max(1, int(limit))]
         return [plugin.metadata.id for plugin in plugins]

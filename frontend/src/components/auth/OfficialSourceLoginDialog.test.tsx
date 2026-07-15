@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, waitFor, fireEvent } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { OfficialSourceLoginDialog } from "./OfficialSourceLoginDialog"
 import { api } from "@/lib/api"
@@ -284,7 +284,7 @@ describe("OfficialSourceLoginDialog", () => {
     })
   })
 
-  it("accepts pending phone login confirmation after verify", async () => {
+  it("rejects pending phone login confirmation after verify", async () => {
     const user = userEvent.setup()
     const onSuccess = vi.fn()
 
@@ -321,7 +321,41 @@ describe("OfficialSourceLoginDialog", () => {
     await user.click(screen.getByRole("button", { name: /^登录$/ }))
 
     await waitFor(() => {
-      expect(onSuccess).toHaveBeenCalled()
+      expect(screen.getByText(/Cookie 已保存，但用户中心未识别登录态/)).toBeInTheDocument()
     })
+    expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it("rejects authenticated login without explicit identity", async () => {
+    const user = userEvent.setup()
+    const onSuccess = vi.fn()
+
+    ;(api.loginCapabilities as any).mockResolvedValue({
+      pluginId: "qidian_com_app",
+      methods: ["cookie"],
+      defaultMethod: "cookie",
+      privateFeatures: { phoneAuth: true, cookieAuth: true, reviews: false },
+      hasPrivatePackage: true,
+    })
+
+    ;(api.loginCookieVerify as any).mockResolvedValue({
+      ok: true,
+      authenticated: true,
+      message: "Cookie 结构有效，但未返回用户名或登录手机号",
+    })
+
+    renderDialog({ pluginId: "qidian_com_app", onSuccess })
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: /Cookie/i })).toBeInTheDocument()
+    })
+
+    await user.type(screen.getByPlaceholderText(/粘贴完整的 Cookie 字符串/), "ywguid=abc; ywkey=def")
+    await user.click(screen.getByRole("button", { name: /验证登录/ }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Cookie 结构有效/)).toBeInTheDocument()
+    })
+    expect(onSuccess).not.toHaveBeenCalled()
   })
 })

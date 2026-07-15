@@ -2,14 +2,19 @@
 
 import asyncio
 import json
+import re
 import sqlite3
-from datetime import timedelta
+from datetime import datetime, timedelta
+from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_settings import PROCESSING_PLACEHOLDER
+from app.services.catalog import Catalog
+from app.services.novel_file_cache import NovelFileCache
 from app.services.shared_book_runtime import SharedBookRuntimeStore
 from app.services.shared_book_storage import SharedBookStorage
 from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
@@ -35,6 +40,8 @@ def _setup_db(tmp_path, *, ai_enabled=True, purify="conservative", ai_provider=N
         "aggregateCheckIntervalMinutes": 10,
         "purifyMode": purify,
         "aiEnabled": ai_enabled,
+        "useSharedBookStorage": True,
+        "sharedBookStorageDualWrite": False,
     }
     config_data: dict[str, Any] = {"aggregate": {"contentWorkflow": workflow}}
     if ai_provider is not None:
@@ -86,29 +93,228 @@ def _insert_chapter(db_path, book_id, index=1, *, status="pending"):
     return ch_id
 
 
+def test_read_chapter_content_skips_garbled_local_file(tmp_path):
+    processor = AggregateProcessor(db_path=tmp_path / "test.db")
+    normal = tmp_path / "normal.md"
+    garbled = tmp_path / "garbled.md"
+    normal.write_text("# 第一章\n\n这是正常中文正文。\n", encoding="utf-8")
+    garbled.write_text("# 第一章\n\njF9@\ufffd\ufffd\ufffd\u0011\u0000\ufffd" * 20, encoding="utf-8")
+
+    assert processor._read_chapter_content_from_file(str(normal)) == "这是正常中文正文。"
+    assert processor._read_chapter_content_from_file(str(garbled)) == ""
+
+
+def test_garbled_content_is_not_persisted_or_reused(tmp_path):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    garbled = "jF9@\ufffd\ufffd\ufffd\u0011\u0000\ufffd" * 20
+
+    with pytest.raises(ValueError, match="garbled"):
+        processor._save_source_snapshot(
+            aggregate_book_id="book-1",
+            chapter_index=1,
+            source_id="official_src",
+            source_book_id="source-book-1",
+            source_chapter_id="source-chapter-1",
+            title="第一章",
+            clean_content=garbled,
+            classification="unknown",
+        )
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO aggregate_source_snapshots
+               (aggregate_book_id, chapter_index, source_id, clean_content, content_hash)
+               VALUES (?, ?, ?, ?, ?)""",
+            ("book-1", 1, "official_src", garbled, "legacy-bad-hash"),
+        )
+        conn.commit()
+
+    assert processor._load_source_snapshot_content(
+        aggregate_book_id="book-1",
+        chapter_index=1,
+        source_id="official_src",
+    ) == ""
+
+    with pytest.raises(ValueError, match="garbled"):
+        processor._write_chapter_result(
+            chapter_id="book-1:ch1",
+            aggregate_book_id="book-1",
+            title="第一章",
+            chapter_index=1,
+            status="processed",
+            content=garbled,
+            alignment_json={},
+        )
+
+    with sqlite3.connect(db_path) as conn, pytest.raises(ValueError, match="garbled"):
+        NovelFileCache(root=tmp_path / "cache").write_chapter(
+            conn=conn,
+            chapter_id="official_src:chapter-1",
+            source_id="official_src",
+            chapter_url="https://example.com/chapter/1",
+            title="第一章",
+            content=garbled,
+        )
+
+
+def test_catalog_rejects_garbled_plugin_chapter():
+    garbled = "jF9@\ufffd\ufffd\ufffd\u0011\u0000\ufffd" * 20
+
+    class FakeScheduler:
+        async def chapter(self, source_id, chapter_url):
+            return {"title": "第一章", "content": garbled, "debug": {}}
+
+    class FakeCache:
+        def get_chapter(self, chapter_id):
+            return None
+
+        def set_chapter(self, *args, **kwargs):
+            raise AssertionError("garbled content must not enter chapter_cache")
+
+    catalog = object.__new__(Catalog)
+    catalog.scheduler = FakeScheduler()
+    catalog.cache = FakeCache()
+    chapter_id = encode_chapter_id("official_src", "https://example.com/chapter/1")
+
+    result = asyncio.run(catalog.chapter(chapter_id))
+
+    assert result["content"] == ""
+    assert result["debug"]["error"] == "garbled chapter content"
+
+
+def test_catalog_preserves_paid_chapter_flags():
+    cached: list[dict] = []
+
+    class FakeScheduler:
+        async def chapter(self, source_id, chapter_url):
+            return {
+                "title": "付费章节",
+                "content": "付费章节预览",
+                "authRequired": True,
+                "isPaid": True,
+                "extra": {"previewOnly": True},
+                "debug": {},
+            }
+
+    class FakeCache:
+        def get_chapter(self, chapter_id):
+            return None
+
+        def set_chapter(self, chapter_id, source_id, chapter_url, data):
+            cached.append(data)
+
+    catalog = object.__new__(Catalog)
+    catalog.scheduler = FakeScheduler()
+    catalog.cache = FakeCache()
+    chapter_id = encode_chapter_id("official_src", "https://example.com/chapter/paid")
+
+    result = asyncio.run(catalog.chapter(chapter_id))
+
+    assert result["authRequired"] is True
+    assert result["isPaid"] is True
+    assert cached[0]["authRequired"] is True
+    assert cached[0]["isPaid"] is True
+
+
+def test_candidate_sources_respect_source_candidate_limit(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    monkeypatch.setattr(
+        processor,
+        "_book_workflow_settings",
+        lambda _book_id: {"sourceCandidateLimit": 2},
+    )
+
+    class FakeSourceMapService:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def load_current_source_map_refs(self, *args, **kwargs):
+            return [
+                {"sourceId": "s1", "bookId": "s1:b", "score": 100},
+                {"sourceId": "s2", "bookId": "s2:b", "score": 90},
+                {"sourceId": "s3", "bookId": "s3:b", "score": 80},
+            ]
+
+    monkeypatch.setattr(
+        "app.services.shared_book_source_map.SharedBookSourceMapService",
+        FakeSourceMapService,
+    )
+
+    candidates = processor._candidate_sources_from_payload({}, "official", "book-1")
+
+    assert [item["sourceId"] for item in candidates] == ["s1", "s2"]
+
+
+def test_candidate_sources_respect_candidate_source_priority(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    monkeypatch.setattr(
+        processor,
+        "_book_workflow_settings",
+        lambda _book_id: {
+            "sourceCandidateLimit": 10,
+            "candidateSourcePriority": ["s3", "s1"],
+        },
+    )
+
+    class FakeSourceMapService:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def load_current_source_map_refs(self, *args, **kwargs):
+            return [
+                {"sourceId": "s1", "bookId": "s1:b", "score": 100},
+                {"sourceId": "s2", "bookId": "s2:b", "score": 90},
+                {"sourceId": "s3", "bookId": "s3:b", "score": 80},
+            ]
+
+    monkeypatch.setattr(
+        "app.services.shared_book_source_map.SharedBookSourceMapService",
+        FakeSourceMapService,
+    )
+
+    candidates = processor._candidate_sources_from_payload({}, "official", "book-1")
+
+    assert [item["sourceId"] for item in candidates] == ["s3", "s1"]
+
+
 class _FakeCatalog:
     """Returns different content depending on source_chapter_id prefix."""
 
     def __init__(self, *, official_content="", candidate_content="",
-                 official_fail=False, candidate_fail=False):
+                 official_fail=False, candidate_fail=False,
+                 official_extra=None, candidate_extra=None):
         self._official = official_content
         self._candidate = candidate_content
         self._official_fail = official_fail
         self._candidate_fail = candidate_fail
+        self._official_extra = official_extra
+        self._candidate_extra = candidate_extra
 
     async def chapter(self, chapter_id: str) -> dict:
         if chapter_id.startswith("official_src"):
             if self._official_fail:
                 raise RuntimeError("official source failed")
-            return {"content": self._official, "title": "第1章"}
+            result = {"content": self._official, "title": "第1章"}
+            if self._official_extra is not None:
+                result["extra"] = self._official_extra
+            return result
         if chapter_id.startswith("candidate_src"):
             if self._candidate_fail:
                 raise RuntimeError("candidate source failed")
-            return {"content": self._candidate, "title": "第1章"}
+            result = {"content": self._candidate, "title": "第1章"}
+            if self._candidate_extra is not None:
+                result["extra"] = self._candidate_extra
+            return result
         # Fallback: try official
         if self._official_fail:
             raise RuntimeError("source fetch failed")
-        return {"content": self._official, "title": "第1章"}
+        result = {"content": self._official, "title": "第1章"}
+        if self._official_extra is not None:
+            result["extra"] = self._official_extra
+        return result
 
     async def toc(self, book_id: str) -> dict:
         """Return a fake TOC with one chapter per book."""
@@ -171,7 +377,7 @@ def _chapter_dict(ch_id, book_id, index=1):
 def _get_chapter_row(db_path, ch_id):
     with sqlite3.connect(db_path) as conn:
         row = conn.execute(
-            "SELECT status, processed_content, source_alignment_json, fallback_source_id, last_error_code "
+            "SELECT status, content_file_path, source_alignment_json, fallback_source_id, last_error_code, preview_only "
             "FROM aggregate_chapter_tasks WHERE chapter_id = ?", (ch_id,),
         ).fetchone()
     if not row:
@@ -181,8 +387,24 @@ def _get_chapter_row(db_path, ch_id):
         alignment = json.loads(row[2] or "{}")
     except Exception:
         pass
-    return {"status": row[0], "content": row[1] or "", "alignment": alignment,
-            "fallbackSourceId": row[3] or "", "lastErrorCode": row[4] or ""}
+    content = ""
+    if row[1]:
+        try:
+            content = Path(row[1]).read_text(encoding="utf-8")
+            TRACE_RE = re.compile(
+                r"(?:\n|^)(?:<!--\s*)?LEGADOHUB_TRACE_BEGIN\s*(?:```yaml\s*)?\n.*?\n(?:\s*```\s*)?LEGADOHUB_TRACE_END(?:\s*-->)?\s*$",
+                re.DOTALL,
+            )
+            content = TRACE_RE.sub("", content).strip()
+            if content.startswith("# "):
+                lines = content.split("\n", 1)
+                content = lines[1] if len(lines) > 1 else ""
+            content = content.strip()
+        except Exception:
+            pass
+    return {"status": row[0], "content": content, "alignment": alignment,
+            "fallbackSourceId": row[3] or "", "lastErrorCode": row[4] or "",
+            "previewOnly": bool(row[5])}
 
 
 def _get_policy_snapshot(db_path, ch_id):
@@ -298,6 +520,74 @@ def test_ensure_candidate_sources_discovers_and_persists_third_party_matches(tmp
     assert [src["sourceId"] for src in persisted["sources"]] == ["official_src", "candidate_src"]
 
 
+def test_processing_enabled_does_not_use_process_aggregate_on_read_for_background_subscription(tmp_path):
+    """Disabling reading-triggered aggregation must not disable shared-subscription background jobs."""
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+
+    config_dir = tmp_path / "config"
+    config_path = config_dir / "app_config.json"
+    config_data = json.loads(config_path.read_text(encoding="utf-8"))
+    config_data["aggregate"]["contentWorkflow"]["processAggregateOnRead"] = False
+    config_path.write_text(json.dumps(config_data, ensure_ascii=False), encoding="utf-8")
+
+    import app.core.app_config as _app_config_module
+
+    _app_config_module.AppConfig.reset()
+
+    processor = AggregateProcessor(db_path)
+    assert processor.processing_enabled() is True
+    assert processor.processing_enabled("book:any") is True
+
+
+def test_processing_enabled_respects_auto_aggregate_for_background_subscription(tmp_path):
+    """The real background subscription kill switch remains autoAggregate."""
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+
+    config_dir = tmp_path / "config"
+    config_path = config_dir / "app_config.json"
+    config_data = json.loads(config_path.read_text(encoding="utf-8"))
+    config_data["aggregate"]["contentWorkflow"]["autoAggregate"] = False
+    config_path.write_text(json.dumps(config_data, ensure_ascii=False), encoding="utf-8")
+
+    import app.core.app_config as _app_config_module
+
+    _app_config_module.AppConfig.reset()
+
+    processor = AggregateProcessor(db_path)
+    assert processor.processing_enabled() is False
+    assert processor.processing_enabled("book:any") is False
+
+
+def test_run_due_once_still_runs_when_process_aggregate_on_read_disabled(tmp_path, monkeypatch):
+    """Background subscription scheduler must still run when only reading-trigger aggregation is disabled."""
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:due_processes"
+    _insert_book(db_path, book_id)
+
+    config_dir = tmp_path / "config"
+    config_path = config_dir / "app_config.json"
+    config_data = json.loads(config_path.read_text(encoding="utf-8"))
+    config_data["aggregate"]["contentWorkflow"]["processAggregateOnRead"] = False
+    config_path.write_text(json.dumps(config_data, ensure_ascii=False), encoding="utf-8")
+
+    import app.core.app_config as _app_config_module
+
+    _app_config_module.AppConfig.reset()
+
+    processor = AggregateProcessor(db_path)
+
+    async def _fake_run_book_task(aggregate_book_id: str):
+        return {"bookId": aggregate_book_id, "success": True}
+
+    monkeypatch.setattr(processor, "run_book_task", _fake_run_book_task)
+
+    result = asyncio.run(processor.run_due_once(limit=5))
+
+    assert result["enabled"] is True
+    assert result["dueBooks"] == 1
+    assert result["processedBooks"] == 1
+
+
 # ── Test A: preview must NOT be marked processed ─────────────────────────────
 
 
@@ -326,7 +616,7 @@ def test_preview_content_is_not_marked_processed_without_candidate(tmp_path):
 
 
 def test_fallback_chapter_response_returns_fallback_content(tmp_path):
-    """A chapter with status='fallback' and processed_content must return that content."""
+    """A chapter with status='fallback' and content_file_path must return file content."""
     from app.services.aggregate_virtual_source import (
         make_aggregate_chapter_url, VIRTUAL_SOURCE_ID,
     )
@@ -337,11 +627,22 @@ def test_fallback_chapter_response_returns_fallback_content(tmp_path):
     _insert_book(db_path, book_id)
     ch_id = _insert_chapter(db_path, book_id)
 
+    storage = SharedBookStorage(root=db_path.parent / "library")
+    md_path = storage.chapter_markdown_path(
+        book_name="测试书", author="作者", chapter_index=1, title="第1章",
+    )
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+    trace_block = storage.render_trace_block({"chapterId": ch_id, "status": "fallback"})
+    md_content = storage.render_chapter_markdown(
+        title="第1章", body="这是 fallback 正文内容", trace_payload={"chapterId": ch_id, "status": "fallback"},
+    )
+    md_path.write_text(md_content, encoding="utf-8")
+
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             "UPDATE aggregate_chapter_tasks SET status='fallback', "
-            "processed_content=? WHERE chapter_id=?",
-            ("这是 fallback 正文内容", ch_id),
+            "content_file_path=? WHERE chapter_id=?",
+            (str(md_path), ch_id),
         )
         conn.commit()
 
@@ -378,69 +679,6 @@ def test_third_party_primary_not_marked_as_official(tmp_path):
 
 
 # ── Test D: preview + aligned candidate calls AI service ─────────────────────
-
-
-def test_preview_with_aligned_candidate_calls_ai_service(tmp_path):
-    """Official preview + aligned candidate → AI service called → processed."""
-    db_path = _setup_db(tmp_path, ai_enabled=False)
-    book_id = "book:preview_ai"
-    _insert_book(db_path, book_id)
-    ch_id = _insert_chapter(db_path, book_id)
-
-    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    # Candidate content contains the preview text + extended content.
-    candidate = ("【小说网】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-
-    catalog = _FakeCatalog(official_content=preview, candidate_content=candidate)
-    # AI output must be similar to candidate to pass deviation check.
-    ai_output = ("少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-    ai_service = _FakeAIService(content=ai_output)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    processor.ai_aggregate_enabled = lambda aggregate_book_id="": True
-
-    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
-
-    row = _get_chapter_row(db_path, ch_id)
-    assert row["status"] == "processed"
-    assert row["content"] == ai_output
-    assert len(ai_service.calls) == 1
-    # Aligned candidate content is treated as third-party primary and processed by
-    # process_third_party_primary in the shared-subscription refactor.
-    assert ai_service.calls[0]["method"] == "third_party_primary"
-    assert row["alignment"]["selectedContentSource"] == "candidate"
-
-
-# ── Test E: preview + aligned candidate + AI failure → candidate fallback ────
-
-
-def test_preview_with_aligned_candidate_ai_failure_writes_candidate_fallback(tmp_path):
-    """AI failure after alignment → fallback to candidate content, not placeholder."""
-    db_path = _setup_db(tmp_path, ai_enabled=False)
-    book_id = "book:ai_fail_fallback"
-    _insert_book(db_path, book_id)
-    ch_id = _insert_chapter(db_path, book_id)
-
-    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    candidate = ("【小说网】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-
-    catalog = _FakeCatalog(official_content=preview, candidate_content=candidate)
-    ai_service = _FakeAIService(fail=True, error=RuntimeError("AI provider failed"))
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    processor.ai_aggregate_enabled = lambda aggregate_book_id="": True
-
-    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
-
-    row = _get_chapter_row(db_path, ch_id)
-    assert row["status"] == "fallback", f"Expected 'fallback', got '{row['status']}'"
-    assert row["content"] != PROCESSING_PLACEHOLDER, "Must not be placeholder"
-    assert len(row["content"]) > len(preview), "Fallback should be candidate content, not preview"
-    assert row["fallbackSourceId"] != "", "fallback_source_id must be set"
-
-
-# ── _is_official_source ─────────────────────────────────────────────────────
 
 
 def test_is_official_source_returns_false_for_unknown(tmp_path, monkeypatch):
@@ -506,145 +744,6 @@ def test_toc_cache_cleared_between_books(tmp_path):
 # ── previous chapter context ─────────────────────────────────────────────────
 
 
-def test_load_previous_chapters_context(tmp_path):
-    """_load_previous_chapters_context returns excerpts of earlier processed chapters."""
-    db_path = _setup_db(tmp_path)
-    book_id = "book:prev_ctx"
-    _insert_book(db_path, book_id)
-    for i in range(1, 5):
-        ch_id = _insert_chapter(db_path, book_id, index=i)
-        with sqlite3.connect(db_path) as conn:
-            conn.execute(
-                "UPDATE aggregate_chapter_tasks SET status='processed', "
-                "processed_content=? WHERE chapter_id=?",
-                (f"第{i}章的正文内容，" * 50, ch_id),
-            )
-            conn.commit()
-
-    processor = AggregateProcessor(db_path)
-    ctx = processor._load_previous_chapters_context(book_id, before_index=4, count=2)
-
-    # Should contain chapters 2 and 3 (the 2 before index 4).
-    assert "第2章" in ctx or "第3章" in ctx
-    assert len(ctx) > 0
-
-
-def test_load_previous_chapters_context_empty_when_none(tmp_path):
-    """No previous chapters → empty string."""
-    db_path = _setup_db(tmp_path)
-    book_id = "book:no_prev"
-    _insert_book(db_path, book_id)
-    _insert_chapter(db_path, book_id, index=1)
-
-    processor = AggregateProcessor(db_path)
-    ctx = processor._load_previous_chapters_context(book_id, before_index=1)
-    assert ctx == ""
-
-
-def test_previous_context_passed_to_ai_service(tmp_path):
-    """When previous chapters exist, previous_context should be passed to AI service."""
-    db_path = _setup_db(tmp_path)
-    book_id = "book:ctx_pass"
-    _insert_book(db_path, book_id)
-    # Insert a processed chapter 1.
-    ch1 = _insert_chapter(db_path, book_id, index=1)
-    with sqlite3.connect(db_path) as conn:
-        conn.execute(
-            "UPDATE aggregate_chapter_tasks SET status='processed', "
-            "processed_content=? WHERE chapter_id=?",
-            ("第一章已处理的正文内容，" * 30, ch1),
-        )
-        conn.commit()
-    # Insert chapter 2 as pending.
-    ch2 = _insert_chapter(db_path, book_id, index=2)
-
-    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    from app.source_plugins.id_codec import encode_chapter_id as enc
-    candidate_ch2_id = enc("candidate_src", "https://candidate.example/ch2.html")
-    candidate = ("【小说网】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-
-    class TwoChapterCatalog(_FakeCatalog):
-        async def toc(self, book_id):
-            return {"chapters": [
-                {"chapterId": enc("candidate_src", "https://candidate.example/ch1.html"), "title": "第1章", "index": 1},
-                {"chapterId": candidate_ch2_id, "title": "第2章", "index": 2},
-            ]}
-        async def chapter(self, chapter_id):
-            if chapter_id == candidate_ch2_id:
-                return {"content": candidate, "title": "第2章"}
-            return await super().chapter(chapter_id)
-
-    catalog = TwoChapterCatalog(official_content=preview, candidate_content=candidate)
-    ai_service = _FakeAIService(content="AI 聚合正文")
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-
-    asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch2, book_id, index=2)))
-
-    assert len(ai_service.calls) == 1
-    call = ai_service.calls[0]
-    assert "previous_context" in call
-    assert len(call["previous_context"]) > 0
-
-
-# ── deviation score integration ──────────────────────────────────────────────
-
-
-@pytest.mark.skip(reason="Deviation-based fallback check was removed in the shared-subscription refactor.")
-def test_high_deviation_reverts_to_fallback(tmp_path):
-    """AI output that deviates too much from candidate → fallback instead of processed."""
-    db_path = _setup_db(tmp_path)
-    book_id = "book:deviation"
-    _insert_book(db_path, book_id)
-    ch_id = _insert_chapter(db_path, book_id)
-
-    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    candidate = ("【小说网】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-    # AI returns completely different content → deviation < threshold.
-    catalog = _FakeCatalog(official_content=preview, candidate_content=candidate)
-    ai_service = _FakeAIService(content="这是一段和原文完全无关的输出内容，偏离度极高。" * 10)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-
-    asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
-
-    row = _get_chapter_row(db_path, ch_id)
-    assert row["status"] == "fallback", \
-        f"High deviation should be fallback, got '{row['status']}'"
-    assert row["content"] != "这是一段和原文完全无关的输出内容", \
-        "Fallback should be candidate content, not the bad AI output"
-
-
-def test_low_deviation_keeps_processed(tmp_path):
-    """AI output within threshold → processed with deviation_score written."""
-    db_path = _setup_db(tmp_path)
-    book_id = "book:dev_ok"
-    _insert_book(db_path, book_id)
-    ch_id = _insert_chapter(db_path, book_id)
-
-    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    # AI returns content very similar to candidate → high deviation score (close to 1.0).
-    candidate = ("【小说网】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-    ai_output = ("少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-
-    catalog = _FakeCatalog(official_content=preview, candidate_content=candidate)
-    ai_service = _FakeAIService(content=ai_output)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-
-    asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
-
-    with sqlite3.connect(db_path) as conn:
-        row = conn.execute(
-            "SELECT status, deviation_score, ai_model FROM aggregate_chapter_tasks WHERE chapter_id=?",
-            (ch_id,),
-        ).fetchone()
-    assert row[0] == "processed"
-    assert row[1] > 0.0  # deviation_score is written
-    assert row[2] == "fake-model"
-
-
 def test_ai_output_deviation_error_code():
     from app.ai.client import AIProviderHTTPError
     from app.services.aggregate_processor import classify_error
@@ -670,8 +769,7 @@ def _patch_ai_provider_config(monkeypatch, config: dict | None):
     monkeypatch.setattr(AggregateSettingsRepository, "ai_provider_config", _fake)
 
 
-def test_default_processor_builds_ai_service_when_provider_configured(tmp_path, monkeypatch):
-    """With complete aiProviderConfig and aiEnabled=True, _get_ai_service() should return AggregateAIService."""
+def test_default_processor_does_not_build_ai_service_while_runtime_disabled(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path)
     _patch_ai_provider_config(monkeypatch, {
         "baseUrl": "https://api.example.com/v1",
@@ -682,146 +780,7 @@ def test_default_processor_builds_ai_service_when_provider_configured(tmp_path, 
 
     service = processor._get_ai_service()
 
-    assert service is not None
-    assert type(service).__name__ == "AggregateAIService"
-    # Cached on second call.
-    assert processor._get_ai_service() is service
-
-
-def test_default_processor_builds_ai_service_with_lexicon(tmp_path, monkeypatch):
-    """When sensitiveLexiconEnabled=True and a valid lexicon path is set, the default
-    AggregateAIService built by _get_ai_service() must hold a non-None lexicon."""
-    import logging
-
-    db_path = _setup_db(tmp_path)
-    _patch_ai_provider_config(monkeypatch, {
-        "baseUrl": "https://api.example.com/v1",
-        "apiKey": "sk-test",
-        "model": "mimo-v2.5",
-    })
-
-    lex_dir = tmp_path / "lexicon"
-    lex_dir.mkdir()
-    (lex_dir / "words.txt").write_text("血腥\n暴力\n杀意\n", encoding="utf-8")
-
-    monkeypatch.setattr(
-        "app.services.aggregate_settings.AggregateSettingsRepository.content_workflow",
-        lambda self: {
-            "aiEnabled": True,
-            "autoAggregate": True,
-            "processAggregateOnRead": True,
-            "aggregateCheckIntervalMinutes": 10,
-            "purifyMode": "conservative",
-            "sensitiveLexiconEnabled": True,
-            "sensitiveLexiconPath": str(lex_dir),
-        },
-    )
-
-    processor = AggregateProcessor(db_path)
-    service = processor._get_ai_service()
-
-    assert service is not None
-    assert type(service).__name__ == "AggregateAIService"
-    assert service._lexicon is not None, "AggregateAIService should hold a loaded lexicon"
-    assert service._lexicon.word_count >= 2
-
-
-def test_default_processor_builds_ai_service_when_lexicon_path_missing(tmp_path, monkeypatch, caplog):
-    """A missing/broken lexicon path must NOT block AI service creation, but it should
-    be logged so the failure is diagnosable."""
-    import logging
-
-    db_path = _setup_db(tmp_path)
-    _patch_ai_provider_config(monkeypatch, {
-        "baseUrl": "https://api.example.com/v1",
-        "apiKey": "sk-test",
-        "model": "mimo-v2.5",
-    })
-
-    missing_path = tmp_path / "does_not_exist" / "lexicon.txt"
-
-    monkeypatch.setattr(
-        "app.services.aggregate_settings.AggregateSettingsRepository.content_workflow",
-        lambda self: {
-            "aiEnabled": True,
-            "autoAggregate": True,
-            "processAggregateOnRead": True,
-            "aggregateCheckIntervalMinutes": 10,
-            "purifyMode": "conservative",
-            "sensitiveLexiconEnabled": True,
-            "sensitiveLexiconPath": str(missing_path),
-        },
-    )
-
-    processor = AggregateProcessor(db_path)
-    # The runtime now creates an empty lexicon directory and logs INFO when the
-    # configured path is missing, so we capture INFO to verify it is logged.
-    with caplog.at_level(logging.INFO, logger="app.services.aggregate_processor"):
-        service = processor._get_ai_service()
-
-    assert service is not None, "AI service should still be created when lexicon load fails"
-    assert service._lexicon is None, "Lexicon should be None after load failure"
-    assert any("lexicon" in rec.message.lower() for rec in caplog.records), \
-        "Expected a log message mentioning the lexicon"
-
-
-def test_default_processor_without_ai_config_falls_back_readably(tmp_path, monkeypatch):
-    """AI config incomplete → _get_ai_service() returns None; preview fallback still works."""
-    db_path = _setup_db(tmp_path)  # no ai_provider inserted
-    _patch_ai_provider_config(monkeypatch, None)
-    preview = "少年站在山巅望着远方。" * 5
-    catalog = _FakeCatalog(official_content=preview)
-    processor = AggregateProcessor(db_path)
-
-    assert processor._get_ai_service() is None
-
-    book_id = "book:no_ai"
-    _insert_book(db_path, book_id)
-    ch_id = _insert_chapter(db_path, book_id)
-    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
-
-    row = _get_chapter_row(db_path, ch_id)
-    assert row["status"] != "processed"
-
-
-def test_official_full_uses_ai_service_process_official_full(tmp_path, monkeypatch):
-    """Official full content path must call process_official_full and write AI fields."""
-    db_path = _setup_db(tmp_path)
-    _patch_ai_provider_config(monkeypatch, None)
-    book_id = "book:official_full_ai"
-    _insert_book(db_path, book_id)
-    ch_id = _insert_chapter(db_path, book_id)
-
-    full_content = "【起点正版】这是一段官方完整正文，字数足够长。" * 20
-    catalog = _FakeCatalog(official_content=full_content)
-    ai_service = _FakeAIService(content="AI 整理后的官方正文")
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-
-    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
-
-    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id)))
-
-    assert len(ai_service.calls) == 1
-    assert ai_service.calls[0]["method"] == "official_full"
-
-    with sqlite3.connect(db_path) as conn:
-        row = conn.execute(
-            """SELECT status, processed_content, ai_model, ai_prompt_tokens, ai_completion_tokens,
-                      ai_total_tokens, ai_latency_ms, ai_self_score
-               FROM aggregate_chapter_tasks WHERE chapter_id = ?""",
-            (ch_id,),
-        ).fetchone()
-    assert row[0] == "processed"
-    assert row[1] == "AI 整理后的官方正文"
-    assert row[2] == "official-fake-model"
-    assert row[3] == 120
-    assert row[4] == 60
-    assert row[5] == 180
-    assert row[6] == 250
-    assert row[7] == 1.0
-
-
-# ── preview candidate TOC window alignment ───────────────────────────────────
+    assert service is None
 
 
 def test_candidate_chapter_uses_candidate_toc_url_not_guessed_book_url(tmp_path, monkeypatch):
@@ -859,17 +818,15 @@ def test_candidate_chapter_uses_candidate_toc_url_not_guessed_book_url(tmp_path,
                 return {"content": candidate, "title": "第3章"}
             return await super().chapter(chapter_id)
 
-    catalog = TOCOnlyCatalog(official_content=preview, candidate_content=candidate)
-    ai_service = _FakeAIService(content=candidate)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    processor.ai_aggregate_enabled = lambda aggregate_book_id="": True
+    catalog = TOCOnlyCatalog(official_content=preview, candidate_content=candidate,
+                             official_extra={"previewOnly": True})
+    processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
 
     result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id, index=3)))
 
     row = _get_chapter_row(db_path, ch_id)
-    assert row["status"] == "processed"
-    assert len(ai_service.calls) == 1
+    assert row["status"] == "fallback"
 
 
 def test_candidate_toc_search_uses_index_window(tmp_path, monkeypatch):
@@ -911,17 +868,15 @@ def test_candidate_toc_search_uses_index_window(tmp_path, monkeypatch):
                 return {"content": "【小说网】" + preview + "后续正文内容扩充了很多。" * 30, "title": "第5章"}
             return {"content": "错误的章节内容，与预览完全不同。" * 50, "title": "其他章"}
 
-    catalog = WindowCatalog(official_content=preview)
-    ai_service = _FakeAIService(content=preview + "后续正文内容扩充了很多。" * 30)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    processor.ai_aggregate_enabled = lambda aggregate_book_id="": True
+    catalog = WindowCatalog(official_content=preview, official_extra={"previewOnly": True})
+    processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
 
     result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id, index=5)))
 
     row = _get_chapter_row(db_path, ch_id)
     decoded_urls = [decode_chapter_id(cid)[1] for cid in fetched_chapter_ids]
-    assert row["status"] == "processed"
+    assert row["status"] == "fallback"
     # Only window chapters 3..7 should be fetched (target index 5 -> 3,4,5,6,7).
     assert len(fetched_chapter_ids) <= 5, f"Expected <=5 fetches, got {len(fetched_chapter_ids)}: {fetched_chapter_ids}"
     assert any("5.html" in url for url in decoded_urls)
@@ -958,7 +913,7 @@ def test_stage2_uses_highest_priority_source_first_and_stops_on_success(tmp_path
 
         async def chapter(self, chapter_id: str) -> dict:
             if chapter_id.startswith("official_src"):
-                return {"content": preview, "title": "第1章"}
+                return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
             fetched_candidate_ids.append(chapter_id)
             if chapter_id.startswith("candidate_a"):
                 return {"content": candidate_a_content, "title": "第1章"}
@@ -966,8 +921,7 @@ def test_stage2_uses_highest_priority_source_first_and_stops_on_success(tmp_path
                 return {"content": candidate_b_content, "title": "第1章"}
             return await super().chapter(chapter_id)
 
-    ai_service = _FakeAIService(content=candidate_a_content)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
+    processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
 
     asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
@@ -1009,7 +963,7 @@ def test_stage2_continues_to_next_source_when_first_source_is_invalid(tmp_path, 
 
         async def chapter(self, chapter_id: str) -> dict:
             if chapter_id.startswith("official_src"):
-                return {"content": preview, "title": "第1章"}
+                return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
             fetched_candidate_ids.append(chapter_id)
             if chapter_id.startswith("candidate_a"):
                 return {"content": "", "title": "第1章"}
@@ -1017,8 +971,7 @@ def test_stage2_continues_to_next_source_when_first_source_is_invalid(tmp_path, 
                 return {"content": candidate_b_content, "title": "第1章"}
             return await super().chapter(chapter_id)
 
-    ai_service = _FakeAIService(content=candidate_b_content)
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
+    processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
 
     asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
@@ -1032,8 +985,108 @@ def test_stage2_continues_to_next_source_when_first_source_is_invalid(tmp_path, 
     assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
 
 
-def test_stage2_marks_long_cycle_wait_when_all_current_sources_fail(tmp_path, monkeypatch):
-    """When every current source fails, Stage 2 should leave the chapter in long-cycle wait instead of writing preview fallback."""
+def test_stage2_can_match_nearby_index_when_title_drift_is_severe(tmp_path, monkeypatch):
+    """When candidate titles drift badly, Stage 2 should still try nearby TOC entries and let preview alignment decide."""
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:stage2_nearby_index_drift"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书", "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100, "bookUrl": "https://official.example/book/1"},
+            {"bookId": "candidate_src:1", "sourceId": "candidate_src", "score": 80, "bookUrl": "https://candidate.example/book/1"},
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=1)
+
+    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
+    matched_candidate = ("【候选源】" + preview + "后续正文内容扩充了很多。" * 20)
+
+    class DriftCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            if source_id == "candidate_src":
+                return {"chapters": [
+                    {"chapterId": encode_chapter_id("candidate_src", "https://candidate.example/wrong.html"), "title": "山风起时", "index": 1},
+                    {"chapterId": encode_chapter_id("candidate_src", "https://candidate.example/right.html"), "title": "云海翻腾", "index": 2},
+                    {"chapterId": encode_chapter_id("candidate_src", "https://candidate.example/other.html"), "title": "夜雨将至", "index": 3},
+                ]}
+            return await super().toc(book_id)
+
+        async def chapter(self, chapter_id: str) -> dict:
+            _, chapter_url = decode_chapter_id(chapter_id)
+            if chapter_url.endswith("wrong.html"):
+                return {"content": "完全不相关的错误正文。" * 30, "title": "山风起时"}
+            if chapter_url.endswith("right.html"):
+                return {"content": matched_candidate, "title": "云海翻腾"}
+            if chapter_url.endswith("other.html"):
+                return {"content": "另一段错误正文。" * 30, "title": "夜雨将至"}
+            return await super().chapter(chapter_id)
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    asyncio.run(processor._process_chapter(DriftCatalog(official_content=preview, official_extra={"previewOnly": True}), _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["status"] == "fallback"
+    assert row["alignment"]["candidateSourceId"] == "candidate_src"
+    assert row["fallbackSourceId"] == "candidate_src"
+    assert len(row["content"]) > len(preview)
+
+
+def test_stage2_rejects_candidate_that_is_not_longer_than_official_preview(tmp_path, monkeypatch):
+    """A candidate that is still shorter than the official preview should not replace the official preview."""
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:stage2_shorter_candidate"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书", "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100, "bookUrl": "https://official.example/book/1"},
+            {"bookId": "candidate_src:1", "sourceId": "candidate_src", "score": 80, "bookUrl": "https://candidate.example/book/1"},
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=1)
+
+    official_preview = ("少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
+                        "他知道这一切才刚刚开始，未来路还很长。") * 3
+    shorter_candidate = official_preview[: len(official_preview) - 40]
+
+    class PreviewVsShorterCandidateCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            if source_id == "candidate_src":
+                return {"chapters": [
+                    {"chapterId": encode_chapter_id("candidate_src", "https://candidate.example/ch1.html"), "title": "第1章", "index": 1}
+                ]}
+            return await super().toc(book_id)
+
+        async def chapter(self, chapter_id: str) -> dict:
+            if chapter_id.startswith("official_src"):
+                return {
+                    "content": official_preview,
+                    "title": "第1章",
+                    "extra": {"previewOnly": True},
+                }
+            if chapter_id.startswith("candidate_src"):
+                return {"content": shorter_candidate, "title": "第1章"}
+            return await super().chapter(chapter_id)
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    result = asyncio.run(processor._process_chapter(PreviewVsShorterCandidateCatalog(), _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert result.get("fallback") is True
+    assert row["status"] == "fallback"
+    assert row["previewOnly"] == 1
+    assert row["fallbackSourceId"] == "official_src"
+    assert row["alignment"]["selectedContentSource"] == "preview_fallback"
+    assert official_preview[:80] in row["content"]
+
+
+def test_stage2_falls_back_to_official_preview_when_candidates_fail(tmp_path, monkeypatch):
+    """When every candidate source fails, Stage 2 should still keep the official preview as a readable fallback."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_wait"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -1070,350 +1123,92 @@ def test_stage2_marks_long_cycle_wait_when_all_current_sources_fail(tmp_path, mo
     result = asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
 
     row = _get_chapter_row(db_path, ch_id)
-    assert result["success"] is False
-    assert row["status"] == "error"
-    # Stage 2 candidate failures are now classified as S2_* codes.
-    assert row["lastErrorCode"] == "S2_CANDIDATE_FETCH_FAILED"
-    assert row["content"] == ""
-
-
-def test_stage3_breaker_opens_and_new_ai_work_pauses(tmp_path, monkeypatch):
-    db_path = _setup_db(tmp_path, ai_enabled=False)
-    book_id = "book:stage3_breaker"
-    _insert_book(
-        db_path,
-        book_id,
-        aggregate_payload={
-            "name": "测试书",
-            "author": "作者",
-            "sources": [
-                {
-                    "bookId": f"official_src:{book_id}",
-                    "sourceId": "official_src",
-                    "score": 100,
-                    "bookUrl": f"https://official.example/book/{book_id}",
-                }
-            ],
-        },
-    )
-    full_content = "这是一段足够长的完整正文。" * 30
-    ai_service = _FakeAIService(fail=True, error=RuntimeError("AI provider overloaded"))
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
-    monkeypatch.setattr(
-        processor,
-        "_book_workflow_settings",
-        lambda aggregate_book_id="": {
-            "aiEnabled": True,
-            "autoAggregate": True,
-            "blockedWordRepair": True,
-            "aiFailureRateThreshold": 0.5,
-            "aiCircuitBreakerCooldownMinutes": 30,
-            "aiTokenBudgetPerHour": 0,
-            "stage3PeakHourSkipEnabled": False,
-        },
-    )
-    # Enable shared-book dual write so policy_snapshot_json is persisted to DB.
-    monkeypatch.setattr(
-        "app.services.aggregate_settings.AggregateSettingsRepository.content_workflow",
-        lambda self: {
-            "aiEnabled": True,
-            "autoAggregate": True,
-            "processAggregateOnRead": True,
-            "aggregateCheckIntervalMinutes": 10,
-            "purifyMode": "conservative",
-            "useSharedBookStorage": True,
-            "sharedBookStorageDualWrite": True,
-            "sharedBookStorageReadMode": "dual_verify",
-        },
-    )
-
-    # Insert and process chapters one at a time so the shared-book bundle writer
-    # never sees empty/unprocessed chapter rows (avoids a product-side kwarg bug
-    # in _shared_stage1_status when it is called with positional arguments).
-    chapter_ids: list[str] = []
-    for index in range(1, 5):
-        chapter_id = _insert_chapter(db_path, book_id, index=index)
-        chapter_ids.append(chapter_id)
-        asyncio.run(
-            processor._process_chapter(
-                _FakeCatalog(official_content=full_content),
-                _chapter_dict(chapter_id, book_id, index=index),
-            )
-        )
-
-    breaker = processor.ai_circuit_breaker_state(book_id)
-    row4 = _get_chapter_row(db_path, chapter_ids[-1])
-    trace4 = _get_policy_snapshot(db_path, chapter_ids[-1])
-    assert breaker["isOpen"] is True
-    assert breaker["reason"] == "failure_rate_threshold_exceeded"
-    assert len(ai_service.calls) == 3, "Fourth chapter should pause Stage 3 while breaker is open"
-    assert row4["status"] == "fallback"
-    assert trace4["chapterStatus"] == "readable"
-    assert trace4["proofreadComplete"] is False
-
-
-def test_stage3_pause_still_allows_stage1_and_stage2_to_complete_readable_content(tmp_path, monkeypatch):
-    # AI must be enabled so the open circuit breaker genuinely pauses Stage 3.
-    db_path = _setup_db(tmp_path, ai_enabled=True)
-    book_id = "book:stage3_pause_flow"
-    _insert_book(
-        db_path,
-        book_id,
-        aggregate_payload={
-            "name": "测试书",
-            "author": "作者",
-            "sources": [
-                {"bookId": f"official_src:{book_id}", "sourceId": "official_src", "score": 100, "bookUrl": "https://official.example/book/1"},
-                {"bookId": f"candidate_src:{book_id}", "sourceId": "candidate_src", "score": 80, "bookUrl": "https://candidate.example/book/1"},
-            ],
-        },
-    )
-    full_chapter_id = _insert_chapter(db_path, book_id, index=1)
-    preview_chapter_id = _insert_chapter(db_path, book_id, index=2)
-
-    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始。"
-    candidate = ("【小说网】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                 "他知道这一切才刚刚开始。后续正文内容扩充了很多。" * 10)
-    full_content = "这是一段完整正文，字数足够长。" * 25
-
-    class PauseCatalog(_FakeCatalog):
-        async def chapter(self, chapter_id: str) -> dict:
-            if chapter_id == "official_src:ch1":
-                return {"content": full_content, "title": "第1章"}
-            if chapter_id == "official_src:ch2":
-                return {"content": preview, "title": "第2章"}
-            source_id, _ = decode_chapter_id(chapter_id)
-            if source_id == "candidate_src":
-                return {"content": candidate, "title": "第2章"}
-            return await super().chapter(chapter_id)
-
-        async def toc(self, book_id: str) -> dict:
-            source_id = book_id.split(":")[0]
-            index = 2
-            return {
-                "chapters": [
-                    {
-                        "chapterId": encode_chapter_id(source_id, f"https://{source_id}.example/ch{index}.html"),
-                        "title": "第2章",
-                        "chapterUrl": f"https://{source_id}.example/ch{index}.html",
-                        "index": index,
-                    }
-                ]
-            }
-
-    ai_service = _FakeAIService(content="不应该被调用")
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
-    async def fake_try_candidate_content(catalog, chapter, payload, primary_source_id):
-        if chapter["chapterId"] == preview_chapter_id:
-            return {
-                "content": candidate,
-                "source_id": "candidate_src",
-                "alignment_json": {
-                    "primarySourceId": "official_src",
-                    "candidateSourceId": "candidate_src",
-                    "selectedContentSource": "candidate",
-                    "alignmentPassed": True,
-                },
-            }
-        return None
-    monkeypatch.setattr(processor, "_try_candidate_content", fake_try_candidate_content)
-    processor._ai_circuit_breakers[book_id] = {
-        "reason": "token_budget_exceeded",
-        "openUntil": processor._now_dt() + timedelta(minutes=20),
-    }
-
-    asyncio.run(processor._process_chapter(PauseCatalog(), _chapter_dict(full_chapter_id, book_id, index=1)))
-    asyncio.run(processor._process_chapter(PauseCatalog(), _chapter_dict(preview_chapter_id, book_id, index=2)))
-
-    full_row = _get_chapter_row(db_path, full_chapter_id)
-    preview_row = _get_chapter_row(db_path, preview_chapter_id)
-    assert ai_service.calls == []
-    assert full_row["status"] == "fallback"
-    assert full_row["content"] != PROCESSING_PLACEHOLDER
-    assert preview_row["status"] == "fallback"
-    assert preview_row["fallbackSourceId"] == "candidate_src"
-    assert len(preview_row["content"]) > len(preview)
-
-
-def test_stage3_deferred_chapter_stays_readable_unproofread_and_retries_from_periodic_scan(tmp_path, monkeypatch):
-    db_path = _setup_db(tmp_path, ai_enabled=False)
-    book_id = "book:stage3_deferred_retry"
-    _insert_book(db_path, book_id)
-    chapter_id = _insert_chapter(db_path, book_id, index=1)
-    full_content = "这是一段完整正文，字数足够长。" * 25
-
-    ai_service = _FakeAIService(content="不应该被调用")
-    processor = AggregateProcessor(db_path, ai_service=ai_service)
-    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
-    # Enable shared-book dual write so policy_snapshot_json is persisted to DB.
-    monkeypatch.setattr(
-        "app.services.aggregate_settings.AggregateSettingsRepository.content_workflow",
-        lambda self: {
-            "aiEnabled": True,
-            "autoAggregate": True,
-            "processAggregateOnRead": True,
-            "aggregateCheckIntervalMinutes": 10,
-            "purifyMode": "conservative",
-            "useSharedBookStorage": True,
-            "sharedBookStorageDualWrite": True,
-            "sharedBookStorageReadMode": "dual_verify",
-        },
-    )
-    processor._ai_circuit_breakers[book_id] = {
-        "reason": "failure_rate_threshold_exceeded",
-        "openUntil": processor._now_dt() + timedelta(minutes=10),
-    }
-
-    asyncio.run(
-        processor._process_chapter(
-            _FakeCatalog(official_content=full_content),
-            _chapter_dict(chapter_id, book_id, index=1),
-        )
-    )
-
-    row = _get_chapter_row(db_path, chapter_id)
-    trace = _get_policy_snapshot(db_path, chapter_id)
-    response = processor.aggregate_chapter_response(
-        make_aggregate_chapter_url(book_id, "official_src:ch1", title="第1章", index=1),
-        chapter_id=chapter_id,
-    )
-    runtime_store = SharedBookRuntimeStore(storage=SharedBookStorage(tmp_path / "library"))
-    state = runtime_store.load_state(book_name="测试书", author="作者")
+    assert result["success"] is True
+    assert result.get("fallback") is True
     assert row["status"] == "fallback"
-    assert trace["chapterStatus"] == "readable"
-    assert trace["proofreadComplete"] is False
-    assert response["content"] == full_content.strip()
-    assert len(state.stage3Deferred) == 1
-
-    deferred = state.stage3Deferred[0].model_copy(update={"retryNotBefore": "2000-01-01T00:00:00+00:00"})
-    runtime_store.save_state(
-        book_name="测试书",
-        author="作者",
-        state=state.model_copy(update={"stage3Deferred": [deferred]}),
-    )
-    chapters = processor._chapters_for_processing(book_id, limit=5)
-    assert any(item["chapterId"] == chapter_id for item in chapters)
+    assert row["previewOnly"] == 1
+    assert preview in row["content"]
 
 
-def test_stage1_dual_write_writes_shared_storage_and_dual_verify_logs_mismatch(
-    tmp_path, monkeypatch, caplog
-):
+def test_refresh_shared_book_state_uses_configured_min_readable_threshold(tmp_path):
     db_path = _setup_db(tmp_path, ai_enabled=False)
-    book_id = "book:shared_stage1"
-    _insert_book(
-        db_path,
-        book_id,
-        aggregate_payload={
-            "name": "测试书",
-            "author": "作者",
-            "sources": [
-                {
-                    "bookId": f"official_src:{book_id}",
-                    "sourceId": "official_src",
-                    "sourceName": "官方源",
-                    "score": 100,
-                    "bookUrl": "https://official.example/book/shared_stage1",
-                    "tocUrl": "https://official.example/book/shared_stage1/toc",
-                }
-            ],
-        },
-    )
-    chapter_id = _insert_chapter(db_path, book_id, index=1)
+    book_id = "book:visibility_threshold"
+    _insert_book(db_path, book_id)
+    for index in range(1, 71):
+        _insert_chapter(db_path, book_id, index=index, status="processed")
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            UPDATE aggregate_book_tasks
+            SET total_chapters = 200,
+                start_chapter_index = 1,
+                processed_chapters = 70,
+                visible_processed_chapters = 0,
+                search_visibility_status = 'hidden'
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        )
+        conn.commit()
+
+    config_path = tmp_path / "config" / "app_config.json"
+    config_data = json.loads(config_path.read_text(encoding="utf-8"))
+    config_data["aggregate"]["contentWorkflow"]["minReadableChaptersForDiscovery"] = 80
+    config_path.write_text(json.dumps(config_data, ensure_ascii=False), encoding="utf-8")
+
     processor = AggregateProcessor(db_path)
+    processor._refresh_shared_book_state(book_id)
 
-    monkeypatch.setattr(
-        "app.services.aggregate_settings.AggregateSettingsRepository.content_workflow",
-        lambda self: {
-            "aiEnabled": True,
-            "autoAggregate": True,
-            "processAggregateOnRead": True,
-            "aggregateCheckIntervalMinutes": 10,
-            "blockedWordRepair": True,
-            "useSharedBookStorage": True,
-            "sharedBookStorageDualWrite": True,
-            "sharedBookStorageReadMode": "dual_verify",
-        },
-    )
+    with sqlite3.connect(db_path) as conn:
+        refreshed = conn.execute(
+            """
+            SELECT visible_processed_chapters, search_visibility_status
+            FROM aggregate_book_tasks
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        ).fetchone()
 
-    content = "第一章完整正文\n第二段内容"
-    processor._write_chapter_result(
-        chapter_id=chapter_id,
-        aggregate_book_id=book_id,
-        title="第1章",
-        chapter_index=1,
-        status="processed",
-        content=content,
-        alignment_json={
-            "primarySourceId": "official_src",
-            "selectedContentSource": "official",
-            "alignmentPassed": True,
-        },
-        fallback_source_id="official_src",
-        ai_model="official-fake-model",
-        ai_self_score=0.98,
-        ai_prompt_tokens=120,
-        ai_completion_tokens=60,
-        ai_total_tokens=180,
-        ai_latency_ms=250,
-        source_word_count=321,
-        primary_source_chapter_url="https://official.example/book/shared_stage1/1",
-        preview_only=False,
-    )
+    assert refreshed[0] == 70
+    assert refreshed[1] == "hidden"
 
-    storage = SharedBookStorage(tmp_path / "library")
-    chapter_path = storage.chapter_markdown_path(
-        book_name="测试书",
-        author="作者",
-        chapter_index=1,
-        title="第1章",
-    )
-    chapter_index_path = storage.chapter_index_path(book_name="测试书", author="作者")
-    metadata_path = storage.metadata_path(book_name="测试书", author="作者")
 
-    assert chapter_path.exists()
-    assert chapter_index_path.exists()
-    assert metadata_path.exists()
+class TestSharedBookProcessLoggerTailStream:
+    """Tail -f style log streaming for the subscription processing panel."""
 
-    chapter_markdown = chapter_path.read_text(encoding="utf-8")
-    trace = storage.parse_trace_block(chapter_markdown)
-    chapter_index_payload = json.loads(chapter_index_path.read_text(encoding="utf-8"))
-    metadata_payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    @pytest.mark.asyncio
+    async def test_tail_stream_yields_appended_records(self, tmp_path):
+        from app.services.shared_book_storage import SharedBookStorage
+        from app.services.shared_book_runtime import SharedBookProcessLogger
 
-    assert trace["chapterIndex"] == 1
-    assert trace["chapterTitle"] == "第1章"
-    assert trace["chapterStatus"] == "proofread_complete"
-    assert trace["proofreadComplete"] is True
-    assert trace["previewOnly"] is False
-    assert trace["primarySource"]["sourceId"] == "official_src"
-    # The shared-book trace no longer exposes private source chapter URLs.
-    assert "chapterUrl" not in trace["primarySource"]
-    assert trace["primarySource"]["wordCount"] == 321
-    assert trace["officialWordCount"] == 321
-    assert trace["fetchedWordCount"] == len(content)
-    assert chapter_index_payload["chapters"] == [
-        {
-            "index": 1,
-            "title": "第1章",
-            "file": "chapters/0001-第1章.md",
-            "status": "proofread_complete",
-        }
-    ]
-    assert metadata_payload["bookState"]["processedChapterCount"] == 1
-    assert metadata_payload["bookState"]["proofreadCompleteCount"] == 1
+        storage = SharedBookStorage(root=tmp_path / "library")
+        logger = SharedBookProcessLogger(storage)
+        book_name = "测试日志书"
+        author = "测试作者"
 
-    tampered_markdown = chapter_markdown.replace("第二段内容", "被篡改的共享内容")
-    chapter_path.write_text(tampered_markdown, encoding="utf-8", newline="\n")
+        records = []
+        tail_task = asyncio.create_task(
+            self._collect(logger.tail_stream(book_name=book_name, author=author, poll_interval_seconds=0.05), records)
+        )
 
-    chapter_url = make_aggregate_chapter_url(
-        aggregate_book_id=book_id,
-        source_chapter_id="official_src:ch1",
-        title="第1章",
-        index=1,
-    )
-    with caplog.at_level("WARNING", logger="app.services.aggregate_processor"):
-        response = processor.aggregate_chapter_response(chapter_url, chapter_id=chapter_id)
+        await asyncio.sleep(0.02)
+        logger.append(book_name=book_name, author=author, event="chapter_write", book_id="b1", chapter_index=1, stage="stage1", payload={"title": "第一章"})
+        logger.append(book_name=book_name, author=author, event="chapter_error", book_id="b1", chapter_index=2, stage="stage1", error_code="E1", error_message="boom")
 
-    assert response["content"] == content
-    assert any("dual_verify" in record.message for record in caplog.records)
+        await asyncio.sleep(0.1)
+        tail_task.cancel()
+        try:
+            await tail_task
+        except asyncio.CancelledError:
+            pass
+
+        assert len(records) >= 2
+        assert records[0]["event"] == "chapter_write"
+        assert records[0]["chapterIndex"] == 1
+        assert records[1]["event"] == "chapter_error"
+        assert records[1]["errorCode"] == "E1"
+
+    async def _collect(self, gen, out):
+        async for record in gen:
+            out.append(record)

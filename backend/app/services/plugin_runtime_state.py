@@ -19,7 +19,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-RUNTIME_DIR = Path(__file__).resolve().parents[2] / "runtime"
+from app.config import RUNTIME_DIR
+
 RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
 STATE_FILE = RUNTIME_DIR / "plugin_state.json"
 

@@ -1626,26 +1626,28 @@ Tab 4「设置」：
 订阅聚合书（长期保存）：
 
 ```
-backend/data/novels/
-└── legadohub/
-    └── {书名}_{作者}/
-        ├── metadata.json
-        ├── 000001 第一章 风起.md
-        ├── 000002 第二章 云涌.md
+backend/data/library/
+└── {书名}_{作者}/
+    ├── metadata.json
+    ├── chapter_index.json
+    └── chapters/
+        ├── 0001-第一章 风起.md
+        ├── 0002-第二章 云涌.md
         └── ...
 ```
 
 第三方书源缓存（临时，可清理）：
 
 ```
-backend/data/novels/
+backend/data/cache/
 └── {source-domain}/
     └── {encoded-book-key}/
         ├── 000001 第一章.md
         └── ...
 ```
 
-- `legadohub/` 存放订阅聚合书，按 `书名_作者` 组织，便于用户本地整理。
+- `library/` 存放订阅聚合书，按 `书名_作者` 组织，便于用户本地整理和备份。
+- `library_private/` 存放处理日志、源引用、运行态等不适合暴露给阅读端的数据。
 - `metadata.json` 记录 `bookId`、`bookName`、`author`、`sourceId`、`chapterCount` 等，方便外部程序读取。
 - 第三方书源缓存按 `来源域名/编码书籍键` 组织，`encoded-book-key` 为 `book_id` 或 `source_id:chapter_url` 的短哈希，后台定期清理。
 
@@ -1683,7 +1685,7 @@ backend/data/novels/
 
 ### 15.5 启动扫描与恢复
 
-服务启动时自动扫描 `backend/data/novels/legadohub/` 下的 `metadata.json`：
+服务启动时自动扫描 `backend/data/library/` 下的 `metadata.json`：
 
 1. 若 `metadata.json` 对应的书籍在 `aggregate_book_tasks` 中不存在，则根据 metadata 重建该书记录。
 2. 扫描目录下的 `.md` 章节文件，按文件名解析章节序号与标题。
@@ -1705,11 +1707,15 @@ backend/data/novels/
 #### 目录结构
 
 ```
-backend/data/novels/legadohub/{书名}_{作者}/
+backend/data/library/{书名}_{作者}/
 ├── metadata.json              # 会话元数据（含 processLog 路径）
-├── process.jsonl              # 处理事件流
-├── 000001 第一章.md
-├── 000002 第二章.md
+├── chapter_index.json
+├── chapters/
+│   ├── 0001-第一章.md
+│   └── 0002-第二章.md
+backend/data/library_private/{书名}_{作者}/
+├── logs/process.jsonl         # 处理事件流
+├── runtime/
 └── ...
 ```
 

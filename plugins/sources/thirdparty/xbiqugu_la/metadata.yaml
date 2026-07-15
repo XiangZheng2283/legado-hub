@@ -26,6 +26,10 @@ tags:
   - html
   - no-login
   - so-novel-seed
+adPatterns:
+  - "最新章节地址"
+  - "请收藏.*xbiqugu"
+  - "手机用户请浏览"
 domainProfiles:
   - id: current
     baseUrl: https://www.xbiqugu.com

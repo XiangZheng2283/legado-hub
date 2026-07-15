@@ -64,15 +64,21 @@ function normalizeLibraryDetail(data: any): any {
 }
 
 function normalizeChapterList(data: any): any {
-  const chapters = (data?.chapters || data?.items || []).map((chapter: any) => ({
+  const rawChapters = Array.isArray(data?.items) && data.items.length > 0
+    ? data.items
+    : Array.isArray(data?.chapters)
+      ? data.chapters
+      : []
+  const chapters = rawChapters.map((chapter: any) => ({
     ...chapter,
     id: chapter?.chapterId ?? chapter?.id,
+    readChapterId: chapter?.readChapterId ?? "",
     chapterId: chapter?.chapterId ?? chapter?.id,
   }))
   return {
     ...data,
     chapters,
-    items: data?.items || chapters,
+    items: chapters,
   }
 }
 
@@ -92,7 +98,7 @@ function normalizeSearchCards(data: any): any {
 }
 
 export const api = {
-  status: (): Promise<any> => fetch("/api/console/status", { credentials: "include" }).then((r) => r.json()),
+  status: (): Promise<any> => fetchJson("/status"),
 
   plugins: (): Promise<any> => fetchJson("/plugins"),
   plugin: (id: string): Promise<any> => fetchJson(`/plugins/${id}`),
@@ -133,7 +139,7 @@ export const api = {
   startLoginBrowser: (id: string): Promise<any> => fetchJson(`/plugins/${id}/login-browser`, { method: "POST" }),
   getLoginBrowserStatus: (id: string): Promise<any> => fetchJson(`/plugins/${id}/login-browser/status`),
   cancelLoginBrowser: (id: string): Promise<any> =>
-    fetch(`${API_BASE}/plugins/${id}/login-browser`, { method: "DELETE", credentials: "include" }).then((r) => r.json()),
+    fetchJson(`/plugins/${id}/login-browser`, { method: "DELETE" }),
 
   // Official source login (generic protocol)
   loginCapabilities: (pluginId: string): Promise<any> =>
@@ -164,21 +170,6 @@ export const api = {
     sourceIds?: string[]
   }): Promise<any> =>
     fetchJson("/search-jobs", {
-      method: "POST",
-      body: JSON.stringify({
-        keyword: payload.keyword,
-        page: payload.page || 1,
-        limit: payload.limit,
-        sourceIds: payload.sourceIds,
-      }),
-    }),
-  createAggregateSearch: (payload: {
-    keyword: string
-    page?: number
-    limit?: number
-    sourceIds?: string[]
-  }): Promise<any> =>
-    fetchJson("/search/aggregate", {
       method: "POST",
       body: JSON.stringify({
         keyword: payload.keyword,
@@ -229,10 +220,6 @@ export const api = {
   updateSettings: (payload: Record<string, any>): Promise<any> =>
     fetchJson("/settings", { method: "POST", body: JSON.stringify(payload) }),
 
-  aggregateSource: (): Promise<any> => fetchJson("/aggregate-source"),
-  regenerateAggregateSource: (): Promise<any> =>
-    fetchJson("/aggregate-source/regenerate", { method: "POST" }),
-
   verification: (): Promise<any> => fetchJson("/verification"),
   runVerification: (): Promise<any> => fetchJson("/verification/run", { method: "POST" }),
   exploreGroups: (id: string): Promise<any> => fetchJson(`/explore/sources/${id}/groups`),
@@ -242,37 +229,10 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  // Aggregate AI source
+  // Subscription content workflow settings.
   aggregateSettings: (): Promise<any> => fetchJson("/aggregate-settings"),
   updateAggregateSettings: (payload: Record<string, any>): Promise<any> =>
     fetchJson("/aggregate-settings", { method: "POST", body: JSON.stringify(payload) }),
-  testAggregateProvider: (payload: Record<string, any>): Promise<any> =>
-    fetchJson("/aggregate-settings/test-provider", { method: "POST", body: JSON.stringify(payload) }),
-  fetchAggregateModels: (payload: Record<string, any>): Promise<any> =>
-    fetchJson("/aggregate-settings/fetch-models", { method: "POST", body: JSON.stringify(payload) }),
-  aggregateBooks: (params: Record<string, string>): Promise<any> => {
-    const qs = new URLSearchParams(params)
-    return fetchJson(`/aggregate-books?${qs}`)
-  },
-  aggregateBook: (bookId: string): Promise<any> => fetchJson(`/aggregate-books/${bookId}`),
-  aggregateBookChapters: (bookId: string, params: Record<string, string>): Promise<any> => {
-    const qs = new URLSearchParams(params)
-    return fetchJson(`/aggregate-books/${bookId}/chapters?${qs}`)
-  },
-  aggregateChapter: (bookId: string, chapterId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}/chapters/${chapterId}`),
-  aggregateChapterReviews: (bookId: string, chapterId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}/chapters/${chapterId}/reviews`),
-  retryAggregateChapter: (bookId: string, chapterId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}/chapters/${chapterId}/retry`, { method: "POST" }),
-  runAggregateBook: (bookId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}/run`, { method: "POST" }),
-  pauseAggregateBook: (bookId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}/pause`, { method: "POST" }),
-  resumeAggregateBook: (bookId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}/resume`, { method: "POST" }),
-  deleteAggregateBook: (bookId: string): Promise<any> =>
-    fetchJson(`/aggregate-books/${bookId}`, { method: "DELETE" }),
 
   // Auth (session cookie based)
   auth: {
@@ -303,10 +263,6 @@ export const api = {
       }),
     library: (): Promise<any> => fetchApiJson("/subscribe/library").then(normalizeLibraryList),
     myLibrary: (): Promise<any> => fetchApiJson("/subscribe/library/mine").then(normalizeLibraryList),
-    book: (aggregateBookId: string): Promise<any> =>
-      fetchApiJson(`/subscribe/books/${aggregateBookId}`).then(normalizeLibraryDetail),
-    chapters: (aggregateBookId: string): Promise<any> =>
-      fetchApiJson(`/subscribe/books/${aggregateBookId}/chapters`).then(normalizeChapterList),
   },
 
   // Admin shared library management
@@ -326,6 +282,10 @@ export const api = {
     fetchJson(`/library-books/${bookId}/logs?limit=${limit}&offset=${offset}`),
   libraryBookChapterProgress: (bookId: string, chapterId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}/chapters/${chapterId}/progress`),
+  processLibraryBookChapter: (bookId: string, chapterId: string): Promise<any> =>
+    fetchJson(`/library-books/${bookId}/chapters/${chapterId}/process`, { method: "POST" }),
+  chapter: (chapterId: string): Promise<any> =>
+    fetchJson(`/chapter/${encodeURIComponent(chapterId)}`),
   pauseLibraryBook: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}/pause`, { method: "POST" }),
   resumeLibraryBook: (bookId: string): Promise<any> =>
@@ -352,6 +312,13 @@ export const api = {
     fetchJson(`/library-books/${bookId}/update-check`, { method: "POST" }),
   libraryBookProcessingLogs: (bookId: string, limit = 50, offset = 0): Promise<any> =>
     fetchJson(`/library-books/${bookId}/processing-logs?limit=${limit}&offset=${offset}`),
+  streamLibraryBookLogsUrl: (bookId: string): string =>
+    `${window.location.origin}${API_BASE}/library-books/${bookId}/logs/stream`,
+
+  // Sensitive-word lexicon
+  lexiconStatus: (): Promise<any> => fetchJson("/lexicon/status"),
+  updateLexicon: (): Promise<any> =>
+    fetchJson("/lexicon/update", { method: "POST" }),
 
   // Admin users
   users: (): Promise<any> => fetchJson("/users"),

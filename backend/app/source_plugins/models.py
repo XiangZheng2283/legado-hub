@@ -34,6 +34,7 @@ class PluginMetadata:
     source_seed: dict = field(default_factory=dict)
     access_strategy: dict = field(default_factory=dict)
     search_provider: dict = field(default_factory=dict)
+    ad_patterns: list[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict) -> PluginMetadata:
@@ -60,6 +61,7 @@ class PluginMetadata:
             source_seed=data.get("sourceSeed", {}),
             access_strategy=data.get("accessStrategy", {}),
             search_provider=data.get("searchProvider", {}),
+            ad_patterns=data.get("adPatterns", []) or [],
         )
 
     def validate(self) -> list[str]:
@@ -103,6 +105,13 @@ class PluginMetadata:
                 errors.append(f"invalid accessStrategy stage: {stage}")
             if mode not in valid_strategy:
                 errors.append(f"invalid accessStrategy.{stage}: {mode}")
+        if not isinstance(self.ad_patterns, list):
+            errors.append("adPatterns must be a list")
+        else:
+            for idx, pat in enumerate(self.ad_patterns):
+                if not isinstance(pat, str):
+                    errors.append(f"adPatterns[{idx}] must be a string regex pattern")
+                    break
         profile_ids: set[str] = set()
         for profile in self.domain_profiles:
             if not isinstance(profile, dict):

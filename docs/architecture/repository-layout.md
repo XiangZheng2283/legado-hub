@@ -13,6 +13,7 @@ docs/
 frontend/
 plugins/
 start.bat
+verify.ps1
 .gitattributes
 .gitignore
 ```
@@ -80,4 +81,3 @@ Do not recreate these root paths:
 - `engine-jvm/`
 
 Use the matching active area instead.
-

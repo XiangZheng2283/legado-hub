@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Loader2, User } from "lucide-react"
+import { BookOpen, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -56,13 +56,17 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background p-4">
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <BookOpen className="h-5 w-5" />
+        </div>
+        <span className="text-xl font-semibold tracking-tight text-foreground">LegadoHub</span>
+      </div>
+
+      <Card className="w-full max-w-sm border-border bg-card shadow-sm">
         <CardHeader className="space-y-1">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            <CardTitle className="text-lg">登录 LegadoHub</CardTitle>
-          </div>
+          <CardTitle className="text-lg">登录</CardTitle>
           <CardDescription>首次使用请在后端启动窗口查看随机生成的 admin 密码。</CardDescription>
         </CardHeader>
         <CardContent>

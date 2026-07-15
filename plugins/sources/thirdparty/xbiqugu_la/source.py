@@ -14,6 +14,16 @@ class Source:
     contract_version = "1.0"
     last_modified = "2026-06-10"
     base_url = "https://www.xbiqugu.com"
+
+    @classmethod
+    def get_ad_patterns(cls) -> list[str]:
+        """香书小说常见广告水印模式（占位，待采集脚本收敛）。"""
+        return [
+            r"最新章节地址",
+            r"请收藏.*xbiqugu",
+            r"手机用户请浏览",
+        ]
+
     explore_defs = [
         {"groupId": "xuanhuan", "title": "玄幻", "url": "/fenlei/1_{page}.html", "kind": "category"},
         {"groupId": "xiuzhen", "title": "修真", "url": "/fenlei/2_{page}.html", "kind": "category"},

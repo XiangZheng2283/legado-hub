@@ -24,6 +24,7 @@ from app.services.aggregate_virtual_source import (
     unpack_aggregate_book_url,
 )
 from app.services.library_books import library_books_service
+from app.services.novel_file_cache import looks_like_garbled_text
 from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
 
 
@@ -728,6 +729,9 @@ class Catalog:
         title = result.get("title", "")
         content = result.get("content", "")
         debug = result.get("debug", {})
+        if looks_like_garbled_text(content):
+            content = ""
+            debug = {**debug, "error": "garbled chapter content"}
 
         error_info = debug.get("error")
         if error_info and cached is not None and self._should_fallback_to_cache(error_info):
@@ -746,6 +750,8 @@ class Catalog:
             "content": content,
             "rawChapterUrl": chapter_url,
             "chapterUrl": chapter_url,
+            "authRequired": bool(result.get("authRequired", False)),
+            "isPaid": bool(result.get("isPaid", False)),
             "extra": result.get("extra", {}) if isinstance(result.get("extra", {}), dict) else {},
             "debug": debug,
         }

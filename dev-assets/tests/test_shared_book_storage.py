@@ -65,6 +65,7 @@ def test_shared_book_storage_resolves_expected_paths(tmp_path: Path):
     storage = SharedBookStorage(tmp_path / "library")
 
     shared_dir = storage.shared_book_dir(book_name="测试小说", author="作者甲")
+    private_dir = tmp_path / "library_private" / "测试小说_作者甲"
 
     assert shared_dir == tmp_path / "library" / "测试小说_作者甲"
     assert storage.metadata_path(book_name="测试小说", author="作者甲") == shared_dir / "metadata.json"
@@ -79,9 +80,9 @@ def test_shared_book_storage_resolves_expected_paths(tmp_path: Path):
         )
         == shared_dir / "chapters" / "0012-第12章 _ 试读.md"
     )
-    assert storage.runtime_dir(book_name="测试小说", author="作者甲") == shared_dir / "runtime"
-    assert storage.logs_dir(book_name="测试小说", author="作者甲") == shared_dir / "logs"
-    assert storage.source_refs_path(book_name="测试小说", author="作者甲") == shared_dir / "source_refs.json"
+    assert storage.runtime_dir(book_name="测试小说", author="作者甲") == private_dir / "runtime"
+    assert storage.logs_dir(book_name="测试小说", author="作者甲") == private_dir / "logs"
+    assert storage.source_refs_path(book_name="测试小说", author="作者甲") == private_dir / "source_refs.json"
 
 
 def test_shared_book_storage_atomic_write_json(tmp_path: Path):
@@ -217,7 +218,6 @@ def test_shared_book_storage_metadata_excludes_private_source_urls():
     assert "primaryTocUrl" not in metadata
     assert metadata["sourceMapSummary"] == [
         {
-            "bookId": "src-a:book-1",
             "sourceId": "src-a",
             "sourceName": "来源A",
             "score": 100,
@@ -228,7 +228,6 @@ def test_shared_book_storage_metadata_excludes_private_source_urls():
             "name": "测试小说",
         },
         {
-            "bookId": "src-b:book-9",
             "sourceId": "src-b",
             "sourceName": "来源B",
             "score": 88,
@@ -301,7 +300,6 @@ def test_library_books_source_map_summary_reads_shared_metadata_only():
     shared_metadata = {
         "sourceMapSummary": [
             {
-                "bookId": "src-a:book-1",
                 "sourceId": "src-a",
                 "sourceName": "来源A",
                 "score": 100,
@@ -320,7 +318,6 @@ def test_library_books_source_map_summary_reads_shared_metadata_only():
 
     assert summary == [
         {
-            "bookId": "src-a:book-1",
             "sourceId": "src-a",
             "sourceName": "来源A",
             "score": 100,
@@ -438,7 +435,7 @@ def test_shared_book_storage_rebuild_book_state_from_files_counts_statuses():
         "status": "active",
         "searchVisibilityStatus": "visible",
         "chapterCount": 6,
-        "processedChapterCount": 4,
+        "processedChapterCount": 5,
         "readableChapterCount": 4,
         "previewChapterCount": 2,
         "proofreadCompleteCount": 1,
@@ -605,6 +602,59 @@ LEGADOHUB_TRACE_END -->
     ]
     assert json.loads(metadata_path.read_text(encoding="utf-8"))["bookState"]["suspectChapterCount"] == 1
     assert rebuilt_metadata["bookState"]["processedChapterCount"] == 1
+
+
+def test_shared_book_storage_update_chapter_index_entry_writes_v2_incrementally(tmp_path: Path):
+    storage = SharedBookStorage(tmp_path / "library")
+    metadata_path = storage.metadata_path(book_name="测试小说", author="作者甲")
+    chapter_index_path = storage.chapter_index_path(book_name="测试小说", author="作者甲")
+    metadata_payload = storage.build_shared_metadata(
+        {
+            "candidateId": "book-1",
+            "name": "测试小说",
+            "author": "作者甲",
+            "bookState": {"status": "active", "searchVisibilityStatus": "visible"},
+        }
+    )
+    storage.atomic_write_json(metadata_path, metadata_payload)
+    storage.atomic_write_json(
+        chapter_index_path,
+        {"schemaVersion": 1, "bookId": "book-1", "chapters": [{"index": 1, "title": "第一章", "file": None, "status": "processing"}]},
+    )
+
+    trace = {
+        "schemaVersion": 2,
+        "chapterIndex": 1,
+        "chapterStatus": "readable",
+        "previewOnly": False,
+        "officialWordCount": 100,
+    }
+    storage.update_chapter_index_entry(
+        chapter_index_path=chapter_index_path,
+        metadata_path=metadata_path,
+        metadata_payload=metadata_payload,
+        entry={
+            "index": 1,
+            "title": "第一章",
+            "file": "chapters/0001-第一章.md",
+            "status": "readable",
+            "isVip": False,
+            "officialWordCount": 100,
+            "officialPreviewWords": None,
+            "sourceId": "official_src",
+            "sourceChapterId": "official_src:ch1",
+            "alignedWith": "official",
+            "alignmentScore": None,
+        },
+        chapter_trace=trace,
+    )
+
+    chapter_index = json.loads(chapter_index_path.read_text(encoding="utf-8"))
+    assert chapter_index["schemaVersion"] == 2
+    assert chapter_index["chapters"][0]["status"] == "readable"
+    assert chapter_index["chapters"][0]["officialWordCount"] == 100
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    assert metadata["bookState"]["readableChapterCount"] == 1
 
 
 def test_library_books_book_state_summary_reads_shared_metadata_only():

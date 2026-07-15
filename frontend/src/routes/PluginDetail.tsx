@@ -1,7 +1,14 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { ArrowLeft, Play, Power, Shield } from "lucide-react"
+import {
+  ArrowLeft,
+  Play,
+  Power,
+  Puzzle,
+  ScrollText,
+  Shield,
+} from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const CAPABILITY_MAP: Record<string, string> = {
   search: "搜索",
@@ -29,17 +37,27 @@ function formatCapability(c: string): string {
   return CAPABILITY_MAP[c] || c
 }
 
+function MetaItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-sm font-medium">{value}</div>
+    </div>
+  )
+}
+
 export function PluginDetail() {
   const { pluginId } = useParams<{ pluginId: string }>()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error: pluginError } = useQuery({
     queryKey: ["plugin", pluginId],
     queryFn: () => api.plugin(pluginId!),
     enabled: !!pluginId,
   })
 
-  const { data: attemptsData } = useQuery({
+  const { data: attemptsData, error: attemptsError } = useQuery({
     queryKey: ["plugin-attempts", pluginId],
     queryFn: () => api.pluginAttempts(pluginId!),
     enabled: !!pluginId,
@@ -55,12 +73,30 @@ export function PluginDetail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] }),
   })
 
-  const loginMutation = useMutation({
-    mutationFn: () => api.pluginLogin(pluginId!),
-  })
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center text-muted-foreground">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
 
-  if (isLoading) return <div className="text-muted-foreground">加载中...</div>
-  if (!data || data.error) return <div className="text-destructive">书源不存在</div>
+  if (pluginError) {
+    return <Alert variant="destructive"><AlertDescription>书源加载失败：{(pluginError as Error).message}</AlertDescription></Alert>
+  }
+  if (!data || data.error) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border py-16 text-center">
+        <p className="text-base font-semibold">书源不存在或已删除</p>
+        <Button variant="outline" size="sm" className="mt-4" asChild>
+          <Link to="/console/plugins">
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            返回书源列表
+          </Link>
+        </Button>
+      </div>
+    )
+  }
 
   const p = data
   const smokeResult = smokeMutation.data || (p.health?.lastTestResult === "pass" ? { pass: true } : p.health?.lastTestResult === "fail" ? { pass: false } : null)
@@ -68,51 +104,80 @@ export function PluginDetail() {
   const attempts = attemptsData?.attempts || []
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link to="/console/plugins" className="text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <h1 className="text-xl font-semibold">{p.name}</h1>
-        <Badge variant={p.enabled ? "success" : "outline"}>
-          {p.enabled ? "启用" : "禁用"}
-        </Badge>
-      </div>
+    <div className="space-y-5">
+      {(enableMutation.error || smokeMutation.error || attemptsError) && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {(enableMutation.error as Error)?.message || (smokeMutation.error as Error)?.message || (attemptsError as Error)?.message || "书源操作失败，请稍后重试。"}
+          </AlertDescription>
+        </Alert>
+      )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => navigate("/console/plugins")}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-card/80 px-3 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur hover:text-foreground hover:bg-card transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            返回书源列表
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <Puzzle className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">{p.name}</h1>
+                <Badge variant={p.enabled ? "success" : "outline"}>
+                  {p.enabled ? "启用" : "禁用"}
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {p.capabilities?.map((c: string) => (
+                  <Badge key={c} variant="secondary" className="text-xs">
+                    {formatCapability(c)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-2">
-        {p.capabilities?.map((c: string) => (
-          <Badge key={c} variant="secondary" className="text-xs">
-            {formatCapability(c)}
-          </Badge>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          onClick={() => enableMutation.mutate(!p.enabled)}
-        >
-          <Power className="w-4 h-4 mr-1" />
-          {p.enabled ? "禁用" : "启用"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => smokeMutation.mutate()}
-        >
-          <Play className="w-4 h-4 mr-1" />
-          冒烟测试
-        </Button>
-        {hasAuth && (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={p.enabled ? "outline" : "default"}
+            onClick={() => enableMutation.mutate(!p.enabled)}
+            disabled={enableMutation.isPending}
+          >
+            <Power className="w-4 h-4 mr-1.5" />
+            {p.enabled ? "禁用" : "启用"}
+          </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loginMutation.mutate()}
+            onClick={() => smokeMutation.mutate()}
+            disabled={smokeMutation.isPending}
           >
-            <Shield className="w-4 h-4 mr-1" />
-            登录
+            {smokeMutation.isPending ? (
+              <div className="mr-1.5 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <Play className="w-4 h-4 mr-1.5" />
+            )}
+            冒烟测试
           </Button>
-        )}
+          {hasAuth && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/console/official-sources")}
+            >
+              <Shield className="w-4 h-4 mr-1.5" />
+              前往官方源管理
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="metadata">
@@ -123,55 +188,69 @@ export function PluginDetail() {
           <TabsTrigger value="logs">日志</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="metadata">
+        <TabsContent value="metadata" className="space-y-4">
           <Card>
-            <CardContent className="p-4 space-y-2 text-sm">
-              <p><span className="text-muted-foreground">ID:</span> {p.pluginId}</p>
-              <p><span className="text-muted-foreground">版本:</span> {p.version}</p>
-              <p><span className="text-muted-foreground">修改时间:</span> {p.lastModified || "-"}</p>
-              <p><span className="text-muted-foreground">域名:</span> {p.domains?.join(", ") || "-"}</p>
-              <p><span className="text-muted-foreground">基础URL:</span> {p.baseUrls?.join(", ") || "-"}</p>
-              <p><span className="text-muted-foreground">书源类型:</span> {p.accessType || p.sourceType || "HTTP"}</p>
-              <p><span className="text-muted-foreground">代理:</span> {p.proxyRequired ? `需要 (${p.proxyMode || "auto"})` : "不需要"}</p>
-              <p><span className="text-muted-foreground">浏览器:</span> {p.browser?.mode || "none"}</p>
-              <p><span className="text-muted-foreground">标签:</span> {p.tags?.join(", ") || "-"}</p>
-              <p><span className="text-muted-foreground">认证模式:</span> {p.auth?.mode || "none"}</p>
-              <p><span className="text-muted-foreground">内容访问:</span> {p.content?.access || "unknown"}</p>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">基础信息</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <MetaItem label="ID" value={p.pluginId} />
+                <MetaItem label="版本" value={p.version || "-"} />
+                <MetaItem label="修改时间" value={p.lastModified || "-"} />
+                <MetaItem label="书源类型" value={p.accessType || p.sourceType || "HTTP"} />
+                <MetaItem label="域名" value={p.domains?.join(", ") || "-"} />
+                <MetaItem label="基础 URL" value={p.baseUrls?.join(", ") || "-"} />
+                <MetaItem label="代理" value={p.proxyRequired ? `需要 (${p.proxyMode || "auto"})` : "不需要"} />
+                <MetaItem label="浏览器模式" value={p.browser?.mode || "none"} />
+                <MetaItem label="标签" value={p.tags?.join(", ") || "-"} />
+                <MetaItem label="认证模式" value={p.auth?.mode || "none"} />
+                <MetaItem label="内容访问" value={p.content?.access || "unknown"} />
+              </div>
             </CardContent>
           </Card>
-          <Card className="mt-4">
+
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">运行时状态</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-2 text-sm">
-              <p>
-                <span className="text-muted-foreground">最近Ping:</span>{" "}
-                {p.health?.pingStatus === "reachable" ? (
-                  <span className="text-green-600">可达 {p.health.pingLatencyMs}ms</span>
-                ) : p.health?.pingStatus === "unreachable" ? (
-                  <span className="text-destructive">不可达</span>
-                ) : (
-                  "-"
-                )}
-              </p>
-              <p>
-                <span className="text-muted-foreground">最近Smoke:</span>{" "}
-                {p.health?.lastTestResult === "pass" ? (
-                  <span className="text-green-600">通过</span>
-                ) : p.health?.lastTestResult === "fail" ? (
-                  <span className="text-destructive">失败</span>
-                ) : (
-                  "-"
-                )}
-              </p>
-              <p>
-                <span className="text-muted-foreground">最近错误:</span>{" "}
-                {p.health?.lastError ? (
-                  <span className="text-destructive">{p.health.lastError}</span>
-                ) : (
-                  "-"
-                )}
-              </p>
+            <CardContent>
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <MetaItem
+                  label="最近 Ping"
+                  value={
+                    p.health?.pingStatus === "reachable" ? (
+                      <span className="text-primary">可达 {p.health.pingLatencyMs}ms</span>
+                    ) : p.health?.pingStatus === "unreachable" ? (
+                      <span className="text-destructive">不可达</span>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+                <MetaItem
+                  label="最近 Smoke"
+                  value={
+                    p.health?.lastTestResult === "pass" ? (
+                      <span className="text-primary">通过</span>
+                    ) : p.health?.lastTestResult === "fail" ? (
+                      <span className="text-destructive">失败</span>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+                <MetaItem
+                  label="最近错误"
+                  value={
+                    p.health?.lastError ? (
+                      <span className="text-destructive">{p.health.lastError}</span>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -181,20 +260,13 @@ export function PluginDetail() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">认证配置</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="grid gap-2 md:grid-cols-2">
-                <p><span className="text-muted-foreground">模式:</span> {p.auth?.mode || "none"}</p>
-                <p><span className="text-muted-foreground">登录URL:</span> {p.auth?.loginUrl || "-"}</p>
-                <p><span className="text-muted-foreground">Cookie域:</span> {p.auth?.cookieDomains?.join(", ") || "-"}</p>
-                <p><span className="text-muted-foreground">验证URL:</span> {p.auth?.verificationUrl || "-"}</p>
+            <CardContent>
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <MetaItem label="模式" value={p.auth?.mode || "none"} />
+                <MetaItem label="登录 URL" value={p.auth?.loginUrl || "-"} />
+                <MetaItem label="Cookie 域" value={p.auth?.cookieDomains?.join(", ") || "-"} />
+                <MetaItem label="验证 URL" value={p.auth?.verificationUrl || "-"} />
               </div>
-              {loginMutation.data && (
-                <div className="mt-2 rounded-md border bg-muted/40 p-2">
-                  <pre className="text-xs bg-muted p-2 rounded overflow-auto">
-                    {JSON.stringify(loginMutation.data, null, 2)}
-                  </pre>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -203,7 +275,8 @@ export function PluginDetail() {
           {smokeResult && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <ScrollText className="h-4 w-4" />
                   冒烟测试结果
                   <Badge className="ml-2" variant={smokeResult.pass ? "success" : "destructive"}>
                     {smokeResult.pass ? "通过" : "失败"}
@@ -232,7 +305,7 @@ export function PluginDetail() {
                   </TableBody>
                 </Table>
                 {smokeResult.errors?.length > 0 && (
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-4 space-y-2">
                     {smokeResult.errors.map((error: any, index: number) => (
                       <div key={`${error.stage}-${index}`} className="rounded border border-destructive/30 p-2 text-xs">
                         <div className="font-medium">{error.code} / {error.stage}</div>
@@ -247,8 +320,10 @@ export function PluginDetail() {
           )}
           {!smokeResult && (
             <Card>
-              <CardContent className="p-8 text-center text-muted-foreground text-sm">
-                点击上方按钮运行测试
+              <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                <Play className="h-10 w-10 text-muted-foreground/50" />
+                <p className="mt-3 text-base font-semibold">还没运行过测试</p>
+                <p className="text-sm">点击上方按钮开始冒烟测试</p>
               </CardContent>
             </Card>
           )}

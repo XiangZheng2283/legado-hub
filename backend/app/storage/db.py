@@ -469,6 +469,7 @@ def _ensure_shared_library_schema(conn: sqlite3.Connection) -> None:
             "policy_snapshot_json": "TEXT DEFAULT ''",
             "source_snapshot_refs_json": "TEXT DEFAULT ''",
             "trace_hash": "TEXT DEFAULT ''",
+            "preview_retry_count": "INTEGER DEFAULT 0",
         }
         for name, sql_type in chapter_columns.items():
             _ensure_column(conn, "aggregate_chapter_tasks", name, sql_type)
@@ -551,6 +552,8 @@ def initialize_database(db_path: Path | None = None) -> str:
             pass
 
     conn = sqlite3.connect(path)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=5000")
     try:
         conn.executescript(SCHEMA_SQL)
         _ensure_shared_library_schema(conn)

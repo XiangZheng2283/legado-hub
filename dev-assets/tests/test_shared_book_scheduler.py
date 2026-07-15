@@ -14,17 +14,20 @@ from app.services.shared_book_scheduler import SharedBookScheduler
 class FakeProcessor:
     def __init__(self):
         self.run_calls: list[str] = []
+        self.run_call_limits: list[int | None] = []
         self.bootstrap_calls: list[str] = []
         self.due_books: list[dict[str, object]] = []
         self.list_due_books_calls = 0
         self._books: dict[str, dict[str, str]] = {}
+        self.pending_counts: dict[str, int] = {}
 
     def list_due_books(self, limit: int = 10) -> list[dict[str, object]]:
         self.list_due_books_calls += 1
         return list(self.due_books[:limit])
 
-    async def run_book_task(self, aggregate_book_id: str) -> dict[str, object]:
+    async def run_book_task(self, aggregate_book_id: str, chapter_limit: int | None = None) -> dict[str, object]:
         self.run_calls.append(aggregate_book_id)
+        self.run_call_limits.append(chapter_limit)
         await asyncio.sleep(0)
         return {"bookId": aggregate_book_id, "success": True}
 
@@ -38,6 +41,12 @@ class FakeProcessor:
 
     def get_book(self, aggregate_book_id: str) -> dict[str, str] | None:
         return self._books.get(aggregate_book_id)
+
+    def _pending_chapter_count(self, aggregate_book_id: str) -> int:
+        return int(self.pending_counts.get(aggregate_book_id, 0))
+
+    def backlog_chapter_limit(self, aggregate_book_id: str) -> int:
+        return 25
 
 
 class FakeLockService:
@@ -61,6 +70,13 @@ class _FakeLease:
 
     def release(self) -> None:
         self._service.active.discard(self._key)
+
+    @property
+    def renewal_interval_seconds(self) -> float:
+        return 60.0
+
+    def renew(self) -> bool:
+        return True
 
 
 class FakeLibraryBooks:
@@ -342,6 +358,49 @@ async def test_per_book_mutual_exclusion_still_applies():
 
 
 @pytest.mark.asyncio
+async def test_update_check_uses_backlog_window_when_pending_chapters_exist():
+    processor = FakeProcessor()
+    processor._books["book-backlog"] = {"aggregateBookId": "book-backlog", "name": "积压书", "author": "作者甲"}
+    processor.pending_counts["book-backlog"] = 120
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+    )
+
+    result = await scheduler._process_book("book-backlog", trigger="book_update_check")
+
+    assert result["success"] is True
+    assert processor.run_calls == ["book-backlog"]
+    assert processor.run_call_limits == [25]
+
+
+@pytest.mark.asyncio
+async def test_initial_subscription_jobs_requeue_when_lock_busy():
+    processor = FakeProcessor()
+    processor._books["book-locked"] = {"aggregateBookId": "book-locked", "name": "锁中书", "author": "作者甲"}
+    lock_service = FakeLockService()
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=lock_service,
+        recovery_scanner=lambda: [],
+    )
+
+    busy_lease = lock_service.acquire(book_name="锁中书", author="作者甲")
+    assert busy_lease is not None
+
+    result = await scheduler._process_book("book-locked", trigger="book_bootstrap")
+
+    assert result["skipped"] is True
+    assert result["reason"] == "lock_busy"
+    assert processor.bootstrap_calls == []
+    assert len(scheduler._manual_queue) == 1
+    assert scheduler._manual_queue[0][0] == "book-locked"
+    assert scheduler._manual_queue[0][1] == "book_bootstrap"
+    busy_lease.release()
+
+
+@pytest.mark.asyncio
 async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
     import app.main as main_module
 
@@ -356,6 +415,9 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
         async def run_forever(self, stop_event):
             started.append(("ping", stop_event))
             await stop_event.wait()
+
+    async def fake_update_lexicon_on_startup():
+        started.append(("lexicon", None))
 
     class FakeAuthService:
         def ensure_default_admin(self):
@@ -379,6 +441,7 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
     monkeypatch.setattr(main_module, "initialize_database", lambda: None)
     monkeypatch.setattr(main_module, "SharedBookScheduler", lambda: FakeScheduler())
     monkeypatch.setattr(main_module, "SourcePingScheduler", lambda: FakePingScheduler())
+    monkeypatch.setattr(main_module, "_update_lexicon_on_startup", fake_update_lexicon_on_startup)
 
     import types
 
@@ -401,15 +464,10 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
             CookieStore=FakeCookieStore,
         ),
     )
-    monkeypatch.setitem(
-        sys.modules,
-        "app.services.startup_library_scanner",
-        types.SimpleNamespace(scan_local_library=lambda: {"recovered": 0, "chapters": 0}),
-    )
-
     async with main_module.lifespan(main_module.app):
         await asyncio.sleep(0)
 
-    assert len(started) == 2
+    assert len(started) == 3
     assert started[0][0] == "scheduler"
     assert started[1][0] == "ping"
+    assert started[2][0] == "lexicon"

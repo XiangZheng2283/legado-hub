@@ -16,6 +16,14 @@ _SELF_RATING_INSTRUCTION = (
     "不要输出解释。"
 )
 
+_STAGE3_STRUCTURED_INSTRUCTION = (
+    "\n同时请在正文最后额外输出两行："
+    "<stage3_verdict>...</stage3_verdict> 和 <stage3_reason>...</stage3_reason>。"
+    "verdict 只能是 trusted_current、trusted_candidate、suspect。"
+    "reason 优先从 ai_proofread_complete、ai_selected_candidate、suspect_content、mixed_book_content、repeated_body、wrong_chapter_order 中选择。"
+    "如果无法确定更细原因，再使用 suspect_content。不要输出解释。"
+)
+
 _SYSTEM_PROMPT_AGGREGATE = (
     "你是一个小说正文整理助手。你的任务是对输入的章节正文进行去广告、纠错、敏感词恢复和格式整理。\n"
     "严格规则：只基于输入正文整理，不新增无依据的剧情、角色、场景或对话。"
@@ -32,6 +40,8 @@ _SYSTEM_PROMPT_ATTRIBUTION = (
 
 
 _SELF_RATING_RE = re.compile(r"<self_rating>\s*([0-9]*\.?[0-9]+)\s*</self_rating>", re.IGNORECASE)
+_STAGE3_VERDICT_RE = re.compile(r"<stage3_verdict>\s*([a-z_]+)\s*</stage3_verdict>", re.IGNORECASE)
+_STAGE3_REASON_RE = re.compile(r"<stage3_reason>\s*([a-z_]+)\s*</stage3_reason>", re.IGNORECASE)
 
 
 def _purify_lightweight(content: str) -> str:
@@ -54,6 +64,17 @@ def _extract_self_rating(content: str) -> tuple[str, float | None]:
     score = max(0.0, min(1.0, score))
     cleaned = _SELF_RATING_RE.sub("", content).strip()
     return cleaned, score
+
+
+def _extract_stage3_tags(content: str) -> tuple[str, str, str]:
+    """Extract optional Stage 3 verdict/reason tags and return cleaned content."""
+    verdict_match = _STAGE3_VERDICT_RE.search(content)
+    reason_match = _STAGE3_REASON_RE.search(content)
+    verdict = verdict_match.group(1).strip().lower() if verdict_match else ""
+    reason = reason_match.group(1).strip().lower() if reason_match else ""
+    cleaned = _STAGE3_VERDICT_RE.sub("", content)
+    cleaned = _STAGE3_REASON_RE.sub("", cleaned)
+    return cleaned.strip(), verdict, reason
 
 
 class AggregateAIService:
@@ -93,14 +114,16 @@ class AggregateAIService:
             "只保留小说正文，去除广告、站点提示和重复内容。"
             "不新增无依据的剧情，只做格式整理、敏感词恢复和错字修正。"
             f"{_SELF_RATING_INSTRUCTION}"
+            f"{_STAGE3_STRUCTURED_INSTRUCTION}"
         )
         blocked = self._scan_blocked_words(cleaned)
         if blocked:
             user_prompt += "\n\n" + blocked
 
-        result, self_score = await self._call_ai(user_prompt)
+        result, self_score, stage3_verdict, stage3_reason = await self._call_ai(user_prompt)
+        status = "fallback" if stage3_verdict == "suspect" else "processed"
         return {
-            "status": "processed",
+            "status": status,
             "content": result.content,
             "selfScore": self_score if self_score is not None else 0.0,
             "aiModel": result.model,
@@ -109,6 +132,8 @@ class AggregateAIService:
             "totalTokens": result.total_tokens,
             "latencyMs": result.latency_ms,
             "plannedAnalysis": False,
+            "stage3Verdict": stage3_verdict,
+            "stage3Reason": stage3_reason,
         }
 
     # ── official preview + candidate aggregation ──────────────────────────
@@ -142,14 +167,16 @@ class AggregateAIService:
             "只保留小说正文，去除广告、站点提示和重复内容。"
             "不新增无依据的剧情，只做格式整理、敏感词恢复和错字修正。"
             f"{_SELF_RATING_INSTRUCTION}"
+            f"{_STAGE3_STRUCTURED_INSTRUCTION}"
         )
         blocked = self._scan_blocked_words(official_preview, candidate_content)
         if blocked:
             user_prompt += "\n\n" + blocked
 
-        result, self_score = await self._call_ai(user_prompt)
+        result, self_score, stage3_verdict, stage3_reason = await self._call_ai(user_prompt)
+        status = "fallback" if stage3_verdict == "suspect" else "processed"
         return {
-            "status": "processed",
+            "status": status,
             "content": result.content,
             "selfScore": self_score if self_score is not None else 0.0,
             "aiModel": result.model,
@@ -158,6 +185,8 @@ class AggregateAIService:
             "totalTokens": result.total_tokens,
             "latencyMs": result.latency_ms,
             "plannedAnalysis": False,
+            "stage3Verdict": stage3_verdict,
+            "stage3Reason": stage3_reason,
         }
 
     # ── third-party primary source ────────────────────────────────────────
@@ -191,15 +220,17 @@ class AggregateAIService:
             "然后整理出最终章节正文。"
             "不新增无依据的剧情，只做格式整理、敏感词恢复和错字修正。"
             f"{_SELF_RATING_INSTRUCTION}"
+            f"{_STAGE3_STRUCTURED_INSTRUCTION}"
         )
         blocked = self._scan_blocked_words(content)
         if blocked:
             user_prompt += "\n\n" + blocked
 
         try:
-            result, self_score = await self._call_ai(user_prompt)
+            result, self_score, stage3_verdict, stage3_reason = await self._call_ai(user_prompt)
+            status = "fallback" if stage3_verdict == "suspect" else "processed"
             return {
-                "status": "processed",
+                "status": status,
                 "content": result.content,
                 "selfScore": self_score if self_score is not None else 0.0,
                 "aiModel": result.model,
@@ -208,6 +239,8 @@ class AggregateAIService:
                 "totalTokens": result.total_tokens,
                 "latencyMs": result.latency_ms,
                 "plannedAnalysis": False,
+                "stage3Verdict": stage3_verdict,
+                "stage3Reason": stage3_reason,
             }
         except AIProviderNotConfiguredError as exc:
             return {
@@ -243,13 +276,14 @@ class AggregateAIService:
             )
         return "\n".join(lines)
 
-    async def _call_ai(self, user_prompt: str) -> tuple[AIProviderResult, float | None]:
+    async def _call_ai(self, user_prompt: str) -> tuple[AIProviderResult, float | None, str, str]:
         messages = [
             {"role": "system", "content": _SYSTEM_PROMPT_AGGREGATE},
             {"role": "user", "content": user_prompt},
         ]
         result = await self._client.chat(messages)
-        cleaned_content, self_score = _extract_self_rating(result.content)
+        content_without_tags, stage3_verdict, stage3_reason = _extract_stage3_tags(result.content)
+        cleaned_content, self_score = _extract_self_rating(content_without_tags)
         cleaned_result = AIProviderResult(
             content=cleaned_content,
             model=result.model,
@@ -258,4 +292,4 @@ class AggregateAIService:
             total_tokens=result.total_tokens,
             latency_ms=result.latency_ms,
         )
-        return cleaned_result, self_score
+        return cleaned_result, self_score, stage3_verdict, stage3_reason

@@ -6,7 +6,7 @@ interface CheckboxProps extends Omit<React.ComponentPropsWithoutRef<"input">, "o
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, onCheckedChange, onClick, ...props }, ref) => (
+  ({ className, onCheckedChange, ...props }, ref) => (
     <input
       type="checkbox"
       ref={ref}

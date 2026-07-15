@@ -14,7 +14,7 @@ from app.services.live_acceptance import group_candidates
 from app.source_plugins.scheduler import get_plugin_scheduler
 
 
-FINAL_STATUSES = {"completed", "failed", "cancelled"}
+FINAL_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
 
 
 @dataclass

@@ -1,12 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-
-export interface AuthUser {
-  userId: string
-  username: string
-  role: "admin" | "user"
-}
+import type { AuthUser } from "@/lib/auth.types"
 
 interface AuthContextValue {
   user: AuthUser | null
@@ -92,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) {

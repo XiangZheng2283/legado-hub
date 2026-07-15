@@ -1,13 +1,16 @@
-"""Generate the aggregate source JSON for LegadoHub.
+"""Generate the Legado virtual source JSON for the shared subscription library.
 
-Reads metadata from the ``aggregate`` section of backend/config/app_config.json.
+The virtual source used to live under ``/api/legado/*``; after the shared
+subscription refactor it is exposed at ``/api/subscribe/legado/*``.
 """
+
+from __future__ import annotations
 
 import json
 from pathlib import Path
 
 from app.config import GENERATED_DIR, HOST, PORT
-from app.core.aggregate_config import load_aggregate_config, update_progress
+from app.core.aggregate_config import load_aggregate_config
 from app.source_plugins.loader import PluginLoader
 
 BASE_API = f"http://{HOST}:{PORT}"
@@ -31,7 +34,7 @@ def _build_source(base_api: str = BASE_API) -> dict:
         "header": "",
         "loginUrl": "",
         "bookSourceComment": "聚合搜索会先返回当前已完成书源的快照，并在后台继续搜索；排行榜、分类、聚合书籍章节元信息后续仅从正版书源获取，普通书源不再暴露排行榜/分类；遇到 Cloudflare 或浏览器挑战的书源会被标记为需要绕过并跳过，不再提供手动验证、验证页或 Cookie 回传链路。",
-        "searchUrl": f"{base_api}/api/legado/search?keyword={{{{key}}}}&page={{{{page}}}}&waitMs=180000",
+        "searchUrl": f"{base_api}/api/subscribe/legado/search?keyword={{{{key}}}}&page={{{{page}}}}&waitMs=180000",
         "exploreUrl": explore_url,
         "ruleSearch": {
             "bookList": "$.items",
@@ -102,41 +105,18 @@ def _build_explore_url(base_api: str) -> str:
         if not plugin.metadata.is_official_source():
             continue
         lines.append(
-            f"{plugin.metadata.name}::{base_api}/api/legado/explore?sourceId={plugin.metadata.id}&page={{{{page}}}}"
+            f"{plugin.metadata.name}::{base_api}/api/subscribe/legado/explore?sourceId={plugin.metadata.id}&page={{{{page}}}}"
         )
     return "\n".join(lines)
 
 
-def generate_aggregate_source(base_api: str = BASE_API) -> list[dict]:
+def generate_legado_source(base_api: str = BASE_API) -> list[dict]:
     return [_build_source(base_api)]
 
 
-def write_aggregate_source() -> str:
+def write_legado_source() -> str:
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     path = GENERATED_DIR / "legadohub-source.json"
-    _sync_progress()
-    data = generate_aggregate_source()
+    data = generate_legado_source()
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     return str(path)
-
-
-def _sync_progress() -> None:
-    try:
-        plugins = PluginLoader().load_all()
-    except Exception:
-        plugins = {}
-    total = len(plugins)
-    enabled = sum(1 for p in plugins.values() if p.metadata.enabled)
-    proxy_needed = sum(
-        1 for p in plugins.values()
-        if bool((p.metadata.proxy or {}).get("required"))
-    )
-    update_progress(
-        {
-            "configured_sources": total,
-            "enabled_sources": enabled,
-            "healthy_sources": 0,
-            "proxy_sources": proxy_needed,
-            "unsupported_sources": 0,
-        }
-    )
