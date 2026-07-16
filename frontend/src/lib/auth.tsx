@@ -8,6 +8,8 @@ interface AuthContextValue {
   isLoading: boolean
   isAuthenticated: boolean
   needsBootstrap: boolean
+  isLoggingOut: boolean
+  logoutError: string
   login: (username: string, password: string) => Promise<void>
   bootstrap: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -73,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: !!user?.user,
     needsBootstrap,
+    isLoggingOut: logoutMutation.isPending,
+    logoutError: logoutMutation.error instanceof Error ? logoutMutation.error.message : "",
     login: async (username: string, password: string) => {
       await loginMutation.mutateAsync({ username, password })
     },

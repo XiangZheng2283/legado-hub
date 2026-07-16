@@ -64,6 +64,25 @@ describe("OfficialSourceLoginDialog", () => {
     expect(screen.queryByRole("tab", { name: /手机号/i })).not.toBeInTheDocument()
   })
 
+  it("retries loading login capabilities", async () => {
+    const user = userEvent.setup()
+    ;(api.loginCapabilities as any)
+      .mockRejectedValueOnce(new Error("network unavailable"))
+      .mockResolvedValueOnce({
+        pluginId: "qidian_com",
+        methods: ["cookie"],
+        defaultMethod: "cookie",
+        privateFeatures: { phoneAuth: false, cookieAuth: false, reviews: false },
+        hasPrivatePackage: false,
+      })
+
+    renderDialog()
+    await user.click(await screen.findByRole("button", { name: "重试" }))
+
+    await waitFor(() => expect(api.loginCapabilities).toHaveBeenCalledTimes(2))
+    expect(await screen.findByRole("tab", { name: /Cookie/i })).toBeInTheDocument()
+  })
+
   it("shows phone tab for qidian_com fallback without private package", async () => {
     ;(api.loginCapabilities as any).mockResolvedValue({
       pluginId: "qidian_com",

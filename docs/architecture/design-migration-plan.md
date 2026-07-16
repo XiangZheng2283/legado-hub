@@ -1,6 +1,7 @@
-# 基于新设计稿重做前端 — 实施规划
+# 基于新设计稿重做前端 — 实施记录
 
-> 以 `untitled/` 为唯一设计来源，在 `frontend/` 内直接重建，不依赖旧页面结构。
+> 状态：迁移已完成。本文仅保留实施背景，不再作为待执行清单。
+> 当前执行入口：`docs/architecture/console-capability-audit-and-next-plan.zh-CN.md`
 
 ## 1. 策略
 

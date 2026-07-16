@@ -1,8 +1,12 @@
 # `/console` 后台直接重构进度
 
-## 当前阶段
+## 当前状态
 
-阶段 10：新设计稿迁移 ✅ 已完成
+- 前端迁移批次（原“阶段 10”）：已完成
+- 产品 Phase 0.5：已完成
+- Console 收尾阶段 B-E：已完成
+- 下一产品阶段：Phase 1 Subscription Ownership
+- 后续 Console 收尾入口：`docs/architecture/console-capability-audit-and-next-plan.zh-CN.md`
 
 ## 完成范围
 
@@ -48,5 +52,7 @@
 - 设置分区按顺序保存，失败时保留未保存状态；章节列表支持分页并统一可读性判断。
 - 移除删除书源、导入规则、Trace 等无实现控件；禁用/筛选/触屏操作保持可用。
 - AI 校对不属于当前产品功能面，章节详情仅保留来源、对齐和处理状态信息。
+- 这里的 Trace 指无实现的操作控件；章节详情中的只读 Trace 摘要作为运营证据保留。
+- Cache/Verification 页面及旧 Aggregate 页面体系属于主动清理，不作为待恢复功能。
 
-后续进入 Phase 1：解耦共享书实体与用户订阅关系，并在 schema 变更前补充可见性与权限决策文档。
+Console 收尾阶段 B-E 已完成。下一步进入 Phase 1；Phase 1 在 schema 变更前补充共享书可见性与权限决策。

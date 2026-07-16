@@ -1,9 +1,7 @@
 # 前端重设计实施文档
 
-> 本文档用于约束 **信息架构、页面边界、路由策略、组件复用策略与实施顺序**。
-> 自 2026-07-03 起，`/console` 后台进入 **直接重构** 路线。
-> 当前主规划为 `docs/architecture/console-direct-refactor-plan.zh-CN.md`。
-> 本文档继续保留，作为页面边界与结构参考；若与主规划冲突，以主规划为准。
+> 状态：历史设计参考。路由边界仍可参考，旧组件方案和实施顺序已废止。
+> 当前产品范围以 `docs/PRODUCT.md` 为准；后续执行见 `docs/architecture/console-capability-audit-and-next-plan.zh-CN.md`。
 
 ## 1. 设计目标
 

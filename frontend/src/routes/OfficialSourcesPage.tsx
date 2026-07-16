@@ -12,7 +12,7 @@ const TERMINAL_LOGIN_STATUSES = new Set(["success", "pending", "failed", "timeou
 
 export function OfficialSourcesPage() {
   const queryClient = useQueryClient()
-  const { data, isLoading, error: queryError } = useQuery({ queryKey: ["official-sources"], queryFn: api.officialSources, refetchInterval: 5000 })
+  const { data, isLoading, error: queryError, refetch } = useQuery({ queryKey: ["official-sources"], queryFn: api.officialSources, refetchInterval: 5000 })
   const [loginSession, setLoginSession] = useState<any>(null)
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [selectedPlugin, setSelectedPlugin] = useState<{ id: string; name: string } | null>(null)
@@ -20,28 +20,28 @@ export function OfficialSourcesPage() {
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const refreshMutation = useMutation({
-    mutationFn: (pluginId: string) => api.pluginAuthCheck(pluginId),
+    mutationFn: ({ pluginId }: { pluginId: string; name: string }) => api.pluginAuthCheck(pluginId),
     onMutate: () => setOperationError(""),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["official-sources"] }),
-    onError: (err) => setOperationError(err instanceof Error ? err.message : "刷新登录状态失败"),
+    onError: (_err, { name }) => setOperationError(`${name} 登录状态刷新失败，请稍后重试。`),
   })
   const globalRefreshMutation = useMutation({
     mutationFn: (pluginIds: string[]) => Promise.all(pluginIds.map(api.pluginAuthCheck)),
     onMutate: () => setOperationError(""),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["official-sources"] }),
-    onError: (err) => setOperationError(err instanceof Error ? err.message : "全局刷新失败"),
+    onError: () => setOperationError("官方源登录状态刷新失败，请稍后重试。"),
   })
   const logoutMutation = useMutation({
-    mutationFn: (pluginId: string) => api.loginLogout(pluginId),
+    mutationFn: ({ pluginId }: { pluginId: string; name: string }) => api.loginLogout(pluginId),
     onMutate: () => setOperationError(""),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["official-sources"] }),
-    onError: (err) => setOperationError(err instanceof Error ? err.message : "注销失败"),
+    onError: (_err, { name }) => setOperationError(`${name} 注销失败，请稍后重试。`),
   })
   const clearCookiesMutation = useMutation({
-    mutationFn: (pluginId: string) => api.pluginCookiesClear(pluginId),
+    mutationFn: ({ pluginId }: { pluginId: string; name: string }) => api.pluginCookiesClear(pluginId),
     onMutate: () => setOperationError(""),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["official-sources"] }),
-    onError: (err) => setOperationError(err instanceof Error ? err.message : "清除 Cookie 失败"),
+    onError: (_err, { name }) => setOperationError(`${name} Cookie 清除失败，请稍后重试。`),
   })
   const cancelLoginMutation = useMutation({
     mutationFn: (pluginId: string) => api.cancelLoginBrowser(pluginId),
@@ -141,6 +141,16 @@ export function OfficialSourcesPage() {
   const validCount = items.filter((i: any) => i.authStatus?.authenticated).length
   const invalidCount = items.length - validCount
   const browserLoginBusy = Boolean(loginSession?.polling) || cancelLoginMutation.isPending
+  const confirmLogout = (item: any) => {
+    if (window.confirm(`确定注销 ${item.name}？已保存的登录状态将被清除。`)) {
+      logoutMutation.mutate({ pluginId: item.pluginId, name: item.name })
+    }
+  }
+  const confirmClearCookies = (item: any) => {
+    if (window.confirm(`确定清除 ${item.name} 的 Cookie？清除后需要重新登录。`)) {
+      clearCookiesMutation.mutate({ pluginId: item.pluginId, name: item.name })
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -151,7 +161,8 @@ export function OfficialSourcesPage() {
         </div>
         <Button
           variant="outline"
-          disabled={globalRefreshMutation.isPending || refreshMutation.isPending || items.length === 0}
+          aria-busy={globalRefreshMutation.isPending}
+          disabled={isLoading || Boolean(queryError) || globalRefreshMutation.isPending || refreshMutation.isPending || items.length === 0}
           onClick={() => globalRefreshMutation.mutate(items.map((item: any) => item.pluginId))}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${globalRefreshMutation.isPending ? "animate-spin" : ""}`} />
@@ -159,13 +170,25 @@ export function OfficialSourcesPage() {
         </Button>
       </div>
 
-      {(queryError || operationError) && (
+      {queryError && (
         <div role="alert" className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{operationError || `官方源加载失败: ${queryError instanceof Error ? queryError.message : "未知错误"}`}</span>
+          <span className="flex-1">官方源加载失败，请稍后重试。</span>
+          <Button type="button" size="sm" variant="outline" onClick={() => { void refetch() }}>重试</Button>
         </div>
       )}
 
+      {operationError && (
+        <div role="alert" className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{operationError}</span>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div role="status" className="py-10 text-center text-sm text-slate-500">正在加载官方源...</div>
+      ) : !queryError && (
+        <>
       <div className="grid md:grid-cols-3 gap-4 mb-6">
         <Card className="bg-slate-800 text-white border-slate-700">
           <CardContent className="p-6">
@@ -196,10 +219,7 @@ export function OfficialSourcesPage() {
         </Card>
       )}
 
-      {isLoading ? (
-        <div className="text-slate-500">加载中...</div>
-      ) : (
-        <Card>
+      <Card>
           <CardHeader><CardTitle>官方源列表</CardTitle><CardDescription>需要认证才能获取完整正文或VIP章节的官方源。</CardDescription></CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -214,12 +234,17 @@ export function OfficialSourcesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {items.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">暂无已配置的官方源</TableCell>
+                  </TableRow>
+                )}
                 {items.map((item: any) => {
                   const auth = item.authStatus || {}
                   const isCurrentSession = loginSession?.pluginId === item.pluginId
-                  const isRefreshing = refreshMutation.isPending && refreshMutation.variables === item.pluginId
-                  const isLoggingOut = logoutMutation.isPending && logoutMutation.variables === item.pluginId
-                  const isClearing = clearCookiesMutation.isPending && clearCookiesMutation.variables === item.pluginId
+                  const isRefreshing = refreshMutation.isPending && refreshMutation.variables?.pluginId === item.pluginId
+                  const isLoggingOut = logoutMutation.isPending && logoutMutation.variables?.pluginId === item.pluginId
+                  const isClearing = clearCookiesMutation.isPending && clearCookiesMutation.variables?.pluginId === item.pluginId
                   return (
                     <TableRow key={item.pluginId}>
                       <TableCell>
@@ -239,16 +264,16 @@ export function OfficialSourcesPage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           {auth.authenticated ? (
-                            <Button aria-label={`注销 ${item.name}`} title="注销" variant="ghost" size="sm" className="h-8" disabled={isLoggingOut} onClick={() => logoutMutation.mutate(item.pluginId)}><LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-pulse" : ""}`} /></Button>
+                            <Button type="button" aria-label={`注销 ${item.name}`} aria-busy={isLoggingOut} title="注销" variant="ghost" size="sm" className="h-8" disabled={isLoggingOut} onClick={() => confirmLogout(item)}><LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-pulse" : ""}`} /></Button>
                           ) : (
                             <Button variant="outline" size="sm" className="h-8" disabled={browserLoginBusy} onClick={() => { setSelectedPlugin({ id: item.pluginId, name: item.name }); setLoginDialogOpen(true) }}>
                               {isCurrentSession && loginSession?.polling ? <><Monitor className="h-3 w-3 mr-1 animate-pulse" /> 登录中...</> : <><LogIn className="h-3 w-3 mr-1" /> 登录</>}
                             </Button>
                           )}
                           {!auth.authenticated && auth.hasCookies && (
-                            <Button aria-label={`清除 ${item.name} Cookie`} title="清除 Cookie" variant="ghost" size="sm" className="h-8" disabled={isClearing} onClick={() => clearCookiesMutation.mutate(item.pluginId)}><XCircle className={`h-4 w-4 ${isClearing ? "animate-pulse" : ""}`} /></Button>
+                            <Button type="button" aria-label={`清除 ${item.name} Cookie`} aria-busy={isClearing} title="清除 Cookie" variant="ghost" size="sm" className="h-8" disabled={isClearing} onClick={() => confirmClearCookies(item)}><XCircle className={`h-4 w-4 ${isClearing ? "animate-pulse" : ""}`} /></Button>
                           )}
-                          <Button aria-label={`刷新 ${item.name} 登录状态`} title="刷新登录状态" variant="ghost" size="sm" className="h-8" disabled={refreshMutation.isPending || globalRefreshMutation.isPending} onClick={() => refreshMutation.mutate(item.pluginId)}><RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} /></Button>
+                          <Button type="button" aria-label={`刷新 ${item.name} 登录状态`} aria-busy={isRefreshing} title="刷新登录状态" variant="ghost" size="sm" className="h-8" disabled={refreshMutation.isPending || globalRefreshMutation.isPending} onClick={() => refreshMutation.mutate({ pluginId: item.pluginId, name: item.name })}><RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -257,7 +282,8 @@ export function OfficialSourcesPage() {
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+      </Card>
+        </>
       )}
 
       {selectedPlugin && loginDialogOpen && (

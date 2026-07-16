@@ -62,6 +62,7 @@ export function OfficialSourceLoginDialog({
 }: OfficialSourceLoginDialogProps) {
   const [caps, setCaps] = useState<LoginCapabilities | null>(null)
   const [loadingCaps, setLoadingCaps] = useState(false)
+  const [capabilityRequestKey, setCapabilityRequestKey] = useState(0)
   const [activeMethod, setActiveMethod] = useState("")
 
   // Phone login state
@@ -116,7 +117,7 @@ export function OfficialSourceLoginDialog({
     return () => {
       cancelled = true
     }
-  }, [open, pluginId])
+  }, [open, pluginId, capabilityRequestKey])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // Countdown timer for SMS resend
@@ -344,10 +345,15 @@ export function OfficialSourceLoginDialog({
         )}
 
         {!loadingCaps && !caps && (
-          <Alert variant="destructive">
-            <AlertCircle className="w-4 h-4" />
-            <AlertDescription>无法获取登录能力，请刷新重试</AlertDescription>
-          </Alert>
+          <div className="space-y-3">
+            <Alert variant="destructive">
+              <AlertCircle className="w-4 h-4" />
+              <AlertDescription>{error || "无法获取登录能力，请稍后重试"}</AlertDescription>
+            </Alert>
+            <Button type="button" variant="outline" className="w-full" onClick={() => setCapabilityRequestKey((key) => key + 1)}>
+              重试
+            </Button>
+          </div>
         )}
 
         {caps && (
@@ -402,13 +408,15 @@ export function OfficialSourceLoginDialog({
                         disabled={sendingSms || verifying}
                       />
                       <Button
+                        type="button"
                         onClick={handleRequestCode}
+                        aria-busy={sendingSms}
                         disabled={sendingSms || countdown > 0 || verifying}
                         variant="outline"
                         className="shrink-0"
                       >
                         {sendingSms ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />发送中...</>
                         ) : countdown > 0 ? (
                           `${countdown}s`
                         ) : (

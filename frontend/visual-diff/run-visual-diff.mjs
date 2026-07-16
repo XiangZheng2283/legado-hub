@@ -7,11 +7,12 @@ import { chromium } from "playwright"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const frontendDir = resolve(__dirname, "..")
-const repoDir = resolve(frontendDir, "..")
-const designDir = resolve(repoDir, "untitled")
+const baselineDir = resolve(__dirname, "baseline")
 const outputRoot = resolve(__dirname, "output")
+const updateBaseline = process.argv.includes("--update-baseline")
+const minimumSimilarity = 0.98
 
-const ports = { current: 5177, design: 5178 }
+const ports = { current: 5177 }
 const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm"
 const useShell = process.platform === "win32"
 
@@ -22,16 +23,45 @@ const viewports = [
 
 const pages = [
   {
-    id: "dashboard",
-    title: "仪表盘",
-    designPath: "/#/",
+    id: "login",
+    title: "登录页",
+    currentPath: "/login",
+    scenario: { role: "anonymous" },
+  },
+  {
+    id: "login-error",
+    title: "登录失败",
+    currentPath: "/login",
+    scenario: { role: "anonymous", loginError: true },
+    prepare: async (page) => {
+      await page.getByLabel("密码").fill("invalid-password")
+      await page.getByRole("button", { name: "登录", exact: true }).click()
+      await page.getByRole("alert").waitFor()
+    },
+  },
+  {
+    id: "dashboard-admin",
+    title: "管理员仪表盘",
     currentPath: "/console",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "dashboard-user",
+    title: "用户仪表盘",
+    currentPath: "/console",
+    scenario: { role: "user" },
+  },
+  {
+    id: "admin-redirect-user",
+    title: "普通用户权限回退",
+    currentPath: "/console/plugins",
+    scenario: { role: "user" },
   },
   {
     id: "subscriptions-results",
     title: "订阅搜索结果",
-    designPath: "/#/subscriptions",
     currentPath: "/console/subscription",
+    scenario: { role: "user" },
     prepare: async (page) => {
       await page.getByPlaceholder(/搜索你想看的小说或作者/).fill("深海")
       await page.keyboard.press("Enter")
@@ -40,22 +70,34 @@ const pages = [
   },
   {
     id: "library",
-    title: "书库",
-    designPath: "/#/library",
+    title: "管理员书库",
     currentPath: "/console/library",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "library-user-empty",
+    title: "用户书库空态",
+    currentPath: "/console/library",
+    scenario: { role: "user", library: "empty" },
   },
   {
     id: "book-detail",
     title: "书籍详情",
-    designPath: "/#/library/2",
     currentPath: "/console/library/book-2",
+    scenario: { role: "user" },
+  },
+  {
+    id: "chapter-detail",
+    title: "章节详情",
+    currentPath: "/console/library/book-2/chapters/chapter-1",
+    scenario: { role: "user" },
   },
   {
     id: "search-workbench",
     title: "搜索工作台",
-    designPath: "/#/search-workbench",
     currentPath: "/console/search",
-    prepareCurrent: async (page) => {
+    scenario: { role: "admin" },
+    prepare: async (page) => {
       await page.getByPlaceholder(/输入测试关键词/).fill("深海")
       await page.getByRole("button", { name: /调试/ }).click()
       await page.waitForTimeout(500)
@@ -64,14 +106,65 @@ const pages = [
   {
     id: "sources",
     title: "书源管理",
-    designPath: "/#/sources",
     currentPath: "/console/plugins",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "sources-empty",
+    title: "书源筛选空态",
+    currentPath: "/console/plugins",
+    scenario: { role: "admin", plugins: "empty" },
+  },
+  {
+    id: "plugin-detail",
+    title: "书源详情",
+    currentPath: "/console/plugins/com.qidian.sandbox",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "official-sources",
+    title: "官方源管理",
+    currentPath: "/console/official-sources",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "official-sources-empty",
+    title: "官方源空态",
+    currentPath: "/console/official-sources",
+    scenario: { role: "admin", officialSources: "empty" },
+  },
+  {
+    id: "official-sources-error",
+    title: "官方源错误态",
+    currentPath: "/console/official-sources",
+    scenario: { role: "admin", officialSources: "error" },
+  },
+  {
+    id: "official-sources-login",
+    title: "官方源登录",
+    currentPath: "/console/official-sources",
+    scenario: { role: "admin" },
+    prepare: async (page) => {
+      await page.getByRole("button", { name: "登录", exact: true }).click()
+      await page.getByRole("dialog").waitFor()
+    },
   },
   {
     id: "settings",
     title: "系统设置",
-    designPath: "/#/settings",
     currentPath: "/console/settings",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "mobile-nav-admin",
+    title: "移动端管理员导航",
+    currentPath: "/console",
+    scenario: { role: "admin" },
+    viewports: ["mobile"],
+    prepare: async (page) => {
+      await page.getByRole("button", { name: "打开导航菜单" }).click()
+      await page.getByRole("menu").waitFor()
+    },
   },
 ]
 
@@ -82,6 +175,11 @@ const now = new Date()
   .replace("Z", "")
 const outputDir = join(outputRoot, now)
 
+function coverFixture(title, background, accent) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="240" viewBox="0 0 180 240"><rect width="180" height="240" fill="${background}"/><rect x="12" y="12" width="156" height="216" fill="none" stroke="${accent}" stroke-width="2"/><path d="M28 48h124M28 192h124" stroke="${accent}" stroke-width="2" opacity=".7"/><text x="90" y="112" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="24" font-weight="700">${title.slice(0, 4)}</text><text x="90" y="145" text-anchor="middle" fill="${accent}" font-family="sans-serif" font-size="13">LEGADO HUB</text></svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 const books = [
   {
     aggregateBookId: "book-1",
@@ -90,7 +188,7 @@ const books = [
     displayAuthor: "远瞳",
     name: "深海余烬",
     author: "远瞳",
-    coverUrl: "https://via.placeholder.com/300x400?text=深海",
+    coverUrl: coverFixture("深海余烬", "#0f766e", "#fbbf24"),
     intro:
       "在那一天，浓雾封锁了一切。在那一天，他成为了一艘幽灵船的船长。在那一天，他跨过浓雾，直面了一个被彻底颠覆而又支离破碎的世界。",
     wordCount: "320万字",
@@ -110,7 +208,7 @@ const books = [
     displayAuthor: "狐尾的笔",
     name: "道诡异仙",
     author: "狐尾的笔",
-    coverUrl: "https://via.placeholder.com/300x400?text=道诡",
+    coverUrl: coverFixture("道诡异仙", "#7f1d1d", "#fca5a5"),
     intro:
       "诡异的天道，异常的仙佛，是真？是假？陷入迷惘的李火旺无法分辨。可让他无法分辨的不仅仅只是这些。还有他自己，他病了，病的很重。",
     wordCount: "280万字",
@@ -130,7 +228,7 @@ const books = [
     displayAuthor: "佛前献花",
     name: "神秘复苏",
     author: "佛前献花",
-    coverUrl: "https://via.placeholder.com/300x400?text=神秘",
+    coverUrl: coverFixture("神秘复苏", "#312e81", "#c4b5fd"),
     intro: "五浊恶世，地狱已空，厉鬼复苏，人间如狱。",
     wordCount: "530万字",
     totalChapters: 1540,
@@ -149,7 +247,7 @@ const books = [
     displayAuthor: "远瞳",
     name: "黎明之剑",
     author: "远瞳",
-    coverUrl: "https://via.placeholder.com/300x400?text=黎明",
+    coverUrl: coverFixture("黎明之剑", "#1e3a5f", "#fde68a"),
     intro:
       "高文穿越了，但穿越的时候稍微出了点问题。在某个异界大陆上空飘了十几万年之后，他觉得自己可能需要一具身体。",
     wordCount: "450万字",
@@ -170,7 +268,7 @@ const searchCards = [
     aggregateBookId: "book-1",
     name: "深海余烬",
     author: "远瞳",
-    coverUrl: "https://via.placeholder.com/300x400?text=深海",
+    coverUrl: books[0].coverUrl,
     intro: books[0].intro,
     wordCount: "320万字",
     chapterCount: 812,
@@ -183,7 +281,7 @@ const searchCards = [
     aggregateBookId: "book-2",
     name: "道诡异仙",
     author: "狐尾的笔",
-    coverUrl: "https://via.placeholder.com/300x400?text=道诡",
+    coverUrl: books[1].coverUrl,
     intro: books[1].intro,
     wordCount: "280万字",
     chapterCount: 1100,
@@ -195,7 +293,7 @@ const searchCards = [
     candidateId: "3",
     name: "大奉打更人",
     author: "卖报小郎君",
-    coverUrl: "https://via.placeholder.com/300x400?text=大奉",
+    coverUrl: coverFixture("大奉打更", "#713f12", "#fef3c7"),
     intro: "这个世界，有儒；有道；有佛；有妖；有术士。",
     wordCount: "480万字",
     chapterCount: 1205,
@@ -207,7 +305,7 @@ const searchCards = [
     candidateId: "4",
     name: "赤心巡天",
     author: "情何以甚",
-    coverUrl: "https://via.placeholder.com/300x400?text=赤心",
+    coverUrl: coverFixture("赤心巡天", "#9f1239", "#fecdd3"),
     intro: "山河千里写伏尸，乾坤百年描饿殍。天地至公如无情，我有赤心一颗，以巡天。",
     wordCount: "650万字",
     chapterCount: 2150,
@@ -354,13 +452,13 @@ async function waitFor(url, timeoutMs = 30000) {
   throw new Error(`Timed out waiting for ${url}: ${lastError?.message || "unknown error"}`)
 }
 
-async function installMocks(page) {
+async function installMocks(page, scenario = {}) {
   await page.route("**/api/**", async (route) => {
     const req = route.request()
     const url = new URL(req.url())
     const path = url.pathname
     const method = req.method()
-    const json = mockApi(path, method)
+    const json = mockApi(path, method, scenario)
     await route.fulfill({
       status: typeof json.status === "number" ? json.status : 200,
       contentType: "application/json",
@@ -369,8 +467,14 @@ async function installMocks(page) {
   })
 }
 
-function mockApi(path, method) {
+function mockApi(path, method, scenario = {}) {
   if (path === "/api/auth/me") {
+    if (scenario.role === "anonymous") return { status: 401, body: { detail: "未登录" } }
+    const role = scenario.role || "admin"
+    return { user: { userId: role, username: role === "admin" ? "管理员" : "阅读用户", role } }
+  }
+  if (path === "/api/auth/login") {
+    if (scenario.loginError) return { status: 401, body: { detail: "用户名或密码错误" } }
     return { user: { userId: "admin", username: "管理员", role: "admin" } }
   }
   if (path === "/api/console/status") {
@@ -380,8 +484,22 @@ function mockApi(path, method) {
       plugins: { total: 342, enabled: 310, healthy: 298, unhealthy: 12 },
     }
   }
-  if (path === "/api/console/plugins") return { items: plugins, total: plugins.length }
-  if (path.startsWith("/api/console/plugins/")) return plugins[0]
+  if (path === "/api/console/plugins") {
+    const items = scenario.plugins === "empty" ? [] : plugins
+    return { items, total: items.length }
+  }
+  if (path.endsWith("/attempts")) return { attempts: [] }
+  if (path.startsWith("/api/console/plugins/")) {
+    return {
+      ...plugins[0],
+      domains: ["m.qidian.com"],
+      baseUrls: ["https://m.qidian.com"],
+      lastModified: "2026-07-16T08:00:00+08:00",
+      auth: { mode: "required", loginUrl: "https://passport.qidian.com", cookieDomains: ["qidian.com"] },
+      content: { access: "authenticated" },
+      browser: { mode: "none" },
+    }
+  }
   if (path === "/api/console/plugins/reload" || path.includes("/enable") || path.includes("/batch-")) {
     return { ok: true }
   }
@@ -395,6 +513,22 @@ function mockApi(path, method) {
     return { events: searchEvents() }
   }
   if (path.includes("/api/console/search-jobs/job-1")) return searchJob()
+  if (path === "/api/console/official-sources") {
+    if (scenario.officialSources === "error") return { status: 500, body: { detail: "上游状态查询失败" } }
+    if (scenario.officialSources === "empty") return { items: [], total: 0 }
+    const items = officialSources()
+    return { items, total: items.length }
+  }
+  if (path.includes("/api/console/official-sources/") && path.endsWith("/login-capabilities")) {
+    return {
+      pluginId: "qidian_com_web",
+      methods: ["phone", "cookie", "browser"],
+      defaultMethod: "phone",
+      privateFeatures: { phoneAuth: true, cookieAuth: true, reviews: true },
+      hasPrivatePackage: true,
+    }
+  }
+  if (path.includes("/auth/check")) return { authenticated: true, accountName: "138****0000" }
   if (path === "/api/console/settings") return settings()
   if (path === "/api/console/aggregate-settings") return aggregateSettings()
   if (path === "/api/console/lexicon/status") {
@@ -404,10 +538,17 @@ function mockApi(path, method) {
   if (path === "/api/subscribe/search") return subscribeJob()
   if (path === "/api/subscribe/search/job-sub-1") return subscribeJob()
   if (path === "/api/subscribe/library" || path === "/api/subscribe/library/mine") {
-    return { items: books, total: books.length }
+    const items = scenario.library === "empty" ? [] : books
+    return { items, total: items.length }
   }
-  if (path === "/api/console/library-books") return { items: books, total: books.length }
+  if (path === "/api/console/library-books") {
+    const items = scenario.library === "empty" ? [] : books
+    return { items, total: items.length }
+  }
   if (path.includes("/api/console/library-books/book-2/summary")) return bookSummary(books[1])
+  if (path.includes("/api/console/library-books/book-2/chapters/") && path.endsWith("/progress")) {
+    return chapterProgress()
+  }
   if (path.includes("/api/console/library-books/book-2/chapters")) return { items: chapters(), total: 50 }
   if (path.includes("/api/console/library-books/book-2/logs")) return { items: [], total: 0 }
   if (path.includes("/api/console/chapter/")) {
@@ -417,7 +558,7 @@ function mockApi(path, method) {
         "这里是试读的预览内容。文字排版模仿真实的阅读体验。\n“你醒了？”一个沙哑的声音从角落里传来。\n李火旺转过头，看到一个身披破烂道袍的老者正盘腿坐在蒲团上。",
     }
   }
-  return { ok: true }
+  return { status: 404, body: { detail: `visual-diff mock missing: ${method} ${path}` } }
 }
 
 function subscribeJob() {
@@ -523,11 +664,70 @@ function chapters() {
   })
 }
 
+function chapterProgress() {
+  return {
+    found: true,
+    bookId: "book-2",
+    chapterId: "chapter-1",
+    chapterIndex: 1,
+    title: "第1章 诡异天道",
+    status: "processed",
+    previewOnly: false,
+    contentLength: 3276,
+    sourceWordCount: 3200,
+    traceSummary: {
+      currentStep: "正文已入库",
+      nextStep: "等待下一次调度",
+      selectedSource: "起点中文网",
+      selectedContentSource: "起点中文网 App",
+      fallbackSourceId: "",
+      alignmentPassed: true,
+      alignmentReason: "标题与预览内容一致",
+      titleSimilarity: 0.998,
+      previewSimilarity: 0.986,
+      processedAt: "2026-07-16T08:30:00+08:00",
+      traceHash: "trace-a1b2c3d4",
+      stage3Verdict: "trusted_current",
+      stage3Reason: "内容完整且章节顺序正确",
+      currentChapterIndex: 1,
+      currentChapterTitle: "第1章 诡异天道",
+      nextChapterIndex: 2,
+      nextChapterTitle: "第2章 坐忘道",
+    },
+  }
+}
+
+function officialSources() {
+  return [
+    {
+      pluginId: "qidian_com_app",
+      name: "起点中文网 (App)",
+      auth: { mode: "required" },
+      authStatus: {
+        authenticated: true,
+        hasCookies: true,
+        accountName: "138****0000",
+        lastCheckedAt: "2026-07-16 08:30",
+      },
+    },
+    {
+      pluginId: "qidian_com_web",
+      name: "起点中文网 (Web)",
+      auth: { mode: "required" },
+      authStatus: {
+        authenticated: false,
+        hasCookies: false,
+        accountName: "",
+        lastCheckedAt: "2026-07-16 08:28",
+      },
+    },
+  ]
+}
+
 function settings() {
   return {
     sourcePool: {
       max_concurrency: 64,
-      source_batch_size: 50,
       source_timeout_seconds: 5,
       browser_search_timeout_seconds: 15,
       default_user_agent: "Mozilla/5.0...",
@@ -550,15 +750,17 @@ function aggregateSettings() {
   }
 }
 
-async function capture(browser, url, viewport, isCurrent, prepare) {
+async function capture(browser, url, viewport, scenario, prepare) {
   const context = await browser.newContext({
     viewport,
     deviceScaleFactor: 1,
     reducedMotion: "reduce",
     colorScheme: "light",
+    locale: "zh-CN",
+    timezoneId: "Asia/Shanghai",
   })
   const page = await context.newPage()
-  if (isCurrent) await installMocks(page)
+  await installMocks(page, scenario)
   page.on("pageerror", (error) => console.warn(`[pageerror] ${url}: ${error.message}`))
   page.on("console", (msg) => {
     if (msg.type() === "error") console.warn(`[console] ${url}: ${msg.text()}`)
@@ -678,11 +880,10 @@ async function compareImages(browser, expected, actual, threshold = 16) {
 async function main() {
   await mkdir(outputDir, { recursive: true })
   await ensureDeps(frontendDir)
-  await ensureDeps(designDir)
+  if (updateBaseline) await mkdir(baselineDir, { recursive: true })
 
   const currentServer = startVite(frontendDir, ports.current)
-  const designServer = startVite(designDir, ports.design)
-  const servers = [currentServer, designServer]
+  const servers = [currentServer]
   const stopServers = () => servers.forEach((child) => child.kill())
   process.on("exit", stopServers)
   process.on("SIGINT", () => {
@@ -691,44 +892,42 @@ async function main() {
   })
 
   try {
-    await Promise.all([
-      waitFor(`http://127.0.0.1:${ports.current}/console`),
-      waitFor(`http://127.0.0.1:${ports.design}/#/`),
-    ])
+    await waitFor(`http://127.0.0.1:${ports.current}/console`)
 
     const browser = await chromium.launch()
     const records = []
     try {
       for (const viewport of viewports) {
         for (const pageDef of pages) {
+          if (pageDef.viewports && !pageDef.viewports.includes(viewport.name)) continue
           const prefix = `${viewport.name}-${pageDef.id}`
-          const designUrl = `http://127.0.0.1:${ports.design}${pageDef.designPath}`
           const currentUrl = `http://127.0.0.1:${ports.current}${pageDef.currentPath}`
           console.log(`[capture] ${prefix}`)
-          const designShot = await capture(browser, designUrl, viewport, false, pageDef.prepare)
-          const currentShot = await capture(
-            browser,
-            currentUrl,
-            viewport,
-            true,
-            pageDef.prepareCurrent || pageDef.prepare,
-          )
-          const comparison = await compareImages(browser, designShot, currentShot)
-          await writeFile(join(outputDir, `${prefix}-design.png`), designShot)
+          const currentShot = await capture(browser, currentUrl, viewport, pageDef.scenario, pageDef.prepare)
+          const baselinePath = join(baselineDir, `${prefix}.png`)
+          if (updateBaseline) await writeFile(baselinePath, currentShot)
+          if (!existsSync(baselinePath)) {
+            throw new Error(`Missing baseline: ${baselinePath}. Run with --update-baseline after review.`)
+          }
+          const baselineShot = await readFile(baselinePath)
+          const comparison = await compareImages(browser, baselineShot, currentShot)
+          await writeFile(join(outputDir, `${prefix}-baseline.png`), baselineShot)
           await writeFile(join(outputDir, `${prefix}-current.png`), currentShot)
           await writeFile(join(outputDir, `${prefix}-diff.png`), comparison.diff)
           records.push({
             viewport: viewport.name,
             page: pageDef.id,
             title: pageDef.title,
-            designPath: pageDef.designPath,
             currentPath: pageDef.currentPath,
+            scenario: pageDef.scenario,
             mismatchPixels: comparison.mismatch,
-            mismatchRatio: Number(comparison.ratio.toFixed(4)),
+            mismatchRatio: Number(comparison.ratio.toFixed(6)),
+            similarity: Number((1 - comparison.ratio).toFixed(6)),
+            passed: 1 - comparison.ratio >= minimumSimilarity,
             width: comparison.width,
             height: comparison.height,
             files: {
-              design: `${prefix}-design.png`,
+              baseline: `${prefix}-baseline.png`,
               current: `${prefix}-current.png`,
               diff: `${prefix}-diff.png`,
             },
@@ -739,18 +938,34 @@ async function main() {
       await browser.close()
     }
 
+    const mismatchPixels = records.reduce((total, item) => total + item.mismatchPixels, 0)
+    const comparedPixels = records.reduce((total, item) => total + item.width * item.height, 0)
+    const overallMismatchRatio = comparedPixels ? mismatchPixels / comparedPixels : 1
+    const overallSimilarity = 1 - overallMismatchRatio
+    const failedRecords = records.filter((item) => !item.passed).map((item) => `${item.viewport}:${item.page}`)
     const report = {
       generatedAt: new Date().toISOString(),
+      mode: updateBaseline ? "update-baseline" : "compare",
       outputDir,
+      baselineDir,
       currentBaseUrl: `http://127.0.0.1:${ports.current}`,
-      designBaseUrl: `http://127.0.0.1:${ports.design}`,
       threshold: 16,
-      note: "official-sources 在 untitled/src/App.tsx 中没有独立路由，首轮映射到 sources/书源管理整体页。",
+      minimumSimilarity,
+      mismatchPixels,
+      comparedPixels,
+      overallMismatchRatio: Number(overallMismatchRatio.toFixed(6)),
+      overallSimilarity: Number(overallSimilarity.toFixed(6)),
+      failedRecords,
+      passed: overallSimilarity >= minimumSimilarity && failedRecords.length === 0,
+      note: "Baseline comes from approved real Console routes and states. The legacy untitled prototype is historical reference only.",
       records,
     }
     await writeFile(join(outputDir, "report.json"), `${JSON.stringify(report, null, 2)}\n`)
     await writeFile(join(outputDir, "report.md"), renderMarkdown(report))
     console.log(`\n[done] report: ${join(outputDir, "report.md")}`)
+    if (!report.passed) {
+      throw new Error(`Visual regression gate failed: overall ${(overallSimilarity * 100).toFixed(2)}%, scenarios ${failedRecords.join(", ") || "none"}`)
+    }
   } finally {
     stopServers()
   }
@@ -761,16 +976,20 @@ function renderMarkdown(report) {
     "# Console Visual Diff Report",
     "",
     `Generated: ${report.generatedAt}`,
+    `Mode: ${report.mode}`,
+    `Overall similarity: ${(report.overallSimilarity * 100).toFixed(2)}%`,
+    `Required similarity: ${(report.minimumSimilarity * 100).toFixed(0)}%`,
+    `Result: ${report.passed ? "PASS" : "FAIL"}`,
     "",
     report.note,
     "",
-    "| Viewport | Page | Mismatch | Files |",
-    "| --- | --- | ---: | --- |",
+    "| Viewport | Page | Similarity | Mismatch | Files |",
+    "| --- | --- | ---: | ---: | --- |",
   ]
   for (const item of report.records) {
     const pct = `${(item.mismatchRatio * 100).toFixed(2)}%`
     lines.push(
-      `| ${item.viewport} | ${item.title} | ${pct} | [design](${item.files.design}) / [current](${item.files.current}) / [diff](${item.files.diff}) |`,
+      `| ${item.viewport} | ${item.title} | ${(item.similarity * 100).toFixed(2)}% | ${pct} | [baseline](${item.files.baseline}) / [current](${item.files.current}) / [diff](${item.files.diff}) |`,
     )
   }
   lines.push("")
@@ -779,6 +998,12 @@ function renderMarkdown(report) {
   lines.push("```powershell")
   lines.push("cd C:\\Home\\Workspace\\UGit\\legado-hub\\frontend")
   lines.push("node .\\visual-diff\\run-visual-diff.mjs")
+  lines.push("```")
+  lines.push("")
+  lines.push("## Update Approved Baseline")
+  lines.push("")
+  lines.push("```powershell")
+  lines.push("node .\\visual-diff\\run-visual-diff.mjs --update-baseline")
   lines.push("```")
   lines.push("")
   return `${lines.join("\n")}\n`

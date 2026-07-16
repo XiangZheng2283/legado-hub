@@ -138,6 +138,13 @@ def test_get_search_job():
     assert data["jobId"] == job_id
 
 
+def test_get_missing_search_job_returns_404():
+    response = client.get("/api/console/search-jobs/missing")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "任务不存在"
+
+
 def test_cancel_search_job():
     create = client.post("/api/console/search-jobs", json={"keyword": "test", "page": 1, "limit": 2})
     job_id = create.json()["jobId"]

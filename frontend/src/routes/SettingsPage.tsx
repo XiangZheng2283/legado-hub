@@ -190,16 +190,16 @@ export function SettingsPage() {
             <CardContent>
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-2 max-w-md">
-                  <Label>当前密码</Label>
-                  <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                  <Label htmlFor="current-password">当前密码</Label>
+                  <Input id="current-password" autoComplete="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                 </div>
                 <div className="space-y-2 max-w-md">
-                  <Label>新密码</Label>
-                  <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                  <Label htmlFor="new-password">新密码</Label>
+                  <Input id="new-password" autoComplete="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                 </div>
                 <div className="space-y-2 max-w-md">
-                  <Label>确认新密码</Label>
-                  <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                  <Label htmlFor="confirm-password">确认新密码</Label>
+                  <Input id="confirm-password" autoComplete="new-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                 </div>
                 {passwordError && <Alert variant="destructive"><AlertDescription>{passwordError}</AlertDescription></Alert>}
                 {passwordOk && <Alert><AlertDescription>密码已修改。</AlertDescription></Alert>}

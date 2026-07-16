@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
@@ -42,9 +42,13 @@ from app.services.user_auth import auth_service
 console_router = APIRouter(prefix="/api/console")
 
 
-def console_route(method: str, path: str, **kwargs):
-    """Register a console API route."""
-    return getattr(console_router, method)(path, **kwargs)
+def console_route(method: str, path: str, *, access: str = "admin", **kwargs):
+    """Register a console route with an explicit server-side access policy."""
+    if access not in {"admin", "user"}:
+        raise ValueError(f"unsupported console route access: {access}")
+    dependency = auth_service.require_admin if access == "admin" else auth_service.require_user
+    dependencies = [*kwargs.pop("dependencies", []), Depends(dependency)]
+    return getattr(console_router, method)(path, dependencies=dependencies, **kwargs)
 
 
 def _read_json(path: Path, default: dict) -> dict:
@@ -883,7 +887,7 @@ async def list_official_sources(request: Request):
 def get_plugin(plugin_id: str):
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     return {
         "pluginId": plugin.metadata.id,
         "name": plugin.metadata.name,
@@ -913,7 +917,7 @@ def get_plugin(plugin_id: str):
 def get_plugin_attempts(plugin_id: str, limit: int = 20):
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     from app.services.plugin_runtime_state import get_runtime_state
 
     attempts = get_runtime_state().get_attempts(plugin_id, limit=limit)
@@ -930,7 +934,7 @@ def reload_plugins():
 def enable_plugin(plugin_id: str, payload: dict):
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     enabled = payload.get("enabled", True)
     plugin.metadata.enabled = enabled
     AppConfig.get().set_plugin_enabled(plugin_id, enabled)
@@ -954,13 +958,6 @@ def batch_enable_plugins(payload: dict):
     return {"results": results}
 
 
-@console_route("post", "/plugins/batch-delete")
-def batch_delete_plugins(request: Request, payload: dict):
-    """Keep the legacy endpoint inert until plugin ownership is explicit."""
-    auth_service.require_admin(request)
-    raise HTTPException(status_code=501, detail="批量删除书源尚未实现，请使用禁用功能")
-
-
 @console_route("post", "/plugins/ping")
 async def ping_all_plugins(payload: dict | None = None):
     payload = payload or {}
@@ -975,7 +972,7 @@ async def ping_all_plugins(payload: dict | None = None):
 @console_route("post", "/plugins/{plugin_id}/ping")
 async def ping_one_plugin(plugin_id: str):
     if plugin_id not in _plugin_scheduler._plugins:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     service = SourcePingService(scheduler=_plugin_scheduler)
     result = await service.ping_one(plugin_id)
     return result
@@ -1002,7 +999,7 @@ async def get_plugin_auth(plugin_id: str, request: Request):
     auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     cookie_store = CookieStore()
     payload = cookie_store.load(plugin_id)
     has_cookies = bool(payload) and (
@@ -1087,7 +1084,7 @@ async def prepare_plugin_login(plugin_id: str, request: Request):
     auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     if hasattr(plugin.source, "prepare_login") and callable(getattr(plugin.source, "prepare_login")):
         ctx = _plugin_scheduler._make_ctx(plugin_id)
         try:
@@ -1116,7 +1113,7 @@ def clear_plugin_cookies(plugin_id: str, request: Request):
     auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
     ctx = _plugin_scheduler._make_ctx(plugin_id)
     ctx.cookies.clear()
     CookieStore().clear(plugin_id)
@@ -1134,7 +1131,7 @@ async def start_login_browser(plugin_id: str, request: Request):
     auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
-        return {"error": "插件不存在"}
+        raise HTTPException(status_code=404, detail="插件不存在")
 
     # Resolve login URL and cookie domains (same logic as prepare_login)
     auth = plugin.metadata.auth or {}
@@ -1227,7 +1224,7 @@ async def official_login_phone_request(plugin_id: str, payload: dict, request: R
     """
     auth_service.require_admin(request)
     if not payload.get("phone"):
-        return {"ok": False, "error": "缺少手机号"}
+        raise HTTPException(status_code=400, detail="缺少手机号")
     return official_auth_manager.request_phone_code(plugin_id, payload)
 
 
@@ -1252,7 +1249,7 @@ async def official_login_cookie_verify(plugin_id: str, payload: dict, request: R
     auth_service.require_admin(request)
     cookie_text = payload.get("cookieText", "")
     if not cookie_text:
-        return {"ok": False, "error": "缺少 Cookie 文本"}
+        raise HTTPException(status_code=400, detail="缺少 Cookie 文本")
     return _normalize_auth_identity(
         await official_auth_manager.verify_cookie(plugin_id, cookie_text)
     )
@@ -1340,7 +1337,7 @@ def list_sources(
 def get_source(source_id: str):
     plugin = _plugin_scheduler._plugins.get(source_id)
     if not plugin:
-        return {"error": "书源不存在"}
+        raise HTTPException(status_code=404, detail="书源不存在")
     return {
         "source": {
             "pluginId": plugin.metadata.id,
@@ -1364,6 +1361,8 @@ def get_source(source_id: str):
 
 @console_route("post", "/sources/{source_id}/test")
 async def test_source(source_id: str, payload: dict):
+    if source_id not in _plugin_scheduler._plugins:
+        raise HTTPException(status_code=404, detail="书源不存在")
     catalog = Catalog()
     keyword = payload.get("keyword", "凡人修仙传")
     page = payload.get("page", 1)
@@ -1482,7 +1481,7 @@ def get_search_job(request: Request, job_id: str):
     # Fallback: try DB for historical job.
     job = _search_service.get_job(job_id)
     if not job:
-        return {"error": "任务不存在"}
+        raise HTTPException(status_code=404, detail="任务不存在")
     result = job.result or {}
     items = result.get("items", [])
     candidate_groups = job.candidate_groups or []
@@ -1523,6 +1522,8 @@ def get_search_job(request: Request, job_id: str):
 @console_route("get", "/search-jobs/{job_id}/events")
 def get_search_job_events(request: Request, job_id: str, after: int = 0):
     auth_service.require_admin(request)
+    if not _search_service.get_job(job_id):
+        raise HTTPException(status_code=404, detail="任务不存在")
     events = _search_service.get_events(job_id, after_index=after)
     return {"jobId": job_id, "events": events, "nextAfter": after + len(events)}
 
@@ -1532,7 +1533,7 @@ def get_search_job_candidates(request: Request, job_id: str):
     auth_service.require_admin(request)
     job = _search_service.get_job(job_id)
     if not job:
-        return {"error": "任务不存在", "items": []}
+        raise HTTPException(status_code=404, detail="任务不存在")
     candidates = _search_service.get_candidates(job_id)
     # Apply score filter to candidate groups
     score_filter = _search_service._get_score_filter()
@@ -1551,7 +1552,7 @@ async def verify_search_job_candidate(request: Request, job_id: str, candidate_i
     auth_service.require_admin(request)
     candidate = _search_service.find_candidate(job_id, candidate_id)
     if not candidate:
-        return {"error": "候选不存在", "jobId": job_id, "candidateId": candidate_id}
+        raise HTTPException(status_code=404, detail="候选不存在")
     job = _search_service.get_job(job_id)
     payload = payload or {}
     chapter_index = payload.get("chapterIndex", 0)
@@ -1576,7 +1577,7 @@ async def fetch_search_job_candidate_reviews(request: Request, job_id: str, cand
     auth_service.require_admin(request)
     candidate = _search_service.find_candidate(job_id, candidate_id)
     if not candidate:
-        return {"error": "候选不存在", "jobId": job_id, "candidateId": candidate_id}
+        raise HTTPException(status_code=404, detail="候选不存在")
     payload = payload or {}
     chapter_index = payload.get("chapterIndex", 0)
     # Allow the caller to cap the backend timeout; default to a generous limit
@@ -1598,6 +1599,8 @@ async def fetch_search_job_candidate_reviews(request: Request, job_id: str, cand
 @console_route("post", "/search-jobs/{job_id}/cancel")
 def cancel_search_job(request: Request, job_id: str):
     auth_service.require_admin(request)
+    if not _search_service.get_job(job_id):
+        raise HTTPException(status_code=404, detail="任务不存在")
     ok = _search_service.cancel_job(job_id)
     return {"jobId": job_id, "cancelled": ok}
 
@@ -1611,10 +1614,10 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
     start_chapter_index = max(1, int(payload.get("startChapterIndex", 1) or 1))
     auto_archive = bool(payload.get("autoArchiveOnComplete", True))
     if not candidate_id:
-        return {"error": "缺少 candidateId"}
+        raise HTTPException(status_code=400, detail="缺少 candidateId")
     group = _search_service.find_candidate_group(job_id, candidate_id)
     if not group:
-        return {"error": "候选书籍不存在", "jobId": job_id, "candidateId": candidate_id}
+        raise HTTPException(status_code=404, detail="候选书籍不存在")
     created = await library_books_service.create_or_get_shared_book(
         group,
         added_by_user_id=added_by_user_id,
@@ -1760,7 +1763,7 @@ async def get_book_toc(book_id: str):
     return await catalog.toc(book_id)
 
 
-@console_route("get", "/chapter/{chapter_id}")
+@console_route("get", "/chapter/{chapter_id}", access="user")
 async def get_chapter(chapter_id: str):
     catalog = BookCatalog()
     return await catalog.chapter(chapter_id)
@@ -1982,7 +1985,6 @@ def _source_pool_from_config(cfg: AppConfig) -> dict:
             "allowAutoRetry": cfg.proxy.allow_auto_retry,
         },
         "max_concurrency": cfg.search.global_source_concurrency,
-        "source_batch_size": 20,
         "source_timeout_seconds": cfg.search.source_timeout_seconds,
         "overall_search_timeout_seconds": cfg.search.overall_timeout_seconds,
         "browser_source_timeout_seconds": cfg.search.browser_source_timeout_seconds,
@@ -2210,7 +2212,7 @@ def list_library_books(request: Request, keyword: str = ""):
     return {"items": items, "total": len(items)}
 
 
-@console_route("get", "/library-books/{book_id}/summary")
+@console_route("get", "/library-books/{book_id}/summary", access="user")
 def get_library_book_summary(request: Request, book_id: str):
     user = auth_service.require_user(request)
     payload = _load_shared_library_book_summary(book_id, admin_view=_is_admin_role(user))
@@ -2226,7 +2228,7 @@ def get_library_book_admin(request: Request, book_id: str):
     return payload
 
 
-@console_route("get", "/library-books/{book_id}/chapters")
+@console_route("get", "/library-books/{book_id}/chapters", access="user")
 def list_library_book_chapters_admin(
     request: Request,
     book_id: str,
@@ -2248,13 +2250,13 @@ def list_library_book_chapters_admin(
     return payload
 
 
-@console_route("get", "/library-books/{book_id}/logs")
+@console_route("get", "/library-books/{book_id}/logs", access="user")
 def list_library_book_logs(request: Request, book_id: str, limit: int = 50, offset: int = 0):
     user = auth_service.require_user(request)
     return _list_library_book_logs(book_id, limit=limit, offset=offset, admin_view=_is_admin_role(user))
 
 
-@console_route("get", "/library-books/{book_id}/chapters/{chapter_id}/progress")
+@console_route("get", "/library-books/{book_id}/chapters/{chapter_id}/progress", access="user")
 def get_library_book_chapter_progress(request: Request, book_id: str, chapter_id: str):
     auth_service.require_user(request)
     payload = _load_library_book_chapter_progress(book_id, chapter_id)
@@ -2312,7 +2314,7 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
             (book_id,),
         ).fetchone()
         if not row:
-            return {"error": "书籍不存在", "bookId": book_id}
+            raise HTTPException(status_code=404, detail="书籍不存在")
 
         settings = _aggregate_book_settings(row[0] or "")
         current_policy_version = int(row[1] or 1)
@@ -2395,7 +2397,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
             (book_id,),
         ).fetchone()
         if not row:
-            return {"error": "书籍不存在", "bookId": book_id}
+            raise HTTPException(status_code=404, detail="书籍不存在")
 
         aggregate_payload_json, settings_json, current_policy_version, current_start_index = row
         settings = _aggregate_book_settings(settings_json or "")
@@ -2528,7 +2530,7 @@ def list_library_book_processing_logs(
             (book_id,),
         ).fetchone()
         if book is None:
-            return {"error": "书籍不存在", "bookId": book_id}
+            raise HTTPException(status_code=404, detail="书籍不存在")
 
         stats = cur.execute(
             """
@@ -2710,7 +2712,7 @@ async def stream_library_book_logs(request: Request, book_id: str):
 
     book = library_books_service.get_book(book_id)
     if not book:
-        return {"error": "书籍不存在", "bookId": book_id}
+        raise HTTPException(status_code=404, detail="书籍不存在")
 
     book_name = str(book.get("name", "") or "").strip()
     author = str(book.get("author", "") or "").strip()

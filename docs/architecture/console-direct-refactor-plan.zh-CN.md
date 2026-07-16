@@ -1,7 +1,8 @@
-# `/console` 后台直接重构总规划（莫奈版）
+# `/console` 后台直接重构总规划（历史记录）
 
-> 状态：当前主规划
+> 状态：已完成并停止作为执行入口
 > 日期：2026-07-03
+> 当前产品范围以 `docs/PRODUCT.md` 为准；后续执行见 `docs/architecture/console-capability-audit-and-next-plan.zh-CN.md`。
 
 ## 当前执行基准
 

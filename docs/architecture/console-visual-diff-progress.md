@@ -1,85 +1,62 @@
-# `/console` 后台视觉对齐进度
+# `/console` 后台视觉回归进度
 
-## 最新 visual diff 报告
+## 当前状态
 
-`frontend/visual-diff/output/2026-07-09_08-54-00-015/report.md`
+真实路由视觉基线已建立，阶段 E 完成。
 
-## 当前结论
+最新报告：
 
-- 整体平均 mismatch：约 **0.83%**
-- 整体设计稿相似度：约 **99.17%**
-- 目标：整体相似度至少 98%（平均 mismatch <= 2%）已达成
-- 当前最高单项：`mobile-sources` 4.23%，其余视图均低于 1.39%
+`frontend/visual-diff/output/2026-07-15_17-23-59-491/report.md`
 
-## 本轮关键改动
+## 基线定义
 
-### 1. 全局字体基线回归设计稿
+- 基线目录：`frontend/visual-diff/baseline/`
+- 场景数量：39
+- 视口：desktop 1440x900、mobile 390x844
+- 角色：admin、user、anonymous
+- 状态：登录/登录失败、权限回退、列表常态/空态/错误态、详情页、官方源登录、移动导航
+- 旧 `untitled/` 只作为迁移历史参考，不再启动为 design server，也不再要求恢复已删除控件。
 
-- `frontend/src/index.css`
-- 移除 `body` 上的 `HarmonyOS_Medium` 自定义字体覆盖，回到 Tailwind/system 默认字体栈。
-- 该项显著消除多页面文字抗锯齿差异。
+覆盖的真实页面包括：
 
-### 2. 共享组件对齐
+- 登录页、管理员/用户仪表盘
+- 订阅搜索结果、管理员书库、用户书库空态
+- 书籍详情、章节详情
+- 搜索工作台、书源管理/空态、书源详情
+- 官方源常态/空态/错误态/登录弹窗
+- 系统设置、移动端管理员导航
 
-- `frontend/src/components/ui/button.tsx`
-  - 移除 `whitespace-nowrap`，恢复设计稿按钮换行/收缩行为。
-- `frontend/src/components/ui/table.tsx`
-  - 表格边框、表头/单元格间距对齐设计稿：`border-slate-200`、`px-4`、`p-4`。
-- `frontend/src/components/ui/tabs.tsx`
-  - Tabs 根节点补 `flex flex-col gap-4`。
-  - TabsContent 移除额外 `mt-2`，修复 Settings 内容整体上移。
+## 验证结果
 
-### 3. 搜索工作台回归设计稿结构
+- 比较像素：31,207,200
+- 差异像素：0
+- 像素加权整体一致率：100%
+- 门禁：整体及每个场景均 >= 98%
+- 结果：PASS
 
-- `frontend/src/routes/SearchJobs.tsx`
-- 搜索按钮恢复「发起调试搜索」宽按钮。
-- 统计数字恢复 `text-2xl`。
-- 聚合结果矩阵取消移动端固定窄列宽，回到设计稿表格密度。
+基线截图已抽查登录错误、书库封面、官方源、章节详情和移动端布局；截图非空，无破图和明显重叠。封面 mock 使用内嵌确定性素材，不依赖外部网络。
 
-### 4. 书源管理页继续压差异
+## 使用方式
 
-- `frontend/src/routes/Plugins.tsx`
-- 筛选卡片增加 `!mt-8`，让筛选区、批量栏、表格整体下移到设计稿位置。
-- 表格列名、作者信息、格式/分类、解析能力、健康指标、启用开关、操作按钮对齐设计稿。
-- mobile 筛选标签使用窄宽度换行，贴近设计稿手机布局。
-- `frontend/visual-diff/run-visual-diff.mjs`
-  - 插件 mock 调整为设计稿同批数据与顺序：起点、笔趣阁、拷贝漫画、Wenku8、塔读、未知小站。
-  - 补 `successRate`，保持 KPI 为 6 总数 / 5 启用 / 3 登录态 / 75.0% 连通度。
-
-### 5. 书籍详情页细节修正
-
-- `frontend/src/routes/LibraryBookDetailPage.tsx`
-- `wordCount` 已带 `字` 时不再重复追加，修复移动端 badge 换行导致的 hero 区错位。
-
-## 最新结果
-
-| Viewport | Page | Mismatch |
-| --- | --- | ---: |
-| desktop | 仪表盘 | 0.29% |
-| desktop | 订阅搜索结果 | 0.46% |
-| desktop | 书库 | 0.54% |
-| desktop | 书籍详情 | 0.77% |
-| desktop | 搜索工作台 | 1.30% |
-| desktop | 书源管理 | 1.39% |
-| desktop | 系统设置 | 0.12% |
-| mobile | 仪表盘 | 0.00% |
-| mobile | 订阅搜索结果 | 0.85% |
-| mobile | 书库 | 0.52% |
-| mobile | 书籍详情 | 0.14% |
-| mobile | 搜索工作台 | 1.07% |
-| mobile | 书源管理 | 4.23% |
-| mobile | 系统设置 | 0.00% |
-
-## 验证命令
+日常回归：
 
 ```powershell
 cd C:\Home\Workspace\UGit\legado-hub\frontend
 node .\visual-diff\run-visual-diff.mjs
-npm run lint
-npm run build
 ```
 
-## 后续可选优化
+仅在已审核的有意 UI 变更后更新基线：
 
-- `mobile-sources` 仍是最高单项，可继续细调移动端 tabs / filter / bulk bar 的像素级间距。
-- 当前整体目标已达成，后续优化属于单页精修。
+```powershell
+node .\visual-diff\run-visual-diff.mjs --update-baseline
+```
+
+默认 compare 不会自动创建缺失基线；整体或任一场景一致率低于 98% 时命令失败。
+
+## 历史参考
+
+旧 `untitled/` 对照报告：
+
+`frontend/visual-diff/output/2026-07-15_15-41-41-768/report.md`
+
+该报告包含主动删除能力与路由不完整造成的差异，不再作为完成度结论。

@@ -100,6 +100,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
               </div>
               <input
                 type="text"
+                aria-label="搜索小说或作者"
                 placeholder="搜索你想看的小说或作者..."
                 className="flex-1 bg-transparent border-0 py-2 md:py-2.5 text-sm focus:outline-none focus:ring-0 text-slate-800 placeholder:text-slate-400"
                 value={query}
@@ -113,6 +114,9 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
               />
               <div className="pr-1 flex items-center gap-2 text-slate-400">
                 <button
+                  type="button"
+                  aria-label="开始搜索"
+                  aria-busy={isSearching}
                   onClick={handleSearch}
                   disabled={!query || isSearching}
                   className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-700 w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"

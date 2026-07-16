@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom"
 import {
-  KeyRound, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Library, ShieldAlert, Server,
+  AlertCircle, KeyRound, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Library, ShieldAlert, Server,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -46,7 +46,7 @@ function isNavItemActive(item: NavItem, pathname: string) {
 
 export function Layout() {
   const location = useLocation()
-  const { user, logout } = useAuth()
+  const { user, logout, isLoggingOut, logoutError } = useAuth()
   const isAdmin = user?.role === "admin"
 
   const renderNavItem = (item: NavItem, mobile = false) => {
@@ -106,8 +106,13 @@ export function Layout() {
               </div>
               <div className="text-sm font-medium text-slate-900">{user?.username || (isAdmin ? "管理员" : "普通用户")}</div>
             </div>
-            <button type="button" onClick={logout} className="text-xs text-slate-500 hover:text-slate-900 underline">
-              退出登录
+            <button
+              type="button"
+              disabled={isLoggingOut}
+              onClick={() => { void logout().catch(() => undefined) }}
+              className="text-xs text-slate-500 hover:text-slate-900 underline disabled:cursor-wait disabled:opacity-60"
+            >
+              {isLoggingOut ? "退出中..." : "退出登录"}
             </button>
           </div>
         </div>
@@ -147,15 +152,21 @@ export function Layout() {
                 </>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => { void logout() }}>
+              <DropdownMenuItem disabled={isLoggingOut} onSelect={() => { void logout().catch(() => undefined) }}>
                 <LogOut className="mr-3 h-5 w-5 text-slate-400" aria-hidden="true" />
-                退出登录
+                {isLoggingOut ? "退出中..." : "退出登录"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
         <main className="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 flex flex-col">
           <div className="mx-auto max-w-6xl w-full flex-1">
+            {logoutError && (
+              <div role="alert" className="mb-4 flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                退出登录失败，请稍后重试。
+              </div>
+            )}
             <Outlet />
           </div>
         </main>
