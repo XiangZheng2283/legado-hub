@@ -1,5 +1,27 @@
 const API_BASE = "/api/console"
 
+export interface ApiErrorDetail {
+  code?: string
+  message?: string
+  retryable?: boolean
+  [key: string]: unknown
+}
+
+export class ApiError extends Error {
+  readonly status: number
+  readonly detail: ApiErrorDetail
+
+  constructor(
+    status: number,
+    detail: ApiErrorDetail,
+  ) {
+    super(detail.message || `请求失败（${status}）`)
+    this.name = "ApiError"
+    this.status = status
+    this.detail = detail
+  }
+}
+
 async function fetchRaw(path: string, options?: RequestInit): Promise<Response> {
   return fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -11,7 +33,12 @@ async function fetchRaw(path: string, options?: RequestInit): Promise<Response> 
 async function responseError(res: Response): Promise<Error> {
   const payload = await res.json().catch(() => null)
   const detail = payload?.detail ?? payload?.message ?? payload?.error
-  return new Error(typeof detail === "string" && detail.trim() ? detail : `请求失败（${res.status}）`)
+  if (detail && typeof detail === "object") {
+    return new ApiError(res.status, detail as ApiErrorDetail)
+  }
+  return new ApiError(res.status, {
+    message: typeof detail === "string" && detail.trim() ? detail : `请求失败（${res.status}）`,
+  })
 }
 
 async function fetchJson(path: string, options?: RequestInit): Promise<any> {
@@ -88,9 +115,8 @@ function normalizeSearchCards(data: any): any {
     ...data,
     cards: (data?.cards || []).map((card: any) => ({
       ...card,
-      status: card.status ?? "completed",
+      status: card.status ?? "unknown",
       alreadyIngested: card.alreadyIngested ?? card.alreadyInLibrary ?? false,
-      addedBy: card.addedBy ?? card.addedByUsername ?? "",
       sourceSummaryText: Array.isArray(card.sourceSummary)
         ? card.sourceSummary.map((source: any) => source.sourceName || source.sourceId).filter(Boolean).join(" / ")
         : card.sourceSummary ?? "",
@@ -205,7 +231,28 @@ export const api = {
         method: "POST",
         body: JSON.stringify(payload),
       }),
-    myLibrary: (): Promise<any> => fetchApiJson("/subscribe/library/mine").then(normalizeLibraryList),
+    myLibrary: (keyword = ""): Promise<any> => {
+      const qs = keyword ? `?${new URLSearchParams({ keyword })}` : ""
+      return fetchApiJson(`/subscribe/library/mine${qs}`).then(normalizeLibraryList)
+    },
+    book: (bookId: string): Promise<any> =>
+      fetchApiJson(`/subscribe/books/${bookId}`).then(normalizeLibraryDetail),
+    chapters: (bookId: string, params?: Record<string, string>): Promise<any> => {
+      const qs = params ? `?${new URLSearchParams(params)}` : ""
+      return fetchApiJson(`/subscribe/books/${bookId}/chapters${qs}`).then(normalizeChapterList)
+    },
+    subscription: (bookId: string): Promise<any> =>
+      fetchApiJson(`/subscribe/books/${bookId}/subscription`),
+    updateSubscription: (
+      bookId: string,
+      payload: { status?: "active" | "paused" | "archived"; startChapterIndex?: number; autoArchiveOnComplete?: boolean },
+    ): Promise<any> =>
+      fetchApiJson(`/subscribe/books/${bookId}/subscription`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    chapter: (chapterId: string): Promise<any> =>
+      fetchApiJson(`/subscribe/chapters/${encodeURIComponent(chapterId)}`),
   },
 
   // Admin shared library management
@@ -214,7 +261,7 @@ export const api = {
     return fetchJson(`/library-books${qs}`).then(normalizeLibraryList)
   },
   libraryBookSummary: (bookId: string): Promise<any> =>
-    fetchJson(`/library-books/${bookId}/summary`).then(normalizeLibraryDetail),
+    fetchJson(`/library-books/${bookId}`).then(normalizeLibraryDetail),
   libraryBookChapters: (bookId: string, params?: Record<string, string>): Promise<any> => {
     const qs = params ? `?${new URLSearchParams(params)}` : ""
     return fetchJson(`/library-books/${bookId}/chapters${qs}`).then(normalizeChapterList)

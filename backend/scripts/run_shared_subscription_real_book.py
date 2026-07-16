@@ -15,9 +15,11 @@ if str(BACKEND_ROOT) not in sys.path:
 
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.book_catalog import BookCatalog
-from app.services.library_books import LibraryBooksService
+from app.services.library_books import LibraryBooksService, make_library_book_id
 from app.services.official_auth.manager import official_auth_manager
+from app.services.shared_book_storage import SharedBookStorage
 from app.services.user_auth import UserAuthService
+from app.services.user_subscriptions import UserSubscriptionsService
 from app.storage.db import initialize_database
 
 
@@ -209,10 +211,40 @@ def inspect_chapter_file(file_path: str) -> dict:
     return {
         "exists": True,
         "hasTraceBlock": "LEGADOHUB_TRACE_BEGIN" in text and "LEGADOHUB_TRACE_END" in text,
-        "hasPrimarySourceChapterUrl": "primarySourceChapterUrl:" in tail,
-        "hasSourceWordCount": "sourceWordCount:" in tail,
-        "hasPreviewMarker": "previewOnly:" in tail,
+        "hasPrimarySourceChapterUrl": '"primarySourceChapterUrl":' in tail,
+        "hasSourceWordCount": '"sourceWordCount":' in tail,
+        "hasPreviewMarker": '"previewOnly":' in tail,
         "tail": tail,
+    }
+
+
+def inspect_reading_contract(service: LibraryBooksService, aggregate_book_id: str) -> dict:
+    """Read the published shared book through the same service used by Legado routes."""
+    book_id = make_library_book_id(aggregate_book_id)
+    base_api = "http://127.0.0.1:8765"
+    detail = service.legado_book_detail(book_id, base_api=base_api)
+    toc = service.legado_toc(book_id, base_api=base_api)
+    chapters = (toc or {}).get("chapters") or []
+    free_sample = next((item for item in chapters if not item.get("previewOnly")), None)
+    preview_sample = next((item for item in chapters if item.get("previewOnly")), None)
+    free_body = service.legado_chapter(free_sample["chapterId"]) if free_sample else None
+    preview_body = service.legado_chapter(preview_sample["chapterId"]) if preview_sample else None
+    return {
+        "published": bool(detail),
+        "bookId": book_id,
+        "chapterCount": len(chapters),
+        "freeChapter": {
+            "found": bool(free_body),
+            "contentLength": len(str((free_body or {}).get("content", "") or "")),
+            "contentAccess": ((free_body or {}).get("extra") or {}).get("contentAccess", ""),
+            "hasReplacementCharacter": "\ufffd" in str((free_body or {}).get("content", "") or ""),
+        },
+        "previewChapter": {
+            "found": bool(preview_body),
+            "contentLength": len(str((preview_body or {}).get("content", "") or "")),
+            "contentAccess": ((preview_body or {}).get("extra") or {}).get("contentAccess", ""),
+            "isVip": bool((preview_body or {}).get("isVip")),
+        },
     }
 
 
@@ -266,7 +298,7 @@ def resolve_actor_user_id(db_path: Path, username: str) -> tuple[str, dict[str, 
     if users:
         first = users[0]
         return first["userId"], {"username": first["username"], "userId": first["userId"]}
-    return "real-runner", {"username": "", "userId": "real-runner"}
+    raise RuntimeError("target database has no users; rerun with --ensure-admin")
 
 
 def delete_user(conn: sqlite3.Connection, user_id: str) -> None:
@@ -363,7 +395,9 @@ async def main() -> int:
             shutil.rmtree(temp_dir, ignore_errors=True)
         return 0
 
-    service = LibraryBooksService(db_path=db_path)
+    storage = SharedBookStorage(root=db_path.parent / "library")
+    service = LibraryBooksService(db_path=db_path, shared_book_storage=storage)
+    subscriptions = UserSubscriptionsService(db_path=db_path)
     ai_service = None if args.real_ai else NoOpAggregateAIService()
     existing: dict | None = None
     deleted_existing: dict | None = None
@@ -394,6 +428,12 @@ async def main() -> int:
         return 0
 
     if existing and args.reuse_existing:
+        subscription, _ = subscriptions.ensure(
+            added_by_user_id,
+            existing["aggregateBookId"],
+            start_chapter_index=args.start_chapter_index,
+            auto_archive_on_complete=args.auto_archive,
+        )
         processor = AggregateProcessor(db_path=db_path, ai_service=ai_service)
         payload = service.load_payload(existing["aggregateBookId"])
         enqueue = processor.enqueue_book(existing["aggregateBookId"], payload)
@@ -423,6 +463,7 @@ async def main() -> int:
             "actor": actor_info,
             "deletedExisting": deleted_existing or {},
             "reusedExisting": existing,
+            "subscription": subscription,
             "enqueue": enqueue,
             "rounds": results,
             "summary": summary,
@@ -438,6 +479,7 @@ async def main() -> int:
                 }
                 for row in chapter_sample
             ],
+            "readingContract": inspect_reading_contract(service, existing["aggregateBookId"]),
         }
         print(json.dumps(output, ensure_ascii=False, indent=2))
         if temp_dir and not args.keep_temp_db:
@@ -446,9 +488,7 @@ async def main() -> int:
 
     created = await service.create_or_get_shared_book(
         group,
-        added_by_user_id=added_by_user_id,
-        start_chapter_index=args.start_chapter_index,
-        auto_archive_on_complete=args.auto_archive,
+        actor_user_id=added_by_user_id,
     )
     if not created.get("created"):
         print("subscription already existed in target db")
@@ -457,6 +497,12 @@ async def main() -> int:
 
     book = created["book"]
     payload = created["payload"]
+    subscription, subscription_created = subscriptions.ensure(
+        added_by_user_id,
+        book["aggregateBookId"],
+        start_chapter_index=args.start_chapter_index,
+        auto_archive_on_complete=args.auto_archive,
+    )
     processor = AggregateProcessor(db_path=db_path, ai_service=ai_service)
     enqueue = processor.enqueue_book(book["aggregateBookId"], payload)
 
@@ -511,6 +557,8 @@ async def main() -> int:
         "deletedExisting": deleted_existing or {},
         "realAiEnabled": bool(args.real_ai),
         "enqueue": enqueue,
+        "subscription": subscription,
+        "subscriptionCreated": subscription_created,
         "rounds": results,
         "summary": summary,
         "chapterSample": [
@@ -538,6 +586,7 @@ async def main() -> int:
             }
             for row in processed_sample
         ],
+        "readingContract": inspect_reading_contract(service, book["aggregateBookId"]),
         "rollbackCreated": bool(args.rollback_created),
     }
 

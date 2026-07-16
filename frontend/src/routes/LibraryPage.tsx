@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Search, MoreVertical, Play, Pause, Archive, RefreshCw, Trash2, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
@@ -17,6 +17,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface LibraryBook {
   aggregateBookId: string
@@ -33,6 +40,18 @@ interface LibraryBook {
   intro?: string
   wordCount?: string
   primarySourceName?: string
+  subscription?: {
+    status: "active" | "paused" | "archived"
+    startChapterIndex: number
+    autoArchiveOnComplete: boolean
+  }
+  personalProgress?: {
+    fullCount: number
+    previewCount: number
+    failedCount: number
+    pendingCount: number
+    coverageRatio: number
+  }
 }
 
 function processStatusLabel(status: string) {
@@ -58,7 +77,6 @@ export function LibraryPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
 
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null)
 
@@ -69,6 +87,10 @@ export function LibraryPage() {
 
   const actionMutation = useMutation({
     mutationFn: async ({ bookId, action }: { bookId: string; action: string }) => {
+      if (!isAdmin) {
+        const status = action === "resume" ? "active" : action === "pause" ? "paused" : "archived"
+        return api.subscribe.updateSubscription(bookId, { status })
+      }
       if (action === "pause") return api.pauseLibraryBook(bookId)
       if (action === "resume") return api.resumeLibraryBook(bookId)
       if (action === "archive") return api.archiveLibraryBook(bookId)
@@ -104,7 +126,7 @@ export function LibraryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{isAdmin ? "全局书库" : "我的书库"}</h1>
-          <p className="mt-1 text-sm text-slate-500">{isAdmin ? `共 ${books.length} 本书籍` : "发现、阅读并沉浸在文字的世界里。"}</p>
+          <p className="mt-1 text-sm text-slate-500">{isAdmin ? `共 ${books.length} 本书籍` : "个人订阅、章节覆盖与处理状态"}</p>
         </div>
       </div>
 
@@ -116,7 +138,9 @@ export function LibraryPage() {
             </div>
             <input
               type="text"
-              placeholder="在书库中搜索..."
+              name="library-search"
+              autoComplete="off"
+              placeholder="在书库中搜索…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent border-0 py-2 md:py-2.5 text-sm focus:outline-none focus:ring-0 text-slate-800 placeholder:text-slate-400"
@@ -140,20 +164,30 @@ export function LibraryPage() {
       ) : books.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {books.map((book) => {
-            const progress = book.totalChapters > 0 ? Math.round((book.processedChapters / book.totalChapters) * 100) : 0
-            const hasError = (book.failedChapters || 0) > 0
+            const personal = book.personalProgress
+            const displayStatus = isAdmin ? book.status : book.subscription?.status || "unknown"
+            const progress = isAdmin
+              ? (book.totalChapters > 0 ? Math.round((book.processedChapters / book.totalChapters) * 100) : 0)
+              : Math.round(Math.max(0, Math.min(1, personal?.coverageRatio ?? 0)) * 100)
+            const failedCount = isAdmin ? book.failedChapters : personal?.failedCount
+            const hasError = typeof failedCount === "number" && failedCount > 0
             return (
-              <Card key={book.aggregateBookId} className="overflow-hidden flex flex-col hover:shadow-lg transition-all duration-200 relative group cursor-pointer" role="button" tabIndex={0} onClick={() => navigate(`/console/library/${book.aggregateBookId}`)} onKeyDown={(event) => { if (event.target instanceof HTMLElement && ["BUTTON", "A", "INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return; if (event.key === "Enter" || event.key === " ") { event.preventDefault(); navigate(`/console/library/${book.aggregateBookId}`) } }}>
+              <Card key={book.aggregateBookId} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200 relative group">
+                <Link
+                  className="absolute inset-0 z-10 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+                  aria-label={`打开《${book.displayName}》详情`}
+                  to={`/console/library/${book.aggregateBookId}`}
+                />
                 <div className="flex p-5 gap-4">
                   <div className="relative w-20 h-28 bg-slate-200 rounded-md overflow-hidden flex-shrink-0 shadow-sm">
                     {book.coverUrl ? (
-                      <img src={book.coverUrl} alt={book.displayName} className="w-full h-full object-cover" />
+                      <img src={book.coverUrl} alt={book.displayName} width={80} height={112} loading="lazy" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-slate-400">
                         <Search className="h-6 w-6" />
                       </div>
                     )}
-                    {book.primarySourceName && (
+                    {isAdmin && book.primarySourceName && (
                       <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm py-1 px-1.5">
                         <p className="text-[9px] text-white/90 text-center truncate">{book.primarySourceName}</p>
                       </div>
@@ -164,43 +198,47 @@ export function LibraryPage() {
                     <div className="flex justify-between items-start">
                       <h3 className="font-semibold text-slate-900 truncate text-base">{book.displayName}</h3>
 
-                      {isAdmin && (
-                        <div className="relative">
-                          <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="relative z-20">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6 -mr-2 -mt-1"
-                              onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === book.aggregateBookId ? null : book.aggregateBookId) }}
+                              aria-label={`打开《${book.displayName}》操作菜单`}
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
-                          </div>
-                          {openMenuId === book.aggregateBookId && (
-                            <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-md shadow-lg border border-slate-100 overflow-hidden z-10" onClick={(e) => e.stopPropagation()}>
-                              <button disabled={libraryBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 flex items-center" onClick={() => { actionMutation.mutate({ bookId: book.aggregateBookId, action: "rebuild" }); setOpenMenuId(null) }}>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            {isAdmin && (
+                              <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "rebuild" })}>
                                 <RefreshCw className="h-3 w-3 mr-2" /> 重新处理
-                              </button>
-                              {book.status === "paused" ? (
-                                <button disabled={libraryBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 flex items-center" onClick={() => { actionMutation.mutate({ bookId: book.aggregateBookId, action: "resume" }); setOpenMenuId(null) }}>
-                                  <Play className="h-3 w-3 mr-2" /> 继续
-                                </button>
-                              ) : (
-                                <button disabled={libraryBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 flex items-center" onClick={() => { actionMutation.mutate({ bookId: book.aggregateBookId, action: "pause" }); setOpenMenuId(null) }}>
-                                  <Pause className="h-3 w-3 mr-2" /> 暂停
-                                </button>
-                              )}
-                              <button disabled={libraryBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 flex items-center" onClick={() => { actionMutation.mutate({ bookId: book.aggregateBookId, action: "archive" }); setOpenMenuId(null) }}>
-                                <Archive className="h-3 w-3 mr-2" /> 归档
-                              </button>
-                              <div className="h-px bg-slate-100 my-1" />
-                              <button disabled={libraryBusy} className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 flex items-center" onClick={() => { setDeleteBookId(book.aggregateBookId); setOpenMenuId(null) }}>
-                                <Trash2 className="h-3 w-3 mr-2" /> 删除
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                              </DropdownMenuItem>
+                            )}
+                            {displayStatus === "paused" || displayStatus === "archived" ? (
+                              <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "resume" })}>
+                                <Play className="h-3 w-3 mr-2" /> 继续
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "pause" })}>
+                                <Pause className="h-3 w-3 mr-2" /> 暂停
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "archive" })}>
+                              <Archive className="h-3 w-3 mr-2" /> 归档
+                            </DropdownMenuItem>
+                            {isAdmin && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem disabled={libraryBusy} className="text-rose-600 focus:text-rose-600" onSelect={() => setDeleteBookId(book.aggregateBookId)}>
+                                  <Trash2 className="h-3 w-3 mr-2" /> 删除
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
 
                     <p className="text-sm text-slate-500 truncate mt-0.5">{book.displayAuthor || "未知作者"}</p>
@@ -232,7 +270,7 @@ export function LibraryPage() {
                 <div className="p-4 border-t border-slate-100 mt-auto bg-white flex flex-col justify-end">
                   <div className="flex justify-between items-center mb-2 text-xs text-slate-500">
                     <div className="flex items-center gap-2">
-                      {processStatusLabel(book.status)}
+                      {processStatusLabel(displayStatus)}
                     </div>
                     <span>{progress}%</span>
                   </div>
@@ -240,16 +278,19 @@ export function LibraryPage() {
                     value={progress}
                     className="h-1.5"
                     indicatorClassName={
-                      book.status === "error" ? "bg-rose-500" :
-                      book.status === "completed" ? "bg-emerald-500" :
-                      book.status === "archived" ? "bg-slate-400" :
+                      displayStatus === "error" ? "bg-rose-500" :
+                      displayStatus === "completed" ? "bg-emerald-500" :
+                      displayStatus === "archived" ? "bg-slate-400" :
                       "bg-slate-500"
                     }
                   />
                   <div className="mt-2.5 text-xs text-slate-500 flex items-center gap-2">
-                    <span>可阅读 {book.visibleProcessedChapters}</span>
+                    <span>{isAdmin ? `可阅读 ${book.visibleProcessedChapters}` : `全文 ${personal?.fullCount ?? 0} · 预览 ${personal?.previewCount ?? 0}`}</span>
                     <span className="text-slate-300">·</span>
-                    <span className={hasError ? "text-rose-500" : ""}>{hasError ? `异常 ${book.failedChapters}` : "异常 0"}</span>
+                    <span className={hasError ? "text-rose-500" : ""}>
+                      {typeof failedCount === "number" ? `失败 ${failedCount}` : "失败数未知"}
+                    </span>
+                    {!isAdmin && <><span className="text-slate-300">·</span><span>待处理 {personal?.pendingCount ?? 0}</span></>}
                   </div>
                 </div>
               </Card>

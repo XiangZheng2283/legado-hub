@@ -39,6 +39,15 @@ Frontend (run from `frontend/`):
 
 There is no command-order contract beyond: build frontend before running the server in Docker/production, since the backend serves `frontend/dist`.
 
+## Validation cadence
+
+- Do not run the full test suite after every small code edit.
+- For a small task, finish the complete scoped change first, then run the relevant tests once as a batch.
+- For a large task, split the work into explicit phases and run the phase-relevant tests once at the end of each phase.
+- Focused syntax checks or a single regression test are allowed while diagnosing a concrete failure; they do not replace the phase gate.
+- Before any commit, push, release, or claim that implementation is ready to commit, run the canonical full verification once with `verify.ps1`.
+- Never claim a phase or task passed without reporting the actual commands and results from its scheduled validation gate.
+
 ## Tests are split between repo and local-only `dev-assets/`
 
 This is the most likely thing to trip you up:

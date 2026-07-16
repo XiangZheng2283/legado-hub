@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Activity, BookMarked, Database, Search, ShieldCheck, AlertCircle, BookOpen, ShieldAlert } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
@@ -100,32 +100,36 @@ export function Dashboard() {
         <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center shadow-lg shadow-slate-200 mb-2">
           <BookOpen className="h-10 w-10 text-white" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">欢迎回来，阅读者。</h1>
-        <p className="text-base text-slate-500 max-w-lg mx-auto">准备好探索新的世界了吗？从全网海量书源中发现、订阅并管理你最喜爱的小说。</p>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">欢迎回来。</h1>
+        <p className="text-base text-slate-500 max-w-lg mx-auto">发现并订阅书籍，跟踪共享正文的处理与发布状态。</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="hover:shadow-lg transition-all cursor-pointer group border-slate-200 overflow-hidden relative" onClick={() => navigate("/console/subscription")}>
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Search className="w-32 h-32" /></div>
-          <CardHeader className="relative z-10 pb-4">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><Search className="h-6 w-6" /></div>
-            <CardTitle className="text-xl">探索与订阅</CardTitle>
-            <CardDescription className="text-sm mt-1">搜索全网书源，一键添加至你的个人书库</CardDescription>
-          </CardHeader>
-          <CardContent className="relative z-10 pt-0">
-            <div className="text-blue-600 font-medium text-sm flex items-center group-hover:translate-x-1 transition-transform">开始探索 →</div>
-          </CardContent>
-        </Card>
-        <Card className="hover:shadow-lg transition-all cursor-pointer group border-slate-200 overflow-hidden relative" onClick={() => navigate("/console/library")}>
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><BookMarked className="w-32 h-32" /></div>
-          <CardHeader className="relative z-10 pb-4">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><BookMarked className="h-6 w-6" /></div>
-            <CardTitle className="text-xl">我的书库</CardTitle>
-            <CardDescription className="text-sm mt-1">沉浸式阅读体验，自动同步最新章节进度</CardDescription>
-          </CardHeader>
-          <CardContent className="relative z-10 pt-0">
-            <div className="text-emerald-600 font-medium text-sm flex items-center group-hover:translate-x-1 transition-transform">查看书库 →</div>
-          </CardContent>
-        </Card>
+        <Link to="/console/subscription" className="group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2">
+          <Card className="h-full hover:shadow-lg transition-shadow border-slate-200 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Search className="w-32 h-32" /></div>
+            <CardHeader className="relative z-10 pb-4">
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><Search className="h-6 w-6" /></div>
+              <CardTitle className="text-xl">探索与订阅</CardTitle>
+              <CardDescription className="text-sm mt-1">搜索全网书源，一键添加至你的个人书库</CardDescription>
+            </CardHeader>
+            <CardContent className="relative z-10 pt-0">
+              <div className="text-blue-600 font-medium text-sm flex items-center group-hover:translate-x-1 transition-transform">开始探索 →</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/console/library" className="group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2">
+          <Card className="h-full hover:shadow-lg transition-shadow border-slate-200 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><BookMarked className="w-32 h-32" /></div>
+            <CardHeader className="relative z-10 pb-4">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><BookMarked className="h-6 w-6" /></div>
+              <CardTitle className="text-xl">我的书库</CardTitle>
+              <CardDescription className="text-sm mt-1">管理个人订阅、章节覆盖与自动归档</CardDescription>
+            </CardHeader>
+            <CardContent className="relative z-10 pt-0">
+              <div className="text-emerald-600 font-medium text-sm flex items-center group-hover:translate-x-1 transition-transform">管理书库 →</div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   )

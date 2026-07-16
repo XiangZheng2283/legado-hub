@@ -59,7 +59,7 @@ export function Layout() {
         end={item.href === "/console"}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "group flex w-full items-center rounded-md py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98]",
+          "group flex w-full items-center rounded-md py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.98]",
           mobile ? "px-2" : "px-3",
           active
             ? "bg-slate-100 text-slate-900"
@@ -88,7 +88,7 @@ export function Layout() {
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto px-4 py-4">
           <nav className="flex-1 space-y-1">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 px-3">发现 & 阅读</div>
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 px-3">订阅管理</div>
             {mainNav.map((item) => renderNavItem(item))}
             {isAdmin && (
               <>

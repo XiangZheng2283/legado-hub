@@ -163,8 +163,8 @@ def main() -> int:
     if archived["status"] != "archived":
         print("expected fully processed completed-book to auto archive")
         return 1
-    if awaiting["status"] != "awaiting_archive":
-        print("expected fully processed completed-book without auto archive to await archive")
+    if awaiting["status"] != "active":
+        print("expected shared book to stay active when personal auto archive is disabled")
         return 1
     return 0
 

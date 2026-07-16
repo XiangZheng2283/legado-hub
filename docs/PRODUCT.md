@@ -9,13 +9,15 @@ product
 LegadoHub has two primary local-network actors:
 
 - An operator who maintains source plugins, official-source authentication, processing health, and recovery workflows.
-- A reader who discovers books, subscribes to them, follows processing progress, and reads available chapters from the web console or Reading/Legado.
+- A reader who discovers books, manages subscriptions, and follows processing progress in the web console, then reads published chapters in Reading/Legado.
 
 The operator may also be the only reader in a single-user installation, but the product model must not assume that every deployment has only one user.
 
 ## Product Purpose
 
-LegadoHub is a self-hosted source-plugin runtime and subscription reading hub for Reading/Legado and the web console. It exposes one importable aggregate source while the local service handles discovery, shared-book ingestion, chapter processing, caching, update tracking, official-source authentication, source governance, proxy fallback, and operator recovery.
+LegadoHub is a self-hosted source-plugin runtime and subscription backend for Reading/Legado. It exposes one importable aggregate source while the web console acts as the subscription and operations control plane for discovery, shared-book ingestion, chapter processing, caching, update tracking, official-source authentication, source governance, proxy fallback, and operator recovery.
+
+Reading/Legado is the primary reading surface. The web console may preview chapter bodies for verification, but it is not a consumer e-reader and must not become the owner of reading position, pagination, typography, themes, or other reading-client behavior.
 
 Success means an operator can keep the source pool healthy and recover failures, while a reader can move through discovery -> subscription -> first readable chapter -> continued reading without understanding plugin internals.
 
@@ -75,14 +77,16 @@ Completed on 2026-07-11. The canonical entry point is `verify.ps1` at the reposi
 
 Completed on 2026-07-12. Remaining product work moves to Phase 1; this phase deliberately does not add shared-book ownership decoupling or persistent search-job recovery.
 
-### Phase 1: Subscription Ownership (After Phase 0.5)
+### Phase 1: Controlled Subscription Ownership (Active)
 
-Separate the global shared-book entity from a user's personal subscription. The intended model is one processed shared book with many user subscriptions, but the exact visibility and access policy must be confirmed before schema work begins.
+Separate the global shared-book entity from a user's personal subscription. The accepted model is one processed shared book with many user subscriptions: readers may discover and manage only their own subscriptions, while shared scheduling, source governance, recovery, rebuild, and deletion remain administrator capabilities.
+
+The visibility, ownership, progress, migration, API, plugin, and release boundaries are fixed in `docs/architecture/subscription-ownership-and-progress-control.zh-CN.md`. Schema work must follow that contract, including the prohibition on deleting an existing database during migration.
 
 ### Deferred Until After Phase 1
 
 - Persistent subscription-search lifecycle and recovery.
-- Reader continuity: previous/next chapter, last-read position, and basic display controls.
+- Reading-client compatibility improvements that preserve stable source, book, TOC, and chapter contracts.
 - Unified data-integrity scan and operator recovery entry point.
 
 ## Brand Personality

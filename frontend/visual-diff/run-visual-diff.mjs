@@ -90,7 +90,7 @@ const pages = [
     id: "chapter-detail",
     title: "章节详情",
     currentPath: "/console/library/book-2/chapters/chapter-1",
-    scenario: { role: "user" },
+    scenario: { role: "admin" },
   },
   {
     id: "search-workbench",
@@ -545,6 +545,16 @@ function mockApi(path, method, scenario = {}) {
     const items = scenario.library === "empty" ? [] : books
     return { items, total: items.length }
   }
+  if (path === "/api/subscribe/books/book-2") return bookSummary(books[1])
+  if (path.includes("/api/subscribe/books/book-2/chapters")) return { items: chapters(), total: 50 }
+  if (path.includes("/api/subscribe/chapters/")) {
+    return {
+      title: "第1章 诡异天道",
+      content:
+        "这里是试读的预览内容。文字排版模仿真实的阅读体验。\n“你醒了？”一个沙哑的声音从角落里传来。\n李火旺转过头，看到一个身披破烂道袍的老者正盘腿坐在蒲团上。",
+    }
+  }
+  if (path === "/api/console/library-books/book-2") return bookSummary(books[1])
   if (path.includes("/api/console/library-books/book-2/summary")) return bookSummary(books[1])
   if (path.includes("/api/console/library-books/book-2/chapters/") && path.endsWith("/progress")) {
     return chapterProgress()
@@ -608,6 +618,21 @@ function bookSummary(book) {
     totalChaptersAtSubscribe: book.totalChapters,
     currentPolicyVersion: 2,
     autoArchiveOnComplete: true,
+    subscription: {
+      status: "active",
+      startChapterIndex: 20,
+      autoArchiveOnComplete: false,
+    },
+    personalProgress: {
+      rangeStartIndex: 20,
+      rangeEndIndex: 1100,
+      fullCount: 430,
+      previewCount: 110,
+      failedCount: 50,
+      pendingCount: 491,
+      continuousReadableThroughIndex: 559,
+      coverageRatio: 0.4995,
+    },
     searchVisibilityStatus: "visible",
     lastCheckedAt: "2026-07-08T14:30:00+08:00",
     nextCheckTime: "2026-07-08T20:30:00+08:00",

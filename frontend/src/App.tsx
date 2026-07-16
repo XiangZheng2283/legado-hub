@@ -49,14 +49,14 @@ function AuthRouter() {
             <Route path="subscription" element={<SubscriptionDiscoveryPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="library/:bookId" element={<LibraryBookDetailPage />} />
-            <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />
             <Route element={<AdminOnly />}>
               <Route path="plugins" element={<Plugins />} />
               <Route path="plugins/:pluginId" element={<PluginDetail />} />
               <Route path="search" element={<SearchJobs />} />
               <Route path="official-sources" element={<OfficialSourcesPage />} />
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="admin/subscription" element={<SubscriptionDiscoveryPage />} />
+              <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />
+              <Route path="admin/subscription" element={<SubscriptionDiscoveryPage mode="admin" />} />
               <Route path="admin/library" element={<LibraryPage />} />
             </Route>
           </Route>

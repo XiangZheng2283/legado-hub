@@ -6,30 +6,66 @@ Copyright (c) 2026 moo. All rights reserved.
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
-from app.core.app_config import AppConfig
 from app.core.legado_source import generate_legado_source
 from app.services.aggregate_processor import AggregateProcessor
+from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, unpack_aggregate_chapter_url
+from app.services.catalog import Catalog
 from app.services.library_books import library_books_service
-from app.services.search_jobs import SearchJobService
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.subscription_search import subscription_search_service
+from app.services.user_subscriptions import SubscriptionLimitError, user_subscriptions_service
 from app.services.user_auth import auth_service
+from app.source_plugins.id_codec import decode_chapter_id
 
 router = APIRouter(prefix="/api/subscribe")
 
-_TERMINAL_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
-_legado_search_service: SearchJobService | None = None
+_USER_BOOK_FIELDS = {
+    "aggregateBookId",
+    "name",
+    "author",
+    "coverUrl",
+    "intro",
+    "wordCount",
+    "bookStatus",
+    "totalChapters",
+    "processedChapters",
+    "visibleProcessedChapters",
+    "failedChapters",
+    "status",
+    "searchVisibilityStatus",
+    "lastSourceChapterTitle",
+    "lastLocalChapterTitle",
+    "createdAt",
+    "updatedAt",
+}
 
 
-def _get_legado_search_service() -> SearchJobService:
-    global _legado_search_service
-    if _legado_search_service is None:
-        _legado_search_service = SearchJobService()
-    return _legado_search_service
+def _limit_detail(exc: SubscriptionLimitError) -> dict:
+    return {"code": exc.code, "message": str(exc), "retryable": False}
+
+
+def _safe_user_book(book: dict | None) -> dict:
+    source = book or {}
+    result = {key: source[key] for key in _USER_BOOK_FIELDS if key in source}
+    for key in ("subscription", "personalProgress", "bookState"):
+        value = source.get(key)
+        if isinstance(value, dict):
+            result[key] = dict(value)
+    return result
+
+
+def _require_book_access(user, aggregate_book_id: str) -> dict | None:
+    if user.role == "admin":
+        return user_subscriptions_service.get(user.user_id, aggregate_book_id)
+    subscription = user_subscriptions_service.get(user.user_id, aggregate_book_id)
+    if not subscription:
+        raise HTTPException(status_code=404, detail="书籍不存在")
+    return subscription
 
 
 @router.post("/search")
@@ -48,7 +84,9 @@ async def subscription_search(request: Request, payload: dict):
             "liveSearchPending": False,
         }
 
-    job = subscription_search_service.create_job(keyword=keyword, page=page)
+    job = subscription_search_service.create_job(
+        keyword=keyword, page=page, owner_user_id=user.user_id
+    )
     snapshot = subscription_search_service.snapshot(job.job_id)
     snapshot["viewer"] = {"userId": user.user_id, "role": user.role}
     return snapshot
@@ -56,50 +94,81 @@ async def subscription_search(request: Request, payload: dict):
 
 @router.get("/search/{job_id}")
 def get_subscription_search(request: Request, job_id: str):
-    auth_service.require_user(request)
+    user = auth_service.require_user(request)
+    if not subscription_search_service.get_job_for_user(job_id, user.user_id):
+        raise HTTPException(status_code=404, detail="搜索任务不存在")
     return subscription_search_service.snapshot(job_id)
 
 
 @router.post("/search/{job_id}/cards/{candidate_id}/subscribe")
 async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
-    group = subscription_search_service.find_card_group(job_id, candidate_id)
+    group = subscription_search_service.find_card_group_for_user(
+        job_id, candidate_id, user.user_id
+    )
     if not group:
         raise HTTPException(status_code=404, detail="候选书籍不存在")
     payload = payload or {}
+    unknown = set(payload) - {"startChapterIndex", "autoArchiveOnComplete"}
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"不支持的字段: {', '.join(sorted(unknown))}")
     start_chapter_index = max(1, int(payload.get("startChapterIndex", 1) or 1))
     auto_archive = bool(payload.get("autoArchiveOnComplete", True))
-    created = await library_books_service.create_or_get_shared_book(
-        group,
-        added_by_user_id=user.user_id,
-        start_chapter_index=start_chapter_index,
-        auto_archive_on_complete=auto_archive,
-    )
-    if not created.get("created"):
-        raise HTTPException(status_code=409, detail="该书已入库，不能重复添加")
+    existing = library_books_service.find_existing_book(group)
+    try:
+        current_subscription = (
+            user_subscriptions_service.get(user.user_id, existing["aggregateBookId"])
+            if existing else None
+        )
+        if not current_subscription or current_subscription.get("status") == "archived":
+            user_subscriptions_service.check_capacity(
+                user.user_id, creates_shared_book=existing is None
+            )
+        try:
+            created = await library_books_service.create_or_get_shared_book(
+                group, actor_user_id=user.user_id
+            )
+        except sqlite3.IntegrityError:
+            raced_book = library_books_service.find_existing_book(group)
+            if not raced_book:
+                raise
+            created = {"created": False, "book": raced_book}
+        subscription, subscription_created = user_subscriptions_service.ensure(
+            user.user_id,
+            created["book"]["aggregateBookId"],
+            start_chapter_index=start_chapter_index,
+            auto_archive_on_complete=auto_archive,
+        )
+    except SubscriptionLimitError as exc:
+        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
     book = created["book"]
-    processor = AggregateProcessor()
-    initial_next_check = (
-        datetime.now(timezone.utc)
-        + timedelta(minutes=processor.check_interval_minutes(book["aggregateBookId"]))
-    ).isoformat()
-    processor.enqueue_book(
-        book["aggregateBookId"],
-        created["payload"],
-        next_check_time=initial_next_check,
-    )
-    scheduler = SharedBookScheduler(processor=processor)
-    scheduler.enqueue_initial_subscription(
-        book["aggregateBookId"],
-        payload=created["payload"],
-        book_name=book.get("name", ""),
-        author=book.get("author", ""),
-    )
-    asyncio.create_task(scheduler.run_periodic_once(wait_for_recovery=False, include_due_books=False))
+    safe_book = _safe_user_book(book)
+    if created.get("created"):
+        processor = AggregateProcessor()
+        initial_next_check = (
+            datetime.now(timezone.utc)
+            + timedelta(minutes=processor.check_interval_minutes(book["aggregateBookId"]))
+        ).isoformat()
+        processor.enqueue_book(
+            book["aggregateBookId"],
+            created["payload"],
+            next_check_time=initial_next_check,
+        )
+        scheduler = SharedBookScheduler(processor=processor)
+        scheduler.enqueue_initial_subscription(
+            book["aggregateBookId"],
+            payload=created["payload"],
+            book_name=book.get("name", ""),
+            author=book.get("author", ""),
+        )
+        asyncio.create_task(scheduler.run_periodic_once(wait_for_recovery=False, include_due_books=False))
     return {
         "ok": True,
-        "created": True,
-        "book": book,
+        "created": bool(created.get("created")),
+        "sharedBookCreated": bool(created.get("created")),
+        "subscriptionCreated": subscription_created,
+        "book": safe_book,
+        "subscription": subscription,
         "subscriptionConfig": {
             "coverUrl": book.get("coverUrl", ""),
             "name": book.get("name", ""),
@@ -107,16 +176,9 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
             "intro": book.get("intro", ""),
             "bookStatus": book.get("bookStatus", ""),
             "totalChaptersAtSubscribe": book.get("totalChaptersAtSubscribe", 0),
-            "startChapterIndex": book.get("startChapterIndex", 1),
-            "autoArchiveOnComplete": book.get("autoArchiveOnComplete", True),
-            "primarySourceId": book.get("primarySourceId", ""),
+            "startChapterIndex": subscription["startChapterIndex"],
+            "autoArchiveOnComplete": subscription["autoArchiveOnComplete"],
             "primarySourceName": book.get("primarySourceName", ""),
-            "primaryBookId": book.get("primaryBookId", ""),
-            "supplementSourceConfig": (
-                __import__("json").loads(book.get("settingsJson", "") or "{}").get("supplementSourceConfig", {})
-                if book.get("settingsJson", "")
-                else {}
-            ),
         },
     }
 
@@ -136,7 +198,7 @@ async def refresh_library_book_source_map(request: Request, aggregate_book_id: s
 
 @router.get("/library")
 def list_library(request: Request, keyword: str = ""):
-    auth_service.require_user(request)
+    auth_service.require_admin(request)
     items = library_books_service.list_books(keyword=keyword, include_hidden=True)
     return {"items": items, "total": len(items)}
 
@@ -144,18 +206,30 @@ def list_library(request: Request, keyword: str = ""):
 @router.get("/library/mine")
 def list_my_library(request: Request, keyword: str = ""):
     user = auth_service.require_user(request)
-    items = library_books_service.list_books(
-        added_by_user_id=user.user_id, keyword=keyword, include_hidden=True
+    items = user_subscriptions_service.list_books(
+        user.user_id, library_books_service, keyword=keyword
     )
-    return {"items": items, "total": len(items)}
+    return {"items": [_safe_user_book(item) for item in items], "total": len(items)}
 
 
 @router.get("/books/{aggregate_book_id}")
 def get_library_book(request: Request, aggregate_book_id: str):
-    auth_service.require_user(request)
+    user = auth_service.require_user(request)
+    subscription = _require_book_access(user, aggregate_book_id)
     detail = library_books_service.get_shared_book_detail(aggregate_book_id)
     if not detail.get("found"):
         raise HTTPException(status_code=404, detail="书籍不存在")
+    detail = {
+        "bookId": aggregate_book_id,
+        "found": True,
+        "book": _safe_user_book(detail.get("book")),
+        "bookState": dict(detail.get("bookState") or {}),
+    }
+    detail["subscription"] = subscription
+    if subscription:
+        detail["personalProgress"] = user_subscriptions_service.progress(
+            subscription, library_books_service
+        )
     return detail
 
 
@@ -166,14 +240,77 @@ def list_library_book_chapters(
     page: int = 1,
     pageSize: int = 200,
     status: str = "all",
+    keyword: str = "",
 ):
-    auth_service.require_user(request)
+    user = auth_service.require_user(request)
+    _require_book_access(user, aggregate_book_id)
     return library_books_service.list_shared_chapters(
         aggregate_book_id,
         page=page,
         pageSize=pageSize,
         status=status,
+        keyword=keyword,
     )
+
+
+@router.get("/books/{aggregate_book_id}/subscription")
+def get_subscription(request: Request, aggregate_book_id: str):
+    user = auth_service.require_user(request)
+    subscription = user_subscriptions_service.get(user.user_id, aggregate_book_id)
+    if not subscription:
+        raise HTTPException(status_code=404, detail="订阅不存在")
+    return {"subscription": subscription}
+
+
+@router.put("/books/{aggregate_book_id}/subscription")
+def put_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
+    user = auth_service.require_user(request)
+    payload = payload or {}
+    unknown = set(payload) - {"startChapterIndex", "autoArchiveOnComplete"}
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"不支持的字段: {', '.join(sorted(unknown))}")
+    try:
+        subscription, created = user_subscriptions_service.ensure(
+            user.user_id,
+            aggregate_book_id,
+            start_chapter_index=max(1, int(payload.get("startChapterIndex", 1) or 1)),
+            auto_archive_on_complete=bool(payload.get("autoArchiveOnComplete", True)),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="书籍不存在") from exc
+    except SubscriptionLimitError as exc:
+        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+    return {"created": created, "subscription": subscription}
+
+
+@router.patch("/books/{aggregate_book_id}/subscription")
+def patch_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
+    user = auth_service.require_user(request)
+    try:
+        subscription = user_subscriptions_service.update(
+            user.user_id, aggregate_book_id, payload or {}
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="订阅不存在") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except SubscriptionLimitError as exc:
+        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+    return {"subscription": subscription}
+
+
+@router.get("/chapters/{chapter_id}")
+async def get_subscribed_chapter(request: Request, chapter_id: str):
+    user = auth_service.require_user(request)
+    try:
+        source_id, chapter_url = decode_chapter_id(chapter_id)
+        payload = unpack_aggregate_chapter_url(chapter_url)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="章节不存在") from exc
+    if source_id != VIRTUAL_SOURCE_ID:
+        raise HTTPException(status_code=404, detail="章节不存在")
+    _require_book_access(user, str(payload.get("aggregateBookId", "") or ""))
+    return await Catalog().chapter(chapter_id)
 
 
 # ---- Legado virtual source (migrated from /api/legado) ----
@@ -185,7 +322,7 @@ def get_legado_source(request: Request) -> list[dict]:
 
 
 @router.get("/legado/search")
-async def legado_search(
+def legado_search(
     request: Request,
     keyword: str = "",
     page: int = 1,
@@ -203,56 +340,28 @@ async def legado_search(
             "debug": {"sourceCount": 0},
         }
 
-    search_service = _get_legado_search_service()
     base_api = str(request.base_url).rstrip("/")
-    wait_seconds = max(0, min(waitMs, 180000)) / 1000
-
-    job = search_service.create_job(keyword=keyword, page=page, search_mode="source")
-
-    loop = asyncio.get_running_loop()
-    deadline = loop.time() + wait_seconds
-    next_poll = loop.time() + 0.5
-    while loop.time() < deadline:
-        session = search_service.get_session(job.job_id)
-        if session and session.status in _TERMINAL_STATUSES:
-            break
-        if loop.time() >= next_poll:
-            next_poll = loop.time() + 0.5
-        await asyncio.sleep(0.1)
-
-    include_official = AppConfig.get().search.official_source_in_normal_search
-    result = search_service.session_snapshot(
-        job.job_id, base_api=base_api, include_official_sources=include_official
-    )
-    if result:
-        result["debug"] = {
-            **(result.get("debug") or {}),
-            "timeoutSeconds": int(wait_seconds),
-        }
-        return result
-
+    books = library_books_service.search_published_books(keyword)
+    items = [
+        library_books_service.build_search_injected_item(book, base_api=base_api)
+        for book in books
+    ]
+    page = max(1, int(page or 1))
+    offset = (page - 1) * 20
     return {
         "implemented": True,
         "keyword": keyword,
         "page": page,
-        "items": [],
-        "jobId": job.job_id,
-        "status": "failed",
+        "items": items[offset : offset + 20],
+        "jobId": "",
+        "status": "completed",
         "liveSearchPending": False,
-        "debug": {"timeoutSeconds": int(wait_seconds)},
+        "debug": {"publishedCount": len(items)},
     }
 
 
 @router.get("/legado/search/{job_id}")
 async def get_legado_search_status(request: Request, job_id: str) -> dict:
-    search_service = _get_legado_search_service()
-    base_api = str(request.base_url).rstrip("/")
-    include_official = AppConfig.get().search.official_source_in_normal_search
-    result = search_service.session_snapshot(
-        job_id, base_api=base_api, include_official_sources=include_official
-    )
-    if result:
-        return result
     return {
         "implemented": True,
         "jobId": job_id,
@@ -264,13 +373,25 @@ async def get_legado_search_status(request: Request, job_id: str) -> dict:
 
 
 @router.post("/legado/search/{job_id}/cancel")
-async def cancel_legado_search(job_id: str) -> dict:
-    ok = _get_legado_search_service().cancel_job(job_id)
-    return {"jobId": job_id, "cancelled": ok}
+async def cancel_legado_search(request: Request, job_id: str) -> dict:
+    auth_service.require_admin(request)
+    return {"jobId": job_id, "cancelled": False}
 
 
 @router.get("/legado/explore")
 async def legado_explore(request: Request, sourceId: str = "", groupId: str = "", page: int = 1) -> dict:
-    from app.services.catalog import Catalog
-    catalog = Catalog(base_api=str(request.base_url).rstrip("/"))
-    return await catalog.explore(source_id=sourceId, group_id=groupId, page=page)
+    base_api = str(request.base_url).rstrip("/")
+    books = library_books_service.list_published_books()
+    items = [
+        library_books_service.build_search_injected_item(book, base_api=base_api)
+        for book in books
+    ]
+    page = max(1, int(page or 1))
+    offset = (page - 1) * 20
+    return {
+        "implemented": True,
+        "groupId": groupId or "published",
+        "page": page,
+        "items": items[offset : offset + 20],
+        "debug": {"publishedCount": len(items)},
+    }

@@ -11,7 +11,6 @@ from pathlib import Path
 
 from app.config import GENERATED_DIR, HOST, PORT
 from app.core.aggregate_config import load_aggregate_config
-from app.source_plugins.loader import PluginLoader
 
 BASE_API = f"http://{HOST}:{PORT}"
 
@@ -22,7 +21,7 @@ def _build_source(base_api: str = BASE_API) -> dict:
     name = config.get("name", "LegadoHub 聚合")
     group = config.get("group", "聚合,LegadoHub")
 
-    explore_url = _build_explore_url(base_api)
+    explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
     return {
         "bookSourceName": f"{name}({version})",
         "bookSourceGroup": group,
@@ -33,8 +32,8 @@ def _build_source(base_api: str = BASE_API) -> dict:
         "enabledExplore": bool(explore_url),
         "header": "",
         "loginUrl": "",
-        "bookSourceComment": "聚合搜索会先返回当前已完成书源的快照，并在后台继续搜索；排行榜、分类、聚合书籍章节元信息后续仅从正版书源获取，普通书源不再暴露排行榜/分类；遇到 Cloudflare 或浏览器挑战的书源会被标记为需要绕过并跳过，不再提供手动验证、验证页或 Cookie 回传链路。",
-        "searchUrl": f"{base_api}/api/subscribe/legado/search?keyword={{{{key}}}}&page={{{{page}}}}&waitMs=180000",
+        "bookSourceComment": "此书源只读取已由 LegadoHub 订阅并发布的共享书、目录和正文；新增订阅、暂停、恢复、归档及运维操作统一在 Web Console 完成。",
+        "searchUrl": f"{base_api}/api/subscribe/legado/search?keyword={{{{key}}}}&page={{{{page}}}}",
         "exploreUrl": explore_url,
         "ruleSearch": {
             "bookList": "$.items",
@@ -91,25 +90,6 @@ def _build_source(base_api: str = BASE_API) -> dict:
         },
         "jsLib": f"function baseUrl() {{ return '{base_api}'; }}",
     }
-
-
-def _build_explore_url(base_api: str) -> str:
-    lines = []
-    try:
-        plugins = PluginLoader().load_all()
-    except Exception:
-        plugins = {}
-    for plugin in plugins.values():
-        if not plugin.metadata.enabled or "explore" not in plugin.capabilities:
-            continue
-        if not plugin.metadata.is_official_source():
-            continue
-        lines.append(
-            f"{plugin.metadata.name}::{base_api}/api/subscribe/legado/explore?sourceId={plugin.metadata.id}&page={{{{page}}}}"
-        )
-    return "\n".join(lines)
-
-
 def generate_legado_source(base_api: str = BASE_API) -> list[dict]:
     return [_build_source(base_api)]
 

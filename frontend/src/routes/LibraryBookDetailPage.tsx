@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
-  ArrowLeft, RefreshCw, Trash2, Code2, Link, Terminal, MoreVertical, Crown, Search, Loader2, ChevronLeft, ChevronRight,
+  ArrowLeft, RefreshCw, Trash2, Code2, Link, Terminal, MoreVertical, Crown, Search, Loader2, ChevronLeft, ChevronRight, Settings2, Play, Pause, Archive,
 } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
@@ -15,6 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 interface SourceMapSummaryItem {
   sourceId: string; sourceName: string; score: number; chapterCount: number; lastChapter: string; bookStatus: string
@@ -33,6 +36,8 @@ interface LibraryBookDetail {
   currentPolicyVersion?: number; autoArchiveOnComplete?: boolean; searchVisibilityStatus?: string
   lastError?: string; nextCheckTime?: string; bookState?: BookStateSummary; freeChapterEndIndex?: number
   sourceMapSummary?: SourceMapSummaryItem[]; sourceMapRefresh?: { completed?: boolean; status?: string; lastVerifiedAt?: string; missingCriticalSource?: boolean }
+  subscription?: { status: "active" | "paused" | "archived"; startChapterIndex: number; autoArchiveOnComplete: boolean }
+  personalProgress?: { rangeStartIndex: number; rangeEndIndex: number; fullCount: number; previewCount: number; failedCount: number; pendingCount: number; continuousReadableThroughIndex: number; coverageRatio: number }
 }
 interface LibraryChapterListItem {
   chapterId: string; chapterIndex: number; title: string; status: string; sourceId?: string; error?: string; isVip?: boolean; previewOnly?: boolean; sourceWordCount?: number; contentLength?: number; hasContent?: boolean; readChapterId?: string
@@ -84,10 +89,13 @@ export function LibraryBookDetailPage() {
   const [readingChapter, setReadingChapter] = useState<LibraryChapterListItem | null>(null)
   const [previewMode, setPreviewMode] = useState(false)
   const [openAdminMenu, setOpenAdminMenu] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [startChapterIndex, setStartChapterIndex] = useState("1")
+  const [autoArchiveOnComplete, setAutoArchiveOnComplete] = useState(true)
 
   const { data: book, isLoading, error: bookError } = useQuery<LibraryBookDetail | null>({
     queryKey: ["library", "book", bookId, "summary"],
-    queryFn: () => api.libraryBookSummary(bookId!),
+    queryFn: () => isAdmin ? api.libraryBookSummary(bookId!) : api.subscribe.book(bookId!),
     enabled: !!bookId,
     refetchInterval: 5000,
   })
@@ -97,7 +105,7 @@ export function LibraryBookDetailPage() {
       const params: Record<string, string> = { page: String(chapterPage), pageSize: "200" }
       if (chapterStatusFilter !== "all") params.status = chapterStatusFilter
       if (chapterKeyword) params.keyword = chapterKeyword
-      return api.libraryBookChapters(bookId!, params)
+      return isAdmin ? api.libraryBookChapters(bookId!, params) : api.subscribe.chapters(bookId!, params)
     },
     enabled: !!bookId,
   })
@@ -123,13 +131,23 @@ export function LibraryBookDetailPage() {
     mutationFn: () => api.deleteLibraryBook(bookId!),
     onSuccess: () => navigate("/console/library"),
   })
+  const subscriptionMutation = useMutation({
+    mutationFn: (payload: { status?: "active" | "paused" | "archived"; startChapterIndex?: number; autoArchiveOnComplete?: boolean }) =>
+      api.subscribe.updateSubscription(bookId!, payload),
+    onSuccess: () => {
+      setSettingsOpen(false)
+      refreshQueries()
+    },
+  })
 
   const chapterBodyQuery = useQuery({
     queryKey: ["library", "chapter-body", readingChapter?.readChapterId],
-    queryFn: () => api.chapter(readingChapter!.readChapterId!),
+    queryFn: () => isAdmin
+      ? api.chapter(readingChapter!.readChapterId!)
+      : api.subscribe.chapter(readingChapter!.readChapterId!),
     enabled: !!(readingChapter?.readChapterId),
   })
-  const maintenanceBusy = actionMutation.isPending || chapterProcessMutation.isPending || deleteMutation.isPending
+  const maintenanceBusy = actionMutation.isPending || chapterProcessMutation.isPending || deleteMutation.isPending || subscriptionMutation.isPending
 
   if (isLoading) return <div className="flex min-h-[300px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
   if (bookError) return <Alert variant="destructive"><AlertDescription>书籍加载失败：{(bookError as Error).message}</AlertDescription></Alert>
@@ -139,12 +157,17 @@ export function LibraryBookDetailPage() {
   const chapterPageSize = Number(chaptersData?.pageSize || 200)
   const chapterTotal = Number(chaptersData?.total ?? chapters.length)
   const chapterPageCount = Math.max(1, Math.ceil(chapterTotal / chapterPageSize))
-  const progress = book.totalChapters > 0 ? Math.round((book.processedChapters / book.totalChapters) * 100) : 0
+  const personal = book.personalProgress
+  const subscription = book.subscription
+  const progress = isAdmin
+    ? (book.totalChapters > 0 ? Math.round((book.processedChapters / book.totalChapters) * 100) : 0)
+    : Math.round(Math.max(0, Math.min(1, personal?.coverageRatio ?? 0)) * 100)
   const bs = book.bookState || {}
-  const readable = bs.readableChapterCount ?? book.visibleProcessedChapters
-  const previewCount = bs.previewChapterCount ?? 0
-  const failedCount = bs.failedChapterCount ?? book.failedChapters ?? 0
-  const psm = processStatusMap(book.status)
+  const readable = isAdmin ? (bs.readableChapterCount ?? book.visibleProcessedChapters) : (personal?.fullCount ?? 0)
+  const previewCount = isAdmin ? (bs.previewChapterCount ?? 0) : (personal?.previewCount ?? 0)
+  const failedCount = isAdmin ? (bs.failedChapterCount ?? book.failedChapters ?? 0) : (personal?.failedCount ?? 0)
+  const displayStatus = isAdmin ? book.status : subscription?.status || "unknown"
+  const psm = processStatusMap(displayStatus)
   const sourceMap = book.sourceMapSummary || []
 
   const handleChapterClick = (c: LibraryChapterListItem) => {
@@ -153,16 +176,22 @@ export function LibraryBookDetailPage() {
     setReadingChapter(c)
   }
 
+  const openSubscriptionSettings = () => {
+    setStartChapterIndex(String(subscription?.startChapterIndex ?? 1))
+    setAutoArchiveOnComplete(subscription?.autoArchiveOnComplete ?? true)
+    setSettingsOpen(true)
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <Button variant="ghost" className="mb-4 -ml-4" onClick={() => navigate(-1)}>
         <ArrowLeft className="h-4 w-4 mr-2" /> 返回书库
       </Button>
 
-      {(actionMutation.error || chapterProcessMutation.error || deleteMutation.error || chaptersError) && (
+      {(actionMutation.error || chapterProcessMutation.error || deleteMutation.error || subscriptionMutation.error || chaptersError) && (
         <Alert variant="destructive">
           <AlertDescription>
-            {(actionMutation.error as Error)?.message || (chapterProcessMutation.error as Error)?.message || (deleteMutation.error as Error)?.message || (chaptersError as Error)?.message || "操作失败，请稍后重试。"}
+            {(actionMutation.error as Error)?.message || (chapterProcessMutation.error as Error)?.message || (deleteMutation.error as Error)?.message || (subscriptionMutation.error as Error)?.message || (chaptersError as Error)?.message || "操作失败，请稍后重试。"}
           </AlertDescription>
         </Alert>
       )}
@@ -170,10 +199,10 @@ export function LibraryBookDetailPage() {
       {/* Hero */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row gap-8 relative">
         <div className="relative w-32 h-48 md:w-40 md:h-60 bg-slate-200 rounded-lg overflow-hidden shrink-0 shadow-md">
-          {book.coverUrl ? <img src={book.coverUrl} alt={book.displayName} className="w-full h-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-slate-400"><Search className="h-8 w-8" /></div>}
+          {book.coverUrl ? <img src={book.coverUrl} alt={book.displayName} width={128} height={176} loading="lazy" className="w-full h-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-slate-400"><Search className="h-8 w-8" /></div>}
         </div>
         <div className="flex flex-col flex-1">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">{book.displayName}</h1>
               <p className="text-lg text-slate-500 mt-1">{book.displayAuthor || "未知作者"}</p>
@@ -195,6 +224,27 @@ export function LibraryBookDetailPage() {
                 )}
               </div>
             )}
+            {!isAdmin && subscription && (
+              <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+                {subscription.status === "active" ? (
+                  <Button variant="outline" size="sm" onClick={() => subscriptionMutation.mutate({ status: "paused" })} disabled={maintenanceBusy}>
+                    <Pause className="mr-2 h-4 w-4" /> 暂停
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => subscriptionMutation.mutate({ status: "active" })} disabled={maintenanceBusy}>
+                    <Play className="mr-2 h-4 w-4" /> 恢复
+                  </Button>
+                )}
+                {subscription.status !== "archived" && (
+                  <Button variant="outline" size="sm" onClick={() => subscriptionMutation.mutate({ status: "archived" })} disabled={maintenanceBusy}>
+                    <Archive className="mr-2 h-4 w-4" /> 归档
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={openSubscriptionSettings} disabled={maintenanceBusy} title="订阅设置" aria-label="订阅设置">
+                  <Settings2 className="h-5 w-5" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2 mt-4 items-center">
@@ -213,8 +263,12 @@ export function LibraryBookDetailPage() {
 
           <div className="mt-auto pt-6">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-slate-700 font-medium">处理进度</span>
-              <span className="text-slate-500">{book.processedChapters} / {book.totalChapters} 章 ({progress}%)</span>
+              <span className="text-slate-700 font-medium">{isAdmin ? "共享处理进度" : "订阅范围覆盖率"}</span>
+              <span className="text-slate-500">
+                {isAdmin
+                  ? `${book.processedChapters} / ${book.totalChapters} 章 (${progress}%)`
+                  : `全文 ${personal?.fullCount ?? 0} · 预览 ${personal?.previewCount ?? 0} · ${progress}%`}
+              </span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -224,8 +278,10 @@ export function LibraryBookDetailPage() {
       {/* Metadata + Source Map */}
       <div className={isAdmin ? "grid lg:grid-cols-2 gap-6" : "w-full"}>
         <Card>
-          <CardHeader className="py-4 border-b border-slate-100"><CardTitle className="text-sm font-medium flex items-center"><Code2 className="h-4 w-4 mr-2 text-slate-400" /> 元数据</CardTitle></CardHeader>
+          <CardHeader className="py-4 border-b border-slate-100"><CardTitle className="text-sm font-medium flex items-center"><Code2 className="h-4 w-4 mr-2 text-slate-400" /> {isAdmin ? "元数据" : "订阅状态"}</CardTitle></CardHeader>
           <CardContent className="p-4 text-sm space-y-4">
+            {isAdmin ? (
+              <>
             <div className="grid sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">基本信息</h4>
@@ -267,6 +323,30 @@ export function LibraryBookDetailPage() {
                 </div>
               </div>
             </div>
+              </>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">个人设置</h4>
+                  <div className="grid grid-cols-2 gap-y-2">
+                    <div className="text-slate-500">订阅状态</div><div className="text-right text-slate-900">{psm.label}</div>
+                    <div className="text-slate-500">起始章节</div><div className="text-right text-slate-900">第 {subscription?.startChapterIndex ?? 1} 章</div>
+                    <div className="text-slate-500">自动归档</div><div className="text-right text-slate-900">{subscription?.autoArchiveOnComplete ? "开启" : "关闭"}</div>
+                    <div className="text-slate-500">连续可读至</div><div className="text-right text-slate-900">第 {personal?.continuousReadableThroughIndex ?? 0} 章</div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">订阅范围</h4>
+                  <div className="grid grid-cols-2 gap-y-2">
+                    <div className="text-slate-500">章节范围</div><div className="text-right text-slate-900">{personal ? `${personal.rangeStartIndex} - ${personal.rangeEndIndex}` : "-"}</div>
+                    <div className="text-slate-500">全文</div><div className="text-right font-medium text-emerald-600">{readable} 章</div>
+                    <div className="text-slate-500">预览</div><div className="text-right font-medium text-orange-500">{previewCount} 章</div>
+                    <div className="text-slate-500">失败</div><div className="text-right font-medium text-rose-500">{failedCount} 章</div>
+                    <div className="text-slate-500">待处理</div><div className="text-right text-slate-900">{personal?.pendingCount ?? 0} 章</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -335,7 +415,7 @@ export function LibraryBookDetailPage() {
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-48">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input type="text" placeholder="搜索章节..." value={chapterKeyword} onChange={(e) => { setChapterKeyword(e.target.value); setChapterPage(1) }}
+                <input type="text" name="chapter-search" autoComplete="off" aria-label="搜索章节" placeholder="搜索章节…" value={chapterKeyword} onChange={(e) => { setChapterKeyword(e.target.value); setChapterPage(1) }}
                   className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400" />
               </div>
               <Select value={chapterStatusFilter} onValueChange={(value) => { setChapterStatusFilter(value); setChapterPage(1) }}>
@@ -373,7 +453,7 @@ export function LibraryBookDetailPage() {
               </TableHeader>
               <TableBody>
                 {chaptersFetching && !chaptersData ? (
-                  <TableRow><TableCell colSpan={isAdmin ? 8 : 4} className="py-8 text-center text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />章节加载中...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={isAdmin ? 8 : 4} className="py-8 text-center text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />章节加载中…</TableCell></TableRow>
                 ) : chapters.length === 0 ? (
                   <TableRow><TableCell colSpan={isAdmin ? 8 : 4} className="text-center text-slate-400 py-8">暂无章节数据</TableCell></TableRow>
                 ) : (
@@ -434,6 +514,46 @@ export function LibraryBookDetailPage() {
         </Card>
       )}
 
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>订阅设置</DialogTitle>
+            <DialogDescription>这些设置只影响你的订阅，不会改变共享抓取任务。</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="detail-start-chapter">起始章节</Label>
+              <Input
+                id="detail-start-chapter"
+                type="number"
+                min={1}
+                step={1}
+                value={startChapterIndex}
+                onChange={(event) => setStartChapterIndex(event.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="detail-auto-archive" className="leading-5">完结且处理完成后自动归档</Label>
+              <Switch
+                id="detail-auto-archive"
+                checked={autoArchiveOnComplete}
+                onCheckedChange={setAutoArchiveOnComplete}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setSettingsOpen(false)}>取消</Button>
+              <Button
+                onClick={() => subscriptionMutation.mutate({ startChapterIndex: Math.max(1, Number(startChapterIndex) || 1), autoArchiveOnComplete })}
+                disabled={subscriptionMutation.isPending}
+              >
+                {subscriptionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!readingChapter} onOpenChange={(open) => { if (!open) setReadingChapter(null) }}>
         <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="p-4 md:p-6 pb-0 shrink-0">
@@ -441,11 +561,11 @@ export function LibraryBookDetailPage() {
               <DialogTitle className="text-xl md:text-2xl font-bold">{readingChapter?.title}</DialogTitle>
               {previewMode && <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-transparent">预览模式</Badge>}
             </div>
-            <DialogDescription className="text-slate-500">{book.displayName} · {book.displayAuthor}</DialogDescription>
+            <DialogDescription className="text-slate-500">正文抽查 · {book.displayName} · {book.displayAuthor}</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-4 md:p-6 text-slate-800 leading-relaxed space-y-6 text-lg bg-[#FDFBF7] mt-4 rounded-b-xl font-serif">
             {chapterBodyQuery.isLoading ? (
-              <p className="text-slate-400 text-center pt-20">章节内容加载中...</p>
+              <p className="text-slate-400 text-center pt-20">章节内容加载中…</p>
             ) : chapterBodyQuery.error ? (
               <Alert variant="destructive"><AlertDescription>正文加载失败：{(chapterBodyQuery.error as Error).message}</AlertDescription></Alert>
             ) : chapterBodyQuery.data?.content ? (

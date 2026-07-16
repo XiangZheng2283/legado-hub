@@ -33,8 +33,7 @@ class SharedBookLease:
     """Caller-facing lease state for one shared-book lock."""
 
     service: "SharedBookLockService"
-    book_name: str
-    author: str
+    aggregate_book_id: str
     worker_id: str
     lock_path: Path
     ttl_seconds: float
@@ -50,7 +49,7 @@ class SharedBookLease:
     def assert_writable(self) -> None:
         if self.stop_requested:
             raise SharedBookLockError(
-                f"shared-book lease for '{self.book_name}' is no longer writable; stop work and exit"
+                f"shared-book lease for '{self.aggregate_book_id}' is no longer writable; stop work and exit"
             )
 
     def renew(self) -> bool:
@@ -84,8 +83,8 @@ class SharedBookLockService:
         self.process_start_ts = int(process_start_ts if process_start_ts is not None else PROCESS_START_TS)
         self.random_factory = random_factory or (lambda: uuid.uuid4().hex[:8])
 
-    def acquire(self, *, book_name: str, author: str) -> SharedBookLease | None:
-        runtime_dir = self.storage.runtime_dir(book_name=book_name, author=author)
+    def acquire(self, *, aggregate_book_id: str) -> SharedBookLease | None:
+        runtime_dir = self.storage.lock_runtime_dir(aggregate_book_id)
         lock_path = runtime_dir / "shared_book.lock.json"
         worker_id = self.build_worker_id()
 
@@ -95,11 +94,14 @@ class SharedBookLockService:
             if current is not None and not self._is_expired(current, now=now):
                 return None
 
-            payload = self._build_lock_payload(worker_id=worker_id, now=now)
+            payload = self._build_lock_payload(
+                aggregate_book_id=aggregate_book_id,
+                worker_id=worker_id,
+                now=now,
+            )
             self._atomic_write_json(lock_path, payload)
             return self._lease_from_payload(
-                book_name=book_name,
-                author=author,
+                aggregate_book_id=aggregate_book_id,
                 lock_path=lock_path,
                 payload=payload,
             )
@@ -148,16 +150,14 @@ class SharedBookLockService:
     def _lease_from_payload(
         self,
         *,
-        book_name: str,
-        author: str,
+        aggregate_book_id: str,
         lock_path: Path,
         payload: dict[str, object],
     ) -> SharedBookLease:
         ttl_seconds = float(payload.get("ttlSeconds", self.ttl_seconds) or self.ttl_seconds)
         return SharedBookLease(
             service=self,
-            book_name=book_name,
-            author=author,
+            aggregate_book_id=aggregate_book_id,
             worker_id=str(payload["workerId"]),
             lock_path=lock_path,
             ttl_seconds=ttl_seconds,
@@ -166,8 +166,15 @@ class SharedBookLockService:
             expires_at=float(payload["expiresAt"]),
         )
 
-    def _build_lock_payload(self, *, worker_id: str, now: float) -> dict[str, object]:
+    def _build_lock_payload(
+        self,
+        *,
+        aggregate_book_id: str,
+        worker_id: str,
+        now: float,
+    ) -> dict[str, object]:
         return {
+            "aggregateBookId": aggregate_book_id,
             "workerId": worker_id,
             "hostname": self.hostname,
             "pid": self.pid,

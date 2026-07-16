@@ -103,6 +103,21 @@ class SearchConfig:
 
 
 @dataclass
+class SubscriptionConfig:
+    max_active_per_user: int = 100
+    max_new_shared_books_per_day: int = 10
+    max_global_provisioning_books: int = 20
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SubscriptionConfig":
+        return cls(
+            max_active_per_user=max(1, int(data.get("maxActivePerUser", 100))),
+            max_new_shared_books_per_day=max(1, int(data.get("maxNewSharedBooksPerDay", 10))),
+            max_global_provisioning_books=max(1, int(data.get("maxGlobalProvisioningBooks", 20))),
+        )
+
+
+@dataclass
 class AggregateConfig:
     name: str = "LegadoHub 聚合"
     version: str = "0.0.1"
@@ -258,6 +273,10 @@ class AppConfig:
     @property
     def aggregate(self) -> AggregateConfig:
         return AggregateConfig.from_dict(self._section("aggregate"))
+
+    @property
+    def subscription(self) -> SubscriptionConfig:
+        return SubscriptionConfig.from_dict(self._section("subscription"))
 
     @property
     def ai_provider(self) -> AIProviderConfig:

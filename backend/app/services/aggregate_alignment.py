@@ -208,8 +208,14 @@ def classify_source_content(
     except (TypeError, ValueError):
         source_word_count = 0
 
+    # The official TOC is authoritative for free chapters. Some Qidian App
+    # fallback responses label short announcements as paid previews even when
+    # the TOC marks them free; treating that transport hint as stronger than
+    # TOC metadata can permanently block publication from chapter one.
+    known_official_free = source_id == "qidian_com_app" and is_official and not is_vip
+
     # 1. 显式预览信号 → preview
-    if explicit_preview:
+    if explicit_preview and not known_official_free:
         return {
             "classification": "preview",
             "contentLength": length,
@@ -245,7 +251,7 @@ def classify_source_content(
         }
 
     # 4. 极短内容且无任何元数据 → preview（安全网，<40 字几乎不可能是完整章节）
-    if length < PREVIEW_MIN_LENGTH and not source_word_count:
+    if length < PREVIEW_MIN_LENGTH and not source_word_count and not known_official_free:
         return {
             "classification": "preview",
             "contentLength": length,

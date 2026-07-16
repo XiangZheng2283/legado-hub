@@ -11,6 +11,7 @@ from typing import Any
 from app.core.app_config import AppConfig
 from app.services.library_books import library_books_service
 from app.services.live_acceptance import group_candidates
+from app.services.user_subscriptions import user_subscriptions_service
 from app.source_plugins.scheduler import get_plugin_scheduler
 
 
@@ -20,6 +21,7 @@ FINAL_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
 @dataclass
 class SubscriptionSearchJob:
     job_id: str
+    owner_user_id: str
     keyword: str
     page: int
     status: str = "pending"
@@ -43,14 +45,21 @@ class SubscriptionSearchJob:
 class SubscriptionSearchService:
     """Runs official-first subscription discovery independent of console search."""
 
-    def __init__(self, scheduler: Any | None = None, library_service: Any | None = None):
+    def __init__(
+        self,
+        scheduler: Any | None = None,
+        library_service: Any | None = None,
+        subscription_service: Any | None = None,
+    ):
         self.scheduler = scheduler or get_plugin_scheduler()
         self.library_service = library_service or library_books_service
+        self.subscription_service = subscription_service or user_subscriptions_service
         self._jobs: dict[str, SubscriptionSearchJob] = {}
 
-    def create_job(self, keyword: str, page: int = 1) -> SubscriptionSearchJob:
+    def create_job(self, keyword: str, page: int = 1, *, owner_user_id: str) -> SubscriptionSearchJob:
         job = SubscriptionSearchJob(
             job_id=uuid.uuid4().hex,
+            owner_user_id=owner_user_id,
             keyword=keyword,
             page=max(1, int(page or 1)),
         )
@@ -71,6 +80,10 @@ class SubscriptionSearchService:
 
     def get_job(self, job_id: str) -> SubscriptionSearchJob | None:
         return self._jobs.get(job_id)
+
+    def get_job_for_user(self, job_id: str, user_id: str) -> SubscriptionSearchJob | None:
+        job = self.get_job(job_id)
+        return job if job and job.owner_user_id == user_id else None
 
     def snapshot(self, job_id: str) -> dict[str, Any]:
         job = self.get_job(job_id)
@@ -96,6 +109,17 @@ class SubscriptionSearchService:
             if group.get("candidateId") == candidate_id:
                 return group
         return None
+
+    def find_card_group_for_user(
+        self, job_id: str, candidate_id: str, user_id: str
+    ) -> dict[str, Any] | None:
+        job = self.get_job_for_user(job_id, user_id)
+        if not job:
+            return None
+        return next(
+            (group for group in job.card_groups if group.get("candidateId") == candidate_id),
+            None,
+        )
 
     def _refresh_cards(self, job: SubscriptionSearchJob) -> None:
         """Rebuild the visible card list from the current stage state."""
@@ -228,15 +252,25 @@ class SubscriptionSearchService:
         return [dict(item) for item in items if isinstance(item, dict)]
 
     def _rebuild_cards(self, job: SubscriptionSearchJob) -> None:
-        job.cards = [
-            self._public_card(self.library_service.build_subscription_card(group))
-            for group in job.card_groups
-            if isinstance(group, dict)
-        ]
+        cards: list[dict[str, Any]] = []
+        for group in job.card_groups:
+            if not isinstance(group, dict):
+                continue
+            card = self._public_card(self.library_service.build_subscription_card(group))
+            book_id = str(card.get("aggregateBookId", "") or "")
+            subscription = (
+                self.subscription_service.get(job.owner_user_id, book_id) if book_id else None
+            )
+            card["alreadySubscribed"] = bool(subscription)
+            card["subscriptionStatus"] = subscription.get("status", "") if subscription else ""
+            cards.append(card)
+        job.cards = cards
 
     def _public_card(self, card: dict[str, Any]) -> dict[str, Any]:
         public = dict(card)
         public.pop("debug", None)
+        public.pop("addedByUserId", None)
+        public.pop("addedByUsername", None)
         return public
 
     def _snapshot(self, job: SubscriptionSearchJob) -> dict[str, Any]:

@@ -45,13 +45,14 @@ def test_shared_book_lock_acquire_succeeds(tmp_path: Path):
     clock = FakeClock(100.0)
     service = _make_service(tmp_path, clock)
 
-    lease = service.acquire(book_name="测试小说", author="作者甲")
+    lease = service.acquire(aggregate_book_id="book-1")
 
     assert lease is not None
     assert lease.worker_id == "host-a-1234-1710000000000-rand1234"
     assert lease.renewal_interval_seconds == pytest.approx(3.0)
     assert lease.can_write is True
     payload = _lock_payload(lease)
+    assert payload["aggregateBookId"] == "book-1"
     assert payload["workerId"] == lease.worker_id
     assert payload["expiresAt"] == pytest.approx(109.0)
 
@@ -61,8 +62,8 @@ def test_shared_book_lock_second_acquire_fails(tmp_path: Path):
     service_a = _make_service(tmp_path, clock, random_factory=lambda: "first")
     service_b = _make_service(tmp_path, clock, random_factory=lambda: "second", pid=5678)
 
-    lease_a = service_a.acquire(book_name="测试小说", author="作者甲")
-    lease_b = service_b.acquire(book_name="测试小说", author="作者甲")
+    lease_a = service_a.acquire(aggregate_book_id="book-1")
+    lease_b = service_b.acquire(aggregate_book_id="book-1")
 
     assert lease_a is not None
     assert lease_b is None
@@ -73,12 +74,12 @@ def test_shared_book_lock_release_allows_clean_reacquire(tmp_path: Path):
     first_service = _make_service(tmp_path, clock, random_factory=lambda: "first")
     second_service = _make_service(tmp_path, clock, random_factory=lambda: "second", pid=5678)
 
-    first_lease = first_service.acquire(book_name="测试小说", author="作者甲")
+    first_lease = first_service.acquire(aggregate_book_id="book-1")
     assert first_lease is not None
 
     first_lease.release()
 
-    second_lease = second_service.acquire(book_name="测试小说", author="作者甲")
+    second_lease = second_service.acquire(aggregate_book_id="book-1")
 
     assert second_lease is not None
     assert second_lease.worker_id.endswith("-second")
@@ -88,7 +89,7 @@ def test_shared_book_lock_release_allows_clean_reacquire(tmp_path: Path):
 def test_shared_book_lock_renew_succeeds(tmp_path: Path):
     clock = FakeClock(100.0)
     service = _make_service(tmp_path, clock, ttl_seconds=12.0)
-    lease = service.acquire(book_name="测试小说", author="作者甲")
+    lease = service.acquire(aggregate_book_id="book-1")
     assert lease is not None
 
     clock.advance(4.0)
@@ -107,11 +108,11 @@ def test_shared_book_lock_expired_lock_can_be_taken(tmp_path: Path):
     first_service = _make_service(tmp_path, clock, random_factory=lambda: "first")
     second_service = _make_service(tmp_path, clock, random_factory=lambda: "second", pid=5678)
 
-    first_lease = first_service.acquire(book_name="测试小说", author="作者甲")
+    first_lease = first_service.acquire(aggregate_book_id="book-1")
     assert first_lease is not None
 
     clock.advance(10.0)
-    second_lease = second_service.acquire(book_name="测试小说", author="作者甲")
+    second_lease = second_service.acquire(aggregate_book_id="book-1")
 
     assert second_lease is not None
     assert second_lease.worker_id.endswith("-second")
@@ -123,11 +124,11 @@ def test_shared_book_lock_renew_failure_forces_caller_visible_stop_state(tmp_pat
     first_service = _make_service(tmp_path, clock, random_factory=lambda: "first")
     second_service = _make_service(tmp_path, clock, random_factory=lambda: "second", pid=5678)
 
-    first_lease = first_service.acquire(book_name="测试小说", author="作者甲")
+    first_lease = first_service.acquire(aggregate_book_id="book-1")
     assert first_lease is not None
 
     clock.advance(10.0)
-    second_lease = second_service.acquire(book_name="测试小说", author="作者甲")
+    second_lease = second_service.acquire(aggregate_book_id="book-1")
     assert second_lease is not None
 
     renewed = first_lease.renew()

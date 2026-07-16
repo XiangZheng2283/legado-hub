@@ -1,9 +1,4 @@
-"""SQLite path and initialization.
-
-The host database is rebuilt from scratch in this refactor. Old runtime/debug
-tables are removed; only long-lived factual data and the new search-oriented
-tables remain.
-"""
+"""SQLite schema initialization and forward-compatible upgrades."""
 
 from __future__ import annotations
 
@@ -12,7 +7,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = "8"
+SCHEMA_VERSION = 9
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -266,6 +261,28 @@ CREATE TABLE IF NOT EXISTS aggregate_book_tasks (
     updated_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS user_book_subscriptions (
+    user_id TEXT NOT NULL,
+    aggregate_book_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'paused', 'archived')),
+    start_chapter_index INTEGER NOT NULL DEFAULT 1
+        CHECK (start_chapter_index >= 1),
+    auto_archive_on_complete INTEGER NOT NULL DEFAULT 1
+        CHECK (auto_archive_on_complete IN (0, 1)),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, aggregate_book_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (aggregate_book_id)
+        REFERENCES aggregate_book_tasks(aggregate_book_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_book_subscriptions_user_status
+    ON user_book_subscriptions (user_id, status, updated_at);
+CREATE INDEX IF NOT EXISTS idx_user_book_subscriptions_book
+    ON user_book_subscriptions (aggregate_book_id);
+
 CREATE TABLE IF NOT EXISTS aggregate_chapter_tasks (
     chapter_id TEXT PRIMARY KEY,
     aggregate_book_id TEXT NOT NULL,
@@ -341,6 +358,9 @@ CREATE INDEX IF NOT EXISTS idx_aggregate_book_sources_book
     ON aggregate_book_sources (aggregate_book_id, role, enabled);
 CREATE INDEX IF NOT EXISTS idx_aggregate_book_sources_source_book
     ON aggregate_book_sources (source_id, source_book_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_aggregate_book_sources_identity
+    ON aggregate_book_sources (source_id, source_book_id)
+    WHERE source_book_id <> '';
 
 CREATE TABLE IF NOT EXISTS aggregate_operation_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -375,38 +395,6 @@ CREATE TABLE IF NOT EXISTS aggregate_source_snapshots (
 CREATE INDEX IF NOT EXISTS idx_aggregate_source_snapshots_book
     ON aggregate_source_snapshots (aggregate_book_id, chapter_index);
 """
-
-
-def _is_legacy_database(path: Path) -> bool:
-    """Detect whether the existing DB still carries old tables that need rebuild."""
-    if not path.exists():
-        return False
-    conn = None
-    try:
-        conn = sqlite3.connect(path)
-        rows = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name IN (?, ?, ?, ?, ?, ?)",
-            ("plugin_health", "plugin_attempts", "search_job_events",
-             "plugin_runtime_state", "plugin_auth_state", "search_query_cache"),
-        ).fetchall()
-        if len(rows) > 0:
-            return True
-        # Also trigger rebuild if the DB schema version is older than the
-        # current shared-library schema.
-        try:
-            ver = conn.execute(
-                "SELECT value FROM schema_meta WHERE key = 'version'"
-            ).fetchone()
-            if ver and ver[0] < SCHEMA_VERSION:
-                return True
-        except Exception:
-            pass
-        return False
-    except Exception:
-        return False
-    finally:
-        if conn is not None:
-            conn.close()
 
 
 def ensure_data_dir() -> None:
@@ -505,62 +493,71 @@ def _migrate_book_search_cache(conn: sqlite3.Connection) -> None:
     if "book_search_cache" not in tables:
         return
 
-    try:
-            conn.execute(
-            """
-            DELETE FROM book_search_cache
-            WHERE id IN (
-                SELECT current.id
-                FROM book_search_cache AS current
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM book_search_cache AS newer
-                    WHERE newer.source_id = current.source_id
-                      AND newer.raw_book_url = current.raw_book_url
-                      AND (
-                            newer.last_seen_at > current.last_seen_at
-                         OR (newer.last_seen_at = current.last_seen_at AND newer.id > current.id)
-                      )
-                )
+    conn.execute(
+        """
+        DELETE FROM book_search_cache
+        WHERE id IN (
+            SELECT current.id
+            FROM book_search_cache AS current
+            WHERE EXISTS (
+                SELECT 1
+                FROM book_search_cache AS newer
+                WHERE newer.source_id = current.source_id
+                  AND newer.raw_book_url = current.raw_book_url
+                  AND (
+                        newer.last_seen_at > current.last_seen_at
+                     OR (newer.last_seen_at = current.last_seen_at AND newer.id > current.id)
+                  )
             )
-            """
         )
-    except Exception:
-        pass
+        """
+    )
+    conn.execute("DROP INDEX IF EXISTS idx_book_search_cache_unique_source_book")
+    conn.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_book_search_cache_unique_source_book
+            ON book_search_cache (source_id, raw_book_url)
+        """
+    )
+
+
+def _current_schema_version(conn: sqlite3.Connection) -> int:
+    table = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_meta'"
+    ).fetchone()
+    if not table:
+        return 0
+    row = conn.execute(
+        "SELECT value FROM schema_meta WHERE key = 'version'"
+    ).fetchone()
+    if not row:
+        return 0
     try:
-        conn.execute("DROP INDEX IF EXISTS idx_book_search_cache_unique_source_book")
-        conn.execute(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_book_search_cache_unique_source_book
-                ON book_search_cache (source_id, raw_book_url)
-            """
-        )
-    except Exception:
-        pass
+        return int(row[0])
+    except (TypeError, ValueError):
+        return 0
 
 
 def initialize_database(db_path: Path | None = None) -> str:
     path = db_path or DB_PATH
     ensure_data_dir()
 
-    # Phase-2 rebuild: if the existing database is from the old schema, delete it
-    # and start fresh. This matches the "direct rebuild, no compatibility" rule.
-    if _is_legacy_database(path):
-        try:
-            path.unlink()
-        except OSError:
-            pass
-
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=5000")
+    conn.execute("PRAGMA foreign_keys=ON")
     try:
+        current_version = _current_schema_version(conn)
+        if current_version > SCHEMA_VERSION:
+            raise RuntimeError(
+                f"database schema {current_version} is newer than supported {SCHEMA_VERSION}"
+            )
         conn.executescript(SCHEMA_SQL)
         _ensure_shared_library_schema(conn)
         _migrate_book_search_cache(conn)
         conn.execute(
             "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
-            ("version", SCHEMA_VERSION),
+            ("version", str(SCHEMA_VERSION)),
         )
         conn.commit()
     finally:

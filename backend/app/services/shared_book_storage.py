@@ -77,6 +77,9 @@ class SharedBookStorage:
     def runtime_dir(self, *, book_name: str, author: str) -> Path:
         return self.private_root / _book_folder_name(book_name, author) / "runtime"
 
+    def lock_runtime_dir(self, aggregate_book_id: str) -> Path:
+        return self.private_root / "_locks" / _safe_segment(aggregate_book_id) / "runtime"
+
     def logs_dir(self, *, book_name: str, author: str) -> Path:
         return self.private_root / _book_folder_name(book_name, author) / "logs"
 

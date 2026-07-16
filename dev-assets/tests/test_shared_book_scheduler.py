@@ -9,6 +9,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
 from app.services.shared_book_scheduler import SharedBookScheduler
+from app.services.shared_book_lock import SharedBookLockError
 
 
 class FakeProcessor:
@@ -51,32 +52,43 @@ class FakeProcessor:
 
 class FakeLockService:
     def __init__(self):
-        self.active: set[tuple[str, str]] = set()
-        self.acquire_calls: list[tuple[str, str]] = []
+        self.active: set[str] = set()
+        self.acquire_calls: list[str] = []
 
-    def acquire(self, *, book_name: str, author: str):
-        key = (book_name, author)
-        self.acquire_calls.append(key)
-        if key in self.active:
+    def acquire(self, *, aggregate_book_id: str):
+        self.acquire_calls.append(aggregate_book_id)
+        if aggregate_book_id in self.active:
             return None
-        self.active.add(key)
-        return _FakeLease(self, key)
+        self.active.add(aggregate_book_id)
+        return _FakeLease(self, aggregate_book_id)
 
 
 class _FakeLease:
-    def __init__(self, service: FakeLockService, key: tuple[str, str]):
+    def __init__(self, service: FakeLockService, aggregate_book_id: str):
         self._service = service
-        self._key = key
+        self._aggregate_book_id = aggregate_book_id
+        self.aggregate_book_id = aggregate_book_id
+        self.stop_requested = False
 
     def release(self) -> None:
-        self._service.active.discard(self._key)
+        self._service.active.discard(self._aggregate_book_id)
 
     @property
     def renewal_interval_seconds(self) -> float:
-        return 60.0
+        return float(getattr(self, "_renewal_interval_seconds", 60.0))
 
     def renew(self) -> bool:
         return True
+
+
+class FailingLockService(FakeLockService):
+    def acquire(self, *, aggregate_book_id: str):
+        lease = super().acquire(aggregate_book_id=aggregate_book_id)
+        if lease is None:
+            return None
+        lease._renewal_interval_seconds = 0.01
+        lease.renew = lambda: False
+        return lease
 
 
 class FakeLibraryBooks:
@@ -346,7 +358,7 @@ async def test_per_book_mutual_exclusion_still_applies():
         recovery_scanner=lambda: [],
     )
 
-    busy_lease = lock_service.acquire(book_name="同一本书", author="作者甲")
+    busy_lease = lock_service.acquire(aggregate_book_id="book-1")
     assert busy_lease is not None
 
     result = await scheduler._process_book("book-1", trigger="book_update_check")
@@ -355,6 +367,44 @@ async def test_per_book_mutual_exclusion_still_applies():
     assert result["reason"] == "lock_busy"
     assert processor.run_calls == []
     busy_lease.release()
+
+
+@pytest.mark.asyncio
+async def test_lease_renewal_failure_cancels_active_book_processing():
+    class BlockingProcessor(FakeProcessor):
+        def __init__(self):
+            super().__init__()
+            self.cancelled = False
+
+        async def run_book_task(
+            self,
+            aggregate_book_id: str,
+            chapter_limit: int | None = None,
+        ) -> dict[str, object]:
+            self.run_calls.append(aggregate_book_id)
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                self.cancelled = True
+                raise
+            return {"bookId": aggregate_book_id, "success": True}
+
+    processor = BlockingProcessor()
+    processor._books["book-lease-loss"] = {
+        "aggregateBookId": "book-lease-loss",
+        "name": "失锁测试",
+        "author": "作者甲",
+    }
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FailingLockService(),
+        recovery_scanner=lambda: [],
+    )
+
+    with pytest.raises(SharedBookLockError, match="lease lost"):
+        await scheduler._process_book("book-lease-loss", trigger="book_update_check")
+
+    assert processor.cancelled is True
 
 
 @pytest.mark.asyncio
@@ -386,7 +436,7 @@ async def test_initial_subscription_jobs_requeue_when_lock_busy():
         recovery_scanner=lambda: [],
     )
 
-    busy_lease = lock_service.acquire(book_name="锁中书", author="作者甲")
+    busy_lease = lock_service.acquire(aggregate_book_id="book-locked")
     assert busy_lease is not None
 
     result = await scheduler._process_book("book-locked", trigger="book_bootstrap")

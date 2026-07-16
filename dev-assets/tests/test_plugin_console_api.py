@@ -5,6 +5,7 @@ import sqlite3
 from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -50,11 +51,11 @@ def test_plugin_reload_requires_admin(admin_client, user_client):
     assert admin_client.post("/api/console/plugins/reload").status_code == 200
 
 
-def test_console_chapter_read_requires_login_but_allows_reader(user_client):
+def test_console_chapter_read_requires_admin(user_client):
     anonymous_client = TestClient(app)
 
     assert anonymous_client.get("/api/console/chapter/invalid").status_code == 401
-    assert user_client.get("/api/console/chapter/invalid").status_code == 200
+    assert user_client.get("/api/console/chapter/invalid").status_code == 403
 
 
 def test_list_plugins():
@@ -784,14 +785,9 @@ class TestOfficialSourceLogout:
         assert calls == ["qidian_com"]
 
 
-def test_library_book_summary_shared_mode_sanitizes_source_map_for_non_admin(monkeypatch):
+def test_library_book_summary_shared_mode_sanitizes_source_map_for_admin(monkeypatch):
     import app.api.console as console_api
 
-    monkeypatch.setattr(
-        console_api.auth_service,
-        "require_user",
-        lambda _request: SimpleNamespace(user_id="user-1", role="user"),
-    )
     monkeypatch.setattr(
         console_api.AggregateSettingsRepository,
         "content_workflow",
@@ -887,16 +883,107 @@ def test_delete_library_book_removes_shared_and_private_files(monkeypatch, tmp_p
     assert result == {"bookId": "book-delete", "deleted": True}
     assert not shared_dir.exists()
     assert not private_dir.exists()
+    with sqlite3.connect(db_path) as conn:
+        operation = conn.execute(
+            """
+            SELECT operation_type, before_json, after_json
+            FROM aggregate_operation_logs
+            WHERE aggregate_book_id = 'book-delete'
+            ORDER BY id DESC LIMIT 1
+            """
+        ).fetchone()
+    assert operation is not None
+    assert operation[0] == "delete"
+    assert '"name": "测试小说"' in operation[1]
+    assert '"deleted": true' in operation[2]
+
+
+def test_delete_library_book_rejects_active_subscriptions(monkeypatch, tmp_path):
+    import app.api.console as console_api
+    import app.config as app_config
+    from app.services.library_books import LibraryBooksService
+    from app.services.shared_book_storage import SharedBookStorage
+    from app.services.user_auth import UserAuthService
+    from app.services.user_subscriptions import UserSubscriptionsService
+    from app.storage.db import initialize_database
+
+    db_path = tmp_path / "app.db"
+    service = LibraryBooksService(
+        db_path=db_path,
+        shared_book_storage=SharedBookStorage(tmp_path / "library"),
+    )
+    monkeypatch.setattr(app_config, "DB_PATH", db_path)
+    monkeypatch.setattr(console_api, "library_books_service", service)
+    initialize_database(db_path)
+    user = UserAuthService(db_path).create_user("reader-delete", "password")
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_tasks (
+                aggregate_book_id, canonical_name, canonical_author, name, author,
+                status, created_at, updated_at
+            ) VALUES ('book-delete', 'book', 'author', '测试小说', '作者甲',
+                      'active', datetime('now'), datetime('now'))
+            """
+        )
+        conn.commit()
+    UserSubscriptionsService(db_path).ensure(user["userId"], "book-delete")
+
+    with pytest.raises(HTTPException) as captured:
+        console_api._delete_aggregate_book_impl("book-delete", actor_user_id="admin-1")
+
+    assert captured.value.status_code == 409
+    assert captured.value.detail["code"] == "active_subscriptions_exist"
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute(
+            "SELECT 1 FROM aggregate_book_tasks WHERE aggregate_book_id = 'book-delete'"
+        ).fetchone() == (1,)
+        assert conn.execute(
+            "SELECT operation_type FROM aggregate_operation_logs "
+            "WHERE aggregate_book_id = 'book-delete' ORDER BY id DESC LIMIT 1"
+        ).fetchone() == ("delete.rejected",)
+
+
+def test_delete_library_book_rejects_active_lease(monkeypatch, tmp_path):
+    import app.api.console as console_api
+    import app.config as app_config
+    from app.services.library_books import LibraryBooksService
+    from app.services.shared_book_lock import SharedBookLockService
+    from app.services.shared_book_storage import SharedBookStorage
+    from app.storage.db import initialize_database
+
+    db_path = tmp_path / "app.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    service = LibraryBooksService(db_path=db_path, shared_book_storage=storage)
+    monkeypatch.setattr(app_config, "DB_PATH", db_path)
+    monkeypatch.setattr(console_api, "library_books_service", service)
+    initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_tasks (
+                aggregate_book_id, canonical_name, canonical_author, name, author,
+                status, created_at, updated_at
+            ) VALUES ('book-delete', 'book', 'author', '测试小说', '作者甲',
+                      'active', datetime('now'), datetime('now'))
+            """
+        )
+        conn.commit()
+    lease = SharedBookLockService(storage=storage).acquire(aggregate_book_id="book-delete")
+    assert lease is not None
+
+    try:
+        with pytest.raises(HTTPException) as captured:
+            console_api._delete_aggregate_book_impl("book-delete")
+        assert captured.value.status_code == 409
+        assert captured.value.detail["code"] == "aggregate_book_busy"
+    finally:
+        lease.release()
 
 
 def test_library_book_chapter_progress_route_sanitizes_trace_by_default(monkeypatch):
     import app.api.console as console_api
 
-    monkeypatch.setattr(
-        console_api.auth_service,
-        "require_user",
-        lambda _request: SimpleNamespace(user_id="user-1", role="user"),
-    )
     monkeypatch.setattr(
         console_api,
         "_load_library_book_chapter_progress",
@@ -952,11 +1039,6 @@ def test_console_sanitize_trace_summary_keeps_stage3_verdict_fields():
 def test_library_book_chapters_shared_mode_returns_paginated_shared_shape(monkeypatch):
     import app.api.console as console_api
 
-    monkeypatch.setattr(
-        console_api.auth_service,
-        "require_user",
-        lambda _request: SimpleNamespace(user_id="user-1", role="user"),
-    )
     monkeypatch.setattr(
         console_api.AggregateSettingsRepository,
         "content_workflow",
@@ -1123,11 +1205,6 @@ def test_library_book_chapters_reads_from_shared_files(admin_client, monkeypatch
 def test_library_book_logs_route_uses_console_shape(monkeypatch):
     import app.api.console as console_api
 
-    monkeypatch.setattr(
-        console_api.auth_service,
-        "require_user",
-        lambda _request: SimpleNamespace(user_id="user-1", role="user"),
-    )
     monkeypatch.setattr(
         console_api,
         "_list_library_book_logs",

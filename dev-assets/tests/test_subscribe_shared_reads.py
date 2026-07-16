@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 from app.main import app
 from app.services.library_books import LibraryBooksService
 from app.services.shared_book_storage import SharedBookStorage
+from app.services.user_subscriptions import UserSubscriptionsService
 from app.storage.db import initialize_database
 
 
@@ -25,7 +26,10 @@ def client(tmp_path, monkeypatch):
     # Ensure shared storage writes under the temp directory.
     storage = SharedBookStorage(root=tmp_path / "library")
     service = LibraryBooksService(db_path=db, shared_book_storage=storage)
+    subscription_service = UserSubscriptionsService(db_path=db)
     monkeypatch.setattr("app.api.subscribe.library_books_service", service)
+    monkeypatch.setattr("app.api.legado.library_books_service", service)
+    monkeypatch.setattr("app.api.subscribe.user_subscriptions_service", subscription_service)
     monkeypatch.setattr("app.services.library_books.library_books_service", service)
 
     tc = TestClient(app)
@@ -35,7 +39,16 @@ def client(tmp_path, monkeypatch):
     return tc
 
 
-def _insert_book(db_path: Path, aggregate_book_id: str, name: str, author: str) -> None:
+def _insert_book(
+    db_path: Path,
+    aggregate_book_id: str,
+    name: str,
+    author: str,
+    *,
+    published: bool = False,
+    chapter_count: int = 0,
+    visible_chapter_count: int = 0,
+) -> None:
     import sqlite3
 
     with sqlite3.connect(db_path) as conn:
@@ -65,10 +78,30 @@ def _insert_book(db_path: Path, aggregate_book_id: str, name: str, author: str) 
                 json.dumps({"name": name, "author": author, "primarySourceId": "src"}, ensure_ascii=False),
             ),
         )
+        if published:
+            conn.execute(
+                """
+                UPDATE aggregate_book_tasks
+                SET search_visibility_status = 'visible', total_chapters = ?,
+                    processed_chapters = ?, visible_processed_chapters = ?
+                WHERE aggregate_book_id = ?
+                """,
+                (chapter_count, chapter_count, visible_chapter_count, aggregate_book_id),
+            )
         conn.commit()
 
 
-def _write_shared_files(storage: SharedBookStorage, aggregate_book_id: str, name: str, author: str) -> None:
+def _write_shared_files(
+    storage: SharedBookStorage,
+    aggregate_book_id: str,
+    name: str,
+    author: str,
+    *,
+    chapter_specs: list[tuple[int, str, bool]] | None = None,
+    include_source_ids: bool = True,
+) -> None:
+    specs = chapter_specs or [(1, "第一章", False), (2, "第二章", False)]
+    preview_count = sum(1 for _, _, preview_only in specs if preview_only)
     metadata = storage.build_shared_metadata(
         {
             "name": name,
@@ -86,10 +119,10 @@ def _write_shared_files(storage: SharedBookStorage, aggregate_book_id: str, name
                 }
             ],
             "bookState": {
-                "chapterCount": 2,
-                "readableChapterCount": 2,
-                "previewChapterCount": 0,
-                "processedChapterCount": 2,
+                "chapterCount": len(specs),
+                "readableChapterCount": len(specs),
+                "previewChapterCount": preview_count,
+                "processedChapterCount": len(specs),
             },
         }
     )
@@ -100,20 +133,31 @@ def _write_shared_files(storage: SharedBookStorage, aggregate_book_id: str, name
 
     chapter_files = []
     chapter_entries = []
-    for idx, title in [(1, "第一章"), (2, "第二章")]:
+    for idx, title, preview_only in specs:
         ch_id = f"src:ch{idx}"
         trace = {
             "schemaVersion": 1,
             "chapterIndex": idx,
             "chapterTitle": title,
             "chapterStatus": "readable",
-            "previewOnly": False,
+            "previewOnly": preview_only,
+            "isVip": preview_only,
             "primarySource": {"sourceId": "src", "chapterId": ch_id, "wordCount": 100},
         }
-        markdown = storage.render_chapter_markdown(title=title, body=f"{title} 正文", trace_payload=trace)
+        body = f"{title} {'付费预览正文' if preview_only else '完整免费正文'}"
+        markdown = storage.render_chapter_markdown(title=title, body=body, trace_payload=trace)
         path = storage.chapter_markdown_path(book_name=name, author=author, chapter_index=idx, title=title)
         chapter_files.append((path, markdown))
-        chapter_entries.append({"index": idx, "title": title, "file": f"chapters/{path.name}", "status": "readable", "sourceChapterId": ch_id})
+        chapter_entries.append(
+            {
+                "index": idx,
+                "title": title,
+                "file": f"chapters/{path.name}",
+                "status": "readable",
+                "sourceChapterId": ch_id if include_source_ids else "",
+                "isVip": preview_only,
+            }
+        )
 
     chapter_index = {"schemaVersion": 1, "bookId": aggregate_book_id, "chapters": chapter_entries}
     storage.write_book_bundle(
@@ -140,14 +184,16 @@ def test_get_library_book_reads_shared_metadata_not_db_sources(client, tmp_path,
     data = response.json()
     assert data["found"] is True
     assert data["book"]["aggregateBookId"] == book_id
+    assert "primaryBookUrl" not in data["book"]
+    assert "primaryTocUrl" not in data["book"]
+    assert "settingsJson" not in data["book"]
+    assert "addedByUserId" not in data["book"]
     assert "bookState" in data
     assert data["bookState"]["readableChapterCount"] == 2
 
-    sources = data.get("sources", [])
-    assert len(sources) >= 1
-    for source in sources:
-        assert "bookUrl" not in source, "private source URLs must not be exposed"
-        assert "tocUrl" not in source
+    assert "sources" not in data
+    assert "sourceMap" not in data
+    assert "sourceMapRefresh" not in data
     payload = data.get("payload")
     assert payload is None, "private payload must not be exposed to subscribe endpoint"
 
@@ -177,6 +223,163 @@ def test_list_library_book_chapters_reads_shared_files(client, tmp_path, monkeyp
     assert "primarySourceChapterUrl" not in items[0]
     assert "processed_content" not in items[0]
 
+    filtered = client.get(
+        f"/api/subscribe/books/{book_id}/chapters",
+        params={"keyword": "第二"},
+    )
+    assert filtered.status_code == 200
+    assert [item["title"] for item in filtered.json()["items"]] == ["第二章"]
+
+
+def test_legado_reads_only_published_shared_content_without_db_side_effects(
+    client, tmp_path, monkeypatch
+):
+    import sqlite3
+
+    from app.core.legado_source import generate_legado_source
+    from app.services.library_books import make_library_book_id
+
+    db = tmp_path / "test.db"
+    storage = SharedBookStorage(root=tmp_path / "library")
+    service = LibraryBooksService(db_path=db, shared_book_storage=storage)
+    monkeypatch.setattr("app.api.subscribe.library_books_service", service)
+    monkeypatch.setattr("app.api.legado.library_books_service", service)
+
+    hidden_id = "book-reading-hidden"
+    published_id = "book-reading-published"
+    _insert_book(db, hidden_id, "阅读契约测试书隐藏", "作者")
+    _insert_book(
+        db,
+        published_id,
+        "阅读契约测试书",
+        "作者",
+        published=True,
+        chapter_count=4,
+        visible_chapter_count=3,
+    )
+    _write_shared_files(
+        storage,
+        published_id,
+        "阅读契约测试书",
+        "作者",
+        chapter_specs=[
+            (1, "第一章", False),
+            (2, "第二章", False),
+            (3, "第三章", False),
+            (4, "第四章 付费", True),
+        ],
+        include_source_ids=False,
+    )
+    from app.services.aggregate_virtual_source import (
+        VIRTUAL_SOURCE_ID,
+        make_aggregate_chapter_url,
+    )
+    from app.source_plugins.id_codec import encode_chapter_id
+
+    with sqlite3.connect(db) as conn:
+        for index, title in enumerate(("第一章", "第二章", "第三章", "第四章 付费"), start=1):
+            source_chapter_id = f"src:ch{index}"
+            aggregate_url = make_aggregate_chapter_url(
+                aggregate_book_id=published_id,
+                source_chapter_id=source_chapter_id,
+                title=title,
+                index=index,
+            )
+            conn.execute(
+                """
+                INSERT INTO aggregate_chapter_tasks (
+                    chapter_id, aggregate_book_id, source_chapter_id,
+                    chapter_index, title, status, preview_only
+                ) VALUES (?, ?, ?, ?, ?, 'processed', ?)
+                """,
+                (
+                    encode_chapter_id(VIRTUAL_SOURCE_ID, aggregate_url),
+                    published_id,
+                    source_chapter_id,
+                    index,
+                    title,
+                    int(index == 4),
+                ),
+            )
+        conn.commit()
+
+    source = generate_legado_source("http://testserver")[0]
+    assert source["searchUrl"].startswith("http://testserver/api/subscribe/legado/search")
+    assert "waitMs" not in source["searchUrl"]
+    assert source["exploreUrl"].startswith("已发布书库::http://testserver/api/subscribe/legado/explore")
+
+    search = client.get("/api/subscribe/legado/search", params={"keyword": "阅读契约测试书"})
+    assert search.status_code == 200
+    search_data = search.json()
+    assert search_data["status"] == "completed"
+    assert search_data["jobId"] == ""
+    assert [item["aggregateBookId"] for item in search_data["items"]] == [published_id]
+    assert "addedByUserId" not in search_data["items"][0]
+    assert "addedByUsername" not in search_data["items"][0]
+
+    book_id = make_library_book_id(published_id)
+    with sqlite3.connect(db) as conn:
+        before = {
+            "books": conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone()[0],
+            "chapters": conn.execute("SELECT COUNT(*) FROM aggregate_chapter_tasks").fetchone()[0],
+            "logs": conn.execute("SELECT COUNT(*) FROM aggregate_operation_logs").fetchone()[0],
+        }
+
+    detail = client.get(f"/api/legado/book/{book_id}")
+    assert detail.status_code == 200
+    detail_data = detail.json()["data"]
+    assert detail_data["name"] == "阅读契约测试书"
+    assert "primaryBookUrl" not in detail_data
+    assert "sources" not in detail_data
+
+    toc = client.get(f"/api/legado/book/{book_id}/toc")
+    assert toc.status_code == 200
+    chapters = toc.json()["chapters"]
+    assert len(chapters) == 4
+    assert chapters[0]["isVip"] is False
+    assert chapters[0]["previewOnly"] is False
+    assert chapters[-1]["isVip"] is True
+    assert chapters[-1]["previewOnly"] is True
+
+    free = client.get(chapters[0]["chapterUrl"].replace("http://testserver", ""))
+    assert free.status_code == 200
+    assert "完整免费正文" in free.json()["content"]
+    assert free.json()["extra"]["contentAccess"] == "full"
+    assert free.json()["isVip"] is False
+
+    preview = client.get(chapters[-1]["chapterUrl"].replace("http://testserver", ""))
+    assert preview.status_code == 200
+    assert "付费预览正文" in preview.json()["content"]
+    assert preview.json()["extra"]["contentAccess"] == "preview"
+    assert preview.json()["isVip"] is True
+    assert preview.json()["extra"]["previewOnly"] is True
+
+    with sqlite3.connect(db) as conn:
+        after = {
+            "books": conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone()[0],
+            "chapters": conn.execute("SELECT COUNT(*) FROM aggregate_chapter_tasks").fetchone()[0],
+            "logs": conn.execute("SELECT COUNT(*) FROM aggregate_operation_logs").fetchone()[0],
+        }
+    assert after == before
+
+    hidden_book_id = make_library_book_id(hidden_id)
+    assert client.get(f"/api/legado/book/{hidden_book_id}").status_code == 404
+
+
+def test_known_official_free_short_chapter_is_not_misclassified_as_preview():
+    from app.services.aggregate_alignment import classify_source_content
+
+    result = classify_source_content(
+        "欢迎收藏本书",
+        source_id="qidian_com_app",
+        is_official=True,
+        preview_only_hint=True,
+        is_paid=True,
+        is_vip=False,
+    )
+
+    assert result["classification"] == "full"
+
 
 def test_subscribe_candidate_response_does_not_expose_private_primary_urls(client, monkeypatch):
     import app.api.subscribe as subscribe_api
@@ -205,8 +408,8 @@ def test_subscribe_candidate_response_does_not_expose_private_primary_urls(clien
 
     monkeypatch.setattr(
         subscribe_api.subscription_search_service,
-        "find_card_group",
-        lambda _job_id, _candidate_id: {"candidateId": "cand-1", "items": [{}]},
+        "find_card_group_for_user",
+        lambda _job_id, _candidate_id, _user_id: {"candidateId": "cand-1", "items": [{}]},
     )
     async def fake_create_or_get_shared_book(*args, **kwargs):
         return created_payload
@@ -215,6 +418,32 @@ def test_subscribe_candidate_response_does_not_expose_private_primary_urls(clien
         subscribe_api.library_books_service,
         "create_or_get_shared_book",
         fake_create_or_get_shared_book,
+    )
+    monkeypatch.setattr(
+        subscribe_api.library_books_service,
+        "find_existing_book",
+        lambda _group: None,
+    )
+    monkeypatch.setattr(
+        subscribe_api.user_subscriptions_service,
+        "check_capacity",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        subscribe_api.user_subscriptions_service,
+        "ensure",
+        lambda *args, **kwargs: (
+            {
+                "userId": "admin",
+                "aggregateBookId": "book-new-1",
+                "status": "active",
+                "startChapterIndex": 1,
+                "autoArchiveOnComplete": True,
+                "createdAt": "",
+                "updatedAt": "",
+            },
+            True,
+        ),
     )
     monkeypatch.setattr(
         subscribe_api.AggregateProcessor,
@@ -244,6 +473,64 @@ def test_subscribe_candidate_response_does_not_expose_private_primary_urls(clien
 
     assert response.status_code == 200
     data = response.json()
+    assert "primaryBookUrl" not in data["book"]
+    assert "primaryTocUrl" not in data["book"]
+    assert "settingsJson" not in data["book"]
     config = data["subscriptionConfig"]
     assert "primaryBookUrl" not in config
     assert "primaryTocUrl" not in config
+    assert "primarySourceId" not in config
+    assert "primaryBookId" not in config
+    assert "supplementSourceConfig" not in config
+
+
+def test_reader_access_requires_own_subscription(client, tmp_path):
+    import sqlite3
+
+    from fastapi.testclient import TestClient
+
+    import app.api.subscribe as subscribe_api
+    from app.services.user_auth import auth_service
+
+    db = tmp_path / "test.db"
+    book_id = "book-owner-scope"
+    _insert_book(db, book_id, "归属测试书", "作者")
+
+    username = "reader-owner-scope"
+    user = auth_service.get_user_by_username(username)
+    if not user:
+        user = auth_service.create_user(username, "reader-password", role="user")
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO users (user_id, username, password_hash, role)
+            VALUES (?, ?, 'test-hash', 'user')
+            """,
+            (user["userId"], username),
+        )
+        conn.commit()
+    reader = TestClient(app)
+    login = reader.post(
+        "/api/auth/login",
+        json={"username": username, "password": "reader-password"},
+    )
+    assert login.status_code == 200
+
+    assert reader.get(f"/api/subscribe/books/{book_id}").status_code == 404
+    assert reader.get("/api/subscribe/library").status_code == 403
+
+    subscribe_api.user_subscriptions_service.ensure(user["userId"], book_id)
+    response = reader.get(f"/api/subscribe/books/{book_id}")
+    assert response.status_code == 200
+    assert response.json()["subscription"]["userId"] == user["userId"]
+    mine = reader.get("/api/subscribe/library/mine")
+    assert mine.status_code == 200
+    mine_book = mine.json()["items"][0]
+    assert mine_book["aggregateBookId"] == book_id
+    assert "primaryBookUrl" not in mine_book
+    assert "primaryTocUrl" not in mine_book
+    assert "settingsJson" not in mine_book
+    assert "addedByUserId" not in mine_book
+    assert reader.get(f"/api/console/library-books/{book_id}/summary").status_code == 403
+    assert reader.get(f"/api/console/library-books/{book_id}/chapters").status_code == 403
+    assert reader.get(f"/api/console/library-books/{book_id}/logs").status_code == 403

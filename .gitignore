@@ -66,3 +66,5 @@ dev-assets/tests/*
 !dev-assets/tests/test_stage1_bootstrap_and_update.py
 !dev-assets/tests/conftest.py
 !dev-assets/tests/test_test_environment_isolation.py
+!dev-assets/tests/test_db.py
+!dev-assets/tests/test_user_subscriptions.py

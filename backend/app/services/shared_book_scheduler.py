@@ -9,7 +9,7 @@ from typing import Any, Callable
 
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.shared_book_job_types import SharedBookJobType
-from app.services.shared_book_lock import SharedBookLockService
+from app.services.shared_book_lock import SharedBookLockError, SharedBookLockService
 from app.services.shared_book_runtime import SharedBookProcessLogger
 from app.services.shared_book_source_map import SharedBookSourceMapService
 
@@ -359,7 +359,7 @@ class SharedBookScheduler:
         book_context = self._resolve_book_context(aggregate_book_id, payload=payload)
         book_name = book_context["bookName"]
         author = book_context["author"]
-        lease = self.lock_service.acquire(book_name=book_name, author=author)
+        lease = self.lock_service.acquire(aggregate_book_id=aggregate_book_id)
         if lease is None:
             if trigger in {
                 SharedBookJobType.BOOK_SOURCE_MAP_REFRESH.value,
@@ -382,7 +382,10 @@ class SharedBookScheduler:
             }
 
         renewal_stop = asyncio.Event()
-        renewal_task = asyncio.create_task(self._renew_lease_until_stopped(lease, renewal_stop))
+        owner_task = asyncio.current_task()
+        renewal_task = asyncio.create_task(
+            self._renew_lease_until_stopped(lease, renewal_stop, owner_task=owner_task)
+        )
         self._log(
             book_name=book_name,
             author=author,
@@ -455,6 +458,19 @@ class SharedBookScheduler:
                 "skipped": False,
                 "result": result,
             }
+        except asyncio.CancelledError as exc:
+            if bool(getattr(lease, "stop_requested", False)):
+                self._log(
+                    book_name=book_name,
+                    author=author,
+                    event="job_error",
+                    book_id=aggregate_book_id,
+                    payload={"trigger": trigger, "error": "lease_lost"},
+                )
+                raise SharedBookLockError(
+                    f"shared-book lease lost while processing '{aggregate_book_id}'"
+                ) from exc
+            raise
         except Exception as exc:
             self._log(
                 book_name=book_name,
@@ -472,8 +488,14 @@ class SharedBookScheduler:
                 pass
             lease.release()
 
-    async def _renew_lease_until_stopped(self, lease: Any, stop_event: asyncio.Event) -> None:
-        interval = max(1.0, float(getattr(lease, "renewal_interval_seconds", 10.0) or 10.0))
+    async def _renew_lease_until_stopped(
+        self,
+        lease: Any,
+        stop_event: asyncio.Event,
+        *,
+        owner_task: asyncio.Task | None,
+    ) -> None:
+        interval = max(0.05, float(getattr(lease, "renewal_interval_seconds", 10.0) or 10.0))
         while not stop_event.is_set():
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=interval)
@@ -482,10 +504,23 @@ class SharedBookScheduler:
                 renew = getattr(lease, "renew", None)
                 try:
                     if callable(renew) and not renew():
-                        logger.warning("Shared-book lease renewal failed for %s", getattr(lease, "book_name", ""))
+                        lease.stop_requested = True
+                        logger.warning(
+                            "Shared-book lease renewal failed for %s",
+                            getattr(lease, "aggregate_book_id", ""),
+                        )
+                        if owner_task is not None and not owner_task.done():
+                            owner_task.cancel()
                         break
                 except Exception:
-                    logger.warning("Shared-book lease renewal raised for %s", getattr(lease, "book_name", ""), exc_info=True)
+                    lease.stop_requested = True
+                    logger.warning(
+                        "Shared-book lease renewal raised for %s",
+                        getattr(lease, "aggregate_book_id", ""),
+                        exc_info=True,
+                    )
+                    if owner_task is not None and not owner_task.done():
+                        owner_task.cancel()
                     break
 
     def _default_recovery_scanner(self) -> list[BookItem]:

@@ -31,6 +31,7 @@ from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_settings import AI_RUNTIME_ENABLED, AggregateSettingsRepository
 from app.services.lexicon_updater import LexiconUpdater
 from app.services.library_books import library_books_service
+from app.services.shared_book_lock import SharedBookLockService
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.shared_book_storage import TRACE_BEGIN
 from app.source_plugins.loader import PluginLoader
@@ -1610,9 +1611,6 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
     """Admin shortcut: add a candidate group to the shared library."""
     admin = auth_service.require_admin(request)
     candidate_id = str(payload.get("candidateId", "")).strip()
-    added_by_user_id = str(payload.get("addedByUserId", "")).strip() or admin.user_id
-    start_chapter_index = max(1, int(payload.get("startChapterIndex", 1) or 1))
-    auto_archive = bool(payload.get("autoArchiveOnComplete", True))
     if not candidate_id:
         raise HTTPException(status_code=400, detail="缺少 candidateId")
     group = _search_service.find_candidate_group(job_id, candidate_id)
@@ -1620,9 +1618,7 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
         raise HTTPException(status_code=404, detail="候选书籍不存在")
     created = await library_books_service.create_or_get_shared_book(
         group,
-        added_by_user_id=added_by_user_id,
-        start_chapter_index=start_chapter_index,
-        auto_archive_on_complete=auto_archive,
+        actor_user_id=admin.user_id,
     )
     if created.get("created"):
         processor = AggregateProcessor()
@@ -1763,7 +1759,7 @@ async def get_book_toc(book_id: str):
     return await catalog.toc(book_id)
 
 
-@console_route("get", "/chapter/{chapter_id}", access="user")
+@console_route("get", "/chapter/{chapter_id}")
 async def get_chapter(chapter_id: str):
     catalog = BookCatalog()
     return await catalog.chapter(chapter_id)
@@ -2115,6 +2111,64 @@ def _bounded_page(value: int | str | None, default: int, maximum: int) -> int:
     return min(max(parsed, 1), maximum)
 
 
+def _write_aggregate_operation_log(
+    conn,
+    *,
+    book_id: str,
+    actor_user_id: str,
+    actor_role: str,
+    operation_type: str,
+    before: dict,
+    after: dict,
+) -> None:
+    conn.execute(
+        """
+        INSERT INTO aggregate_operation_logs
+        (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            book_id,
+            actor_user_id,
+            actor_role,
+            operation_type,
+            json.dumps(before, ensure_ascii=False),
+            json.dumps(after, ensure_ascii=False),
+            _now(),
+        ),
+    )
+
+
+def _aggregate_book_delete_snapshot(conn, book_id: str, book: dict) -> dict:
+    subscription_rows = conn.execute(
+        """
+        SELECT status, COUNT(*)
+        FROM user_book_subscriptions
+        WHERE aggregate_book_id = ?
+        GROUP BY status
+        """,
+        (book_id,),
+    ).fetchall()
+    subscription_counts = {str(status): int(count or 0) for status, count in subscription_rows}
+    chapter_count = int(
+        conn.execute(
+            "SELECT COUNT(*) FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()[0]
+        or 0
+    )
+    return {
+        "book": {
+            "aggregateBookId": book_id,
+            "name": str(book.get("name", "") or ""),
+            "author": str(book.get("author", "") or ""),
+            "status": str(book.get("status", "") or ""),
+        },
+        "subscriptionCounts": subscription_counts,
+        "chapterCount": chapter_count,
+    }
+
+
 def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_role: str = "admin") -> dict:
     import sqlite3
     from app.config import DB_PATH
@@ -2122,23 +2176,86 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
 
     initialize_database(DB_PATH)
     book = library_books_service.get_book(book_id)
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            INSERT INTO aggregate_operation_logs
-            (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
-            VALUES (?, ?, ?, 'delete', '', '', ?)
-            """,
-            (book_id, actor_user_id, actor_role, _now()),
-        )
-        conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (book_id,))
-        conn.execute("DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ?", (book_id,))
-        conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
-        cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
-        conn.commit()
+    if not book:
+        return {"bookId": book_id, "deleted": False}
 
-    # Clean up both the shared library directory and the private runtime directory.
-    if book:
+    lock_service = SharedBookLockService(storage=library_books_service.shared_book_storage)
+    lease = lock_service.acquire(aggregate_book_id=book_id)
+    if lease is None:
+        with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
+            before = _aggregate_book_delete_snapshot(conn, book_id, book)
+            _write_aggregate_operation_log(
+                conn,
+                book_id=book_id,
+                actor_user_id=actor_user_id,
+                actor_role=actor_role,
+                operation_type="delete.rejected",
+                before=before,
+                after={"deleted": False, "reason": "aggregate_book_busy"},
+            )
+            conn.commit()
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "aggregate_book_busy",
+                "message": "共享书正在处理，暂时不能删除",
+                "retryable": True,
+            },
+        )
+
+    try:
+        with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
+            conn.execute("PRAGMA foreign_keys=ON")
+            conn.execute("PRAGMA busy_timeout=5000")
+            conn.execute("BEGIN IMMEDIATE")
+            before = _aggregate_book_delete_snapshot(conn, book_id, book)
+            active_subscriptions = sum(
+                int(before["subscriptionCounts"].get(status, 0) or 0)
+                for status in ("active", "paused")
+            )
+            if active_subscriptions:
+                after = {
+                    "deleted": False,
+                    "reason": "active_subscriptions_exist",
+                    "activeSubscriptionCount": active_subscriptions,
+                }
+                _write_aggregate_operation_log(
+                    conn,
+                    book_id=book_id,
+                    actor_user_id=actor_user_id,
+                    actor_role=actor_role,
+                    operation_type="delete.rejected",
+                    before=before,
+                    after=after,
+                )
+                conn.commit()
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "code": "active_subscriptions_exist",
+                        "message": "仍有用户订阅该书，不能删除",
+                        "retryable": False,
+                        "activeSubscriptionCount": active_subscriptions,
+                    },
+                )
+
+            conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (book_id,))
+            conn.execute("DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ?", (book_id,))
+            conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
+            cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
+            deleted = cursor.rowcount > 0
+            _write_aggregate_operation_log(
+                conn,
+                book_id=book_id,
+                actor_user_id=actor_user_id,
+                actor_role=actor_role,
+                operation_type="delete",
+                before=before,
+                after={"deleted": deleted},
+            )
+            conn.commit()
+
+        # Clean up both the shared library directory and the private runtime directory.
         storage = library_books_service.shared_book_storage
         book_name = str(book.get("name", "") or "").strip()
         author = str(book.get("author", "") or "").strip()
@@ -2150,11 +2267,13 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
             if private_dir.exists():
                 shutil.rmtree(private_dir, ignore_errors=True)
 
-    # Legacy path cleanup (no longer the active storage location).
-    legacy_dir = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
-    if legacy_dir.exists():
-        shutil.rmtree(legacy_dir, ignore_errors=True)
-    return {"bookId": book_id, "deleted": cursor.rowcount > 0}
+        # Legacy path cleanup (no longer the active storage location).
+        legacy_dir = Path(DB_PATH).parent / "novels" / "legadohub_ai_aggregate" / book_id
+        if legacy_dir.exists():
+            shutil.rmtree(legacy_dir, ignore_errors=True)
+        return {"bookId": book_id, "deleted": deleted}
+    finally:
+        lease.release()
 
 
 def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: str = "", actor_role: str = "admin"):
@@ -2164,21 +2283,13 @@ def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: s
 
     initialize_database(DB_PATH)
     with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            INSERT INTO aggregate_operation_logs
-            (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
-            VALUES (?, ?, ?, ?, '', ?, ?)
-            """,
-            (
-                book_id,
-                actor_user_id,
-                actor_role,
-                f"set_status:{status}",
-                json.dumps({"status": status}, ensure_ascii=False),
-                _now(),
-            ),
-        )
+        row = conn.execute(
+            "SELECT status FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()
+        if not row:
+            return {"bookId": book_id, "status": status, "updated": False}
+        before = {"status": str(row[0] or "")}
         cursor = conn.execute(
             """
             UPDATE aggregate_book_tasks
@@ -2194,13 +2305,26 @@ def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: s
             """,
             (status, status, status, status, book_id),
         )
+        _write_aggregate_operation_log(
+            conn,
+            book_id=book_id,
+            actor_user_id=actor_user_id,
+            actor_role=actor_role,
+            operation_type=f"set_status:{status}",
+            before=before,
+            after={"status": status},
+        )
         conn.commit()
     return {"bookId": book_id, "status": status, "updated": cursor.rowcount > 0}
 
 
 def delete_aggregate_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    return _delete_aggregate_book_impl(book_id)
+    admin = auth_service.require_admin(request)
+    return _delete_aggregate_book_impl(
+        book_id,
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+    )
 
 
 # ---- Shared Library / Users ----
@@ -2212,10 +2336,10 @@ def list_library_books(request: Request, keyword: str = ""):
     return {"items": items, "total": len(items)}
 
 
-@console_route("get", "/library-books/{book_id}/summary", access="user")
+@console_route("get", "/library-books/{book_id}/summary")
 def get_library_book_summary(request: Request, book_id: str):
-    user = auth_service.require_user(request)
-    payload = _load_shared_library_book_summary(book_id, admin_view=_is_admin_role(user))
+    auth_service.require_admin(request)
+    payload = _load_shared_library_book_summary(book_id, admin_view=True)
     payload["mode"] = "shared"
     return payload
 
@@ -2228,7 +2352,7 @@ def get_library_book_admin(request: Request, book_id: str):
     return payload
 
 
-@console_route("get", "/library-books/{book_id}/chapters", access="user")
+@console_route("get", "/library-books/{book_id}/chapters")
 def list_library_book_chapters_admin(
     request: Request,
     book_id: str,
@@ -2237,7 +2361,7 @@ def list_library_book_chapters_admin(
     status: str = "all",
     keyword: str = "",
 ):
-    user = auth_service.require_user(request)
+    auth_service.require_admin(request)
     payload = _list_shared_library_book_chapters(
         book_id,
         page=page,
@@ -2246,19 +2370,19 @@ def list_library_book_chapters_admin(
         keyword=keyword,
     )
     payload["mode"] = "shared"
-    payload["adminView"] = _is_admin_role(user)
+    payload["adminView"] = True
     return payload
 
 
-@console_route("get", "/library-books/{book_id}/logs", access="user")
+@console_route("get", "/library-books/{book_id}/logs")
 def list_library_book_logs(request: Request, book_id: str, limit: int = 50, offset: int = 0):
-    user = auth_service.require_user(request)
-    return _list_library_book_logs(book_id, limit=limit, offset=offset, admin_view=_is_admin_role(user))
+    auth_service.require_admin(request)
+    return _list_library_book_logs(book_id, limit=limit, offset=offset, admin_view=True)
 
 
-@console_route("get", "/library-books/{book_id}/chapters/{chapter_id}/progress", access="user")
+@console_route("get", "/library-books/{book_id}/chapters/{chapter_id}/progress")
 def get_library_book_chapter_progress(request: Request, book_id: str, chapter_id: str):
-    auth_service.require_user(request)
+    auth_service.require_admin(request)
     payload = _load_library_book_chapter_progress(book_id, chapter_id)
     if payload.get("found", True) and isinstance(payload.get("traceSummary"), dict):
         payload["traceSummary"] = _sanitize_trace_summary(payload["traceSummary"])
@@ -2273,20 +2397,26 @@ def process_library_book_chapter(request: Request, book_id: str, chapter_id: str
 
 @console_route("post", "/library-books/{book_id}/pause")
 def pause_library_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    return _update_aggregate_book_status(book_id, "paused")
+    admin = auth_service.require_admin(request)
+    return _update_aggregate_book_status(
+        book_id, "paused", actor_user_id=admin.user_id, actor_role=admin.role
+    )
 
 
 @console_route("post", "/library-books/{book_id}/resume")
 def resume_library_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    return _update_aggregate_book_status(book_id, "active")
+    admin = auth_service.require_admin(request)
+    return _update_aggregate_book_status(
+        book_id, "active", actor_user_id=admin.user_id, actor_role=admin.role
+    )
 
 
 @console_route("post", "/library-books/{book_id}/archive")
 def archive_library_book(request: Request, book_id: str):
-    auth_service.require_admin(request)
-    return _update_aggregate_book_status(book_id, "archived")
+    admin = auth_service.require_admin(request)
+    return _update_aggregate_book_status(
+        book_id, "archived", actor_user_id=admin.user_id, actor_role=admin.role
+    )
 
 
 @console_route("delete", "/library-books/{book_id}")
@@ -2307,7 +2437,7 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
     with sqlite3.connect(DB_PATH) as conn:
         row = conn.execute(
             """
-            SELECT settings_json, current_policy_version, interval_minutes, auto_archive_on_complete
+            SELECT settings_json, current_policy_version, interval_minutes
             FROM aggregate_book_tasks
             WHERE aggregate_book_id = ?
             """,
@@ -2319,15 +2449,16 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
         settings = _aggregate_book_settings(row[0] or "")
         current_policy_version = int(row[1] or 1)
         interval_minutes = int(row[2] or settings.get("updateIntervalMinutes", 60) or 60)
-        auto_archive = bool(row[3])
         policy_changed = False
 
         if "autoTrackUpdates" in payload:
             settings["autoTrackUpdates"] = bool(payload["autoTrackUpdates"])
             policy_changed = True
         if "updateIntervalMinutes" in payload:
-            settings["updateIntervalMinutes"] = max(10, int(payload["updateIntervalMinutes"] or 60))
+            settings["updateIntervalMinutes"] = min(1440, max(10, int(payload["updateIntervalMinutes"] or 60)))
             interval_minutes = settings["updateIntervalMinutes"]
+        if "backlogChapterLimit" in payload:
+            settings["backlogChapterLimit"] = min(100, max(5, int(payload["backlogChapterLimit"] or 25)))
         if "aiAggregateEnabled" in payload:
             settings["aiAggregateEnabled"] = bool(payload["aiAggregateEnabled"])
             policy_changed = True
@@ -2339,21 +2470,16 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
             policy_changed = True
         if _apply_book_source_priority_settings(settings, payload):
             policy_changed = True
-        if "autoArchiveOnComplete" in payload:
-            auto_archive = bool(payload["autoArchiveOnComplete"])
-
         next_policy_version = current_policy_version + 1 if policy_changed else current_policy_version
         conn.execute(
             """
             UPDATE aggregate_book_tasks
-            SET settings_json = ?, interval_minutes = ?, auto_archive_on_complete = ?,
-                current_policy_version = ?, updated_at = ?
+            SET settings_json = ?, interval_minutes = ?, current_policy_version = ?, updated_at = ?
             WHERE aggregate_book_id = ?
             """,
             (
                 json.dumps(settings, ensure_ascii=False),
                 interval_minutes,
-                1 if auto_archive else 0,
                 next_policy_version,
                 now,
                 book_id,
@@ -2402,9 +2528,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         aggregate_payload_json, settings_json, current_policy_version, current_start_index = row
         settings = _aggregate_book_settings(settings_json or "")
         new_start_index = max(1, int(payload.get("startChapterIndex", current_start_index or 1) or 1))
-        new_auto_archive = bool(payload.get("autoArchiveOnComplete", settings.get("autoArchiveOnComplete", True)))
         settings["startChapterIndex"] = new_start_index
-        settings["autoArchiveOnComplete"] = new_auto_archive
         if "aiAggregateEnabled" in payload:
             settings["aiAggregateEnabled"] = bool(payload["aiAggregateEnabled"])
         if "aiPurifyEnabled" in payload:
@@ -2420,7 +2544,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
             SET start_chapter_index = ?, initial_snapshot_last_index = 0, backfill_started = 0,
                 total_chapters = 0, processed_chapters = 0, visible_processed_chapters = 0, failed_chapters = 0,
                 search_visibility_status = 'hidden', status = 'active', archived_at = NULL,
-                settings_json = ?, current_policy_version = ?, auto_archive_on_complete = ?,
+                settings_json = ?, current_policy_version = ?, auto_archive_on_complete = 0,
                 last_processed_at = NULL, updated_at = ?
             WHERE aggregate_book_id = ?
             """,
@@ -2428,7 +2552,6 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
                 new_start_index,
                 json.dumps(settings, ensure_ascii=False),
                 int(current_policy_version or 1) + 1,
-                1 if new_auto_archive else 0,
                 now,
                 book_id,
             ),

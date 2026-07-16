@@ -340,6 +340,8 @@ class AggregateProcessor:
             settings["autoAggregate"] = bool(per_book["autoTrackUpdates"])
         if "updateIntervalMinutes" in per_book:
             settings["aggregateCheckIntervalMinutes"] = int(per_book["updateIntervalMinutes"] or settings.get("aggregateCheckIntervalMinutes", 30))
+        if "backlogChapterLimit" in per_book:
+            settings["backlogChapterLimit"] = int(per_book["backlogChapterLimit"] or BACKLOG_CHAPTER_LIMIT)
         if "primarySourceMode" in per_book:
             settings["primarySourceMode"] = per_book["primarySourceMode"]
         if "sourcePriority" in per_book:
@@ -3196,7 +3198,7 @@ class AggregateProcessor:
             "primarySourceId": primary_source_id,
             "officialWordCount": source_word_count,
             "officialPreviewWords": source_word_count if bool(chapter_row["preview_only"]) else None,
-            "isVip": bool(chapter_row["preview_only"]),
+            "isVip": bool(trace_meta.get("isVip", chapter_row["preview_only"])),
             "fetchedWordCount": fetched_word_count,
             "selectedContentSource": alignment.get("selectedContentSource", "") or trace_meta.get("selectedContentSource", ""),
             "processedAt": chapter_row["last_processed_at"] or trace_meta.get("processedAt", "") or "",
@@ -3730,7 +3732,6 @@ class AggregateProcessor:
             "policyVersion": book.get("currentPolicyVersion", 1),
             "processedAt": self._now(),
             "startChapterIndex": book.get("startChapterIndex", 1),
-            "autoArchiveOnComplete": book.get("autoArchiveOnComplete", True),
             "primarySource": {
                 "sourceId": primary_source_id,
                 "chapterId": "",
@@ -3987,10 +3988,11 @@ class AggregateProcessor:
             )
 
     def _refresh_shared_book_state(self, aggregate_book_id: str) -> None:
+        should_archive_subscriptions = False
         with self._conn() as conn:
             row = conn.execute(
                 """
-                SELECT start_chapter_index, total_chapters, auto_archive_on_complete, book_status, status
+                SELECT start_chapter_index, total_chapters, book_status, status
                 FROM aggregate_book_tasks
                 WHERE aggregate_book_id = ?
                 """,
@@ -4000,9 +4002,8 @@ class AggregateProcessor:
                 return
             start_index = int(row[0] or 1)
             total_chapters = int(row[1] or 0)
-            auto_archive = bool(row[2])
-            book_status = str(row[3] or "unknown")
-            current_status = str(row[4] or "active")
+            book_status = str(row[2] or "unknown")
+            current_status = str(row[3] or "active")
             visible_count = self._visible_processed_count(conn, aggregate_book_id, start_index)
             unfinished_count = int(
                 conn.execute(
@@ -4022,14 +4023,8 @@ class AggregateProcessor:
             search_visibility = "visible" if visible_count >= threshold and threshold > 0 else "hidden"
             next_status = current_status
             if current_status not in {"paused", "archived"}:
-                if unfinished_count > 0:
-                    next_status = "active"
-                elif book_status == "completed" and auto_archive:
-                    next_status = "archived"
-                elif book_status == "completed" and not auto_archive:
-                    next_status = "awaiting_archive"
-                elif current_status == "awaiting_archive" and book_status != "completed":
-                    next_status = "active"
+                next_status = "active"
+            should_archive_subscriptions = unfinished_count == 0 and book_status == "completed"
             conn.execute(
                 """
                 UPDATE aggregate_book_tasks
@@ -4056,6 +4051,10 @@ class AggregateProcessor:
                 ),
             )
             conn.commit()
+        if should_archive_subscriptions:
+            from app.services.user_subscriptions import UserSubscriptionsService
+
+            UserSubscriptionsService(self.db_path).archive_completed_for_book(aggregate_book_id)
 
     def _pending_chapter_count(self, aggregate_book_id: str) -> int:
         with self._conn() as conn:

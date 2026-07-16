@@ -161,28 +161,12 @@ export function SettingsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4 flex-wrap h-auto gap-2 p-2 w-full justify-start overflow-x-auto bg-slate-100 text-slate-500">
-          <TabsTrigger className={settingsTabTriggerClass} value="general">通用</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="security">账户安全</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="pool">书源池</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="agg">聚合策略</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="priority">优先级</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="dict">词库</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="general">
-          <Card>
-            <CardHeader><CardTitle>通用设置</CardTitle></CardHeader>
-            <CardContent>
-              <div className="bg-slate-50 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 text-blue-600 font-bold text-2xl">LH</div>
-                <h3 className="text-xl font-bold text-slate-800">LegadoHub</h3>
-                <p className="text-slate-500 text-sm mt-2 max-w-md">
-                  一个专注于提供无缝、纯净小说阅读体验的聚合服务端。
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="security">
           <Card>

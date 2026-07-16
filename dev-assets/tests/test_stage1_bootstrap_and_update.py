@@ -445,7 +445,7 @@ async def test_backlog_run_schedules_quick_followup(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_completed_book_auto_archived(tmp_path, monkeypatch):
+async def test_completed_book_does_not_auto_archive_shared_task(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path)
     book_id = "book:completed_archive"
     chapters, contents = _make_chapters(2)
@@ -461,8 +461,8 @@ async def test_completed_book_auto_archived(tmp_path, monkeypatch):
     await processor.bootstrap_book_until_visible(book_id)
 
     book_row = _book_row(db_path, book_id)
-    assert book_row["status"] == "archived"
-    assert book_row["archivedAt"] is not None
+    assert book_row["status"] == "active"
+    assert book_row["archivedAt"] is None
 
 
 @pytest.mark.asyncio

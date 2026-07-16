@@ -10,6 +10,9 @@ import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 interface SearchCard {
   candidateId: string
@@ -22,6 +25,8 @@ interface SearchCard {
   completed?: boolean
   status?: string
   alreadyIngested?: boolean
+  alreadySubscribed?: boolean
+  subscriptionStatus?: string
   aggregateBookId?: string
   sourceSummaryText?: string
 }
@@ -30,6 +35,7 @@ interface SearchJobData {
   status?: string
   liveSearchPending?: boolean
   error?: string
+  message?: string
   cards?: SearchCard[]
   events?: Array<{ type: string; sourceId?: string; count?: number; error?: string; message?: string; ts: number }>
 }
@@ -47,6 +53,14 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
   const [jobId, setJobId] = useState<string | null>(null)
   const [showLogs, setShowLogs] = useState(false)
   const [selectedCard, setSelectedCard] = useState<SearchCard | null>(null)
+  const [startChapterIndex, setStartChapterIndex] = useState("1")
+  const [autoArchiveOnComplete, setAutoArchiveOnComplete] = useState(true)
+
+  const openSubscriptionDialog = (card: SearchCard) => {
+    setStartChapterIndex("1")
+    setAutoArchiveOnComplete(true)
+    setSelectedCard(card)
+  }
 
   const searchMutation = useMutation({
     mutationFn: (keyword: string) => api.subscribe.search({ keyword, page: 1 }),
@@ -65,11 +79,18 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
   })
 
   const subscribeMutation = useMutation({
-    mutationFn: (card: SearchCard) => api.subscribe.subscribeCard(jobId!, card.candidateId, { startChapterIndex: 1, autoArchiveOnComplete: true }),
+    mutationFn: async (card: SearchCard) => {
+      const data = await api.subscribe.subscribeCard(jobId!, card.candidateId, {
+        startChapterIndex: Math.max(1, Number(startChapterIndex) || 1),
+        autoArchiveOnComplete,
+      })
+      const bookId = data.aggregateBookId || data.book?.aggregateBookId
+      if (!bookId) throw new Error("订阅响应缺少书籍 ID，请刷新后确认订阅状态。")
+      return { ...data, aggregateBookId: bookId }
+    },
     onSuccess: (data) => {
       setSelectedCard(null)
-      const bid = data.aggregateBookId || data.book?.aggregateBookId
-      if (bid) navigate(`/console/library/${bid}`)
+      navigate(`/console/library/${data.aggregateBookId}`)
     },
   })
 
@@ -80,7 +101,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     searchMutation.mutate(query.trim())
   }
 
-  const isSearching = searchMutation.isPending || (!!jobData && jobData.liveSearchPending !== false && !["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(jobData.status || ""))
+  const isSearching = searchMutation.isPending || (!jobError && !!jobData && jobData.liveSearchPending !== false && !["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(jobData.status || ""))
   const cards: SearchCard[] = jobData?.cards || []
   const events = jobData?.events || []
 
@@ -89,7 +110,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
       <div className="text-center pt-8 pb-4">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">发现新书</h1>
         <p className="text-slate-500 max-w-2xl mx-auto mb-8">
-          输入你想看的小说、作者或者相关关键字，我们将自动在全网为你寻找最佳的书源并提供纯净阅读体验。
+          输入小说、作者或关键字，查找可订阅候选并建立个人书库关系。
         </p>
 
         <div className="max-w-2xl mx-auto">
@@ -101,7 +122,9 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
               <input
                 type="text"
                 aria-label="搜索小说或作者"
-                placeholder="搜索你想看的小说或作者..."
+                name="subscription-search"
+                autoComplete="off"
+                placeholder="搜索你想看的小说或作者…"
                 className="flex-1 bg-transparent border-0 py-2 md:py-2.5 text-sm focus:outline-none focus:ring-0 text-slate-800 placeholder:text-slate-400"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -119,7 +142,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
                   aria-busy={isSearching}
                   onClick={handleSearch}
                   disabled={!query || isSearching}
-                  className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-700 w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+                  className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-700 w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-[background-color,opacity,transform] duration-200 active:scale-95"
                 >
                   {isSearching ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowRight className="h-3 w-3" />}
                 </button>
@@ -132,7 +155,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
       {(searchMutation.error || jobError || subscribeMutation.error || ["failed", "timed_out", "unknown"].includes(jobData?.status || "")) && (
         <Alert variant="destructive">
           <AlertDescription>
-            {searchMutation.error?.message || (jobError as Error)?.message || subscribeMutation.error?.message || jobData?.error || (jobData?.status === "unknown" ? "搜索任务已过期，请重新搜索。" : jobData?.status === "timed_out" ? "搜索超时，请查看已返回的结果或重新搜索。" : "操作失败，请稍后重试。")}
+            {searchMutation.error?.message || (jobError as Error)?.message || subscribeMutation.error?.message || jobData?.message || jobData?.error || (jobData?.status === "unknown" ? "搜索任务已过期，请重新搜索。" : jobData?.status === "timed_out" ? "搜索超时，请查看已返回的结果或重新搜索。" : "操作失败，请稍后重试。")}
           </AlertDescription>
         </Alert>
       )}
@@ -141,7 +164,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
         <div className="flex flex-col items-center justify-center py-10">
           <div className="w-full max-w-md space-y-4">
             <div className="flex justify-between text-sm text-slate-500">
-              <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> 正在搜索...</span>
+              <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> 正在搜索…</span>
             </div>
             <Progress value={undefined} className="h-1 w-full bg-slate-100 [&>div]:bg-blue-500 animate-pulse" />
           </div>
@@ -177,23 +200,23 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
             {cards.map((card) => (
               <Card
                 key={card.candidateId}
-                className="overflow-hidden flex flex-col hover:shadow-lg transition-all duration-200 cursor-pointer relative group"
+                className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200 cursor-pointer relative group"
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  if (card.alreadyIngested && card.aggregateBookId) {
+                  if (card.alreadySubscribed && card.aggregateBookId) {
                     navigate(`/console/library/${card.aggregateBookId}`)
                   } else {
-                    setSelectedCard(card)
+                    openSubscriptionDialog(card)
                   }
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault()
-                    if (card.alreadyIngested && card.aggregateBookId) {
+                    if (card.alreadySubscribed && card.aggregateBookId) {
                       navigate(`/console/library/${card.aggregateBookId}`)
                     } else {
-                      setSelectedCard(card)
+                      openSubscriptionDialog(card)
                     }
                   }
                 }}
@@ -201,7 +224,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
                 <div className="flex p-5 gap-4">
                   <div className="relative w-20 h-28 bg-slate-200 rounded-md overflow-hidden flex-shrink-0 shadow-sm">
                     {card.coverUrl ? (
-                      <img src={card.coverUrl} alt={card.name} className="w-full h-full object-cover" />
+                      <img src={card.coverUrl} alt={card.name} width={80} height={112} loading="lazy" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-slate-400">
                         <SearchIcon className="h-6 w-6" />
@@ -232,12 +255,16 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
                   </div>
                 )}
                 <div className="p-4 border-t border-slate-100 mt-auto flex items-center justify-between">
-                  {card.alreadyIngested ? (
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-transparent hover:bg-slate-100 font-normal">已入库</Badge>
+                  {card.alreadySubscribed ? (
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-transparent hover:bg-slate-100 font-normal">
+                      {card.subscriptionStatus === "paused" ? "已暂停" : card.subscriptionStatus === "archived" ? "已归档" : "已订阅"}
+                    </Badge>
+                  ) : card.alreadyIngested ? (
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-transparent hover:bg-blue-50 font-normal">已共享，可订阅</Badge>
                   ) : (
                     <Badge variant="success" className="font-normal">可订阅</Badge>
                   )}
-                  {card.alreadyIngested && (
+                  {card.alreadySubscribed && (
                     <span className="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">查看详情 &rarr;</span>
                   )}
                 </div>
@@ -262,6 +289,27 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
               <p className="text-sm text-slate-600 leading-relaxed">{selectedCard.intro}</p>
             </div>
           )}
+          <div className="space-y-5 border-t border-slate-100 px-6 py-5">
+            <div className="space-y-2">
+              <Label htmlFor="start-chapter-index">从第几章开始订阅</Label>
+              <Input
+                id="start-chapter-index"
+                type="number"
+                min={1}
+                step={1}
+                value={startChapterIndex}
+                onChange={(event) => setStartChapterIndex(event.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="auto-archive-on-complete" className="leading-5">完结且处理完成后自动归档</Label>
+              <Switch
+                id="auto-archive-on-complete"
+                checked={autoArchiveOnComplete}
+                onCheckedChange={setAutoArchiveOnComplete}
+              />
+            </div>
+          </div>
           <div className="px-6 py-4 border-t border-slate-100 mt-auto flex justify-end gap-3 bg-white">
             <Button variant="outline" onClick={() => setSelectedCard(null)}>取消</Button>
             <Button onClick={() => selectedCard && subscribeMutation.mutate(selectedCard)} disabled={subscribeMutation.isPending}>
