@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import { SearchIcon, Loader2, ArrowRight, Activity } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
@@ -28,6 +28,7 @@ interface SearchCard {
   alreadySubscribed?: boolean
   subscriptionStatus?: string
   aggregateBookId?: string
+  sourceCount?: number
   sourceSummaryText?: string
 }
 
@@ -44,8 +45,12 @@ interface SubscriptionDiscoveryPageProps {
   mode?: "user" | "admin"
 }
 
+const terminalSearchStatuses = new Set(["completed", "partial", "timed_out", "failed", "cancelled", "interrupted", "unknown"])
+const failedSearchStatuses = new Set(["failed", "timed_out", "interrupted", "unknown"])
+
 export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscoveryPageProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user } = useAuth()
   const isAdmin = user?.role === "admin" || mode === "admin"
 
@@ -73,7 +78,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     enabled: !!jobId,
     refetchInterval: (q) => {
       const d = q.state.data as SearchJobData | null
-      if (q.state.error || !d || d.liveSearchPending === false || ["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(d.status || "")) return false
+      if (q.state.error || !d || d.liveSearchPending === false || terminalSearchStatuses.has(d.status || "")) return false
       return 500
     },
   })
@@ -90,6 +95,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     },
     onSuccess: (data) => {
       setSelectedCard(null)
+      void queryClient.invalidateQueries({ queryKey: ["library"] })
       navigate(`/console/library/${data.aggregateBookId}`)
     },
   })
@@ -109,7 +115,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     handleSearch()
   }
 
-  const isSearching = searchMutation.isPending || (!jobError && !!jobData && jobData.liveSearchPending !== false && !["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(jobData.status || ""))
+  const isSearching = searchMutation.isPending || (!jobError && !!jobData && jobData.liveSearchPending !== false && !terminalSearchStatuses.has(jobData.status || ""))
   const cards: SearchCard[] = jobData?.cards || []
   const events = jobData?.events || []
 
@@ -160,7 +166,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
         </div>
       </div>
 
-      {(searchMutation.error || jobError || subscribeMutation.error || ["failed", "timed_out", "unknown"].includes(jobData?.status || "")) && (
+      {(searchMutation.error || jobError || subscribeMutation.error || failedSearchStatuses.has(jobData?.status || "")) && (
         <Alert variant="destructive">
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>
@@ -172,7 +178,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
                     ? apiErrorMessage(subscribeMutation.error, "订阅失败，请稍后重试。")
                     : jobData?.message || jobData?.error || (jobData?.status === "unknown" ? "搜索任务已过期，请重新搜索。" : jobData?.status === "timed_out" ? "搜索超时，请查看已返回的结果或重新搜索。" : "操作失败，请稍后重试。")}
             </span>
-            {(jobError || searchMutation.error || ["failed", "timed_out", "unknown"].includes(jobData?.status || "")) && (
+            {(jobError || searchMutation.error || failedSearchStatuses.has(jobData?.status || "")) && (
               <Button type="button" size="sm" variant="outline" onClick={handleRetry} disabled={!query.trim() || searchMutation.isPending}>
                 重试
               </Button>
@@ -205,12 +211,12 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
           </div>
 
           {isAdmin && showLogs && events.length > 0 && (
-            <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 space-y-1 h-32 overflow-y-auto">
+            <div className="h-32 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-600">
               {events.map((e, i) => {
                 const time = new Date((e.ts || 0) * 1000).toLocaleTimeString()
                 return (
-                  <div key={i}>
-                    [{time}] {e.sourceId || "system"}: {e.type === "source_complete" ? `完成 (${e.count ?? 0} 条)` : e.type === "source_error" ? `错误: ${e.error || ""}` : e.type === "source_timeout" ? "超时" : e.type === "source_empty" ? "无结果" : e.message || e.type}
+                  <div key={i} className="border-b border-slate-200/70 py-1 last:border-0">
+                    <span className="text-slate-400">[{time}]</span> <span className="font-medium text-slate-700">{e.sourceId || "system"}</span>: {e.type === "source_complete" ? `完成 (${e.count ?? 0} 条)` : e.type === "source_error" ? `错误: ${e.error || ""}` : e.type === "source_timeout" ? "超时" : e.type === "source_empty" ? "无结果" : e.message || e.type}
                   </div>
                 )
               })}
@@ -281,13 +287,17 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
                       {card.subscriptionStatus === "paused" ? "已暂停" : card.subscriptionStatus === "archived" ? "已归档" : "已订阅"}
                     </Badge>
                   ) : card.alreadyIngested ? (
-                    <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-transparent hover:bg-blue-50 font-normal">已共享，可订阅</Badge>
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-transparent hover:bg-blue-50 font-normal">已入库</Badge>
                   ) : (
                     <Badge variant="success" className="font-normal">可订阅</Badge>
                   )}
-                  {card.alreadySubscribed && (
-                    <span className="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">查看详情 &rarr;</span>
-                  )}
+                  <span className="flex items-center gap-1.5 text-xs text-blue-600">
+                    {!card.alreadySubscribed && (card.sourceCount ?? 0) > 1 && (
+                      <span className="text-slate-400">{card.sourceCount} 个来源</span>
+                    )}
+                    <span>{card.alreadySubscribed ? "查看详情" : "订阅"}</span>
+                    <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                  </span>
                 </div>
               </Card>
             ))}

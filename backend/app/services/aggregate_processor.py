@@ -3302,7 +3302,7 @@ class AggregateProcessor:
                 "searchVisibilityStatus": (row[10] if row else "") or "hidden",
                 "chapterCount": total_count,
                 "processedChapterCount": processed_count,
-                "readableChapterCount": processed_count,
+                "readableChapterCount": max(0, processed_count - preview_count),
                 "previewChapterCount": preview_count,
                 "proofreadCompleteCount": proofread_count,
                 "suspectChapterCount": 0,

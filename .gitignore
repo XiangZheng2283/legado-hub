@@ -8,6 +8,8 @@ build/
 **/build/
 
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 
@@ -21,24 +23,19 @@ logs/
 backend/generated/
 frontend/dist/
 frontend/node_modules/
-backend/data/*.db
-backend/data/*.sqlite*
-backend/data/ai_provider.json
-backend/data/.ai_encryption_key
-backend/data/cache/
-backend/data/browser_challenges/
-backend/data/browser_fetch/
-backend/data/browser_profiles/
-backend/data/local_browser_profiles/
-backend/data/novels/
-backend/data/lexicons/
-backend/data/library/
+frontend/visual-diff/output/
+backend/data/
 backend/config/cookies/
 backend/config/app_config.json
 backend/runtime/
+backend/server.err
+backend/debug_stage2.py
+dev_assets_test_loader.py
 .tmp/
 backend/=0.1.7
 docs/archive/**/data/upstreams/
+bilibili-Design-System/
+untitled/
 plugins/sources/*/__pycache__/
 plugins/sources/official/
 plugins/sources/**/Cookie.json

@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom"
 import {
-  AlertCircle, KeyRound, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Users, Library, ShieldAlert, Server,
+  AlertCircle, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Users, Library, ShieldAlert, Server,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -30,7 +30,6 @@ const mainNav: NavItem[] = [
 const adminNav: NavItem[] = [
   { name: "搜索工作台", href: "/console/search", icon: ShieldAlert, adminOnly: true },
   { name: "书源管理", href: "/console/plugins", icon: Server, adminOnly: true },
-  { name: "官方源管理", href: "/console/official-sources", icon: KeyRound, adminOnly: true },
   { name: "用户管理", href: "/console/users", icon: Users, adminOnly: true },
   { name: "系统设置", href: "/console/settings", icon: Settings, adminOnly: true },
 ]
@@ -82,7 +81,7 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <aside className="hidden w-64 flex-col bg-white border-r border-slate-200 md:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 self-start flex-col bg-white border-r border-slate-200 md:flex">
         <div className="flex h-16 flex-shrink-0 items-center px-6">
           <BookOpen className="h-6 w-6 text-slate-800" />
           <span className="ml-3 text-lg font-bold tracking-tight text-slate-900">LegadoHub</span>

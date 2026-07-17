@@ -459,32 +459,65 @@ def test_official_sources_endpoint_lists_qidian(admin_client):
 
 
 def test_status_endpoint():
+    from app import config
+
     res = client.get("/api/console/status")
     assert res.status_code == 200
     data = res.json()
     assert "pluginStats" in data
     assert "sourceStats" in data  # compatibility alias
     assert "plugins" in data  # compatibility alias
+    assert data["version"] == config.APP_VERSION
+    assert data["health"] in {"healthy", "degraded", "pending", "idle"}
+    assert data["uptimeSeconds"] >= 0
+    stats = data["pluginStats"]
+    assert stats["checked"] == stats["healthy"] + stats["unhealthy"]
+    assert stats["unknown"] == stats["enabled"] - stats["checked"]
 
 
 def test_status_health_counts_ping_only(monkeypatch):
+    import app.api.console as console_api
     import app.services.plugin_runtime_state as runtime_state_module
+
+    plugins = {
+        plugin_id: SimpleNamespace(
+            metadata=SimpleNamespace(id=plugin_id, enabled=enabled),
+        )
+        for plugin_id, enabled in {
+            "reachable": True,
+            "unreachable": True,
+            "unknown": True,
+            "disabled": False,
+        }.items()
+    }
 
     class FakeRuntimeState:
         def get_state(self, plugin_id):
-            return {
-                "lastPing": {"status": "unreachable"},
-                "lastSmoke": {"pass": True},
+            statuses = {
+                "reachable": "reachable",
+                "unreachable": "unreachable",
+                "disabled": "reachable",
             }
+            status = statuses.get(plugin_id)
+            return {"lastPing": {"status": status}} if status else {}
 
+    monkeypatch.setattr(console_api._plugin_scheduler, "_plugins", plugins)
     monkeypatch.setattr(runtime_state_module, "get_runtime_state", lambda: FakeRuntimeState())
 
     response = client.get("/api/console/status")
 
     assert response.status_code == 200
-    stats = response.json()["pluginStats"]
-    assert stats["healthy"] == 0
-    assert stats["unhealthy"] == stats["total"]
+    data = response.json()
+    assert data["health"] == "degraded"
+    assert data["pluginStats"] == {
+        "total": 4,
+        "enabled": 3,
+        "disabled": 1,
+        "healthy": 1,
+        "unhealthy": 1,
+        "checked": 2,
+        "unknown": 1,
+    }
 
 
 def test_runtime_state_discards_legacy_smoke(tmp_path):

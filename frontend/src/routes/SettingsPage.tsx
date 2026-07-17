@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useId, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Save, RefreshCw, CheckCircle2, Loader2 } from "lucide-react"
+import { ArrowDown, ArrowUp, CheckCircle2, Loader2, RefreshCw, Save, Trash2 } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 
 const settingsCardClass = "border-slate-200 bg-white shadow-sm"
 const settingsInputClass = "h-10 border-slate-200 bg-white shadow-none"
@@ -54,6 +55,101 @@ function SettingRow({ title, description, children }: { title: string; descripti
   )
 }
 
+interface PrioritySourceOption {
+  pluginId: string
+  name: string
+  official: boolean
+}
+
+function PriorityListEditor({ title, description, items, options, onChange }: { title: string; description: string; items: string[]; options: PrioritySourceOption[]; onChange: (items: string[]) => void }) {
+  const editorId = useId()
+  const [sourceToAdd, setSourceToAdd] = useState("")
+  const sourceById = new Map(options.map((option) => [option.pluginId, option]))
+  const availableOptions = options.filter((option) => !items.includes(option.pluginId))
+  const focusAfterUpdate = (selector: string) => {
+    setTimeout(() => (document.getElementById(editorId)?.querySelector(selector) as HTMLElement | null)?.focus(), 0)
+  }
+
+  const moveItem = (from: number, to: number) => {
+    if (to < 0 || to >= items.length) return
+    const next = [...items]
+    ;[next[from], next[to]] = [next[to], next[from]]
+    onChange(next)
+    focusAfterUpdate(`[data-row-index="${to}"] [data-row-focus]`)
+  }
+
+  const removeItem = (index: number) => {
+    const next = items.filter((_, itemIndex) => itemIndex !== index)
+    onChange(next)
+    focusAfterUpdate(next.length > 0 ? `[data-row-index="${Math.min(index, next.length - 1)}"] [data-row-focus]` : "[data-add-source]")
+  }
+
+  const addItem = (pluginId: string) => {
+    if (!pluginId || items.includes(pluginId)) return
+    onChange([...items, pluginId])
+    setSourceToAdd("")
+    focusAfterUpdate(`[data-row-index="${items.length}"] [data-row-focus]`)
+  }
+
+  return (
+    <section id={editorId} className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{items.filter((item) => item.trim()).length} 个源</span>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">暂未配置，运行时使用默认顺序。</div>
+      ) : (
+        <div className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200 bg-white">
+          {items.map((item, index) => {
+            const source = sourceById.get(item)
+            return (
+            <div key={`${item}-${index}`} data-row-index={index} className="flex items-center gap-2 p-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-semibold tabular-nums text-slate-500">{index + 1}</span>
+              <div
+                aria-label={`${title}第 ${index + 1} 项`}
+                data-row-focus
+                tabIndex={-1}
+                className="min-w-0 flex-1"
+              >
+                <div className="truncate text-sm font-medium text-slate-900">{source?.name || "未知书源"}</div>
+                <div className="truncate font-mono text-xs text-slate-400">{item}</div>
+              </div>
+              <Badge variant={source ? "secondary" : "outline"} className="shrink-0 text-[10px]">
+                {source ? (source.official ? "官方" : "第三方") : "未安装"}
+              </Badge>
+              <div className="flex shrink-0 items-center">
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`将${title}第 ${index + 1} 项上移`} title="上移" disabled={index === 0} onClick={() => moveItem(index, index - 1)}><ArrowUp className="h-4 w-4" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`将${title}第 ${index + 1} 项下移`} title="下移" disabled={index === items.length - 1} onClick={() => moveItem(index, index + 1)}><ArrowDown className="h-4 w-4" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700" aria-label={`删除${title}第 ${index + 1} 项`} title="删除" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4" /></Button>
+              </div>
+            </div>
+            )
+          })}
+        </div>
+      )}
+
+      <select
+        data-add-source
+        aria-label={`添加${title}`}
+        className="h-10 w-full max-w-md rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-none focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+        value={sourceToAdd}
+        disabled={availableOptions.length === 0}
+        onChange={(event) => addItem(event.target.value)}
+      >
+        <option value="">{availableOptions.length > 0 ? "选择要添加的书源" : "没有可添加的书源"}</option>
+        {availableOptions.map((option) => (
+          <option key={option.pluginId} value={option.pluginId}>{option.name} ({option.pluginId})</option>
+        ))}
+      </select>
+    </section>
+  )
+}
+
 export function SettingsPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState("pool")
@@ -72,6 +168,7 @@ export function SettingsPage() {
   const { data: settingsData, error: settingsError, refetch: refetchSettings } = useQuery({ queryKey: ["settings"], queryFn: api.settings })
   const { data: aggData, error: aggError, refetch: refetchAggregateSettings } = useQuery({ queryKey: ["aggregateSettings"], queryFn: api.aggregateSettings })
   const { data: lexiconData, error: lexiconError, refetch: refetchLexicon } = useQuery({ queryKey: ["lexiconStatus"], queryFn: api.lexiconStatus })
+  const { data: pluginsData, error: pluginsError, refetch: refetchPlugins } = useQuery({ queryKey: ["plugins"], queryFn: api.plugins })
 
   const [editedSettings, setEditedSettings] = useState<Record<string, any> | null>(null)
   const [aggForm, setAggForm] = useState<Record<string, any> | null>(null)
@@ -88,6 +185,11 @@ export function SettingsPage() {
   const subscription = local.subscription || {}
   const agg = aggForm ?? aggData ?? {}
   const wf = parseRecord(agg.contentWorkflow)
+  const sourceOptions: PrioritySourceOption[] = (pluginsData?.items || []).map((plugin: any) => ({
+    pluginId: String(plugin.pluginId || ""),
+    name: String(plugin.name || plugin.pluginId || "未知书源"),
+    official: Boolean(plugin.official),
+  })).filter((plugin: PrioritySourceOption) => plugin.pluginId)
 
   const setLocal = (patch: any) => {
     setHasChanges(true)
@@ -158,16 +260,16 @@ export function SettingsPage() {
         <p className="mt-1 text-sm text-slate-500">配置 LegadoHub 的核心运行参数。</p>
       </div>
 
-      {(settingsError || aggError || saveError) && (
+      {(settingsError || aggError || pluginsError || saveError) && (
         <Alert variant="destructive">
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-            <span>{saveError || apiErrorMessage(settingsError || aggError, "设置加载失败，请稍后重试。")}</span>
-            {(settingsError || aggError) && (
+            <span>{saveError || apiErrorMessage(settingsError || aggError || pluginsError, "设置加载失败，请稍后重试。")}</span>
+            {(settingsError || aggError || pluginsError) && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => { void Promise.all([refetchSettings(), refetchAggregateSettings()]) }}
+                onClick={() => { void Promise.all([refetchSettings(), refetchAggregateSettings(), refetchPlugins()]) }}
               >
                 重试
               </Button>
@@ -317,36 +419,30 @@ export function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="priority">
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-3 border-b border-slate-100">
-                <CardTitle className="text-base">官方主源优先级</CardTitle>
-                <CardDescription>用于目录对齐和元数据抓取，每行一个源 ID。</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <textarea
-                  aria-label="官方主源优先级"
-                  className="min-h-32 w-full rounded-md border border-slate-200 bg-white p-3 text-sm font-mono"
-                  value={Array.isArray(wf.primarySourcePriority) ? wf.primarySourcePriority.join("\n") : ""}
-                  onChange={(e) => setAgg({ contentWorkflow: { ...wf, primarySourcePriority: e.target.value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean) } })}
+          <Card className={settingsCardClass}>
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle>书源优先级</CardTitle>
+              <CardDescription>列表顺序就是处理顺序，排在上方的书源会被优先使用。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8 p-6">
+              <PriorityListEditor
+                title="官方主源优先级"
+                description="用于目录对齐和元数据抓取。"
+                items={Array.isArray(wf.primarySourcePriority) ? wf.primarySourcePriority.map(String) : []}
+                options={sourceOptions.filter((source) => source.official)}
+                onChange={(items) => setAgg({ contentWorkflow: { ...wf, primarySourcePriority: items } })}
+              />
+              <div className="border-t border-slate-100 pt-8">
+                <PriorityListEditor
+                  title="补全源优先级"
+                  description="用于补全 VIP 预览或读取失败的章节。"
+                  items={Array.isArray(wf.candidateSourcePriority) ? wf.candidateSourcePriority.map(String) : []}
+                  options={sourceOptions.filter((source) => !source.official)}
+                  onChange={(items) => setAgg({ contentWorkflow: { ...wf, candidateSourcePriority: items } })}
                 />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3 border-b border-slate-100">
-                <CardTitle className="text-base">补全源优先级</CardTitle>
-                <CardDescription>VIP或错误章节的替补内容来源，每行一个源 ID。</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <textarea
-                  aria-label="补全源优先级"
-                  className="min-h-32 w-full rounded-md border border-slate-200 bg-white p-3 text-sm font-mono"
-                  value={Array.isArray(wf.candidateSourcePriority) ? wf.candidateSourcePriority.join("\n") : ""}
-                  onChange={(e) => setAgg({ contentWorkflow: { ...wf, candidateSourcePriority: e.target.value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean) } })}
-                />
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="dict">

@@ -36,8 +36,10 @@ describe("Dashboard", () => {
     ;(api.status as any)
       .mockRejectedValueOnce(new Error("状态接口不可用"))
       .mockResolvedValueOnce({
-        phase: "ready",
-        pluginStats: { total: 2, enabled: 2, healthy: 2, unhealthy: 0 },
+        health: "healthy",
+        uptimeSeconds: 3660,
+        version: "0.0.1",
+        pluginStats: { total: 2, enabled: 2, disabled: 0, healthy: 2, unhealthy: 0, checked: 2, unknown: 0 },
       })
     renderPage()
 
@@ -45,6 +47,22 @@ describe("Dashboard", () => {
     await user.click(screen.getByRole("button", { name: "重试" }))
 
     await waitFor(() => expect(api.status).toHaveBeenCalledTimes(2))
-    expect(await screen.findByText("良好")).toBeInTheDocument()
+    expect(await screen.findByText("1 小时 1 分钟")).toBeInTheDocument()
+    expect(screen.getByText("后端进程 · v0.0.1")).toBeInTheDocument()
+  })
+
+  it("shows degraded and untested plugin state from the status contract", async () => {
+    ;(api.status as any).mockResolvedValue({
+      health: "degraded",
+      uptimeSeconds: 60,
+      version: "0.0.1",
+      pluginStats: { total: 4, enabled: 3, disabled: 1, healthy: 1, unhealthy: 1, checked: 2, unknown: 1 },
+    })
+
+    renderPage()
+
+    expect(await screen.findByText("1 分钟")).toBeInTheDocument()
+    expect(screen.getByText("另有 1 个待检测")).toBeInTheDocument()
+    expect(screen.getByText("启用 3 · 停用 1")).toBeInTheDocument()
   })
 })

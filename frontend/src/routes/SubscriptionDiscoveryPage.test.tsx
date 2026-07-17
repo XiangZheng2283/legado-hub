@@ -23,13 +23,14 @@ vi.mock("@/lib/api", () => ({
 
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <SubscriptionDiscoveryPage />
       </MemoryRouter>
     </QueryClientProvider>,
   )
+  return { ...view, queryClient }
 }
 
 describe("SubscriptionDiscoveryPage", () => {
@@ -47,17 +48,32 @@ describe("SubscriptionDiscoveryPage", () => {
         alreadyIngested: true,
         alreadySubscribed: false,
         aggregateBookId: "book-1",
+        sourceCount: 2,
+        sourceSummaryText: "起点中文网(App) / 起点中文网(Web)",
       }],
     })
-    ;(api.subscribe.subscribeCard as any).mockResolvedValue({ book: { aggregateBookId: "book-1" } })
+    ;(api.subscribe.subscribeCard as any).mockResolvedValue({
+      book: { aggregateBookId: "book-1" },
+      provisioning: {
+        state: "processing",
+        readableChapterCount: 0,
+        previewChapterCount: 0,
+        pendingChapterCount: 10,
+        firstReadableChapter: null,
+      },
+    })
   })
 
   it("subscribes an existing shared book with user-selected settings", async () => {
     const user = userEvent.setup()
-    renderPage()
+    const { queryClient } = renderPage()
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries")
 
     await user.type(screen.getByLabelText("搜索小说或作者"), "共享书")
     await user.click(screen.getByRole("button", { name: "开始搜索" }))
+    expect(await screen.findByText("已入库")).toBeInTheDocument()
+    expect(screen.getByText("2 个来源")).toBeInTheDocument()
+    expect(screen.queryByText("已共享，可订阅")).not.toBeInTheDocument()
     await user.click(await screen.findByText("共享书"))
 
     const startInput = screen.getByLabelText("从第几章开始订阅")
@@ -71,6 +87,7 @@ describe("SubscriptionDiscoveryPage", () => {
       "candidate-1",
       { startChapterIndex: 5, autoArchiveOnComplete: false },
     ))
+    await waitFor(() => expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library"] }))
   })
 
   it("stops the searching state and shows the backend failure message", async () => {
@@ -89,6 +106,26 @@ describe("SubscriptionDiscoveryPage", () => {
 
     expect(await screen.findByText("官方源暂时不可用")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "开始搜索" })).toBeEnabled()
+  })
+
+  it("stops polling when a persisted search was interrupted by restart", async () => {
+    const user = userEvent.setup()
+    ;(api.subscribe.searchJob as any).mockResolvedValue({
+      jobId: "job-1",
+      status: "interrupted",
+      liveSearchPending: true,
+      message: "服务重启，搜索任务已中断，请重新搜索。",
+      cards: [],
+    })
+    renderPage()
+
+    await user.type(screen.getByLabelText("搜索小说或作者"), "测试")
+    await user.click(screen.getByRole("button", { name: "开始搜索" }))
+
+    expect(await screen.findByText("服务重启，搜索任务已中断，请重新搜索。")).toBeInTheDocument()
+    expect(screen.queryByText("正在搜索…")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "开始搜索" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "重试" })).toBeEnabled()
   })
 
   it("keeps the dialog open when a success response has no book id", async () => {

@@ -35,6 +35,33 @@ export interface LibraryBookSettingsResponse {
   policyChanged?: boolean
 }
 
+export interface FirstReadableChapter {
+  chapterId: string
+  chapterIndex: number
+  title: string
+  contentAccess: "full" | "preview"
+}
+
+export interface ProvisioningSummary {
+  state: "ready" | "processing" | "error" | "paused"
+  readableChapterCount: number
+  previewChapterCount: number
+  pendingChapterCount: number
+  firstReadableChapter: FirstReadableChapter | null
+}
+
+export interface SubscribeCardResponse {
+  ok: boolean
+  created: boolean
+  sharedBookCreated: boolean
+  subscriptionCreated: boolean
+  book: { aggregateBookId: string; [key: string]: unknown }
+  provisioning: ProvisioningSummary
+  processingWakeRequested: boolean
+  aggregateBookId?: string
+  [key: string]: unknown
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly detail: ApiErrorDetail
@@ -306,7 +333,7 @@ export const api = {
       jobId: string,
       candidateId: string,
       payload: { startChapterIndex?: number; autoArchiveOnComplete?: boolean }
-    ): Promise<any> =>
+    ): Promise<SubscribeCardResponse> =>
       fetchApiJson(`/subscribe/search/${jobId}/cards/${candidateId}/subscribe`, {
         method: "POST",
         body: JSON.stringify(payload),

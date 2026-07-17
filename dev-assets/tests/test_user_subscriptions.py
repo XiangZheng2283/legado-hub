@@ -12,13 +12,18 @@ from types import SimpleNamespace
 import pytest
 
 from app.services.library_books import LibraryBooksService
-from app.services.subscription_search import SubscriptionSearchService
+from app.services.live_acceptance import group_candidates
+from app.services.subscription_search import (
+    SubscriptionSearchJob,
+    SubscriptionSearchService,
+)
 from app.services.user_auth import UserAuthService
 from app.services.user_subscriptions import UserSubscriptionsService
 from app.services.user_subscriptions import (
     SubscriptionLimitError,
     SubscriptionRateLimiter,
 )
+from app.source_plugins.id_codec import encode_book_id
 from app.storage.db import initialize_database
 
 
@@ -34,6 +39,114 @@ def _insert_book(db_path: Path, book_id: str = "book-1") -> None:
             (book_id,),
         )
         conn.commit()
+
+
+def test_qidian_app_and_web_results_share_one_stable_candidate() -> None:
+    app_item = {
+        "sourceId": "qidian_com_app",
+        "sourceName": "起点中文网(App)",
+        "name": "测试作品",
+        "author": "测试作者",
+        "rawBookUrl": "https://m.qidian.com/book/123456/",
+        "bookUrl": "http://127.0.0.1/api/legado/book/app-id",
+    }
+    web_item = {
+        "sourceId": "qidian_com_web",
+        "sourceName": "起点中文网(Web)",
+        "name": "测试作品（Web）",
+        "author": "测试作者 著",
+        "rawBookUrl": "https://m.qidian.com/book/123456/",
+        "bookUrl": "http://127.0.0.1/api/legado/book/web-id",
+    }
+
+    app_only = group_candidates([app_item], "测试作品")
+    combined = group_candidates([app_item, web_item], "测试作品")
+
+    assert len(combined) == 1
+    assert combined[0]["sourceCount"] == 2
+    assert combined[0]["candidateId"] == app_only[0]["candidateId"]
+    assert {item["sourceId"] for item in combined[0]["items"]} == {
+        "qidian_com_app",
+        "qidian_com_web",
+    }
+
+
+def test_qidian_results_with_different_work_ids_remain_separate() -> None:
+    common = {"name": "同名作品", "author": "同一作者"}
+    groups = group_candidates(
+        [
+            {
+                **common,
+                "sourceId": "qidian_com_app",
+                "rawBookUrl": "https://m.qidian.com/book/111111/",
+            },
+            {
+                **common,
+                "sourceId": "qidian_com_web",
+                "rawBookUrl": "https://m.qidian.com/book/222222/",
+            },
+        ],
+        "同名作品",
+    )
+
+    assert len(groups) == 2
+
+
+def test_existing_qidian_book_matches_the_sibling_plugin(tmp_path: Path) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    _insert_book(db)
+    canonical_url = "https://m.qidian.com/book/123456/"
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_sources (
+                aggregate_book_id, source_id, source_book_id, source_name, source_book_url
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                "book-1",
+                "qidian_com_app",
+                encode_book_id("qidian_com_app", canonical_url),
+                "起点中文网(App)",
+                canonical_url,
+            ),
+        )
+        conn.commit()
+
+    service = LibraryBooksService(db_path=db)
+    existing = service.find_existing_book(
+        {
+            "candidateId": "candidate-web",
+            "name": "Book",
+            "author": "Author",
+            "items": [
+                {
+                    "sourceId": "qidian_com_web",
+                    "sourceName": "起点中文网(Web)",
+                    "name": "Book",
+                    "author": "Author",
+                    "rawBookUrl": canonical_url,
+                }
+            ],
+        }
+    )
+
+    assert existing is not None
+    assert existing["aggregateBookId"] == "book-1"
+
+
+def test_discovery_readable_count_does_not_subtract_previews_twice(tmp_path: Path) -> None:
+    service = LibraryBooksService(db_path=tmp_path / "app.db")
+
+    assert service._discovery_readable_chapter_count(
+        {
+            "bookState": {
+                "readableChapterCount": 640,
+                "previewChapterCount": 19,
+            }
+        }
+    ) == 640
 
 
 def test_two_users_keep_independent_subscription_settings(tmp_path: Path) -> None:
@@ -277,8 +390,18 @@ async def test_concurrent_users_share_one_new_book_record(tmp_path: Path, monkey
 
     assert sorted(result["created"] for result in results) == [False, True]
     assert results[0]["book"]["aggregateBookId"] == results[1]["book"]["aggregateBookId"]
+    creator = next(
+        user
+        for user, result in zip((user_a, user_b), results, strict=True)
+        if result["created"]
+    )
+    assert {result["book"]["addedByUserId"] for result in results} == {creator["userId"]}
+    assert {result["book"]["addedByUsername"] for result in results} == {creator["username"]}
     with sqlite3.connect(db) as conn:
         assert conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone() == (1,)
+        assert conn.execute(
+            "SELECT added_by_user_id FROM aggregate_book_tasks"
+        ).fetchone() == (creator["userId"],)
         assert conn.execute("SELECT COUNT(*) FROM aggregate_book_sources").fetchone() == (1,)
         assert conn.execute("SELECT COUNT(*) FROM user_book_subscriptions").fetchone() == (2,)
         assert conn.execute(
@@ -414,16 +537,298 @@ class _NoOfficialScheduler:
         return plugins
 
 
+class _OfficialSearchMetadata:
+    id = "official-source"
+    name = "官方源"
+    priority = 1
+
+    @staticmethod
+    def is_official_source() -> bool:
+        return True
+
+
+class _OfficialSearchScheduler:
+    config = {"max_concurrency": 1}
+
+    def __init__(self):
+        self.plugin = SimpleNamespace(
+            metadata=_OfficialSearchMetadata(),
+            capabilities=["search"],
+        )
+
+    def _enabled_plugins(self):
+        return [self.plugin]
+
+    def _search_priority_plugins(self, plugins):
+        return plugins
+
+    async def search_one(self, source_id: str, keyword: str, page: int):
+        return {
+            "items": [
+                {
+                    "sourceId": source_id,
+                    "sourceName": "官方源",
+                    "name": keyword,
+                    "author": "作者",
+                    "bookUrl": "https://example.test/book/1",
+                    "rawBookUrl": "https://example.test/book/1",
+                }
+            ],
+            "error": None,
+        }
+
+
+class _SearchCardLibrary:
+    @staticmethod
+    def build_subscription_card(group):
+        return {
+            "candidateId": group["candidateId"],
+            "name": group["name"],
+            "author": group.get("author", ""),
+            "aggregateBookId": "",
+        }
+
+
+class _NoSubscriptions:
+    @staticmethod
+    def get(user_id: str, book_id: str):
+        return None
+
+
 def test_subscription_search_jobs_are_owner_scoped(tmp_path: Path) -> None:
     db = tmp_path / "app.db"
     initialize_database(db)
+    auth = UserAuthService(db)
+    user_a = auth.create_user("search-owner-a", "password-a")
+    user_b = auth.create_user("search-owner-b", "password-b")
     service = SubscriptionSearchService(
         scheduler=_NoOfficialScheduler(),
         library_service=LibraryBooksService(db_path=db),
         subscription_service=UserSubscriptionsService(db_path=db),
+        db_path=db,
     )
 
-    job = service.create_job("Book", owner_user_id="user-a")
+    job = service.create_job("Book", owner_user_id=user_a["userId"])
 
-    assert service.get_job_for_user(job.job_id, "user-a") is job
-    assert service.get_job_for_user(job.job_id, "user-b") is None
+    assert service.get_job_for_user(job.job_id, user_a["userId"]) is job
+    assert service.get_job_for_user(job.job_id, user_b["userId"]) is None
+
+
+@pytest.mark.asyncio
+async def test_completed_subscription_search_survives_service_restart(
+    tmp_path: Path,
+) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("search-reload", "password")
+    service = SubscriptionSearchService(
+        scheduler=_OfficialSearchScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+
+    job = service.create_job("持久化测试书", owner_user_id=user["userId"])
+    while service.snapshot(job.job_id)["liveSearchPending"]:
+        await asyncio.sleep(0.01)
+    before = service.snapshot(job.job_id)
+    assert "cardGroups" not in before
+    assert "card_groups" not in before
+
+    reloaded = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+    after = reloaded.snapshot(job.job_id)
+
+    assert after["status"] == "completed"
+    assert after["cards"] == before["cards"]
+    assert "cardGroups" not in after
+    assert "card_groups" not in after
+    candidate_id = after["cards"][0]["candidateId"]
+    assert reloaded.find_card_group_for_user(
+        job.job_id, candidate_id, user["userId"]
+    ) is not None
+    assert reloaded.find_card_group_for_user(job.job_id, candidate_id, "other-user") is None
+
+
+def test_running_subscription_search_becomes_interrupted_after_restart(
+    tmp_path: Path,
+) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("search-interrupted", "password")
+    service = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+    job = SubscriptionSearchJob(
+        job_id="interrupted-job",
+        owner_user_id=user["userId"],
+        keyword="中断测试",
+        page=1,
+        status="running",
+        official_status="running",
+        message="正在搜索官方源。",
+    )
+    service._persist_job(job)
+
+    reloaded = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+
+    assert reloaded.recover_interrupted_jobs() == 1
+    snapshot = reloaded.snapshot(job.job_id)
+    assert snapshot["status"] == "interrupted"
+    assert snapshot["officialStatus"] == "interrupted"
+    assert snapshot["liveSearchPending"] is False
+    assert snapshot["message"] == "服务重启，搜索任务已中断，请重新搜索。"
+    assert snapshot["events"][-1]["type"] == "job_interrupted"
+
+
+def test_subscription_search_loads_malformed_numeric_snapshot_safely(
+    tmp_path: Path,
+) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("search-damaged", "password")
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT INTO subscription_search_jobs (
+                job_id, owner_user_id, keyword, page, status, payload_json,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, 1, 'running', ?, ?, ?)
+            """,
+            (
+                "damaged-job",
+                user["userId"],
+                "损坏快照",
+                '{"official_status":"running","success_count":"not-a-number"}',
+                "not-a-timestamp",
+                "not-a-timestamp",
+            ),
+        )
+        conn.commit()
+
+    service = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+
+    assert service.recover_interrupted_jobs() == 1
+    snapshot = service.snapshot("damaged-job")
+    assert snapshot["status"] == "interrupted"
+    assert snapshot["progress"]["successCount"] == 0
+
+
+def test_subscription_search_removes_unreadable_running_snapshot(
+    tmp_path: Path,
+) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("search-unreadable", "password")
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT INTO subscription_search_jobs (
+                job_id, owner_user_id, keyword, page, status, payload_json,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, 1, 'running', ?, 1, 1)
+            """,
+            ("unreadable-job", user["userId"], "不可读快照", "{invalid-json"),
+        )
+        conn.commit()
+
+    service = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+
+    assert service.recover_interrupted_jobs() == 0
+    assert service.snapshot("unreadable-job")["status"] == "unknown"
+    with sqlite3.connect(db) as conn:
+        assert conn.execute(
+            "SELECT 1 FROM subscription_search_jobs WHERE job_id = 'unreadable-job'"
+        ).fetchone() is None
+
+
+def test_subscription_search_rejects_stale_or_conflicting_snapshots(
+    tmp_path: Path,
+) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("search-stale", "password")
+    service = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+    current = SubscriptionSearchJob(
+        job_id="stale-job",
+        owner_user_id=user["userId"],
+        keyword="当前快照",
+        page=1,
+        status="completed",
+        message="当前状态",
+        created_at=100.0,
+        updated_at=200.0,
+    )
+    stale = SubscriptionSearchJob(
+        job_id="stale-job",
+        owner_user_id=user["userId"],
+        keyword="当前快照",
+        page=1,
+        status="running",
+        message="旧状态",
+        created_at=100.0,
+        updated_at=150.0,
+    )
+
+    assert service._persist_job(current) is True
+    assert service._persist_job(stale) is False
+    reloaded = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+    snapshot = reloaded.snapshot("stale-job")
+    assert snapshot["status"] == "completed"
+    assert snapshot["message"] == "当前状态"
+
+
+def test_subscription_search_creation_discards_memory_job_when_persistence_fails(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("search-write-failure", "password")
+    service = SubscriptionSearchService(
+        scheduler=_NoOfficialScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=db,
+    )
+    monkeypatch.setattr(
+        service,
+        "_persist_job",
+        lambda _job: (_ for _ in ()).throw(sqlite3.OperationalError("disk unavailable")),
+    )
+
+    with pytest.raises(sqlite3.OperationalError, match="disk unavailable"):
+        service.create_job("写入失败", owner_user_id=user["userId"])
+    assert service._jobs == {}

@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft, RefreshCw, Trash2, Code2, Link, Terminal, MoreVertical, Crown, Search, Loader2, ChevronLeft, ChevronRight, Settings2, Play, Pause, Archive,
 } from "lucide-react"
-import { api, apiErrorMessage } from "@/lib/api"
+import { api, apiErrorMessage, type ProvisioningSummary } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { executeLibraryBookMaintenanceAction } from "@/lib/library-actions"
 import { LogStream } from "@/components/shared/LogStream"
@@ -40,6 +40,7 @@ interface LibraryBookDetail {
   processingSettings?: { updateIntervalMinutes: number; backlogChapterLimit: number }; intervalMinutes?: number
   subscription?: { status: "active" | "paused" | "archived"; startChapterIndex: number; autoArchiveOnComplete: boolean }
   personalProgress?: { rangeStartIndex: number; rangeEndIndex: number; fullCount: number; previewCount: number; failedCount: number; pendingCount: number; continuousReadableThroughIndex: number; coverageRatio: number }
+  provisioning?: ProvisioningSummary
 }
 interface LibraryChapterListItem {
   chapterId: string; chapterIndex: number; title: string; status: string; sourceId?: string; error?: string; isVip?: boolean; previewOnly?: boolean; sourceWordCount?: number; contentLength?: number; hasContent?: boolean; readChapterId?: string
@@ -113,12 +114,24 @@ export function LibraryBookDetailPage() {
       return isAdmin ? api.libraryBookChapters(bookId!, params) : api.subscribe.chapters(bookId!, params)
     },
     enabled: !!bookId,
+    refetchInterval: 5000,
   })
 
-  const refreshQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ["library", "book", bookId] })
-    queryClient.invalidateQueries({ queryKey: ["library"] })
-  }
+  const refreshQueries = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["library", "book", bookId] })
+    void queryClient.invalidateQueries({ queryKey: ["library", isAdmin ? "admin" : "mine"], refetchType: "none" })
+  }, [bookId, isAdmin, queryClient])
+  const liveRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refreshFromLiveRecord = useCallback(() => {
+    if (document.visibilityState === "hidden" || liveRefreshTimerRef.current) return
+    liveRefreshTimerRef.current = setTimeout(() => {
+      liveRefreshTimerRef.current = null
+      refreshQueries()
+    }, 1000)
+  }, [refreshQueries])
+  useEffect(() => () => {
+    if (liveRefreshTimerRef.current) clearTimeout(liveRefreshTimerRef.current)
+  }, [bookId])
   const actionMutation = useMutation({
     mutationFn: (action: string) => executeLibraryBookMaintenanceAction(bookId!, action),
     onSuccess: refreshQueries,
@@ -129,7 +142,11 @@ export function LibraryBookDetailPage() {
   })
   const deleteMutation = useMutation({
     mutationFn: () => api.deleteLibraryBook(bookId!),
-    onSuccess: () => navigate("/console/library"),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["library", "book", bookId] })
+      void queryClient.invalidateQueries({ queryKey: ["library"], refetchType: "none" })
+      navigate("/console/library")
+    },
   })
   const subscriptionMutation = useMutation({
     mutationFn: (payload: { status?: "active" | "paused" | "archived"; startChapterIndex?: number; autoArchiveOnComplete?: boolean }) =>
@@ -174,16 +191,34 @@ export function LibraryBookDetailPage() {
   const chapterPageCount = Math.max(1, Math.ceil(chapterTotal / chapterPageSize))
   const personal = book.personalProgress
   const subscription = book.subscription
-  const progress = isAdmin
-    ? (book.totalChapters > 0 ? Math.round((book.processedChapters / book.totalChapters) * 100) : 0)
-    : Math.round(Math.max(0, Math.min(1, personal?.coverageRatio ?? 0)) * 100)
   const bs = book.bookState || {}
   const readable = isAdmin ? (bs.readableChapterCount ?? book.visibleProcessedChapters) : (personal?.fullCount ?? 0)
   const previewCount = isAdmin ? (bs.previewChapterCount ?? 0) : (personal?.previewCount ?? 0)
   const failedCount = isAdmin ? (bs.failedChapterCount ?? book.failedChapters ?? 0) : (personal?.failedCount ?? 0)
+  const processedCount = isAdmin ? (bs.processedChapterCount ?? book.processedChapters) : readable + previewCount
+  const personalCountTotal = (personal?.fullCount ?? 0) + (personal?.previewCount ?? 0) + (personal?.failedCount ?? 0) + (personal?.pendingCount ?? 0)
+  const personalRangeTotal = personal && personal.rangeEndIndex >= personal.rangeStartIndex
+    ? personal.rangeEndIndex - personal.rangeStartIndex + 1
+    : 0
+  const scopeTotal = isAdmin
+    ? Math.max(0, book.totalChapters || bs.chapterCount || 0)
+    : Math.max(0, personalCountTotal || personalRangeTotal)
+  const pendingCount = isAdmin
+    ? Math.max(0, scopeTotal - processedCount - failedCount)
+    : Math.max(0, personal?.pendingCount ?? 0)
+  const progress = scopeTotal > 0
+    ? Math.round((Math.max(0, Math.min(readable, scopeTotal)) / scopeTotal) * 100)
+    : 0
+  const currentChaptersResolved = scopeTotal > 0 && pendingCount === 0 && failedCount === 0
+  const trackingMessage = book.bookStatus !== "completed" && currentChaptersResolved
+    ? "当前章节已同步 · 持续追更"
+    : book.bookStatus === "completed" && currentChaptersResolved && previewCount === 0 && readable >= scopeTotal
+      ? "全文已就绪"
+      : ""
   const displayStatus = isAdmin ? book.status : subscription?.status || "unknown"
   const psm = processStatusMap(displayStatus)
   const sourceMap = book.sourceMapSummary || []
+  const provisioning = book.provisioning
 
   const handleChapterClick = (c: LibraryChapterListItem) => {
     if (!canReadChapter(c)) return
@@ -245,7 +280,7 @@ export function LibraryBookDetailPage() {
               <div className="flex items-center gap-2 relative">
                 <Button variant="outline" size="sm" onClick={openProcessingSettings} disabled={maintenanceBusy}><Settings2 className="h-4 w-4 mr-2" /> 处理设置</Button>
                 <Button variant="outline" size="sm" onClick={() => actionMutation.mutate("check-update")} disabled={maintenanceBusy}><RefreshCw className="h-4 w-4 mr-2" /> 检查更新</Button>
-                <Button variant="ghost" size="icon" onClick={() => setOpenAdminMenu(!openAdminMenu)}><MoreVertical className="h-5 w-5" /></Button>
+                <Button variant="ghost" size="icon" aria-label="更多维护操作" title="更多维护操作" onClick={() => setOpenAdminMenu(!openAdminMenu)}><MoreVertical className="h-5 w-5" /></Button>
                 {openAdminMenu && (
                   <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-slate-100 overflow-hidden z-10" onClick={() => setOpenAdminMenu(false)}>
                     <button disabled={maintenanceBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => actionMutation.mutate("refresh-sources")}>刷新源映射</button>
@@ -287,6 +322,17 @@ export function LibraryBookDetailPage() {
             {book.wordCount && <Badge variant="outline">{book.wordCount.replace(/字$/, "")} 字</Badge>}
             {book.lastChapterTitle && <Badge variant="outline">最新: {book.lastChapterTitle}</Badge>}
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${psm.color}`}>{psm.label}</span>
+            {!isAdmin && provisioning && (
+              <Badge variant={provisioning.state === "ready" ? "secondary" : "outline"}>
+                {provisioning.state === "ready"
+                  ? "首章可读"
+                  : provisioning.state === "error"
+                    ? "处理异常"
+                    : provisioning.state === "paused"
+                      ? "共享处理已暂停"
+                      : "等待首章"}
+              </Badge>
+            )}
           </div>
 
           {book.intro && (
@@ -297,22 +343,36 @@ export function LibraryBookDetailPage() {
           )}
 
           <div className="mt-auto pt-6">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-slate-700 font-medium">{isAdmin ? "共享处理进度" : "订阅范围覆盖率"}</span>
-              <span className="text-slate-500">
-                {isAdmin
-                  ? `${book.processedChapters} / ${book.totalChapters} 章 (${progress}%)`
-                  : `全文 ${personal?.fullCount ?? 0} · 预览 ${personal?.previewCount ?? 0} · ${progress}%`}
-              </span>
+            <div className="mb-2 flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <span className="font-medium text-slate-700">当前章节全文覆盖</span>
+              <span className="text-slate-500">{readable} / {scopeTotal} 章 ({progress}%)</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress
+              value={progress}
+              role="progressbar"
+              aria-label="当前章节全文覆盖"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className="h-2 bg-slate-100"
+              indicatorClassName="bg-emerald-500"
+            />
+            <div className="mt-2 flex flex-col gap-1.5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+              <span>全文 {readable} · 预览 {previewCount} · 待处理 {pendingCount} · 失败 {failedCount}</span>
+              {trackingMessage && (
+                <span className="flex items-center gap-1.5 font-medium text-emerald-700" aria-live="polite">
+                  {book.bookStatus !== "completed" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                  {trackingMessage}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Metadata + Source Map */}
       <div className={isAdmin ? "grid lg:grid-cols-2 gap-6" : "w-full"}>
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="py-4 border-b border-slate-100"><CardTitle className="text-sm font-medium flex items-center"><Code2 className="h-4 w-4 mr-2 text-slate-400" /> {isAdmin ? "元数据" : "订阅状态"}</CardTitle></CardHeader>
           <CardContent className="p-4 text-sm space-y-4">
             {isAdmin ? (
@@ -386,7 +446,7 @@ export function LibraryBookDetailPage() {
         </Card>
 
         {isAdmin && (
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="py-4 border-b border-slate-100 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center"><Link className="h-4 w-4 mr-2 text-slate-400" /> 源映射摘要</CardTitle>
             </CardHeader>
@@ -409,10 +469,10 @@ export function LibraryBookDetailPage() {
                 </div>
               )}
               {sourceMap.length > 0 && (
-                <div className="space-y-2 flex flex-col">
+                <div className="flex min-w-0 flex-col space-y-2">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">候选源列表</h4>
-                  <div className="border border-slate-200 rounded-lg overflow-y-auto max-h-[180px]">
-                    <Table>
+                  <div className="max-h-[180px] min-w-0 overflow-auto rounded-lg border border-slate-200" data-testid="candidate-sources-table-boundary">
+                    <Table className="min-w-[520px]">
                       <TableHeader className="bg-slate-50 sticky top-0 z-10">
                         <TableRow>
                           <TableHead className="py-2 h-auto text-xs bg-slate-50">来源</TableHead>
@@ -468,8 +528,8 @@ export function LibraryBookDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="h-[500px] overflow-y-auto">
-            <Table>
+          <div className="h-[500px] overflow-y-auto" data-testid="chapter-table-boundary">
+            <Table className={isAdmin ? "min-w-[860px]" : "min-w-[560px]"}>
               <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
                 <TableRow>
                   <TableHead className="w-16">序号</TableHead>
@@ -545,7 +605,7 @@ export function LibraryBookDetailPage() {
       {isAdmin && (
         <Card>
           <CardHeader className="py-4 border-b border-slate-100"><CardTitle className="text-sm font-medium flex items-center"><Terminal className="h-4 w-4 mr-2 text-slate-400" /> 实时日志</CardTitle></CardHeader>
-          <CardContent className="p-0 h-48"><LogStream key={bookId} url={api.streamLibraryBookLogsUrl(bookId!)} /></CardContent>
+          <CardContent className="p-0 h-48"><LogStream key={bookId} url={api.streamLibraryBookLogsUrl(bookId!)} onRecord={refreshFromLiveRecord} /></CardContent>
         </Card>
       )}
 

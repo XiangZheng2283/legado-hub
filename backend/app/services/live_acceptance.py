@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import re
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 from app.services.live_check_repository import LiveCheckRepository
 from app.source_plugins.scheduler import PluginScheduler, get_plugin_scheduler
 from app.source_plugins.loader import PluginLoader
+
+
+QIDIAN_SOURCE_IDS = frozenset({"qidian_com_app", "qidian_com_web"})
 
 
 def normalize_text(value: str) -> str:
@@ -21,6 +26,15 @@ def normalize_author_key(value: str) -> str:
     if author in {"", "佚名", "未知", "未知作者", "匿名", "作者", "不详"}:
         return ""
     return author
+
+
+def qidian_book_identity(source_id: str, book_url: str) -> str:
+    """Return the shared Qidian work id used by the App and Web variants."""
+    if source_id not in QIDIAN_SOURCE_IDS:
+        return ""
+    parsed = urlparse(str(book_url or "").strip())
+    match = re.search(r"/book/(\d+)/?", parsed.path or "")
+    return match.group(1) if match else ""
 
 
 def candidate_id_for(item: dict[str, Any]) -> str:
@@ -73,7 +87,7 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
         return bool(plugin and plugin.metadata.is_official_source())
 
     groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    unresolved_by_name: dict[str, list[dict[str, Any]]] = {}
+    unresolved_by_group: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for raw in items:
         item = dict(raw)
         item.setdefault("candidateId", candidate_id_for(item))
@@ -83,21 +97,31 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
         name_key = normalize_text(item.get("name", ""))
         author_key = normalize_author_key(item.get("author", ""))
         source_id = item.get("sourceId", "")
+        qidian_work_id = qidian_book_identity(
+            source_id,
+            item.get("rawBookUrl") or item.get("bookUrl", ""),
+        )
+        if qidian_work_id:
+            # The platform work id is stronger than display text and remains
+            # stable when App/Web return slightly different names or authors.
+            groups.setdefault((f"qidian:{qidian_work_id}", ""), []).append(item)
+            continue
+        if is_official(source_id):
+            source_group_key = f"{source_id}:{name_key}"
+        else:
+            source_group_key = name_key
         if not name_key:
             groups.setdefault((item["candidateId"], ""), []).append(item)
             continue
         if not author_key:
-            unresolved_by_name.setdefault(name_key, []).append(item)
+            unresolved_by_group.setdefault((source_group_key, name_key), []).append(item)
             continue
-        if is_official(source_id):
-            groups.setdefault((f"{source_id}:{name_key}", author_key), []).append(item)
-        else:
-            groups.setdefault((name_key, author_key), []).append(item)
+        groups.setdefault((source_group_key, author_key), []).append(item)
 
-    for name_key, unresolved_items in unresolved_by_name.items():
-        matching_keys = [key for key in groups if key[0] == name_key]
+    for (source_group_key, name_key), unresolved_items in unresolved_by_group.items():
+        matching_keys = [key for key in groups if key[0] == source_group_key]
         if not matching_keys:
-            groups[(name_key, "")] = list(unresolved_items)
+            groups[(source_group_key or name_key, "")] = list(unresolved_items)
             continue
         if len(matching_keys) == 1:
             groups[matching_keys[0]].extend(unresolved_items)
@@ -109,7 +133,7 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
         groups[best_key].extend(unresolved_items)
 
     result: list[dict[str, Any]] = []
-    for index, ((name_key, author_key), group_items) in enumerate(groups.items(), start=1):
+    for index, ((group_key, author_key), group_items) in enumerate(groups.items(), start=1):
         best = max(
             group_items,
             key=lambda candidate: (
@@ -120,11 +144,11 @@ def group_candidates(items: list[dict[str, Any]], keyword: str) -> list[dict[str
         source_items = sorted(group_items, key=lambda candidate: -candidate.get("score", 0))
         source_ids = sorted({item.get("sourceId", "") for item in group_items if item.get("sourceId")})
         official_items = [item for item in group_items if is_official(item.get("sourceId", ""))]
-        source_seed = "|".join(source_ids)
-        if len(group_items) == 1 and is_official(group_items[0].get("sourceId", "")):
+        source_seed = group_key if group_key.startswith("qidian:") else "|".join(source_ids)
+        if not group_key.startswith("qidian:") and len(group_items) == 1 and is_official(group_items[0].get("sourceId", "")):
             source_seed = group_items[0].get("sourceId", "")
         group_id = hashlib.sha256(
-            f"{name_key}|{author_key}|{source_seed}".encode("utf-8")
+            f"{group_key}|{author_key}|{source_seed}".encode("utf-8")
         ).hexdigest()[:24]
         result.append(
             {

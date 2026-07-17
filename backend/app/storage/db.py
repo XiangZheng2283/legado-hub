@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 12
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -191,6 +191,24 @@ CREATE INDEX IF NOT EXISTS idx_search_results_job
     ON search_results (job_id);
 CREATE INDEX IF NOT EXISTS idx_search_results_book
     ON search_results (name, author);
+
+CREATE TABLE IF NOT EXISTS subscription_search_jobs (
+    job_id TEXT PRIMARY KEY,
+    owner_user_id TEXT NOT NULL,
+    keyword TEXT NOT NULL,
+    page INTEGER NOT NULL CHECK(page >= 1),
+    status TEXT NOT NULL CHECK(status IN (
+        'pending', 'running', 'completed', 'partial', 'timed_out',
+        'failed', 'cancelled', 'interrupted'
+    )),
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    created_at REAL NOT NULL,
+    updated_at REAL NOT NULL,
+    FOREIGN KEY(owner_user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscription_search_jobs_owner_updated
+    ON subscription_search_jobs (owner_user_id, updated_at DESC);
 
 
 -- Book-centric search cache (replaces search_query_cache).
@@ -558,6 +576,31 @@ def _current_schema_version(conn: sqlite3.Connection) -> int:
         return 0
 
 
+def _backfill_shared_book_creators(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        UPDATE aggregate_book_tasks
+        SET added_by_user_id = (
+            SELECT actor_user_id
+            FROM aggregate_operation_logs
+            WHERE aggregate_operation_logs.aggregate_book_id = aggregate_book_tasks.aggregate_book_id
+              AND aggregate_operation_logs.operation_type = 'create'
+              AND TRIM(COALESCE(aggregate_operation_logs.actor_user_id, '')) <> ''
+            ORDER BY aggregate_operation_logs.id ASC
+            LIMIT 1
+        )
+        WHERE TRIM(COALESCE(added_by_user_id, '')) = ''
+          AND EXISTS (
+              SELECT 1
+              FROM aggregate_operation_logs
+              WHERE aggregate_operation_logs.aggregate_book_id = aggregate_book_tasks.aggregate_book_id
+                AND aggregate_operation_logs.operation_type = 'create'
+                AND TRIM(COALESCE(aggregate_operation_logs.actor_user_id, '')) <> ''
+          )
+        """
+    )
+
+
 def initialize_database(db_path: Path | None = None) -> str:
     path = db_path or DB_PATH
     ensure_data_dir()
@@ -575,6 +618,8 @@ def initialize_database(db_path: Path | None = None) -> str:
         conn.executescript(f"BEGIN IMMEDIATE;\n{SCHEMA_SQL}")
         _ensure_shared_library_schema(conn)
         _migrate_book_search_cache(conn)
+        if current_version < 12:
+            _backfill_shared_book_creators(conn)
         conn.execute(
             "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
             ("version", str(SCHEMA_VERSION)),

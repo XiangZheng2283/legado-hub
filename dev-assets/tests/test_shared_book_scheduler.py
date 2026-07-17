@@ -130,6 +130,31 @@ class FakeSourceMapService:
         }
 
 
+class FlakySourceMapService:
+    def __init__(self):
+        self.refresh_calls: list[str] = []
+        self.library_books = FakeLibraryBooks()
+
+    def should_refresh(self, aggregate_book_id: str, *, payload=None):
+        state = self.library_books.source_map_refresh_state(aggregate_book_id)
+        return (not bool(state.get("completed")), "missing_health")
+
+    async def refresh_for_book(self, aggregate_book_id: str, *, payload=None, force: bool = False):
+        self.refresh_calls.append(aggregate_book_id)
+        if len(self.refresh_calls) == 1:
+            return {
+                "bookId": aggregate_book_id,
+                "success": False,
+                "refreshed": False,
+            }
+        self.library_books.mark_completed(aggregate_book_id)
+        return {
+            "bookId": aggregate_book_id,
+            "success": True,
+            "refreshed": True,
+        }
+
+
 @pytest.mark.asyncio
 async def test_startup_recovery_runs_before_periodic_loop():
     events: list[str] = []
@@ -325,6 +350,112 @@ async def test_bootstrap_is_deferred_until_source_map_completion():
 
 
 @pytest.mark.asyncio
+async def test_manual_failure_is_requeued_without_blocking_later_books():
+    class FailingOnceProcessor(FakeProcessor):
+        def __init__(self):
+            super().__init__()
+            self.failed = False
+
+        async def run_book_task(
+            self,
+            aggregate_book_id: str,
+            chapter_limit: int | None = None,
+        ) -> dict[str, object]:
+            self.run_calls.append(aggregate_book_id)
+            if aggregate_book_id == "book-fails" and not self.failed:
+                self.failed = True
+                raise RuntimeError("first attempt failed")
+            return {"bookId": aggregate_book_id, "success": True}
+
+    processor = FailingOnceProcessor()
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+    )
+    scheduler._recovery_complete.set()
+    scheduler.enqueue_manual_update("book-fails", reason="manual")
+    scheduler.enqueue_manual_update("book-succeeds", reason="manual")
+
+    first = await scheduler.run_periodic_once(
+        wait_for_recovery=False,
+        include_due_books=False,
+    )
+
+    assert processor.run_calls == ["book-fails", "book-succeeds"]
+    assert first["failedBooks"] == 1
+    assert first["requeuedBooks"] == 1
+    assert first["pendingManualBooks"] == 1
+    assert first["items"][0]["success"] is False
+    assert first["items"][1]["success"] is True
+
+    second = await scheduler.run_periodic_once(
+        wait_for_recovery=False,
+        include_due_books=False,
+    )
+    assert second["failedBooks"] == 0
+    assert second["pendingManualBooks"] == 0
+    assert processor.run_calls == ["book-fails", "book-succeeds", "book-fails"]
+
+
+@pytest.mark.asyncio
+async def test_distinct_manual_reasons_for_same_book_are_deferred_not_dropped():
+    processor = FakeProcessor()
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+    )
+    scheduler._recovery_complete.set()
+    scheduler.enqueue_manual_update("book-two-reasons", reason="manual-first")
+    scheduler.enqueue_manual_update("book-two-reasons", reason="manual-second")
+
+    first = await scheduler.run_periodic_once(
+        wait_for_recovery=False,
+        include_due_books=False,
+    )
+    second = await scheduler.run_periodic_once(
+        wait_for_recovery=False,
+        include_due_books=False,
+    )
+
+    assert first["processedBooks"] == 1
+    assert first["deferredDuplicateManualBooks"] == 1
+    assert first["pendingManualBooks"] == 1
+    assert second["processedBooks"] == 1
+    assert second["pendingManualBooks"] == 0
+    assert processor.run_calls == ["book-two-reasons", "book-two-reasons"]
+
+
+@pytest.mark.asyncio
+async def test_initial_subscription_retries_refresh_before_bootstrap_within_bound():
+    processor = FakeProcessor()
+    source_map_service = FlakySourceMapService()
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+        source_map_service=source_map_service,
+    )
+    scheduler.enqueue_initial_subscription(
+        "book-retry",
+        payload={"name": "重试书", "author": "作者"},
+        book_name="重试书",
+        author="作者",
+    )
+
+    result = await scheduler.run_manual_until_idle(
+        max_passes=3,
+        retry_delays=(0.0, 0.0),
+    )
+
+    assert result["completed"] is True
+    assert result["passes"] == 2
+    assert source_map_service.refresh_calls == ["book-retry", "book-retry"]
+    assert processor.bootstrap_calls == ["book-retry"]
+
+
+@pytest.mark.asyncio
 async def test_periodic_pass_skips_books_already_in_recovery_queue():
     processor = FakeProcessor()
     processor.due_books = [
@@ -484,6 +615,11 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
         def cancel_job(self, job_id):
             return None
 
+    class FakeSubscriptionSearchService:
+        def recover_interrupted_jobs(self):
+            started.append(("subscription-search-recovery", None))
+            return 0
+
     class FakeCookieStore:
         def list_plugin_ids(self):
             return []
@@ -508,6 +644,13 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
     )
     monkeypatch.setitem(
         sys.modules,
+        "app.services.subscription_search",
+        types.SimpleNamespace(
+            subscription_search_service=FakeSubscriptionSearchService()
+        ),
+    )
+    monkeypatch.setitem(
+        sys.modules,
         "app.services.cookie_store",
         types.SimpleNamespace(
             migrate_legacy_plugin_cookies=lambda: None,
@@ -517,7 +660,8 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
     async with main_module.lifespan(main_module.app):
         await asyncio.sleep(0)
 
-    assert len(started) == 3
-    assert started[0][0] == "scheduler"
-    assert started[1][0] == "ping"
-    assert started[2][0] == "lexicon"
+    assert len(started) == 4
+    assert started[0][0] == "subscription-search-recovery"
+    assert started[1][0] == "scheduler"
+    assert started[2][0] == "ping"
+    assert started[3][0] == "lexicon"

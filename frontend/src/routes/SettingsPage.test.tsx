@@ -12,6 +12,7 @@ vi.mock("@/lib/api", () => ({
     updateSettings: vi.fn(),
     aggregateSettings: vi.fn(),
     updateAggregateSettings: vi.fn(),
+    plugins: vi.fn(),
     lexiconStatus: vi.fn(),
     updateLexicon: vi.fn(),
     auth: { changePassword: vi.fn() },
@@ -61,6 +62,15 @@ describe("SettingsPage subscription policy", () => {
     })
     ;(api.aggregateSettings as any).mockResolvedValue({ contentWorkflow: {} })
     ;(api.lexiconStatus as any).mockResolvedValue({})
+    ;(api.plugins as any).mockResolvedValue({
+      items: [
+        { pluginId: "qidian_com_app", name: "起点中文网 (App)", official: true },
+        { pluginId: "qidian_com_web", name: "起点中文网 (Web)", official: true },
+        { pluginId: "fanqie_novel", name: "番茄小说", official: true },
+        { pluginId: "xbiquzw_net", name: "笔趣阁", official: false },
+        { pluginId: "new_candidate", name: "新补全源", official: false },
+      ],
+    })
     ;(api.updateSettings as any).mockResolvedValue({ saved: true })
     ;(api.updateAggregateSettings as any).mockResolvedValue({ saved: true })
   })
@@ -105,5 +115,46 @@ describe("SettingsPage subscription policy", () => {
 
     await waitFor(() => expect(api.settings).toHaveBeenCalledTimes(2))
     expect(api.aggregateSettings).toHaveBeenCalledTimes(2)
+  })
+
+  it("reorders source priorities and saves the existing array contract", async () => {
+    const user = userEvent.setup()
+    ;(api.aggregateSettings as any).mockResolvedValue({
+      contentWorkflow: {
+        primarySourcePriority: ["qidian_com_app", "qidian_com_web", "fanqie_novel"],
+        candidateSourcePriority: ["xbiquzw_net"],
+      },
+    })
+    renderPage()
+
+    await user.click(await screen.findByRole("tab", { name: "优先级" }))
+    const moveButton = screen.getByRole("button", { name: "将官方主源优先级第 1 项下移" })
+    await user.click(moveButton)
+    await waitFor(() => expect(screen.getByLabelText("官方主源优先级第 2 项")).toHaveFocus())
+    expect(screen.getByLabelText("官方主源优先级第 2 项")).toHaveTextContent("qidian_com_app")
+    expect(screen.queryByRole("textbox", { name: "官方主源优先级第 2 项" })).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "保存配置" }))
+
+    await waitFor(() => expect(api.updateAggregateSettings).toHaveBeenCalledTimes(1))
+    const payload = (api.updateAggregateSettings as any).mock.calls[0][0]
+    expect(payload.contentWorkflow.primarySourcePriority).toEqual(["qidian_com_web", "qidian_com_app", "fanqie_novel"])
+    expect(payload.contentWorkflow.candidateSourcePriority).toEqual(["xbiquzw_net"])
+  })
+
+  it("adds a priority from the installed source list", async () => {
+    const user = userEvent.setup()
+    ;(api.aggregateSettings as any).mockResolvedValue({
+      contentWorkflow: { primarySourcePriority: ["qidian_com_app"], candidateSourcePriority: [] },
+    })
+    renderPage()
+
+    await user.click(await screen.findByRole("tab", { name: "优先级" }))
+    await user.selectOptions(screen.getByRole("combobox", { name: "添加补全源优先级" }), "new_candidate")
+    expect(screen.getByLabelText("补全源优先级第 1 项")).toHaveTextContent("new_candidate")
+    await user.click(screen.getByRole("button", { name: "保存配置" }))
+
+    await waitFor(() => expect(api.updateAggregateSettings).toHaveBeenCalledTimes(1))
+    const payload = (api.updateAggregateSettings as any).mock.calls[0][0]
+    expect(payload.contentWorkflow.candidateSourcePriority).toEqual(["new_candidate"])
   })
 })

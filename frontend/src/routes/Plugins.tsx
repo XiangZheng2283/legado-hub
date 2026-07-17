@@ -1,54 +1,19 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Link } from "react-router-dom"
-import { Globe, RotateCw, Power, Search, AlertCircle, SlidersHorizontal, KeyRound } from "lucide-react"
+import { useSearchParams } from "react-router-dom"
+import { RotateCw, Power, SlidersHorizontal, KeyRound } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-const CAPABILITY_MAP: Record<string, string> = { search: "搜索", detail: "详情", toc: "目录", chapter: "正文", content: "正文", explore: "发现", auth: "登录" }
-const CAP_COLORS: Record<string, string> = {
-  search: "bg-blue-50 text-blue-600", detail: "bg-emerald-50 text-emerald-600",
-  toc: "bg-purple-50 text-purple-600", chapter: "bg-amber-50 text-amber-600", content: "bg-amber-50 text-amber-600",
-  explore: "bg-cyan-50 text-cyan-600", auth: "bg-rose-50 text-rose-600",
-}
-
-const CATEGORIES = ["全部", "小说", "漫画", "轻小说"]
-const FORMATS = ["全部格式", "HTTP", "Browser"]
-const STATUSES = ["全部状态", "已启用", "已禁用"]
-
-function getPluginCategory(p: any): string {
-  const tags = (p.tags || []).map((t: string) => t.toLowerCase())
-  const name = (p.name || "").toLowerCase()
-  if (tags.includes("漫画") || name.includes("漫画")) return "漫画"
-  if (tags.includes("轻小说") || name.includes("轻小说")) return "轻小说"
-  return "小说"
-}
-
-function getPluginLatency(p: any): number {
-  const value = Number(p.health?.pingLatencyMs ?? p.latency ?? 0)
-  return Number.isFinite(value) ? value : 0
-}
-
-function getLatencyClass(latency: number): string {
-  if (latency === 0) return "text-slate-400"
-  if (latency < 100) return "text-emerald-500"
-  if (latency < 300) return "text-amber-500"
-  return "text-rose-500"
-}
+import { SourceListTable } from "@/components/sources/SourceListTable"
+import { OfficialSourcesPage } from "./OfficialSourcesPage"
 
 export function Plugins() {
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("全部")
-  const [formatFilter, setFormatFilter] = useState("全部格式")
-  const [statusFilter, setStatusFilter] = useState("全部状态")
-  const [activeTab, setActiveTab] = useState<"thirdparty" | "official">("thirdparty")
+  const activeTab: "thirdparty" | "official" = searchParams.get("tab") === "official" ? "official" : "thirdparty"
 
   const { data, isLoading, error: pluginsError } = useQuery({ queryKey: ["plugins"], queryFn: api.plugins })
   const allPlugins = data?.items || []
@@ -64,28 +29,13 @@ export function Plugins() {
     onSuccess: () => { setSelectedIds(new Set()); queryClient.invalidateQueries({ queryKey: ["plugins"] }) },
   })
   const enabledCount = plugins.filter((p: any) => p.enabled).length
-  const officialAuthCount = plugins.filter((p: any) => p.enabled && (p.capabilities || []).includes("auth")).length
+  const browserSourceCount = plugins.filter((p: any) => (p.accessType || p.sourceType) === "Browser").length
   const pingReachable = plugins.filter((p: any) => p.health?.pingStatus === "reachable").length
   const pingChecked = plugins.filter((p: any) => ["reachable", "unreachable"].includes(p.health?.pingStatus)).length
   const pingRate = pingChecked > 0 ? ((pingReachable / pingChecked) * 100).toFixed(1) : "0"
 
-  const filteredPlugins = plugins.filter((p: any) => {
-    const query = searchQuery.toLowerCase()
-    const matchesSearch = !query
-      || p.name.toLowerCase().includes(query)
-      || p.pluginId.toLowerCase().includes(query)
-      || (p.author || "").toLowerCase().includes(query)
-      || (p.contributor || "").toLowerCase().includes(query)
-    const matchesCategory = categoryFilter === "全部" || getPluginCategory(p) === categoryFilter
-    const matchesFormat = formatFilter === "全部格式" || (p.accessType || p.sourceType) === formatFilter
-    const matchesStatus = statusFilter === "全部状态"
-      || (statusFilter === "已启用" && p.enabled)
-      || (statusFilter === "已禁用" && !p.enabled)
-    return matchesSearch && matchesCategory && matchesFormat && matchesStatus
-  })
-
   const toggleSelectAll = () => {
-    setSelectedIds((prev) => prev.size === filteredPlugins.length ? new Set() : new Set(filteredPlugins.map((p: any) => p.pluginId)))
+    setSelectedIds((prev) => prev.size === plugins.length ? new Set() : new Set(plugins.map((p: any) => p.pluginId)))
   }
 
   const handleRowCheck = (pluginId: string) => {
@@ -97,254 +47,131 @@ export function Plugins() {
     })
   }
 
+  const selectTab = (tab: "thirdparty" | "official") => {
+    setSelectedIds(new Set())
+    setSearchParams(tab === "official" ? { tab: "official" } : {}, { replace: true })
+  }
+
+  const sourceTabs = (
+    <div className="inline-flex flex-col rounded-full border border-slate-200 bg-white p-1 shadow-md" role="tablist" aria-label="书源类型">
+      <button
+        type="button"
+        role="tab"
+        title={`第三方书源，共 ${thirdPartyCount} 个`}
+        aria-label={`第三方书源，共 ${thirdPartyCount} 个`}
+        aria-selected={activeTab === "thirdparty"}
+        onClick={() => selectTab("thirdparty")}
+        className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${activeTab === "thirdparty" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
+      >
+        <SlidersHorizontal className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        role="tab"
+        title={`官方源认证，共 ${officialCount} 个`}
+        aria-label={`官方源认证，共 ${officialCount} 个`}
+        aria-selected={activeTab === "official"}
+        onClick={() => selectTab("official")}
+        className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${activeTab === "official" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
+      >
+        <KeyRound className="h-4 w-4" />
+      </button>
+    </div>
+  )
+
   return (
     <div className="space-y-6">
-      {/* Stat Banner */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-xl p-6 shadow-sm border border-slate-700">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 bg-slate-700/60 rounded-lg text-emerald-400"><Globe className="h-5 w-5" /></span>
-              <h1 className="text-2xl font-bold tracking-tight">书源管理</h1>
-            </div>
-            <p className="mt-1.5 text-slate-300 text-sm max-w-2xl">管理第三方与官方书源的启用状态、作者信息和站点连通性。</p>
-          </div>
-          <Button
-            variant="secondary"
-            className="bg-white/10 text-white hover:bg-white/20 border-white/10"
-            disabled={pingAllMutation.isPending || plugins.length === 0}
-            onClick={() => pingAllMutation.mutate()}
-          >
-            <RotateCw className="h-4 w-4 mr-2" /> Ping 全部
-          </Button>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-700/60">
-          <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/40">
-            <p className="text-xs text-slate-400">总插件数量</p>
-            <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono">{plugins.length}</span><span className="text-xs text-slate-500">规则源</span></div>
-          </div>
-          <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/40">
-            <p className="text-xs text-slate-400">活跃启用中</p>
-            <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono text-emerald-400">{enabledCount}</span><span className="text-xs text-slate-500">/{plugins.length} 运行中</span></div>
-          </div>
-          <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/40">
-            <p className="text-xs text-slate-400">官方登录能力</p>
-            <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono text-cyan-400">{officialAuthCount}</span><span className="text-xs text-slate-500">/{plugins.length} 支持认证</span></div>
-          </div>
-          <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/40">
-            <p className="text-xs text-slate-400">Ping 连通率</p>
-            <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono text-amber-400">{pingRate}%</span><span className="text-xs text-slate-500">{pingChecked}/{plugins.length} 已测</span></div>
-          </div>
+      <div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">书源管理</h1>
+          <p className="mt-1 text-sm text-slate-500">管理第三方书源、官方账号认证与站点连通性。</p>
         </div>
       </div>
 
+      {activeTab === "official" ? (
+        <div key="official" className="space-y-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
+          {batchEnableMutation.error && (
+            <Alert variant="destructive"><AlertDescription>{apiErrorMessage(batchEnableMutation.error, "书源状态更新失败，请稍后重试。")}</AlertDescription></Alert>
+          )}
+          <OfficialSourcesPage
+            embedded
+            basePlugins={plugins}
+            switcher={sourceTabs}
+            toggleEnabledPending={batchEnableMutation.isPending}
+            onToggleEnabled={(pluginId, enabled) => batchEnableMutation.mutate({ ids: [pluginId], enabled })}
+          />
+        </div>
+      ) : (
+      <div key="thirdparty" className="space-y-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
       {(pluginsError || pingAllMutation.error || batchEnableMutation.error) && (
-          <Alert variant="destructive">
-            <AlertDescription>
+        <Alert variant="destructive">
+          <AlertDescription>
             {apiErrorMessage(pingAllMutation.error || batchEnableMutation.error || pluginsError, "书源操作失败，请稍后重试。")}
-            </AlertDescription>
-          </Alert>
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* Tabs */}
-      <div className="flex justify-between items-center border-b border-slate-200 pb-px">
-        <div className="bg-slate-100/80 p-1 rounded-lg inline-flex" role="tablist" aria-label="书源类型">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "thirdparty"}
-            onClick={() => { setActiveTab("thirdparty"); setSelectedIds(new Set()) }}
-            className={`px-4 py-2 text-sm font-medium transition-all rounded-md ${activeTab === "thirdparty" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-          >
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <SlidersHorizontal className="h-4 w-4" />
-              <span>第三方书源插件</span>
-              <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold">{thirdPartyCount}</span>
-            </div>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "official"}
-            onClick={() => { setActiveTab("official"); setSelectedIds(new Set()) }}
-            className={`px-4 py-2 text-sm font-medium transition-all rounded-md ${activeTab === "official" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-          >
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <KeyRound className="h-4 w-4" />
-              <span>官方源账号认证</span>
-              <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold">{officialCount}</span>
-            </div>
-          </button>
-        </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-slate-500">总插件数量</p>
+            <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-slate-900">{plugins.length}</span><span className="text-xs text-slate-400">规则源</span></div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-slate-500">活跃启用中</p>
+            <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-emerald-700">{enabledCount}</span><span className="text-xs text-slate-400">/{plugins.length} 运行中</span></div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-slate-500">浏览器书源</p>
+            <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-blue-700">{browserSourceCount}</span><span className="text-xs text-slate-400">/{plugins.length} 需要浏览器</span></div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-slate-500">Ping 连通率</p>
+            <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-amber-700">{pingRate}%</span><span className="text-xs text-slate-400">{pingChecked}/{plugins.length} 已测</span></div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Search + Filters */}
-      <div className="!mt-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="搜索书源名称, ID, 或贡献者/作者..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setSelectedIds(new Set()) }}
-              className="w-full pl-9 pr-4 py-2 border border-slate-200 bg-slate-50/50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all text-slate-800"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-400 font-medium">类目:</span>
-            {CATEGORIES.map((t) => (
-              <button key={t} type="button" onClick={() => { setCategoryFilter(t); setSelectedIds(new Set()) }}
-                className={`px-3 py-1 text-xs rounded-full border transition-all ${categoryFilter === t ? "bg-slate-800 border-slate-800 text-white font-medium" : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600"}`}>{t}</button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="w-10 sm:w-auto text-xs text-slate-400 font-medium leading-tight">规则格式:</span>
-            <select
-              value={formatFilter}
-              onChange={(e) => { setFormatFilter(e.target.value); setSelectedIds(new Set()) }}
-              className="px-2 py-1 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
-            >
-              {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-10 sm:w-auto text-xs text-slate-400 font-medium leading-tight">运行状态:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setSelectedIds(new Set()) }}
-              className="px-2 py-1 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
-            >
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Bulk Action Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-slate-50 rounded-lg border border-slate-200 gap-3">
-        <div className="flex items-center gap-2">
-          <Checkbox checked={filteredPlugins.length > 0 && selectedIds.size === filteredPlugins.length} onCheckedChange={toggleSelectAll} disabled={batchEnableMutation.isPending} />
-          <span className="text-sm text-slate-600 font-medium">
-            {selectedIds.size > 0 ? `已选中 ${selectedIds.size} 项` : "选择书源批量操作"}
-          </span>
-        </div>
-        {selectedIds.size > 0 && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: true })}>
-              <Power className="h-3.5 w-3.5 mr-1 text-emerald-500" /> 批量启用
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: false })}>
-              <Power className="h-3.5 w-3.5 mr-1 text-slate-400" /> 批量禁用
+      <SourceListTable
+        items={plugins}
+        title="第三方书源列表"
+        description="管理规则插件的启用状态与站点连通性。"
+        emptyMessage="暂无第三方书源。"
+        switcher={sourceTabs}
+        loading={isLoading}
+        selectable
+        selectedIds={selectedIds}
+        selectionDisabled={batchEnableMutation.isPending}
+        onToggleSelectAll={toggleSelectAll}
+        onToggleSelected={handleRowCheck}
+        onToggleEnabled={(pluginId, enabled) => batchEnableMutation.mutate({ ids: [pluginId], enabled })}
+        toggleEnabledDisabled={batchEnableMutation.isPending}
+        toolbar={(
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {selectedIds.size > 0 && (
+              <>
+                <span className="text-xs font-medium text-slate-500">已选 {selectedIds.size} 项</span>
+                <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: true })}>
+                  <Power className="mr-1 h-3.5 w-3.5 text-emerald-500" />批量启用
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: false })}>
+                  <Power className="mr-1 h-3.5 w-3.5 text-slate-400" />批量禁用
+                </Button>
+              </>
+            )}
+            <Button variant="outline" disabled={pingAllMutation.isPending || plugins.length === 0} onClick={() => pingAllMutation.mutate()}>
+              <RotateCw className={`mr-2 h-4 w-4 ${pingAllMutation.isPending ? "animate-spin" : ""}`} />Ping 全部
             </Button>
           </div>
         )}
+      />
       </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <div className="text-slate-500 py-10 text-center">加载中...</div>
-      ) : (
-        <Card className="border border-slate-200 overflow-hidden shadow-sm">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50/75 border-b border-slate-200">
-                  <TableRow>
-                    <TableHead className="w-10 text-center"></TableHead>
-                    <TableHead className="py-3 text-slate-700 font-semibold">名称与版本</TableHead>
-                    <TableHead className="text-slate-700 font-semibold">插件标识 (ID)</TableHead>
-                    <TableHead className="text-slate-700 font-semibold">格式/分类</TableHead>
-                    <TableHead className="text-slate-700 font-semibold">解析能力</TableHead>
-                    <TableHead className="text-slate-700 font-semibold">Ping 状态</TableHead>
-                    <TableHead className="text-slate-700 font-semibold">激活状态</TableHead>
-                    <TableHead className="text-right text-slate-700 font-semibold pr-4">操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="divide-y divide-slate-100">
-                  {filteredPlugins.map((p: any) => {
-                    const pingStatus = p.health?.pingStatus || "unknown"
-                    return (
-                    <TableRow key={p.pluginId} className={`transition-colors duration-150 hover:bg-slate-50/50 ${!p.enabled ? "opacity-70 bg-slate-50/20" : ""}`}>
-                      <TableCell className="text-center py-4">
-                        <Checkbox checked={selectedIds.has(p.pluginId)} onCheckedChange={() => handleRowCheck(p.pluginId)} />
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="flex flex-col">
-                          <Link to={`/console/plugins/${p.pluginId}`} className="font-semibold text-slate-900 text-sm hover:text-blue-600 flex items-center gap-1.5">
-                            {p.name}
-                            {p.version && <span className="text-[10px] text-slate-400 font-mono font-normal">v{p.version}</span>}
-                          </Link>
-                          <span className="text-xs text-slate-400 mt-0.5">作者: {p.author || p.contributor || p.domain || p.baseUrls?.[0] || "-"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-500 font-mono">{p.pluginId}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1.5 items-center">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono">{p.accessType || p.sourceType || "HTTP"}</Badge>
-                          <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0">{getPluginCategory(p)}</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-0.5 flex-wrap w-44">
-                          {p.capabilities?.map((c: string) => (
-                            <span key={c} className={`text-[9px] font-medium px-1.5 py-0.5 rounded mr-1 ${CAP_COLORS[c] || "bg-slate-50 text-slate-500"}`}>{CAPABILITY_MAP[c] || c}</span>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1.5 w-28">
-                          <div className="flex justify-between items-center text-[10px] text-slate-400">
-                            <span>状态:</span>
-                            <Badge
-                              variant={pingStatus === "reachable" ? "success" : pingStatus === "unreachable" ? "destructive" : "outline"}
-                              className="px-1.5 py-0 text-[9px]"
-                            >
-                              {pingStatus === "reachable" ? "可达" : pingStatus === "unreachable" ? "不可达" : "未检测"}
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center text-[10px] text-slate-400">
-                            <span>延时:</span>
-                            <span className={`font-mono font-bold ${getLatencyClass(getPluginLatency(p))}`}>
-                              {getPluginLatency(p) === 0 ? "N/A" : `${getPluginLatency(p)}ms`}
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <button
-                            type="button"
-                            onClick={() => batchEnableMutation.mutate({ ids: [p.pluginId], enabled: !p.enabled })}
-                            disabled={batchEnableMutation.isPending}
-                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${p.enabled ? "bg-slate-800" : "bg-slate-200"}`}
-                            aria-label={p.enabled ? "禁用书源" : "启用书源"}
-                          >
-                            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${p.enabled ? "translate-x-4" : "translate-x-0"}`} />
-                          </button>
-                          <span className="text-xs text-slate-500 ml-2 font-medium">{p.enabled ? "已启用" : "已禁用"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right pr-4">
-                        <div className="flex justify-end">
-                          <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" asChild>
-                            <Link to={`/console/plugins/${p.pluginId}`}>详情与检测</Link>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    )
-                  })}
-                  {filteredPlugins.length === 0 && (
-                    <TableRow><TableCell colSpan={8} className="text-center py-12 text-slate-400 text-sm"><AlertCircle className="h-8 w-8 mx-auto text-slate-300 mb-2" />没有找到符合筛选条件的书源。</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
       )}
     </div>
   )

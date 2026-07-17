@@ -1,6 +1,7 @@
 """FastAPI app factory and route registration."""
 
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -14,6 +15,7 @@ from app.services.source_ping_scheduler import SourcePingScheduler
 from app.storage.db import initialize_database
 
 FRONTEND_DIST = config.FRONTEND_DIST_DIR
+logger = logging.getLogger(__name__)
 
 
 async def _update_lexicon_on_startup() -> None:
@@ -53,6 +55,13 @@ async def lifespan(app: FastAPI):
                 _job_service.cancel_job(_job["jobId"])
     except Exception:
         pass
+
+    try:
+        from app.services.subscription_search import subscription_search_service
+
+        subscription_search_service.recover_interrupted_jobs()
+    except Exception:
+        logger.warning("Failed to recover interrupted subscription searches", exc_info=True)
 
     # Migrate legacy plugin-directory Cookie.json files to the host store once.
     try:

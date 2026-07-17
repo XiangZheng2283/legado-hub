@@ -296,6 +296,90 @@ def test_list_library_book_chapters_reads_shared_files(client, tmp_path, monkeyp
     assert [item["title"] for item in filtered.json()["items"]] == ["第二章"]
 
 
+def test_chapter_list_reads_only_requested_page_files(client, tmp_path, monkeypatch):
+    import app.api.subscribe as subscribe_api
+
+    db = tmp_path / "test.db"
+    storage = SharedBookStorage(root=tmp_path / "library")
+    service = LibraryBooksService(db_path=db, shared_book_storage=storage)
+    monkeypatch.setattr(subscribe_api, "library_books_service", service)
+
+    book_id = "book-page-read-count"
+    _insert_book(db, book_id, "分页读取测试书", "作者")
+    _write_shared_files(
+        storage,
+        book_id,
+        "分页读取测试书",
+        "作者",
+        chapter_specs=[
+            (1, "第一章", False),
+            (2, "第二章", False),
+            (3, "第三章", False),
+        ],
+    )
+
+    original_read_text = Path.read_text
+    markdown_reads: list[Path] = []
+
+    def tracked_read_text(path: Path, *args, **kwargs):
+        if path.suffix == ".md":
+            markdown_reads.append(path)
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", tracked_read_text)
+    response = client.get(
+        f"/api/subscribe/books/{book_id}/chapters",
+        params={"page": 2, "pageSize": 1},
+    )
+
+    assert response.status_code == 200
+    assert [item["title"] for item in response.json()["items"]] == ["第二章"]
+    assert len(markdown_reads) == 1
+    assert markdown_reads[0].suffix == ".md"
+
+
+def test_legado_published_search_pages_in_database_without_metadata_reads(
+    client, tmp_path, monkeypatch
+):
+    import app.api.subscribe as subscribe_api
+
+    service = subscribe_api.library_books_service
+    for index in range(25):
+        _insert_book(
+            service.db_path,
+            f"book-paged-{index:02d}",
+            f"分页书 {index:02d}",
+            "分页作者",
+            published=True,
+            chapter_count=1,
+            visible_chapter_count=1,
+        )
+
+    monkeypatch.setattr(
+        service,
+        "_attach_book_state_summary",
+        lambda _item: pytest.fail("published paging must not read per-book metadata"),
+    )
+    first = client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "分页书", "page": 1},
+    )
+    second = client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "分页书", "page": 2},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert len(first.json()["items"]) == 20
+    assert len(second.json()["items"]) == 5
+    assert first.json()["debug"]["publishedCount"] == 25
+    assert second.json()["debug"]["publishedCount"] == 25
+    first_ids = {item["aggregateBookId"] for item in first.json()["items"]}
+    second_ids = {item["aggregateBookId"] for item in second.json()["items"]}
+    assert first_ids.isdisjoint(second_ids)
+
+
 def test_legado_reads_only_published_shared_content_without_db_side_effects(
     client, tmp_path, monkeypatch
 ):
@@ -397,8 +481,29 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "primaryBookUrl" not in detail_data
     assert "sources" not in detail_data
 
+    original_read_text = Path.read_text
+    markdown_reads: list[Path] = []
+
+    def tracked_read_text(path: Path, *args, **kwargs):
+        if path.suffix == ".md":
+            markdown_reads.append(path)
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", tracked_read_text)
+    delivery = service.subscription_delivery_summary(
+        published_id,
+        start_chapter_index=1,
+    )
+    assert markdown_reads == []
+    assert delivery["personalProgress"]["fullCount"] == 3
+    assert delivery["personalProgress"]["previewCount"] == 1
+    assert delivery["provisioning"]["state"] == "ready"
+    assert delivery["provisioning"]["firstReadableChapter"]["chapterIndex"] == 1
+    assert delivery["provisioning"]["firstReadableChapter"]["contentAccess"] == "full"
+
     toc = client.get(f"/api/legado/book/{book_id}/toc")
     assert toc.status_code == 200
+    assert markdown_reads == []
     chapters = toc.json()["chapters"]
     assert len(chapters) == 4
     assert chapters[0]["isVip"] is False
@@ -411,6 +516,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "完整免费正文" in free.json()["content"]
     assert free.json()["extra"]["contentAccess"] == "full"
     assert free.json()["isVip"] is False
+    assert len(markdown_reads) == 1
 
     preview = client.get(chapters[-1]["chapterUrl"].replace("http://testserver", ""))
     assert preview.status_code == 200
@@ -418,6 +524,8 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert preview.json()["extra"]["contentAccess"] == "preview"
     assert preview.json()["isVip"] is True
     assert preview.json()["extra"]["previewOnly"] is True
+    assert preview.json()["previewOnly"] is True
+    assert len(markdown_reads) == 2
 
     with sqlite3.connect(db) as conn:
         after = {
@@ -528,7 +636,7 @@ def test_subscribe_candidate_response_does_not_expose_private_primary_urls(clien
     monkeypatch.setattr(
         subscribe_api.asyncio,
         "create_task",
-        lambda coro: None,
+        lambda coro: coro.close(),
     )
 
     response = client.post(
@@ -547,6 +655,69 @@ def test_subscribe_candidate_response_does_not_expose_private_primary_urls(clien
     assert "primarySourceId" not in config
     assert "primaryBookId" not in config
     assert "supplementSourceConfig" not in config
+    assert data["provisioning"]["state"] in {"processing", "error"}
+    assert data["provisioning"]["firstReadableChapter"] is None
+    assert data["processingWakeRequested"] is True
+
+
+def test_subscription_activation_wakes_unready_book_but_repeated_active_is_idempotent(
+    client, tmp_path, monkeypatch
+):
+    import sqlite3
+
+    import app.api.subscribe as subscribe_api
+
+    book_id = "book-subscription-wake"
+    db = tmp_path / "test.db"
+    _insert_book(db, book_id, "订阅唤醒测试书", "作者")
+    user = client.get("/api/auth/me").json()["user"]
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO users (user_id, username, password_hash, role)
+            VALUES (?, ?, 'test-hash', 'admin')
+            """,
+            (user["userId"], user["username"]),
+        )
+        conn.commit()
+    wake_calls: list[tuple[str, str]] = []
+
+    def fake_schedule(book, *, payload, provisioning):
+        wake_calls.append((book["aggregateBookId"], provisioning["state"]))
+        return True
+
+    monkeypatch.setattr(subscribe_api, "_schedule_subscription_wake", fake_schedule)
+
+    created = client.put(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 1, "autoArchiveOnComplete": True},
+    )
+    repeated = client.put(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 1, "autoArchiveOnComplete": True},
+    )
+    paused = client.patch(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"status": "paused"},
+    )
+    resumed = client.patch(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"status": "active"},
+    )
+
+    assert created.status_code == 200
+    assert created.json()["processingWakeRequested"] is True
+    assert created.json()["provisioning"]["state"] == "processing"
+    assert repeated.status_code == 200
+    assert repeated.json()["processingWakeRequested"] is False
+    assert paused.status_code == 200
+    assert paused.json()["processingWakeRequested"] is False
+    assert resumed.status_code == 200
+    assert resumed.json()["processingWakeRequested"] is True
+    assert wake_calls == [
+        (book_id, "processing"),
+        (book_id, "processing"),
+    ]
 
 
 def test_reader_access_requires_own_subscription(client, tmp_path):
@@ -628,7 +799,10 @@ def test_subscription_routes_keep_each_reader_on_their_own_relationship(client, 
     chapters = reader_a.get(f"/api/subscribe/books/{book_id}/chapters")
     assert chapters.status_code == 200
     chapter_id = chapters.json()["items"][0]["readChapterId"]
-    assert reader_a.get(f"/api/subscribe/chapters/{chapter_id}").status_code == 200
+    chapter_body = reader_a.get(f"/api/subscribe/chapters/{chapter_id}")
+    assert chapter_body.status_code == 200
+    assert "完整免费正文" in chapter_body.json()["content"]
+    assert chapter_body.json()["extra"]["contentAccess"] == "full"
 
     assert reader_b.get(f"/api/subscribe/books/{book_id}").status_code == 404
     assert reader_b.get(f"/api/subscribe/books/{book_id}/chapters").status_code == 404

@@ -9,7 +9,6 @@ import { Plugins } from "@/routes/Plugins"
 import { PluginDetail } from "@/routes/PluginDetail"
 import { SearchJobs } from "@/routes/SearchJobs"
 import { SettingsPage } from "@/routes/SettingsPage"
-import { OfficialSourcesPage } from "@/routes/OfficialSourcesPage"
 import { SubscriptionDiscoveryPage } from "@/routes/SubscriptionDiscoveryPage"
 import { LibraryPage } from "@/routes/LibraryPage"
 import { LibraryBookDetailPage } from "@/routes/LibraryBookDetailPage"
@@ -54,7 +53,7 @@ function AuthRouter() {
               <Route path="plugins" element={<Plugins />} />
               <Route path="plugins/:pluginId" element={<PluginDetail />} />
               <Route path="search" element={<SearchJobs />} />
-              <Route path="official-sources" element={<OfficialSourcesPage />} />
+              <Route path="official-sources" element={<Navigate to="/console/plugins?tab=official" replace />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />

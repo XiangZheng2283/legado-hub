@@ -31,6 +31,7 @@ def test_initialize_database(tmp_path: Path) -> None:
         "book_search_cache",
         "search_jobs",
         "search_results",
+        "subscription_search_jobs",
         "aggregate_book_tasks",
         "user_book_subscriptions",
         "aggregate_chapter_tasks",
@@ -52,7 +53,7 @@ def test_initialize_database(tmp_path: Path) -> None:
         version = conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
         ).fetchone()
-        assert version == ("10",)
+        assert version == ("12",)
 
         foreign_keys = conn.execute(
             "PRAGMA foreign_key_list(user_book_subscriptions)"
@@ -66,6 +67,10 @@ def test_initialize_database(tmp_path: Path) -> None:
         }
         assert "idx_user_book_subscriptions_user_status" in indexes
         assert "idx_user_book_subscriptions_book" in indexes
+        search_indexes = {
+            row[1] for row in conn.execute("PRAGMA index_list(subscription_search_jobs)")
+        }
+        assert "idx_subscription_search_jobs_owner_updated" in search_indexes
 
 
 def test_initialize_database_idempotent(tmp_path: Path) -> None:
@@ -147,10 +152,72 @@ def test_upgrade_preserves_users_and_sessions(tmp_path: Path) -> None:
     with sqlite3.connect(db_path) as conn:
         assert conn.execute("SELECT username FROM users WHERE user_id = 'u1'").fetchone() == ("reader",)
         assert conn.execute("SELECT user_id FROM user_sessions WHERE session_id = 's1'").fetchone() == ("u1",)
-        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("10",)
+        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("12",)
         assert conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'user_book_subscriptions'"
         ).fetchone() == (1,)
+
+
+def test_v10_upgrade_adds_subscription_search_jobs_without_touching_users(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "v10.db"
+    initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO users (user_id, username, password_hash, role) VALUES ('u1', 'reader', 'hash', 'user')"
+        )
+        conn.execute("DROP TABLE subscription_search_jobs")
+        conn.execute("UPDATE schema_meta SET value = '10' WHERE key = 'version'")
+        conn.commit()
+
+    initialize_database(db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute(
+            "SELECT username FROM users WHERE user_id = 'u1'"
+        ).fetchone() == ("reader",)
+        assert conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'subscription_search_jobs'"
+        ).fetchone() == (1,)
+        assert conn.execute(
+            "SELECT value FROM schema_meta WHERE key = 'version'"
+        ).fetchone() == ("12",)
+
+
+def test_v11_upgrade_backfills_shared_book_creator_from_create_log(tmp_path: Path) -> None:
+    db_path = tmp_path / "v11.db"
+    initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.executemany(
+            "INSERT INTO users (user_id, username, password_hash, role) VALUES (?, ?, 'hash', 'user')",
+            [("u1", "creator"), ("u2", "existing")],
+        )
+        conn.executemany(
+            "INSERT INTO aggregate_book_tasks (aggregate_book_id, name, added_by_user_id) VALUES (?, ?, ?)",
+            [("b1", "Recoverable", ""), ("b2", "Keep Existing", "u2"), ("b3", "Unknown", "")],
+        )
+        conn.executemany(
+            """
+            INSERT INTO aggregate_operation_logs (
+                aggregate_book_id, actor_user_id, actor_role, operation_type
+            ) VALUES (?, ?, 'user', 'create')
+            """,
+            [("b1", "u1"), ("b2", "u1")],
+        )
+        conn.execute("UPDATE schema_meta SET value = '11' WHERE key = 'version'")
+        conn.commit()
+
+    initialize_database(db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        creators = dict(conn.execute(
+            "SELECT aggregate_book_id, added_by_user_id FROM aggregate_book_tasks"
+        ).fetchall())
+        assert creators == {"b1": "u1", "b2": "u2", "b3": ""}
+        assert conn.execute(
+            "SELECT value FROM schema_meta WHERE key = 'version'"
+        ).fetchone() == ("12",)
 
 
 def test_subscription_constraints_and_cascade(tmp_path: Path) -> None:
@@ -167,6 +234,14 @@ def test_subscription_constraints_and_cascade(tmp_path: Path) -> None:
         conn.execute(
             "INSERT INTO user_book_subscriptions (user_id, aggregate_book_id) VALUES ('u1', 'b1')"
         )
+        conn.execute(
+            """
+            INSERT INTO subscription_search_jobs (
+                job_id, owner_user_id, keyword, page, status,
+                payload_json, created_at, updated_at
+            ) VALUES ('j1', 'u1', 'Book', 1, 'completed', '{}', 1, 1)
+            """
+        )
         with pytest.raises(sqlite3.IntegrityError):
             conn.execute(
                 "INSERT INTO user_book_subscriptions (user_id, aggregate_book_id, status) VALUES ('u1', 'b2', 'invalid')"
@@ -178,4 +253,8 @@ def test_subscription_constraints_and_cascade(tmp_path: Path) -> None:
         conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = 'b1'")
         assert conn.execute(
             "SELECT 1 FROM user_book_subscriptions WHERE aggregate_book_id = 'b1'"
+        ).fetchone() is None
+        conn.execute("DELETE FROM users WHERE user_id = 'u1'")
+        assert conn.execute(
+            "SELECT 1 FROM subscription_search_jobs WHERE job_id = 'j1'"
         ).fetchone() is None

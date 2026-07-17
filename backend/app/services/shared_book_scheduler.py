@@ -243,6 +243,9 @@ class SharedBookScheduler:
 
         effective_limit = int(limit or self.periodic_limit)
         manual_items = self._drain_manual_queue()
+        manual_entry_keys = {
+            (book_id, reason) for book_id, reason, _payload in manual_items
+        }
         due_items = list(self.processor.list_due_books(limit=effective_limit) or []) if include_due_books else []
 
         scheduled: list[ManualQueueEntry] = []
@@ -251,9 +254,11 @@ class SharedBookScheduler:
         skipped_startup_recovery_processed = 0
         skipped_stage3_backlog = 0
         deferred_bootstrap = 0
+        deferred_duplicate_manual = 0
 
         for book_id, reason, payload in manual_items:
             if book_id in self._recovery_pending_books:
+                self._requeue_manual_entry(book_id, reason, payload)
                 skipped_recovery += 1
                 continue
             backlog_state = self._stage3_backlog_state(book_id)
@@ -262,6 +267,8 @@ class SharedBookScheduler:
                 skipped_stage3_backlog += 1
                 continue
             if reason != SharedBookJobType.BOOK_BOOTSTRAP.value and book_id in seen_book_ids:
+                self._requeue_manual_entry(book_id, reason, payload)
+                deferred_duplicate_manual += 1
                 continue
             if reason != SharedBookJobType.BOOK_BOOTSTRAP.value:
                 seen_book_ids.add(book_id)
@@ -300,14 +307,63 @@ class SharedBookScheduler:
             scheduled.append((book_id, trigger, payload))
 
         processed_items: list[dict[str, Any]] = []
-        for book_id, trigger, payload in scheduled:
+        failed_books = 0
+        requeued_books = 0
+        for index, (book_id, trigger, payload) in enumerate(scheduled):
             if trigger == SharedBookJobType.BOOK_BOOTSTRAP.value and self._should_defer_bootstrap(book_id):
                 self._requeue_manual_entry(book_id, trigger, payload)
                 deferred_bootstrap += 1
                 continue
-            processed_items.append(await self._process_book(book_id, trigger=trigger, payload=payload))
-            if trigger == SharedBookJobType.BOOK_SOURCE_MAP_REFRESH.value:
-                self._initial_source_map_pending_books.discard(book_id)
+            try:
+                processed = await self._process_book(
+                    book_id,
+                    trigger=trigger,
+                    payload=payload,
+                )
+            except asyncio.CancelledError:
+                for pending_book_id, pending_trigger, pending_payload in scheduled[index:]:
+                    if (pending_book_id, pending_trigger) in manual_entry_keys:
+                        self._requeue_manual_entry(
+                            pending_book_id,
+                            pending_trigger,
+                            pending_payload,
+                        )
+                raise
+            except Exception as exc:
+                logger.warning(
+                    "Shared-book scheduled item failed: bookId=%s trigger=%s",
+                    book_id,
+                    trigger,
+                    exc_info=True,
+                )
+                if (book_id, trigger) in manual_entry_keys:
+                    self._requeue_manual_entry(book_id, trigger, payload)
+                    requeued_books += 1
+                failed_books += 1
+                processed_items.append(
+                    {
+                        "bookId": book_id,
+                        "trigger": trigger,
+                        "success": False,
+                        "skipped": False,
+                        "error": str(exc),
+                    }
+                )
+                continue
+
+            processed_items.append(processed)
+            succeeded = bool(processed.get("success", False))
+            if (book_id, trigger) in manual_entry_keys and not succeeded:
+                self._requeue_manual_entry(book_id, trigger, payload)
+                requeued_books += 1
+            if trigger == SharedBookJobType.BOOK_SOURCE_MAP_REFRESH.value and succeeded:
+                if self._source_map_refresh_completed(book_id):
+                    self._initial_source_map_pending_books.discard(book_id)
+                elif (book_id, trigger) in manual_entry_keys:
+                    self._requeue_manual_entry(book_id, trigger, payload)
+                    requeued_books += 1
+            if not succeeded:
+                failed_books += 1
 
         result = {
             "processedBooks": len(processed_items),
@@ -317,12 +373,50 @@ class SharedBookScheduler:
             "skippedStartupRecoveryProcessedBooks": skipped_startup_recovery_processed,
             "skippedStage3BacklogBooks": skipped_stage3_backlog,
             "deferredBootstrapBooks": deferred_bootstrap,
+            "deferredDuplicateManualBooks": deferred_duplicate_manual,
+            "failedBooks": failed_books,
+            "requeuedBooks": requeued_books,
+            "pendingManualBooks": len(self._manual_queue),
             "items": processed_items,
         }
         if self._startup_periodic_skip_pending:
             self._startup_periodic_skip_pending = False
             self._startup_recovery_processed_books.clear()
         return result
+
+    async def run_manual_until_idle(
+        self,
+        *,
+        max_passes: int = 3,
+        retry_delays: tuple[float, ...] = (1.0, 5.0),
+    ) -> dict[str, Any]:
+        """Drain manual work with bounded in-process retries.
+
+        The aggregate task remains due in SQLite, so exhausting this bounded
+        runner does not remove the periodic recovery path.
+        """
+        pass_limit = max(1, int(max_passes or 1))
+        results: list[dict[str, Any]] = []
+        for pass_index in range(pass_limit):
+            if not self._manual_queue:
+                break
+            if pass_index > 0:
+                delay_index = min(pass_index - 1, max(0, len(retry_delays) - 1))
+                delay = float(retry_delays[delay_index]) if retry_delays else 0.0
+                if delay > 0:
+                    await asyncio.sleep(delay)
+            results.append(
+                await self.run_periodic_once(
+                    wait_for_recovery=False,
+                    include_due_books=False,
+                )
+            )
+        return {
+            "passes": len(results),
+            "pendingManualBooks": len(self._manual_queue),
+            "completed": not self._manual_queue,
+            "items": results,
+        }
 
     async def run_forever(self, stop_event: asyncio.Event, poll_seconds: int = 60) -> None:
         """Run startup recovery once, then continue periodic checks."""
@@ -614,11 +708,14 @@ class SharedBookScheduler:
     def _should_defer_bootstrap(self, aggregate_book_id: str) -> bool:
         if aggregate_book_id in self._initial_source_map_pending_books:
             return True
+        return not self._source_map_refresh_completed(aggregate_book_id)
+
+    def _source_map_refresh_completed(self, aggregate_book_id: str) -> bool:
         library_books = getattr(self.source_map_service, "library_books", None)
         if library_books is None or not hasattr(library_books, "source_map_refresh_state"):
-            return False
+            return True
         state = library_books.source_map_refresh_state(aggregate_book_id)
-        return not bool(state.get("completed"))
+        return bool(state.get("completed"))
 
     def _log(
         self,

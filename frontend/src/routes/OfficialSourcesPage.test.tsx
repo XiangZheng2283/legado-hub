@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { api } from "@/lib/api"
 import { BROWSER_LOGIN_TIMEOUT_MS, OfficialSourcesPage } from "./OfficialSourcesPage"
@@ -18,11 +19,13 @@ vi.mock("@/lib/api", () => ({
   },
 }))
 
-function renderPage() {
+function renderPage(embedded = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <OfficialSourcesPage />
+      <MemoryRouter>
+        <OfficialSourcesPage embedded={embedded} />
+      </MemoryRouter>
     </QueryClientProvider>
   )
 }
@@ -38,10 +41,23 @@ describe("OfficialSourcesPage", () => {
       items: [{
         pluginId: "qidian_com",
         name: "起点中文网",
+        enabled: true,
         auth: { mode: "required" },
         authStatus: { authenticated: true, accountName: "reader" },
       }],
     })
+  })
+
+  it("embeds authentication controls without a second page heading", async () => {
+    renderPage(true)
+
+    const sourceLink = await screen.findByRole("link", { name: "起点中文网" })
+    expect(sourceLink).toHaveAttribute("href", "/console/plugins/qidian_com")
+    expect(screen.queryByRole("heading", { name: "官方源管理" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "全局刷新状态" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "格式/分类" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "Ping 状态" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "账号状态" })).toBeInTheDocument()
   })
 
   it("requires confirmation before logging out an official source", async () => {

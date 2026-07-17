@@ -70,6 +70,18 @@ const pages = [
     },
   },
   {
+    id: "subscriptions-admin-logs",
+    title: "管理员订阅事件日志",
+    currentPath: "/console/admin/subscription",
+    scenario: { role: "admin" },
+    prepare: async (page) => {
+      await page.getByPlaceholder(/搜索你想看的小说或作者/).fill("深海")
+      await page.keyboard.press("Enter")
+      await page.waitForTimeout(1800)
+      await page.getByRole("button", { name: "查看事件日志" }).click()
+    },
+  },
+  {
     id: "library",
     title: "管理员书库",
     currentPath: "/console/library",
@@ -86,6 +98,24 @@ const pages = [
     title: "书籍详情",
     currentPath: "/console/library/book-2",
     scenario: { role: "user" },
+    prepare: async (page) => {
+      await assertMobileHorizontalScroll(page, "chapter-table-boundary")
+    },
+  },
+  {
+    id: "book-detail-admin-logs",
+    title: "管理员书籍详情日志",
+    currentPath: "/console/library/book-2",
+    scenario: { role: "admin" },
+    preserveScroll: true,
+    prepare: async (page) => {
+      await assertMobileHorizontalScroll(page, "candidate-sources-table-boundary")
+      await assertMobileHorizontalScroll(page, "chapter-table-boundary")
+      await page.getByText(/rate limit exceeded/).waitFor()
+      const scrollTop = await page.locator("main").evaluate((element) => element.scrollTop)
+      if (scrollTop > 1) throw new Error(`book detail unexpectedly scrolled to ${scrollTop}`)
+      await page.getByText("实时日志", { exact: true }).scrollIntoViewIfNeeded()
+    },
   },
   {
     id: "chapter-detail",
@@ -125,8 +155,11 @@ const pages = [
   {
     id: "official-sources",
     title: "官方源管理",
-    currentPath: "/console/official-sources",
+    currentPath: "/console/plugins?tab=official",
     scenario: { role: "admin" },
+    prepare: async (page) => {
+      await assertMobileHorizontalScroll(page, "official-sources-table-boundary")
+    },
   },
   {
     id: "official-sources-empty",
@@ -137,13 +170,13 @@ const pages = [
   {
     id: "official-sources-error",
     title: "官方源错误态",
-    currentPath: "/console/official-sources",
+    currentPath: "/console/plugins?tab=official",
     scenario: { role: "admin", officialSources: "error" },
   },
   {
     id: "official-sources-login",
     title: "官方源登录",
-    currentPath: "/console/official-sources",
+    currentPath: "/console/plugins?tab=official",
     scenario: { role: "admin" },
     prepare: async (page) => {
       await page.getByRole("button", { name: "登录", exact: true }).click()
@@ -154,6 +187,21 @@ const pages = [
     id: "settings",
     title: "系统设置",
     currentPath: "/console/settings",
+    scenario: { role: "admin" },
+  },
+  {
+    id: "settings-priority",
+    title: "优先级设置",
+    currentPath: "/console/settings",
+    scenario: { role: "admin" },
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "优先级" }).click()
+    },
+  },
+  {
+    id: "users",
+    title: "用户管理",
+    currentPath: "/console/users",
     scenario: { role: "admin" },
   },
   {
@@ -275,7 +323,11 @@ const searchCards = [
     chapterCount: 812,
     completed: false,
     alreadyIngested: true,
-    sourceSummary: [{ sourceName: "起点中文网" }],
+    sourceCount: 2,
+    sourceSummary: [
+      { sourceName: "起点中文网(App)" },
+      { sourceName: "起点中文网(Web)" },
+    ],
   },
   {
     candidateId: "2",
@@ -390,6 +442,30 @@ const plugins = [
     version: "0.8.0",
     health: { pingStatus: "unreachable", pingLatencyMs: 890 },
   },
+  {
+    pluginId: "qidian_com_app",
+    name: "起点中文网 (App)",
+    accessType: "JSON",
+    capabilities: ["search", "detail", "toc", "chapter", "auth"],
+    enabled: true,
+    official: true,
+    author: "Yunwei",
+    tags: ["小说"],
+    version: "1.0.0",
+    health: { pingStatus: "reachable", pingLatencyMs: 36 },
+  },
+  {
+    pluginId: "qidian_com_web",
+    name: "起点中文网 (Web)",
+    accessType: "HTTP",
+    capabilities: ["search", "detail", "toc", "chapter", "auth"],
+    enabled: true,
+    official: true,
+    author: "Yunwei",
+    tags: ["小说"],
+    version: "1.0.0",
+    health: { pingStatus: "reachable", pingLatencyMs: 48 },
+  },
 ]
 
 function run(command, args, cwd, options = {}) {
@@ -502,9 +578,10 @@ function mockApi(path, method, scenario = {}) {
   }
   if (path === "/api/console/status") {
     return {
-      phase: "Uptime: 14 天 3 小时",
+      health: "degraded",
+      uptimeSeconds: 1220400,
       version: "1.2.0-beta",
-      plugins: { total: 342, enabled: 310, healthy: 298, unhealthy: 12 },
+      pluginStats: { total: 342, enabled: 310, disabled: 32, healthy: 298, unhealthy: 12, checked: 310, unknown: 0 },
     }
   }
   if (path === "/api/console/plugins") {
@@ -565,6 +642,16 @@ function mockApi(path, method, scenario = {}) {
     return { commitSha: "a1b2c3d4ef", fileCount: 45, wordCount: 12400, updatedAt: "2026-07-08T10:00:00+08:00" }
   }
   if (path === "/api/console/lexicon/update") return { ok: true }
+  if (path === "/api/console/users" && method === "GET") {
+    return {
+      items: [
+        { userId: "admin", username: "管理员", role: "admin", disabled: false, createdAt: "2026-07-01T08:30:00+08:00", updatedAt: "2026-07-16T08:30:00+08:00" },
+        { userId: "reader-1", username: "阅读用户", role: "user", disabled: false, createdAt: "2026-07-03T10:20:00+08:00", updatedAt: "2026-07-15T21:10:00+08:00" },
+        { userId: "reader-2", username: "暂停账户", role: "user", disabled: true, createdAt: "2026-07-05T14:00:00+08:00", updatedAt: "2026-07-12T09:15:00+08:00" },
+      ],
+      total: 3,
+    }
+  }
   if (path === "/api/subscribe/search") return subscribeJob()
   if (path === "/api/subscribe/search/job-sub-1") return subscribeJob()
   if (path === "/api/subscribe/library" || path === "/api/subscribe/library/mine") {
@@ -757,6 +844,9 @@ function officialSources() {
     {
       pluginId: "qidian_com_app",
       name: "起点中文网 (App)",
+      author: "Yunwei",
+      version: "1.0.0",
+      enabled: true,
       auth: { mode: "required" },
       authStatus: {
         authenticated: true,
@@ -768,6 +858,9 @@ function officialSources() {
     {
       pluginId: "qidian_com_web",
       name: "起点中文网 (Web)",
+      author: "Yunwei",
+      version: "1.0.0",
+      enabled: true,
       auth: { mode: "required" },
       authStatus: {
         authenticated: false,
@@ -799,13 +892,49 @@ function aggregateSettings() {
     contentWorkflow: {
       sourceCandidateLimit: 5,
       aggregateCheckIntervalMinutes: 60,
-      primarySourcePriority: ["起点中文网", "纵横中文网", "番茄小说"],
-      candidateSourcePriority: ["笔趣阁", "书趣阁", "看书阁"],
+      primarySourcePriority: ["qidian_com_app", "qidian_com_web"],
+      candidateSourcePriority: ["com.biquge.general", "com.tadu", "net.wenku8"],
     },
   }
 }
 
-async function capture(browser, url, viewport, scenario, prepare) {
+async function assertMobileHorizontalScroll(page, testId) {
+  const viewport = page.viewportSize()
+  if (!viewport || viewport.width > 500) return
+
+  const state = await page.getByTestId(testId).evaluate((boundary) => {
+    const candidates = [boundary, ...boundary.querySelectorAll("*")]
+    const container = candidates.find((element) => {
+      const overflowX = window.getComputedStyle(element).overflowX
+      return ["auto", "scroll"].includes(overflowX) && element.scrollWidth > element.clientWidth
+    })
+    const boundaryRect = boundary.getBoundingClientRect()
+    if (!container) {
+      return {
+        found: false,
+        boundaryWidth: boundaryRect.width,
+        viewportWidth: window.innerWidth,
+      }
+    }
+    container.scrollLeft = container.scrollWidth
+    const reachableScrollLeft = container.scrollLeft
+    container.scrollLeft = 0
+    return {
+      found: true,
+      boundaryWidth: boundaryRect.width,
+      viewportWidth: window.innerWidth,
+      overflowX: window.getComputedStyle(container).overflowX,
+      clientWidth: container.clientWidth,
+      scrollWidth: container.scrollWidth,
+      reachableScrollLeft,
+    }
+  })
+  if (!state.found || state.boundaryWidth > state.viewportWidth + 1 || !state.reachableScrollLeft || state.reachableScrollLeft <= 0) {
+    throw new Error(`${testId} is not horizontally scrollable on mobile: ${JSON.stringify(state)}`)
+  }
+}
+
+async function capture(browser, url, viewport, scenario, prepare, preserveScroll = false) {
   const context = await browser.newContext({
     viewport,
     deviceScaleFactor: 1,
@@ -824,7 +953,8 @@ async function capture(browser, url, viewport, scenario, prepare) {
     await page.addInitScript(() => {
       window.EventSource = class {
         constructor(url) {
-          setTimeout(() => this.onopen?.({}), 0)
+          this.closed = false
+          setTimeout(() => { if (!this.closed) this.onopen?.({}) }, 0)
           if (typeof url === "string" && url.includes("book-2/logs")) {
             const messages = [
               { ts: "2023-10-27T14:30:00", event: "Checking for updates..." },
@@ -832,11 +962,11 @@ async function capture(browser, url, viewport, scenario, prepare) {
               { ts: "2023-10-27T14:32:11", event: "Chapter 541 processing failed: rate limit exceeded.", errorCode: "RATE_LIMIT" },
             ]
             messages.forEach((msg, i) => {
-              setTimeout(() => this.onmessage?.({ data: JSON.stringify(msg) }), 50 + i * 50)
+              setTimeout(() => { if (!this.closed) this.onmessage?.({ data: JSON.stringify(msg) }) }, 50 + i * 50)
             })
           }
         }
-        close() {}
+        close() { this.closed = true }
       }
     })
     await page.goto(url, { waitUntil: "networkidle" })
@@ -854,8 +984,36 @@ async function capture(browser, url, viewport, scenario, prepare) {
     if (prepare) await prepare(page)
     await page.waitForLoadState("networkidle").catch(() => {})
     await page.waitForTimeout(250)
-    await page.evaluate(() => window.scrollTo(0, 0))
-    return await page.screenshot({ fullPage: false, animations: "disabled" })
+    if (!preserveScroll) await page.evaluate(() => window.scrollTo(0, 0))
+    const screenshot = await page.screenshot({ fullPage: false, animations: "disabled" })
+    if (viewport.name === "desktop") {
+      const sidebar = await page.evaluate(async () => {
+        const aside = document.querySelector("aside")
+        if (!aside) return null
+        const originalScrollY = window.scrollY
+        const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+        window.scrollTo(0, Math.min(400, maxScrollY))
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        const rect = aside.getBoundingClientRect()
+        const state = {
+          position: getComputedStyle(aside).position,
+          top: rect.top,
+          height: rect.height,
+          viewportHeight: window.innerHeight,
+          maxScrollY,
+        }
+        window.scrollTo(0, originalScrollY)
+        return state
+      })
+      if (sidebar && (
+        sidebar.position !== "sticky"
+        || Math.abs(sidebar.height - sidebar.viewportHeight) > 1
+        || (sidebar.maxScrollY > 0 && Math.abs(sidebar.top) > 1)
+      )) {
+        throw new Error(`desktop sidebar is not viewport-independent: ${JSON.stringify(sidebar)}`)
+      }
+    }
+    return screenshot
   } finally {
     await context.close().catch(() => {})
   }
@@ -964,7 +1122,7 @@ async function main() {
           const prefix = `${viewport.name}-${pageDef.id}`
           const currentUrl = `http://127.0.0.1:${ports.current}${pageDef.currentPath}`
           console.log(`[capture] ${prefix}`)
-          const currentShot = await capture(browser, currentUrl, viewport, pageDef.scenario, pageDef.prepare)
+          const currentShot = await capture(browser, currentUrl, viewport, pageDef.scenario, pageDef.prepare, pageDef.preserveScroll)
           const baselinePath = join(baselineDir, `${prefix}.png`)
           if (updateBaseline) await writeFile(baselinePath, currentShot)
           if (!existsSync(baselinePath)) {

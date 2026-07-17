@@ -42,16 +42,6 @@ class PluginScheduler:
         self.config = self._default_config() if config is None else config
         self._cookie_store = CookieStore()
         self._load_plugins()
-        self._cleanup_stale_cookie_files()
-
-    def _cleanup_stale_cookie_files(self) -> None:
-        """Remove cookie files for plugins that do not declare cookie storage."""
-        for plugin_id in self._cookie_store.list_plugin_ids():
-            plugin = self._plugins.get(plugin_id)
-            if plugin is None:
-                continue
-            if not plugin.metadata.declares_cookies:
-                self._cookie_store.clear(plugin_id)
 
     def _default_config(self) -> dict:
         cfg = AppConfig.get()

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface LogRecord {
   ts: string
@@ -13,6 +13,7 @@ interface LogRecord {
 
 interface LogStreamProps {
   url: string
+  onRecord?: (record: LogRecord) => void
 }
 
 const MAX_LINES = 2000
@@ -23,10 +24,10 @@ function logLevel(record: LogRecord): string {
   return "INFO"
 }
 
-function logColor(level: string): string {
-  if (level === "ERROR") return "text-rose-400"
-  if (level === "WARN") return "text-amber-400"
-  return "text-emerald-400"
+function logLevelClass(level: string): string {
+  if (level === "ERROR") return "border-rose-200 bg-rose-50 text-rose-700"
+  if (level === "WARN") return "border-amber-200 bg-amber-50 text-amber-700"
+  return "border-emerald-200 bg-emerald-50 text-emerald-700"
 }
 
 function formatLog(record: LogRecord): string {
@@ -38,22 +39,16 @@ function formatLog(record: LogRecord): string {
   return parts.join(" ")
 }
 
-export function LogStream({ url }: LogStreamProps) {
+export function LogStream({ url, onRecord }: LogStreamProps) {
   const [lines, setLines] = useState<LogRecord[]>([])
-  const [status, setStatus] = useState<"connecting" | "open" | "closed" | "error">("connecting")
-  const pausedRef = useRef(false)
-  const esRef = useRef<EventSource | null>(null)
-  const pendingRef = useRef<LogRecord[]>([])
-  const bottomRef = useRef<HTMLDivElement | null>(null)
+  const [status, setStatus] = useState<"connecting" | "open" | "error">("connecting")
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const stickToBottomRef = useRef(true)
+  const onRecordRef = useRef(onRecord)
 
-  const flushPending = useCallback(() => {
-    if (pendingRef.current.length === 0) return
-    const batch = pendingRef.current.splice(0, pendingRef.current.length)
-    setLines((prev) => {
-      const next = [...prev, ...batch]
-      return next.length > MAX_LINES ? next.slice(next.length - MAX_LINES) : next
-    })
-  }, [])
+  useEffect(() => {
+    onRecordRef.current = onRecord
+  }, [onRecord])
 
   useEffect(() => {
     if (!url || typeof EventSource === "undefined") return
@@ -63,53 +58,59 @@ export function LogStream({ url }: LogStreamProps) {
     es.onmessage = (event) => {
       try {
         const record = JSON.parse(event.data) as LogRecord
-        pendingRef.current.push(record)
-        if (!pausedRef.current) {
-          flushPending()
-        }
+        setLines((previous) => {
+          const next = [...previous, record]
+          return next.length > MAX_LINES ? next.slice(next.length - MAX_LINES) : next
+        })
+        onRecordRef.current?.(record)
       } catch {
         // ignore malformed records
       }
     }
     es.onerror = () => setStatus("error")
-    esRef.current = es
 
     return () => {
       es.close()
-      esRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url])
 
   useEffect(() => {
-    if (!pausedRef.current && pendingRef.current.length > 0) {
-      flushPending()
+    const container = containerRef.current
+    if (container && stickToBottomRef.current) {
+      container.scrollTop = container.scrollHeight
     }
-  }, [flushPending])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [lines])
 
   const isEmpty = lines.length === 0 && status !== "error"
 
   return (
-    <div className="h-48 overflow-y-auto bg-slate-900 p-4 font-mono text-xs">
-      <div className="space-y-1">
+    <div
+      ref={containerRef}
+      role="log"
+      onScroll={() => {
+        const container = containerRef.current
+        if (!container) return
+        stickToBottomRef.current = container.scrollHeight - container.scrollTop - container.clientHeight <= 24
+      }}
+      className="h-48 overflow-y-auto bg-slate-50 px-4 py-3 font-mono text-xs text-slate-700"
+    >
+      <div className="space-y-1.5">
         {isEmpty ? (
-          <div className="text-emerald-400/60">等待日志...</div>
+          <div className="py-2 text-slate-400">{status === "connecting" ? "正在连接日志..." : "等待新日志..."}</div>
+        ) : status === "error" && lines.length === 0 ? (
+          <div className="py-2 text-rose-600">日志连接中断，等待自动重连。</div>
         ) : (
           lines.map((line, index) => {
             const level = logLevel(line)
             return (
-              <div key={`${line.ts}-${index}`} className={`break-all ${logColor(level)}`}>
-                <span className="text-slate-400">[{level}] {new Date(line.ts).toLocaleString("zh-CN")} -</span>{" "}
-                {formatLog(line)}
+              <div key={`${line.ts}-${index}`} className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1 border-b border-slate-200/70 py-1.5 last:border-0 sm:flex">
+                <span className={`inline-flex w-12 shrink-0 justify-center rounded border px-1 py-0.5 text-[10px] font-semibold ${logLevelClass(level)}`}>{level}</span>
+                <span className="shrink-0 py-0.5 text-slate-400">{new Date(line.ts).toLocaleString("zh-CN")}</span>
+                <span className="col-span-2 min-w-0 break-words py-0.5 text-slate-700 sm:col-auto">{formatLog(line)}</span>
               </div>
             )
           })
         )}
-        <div ref={bottomRef} />
       </div>
     </div>
   )

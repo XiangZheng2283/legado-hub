@@ -1,18 +1,34 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router-dom"
-import { Activity, BookMarked, Database, Search, ShieldCheck, AlertCircle, BookOpen, ShieldAlert } from "lucide-react"
+import { Activity, BookMarked, Database, Search, ShieldCheck, AlertCircle, BookOpen, ShieldAlert, RefreshCw } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+function formatUptime(value: unknown) {
+  const seconds = Math.max(0, Math.floor(Number(value) || 0))
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  if (days > 0) return `${days} 天 ${hours} 小时`
+  if (hours > 0) return `${hours} 小时 ${minutes} 分钟`
+  if (minutes > 0) return `${minutes} 分钟`
+  return `${seconds} 秒`
+}
+
 export function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
 
-  const { data: statsData, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({ queryKey: ["status"], queryFn: api.status, enabled: isAdmin })
+  const { data: statsData, isLoading: statsLoading, isFetching: statsFetching, error: statsError, refetch: refetchStats } = useQuery({
+    queryKey: ["status"],
+    queryFn: api.status,
+    enabled: isAdmin,
+    refetchInterval: 30_000,
+  })
 
   if (isAdmin) {
     const stats = statsData || {}
@@ -20,21 +36,25 @@ export function Dashboard() {
     const metric = (value: unknown) => statsLoading ? "加载中" : statsError ? "N/A" : String(value ?? 0)
     return (
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">仪表盘</h1>
             <p className="mt-1 text-sm text-slate-500">欢迎回来，这是 LegadoHub 系统的当前状态。</p>
           </div>
+          <Button type="button" variant="outline" size="sm" disabled={statsFetching} onClick={() => { void refetchStats() }}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${statsFetching ? "animate-spin" : ""}`} />
+            {statsFetching ? "刷新中" : "刷新状态"}
+          </Button>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">系统运行状态</CardTitle>
-              <Activity className="h-4 w-4 text-emerald-500" />
+              <CardTitle className="text-sm font-medium">服务运行时间</CardTitle>
+              <Activity className={`h-4 w-4 ${statsError ? "text-rose-500" : "text-blue-600"}`} />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${statsError ? "text-rose-600" : "text-slate-900"}`}>{statsLoading ? "加载中" : statsError ? "未知" : "良好"}</div>
-              <p className="text-xs text-slate-500 mt-1">{statsLoading ? "正在读取状态" : statsError ? "状态接口暂时不可用" : (stats.phase || "正常运行中")}</p>
+              <div className="text-2xl font-bold text-slate-900">{statsLoading ? "加载中" : statsError ? "未知" : formatUptime(stats.uptimeSeconds)}</div>
+              <p className="mt-1 text-xs text-slate-500">{statsLoading ? "正在读取状态" : statsError ? "状态接口暂时不可用" : `后端进程 · v${stats.version || "-"}`}</p>
             </CardContent>
           </Card>
           <Card>
@@ -44,7 +64,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-slate-900">{metric(pluginStats.total)}</div>
-              <p className="text-xs text-slate-500 mt-1">已启用: {metric(pluginStats.enabled)}</p>
+              <p className="mt-1 text-xs text-slate-500">启用 {metric(pluginStats.enabled)} · 停用 {metric(pluginStats.disabled)}</p>
             </CardContent>
           </Card>
           <Card>
@@ -54,7 +74,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">{metric(pluginStats.healthy)}</div>
-              <p className="text-xs text-slate-500 mt-1">Ping 可达</p>
+              <p className="mt-1 text-xs text-slate-500">已检测 {metric(pluginStats.checked)} / {metric(pluginStats.enabled)}</p>
             </CardContent>
           </Card>
           <Card>
@@ -64,7 +84,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-rose-600">{metric(pluginStats.unhealthy)}</div>
-              <p className="text-xs text-slate-500 mt-1">需要管理员检查</p>
+              <p className="mt-1 text-xs text-slate-500">{Number(pluginStats.unknown || 0) > 0 ? `另有 ${pluginStats.unknown} 个待检测` : Number(pluginStats.unhealthy || 0) > 0 ? "需要管理员检查" : "当前无异常"}</p>
             </CardContent>
           </Card>
         </div>
@@ -87,9 +107,9 @@ export function Dashboard() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>系统状态说明</CardTitle><CardDescription>当前页面只展示实时状态指标</CardDescription></CardHeader>
+            <CardHeader><CardTitle>状态口径</CardTitle><CardDescription>当前指标来自书源 Ping 探测</CardDescription></CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-500 leading-relaxed">暂无实时动态流。需要查看具体处理进度时，请进入书库或对应书籍详情页。</p>
+              <p className="text-sm text-slate-500 leading-relaxed">书源可达性不等于正文可用性；具体章节处理日志仍以对应书籍详情为准。</p>
             </CardContent>
           </Card>
         </div>

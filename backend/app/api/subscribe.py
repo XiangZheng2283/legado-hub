@@ -6,18 +6,19 @@ Copyright (c) 2026 moo. All rights reserved.
 from __future__ import annotations
 
 import asyncio
+import logging
 import sqlite3
 import threading
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
 from app.core.legado_source import generate_legado_source
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, unpack_aggregate_chapter_url
-from app.services.catalog import Catalog
 from app.services.library_books import library_books_service
+from app.services.shared_book_job_types import SharedBookJobType
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.subscription_search import subscription_search_service
 from app.services.user_subscriptions import (
@@ -29,6 +30,7 @@ from app.services.user_auth import auth_service
 from app.source_plugins.id_codec import decode_chapter_id
 
 router = APIRouter(prefix="/api/subscribe")
+logger = logging.getLogger(__name__)
 _shared_book_creation_lock = threading.Lock()
 
 
@@ -115,7 +117,7 @@ async def _create_or_get_book_for_subscription(group: dict, user_id: str, existi
 def _safe_user_book(book: dict | None) -> dict:
     source = book or {}
     result = {key: source[key] for key in _USER_BOOK_FIELDS if key in source}
-    for key in ("subscription", "personalProgress", "bookState"):
+    for key in ("subscription", "personalProgress", "provisioning", "bookState"):
         value = source.get(key)
         if isinstance(value, dict):
             result[key] = dict(value)
@@ -129,6 +131,87 @@ def _require_book_access(user, aggregate_book_id: str) -> dict | None:
     if not subscription:
         raise HTTPException(status_code=404, detail="书籍不存在")
     return subscription
+
+
+def _book_needs_subscription_wake(
+    book: dict,
+    provisioning: dict,
+) -> bool:
+    shared_status = str(book.get("status", "") or "active").lower()
+    if shared_status in {"paused", "archived"}:
+        return False
+    return bool(
+        book.get("searchVisibilityStatus") != "visible"
+        or shared_status == "error"
+        or not provisioning.get("firstReadableChapter")
+    )
+
+
+async def _run_subscription_wake(scheduler: SharedBookScheduler) -> None:
+    try:
+        await scheduler.run_manual_until_idle()
+    except Exception:
+        logger.warning("Subscription provisioning runner failed", exc_info=True)
+
+
+def _schedule_subscription_wake(
+    book: dict,
+    *,
+    payload: dict | None,
+    provisioning: dict,
+) -> bool:
+    """Wake shared processing without changing any personal subscription setting."""
+    if not _book_needs_subscription_wake(book, provisioning):
+        return False
+    aggregate_book_id = str(book.get("aggregateBookId", "") or "")
+    processing_payload = (
+        dict(payload)
+        if isinstance(payload, dict) and payload
+        else library_books_service.load_payload(aggregate_book_id)
+    )
+    if not aggregate_book_id or not processing_payload:
+        logger.warning(
+            "Skipped subscription wake because processing payload is missing: bookId=%s",
+            aggregate_book_id,
+        )
+        return False
+    try:
+        processor = AggregateProcessor()
+        enqueue_result = processor.enqueue_book(
+            aggregate_book_id,
+            processing_payload,
+            next_check_time=datetime.now(timezone.utc).isoformat(),
+        )
+        if not enqueue_result.get("queued"):
+            return False
+        scheduler = SharedBookScheduler(processor=processor)
+        if (
+            book.get("searchVisibilityStatus") != "visible"
+            or not provisioning.get("firstReadableChapter")
+        ):
+            scheduler.enqueue_initial_subscription(
+                aggregate_book_id,
+                payload=processing_payload,
+                book_name=book.get("name", ""),
+                author=book.get("author", ""),
+            )
+        else:
+            scheduler.enqueue_manual_update(
+                aggregate_book_id,
+                reason=SharedBookJobType.BOOK_UPDATE_CHECK.value,
+                payload=processing_payload,
+                book_name=book.get("name", ""),
+                author=book.get("author", ""),
+            )
+        asyncio.create_task(_run_subscription_wake(scheduler))
+        return True
+    except Exception:
+        logger.warning(
+            "Failed to wake shared processing for %s",
+            aggregate_book_id,
+            exc_info=True,
+        )
+        return False
 
 
 @router.post("/search")
@@ -186,6 +269,11 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
     except SubscriptionLimitError as exc:
         raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
     existing = library_books_service.find_existing_book(group)
+    previous_subscription = (
+        user_subscriptions_service.get(user.user_id, existing["aggregateBookId"])
+        if existing
+        else None
+    )
     try:
         if existing is None:
             async with _shared_book_creation_guard():
@@ -213,25 +301,24 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
         raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
     book = created["book"]
     safe_book = _safe_user_book(book)
-    if created.get("created"):
-        processor = AggregateProcessor()
-        initial_next_check = (
-            datetime.now(timezone.utc)
-            + timedelta(minutes=processor.check_interval_minutes(book["aggregateBookId"]))
-        ).isoformat()
-        processor.enqueue_book(
-            book["aggregateBookId"],
-            created["payload"],
-            next_check_time=initial_next_check,
+    provisioning = library_books_service.provisioning_summary(
+        book["aggregateBookId"],
+        start_chapter_index=subscription["startChapterIndex"],
+    )
+    subscription_activated = bool(
+        created.get("created")
+        or subscription_created
+        or not previous_subscription
+        or previous_subscription.get("status") != "active"
+    )
+    wake_requested = bool(
+        subscription_activated
+        and _schedule_subscription_wake(
+            book,
+            payload=created.get("payload"),
+            provisioning=provisioning,
         )
-        scheduler = SharedBookScheduler(processor=processor)
-        scheduler.enqueue_initial_subscription(
-            book["aggregateBookId"],
-            payload=created["payload"],
-            book_name=book.get("name", ""),
-            author=book.get("author", ""),
-        )
-        asyncio.create_task(scheduler.run_periodic_once(wait_for_recovery=False, include_due_books=False))
+    )
     return {
         "ok": True,
         "created": bool(created.get("created")),
@@ -239,6 +326,8 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
         "subscriptionCreated": subscription_created,
         "book": safe_book,
         "subscription": subscription,
+        "provisioning": provisioning,
+        "processingWakeRequested": wake_requested,
         "subscriptionConfig": {
             "coverUrl": book.get("coverUrl", ""),
             "name": book.get("name", ""),
@@ -297,9 +386,12 @@ def get_library_book(request: Request, aggregate_book_id: str):
     }
     detail["subscription"] = subscription
     if subscription:
-        detail["personalProgress"] = user_subscriptions_service.progress(
-            subscription, library_books_service
+        delivery = library_books_service.subscription_delivery_summary(
+            aggregate_book_id,
+            start_chapter_index=subscription.get("startChapterIndex", 1),
         )
+        detail["personalProgress"] = delivery["personalProgress"]
+        detail["provisioning"] = delivery["provisioning"]
     return detail
 
 
@@ -333,14 +425,16 @@ def get_subscription(request: Request, aggregate_book_id: str):
 
 
 @router.put("/books/{aggregate_book_id}/subscription")
-def put_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
+async def put_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
     payload = payload or {}
     unknown = set(payload) - {"startChapterIndex", "autoArchiveOnComplete"}
     if unknown:
         raise HTTPException(status_code=422, detail=f"不支持的字段: {', '.join(sorted(unknown))}")
-    if not library_books_service.get_book(aggregate_book_id):
+    book = library_books_service.get_book(aggregate_book_id)
+    if not book:
         raise HTTPException(status_code=404, detail="书籍不存在")
+    previous_subscription = user_subscriptions_service.get(user.user_id, aggregate_book_id)
     start_chapter_index = _start_chapter_index(payload)
     auto_archive = _auto_archive_on_complete(payload)
     try:
@@ -358,11 +452,33 @@ def put_subscription(request: Request, aggregate_book_id: str, payload: dict | N
         raise HTTPException(status_code=404, detail="书籍不存在") from exc
     except SubscriptionLimitError as exc:
         raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
-    return {"created": created, "subscription": subscription}
+    provisioning = library_books_service.provisioning_summary(
+        aggregate_book_id,
+        start_chapter_index=subscription["startChapterIndex"],
+    )
+    subscription_activated = bool(
+        created
+        or not previous_subscription
+        or previous_subscription.get("status") != "active"
+    )
+    wake_requested = bool(
+        subscription_activated
+        and _schedule_subscription_wake(
+            book,
+            payload=None,
+            provisioning=provisioning,
+        )
+    )
+    return {
+        "created": created,
+        "subscription": subscription,
+        "provisioning": provisioning,
+        "processingWakeRequested": wake_requested,
+    }
 
 
 @router.patch("/books/{aggregate_book_id}/subscription")
-def patch_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
+async def patch_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
     payload = payload or {}
     unknown = set(payload) - {"status", "startChapterIndex", "autoArchiveOnComplete"}
@@ -372,6 +488,7 @@ def patch_subscription(request: Request, aggregate_book_id: str, payload: dict |
         payload["startChapterIndex"] = _start_chapter_index(payload)
     if "autoArchiveOnComplete" in payload:
         payload["autoArchiveOnComplete"] = _auto_archive_on_complete(payload)
+    previous_subscription = user_subscriptions_service.get(user.user_id, aggregate_book_id)
     try:
         subscription = user_subscriptions_service.update(
             user.user_id,
@@ -385,7 +502,29 @@ def patch_subscription(request: Request, aggregate_book_id: str, payload: dict |
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except SubscriptionLimitError as exc:
         raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
-    return {"subscription": subscription}
+    provisioning = library_books_service.provisioning_summary(
+        aggregate_book_id,
+        start_chapter_index=subscription["startChapterIndex"],
+    )
+    subscription_activated = bool(
+        subscription.get("status") == "active"
+        and previous_subscription
+        and previous_subscription.get("status") != "active"
+    )
+    book = library_books_service.get_book(aggregate_book_id) or {}
+    wake_requested = bool(
+        subscription_activated
+        and _schedule_subscription_wake(
+            book,
+            payload=None,
+            provisioning=provisioning,
+        )
+    )
+    return {
+        "subscription": subscription,
+        "provisioning": provisioning,
+        "processingWakeRequested": wake_requested,
+    }
 
 
 @router.get("/chapters/{chapter_id}")
@@ -399,7 +538,12 @@ async def get_subscribed_chapter(request: Request, chapter_id: str):
     if source_id != VIRTUAL_SOURCE_ID:
         raise HTTPException(status_code=404, detail="章节不存在")
     _require_book_access(user, str(payload.get("aggregateBookId", "") or ""))
-    result = await Catalog().chapter(chapter_id)
+    result = library_books_service.read_shared_chapter(
+        chapter_id,
+        published_only=False,
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="章节尚未就绪")
     return {
         "implemented": bool(result.get("implemented", True)),
         "chapterId": str(result.get("chapterId", chapter_id) or chapter_id),
@@ -441,22 +585,24 @@ def legado_search(
         }
 
     base_api = str(request.base_url).rstrip("/")
-    books = library_books_service.search_published_books(keyword)
+    published = library_books_service.page_published_books(
+        keyword=keyword,
+        page=page,
+        page_size=20,
+    )
     items = [
         library_books_service.build_search_injected_item(book, base_api=base_api)
-        for book in books
+        for book in published["items"]
     ]
-    page = max(1, int(page or 1))
-    offset = (page - 1) * 20
     return {
         "implemented": True,
         "keyword": keyword,
-        "page": page,
-        "items": items[offset : offset + 20],
+        "page": published["page"],
+        "items": items,
         "jobId": "",
         "status": "completed",
         "liveSearchPending": False,
-        "debug": {"publishedCount": len(items)},
+        "debug": {"publishedCount": published["total"]},
     }
 
 
@@ -481,17 +627,18 @@ async def cancel_legado_search(request: Request, job_id: str) -> dict:
 @router.get("/legado/explore")
 async def legado_explore(request: Request, sourceId: str = "", groupId: str = "", page: int = 1) -> dict:
     base_api = str(request.base_url).rstrip("/")
-    books = library_books_service.list_published_books()
+    published = library_books_service.page_published_books(
+        page=page,
+        page_size=20,
+    )
     items = [
         library_books_service.build_search_injected_item(book, base_api=base_api)
-        for book in books
+        for book in published["items"]
     ]
-    page = max(1, int(page or 1))
-    offset = (page - 1) * 20
     return {
         "implemented": True,
         "groupId": groupId or "published",
-        "page": page,
-        "items": items[offset : offset + 20],
-        "debug": {"publishedCount": len(items)},
+        "page": published["page"],
+        "items": items,
+        "debug": {"publishedCount": published["total"]},
     }

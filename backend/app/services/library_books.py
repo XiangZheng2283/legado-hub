@@ -9,6 +9,7 @@ import json
 import re
 import sqlite3
 import uuid
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
@@ -22,7 +23,12 @@ from app.services.aggregate_virtual_source import (
     unpack_aggregate_book_url,
     unpack_aggregate_chapter_url,
 )
-from app.services.live_acceptance import normalize_author_key, normalize_text
+from app.services.live_acceptance import (
+    QIDIAN_SOURCE_IDS,
+    normalize_author_key,
+    normalize_text,
+    qidian_book_identity,
+)
 from app.services.audit import audit_service
 from app.services.shared_book_storage import SharedBookStorage, TRACE_BEGIN
 from app.source_plugins.id_codec import (
@@ -272,6 +278,173 @@ class LibraryBooksService:
             "sourceMapRefresh": self.source_map_refresh_state(aggregate_book_id),
         }
 
+    def _safe_shared_chapter_path(self, book_dir: Path, file_name: str) -> Path | None:
+        """Resolve one index-owned chapter path without allowing directory escape."""
+        if not file_name:
+            return None
+        try:
+            resolved_book_dir = book_dir.resolve()
+            chapter_path = (resolved_book_dir / file_name).resolve()
+        except OSError:
+            return None
+        if chapter_path == resolved_book_dir or resolved_book_dir not in chapter_path.parents:
+            return None
+        return chapter_path
+
+    def _shared_chapter_catalog(
+        self,
+        aggregate_book_id: str,
+        *,
+        book: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, Any] | None, Path | None, list[dict[str, Any]]]:
+        """Load the shared chapter index and its DB projection exactly once."""
+        book = book or self.get_book(aggregate_book_id)
+        if not book:
+            return None, None, []
+
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        if not book_name:
+            return book, None, []
+        storage = self.shared_book_storage
+        book_dir = storage.shared_book_dir(book_name=book_name, author=author)
+        chapter_index_payload = storage._read_json(
+            storage.chapter_index_path(book_name=book_name, author=author)
+        ) or {}
+        chapter_entries = chapter_index_payload.get("chapters")
+        if not isinstance(chapter_entries, list):
+            chapter_entries = []
+
+        with self._conn() as conn:
+            db_chapters = {
+                int(row[2] or 0): {
+                    "chapterId": str(row[0] or ""),
+                    "sourceChapterId": str(row[1] or ""),
+                    "contentLength": int(row[3] or 0),
+                    "sourceWordCount": int(row[4] or 0),
+                    "previewOnly": bool(row[5]),
+                    "processedAt": str(row[6] or ""),
+                }
+                for row in conn.execute(
+                    """
+                    SELECT chapter_id, source_chapter_id, chapter_index,
+                           content_length, source_word_count, preview_only,
+                           last_processed_at
+                    FROM aggregate_chapter_tasks
+                    WHERE aggregate_book_id = ?
+                    """,
+                    (aggregate_book_id,),
+                ).fetchall()
+            }
+
+        records: list[dict[str, Any]] = []
+        for entry in chapter_entries:
+            if not isinstance(entry, dict):
+                continue
+            chapter_index = int(entry.get("index", 0) or 0)
+            chapter_title = str(entry.get("title", "") or "")
+            chapter_status = str(entry.get("status", "") or "pending")
+            file_name = str(entry.get("file", "") or "").strip()
+            chapter_path = self._safe_shared_chapter_path(book_dir, file_name)
+            db_chapter = db_chapters.get(chapter_index, {})
+            db_chapter_id = str(db_chapter.get("chapterId", "") or "")
+            source_chapter_id = str(
+                entry.get("sourceChapterId")
+                or db_chapter.get("sourceChapterId")
+                or ""
+            )
+            if db_chapter_id.startswith(f"{VIRTUAL_SOURCE_ID}:"):
+                read_chapter_id = db_chapter_id
+            elif source_chapter_id:
+                read_chapter_id = encode_chapter_id(
+                    VIRTUAL_SOURCE_ID,
+                    make_aggregate_chapter_url(
+                        aggregate_book_id=aggregate_book_id,
+                        source_chapter_id=source_chapter_id,
+                        title=chapter_title,
+                        index=chapter_index,
+                    ),
+                )
+            else:
+                read_chapter_id = ""
+            preview_only = bool(
+                db_chapter.get("previewOnly", chapter_status == "fetched")
+            )
+            is_vip = bool(entry.get("isVip", preview_only))
+            records.append(
+                {
+                    "chapterId": str(chapter_index),
+                    "chapterIndex": chapter_index,
+                    "readChapterId": read_chapter_id,
+                    "title": chapter_title,
+                    "status": chapter_status,
+                    "contentLength": int(db_chapter.get("contentLength", 0) or 0),
+                    "hasContent": bool(chapter_path and chapter_path.is_file()),
+                    "processedAt": str(db_chapter.get("processedAt", "") or ""),
+                    "sourceWordCount": int(db_chapter.get("sourceWordCount", 0) or 0),
+                    "isVip": is_vip,
+                    "isPaid": is_vip,
+                    "previewOnly": preview_only,
+                    "file": file_name or None,
+                    "_chapterPath": chapter_path,
+                    "_hasDbProjection": bool(db_chapter),
+                }
+            )
+        return book, book_dir, records
+
+    def _hydrate_shared_chapter_record(
+        self,
+        aggregate_book_id: str,
+        record: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Read one chapter file to provide current-page content metrics."""
+        item = dict(record)
+        chapter_path = item.pop("_chapterPath", None)
+        item.pop("_hasDbProjection", None)
+        if not isinstance(chapter_path, Path) or not chapter_path.is_file():
+            item["hasContent"] = False
+            return item
+        try:
+            markdown = chapter_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            item["hasContent"] = False
+            return item
+
+        item["hasContent"] = True
+        body, _, _ = markdown.partition(f"<!-- {TRACE_BEGIN}")
+        item["contentLength"] = len(
+            body.replace(f"# {item.get('title', '')}", "", 1).strip()
+        )
+        try:
+            trace = self.shared_book_storage.parse_trace_block(markdown)
+        except ValueError:
+            trace = {}
+        item["previewOnly"] = bool(trace.get("previewOnly", item.get("previewOnly", False)))
+        item["isVip"] = bool(item.get("isVip", trace.get("isVip", item["previewOnly"])))
+        item["isPaid"] = item["isVip"]
+        item["sourceWordCount"] = int(
+            item.get("sourceWordCount", 0) or trace.get("sourceWordCount", 0) or 0
+        )
+        item["processedAt"] = str(
+            item.get("processedAt", "") or trace.get("processedAt", "") or ""
+        )
+        if not item.get("readChapterId"):
+            primary = trace.get("primarySource")
+            source_chapter_id = str(
+                primary.get("chapterId", "") if isinstance(primary, dict) else ""
+            )
+            if source_chapter_id:
+                item["readChapterId"] = encode_chapter_id(
+                    VIRTUAL_SOURCE_ID,
+                    make_aggregate_chapter_url(
+                        aggregate_book_id=aggregate_book_id,
+                        source_chapter_id=source_chapter_id,
+                        title=str(item.get("title", "") or ""),
+                        index=int(item.get("chapterIndex", 0) or 0),
+                    ),
+                )
+        return item
+
     def list_shared_chapters(
         self,
         aggregate_book_id: str,
@@ -281,118 +454,158 @@ class LibraryBooksService:
         status: str = "all",
         keyword: str = "",
     ) -> dict[str, Any]:
-        """List chapters from the shared-file truth, not from DB rows."""
-        book = self.get_book(aggregate_book_id)
+        """List chapters from shared-file truth, reading only the requested page."""
+        book, _book_dir, records = self._shared_chapter_catalog(aggregate_book_id)
         if not book:
             return {"items": [], "page": page, "pageSize": pageSize, "total": 0}
 
         page = max(1, int(page or 1))
         page_size = max(1, min(int(pageSize or 50), 200))
-        storage = self.shared_book_storage
-        book_name = str(book.get("name", "") or "").strip()
-        author = str(book.get("author", "") or "").strip()
-        chapter_index_payload = storage._read_json(storage.chapter_index_path(book_name=book_name, author=author)) or {}
-        chapter_entries = chapter_index_payload.get("chapters")
-        if not isinstance(chapter_entries, list):
-            chapter_entries = []
-
         normalized_status = str(status or "all").strip().lower()
         normalized_keyword = str(keyword or "").strip().lower()
-        with self._conn() as conn:
-            db_chapters = {
-                int(row[2] or 0): {
-                    "chapterId": str(row[0] or ""),
-                    "sourceChapterId": str(row[1] or ""),
-                }
-                for row in conn.execute(
-                    """
-                    SELECT chapter_id, source_chapter_id, chapter_index
-                    FROM aggregate_chapter_tasks
-                    WHERE aggregate_book_id = ?
-                    """,
-                    (aggregate_book_id,),
-                ).fetchall()
-            }
-        items: list[dict[str, Any]] = []
-        for entry in chapter_entries:
-            if not isinstance(entry, dict):
-                continue
-            chapter_status = str(entry.get("status", "") or "pending")
-            chapter_title = str(entry.get("title", "") or "")
-            if normalized_status != "all" and chapter_status != normalized_status:
-                continue
-            if normalized_keyword and normalized_keyword not in chapter_title.lower():
-                continue
-
-            chapter_index = int(entry.get("index", 0) or 0)
-            file_name = str(entry.get("file", "") or "").strip()
-            trace: dict[str, Any] = {}
-            content_length = 0
-            has_content = False
-            preview_only = False
-            source_word_count = 0
-            processed_at = ""
-            if file_name:
-                chapter_path = storage.shared_book_dir(book_name=book_name, author=author) / file_name
-                if chapter_path.exists():
-                    markdown = chapter_path.read_text(encoding="utf-8")
-                    has_content = True
-                    body, _, _ = markdown.partition(f"<!-- {TRACE_BEGIN}")
-                    content_length = len(body.replace(f"# {chapter_title}", "", 1).strip())
-                    try:
-                        trace = storage.parse_trace_block(markdown)
-                    except ValueError:
-                        trace = {}
-            preview_only = bool(trace.get("previewOnly", False))
-            is_vip = bool(entry.get("isVip", trace.get("isVip", preview_only)))
-            source_word_count = int(trace.get("sourceWordCount", 0) or 0)
-            processed_at = str(trace.get("processedAt", "") or "")
-            db_chapter = db_chapters.get(chapter_index, {})
-            db_chapter_id = str(db_chapter.get("chapterId", "") or "")
-            trace_primary = trace.get("primarySource")
-            source_chapter_id = str(
-                entry.get("sourceChapterId")
-                or db_chapter.get("sourceChapterId")
-                or (
-                    trace_primary.get("chapterId", "")
-                    if isinstance(trace_primary, dict)
-                    else ""
-                )
-                or ""
+        filtered = [
+            record
+            for record in records
+            if (normalized_status == "all" or record.get("status") == normalized_status)
+            and (
+                not normalized_keyword
+                or normalized_keyword in str(record.get("title", "") or "").lower()
             )
-            if db_chapter_id.startswith(f"{VIRTUAL_SOURCE_ID}:"):
-                read_chapter_id = db_chapter_id
-            elif source_chapter_id:
-                agg_url = make_aggregate_chapter_url(
-                    aggregate_book_id=aggregate_book_id,
-                    source_chapter_id=source_chapter_id,
-                    title=chapter_title,
-                    index=chapter_index,
-                )
-                read_chapter_id = encode_chapter_id(VIRTUAL_SOURCE_ID, agg_url)
-            else:
-                read_chapter_id = ""
-            items.append(
-                {
-                    "chapterId": str(chapter_index),
-                    "chapterIndex": chapter_index,
-                    "readChapterId": read_chapter_id,
-                    "title": chapter_title,
-                    "status": chapter_status,
-                    "contentLength": content_length,
-                    "hasContent": has_content,
-                    "processedAt": processed_at,
-                    "sourceWordCount": source_word_count,
-                    "isVip": is_vip,
-                    "isPaid": is_vip,
-                    "previewOnly": preview_only,
-                    "file": file_name or None,
-                }
-            )
-
-        total = len(items)
+        ]
+        total = len(filtered)
         offset = (page - 1) * page_size
-        return {"items": items[offset : offset + page_size], "page": page, "pageSize": page_size, "total": total}
+        items = [
+            self._hydrate_shared_chapter_record(aggregate_book_id, record)
+            for record in filtered[offset : offset + page_size]
+        ]
+        return {"items": items, "page": page, "pageSize": page_size, "total": total}
+
+    def subscription_delivery_summary(
+        self,
+        aggregate_book_id: str,
+        *,
+        start_chapter_index: int = 1,
+    ) -> dict[str, Any]:
+        """Build personal progress and first-readable state without scanning bodies."""
+        book, _book_dir, records = self._shared_chapter_catalog(aggregate_book_id)
+        start = max(1, int(start_chapter_index or 1))
+        if not book:
+            return {
+                "personalProgress": {
+                    "rangeStartIndex": start,
+                    "rangeEndIndex": start - 1,
+                    "fullCount": 0,
+                    "previewCount": 0,
+                    "failedCount": 0,
+                    "pendingCount": 0,
+                    "continuousReadableThroughIndex": start - 1,
+                    "coverageRatio": 0.0,
+                },
+                "provisioning": {
+                    "state": "error",
+                    "readableChapterCount": 0,
+                    "previewChapterCount": 0,
+                    "pendingChapterCount": 0,
+                    "firstReadableChapter": None,
+                },
+            }
+
+        delivery_records: list[dict[str, Any]] = []
+        for record in records:
+            if int(record.get("chapterIndex", 0) or 0) < start:
+                continue
+            if record.get("hasContent") and not record.get("_hasDbProjection"):
+                item = self._hydrate_shared_chapter_record(aggregate_book_id, record)
+            else:
+                item = dict(record)
+                item.pop("_chapterPath", None)
+                item.pop("_hasDbProjection", None)
+            delivery_records.append(item)
+        delivery_records.sort(key=lambda item: int(item.get("chapterIndex", 0) or 0))
+
+        full = 0
+        preview = 0
+        failed = 0
+        first_readable: dict[str, Any] | None = None
+        continuous = start - 1
+        expected_index = start
+        continuous_blocked = False
+        failed_statuses = {"error", "failed", "rejected"}
+        for item in delivery_records:
+            chapter_index = int(item.get("chapterIndex", 0) or 0)
+            read_chapter_id = str(item.get("readChapterId", "") or "")
+            has_readable_content = bool(item.get("hasContent") and read_chapter_id)
+            preview_only = bool(item.get("previewOnly"))
+            status = str(item.get("status", "") or "").lower()
+            if has_readable_content and preview_only:
+                preview += 1
+            elif has_readable_content:
+                full += 1
+            elif status in failed_statuses:
+                failed += 1
+
+            if has_readable_content and first_readable is None:
+                first_readable = {
+                    "chapterId": read_chapter_id,
+                    "chapterIndex": chapter_index,
+                    "title": str(item.get("title", "") or ""),
+                    "contentAccess": "preview" if preview_only else "full",
+                }
+
+            if chapter_index != expected_index:
+                continuous_blocked = True
+            if not continuous_blocked and has_readable_content:
+                continuous = chapter_index
+                expected_index = chapter_index + 1
+            else:
+                continuous_blocked = True
+
+        range_end = max(
+            [int(item.get("chapterIndex", 0) or 0) for item in delivery_records]
+            + [int(book.get("totalChapters", 0) or 0), start - 1]
+        )
+        total = max(0, range_end - start + 1)
+        pending = max(0, total - full - preview - failed)
+        available = full + preview
+        shared_status = str(book.get("status", "") or "active").lower()
+        if first_readable is not None:
+            provisioning_state = "ready"
+        elif shared_status in {"paused", "archived"}:
+            provisioning_state = "paused"
+        elif shared_status == "error":
+            provisioning_state = "error"
+        else:
+            provisioning_state = "processing"
+        return {
+            "personalProgress": {
+                "rangeStartIndex": start,
+                "rangeEndIndex": range_end,
+                "fullCount": full,
+                "previewCount": preview,
+                "failedCount": failed,
+                "pendingCount": pending,
+                "continuousReadableThroughIndex": continuous,
+                "coverageRatio": round(available / total, 4) if total else 0.0,
+            },
+            "provisioning": {
+                "state": provisioning_state,
+                "readableChapterCount": full,
+                "previewChapterCount": preview,
+                "pendingChapterCount": pending,
+                "firstReadableChapter": first_readable,
+            },
+        }
+
+    def provisioning_summary(
+        self,
+        aggregate_book_id: str,
+        *,
+        start_chapter_index: int = 1,
+    ) -> dict[str, Any]:
+        return self.subscription_delivery_summary(
+            aggregate_book_id,
+            start_chapter_index=start_chapter_index,
+        )["provisioning"]
 
     def save_payload_sources(self, aggregate_book_id: str, sources: list[dict[str, Any]]) -> None:
         payload = self.load_payload(aggregate_book_id)
@@ -553,23 +766,35 @@ class LibraryBooksService:
         payload = self._payload_from_group(group)
         with self._conn() as conn:
             for source in payload.get("sources", []):
-                row = conn.execute(
-                    """
-                    SELECT aggregate_book_id
-                    FROM aggregate_book_sources
-                    WHERE source_id = ? AND source_book_id = ?
-                    ORDER BY id ASC
-                    LIMIT 1
-                    """,
-                    (source.get("sourceId", ""), source.get("bookId", "")),
-                ).fetchone()
-                if row:
-                    book = self._book_lookup_row(row[0])
-                    if not book:
-                        continue
-                    if visible_only and book.get("searchVisibilityStatus") != "visible":
-                        continue
-                    return book
+                source_id = str(source.get("sourceId", "") or "")
+                source_book_id = str(source.get("bookId", "") or "")
+                identities = [(source_id, source_book_id)]
+                qidian_work_id = qidian_book_identity(source_id, source.get("bookUrl", ""))
+                if qidian_work_id:
+                    canonical_url = f"https://m.qidian.com/book/{qidian_work_id}/"
+                    identities.extend(
+                        (variant_id, encode_book_id(variant_id, canonical_url))
+                        for variant_id in sorted(QIDIAN_SOURCE_IDS)
+                        if variant_id != source_id
+                    )
+                for identity_source_id, identity_book_id in identities:
+                    row = conn.execute(
+                        """
+                        SELECT aggregate_book_id
+                        FROM aggregate_book_sources
+                        WHERE source_id = ? AND source_book_id = ?
+                        ORDER BY id ASC
+                        LIMIT 1
+                        """,
+                        (identity_source_id, identity_book_id),
+                    ).fetchone()
+                    if row:
+                        book = self._book_lookup_row(row[0])
+                        if not book:
+                            continue
+                        if visible_only and book.get("searchVisibilityStatus") != "visible":
+                            continue
+                        return book
         return None
 
     def build_subscription_card(self, group: dict[str, Any]) -> dict[str, Any]:
@@ -694,7 +919,7 @@ class LibraryBooksService:
                     payload.get("primarySourceName", "") or primary_source_id,
                     payload.get("primaryBookUrl", "") or "",
                     payload.get("primaryTocUrl", "") or "",
-                    "",
+                    actor_user_id,
                     1,
                     int(payload.get("totalChaptersAtSubscribe", 0) or 0),
                     0,
@@ -783,7 +1008,7 @@ class LibraryBooksService:
             return
         if not isinstance(payload, dict):
             return
-        item["bookState"] = self.build_book_state_summary(payload.get("bookState"))
+        item["bookState"] = self.build_book_state_summary(payload)
 
     def list_books(self, *, added_by_user_id: str | None = None, keyword: str = "", include_hidden: bool = True) -> list[dict[str, Any]]:
         where = []
@@ -836,10 +1061,9 @@ class LibraryBooksService:
         if isinstance(book_state, dict):
             try:
                 readable = int(book_state.get("readableChapterCount", 0) or 0)
-                preview = int(book_state.get("previewChapterCount", 0) or 0)
             except (TypeError, ValueError):
                 return 0
-            return max(0, readable - preview)
+            return max(0, readable)
         try:
             return max(0, int(book.get("processedChapters", 0) or 0))
         except (TypeError, ValueError):
@@ -973,6 +1197,62 @@ class LibraryBooksService:
         """Return only shared books that are explicitly published and readable."""
         return self.list_books(keyword=keyword, include_hidden=False)
 
+    def page_published_books(
+        self,
+        *,
+        keyword: str = "",
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict[str, Any]:
+        """Page published books in SQLite without per-book filesystem hydration."""
+        page = max(1, int(page or 1))
+        page_size = max(1, min(int(page_size or 20), 100))
+        normalized_keyword = str(keyword or "").strip()
+        where = ["search_visibility_status = 'visible'"]
+        params: list[Any] = []
+        if normalized_keyword:
+            where.append("(name LIKE ? COLLATE NOCASE OR author LIKE ? COLLATE NOCASE)")
+            pattern = f"%{normalized_keyword}%"
+            params.extend([pattern, pattern])
+        where_sql = " AND ".join(where)
+        offset = (page - 1) * page_size
+        with self._conn() as conn:
+            total = int(
+                conn.execute(
+                    f"SELECT COUNT(*) FROM aggregate_book_tasks WHERE {where_sql}",
+                    params,
+                ).fetchone()[0]
+                or 0
+            )
+            rows = conn.execute(
+                f"""
+                SELECT aggregate_book_id, canonical_name, canonical_author, name, author,
+                       cover_url, intro, word_count, primary_book_id, primary_source_id,
+                       primary_source_name, primary_book_url, primary_toc_url, added_by_user_id,
+                       start_chapter_index, total_chapters_at_subscribe, initial_snapshot_last_index,
+                       backfill_started, auto_archive_on_complete, search_visibility_status,
+                       book_status, total_chapters, processed_chapters, visible_processed_chapters,
+                       failed_chapters, status, settings_json, current_policy_version,
+                       last_source_chapter_title, '', last_check_time, next_check_time, last_error,
+                       archived_at, created_at, updated_at, interval_minutes
+                FROM aggregate_book_tasks
+                WHERE {where_sql}
+                ORDER BY updated_at DESC, created_at DESC
+                LIMIT ? OFFSET ?
+                """,
+                [*params, page_size, offset],
+            ).fetchall()
+        return {
+            "items": [
+                item
+                for row in rows
+                if (item := self._aggregate_book_row_to_dict(row)) is not None
+            ],
+            "page": page,
+            "pageSize": page_size,
+            "total": total,
+        }
+
     def search_published_books(self, keyword: str) -> list[dict[str, Any]]:
         """Search the explicit Reading publication set without changing state."""
         normalized_keyword = str(keyword or "").strip().lower()
@@ -1037,32 +1317,35 @@ class LibraryBooksService:
     def legado_toc(self, book_id: str, *, base_api: str) -> dict[str, Any] | None:
         """Return only chapter entries that already have published shared content."""
         aggregate_book_id = self._decode_library_book_id(book_id)
-        if not aggregate_book_id or not self._published_book(aggregate_book_id):
+        book = self._published_book(aggregate_book_id) if aggregate_book_id else None
+        if not book:
             return None
+        _book, _book_dir, records = self._shared_chapter_catalog(
+            aggregate_book_id,
+            book=book,
+        )
         chapters: list[dict[str, Any]] = []
-        page = 1
-        while True:
-            result = self.list_shared_chapters(aggregate_book_id, page=page, pageSize=200)
-            for item in result.get("items") or []:
+        for record in records:
+            item = record
+            read_chapter_id = str(item.get("readChapterId", "") or "")
+            if item.get("hasContent") and not read_chapter_id:
+                item = self._hydrate_shared_chapter_record(aggregate_book_id, record)
                 read_chapter_id = str(item.get("readChapterId", "") or "")
-                if not item.get("hasContent") or not read_chapter_id:
-                    continue
-                chapters.append(
-                    {
-                        "sourceId": VIRTUAL_SOURCE_ID,
-                        "chapterId": read_chapter_id,
-                        "index": int(item.get("chapterIndex", 0) or 0),
-                        "title": item.get("title", ""),
-                        "chapterUrl": f"{base_api}/api/legado/chapter/{read_chapter_id}",
-                        "updateTime": item.get("processedAt", ""),
-                        "isVip": bool(item.get("isVip")),
-                        "isPaid": bool(item.get("isPaid")),
-                        "previewOnly": bool(item.get("previewOnly")),
-                    }
-                )
-            if page * 200 >= int(result.get("total", 0) or 0):
-                break
-            page += 1
+            if not item.get("hasContent") or not read_chapter_id:
+                continue
+            chapters.append(
+                {
+                    "sourceId": VIRTUAL_SOURCE_ID,
+                    "chapterId": read_chapter_id,
+                    "index": int(item.get("chapterIndex", 0) or 0),
+                    "title": item.get("title", ""),
+                    "chapterUrl": f"{base_api}/api/legado/chapter/{read_chapter_id}",
+                    "updateTime": item.get("processedAt", ""),
+                    "isVip": bool(item.get("isVip")),
+                    "isPaid": bool(item.get("isPaid")),
+                    "previewOnly": bool(item.get("previewOnly")),
+                }
+            )
         return {
             "implemented": True,
             "bookId": book_id,
@@ -1070,8 +1353,13 @@ class LibraryBooksService:
             "debug": {"aggregate": True, "published": True},
         }
 
-    def legado_chapter(self, chapter_id: str) -> dict[str, Any] | None:
-        """Read one published chapter directly from the UTF-8 shared file."""
+    def read_shared_chapter(
+        self,
+        chapter_id: str,
+        *,
+        published_only: bool,
+    ) -> dict[str, Any] | None:
+        """Read one shared UTF-8 chapter without invoking processing services."""
         try:
             source_id, chapter_url = decode_chapter_id(chapter_id)
             payload = unpack_aggregate_chapter_url(chapter_url)
@@ -1080,34 +1368,53 @@ class LibraryBooksService:
         if source_id != VIRTUAL_SOURCE_ID:
             return None
         aggregate_book_id = str(payload.get("aggregateBookId", "") or "")
-        book = self._published_book(aggregate_book_id)
+        book = (
+            self._published_book(aggregate_book_id)
+            if published_only
+            else self.get_book(aggregate_book_id)
+        )
         if not book:
             return None
 
-        target: dict[str, Any] | None = None
-        page = 1
-        while True:
-            result = self.list_shared_chapters(aggregate_book_id, page=page, pageSize=200)
+        _book, _book_dir, records = self._shared_chapter_catalog(
+            aggregate_book_id,
+            book=book,
+        )
+        payload_index = int(payload.get("index", 0) or 0)
+        target = next(
+            (
+                item
+                for item in records
+                if int(item.get("chapterIndex", 0) or 0) == payload_index
+            ),
+            None,
+        )
+        if target is None:
             target = next(
-                (
-                    item
-                    for item in result.get("items") or []
-                    if item.get("hasContent") and item.get("readChapterId") == chapter_id
-                ),
+                (item for item in records if item.get("readChapterId") == chapter_id),
                 None,
             )
-            if target or page * 200 >= int(result.get("total", 0) or 0):
-                break
-            page += 1
-        if not target or not target.get("file"):
+        if not target or not target.get("hasContent"):
             return None
 
-        book_dir = self.shared_book_storage.shared_book_dir(
-            book_name=str(book.get("name", "") or ""),
-            author=str(book.get("author", "") or ""),
-        ).resolve()
-        chapter_path = (book_dir / str(target["file"])).resolve()
-        if chapter_path != book_dir and book_dir not in chapter_path.parents:
+        expected_chapter_id = str(target.get("readChapterId", "") or "")
+        if not expected_chapter_id:
+            source_chapter_id = str(payload.get("sourceChapterId", "") or "")
+            if source_chapter_id:
+                expected_chapter_id = encode_chapter_id(
+                    VIRTUAL_SOURCE_ID,
+                    make_aggregate_chapter_url(
+                        aggregate_book_id=aggregate_book_id,
+                        source_chapter_id=source_chapter_id,
+                        title=str(target.get("title", "") or ""),
+                        index=int(target.get("chapterIndex", 0) or 0),
+                    ),
+                )
+        if expected_chapter_id != chapter_id:
+            return None
+
+        chapter_path = target.get("_chapterPath")
+        if not isinstance(chapter_path, Path):
             return None
         try:
             markdown = chapter_path.read_text(encoding="utf-8")
@@ -1121,8 +1428,12 @@ class LibraryBooksService:
         if not body or "\ufffd" in body or "\x00" in body:
             return None
 
-        preview_only = bool(target.get("previewOnly"))
-        is_vip = bool(target.get("isVip"))
+        try:
+            trace = self.shared_book_storage.parse_trace_block(markdown)
+        except ValueError:
+            trace = {}
+        preview_only = bool(trace.get("previewOnly", target.get("previewOnly", False)))
+        is_vip = bool(target.get("isVip", trace.get("isVip", preview_only)))
         return {
             "implemented": True,
             "chapterId": chapter_id,
@@ -1131,6 +1442,7 @@ class LibraryBooksService:
             "authRequired": preview_only,
             "isVip": is_vip,
             "isPaid": is_vip,
+            "previewOnly": preview_only,
             "extra": {
                 "previewOnly": preview_only,
                 "isVip": is_vip,
@@ -1138,6 +1450,10 @@ class LibraryBooksService:
             },
             "debug": {"aggregate": True, "published": True},
         }
+
+    def legado_chapter(self, chapter_id: str) -> dict[str, Any] | None:
+        """Read one published chapter for the Reading/Legado data plane."""
+        return self.read_shared_chapter(chapter_id, published_only=True)
 
     def build_search_injected_items_for_groups(
         self,

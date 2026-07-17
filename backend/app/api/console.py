@@ -6,6 +6,7 @@ import asyncio
 import json
 import math
 import shutil
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
-from app.config import APP_PHASE
+from app.config import APP_PHASE, APP_VERSION
 from app.core.app_config import AppConfig
 from app.core.aggregate_config import load_aggregate_config, update_progress
 from app.services.catalog import Catalog
@@ -43,6 +44,7 @@ from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, make_aggreg
 from app.services.user_auth import auth_service
 
 console_router = APIRouter(prefix="/api/console")
+_CONSOLE_STARTED_AT = time.monotonic()
 
 
 def console_route(method: str, path: str, *, access: str = "admin", **kwargs):
@@ -3365,37 +3367,56 @@ def get_status():
     # Count from actually loaded plugins so numbers always match the plugin list
     plugins = _plugin_scheduler._plugins
     total = len(plugins)
-    enabled = sum(1 for p in plugins.values() if p.metadata.enabled)
+    enabled_plugins = [plugin for plugin in plugins.values() if plugin.metadata.enabled]
+    enabled = len(enabled_plugins)
     disabled = total - enabled
     from app.services.plugin_runtime_state import get_runtime_state
 
     runtime_state = get_runtime_state()
     healthy = 0
     unhealthy = 0
-    for p in plugins.values():
+    for p in enabled_plugins:
         state = runtime_state.get_state(p.metadata.id)
         last_ping = state.get("lastPing") or {}
         if last_ping.get("status") == "reachable":
             healthy += 1
         elif last_ping.get("status") == "unreachable":
             unhealthy += 1
+    checked = healthy + unhealthy
+    unknown = enabled - checked
+    health = (
+        "degraded"
+        if unhealthy > 0
+        else "pending"
+        if unknown > 0
+        else "idle"
+        if enabled == 0
+        else "healthy"
+    )
     plugin_stats = {
         "total": total,
         "enabled": enabled,
         "disabled": disabled,
         "healthy": healthy,
         "unhealthy": unhealthy,
+        "checked": checked,
+        "unknown": unknown,
     }
     return {
+        "health": health,
+        "uptimeSeconds": max(0, int(time.monotonic() - _CONSOLE_STARTED_AT)),
         "pluginStats": plugin_stats,
         "sourceStats": plugin_stats,  # compatibility alias
         "plugins": {  # compatibility alias
             "total": total,
             "enabled": enabled,
+            "disabled": disabled,
             "healthy": healthy,
             "unhealthy": unhealthy,
+            "checked": checked,
+            "unknown": unknown,
         },
-        "version": "0.1.0",
+        "version": APP_VERSION,
         "phase": APP_PHASE,
     }
 

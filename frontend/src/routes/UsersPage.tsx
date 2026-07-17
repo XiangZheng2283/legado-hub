@@ -85,25 +85,16 @@ export function UsersPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">用户管理</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">用户管理</h1>
           <p className="mt-1 text-sm text-slate-500">账户、角色与访问状态</p>
         </div>
         <Button onClick={openCreateDialog}><Plus className="mr-2 h-4 w-4" /> 新建用户</Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="border-l-2 border-slate-400 bg-white px-4 py-3">
-          <div className="text-xs text-slate-500">用户总数</div>
-          <div className="mt-1 text-xl font-semibold text-slate-900">{users.length}</div>
-        </div>
-        <div className="border-l-2 border-emerald-500 bg-white px-4 py-3">
-          <div className="text-xs text-slate-500">可用账户</div>
-          <div className="mt-1 text-xl font-semibold text-emerald-700">{enabledCount}</div>
-        </div>
-        <div className="col-span-2 border-l-2 border-blue-500 bg-white px-4 py-3 sm:col-span-1">
-          <div className="text-xs text-slate-500">可用管理员</div>
-          <div className="mt-1 text-xl font-semibold text-blue-700">{adminCount}</div>
-        </div>
+        <Card className="shadow-none"><CardContent className="p-4"><div className="text-xs font-medium text-slate-500">用户总数</div><div className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{users.length}</div></CardContent></Card>
+        <Card className="shadow-none"><CardContent className="p-4"><div className="text-xs font-medium text-slate-500">可用账户</div><div className="mt-2 text-2xl font-semibold tabular-nums text-emerald-700">{enabledCount}</div></CardContent></Card>
+        <Card className="col-span-2 shadow-none sm:col-span-1"><CardContent className="p-4"><div className="text-xs font-medium text-slate-500">可用管理员</div><div className="mt-2 text-2xl font-semibold tabular-nums text-blue-700">{adminCount}</div></CardContent></Card>
       </div>
 
       {pageError && (
@@ -122,7 +113,7 @@ export function UsersPage() {
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[780px]">
               <TableHeader className="bg-slate-50">
                 <TableRow>
                   <TableHead>用户名</TableHead>

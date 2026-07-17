@@ -3,19 +3,30 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import logging
+import math
+import sqlite3
 import time
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Iterator
 
+from app.config import DB_PATH
 from app.core.app_config import AppConfig
 from app.services.library_books import library_books_service
 from app.services.live_acceptance import group_candidates
 from app.services.user_subscriptions import user_subscriptions_service
 from app.source_plugins.scheduler import get_plugin_scheduler
+from app.storage.db import initialize_database
 
 
-FINAL_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
+FINAL_STATUSES = {
+    "completed", "partial", "timed_out", "failed", "cancelled", "interrupted"
+}
+ALL_STATUSES = FINAL_STATUSES | {"pending", "running"}
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -50,13 +61,205 @@ class SubscriptionSearchService:
         scheduler: Any | None = None,
         library_service: Any | None = None,
         subscription_service: Any | None = None,
+        db_path=DB_PATH,
     ):
         self.scheduler = scheduler or get_plugin_scheduler()
         self.library_service = library_service or library_books_service
         self.subscription_service = subscription_service or user_subscriptions_service
+        self.db_path = db_path
         self._jobs: dict[str, SubscriptionSearchJob] = {}
+        self._tasks: set[asyncio.Task[None]] = set()
+
+    @contextmanager
+    def _conn(self) -> Iterator[sqlite3.Connection]:
+        initialize_database(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=5.0)
+        conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute("PRAGMA foreign_keys=ON")
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+    def _persist_job(self, job: SubscriptionSearchJob) -> bool:
+        # ponytail: one bounded snapshot row; split events/cards only when row size
+        # or cross-job querying becomes a measured problem.
+        job.events = job.events[-50:]
+        payload = {
+            "mode": job.mode,
+            "official_status": job.official_status,
+            "message": job.message,
+            "official_source_count": job.official_source_count,
+            "official_completed_count": job.official_completed_count,
+            "success_count": job.success_count,
+            "error_count": job.error_count,
+            "timeout_count": job.timeout_count,
+            "card_groups": job.card_groups,
+            "cards": job.cards,
+            "events": job.events,
+        }
+        with self._conn() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO subscription_search_jobs (
+                    job_id, owner_user_id, keyword, page, status, payload_json,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(job_id) DO UPDATE SET
+                    status = excluded.status,
+                    payload_json = excluded.payload_json,
+                    updated_at = excluded.updated_at
+                WHERE subscription_search_jobs.owner_user_id = excluded.owner_user_id
+                  AND subscription_search_jobs.keyword = excluded.keyword
+                  AND subscription_search_jobs.page = excluded.page
+                  AND (
+                      typeof(subscription_search_jobs.updated_at) NOT IN ('integer', 'real')
+                      OR excluded.updated_at >= subscription_search_jobs.updated_at
+                  )
+                """,
+                (
+                    job.job_id,
+                    job.owner_user_id,
+                    job.keyword,
+                    job.page,
+                    job.status,
+                    json.dumps(payload, ensure_ascii=False, default=str),
+                    job.created_at,
+                    job.updated_at,
+                ),
+            )
+            conn.commit()
+        return cursor.rowcount == 1
+
+    def _persist_job_best_effort(
+        self,
+        job: SubscriptionSearchJob,
+        *,
+        context: str,
+    ) -> bool:
+        try:
+            persisted = self._persist_job(job)
+        except Exception:
+            persisted = False
+            logger.warning(
+                "Failed to persist subscription search job %s during %s",
+                job.job_id,
+                context,
+                exc_info=True,
+            )
+        if persisted:
+            return True
+        job.events.append(
+            {
+                "type": "persistence_error",
+                "message": "搜索进度暂未保存，服务重启后可能需要重新搜索。",
+                "stage": context,
+                "ts": time.time(),
+            }
+        )
+        job.events = job.events[-50:]
+        return False
+
+    def _load_job(self, job_id: str) -> SubscriptionSearchJob | None:
+        with self._conn() as conn:
+            row = conn.execute(
+                """
+                SELECT job_id, owner_user_id, keyword, page, status,
+                       payload_json, created_at, updated_at
+                FROM subscription_search_jobs
+                WHERE job_id = ?
+                """,
+                (job_id,),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            payload = json.loads(row[5] or "{}")
+        except (TypeError, json.JSONDecodeError):
+            return None
+        if not isinstance(payload, dict):
+            return None
+
+        def payload_list(key: str) -> list[dict[str, Any]]:
+            value = payload.get(key)
+            return [dict(item) for item in value if isinstance(item, dict)] if isinstance(value, list) else []
+
+        status = str(row[4] or "")
+        if status not in ALL_STATUSES:
+            return None
+        now = time.time()
+        job = SubscriptionSearchJob(
+            job_id=str(row[0]),
+            owner_user_id=str(row[1]),
+            keyword=str(row[2]),
+            page=self._positive_int(row[3], 1),
+            status=status,
+            mode=str(payload.get("mode", "official-primary") or "official-primary"),
+            official_status=str(payload.get("official_status", "pending") or "pending"),
+            message=str(payload.get("message", "") or ""),
+            created_at=self._timestamp(row[6], now),
+            updated_at=self._timestamp(row[7], now),
+            official_source_count=self._nonnegative_int(
+                payload.get("official_source_count"), 0
+            ),
+            official_completed_count=self._nonnegative_int(
+                payload.get("official_completed_count"), 0
+            ),
+            success_count=self._nonnegative_int(payload.get("success_count"), 0),
+            error_count=self._nonnegative_int(payload.get("error_count"), 0),
+            timeout_count=self._nonnegative_int(payload.get("timeout_count"), 0),
+            card_groups=payload_list("card_groups"),
+            cards=payload_list("cards"),
+            events=payload_list("events"),
+        )
+        self._jobs[job.job_id] = job
+        return job
+
+    def recover_interrupted_jobs(self) -> int:
+        with self._conn() as conn:
+            job_ids = [
+                str(row[0])
+                for row in conn.execute(
+                    """
+                    SELECT job_id FROM subscription_search_jobs
+                    WHERE status IN ('pending', 'running')
+                    """
+                ).fetchall()
+            ]
+        recovered = 0
+        for job_id in job_ids:
+            self._jobs.pop(job_id, None)
+            job = self._load_job(job_id)
+            if not job:
+                with self._conn() as conn:
+                    cursor = conn.execute(
+                        """
+                        DELETE FROM subscription_search_jobs
+                        WHERE job_id = ? AND status IN ('pending', 'running')
+                        """,
+                        (job_id,),
+                    )
+                    conn.commit()
+                if cursor.rowcount:
+                    logger.warning(
+                        "Removed unreadable subscription search snapshot %s",
+                        job_id,
+                    )
+                continue
+            job.status = "interrupted"
+            if job.official_status in {"pending", "running"}:
+                job.official_status = "interrupted"
+            job.message = "服务重启，搜索任务已中断，请重新搜索。"
+            job.events.append(
+                {"type": "job_interrupted", "message": job.message, "ts": time.time()}
+            )
+            job.updated_at = time.time()
+            if self._persist_job_best_effort(job, context="startup-recovery"):
+                recovered += 1
+        return recovered
 
     def create_job(self, keyword: str, page: int = 1, *, owner_user_id: str) -> SubscriptionSearchJob:
+        official_plugins, _ = self._split_plugins()
         job = SubscriptionSearchJob(
             job_id=uuid.uuid4().hex,
             owner_user_id=owner_user_id,
@@ -64,7 +267,6 @@ class SubscriptionSearchService:
             page=max(1, int(page or 1)),
         )
         self._jobs[job.job_id] = job
-        official_plugins, _ = self._split_plugins()
         job.official_source_count = len(official_plugins)
         if not official_plugins:
             job.status = "completed"
@@ -72,14 +274,29 @@ class SubscriptionSearchService:
             job.mode = "no-official-source"
             job.message = "未检测到可用官方源，订阅搜索不会生成入库卡片。"
             job.updated_at = time.time()
+            try:
+                if not self._persist_job(job):
+                    raise RuntimeError("订阅搜索任务初始快照发生冲突")
+            except Exception:
+                self._jobs.pop(job.job_id, None)
+                raise
             return job
         job.status = "running"
         job.official_status = "running"
-        asyncio.create_task(self._run_job(job, official_plugins))
+        job.updated_at = time.time()
+        try:
+            if not self._persist_job(job):
+                raise RuntimeError("订阅搜索任务初始快照发生冲突")
+        except Exception:
+            self._jobs.pop(job.job_id, None)
+            raise
+        task = asyncio.create_task(self._run_job(job, official_plugins))
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
         return job
 
     def get_job(self, job_id: str) -> SubscriptionSearchJob | None:
-        return self._jobs.get(job_id)
+        return self._jobs.get(job_id) or self._load_job(job_id)
 
     def get_job_for_user(self, job_id: str, user_id: str) -> SubscriptionSearchJob | None:
         job = self.get_job(job_id)
@@ -169,6 +386,7 @@ class SubscriptionSearchService:
                 job.official_status = "failed" if job.status == "failed" else "completed"
             self._sync_message(job)
             job.updated_at = time.time()
+            self._persist_job_best_effort(job, context="job-finalize")
 
     async def _run_stage(self, job: SubscriptionSearchJob, plugins: list[Any], *, official: bool) -> None:
         if not plugins:
@@ -202,6 +420,7 @@ class SubscriptionSearchService:
                 else:
                     job.events.append({"type": "source_empty", "sourceId": source_id, "official": official, "ts": time.time()})
                 job.updated_at = time.time()
+                self._persist_job_best_effort(job, context="source-complete")
 
         await asyncio.gather(*(search_plugin(plugin) for plugin in plugins))
 
@@ -323,6 +542,20 @@ class SubscriptionSearchService:
         except (TypeError, ValueError):
             return default
         return parsed if parsed > 0 else default
+
+    def _nonnegative_int(self, value: Any, default: int) -> int:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return default
+        return parsed if parsed >= 0 else default
+
+    def _timestamp(self, value: Any, default: float) -> float:
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return default
+        return parsed if parsed > 0 and math.isfinite(parsed) else default
 
 
 subscription_search_service = SubscriptionSearchService()

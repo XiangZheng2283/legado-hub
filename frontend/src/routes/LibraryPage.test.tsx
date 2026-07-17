@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -86,6 +86,19 @@ describe("LibraryPage user controls", () => {
 
     await waitFor(() => expect(api.subscribe.myLibrary).toHaveBeenCalledTimes(2))
     expect(await screen.findByText("你还没有订阅的书籍")).toBeInTheDocument()
+  })
+
+  it("refreshes library progress while the page remains open", async () => {
+    vi.useFakeTimers()
+    const view = renderPage()
+    try {
+      await vi.waitFor(() => expect(api.subscribe.myLibrary).toHaveBeenCalledTimes(1))
+      await act(async () => { await vi.advanceTimersByTimeAsync(5000) })
+      await vi.waitFor(() => expect(api.subscribe.myLibrary).toHaveBeenCalledTimes(2))
+    } finally {
+      view.unmount()
+      vi.useRealTimers()
+    }
   })
 
   it("rejects unknown actions without calling an archive or rebuild endpoint", () => {

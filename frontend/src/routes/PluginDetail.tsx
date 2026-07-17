@@ -178,10 +178,10 @@ export function PluginDetail() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/console/official-sources")}
+              onClick={() => navigate("/console/plugins?tab=official")}
             >
               <Shield className="w-4 h-4 mr-1.5" />
-              官方源管理
+              账号认证
             </Button>
           )}
         </div>

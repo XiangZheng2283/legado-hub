@@ -84,6 +84,7 @@ export function LibraryPage() {
   const { data, isLoading, error: libraryError, refetch: refetchLibrary } = useQuery({
     queryKey: ["library", isAdmin ? "admin" : "mine"],
     queryFn: () => isAdmin ? api.libraryBooks() : api.subscribe.myLibrary(),
+    refetchInterval: 5000,
   })
 
   const actionMutation = useMutation({

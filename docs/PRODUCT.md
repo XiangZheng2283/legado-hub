@@ -85,10 +85,26 @@ The visibility, ownership, progress, migration, API, plugin, and release boundar
 
 Completed on 2026-07-16. The final gate covered transactional subscription quotas, owner-scoped APIs, administrator controls, official Qidian plugin synchronization and live App validation, frontend recovery semantics, all plugin validators, and a 39-scenario visual comparison. `verify.ps1` is the canonical repository verification command and rejects protected runtime-data changes.
 
+### Phase 2: Reading Delivery and Subscription Readiness (Complete)
+
+Optimize the path from an accepted subscription to the first readable chapter while keeping Reading/Legado strictly read-only. Published search and explore must page in storage, TOC and chapter reads must avoid repeated whole-book file scans, and subscriber chapter preview must read the same shared UTF-8 files and access flags as the Reading endpoint.
+
+Subscription activation must wake an existing shared book when it is hidden, failed, or has no readable chapter. Initial source-map refresh and bootstrap remain ordered in one processing attempt; failed manual work is isolated, requeued with bounded retries, and reported through an explicit provisioning summary instead of being inferred by the frontend.
+
+The execution contract and phase gates are defined in `docs/architecture/reading-and-subscription-optimization-plan.zh-CN.md`.
+
+Completed on 2026-07-17. Published search/explore now page in SQLite, shared TOC and chapter reads avoid whole-book Markdown scans, subscriber previews use the same pure shared-file path, provisioning exposes the first readable chapter, and newly activated subscriptions wake unready shared books with bounded manual retries. The final gate passed 289 backend tests, 22 plugin validators, 46 frontend tests, lint/build/audit, a 39-scenario visual comparison at 99.86% overall similarity, runtime import smoke, and protected runtime-data comparison.
+
+### Phase 3: Persistent Subscription Search (Complete)
+
+Persist each user-owned subscription-search snapshot so completed cards remain available after a process restart and candidate subscription remains owner-scoped. Searches that were pending or running at shutdown are marked `interrupted` on startup; they are not automatically replayed because external source searches are not an idempotent durable job protocol.
+
+The schema, recovery and privacy boundaries are defined in `docs/architecture/subscription-search-persistence-plan.zh-CN.md`.
+
+Completed on 2026-07-17. User-owned subscription-search snapshots now persist in schema 11, completed candidate cards survive service restarts, and unfinished work is deterministically exposed as `interrupted` without replaying external searches. Owner isolation, private candidate groups, stale-write protection, malformed-snapshot recovery, temporary-database self-checks, and the real v10 -> v11 runtime migration were verified. The final gate passed 296 backend tests, 22 plugin validators, 47 frontend tests, lint/build/audit, a 39-scenario visual comparison at 99.86% overall similarity, runtime import smoke, and protected runtime-data comparison.
+
 ### Deferred Until After Phase 1
 
-- Persistent subscription-search lifecycle and recovery.
-- Reading-client compatibility improvements that preserve stable source, book, TOC, and chapter contracts.
 - Unified data-integrity scan and operator recovery entry point.
 
 ## Brand Personality

@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from app import config
 from app.services import plugin_runtime_state
@@ -44,3 +45,26 @@ def test_pytest_ignore_collect_ignores_test_outside_allowlist() -> None:
     test_path = repo_root / "dev-assets/tests/test_ai_client.py"
 
     assert pytest_ignore_collect(test_path, None) is True
+
+
+def test_plugin_scheduler_initialization_does_not_mutate_cookie_store(
+    tmp_path, monkeypatch
+) -> None:
+    from app.services.cookie_store import CookieStore
+    from app.source_plugins import scheduler as scheduler_module
+
+    cookie_store = CookieStore(base_dir=tmp_path / "cookies")
+    cookie_store.save("no_cookie_source", {"cookies": {}})
+    plugin = SimpleNamespace(
+        metadata=SimpleNamespace(
+            id="no_cookie_source",
+            enabled=True,
+            declares_cookies=False,
+        )
+    )
+    loader = SimpleNamespace(load_all=lambda: {"no_cookie_source": plugin})
+    monkeypatch.setattr(scheduler_module, "CookieStore", lambda: cookie_store)
+
+    scheduler_module.PluginScheduler(loader=loader, config={})
+
+    assert cookie_store.path_for("no_cookie_source").exists()

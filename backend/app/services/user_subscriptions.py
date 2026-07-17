@@ -378,63 +378,21 @@ class UserSubscriptionsService:
             if not book or not subscription:
                 continue
             library_service._attach_book_state_summary(book)
+            delivery = library_service.subscription_delivery_summary(
+                row[0],
+                start_chapter_index=subscription.get("startChapterIndex", 1),
+            )
             book["subscription"] = subscription
-            book["personalProgress"] = self.progress(subscription, library_service)
+            book["personalProgress"] = delivery["personalProgress"]
+            book["provisioning"] = delivery["provisioning"]
             items.append(book)
         return items
 
     def progress(self, subscription: dict[str, Any], library_service: Any) -> dict[str, Any]:
-        book_id = subscription["aggregateBookId"]
-        start = max(1, int(subscription.get("startChapterIndex", 1) or 1))
-        page = 1
-        chapters: list[dict[str, Any]] = []
-        while True:
-            result = library_service.list_shared_chapters(book_id, page=page, pageSize=200)
-            batch = result.get("items") or []
-            chapters.extend(item for item in batch if int(item.get("chapterIndex", 0) or 0) >= start)
-            if page * 200 >= int(result.get("total", 0) or 0):
-                break
-            page += 1
-
-        full = preview = failed = pending = 0
-        continuous = start - 1
-        blocked = False
-        for chapter in sorted(chapters, key=lambda item: int(item.get("chapterIndex", 0) or 0)):
-            has_content = bool(chapter.get("hasContent"))
-            is_preview = bool(chapter.get("previewOnly"))
-            status = str(chapter.get("status", "") or "").lower()
-            if has_content and is_preview:
-                preview += 1
-            elif has_content:
-                full += 1
-            elif status in {"error", "failed", "rejected"}:
-                failed += 1
-            else:
-                pending += 1
-            if not blocked and has_content:
-                continuous = int(chapter.get("chapterIndex", continuous) or continuous)
-            else:
-                blocked = True
-
-        book = library_service.get_book(book_id) or {}
-        range_end = max(
-            [int(item.get("chapterIndex", 0) or 0) for item in chapters]
-            + [int(book.get("totalChapters", 0) or 0), start - 1]
-        )
-        total = max(0, range_end - start + 1)
-        known = full + preview + failed + pending
-        pending += max(0, total - known)
-        available = full + preview
-        return {
-            "rangeStartIndex": start,
-            "rangeEndIndex": range_end,
-            "fullCount": full,
-            "previewCount": preview,
-            "failedCount": failed,
-            "pendingCount": pending,
-            "continuousReadableThroughIndex": continuous,
-            "coverageRatio": round(available / total, 4) if total else 0.0,
-        }
+        return library_service.subscription_delivery_summary(
+            subscription["aggregateBookId"],
+            start_chapter_index=subscription.get("startChapterIndex", 1),
+        )["personalProgress"]
 
     def archive_completed_for_book(self, aggregate_book_id: str) -> int:
         now = datetime.now(timezone.utc).isoformat()
