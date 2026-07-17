@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: 96dushu_com
 name: 96读书
+author: Yunwei
 version: 0.1.0
 type: source
 domains:

@@ -20,7 +20,7 @@
 
 - 登录与角色边界
 - 搜索、订阅、共享书库、书籍详情、章节正文阅读
-- 插件列表、启用/禁用、Ping、Smoke 与运行错误
+- 插件列表、启用/禁用、Ping 与运行错误
 - 官方源登录、状态校验、注销与 Cookie 管理
 - 运行参数、聚合策略、优先级与词库状态
 - Reading/Legado 外部读取契约
@@ -32,6 +32,7 @@
 - `BookCard`、`SubscriptionCard`、`MasonryGrid` 旧组件方案
 - 无实现的书源导入、书源删除、候选 Trace 操作按钮、书库筛选按钮
 - AI 校对、改写、敏感词恢复及其章节详情字段
+- 运行期 Smoke、verification、单书源 stage test 与插件 live-check；这些只属于插件编写期验证
 
 章节详情中的只读 Trace 摘要属于运营证据，不是已移除的 Trace 操作，继续保留。
 
@@ -39,16 +40,15 @@
 
 - `/api/legado/*` 与 `/api/subscribe/legado/*`：外部读取契约
 - `/api/console/cache*`：运维/恢复接口；不恢复旧 Cache 页面
-- `/api/console/verification*`：运维验证接口；仓库级验收仍以 `verify.ps1` 为准
 - `/api/console/update-tasks*`、`/progress`、`/rule-engines`：后台调度与诊断
-- live-check、登录 debug trace：插件/登录诊断
+- 登录 debug trace：官方源登录诊断
 - 用户管理 API：为多用户模型保留，Phase 1 前不新增管理页
 
 ### 2.4 删除候选
 
 以下仅是前端内部封装，当前没有生产调用者。第一轮直接删除；未来出现真实 UI 时再按需添加：
 
-- `reloadPlugins`、`batchDeletePlugins`、`pingPlugin`、`testSource`
+- `reloadPlugins`、`batchDeletePlugins`、`testSource`
 - `pluginAuth`、`pluginLogin`
 - `searchJobs`、候选 verify/reviews/cancel 封装
 - live-check、cache、verification、explore 封装

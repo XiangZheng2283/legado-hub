@@ -1,4 +1,4 @@
-"""Lightweight runtime state for plugin health / ping / smoke / errors.
+"""Lightweight runtime state for plugin ping health and errors.
 
 This module intentionally does NOT use the main SQLite database.  State is kept
 in a small JSON file under backend/runtime/ so it can be:
@@ -45,7 +45,21 @@ class PluginRuntimeState:
         try:
             with open(self._state_file, "r", encoding="utf-8") as fh:
                 loaded = json.load(fh)
-            if isinstance(loaded, dict) and "plugins" in loaded:
+            plugins = loaded.get("plugins") if isinstance(loaded, dict) else None
+            if isinstance(plugins, dict):
+                for plugin_state in plugins.values():
+                    if not isinstance(plugin_state, dict):
+                        continue
+                    last_smoke = plugin_state.pop("lastSmoke", None)
+                    if isinstance(plugin_state.get("attempts"), list):
+                        plugin_state["attempts"] = [
+                            item for item in plugin_state["attempts"]
+                            if not isinstance(item, dict) or item.get("type") != "smoke"
+                        ]
+                    if isinstance(last_smoke, dict) and last_smoke.get("error"):
+                        last_error = plugin_state.get("lastError") or {}
+                        if last_error.get("message") == last_smoke["error"]:
+                            plugin_state.pop("lastError", None)
                 self._state = loaded
         except (json.JSONDecodeError, OSError):
             self._state = {"version": 1, "plugins": {}}
@@ -84,21 +98,6 @@ class PluginRuntimeState:
         self._append_attempt(plugin_id, entry)
         self._save()
 
-    def record_smoke(self, plugin_id: str, passed: bool, message: str = "", error: str | None = None) -> None:
-        entry = {
-            "type": "smoke",
-            "pass": passed,
-            "message": message,
-            "error": error or "",
-            "timestamp": _now_ms(),
-        }
-        ps = self._plugin_state(plugin_id)
-        ps["lastSmoke"] = entry
-        if error:
-            ps["lastError"] = {"message": error, "timestamp": _now_ms()}
-        self._append_attempt(plugin_id, entry)
-        self._save()
-
     def record_error(self, plugin_id: str, error: str) -> None:
         entry = {
             "type": "error",
@@ -125,7 +124,7 @@ class PluginRuntimeState:
 
     def get_attempts(self, plugin_id: str, limit: int = 20) -> list[dict[str, Any]]:
         ps = self._plugin_state(plugin_id)
-        attempts = list(ps.get("attempts", []))
+        attempts = [item for item in ps.get("attempts", []) if item.get("type") != "smoke"]
         attempts.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
         return attempts[:limit]
 

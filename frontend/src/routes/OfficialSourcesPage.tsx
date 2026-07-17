@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertCircle, LogIn, LogOut, RefreshCw, XCircle, Monitor, ShieldCheck } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { OfficialSourceLoginDialog } from "@/components/auth/OfficialSourceLoginDialog"
 
 const TERMINAL_LOGIN_STATUSES = new Set(["success", "pending", "failed", "timeout", "cancelled", "none"])
+export const BROWSER_LOGIN_TIMEOUT_MS = 5 * 60 * 1000
+const BROWSER_LOGIN_POLL_INTERVAL_MS = 3000
 
 export function OfficialSourcesPage() {
   const queryClient = useQueryClient()
@@ -18,6 +20,8 @@ export function OfficialSourcesPage() {
   const [selectedPlugin, setSelectedPlugin] = useState<{ id: string; name: string } | null>(null)
   const [operationError, setOperationError] = useState("")
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const deadlineRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const loginAttemptRef = useRef(0)
 
   const refreshMutation = useMutation({
     mutationFn: ({ pluginId }: { pluginId: string; name: string }) => api.pluginAuthCheck(pluginId),
@@ -46,6 +50,7 @@ export function OfficialSourcesPage() {
   const cancelLoginMutation = useMutation({
     mutationFn: (pluginId: string) => api.cancelLoginBrowser(pluginId),
     onMutate: () => {
+      loginAttemptRef.current += 1
       setOperationError("")
       setLoginSession((current: any) => current ? { ...current, status: "cancelling", message: "正在取消登录...", polling: false } : current)
     },
@@ -67,15 +72,20 @@ export function OfficialSourcesPage() {
 
   const startBrowserLogin = useCallback(async (pluginId: string) => {
     if (loginSession?.polling || cancelLoginMutation.isPending) return
+    const attemptId = ++loginAttemptRef.current
+    const deadlineAt = Date.now() + BROWSER_LOGIN_TIMEOUT_MS
     setOperationError("")
     setLoginSession({
       pluginId,
       status: "starting",
       message: "正在启动浏览器登录...",
       polling: true,
+      deadlineAt,
+      attemptId,
     })
     try {
       const result = await api.startLoginBrowser(pluginId)
+      if (loginAttemptRef.current !== attemptId) return
       if (result?.error) throw new Error(result.error)
       const status = result.status || "running"
       setLoginSession({
@@ -83,11 +93,14 @@ export function OfficialSourcesPage() {
         status,
         message: result.message || "请在浏览器窗口完成登录",
         polling: !TERMINAL_LOGIN_STATUSES.has(status),
+        deadlineAt,
+        attemptId,
       })
       if (status === "success") {
         queryClient.invalidateQueries({ queryKey: ["official-sources"] })
       }
     } catch (err) {
+      if (loginAttemptRef.current !== attemptId) return
       setLoginSession({
         pluginId,
         status: "failed",
@@ -106,36 +119,60 @@ export function OfficialSourcesPage() {
     return () => window.removeEventListener("official-source-browser-login", handleBrowserLogin)
   }, [startBrowserLogin])
 
+  useEffect(() => () => {
+    loginAttemptRef.current += 1
+  }, [])
+
   useEffect(() => {
     if (!loginSession?.polling || !loginSession.pluginId) return
     let active = true
+    const pluginId = loginSession.pluginId
+    const attemptId = Number(loginSession.attemptId) || loginAttemptRef.current
+    const deadlineAt = Number(loginSession.deadlineAt) || Date.now() + BROWSER_LOGIN_TIMEOUT_MS
+    const markTimedOut = () => {
+      if (!active || loginAttemptRef.current !== attemptId) return
+      loginAttemptRef.current += 1
+      setLoginSession({
+        pluginId,
+        status: "timeout",
+        message: "浏览器登录超时，请重新发起。",
+        polling: false,
+      })
+    }
     const poll = async () => {
+      if (Date.now() >= deadlineAt) {
+        markTimedOut()
+        return
+      }
       try {
-        const result = await api.getLoginBrowserStatus(loginSession.pluginId)
-        if (!active) return
+        const result = await api.getLoginBrowserStatus(pluginId)
+        if (!active || loginAttemptRef.current !== attemptId) return
         if (result?.error) throw new Error(result.error)
         const status = result.status || "failed"
         const polling = !TERMINAL_LOGIN_STATUSES.has(status)
-        setLoginSession({ pluginId: loginSession.pluginId, status, message: result.message || "登录中...", polling })
+        setLoginSession({ pluginId, status, message: result.message || "登录中...", polling, deadlineAt, attemptId })
         if (status === "success") queryClient.invalidateQueries({ queryKey: ["official-sources"] })
-        if (polling) intervalRef.current = setTimeout(poll, 3000)
+        if (polling) intervalRef.current = setTimeout(poll, Math.min(BROWSER_LOGIN_POLL_INTERVAL_MS, Math.max(0, deadlineAt - Date.now())))
       } catch (err) {
-        if (!active) return
+        if (!active || loginAttemptRef.current !== attemptId) return
         setLoginSession({
-          pluginId: loginSession.pluginId,
+          pluginId,
           status: "failed",
-          message: err instanceof Error ? err.message : "登录状态查询失败",
+          message: apiErrorMessage(err, "登录状态查询失败"),
           polling: false,
         })
       }
     }
-    intervalRef.current = setTimeout(poll, 3000)
+    deadlineRef.current = setTimeout(markTimedOut, Math.max(0, deadlineAt - Date.now()))
+    intervalRef.current = setTimeout(poll, Math.min(BROWSER_LOGIN_POLL_INTERVAL_MS, Math.max(0, deadlineAt - Date.now())))
     return () => {
       active = false
       if (intervalRef.current) clearTimeout(intervalRef.current)
+      if (deadlineRef.current) clearTimeout(deadlineRef.current)
       intervalRef.current = null
+      deadlineRef.current = null
     }
-  }, [loginSession?.pluginId, loginSession?.polling, queryClient])
+  }, [loginSession?.attemptId, loginSession?.deadlineAt, loginSession?.pluginId, loginSession?.polling, queryClient])
 
   const items = data?.items || []
   const validCount = items.filter((i: any) => i.authStatus?.authenticated).length
@@ -173,7 +210,7 @@ export function OfficialSourcesPage() {
       {queryError && (
         <div role="alert" className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span className="flex-1">官方源加载失败，请稍后重试。</span>
+          <span className="flex-1">官方源加载失败：{apiErrorMessage(queryError, "请稍后重试。")}</span>
           <Button type="button" size="sm" variant="outline" onClick={() => { void refetch() }}>重试</Button>
         </div>
       )}

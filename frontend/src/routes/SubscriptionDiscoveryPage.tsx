@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import { SearchIcon, Loader2, ArrowRight, Activity } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -67,7 +67,7 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     onSuccess: (data) => setJobId(data.jobId),
   })
 
-  const { data: jobData, error: jobError } = useQuery<SearchJobData | null>({
+  const { data: jobData, error: jobError, refetch: refetchJob } = useQuery<SearchJobData | null>({
     queryKey: ["subscribe", "search", jobId],
     queryFn: () => (jobId ? api.subscribe.searchJob(jobId) : Promise.resolve(null)),
     enabled: !!jobId,
@@ -99,6 +99,14 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     setJobId(null)
     setSelectedCard(null)
     searchMutation.mutate(query.trim())
+  }
+
+  const handleRetry = () => {
+    if (jobError && jobId) {
+      void refetchJob()
+      return
+    }
+    handleSearch()
   }
 
   const isSearching = searchMutation.isPending || (!jobError && !!jobData && jobData.liveSearchPending !== false && !["completed", "partial", "timed_out", "failed", "cancelled", "unknown"].includes(jobData.status || ""))
@@ -154,8 +162,21 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
 
       {(searchMutation.error || jobError || subscribeMutation.error || ["failed", "timed_out", "unknown"].includes(jobData?.status || "")) && (
         <Alert variant="destructive">
-          <AlertDescription>
-            {searchMutation.error?.message || (jobError as Error)?.message || subscribeMutation.error?.message || jobData?.message || jobData?.error || (jobData?.status === "unknown" ? "搜索任务已过期，请重新搜索。" : jobData?.status === "timed_out" ? "搜索超时，请查看已返回的结果或重新搜索。" : "操作失败，请稍后重试。")}
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>
+              {searchMutation.error
+                ? apiErrorMessage(searchMutation.error, "搜索发起失败，请稍后重试。")
+                : jobError
+                  ? apiErrorMessage(jobError, "搜索状态加载失败，请稍后重试。")
+                  : subscribeMutation.error
+                    ? apiErrorMessage(subscribeMutation.error, "订阅失败，请稍后重试。")
+                    : jobData?.message || jobData?.error || (jobData?.status === "unknown" ? "搜索任务已过期，请重新搜索。" : jobData?.status === "timed_out" ? "搜索超时，请查看已返回的结果或重新搜索。" : "操作失败，请稍后重试。")}
+            </span>
+            {(jobError || searchMutation.error || ["failed", "timed_out", "unknown"].includes(jobData?.status || "")) && (
+              <Button type="button" size="sm" variant="outline" onClick={handleRetry} disabled={!query.trim() || searchMutation.isPending}>
+                重试
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}

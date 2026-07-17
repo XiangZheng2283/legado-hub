@@ -4,8 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft, RefreshCw, Trash2, Code2, Link, Terminal, MoreVertical, Crown, Search, Loader2, ChevronLeft, ChevronRight, Settings2, Play, Pause, Archive,
 } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
+import { executeLibraryBookMaintenanceAction } from "@/lib/library-actions"
 import { LogStream } from "@/components/shared/LogStream"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -36,6 +37,7 @@ interface LibraryBookDetail {
   currentPolicyVersion?: number; autoArchiveOnComplete?: boolean; searchVisibilityStatus?: string
   lastError?: string; nextCheckTime?: string; bookState?: BookStateSummary; freeChapterEndIndex?: number
   sourceMapSummary?: SourceMapSummaryItem[]; sourceMapRefresh?: { completed?: boolean; status?: string; lastVerifiedAt?: string; missingCriticalSource?: boolean }
+  processingSettings?: { updateIntervalMinutes: number; backlogChapterLimit: number }; intervalMinutes?: number
   subscription?: { status: "active" | "paused" | "archived"; startChapterIndex: number; autoArchiveOnComplete: boolean }
   personalProgress?: { rangeStartIndex: number; rangeEndIndex: number; fullCount: number; previewCount: number; failedCount: number; pendingCount: number; continuousReadableThroughIndex: number; coverageRatio: number }
 }
@@ -92,14 +94,17 @@ export function LibraryBookDetailPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [startChapterIndex, setStartChapterIndex] = useState("1")
   const [autoArchiveOnComplete, setAutoArchiveOnComplete] = useState(true)
+  const [processingSettingsOpen, setProcessingSettingsOpen] = useState(false)
+  const [updateIntervalMinutes, setUpdateIntervalMinutes] = useState("60")
+  const [backlogChapterLimit, setBacklogChapterLimit] = useState("25")
 
-  const { data: book, isLoading, error: bookError } = useQuery<LibraryBookDetail | null>({
+  const { data: book, isLoading, error: bookError, refetch: refetchBook } = useQuery<LibraryBookDetail | null>({
     queryKey: ["library", "book", bookId, "summary"],
     queryFn: () => isAdmin ? api.libraryBookSummary(bookId!) : api.subscribe.book(bookId!),
     enabled: !!bookId,
     refetchInterval: 5000,
   })
-  const { data: chaptersData, isFetching: chaptersFetching, error: chaptersError } = useQuery({
+  const { data: chaptersData, isFetching: chaptersFetching, error: chaptersError, refetch: refetchChapters } = useQuery({
     queryKey: ["library", "book", bookId, "chapters", { status: chapterStatusFilter, keyword: chapterKeyword, page: chapterPage }],
     queryFn: () => {
       const params: Record<string, string> = { page: String(chapterPage), pageSize: "200" }
@@ -115,12 +120,7 @@ export function LibraryBookDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["library"] })
   }
   const actionMutation = useMutation({
-    mutationFn: (action: string) => {
-      if (action === "check-update") return api.checkLibraryBookUpdate(bookId!)
-      if (action === "refresh-sources") return api.refreshLibraryBookSources(bookId!, { force: true })
-      if (action === "repair") return api.repairLibraryBook(bookId!, { reason: "manual" })
-      return api.rebuildLibraryBook(bookId!)
-    },
+    mutationFn: (action: string) => executeLibraryBookMaintenanceAction(bookId!, action),
     onSuccess: refreshQueries,
   })
   const chapterProcessMutation = useMutation({
@@ -139,6 +139,14 @@ export function LibraryBookDetailPage() {
       refreshQueries()
     },
   })
+  const processingSettingsMutation = useMutation({
+    mutationFn: (payload: { updateIntervalMinutes: number; backlogChapterLimit: number }) =>
+      api.updateLibraryBookSettings(bookId!, payload),
+    onSuccess: () => {
+      setProcessingSettingsOpen(false)
+      refreshQueries()
+    },
+  })
 
   const chapterBodyQuery = useQuery({
     queryKey: ["library", "chapter-body", readingChapter?.readChapterId],
@@ -147,10 +155,17 @@ export function LibraryBookDetailPage() {
       : api.subscribe.chapter(readingChapter!.readChapterId!),
     enabled: !!(readingChapter?.readChapterId),
   })
-  const maintenanceBusy = actionMutation.isPending || chapterProcessMutation.isPending || deleteMutation.isPending || subscriptionMutation.isPending
+  const maintenanceBusy = actionMutation.isPending || chapterProcessMutation.isPending || deleteMutation.isPending || subscriptionMutation.isPending || processingSettingsMutation.isPending
 
   if (isLoading) return <div className="flex min-h-[300px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-  if (bookError) return <Alert variant="destructive"><AlertDescription>书籍加载失败：{(bookError as Error).message}</AlertDescription></Alert>
+  if (bookError) return (
+    <Alert variant="destructive">
+      <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+        <span>书籍加载失败：{apiErrorMessage(bookError, "请稍后重试。")}</span>
+        <Button type="button" size="sm" variant="outline" onClick={() => { void refetchBook() }}>重试</Button>
+      </AlertDescription>
+    </Alert>
+  )
   if (!book || book.found === false) return <div className="text-slate-500">书籍不存在或已删除。</div>
 
   const chapters: LibraryChapterListItem[] = chaptersData?.items || chaptersData?.chapters || []
@@ -181,6 +196,20 @@ export function LibraryBookDetailPage() {
     setAutoArchiveOnComplete(subscription?.autoArchiveOnComplete ?? true)
     setSettingsOpen(true)
   }
+  const openProcessingSettings = () => {
+    setUpdateIntervalMinutes(String(book.processingSettings?.updateIntervalMinutes ?? book.intervalMinutes ?? 60))
+    setBacklogChapterLimit(String(book.processingSettings?.backlogChapterLimit ?? 25))
+    processingSettingsMutation.reset()
+    setProcessingSettingsOpen(true)
+  }
+  const processingInterval = Number(updateIntervalMinutes)
+  const processingBacklog = Number(backlogChapterLimit)
+  const processingSettingsValid = Number.isInteger(processingInterval)
+    && processingInterval >= 10
+    && processingInterval <= 1440
+    && Number.isInteger(processingBacklog)
+    && processingBacklog >= 5
+    && processingBacklog <= 100
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -188,10 +217,15 @@ export function LibraryBookDetailPage() {
         <ArrowLeft className="h-4 w-4 mr-2" /> 返回书库
       </Button>
 
-      {(actionMutation.error || chapterProcessMutation.error || deleteMutation.error || subscriptionMutation.error || chaptersError) && (
+      {(actionMutation.error || chapterProcessMutation.error || deleteMutation.error || subscriptionMutation.error || processingSettingsMutation.error || chaptersError) && (
         <Alert variant="destructive">
-          <AlertDescription>
-            {(actionMutation.error as Error)?.message || (chapterProcessMutation.error as Error)?.message || (deleteMutation.error as Error)?.message || (subscriptionMutation.error as Error)?.message || (chaptersError as Error)?.message || "操作失败，请稍后重试。"}
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{apiErrorMessage(actionMutation.error || chapterProcessMutation.error || deleteMutation.error || subscriptionMutation.error || processingSettingsMutation.error || chaptersError, "操作失败，请稍后重试。")}</span>
+            {chaptersError && (
+              <Button type="button" size="sm" variant="outline" onClick={() => { void refetchChapters() }}>
+                重试章节列表
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -209,6 +243,7 @@ export function LibraryBookDetailPage() {
             </div>
             {isAdmin && (
               <div className="flex items-center gap-2 relative">
+                <Button variant="outline" size="sm" onClick={openProcessingSettings} disabled={maintenanceBusy}><Settings2 className="h-4 w-4 mr-2" /> 处理设置</Button>
                 <Button variant="outline" size="sm" onClick={() => actionMutation.mutate("check-update")} disabled={maintenanceBusy}><RefreshCw className="h-4 w-4 mr-2" /> 检查更新</Button>
                 <Button variant="ghost" size="icon" onClick={() => setOpenAdminMenu(!openAdminMenu)}><MoreVertical className="h-5 w-5" /></Button>
                 {openAdminMenu && (
@@ -514,6 +549,51 @@ export function LibraryBookDetailPage() {
         </Card>
       )}
 
+      <Dialog open={processingSettingsOpen} onOpenChange={setProcessingSettingsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>共享处理设置</DialogTitle>
+            <DialogDescription>这些设置影响本书的共享后台任务，对所有订阅者统一生效。</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="detail-update-interval">更新检查间隔（分钟）</Label>
+              <Input
+                id="detail-update-interval"
+                type="number"
+                min={10}
+                max={1440}
+                step={1}
+                value={updateIntervalMinutes}
+                onChange={(event) => setUpdateIntervalMinutes(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="detail-backlog-limit">单轮积压章节上限</Label>
+              <Input
+                id="detail-backlog-limit"
+                type="number"
+                min={5}
+                max={100}
+                step={1}
+                value={backlogChapterLimit}
+                onChange={(event) => setBacklogChapterLimit(event.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setProcessingSettingsOpen(false)}>取消</Button>
+              <Button
+                onClick={() => processingSettingsMutation.mutate({ updateIntervalMinutes: processingInterval, backlogChapterLimit: processingBacklog })}
+                disabled={processingSettingsMutation.isPending || !processingSettingsValid}
+              >
+                {processingSettingsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -567,7 +647,12 @@ export function LibraryBookDetailPage() {
             {chapterBodyQuery.isLoading ? (
               <p className="text-slate-400 text-center pt-20">章节内容加载中…</p>
             ) : chapterBodyQuery.error ? (
-              <Alert variant="destructive"><AlertDescription>正文加载失败：{(chapterBodyQuery.error as Error).message}</AlertDescription></Alert>
+              <Alert variant="destructive">
+                <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+                  <span>正文加载失败：{apiErrorMessage(chapterBodyQuery.error, "请稍后重试。")}</span>
+                  <Button type="button" size="sm" variant="outline" onClick={() => { void chapterBodyQuery.refetch() }}>重试</Button>
+                </AlertDescription>
+              </Alert>
             ) : chapterBodyQuery.data?.content ? (
               String(chapterBodyQuery.data.content)
                 .split(/\n+/)

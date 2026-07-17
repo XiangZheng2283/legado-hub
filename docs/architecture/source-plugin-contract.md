@@ -124,6 +124,7 @@ site has those pages.
 Optional fields:
 
 ```yaml
+author: Yunwei
 priority: 50
 enabled: true
 language: zh-CN
@@ -172,6 +173,9 @@ adPatterns:
   - "regex pattern 1"
   - "regex pattern 2"
 ```
+
+`author` is the plugin maintainer attribution displayed by the console. It is
+not the author of books returned by `search()` or `detail()`.
 
 `enabled`: whether the source is enabled by default after loading. The console can toggle this per-source.
 

@@ -151,8 +151,8 @@ LegadoHub should preserve this capability grouping in the plugin detail page. Do
 LegadoHub translation:
 
 - `编辑源` -> plugin manifest/source view, contract summary, generated fixture status.
-- `调试源` -> live source check and structured search/detail/toc/chapter trace.
-- `源列表` -> plugin/source inventory with enable, auth, health, smoke, and live-check actions.
+- `调试源` -> authoring-time fixture/live checks outside the runtime console.
+- `源列表` -> plugin/source inventory with enable, auth, and Ping health actions.
 - `帮助信息` -> local plugin authoring guide and source template rules.
 
 ### Source List Behavior
@@ -479,9 +479,10 @@ This is the acceptance step that proves the source can actually return readable 
 ```text
 POST /api/console/search-jobs/{job_id}/candidates/{candidate_id}/verify
 GET  /api/console/search-jobs/{job_id}/candidates
-POST /api/console/plugins/{plugin_id}/live-check
-GET  /api/console/plugins/{plugin_id}/live-checks
 ```
+
+Plugin live-check and fixture smoke are authoring-time checks. The runtime
+console intentionally exposes only Ping for source health.
 
 ### Candidate Verify Response
 
@@ -625,4 +626,3 @@ Stage 3 should focus on:
 4. Add candidate verification drawer.
 5. Repair live plugins until at least 3 real sources pass content validation.
 6. Make live acceptance part of final verification reports.
-

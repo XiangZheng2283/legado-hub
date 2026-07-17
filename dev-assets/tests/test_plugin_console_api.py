@@ -1,7 +1,12 @@
 """Tests for plugin console API endpoints."""
 
 import asyncio
+import copy
+import json
 import sqlite3
+import time
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
 import pytest
@@ -58,6 +63,237 @@ def test_console_chapter_read_requires_admin(user_client):
     assert user_client.get("/api/console/chapter/invalid").status_code == 403
 
 
+def test_settings_subscription_policy_round_trip_and_strict_validation(admin_client, user_client):
+    original = admin_client.get("/api/console/settings").json()
+    payload = copy.deepcopy(original)
+    payload["subscription"] = {
+        **payload["subscription"],
+        "maxActivePerUser": 17,
+        "maxNewSharedBooksPerDay": 4,
+        "maxGlobalProvisioningBooks": 9,
+    }
+    payload["searchConfig"]["sourceTimeoutSeconds"] = 1
+    payload["sourcePool"]["source_timeout_seconds"] = 12.5
+
+    try:
+        response = admin_client.post("/api/console/settings", json=payload)
+        assert response.status_code == 200
+        saved = admin_client.get("/api/console/settings").json()
+        assert saved["subscription"] == payload["subscription"]
+        assert saved["sourcePool"]["source_timeout_seconds"] == 12.5
+
+        before_rejected_request = copy.deepcopy(saved)
+        rejected = admin_client.post(
+            "/api/console/settings",
+            json={
+                "sourcePool": {"max_concurrency": 99},
+                "subscription": {"maxActivePerUser": 3, "unexpected": True},
+            },
+        )
+        assert rejected.status_code == 422
+        after_rejected_request = admin_client.get("/api/console/settings").json()
+        assert after_rejected_request["sourcePool"]["max_concurrency"] == before_rejected_request["sourcePool"]["max_concurrency"]
+        assert after_rejected_request["subscription"] == before_rejected_request["subscription"]
+
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"subscription": {"maxActivePerUser": 0}},
+        ).status_code == 422
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"unknown": {}},
+        ).status_code == 422
+        assert user_client.get("/api/console/settings").status_code == 403
+        assert user_client.post("/api/console/settings", json=payload).status_code == 403
+    finally:
+        restored = admin_client.post("/api/console/settings", json=original)
+        assert restored.status_code == 200
+
+
+def test_settings_updates_do_not_overwrite_concurrent_fields(admin_client, monkeypatch):
+    import app.api.console as console_api
+    from app.core.app_config import AppConfig
+
+    original = admin_client.get("/api/console/settings").json()
+    original_save = AppConfig.save
+
+    def slow_save(config):
+        time.sleep(0.05)
+        original_save(config)
+
+    monkeypatch.setattr(AppConfig, "save", slow_save)
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(console_api.update_settings, {"subscription": {"maxActivePerUser": 31}}),
+                executor.submit(console_api.update_settings, {"searchScoreFilter": 321}),
+            ]
+            for future in futures:
+                assert future.result()["saved"] is True
+
+        saved = admin_client.get("/api/console/settings").json()
+        assert saved["subscription"]["maxActivePerUser"] == 31
+        assert saved["searchScoreFilter"] == 321
+    finally:
+        assert admin_client.post("/api/console/settings", json=original).status_code == 200
+
+
+def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_client, user_client):
+    username = f"reader-{uuid.uuid4().hex[:8]}"
+    create_response = admin_client.post(
+        "/api/console/users",
+        json={"username": username, "password": "initial-pass", "role": "user"},
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()
+
+    assert user_client.get("/api/console/users").status_code == 403
+    assert admin_client.post(
+        "/api/console/users",
+        json={"username": "bad-role", "password": "password-123", "role": "owner"},
+    ).status_code == 400
+    assert admin_client.post(
+        "/api/console/users",
+        json={"username": "weak-password", "password": "short", "role": "user"},
+    ).status_code == 400
+    assert admin_client.post(
+        "/api/console/users",
+        json={"username": "unknown-field", "password": "password-123", "role": "user", "extra": True},
+    ).status_code == 422
+
+    reader_client = TestClient(app)
+    assert reader_client.post(
+        "/api/auth/login",
+        json={"username": username, "password": "initial-pass"},
+    ).status_code == 200
+    reset_response = admin_client.post(
+        f"/api/console/users/{created['userId']}/reset-password",
+        json={"password": "replacement-pass"},
+    )
+    assert reset_response.status_code == 200
+    assert reader_client.get("/api/auth/me").json()["authenticated"] is False
+    assert reader_client.post(
+        "/api/auth/login",
+        json={"username": username, "password": "initial-pass"},
+    ).status_code == 401
+    assert reader_client.post(
+        "/api/auth/login",
+        json={"username": username, "password": "replacement-pass"},
+    ).status_code == 200
+
+    assert admin_client.post(
+        f"/api/console/users/{created['userId']}/disable",
+        json={"disabled": "true"},
+    ).status_code == 422
+    assert admin_client.post(
+        f"/api/console/users/{created['userId']}/disable",
+        json={"disabled": True, "extra": True},
+    ).status_code == 422
+    assert admin_client.post(
+        f"/api/console/users/{created['userId']}/disable",
+        json={"disabled": True},
+    ).status_code == 200
+    assert reader_client.get("/api/auth/me").json()["authenticated"] is False
+    from app.services.audit import audit_service
+
+    actions = {
+        event["action"]
+        for event in audit_service.list_events(limit=1000)
+        if event["targetId"] == created["userId"]
+    }
+    assert {"user.create", "user.password.reset", "user.disable"}.issubset(actions)
+
+
+def test_user_management_prevents_self_and_last_admin_disable(admin_client, tmp_path):
+    from app.services.user_auth import UserAuthService
+
+    current_admin = admin_client.get("/api/auth/me").json()["user"]
+    self_disable = admin_client.post(
+        f"/api/console/users/{current_admin['userId']}/disable",
+        json={"disabled": True},
+    )
+    assert self_disable.status_code == 409
+    assert "当前登录" in self_disable.json()["detail"]
+
+    auth = UserAuthService(tmp_path / "last-admin.db")
+    only_admin = auth.bootstrap_admin("only-admin", "password-123")
+    with pytest.raises(HTTPException) as captured:
+        auth.set_disabled(only_admin["userId"], True, actor_user_id="different-admin")
+    assert captured.value.status_code == 409
+    assert "至少一个" in captured.value.detail
+
+
+def test_library_book_processing_settings_are_admin_only_and_persist(admin_client, user_client):
+    import app.config as app_config
+
+    book_id = f"book-settings-{uuid.uuid4().hex[:8]}"
+    with sqlite3.connect(app_config.DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_tasks (
+                aggregate_book_id, canonical_name, canonical_author, name, author,
+                status, settings_json, current_policy_version, interval_minutes,
+                next_check_time, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'active', ?, 1, 60, '2099-01-01T00:00:00+00:00', datetime('now'), datetime('now'))
+            """,
+            (book_id, book_id, "author", "处理设置测试", "作者", '{"backlogChapterLimit": 25, "updateIntervalMinutes": 60}'),
+        )
+        conn.commit()
+
+    try:
+        initial = admin_client.get(f"/api/console/library-books/{book_id}/settings")
+        assert initial.status_code == 200
+        assert initial.json()["settings"] == {
+            "updateIntervalMinutes": 60,
+            "backlogChapterLimit": 25,
+        }
+
+        updated = admin_client.post(
+            f"/api/console/library-books/{book_id}/settings",
+            json={"updateIntervalMinutes": 120, "backlogChapterLimit": 40},
+        )
+        assert updated.status_code == 200
+        assert updated.json()["settings"] == {
+            "updateIntervalMinutes": 120,
+            "backlogChapterLimit": 40,
+        }
+        assert updated.json()["currentPolicyVersion"] == 1
+        assert updated.json()["nextCheckTime"] != "2099-01-01T00:00:00+00:00"
+
+        reloaded = admin_client.get(f"/api/console/library-books/{book_id}").json()
+        assert reloaded["processingSettings"] == updated.json()["settings"]
+        assert reloaded["intervalMinutes"] == 120
+        assert reloaded["currentPolicyVersion"] == 1
+        with sqlite3.connect(app_config.DB_PATH) as conn:
+            assert conn.execute(
+                "SELECT action FROM audit_events WHERE target_id = ? ORDER BY occurred_at DESC LIMIT 1",
+                (book_id,),
+            ).fetchone() == ("shared_book.settings.update",)
+
+        assert admin_client.post(
+            f"/api/console/library-books/{book_id}/settings",
+            json={"updateIntervalMinutes": 9},
+        ).status_code == 422
+        assert admin_client.post(
+            f"/api/console/library-books/{book_id}/settings",
+            json={"backlogChapterLimit": 101},
+        ).status_code == 422
+        assert admin_client.post(
+            f"/api/console/library-books/{book_id}/settings",
+            json={"unknown": True},
+        ).status_code == 422
+        assert user_client.get(f"/api/console/library-books/{book_id}/settings").status_code == 403
+        assert user_client.post(
+            f"/api/console/library-books/{book_id}/settings",
+            json={"updateIntervalMinutes": 30, "backlogChapterLimit": 10},
+        ).status_code == 403
+    finally:
+        with sqlite3.connect(app_config.DB_PATH) as conn:
+            conn.execute("DELETE FROM aggregate_operation_logs WHERE aggregate_book_id = ?", (book_id,))
+            conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
+            conn.commit()
+
+
 def test_list_plugins():
     res = client.get("/api/console/plugins")
     assert res.status_code == 200
@@ -66,6 +302,7 @@ def test_list_plugins():
     assert "total" in data
     if data["items"]:
         item = data["items"][0]
+        assert item["author"] == "Yunwei"
         assert item["accessType"] in {"HTTP", "Browser"}
         assert item["sourceType"] == item["accessType"]
         assert "proxyRequired" in item
@@ -81,6 +318,7 @@ def test_get_plugin():
     res = client.get(f"/api/console/plugins/{plugin_id}")
     assert res.status_code == 200
     assert res.json()["pluginId"] == plugin_id
+    assert res.json()["author"] == "Yunwei"
     assert res.json()["accessType"] in {"HTTP", "Browser"}
 
 
@@ -108,15 +346,32 @@ def test_enable_plugin():
     assert res.json()["enabled"] is True
 
 
-def test_smoke_plugin():
+def test_runtime_plugin_checks_expose_ping_only(monkeypatch):
+    import app.api.console as console_api
+
     list_res = client.get("/api/console/plugins")
     items = list_res.json().get("items", [])
     if not items:
         pytest.skip("No plugins installed")
     plugin_id = items[0]["pluginId"]
-    res = client.post(f"/api/console/plugins/{plugin_id}/smoke", json={"keyword": "test"})
-    assert res.status_code == 200
-    assert "pass" in res.json()
+
+    class FakePingService:
+        def __init__(self, scheduler=None):
+            self.scheduler = scheduler
+
+        async def ping_one(self, requested_plugin_id):
+            return {"pluginId": requested_plugin_id, "status": "reachable", "latencyMs": 7}
+
+    monkeypatch.setattr(console_api, "SourcePingService", FakePingService)
+
+    response = client.post(f"/api/console/plugins/{plugin_id}/ping")
+
+    assert response.status_code == 200
+    assert response.json() == {"pluginId": plugin_id, "status": "reachable", "latencyMs": 7}
+    assert client.post(f"/api/console/plugins/{plugin_id}/smoke", json={}).status_code == 404
+    assert client.post(f"/api/console/plugins/{plugin_id}/live-check", json={}).status_code == 404
+    assert client.get("/api/console/verification").status_code == 404
+    assert client.post("/api/console/verification/run", json={}).status_code == 404
 
 
 def test_plugin_auth(admin_client):
@@ -203,34 +458,6 @@ def test_official_sources_endpoint_lists_qidian(admin_client):
     assert qidian["auth"]["mode"] == "optional"
 
 
-def test_plugin_live_check_preserves_bypass_diagnostics(monkeypatch):
-    import app.api.console as console_api
-
-    class FakeLiveAcceptance:
-        async def run_plugin_live_check(self, **kwargs):
-            return {
-                "pluginId": kwargs["plugin_id"],
-                "status": "failed",
-                "passed": False,
-                "diagnostics": [{
-                    "stage": "runtime",
-                    "code": "BROWSER_REQUIRED",
-                    "message": "browser bypass required",
-                    "extra": {"bypassRequired": True},
-                }],
-            }
-
-    monkeypatch.setattr(console_api, "_live_acceptance_service", FakeLiveAcceptance())
-
-    res = client.post("/api/console/plugins/69shuba_com/live-check", json={"keyword": "剑宗外门"})
-
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "failed"
-    assert data["diagnostics"][0]["extra"]["bypassRequired"] is True
-    assert "browserChallenges" not in data
-
-
 def test_status_endpoint():
     res = client.get("/api/console/status")
     assert res.status_code == 200
@@ -238,6 +465,54 @@ def test_status_endpoint():
     assert "pluginStats" in data
     assert "sourceStats" in data  # compatibility alias
     assert "plugins" in data  # compatibility alias
+
+
+def test_status_health_counts_ping_only(monkeypatch):
+    import app.services.plugin_runtime_state as runtime_state_module
+
+    class FakeRuntimeState:
+        def get_state(self, plugin_id):
+            return {
+                "lastPing": {"status": "unreachable"},
+                "lastSmoke": {"pass": True},
+            }
+
+    monkeypatch.setattr(runtime_state_module, "get_runtime_state", lambda: FakeRuntimeState())
+
+    response = client.get("/api/console/status")
+
+    assert response.status_code == 200
+    stats = response.json()["pluginStats"]
+    assert stats["healthy"] == 0
+    assert stats["unhealthy"] == stats["total"]
+
+
+def test_runtime_state_discards_legacy_smoke(tmp_path):
+    from app.services.plugin_runtime_state import PluginRuntimeState
+
+    state_path = tmp_path / "plugin_state.json"
+    state_path.write_text(json.dumps({
+        "version": 1,
+        "plugins": {
+            "source-1": {
+                "lastSmoke": {"pass": False, "error": "fixture failed", "timestamp": 1},
+                "lastError": {"message": "fixture failed", "timestamp": 1},
+                "attempts": [
+                    {"type": "smoke", "pass": False, "timestamp": 1},
+                    {"type": "ping", "status": "reachable", "timestamp": 2},
+                ],
+            },
+        },
+    }), encoding="utf-8")
+
+    state = PluginRuntimeState(state_path)
+
+    plugin_state = state.get_state("source-1")
+    assert "lastSmoke" not in plugin_state
+    assert "lastError" not in plugin_state
+    assert state.get_attempts("source-1") == [
+        {"type": "ping", "status": "reachable", "timestamp": 2},
+    ]
 
 
 def test_legacy_admin_api_entry_not_exposed():
@@ -395,6 +670,56 @@ def test_public_cookie_basic_verify_requires_both_qidian_markers():
 
     assert result["authenticated"] is False
     assert "Cookie 不完整" in result["message"]
+
+
+def test_login_trace_store_redacts_nested_secrets_and_limits_errors():
+    from app.services.official_auth.sessions import (
+        LoginTraceStore,
+        OfficialLoginSession,
+        REDACTED,
+    )
+
+    store = LoginTraceStore()
+    payload = {
+        "phone": "13800138000",
+        "code": "123456",
+        "nested": [{"challengeToken": "challenge-secret", "safe": "kept"}],
+    }
+    result = {
+        "cookies": {"qidian.com": {"ywkey": "cookie-secret"}},
+        "accountName": "reader",
+        "cmfuToken": "token-secret",
+        "message": "phone 13800138000 code 123456 token-secret " + ("y" * 2400),
+    }
+    store.record(
+        "qidian_com",
+        "verify_code",
+        payload,
+        result,
+        error="phone=13800138000 code=123456 token=token-secret " + ("x" * 600),
+    )
+
+    trace = store.get("qidian_com")[0]
+    assert trace["payload"]["phone"] == REDACTED
+    assert trace["payload"]["code"] == REDACTED
+    assert trace["payload"]["nested"][0]["challengeToken"] == REDACTED
+    assert trace["payload"]["nested"][0]["safe"] == "kept"
+    assert trace["result"]["cookies"] == REDACTED
+    assert trace["result"]["cmfuToken"] == REDACTED
+    assert "13800138000" not in trace["result"]["message"]
+    assert "123456" not in trace["result"]["message"]
+    assert "token-secret" not in trace["result"]["message"]
+    assert len(trace["result"]["message"]) <= 2000
+    assert "13800138000" not in trace["error"]
+    assert "123456" not in trace["error"]
+    assert "token-secret" not in trace["error"]
+    assert len(trace["error"]) <= 500
+    assert payload["phone"] == "13800138000"
+    trace["payload"]["nested"][0]["safe"] = "changed"
+    assert store.get("qidian_com")[0]["payload"]["nested"][0]["safe"] == "kept"
+    session = OfficialLoginSession("qidian_com")
+    session.phone_masked = "13800138000"
+    assert session.to_dict()["phoneMasked"] == "138****8000"
 
 
 @pytest.mark.parametrize(
@@ -655,6 +980,17 @@ class TestOfficialSourceCookieVerify:
         assert data["message"] == "Cookie 有效"
         assert len(calls) == 1
         assert calls[0]["plugin_id"] == "qidian_com"
+        from app.services.audit import audit_service
+
+        event = next(
+            event
+            for event in audit_service.list_events(limit=1000)
+            if event["action"] == "official_source.login"
+            and event["targetId"] == "qidian_com"
+            and event["summary"].get("method") == "cookie"
+        )
+        assert event["outcome"] == "success"
+        assert "ywguid=abc" not in json.dumps(event, ensure_ascii=False)
 
 
 class TestOfficialSourcePhoneRequestCode:
@@ -760,6 +1096,18 @@ class TestOfficialSourcePhoneVerify:
         assert data["accountName"] == "foo"
         assert data["message"] == "登录成功"
         assert len(calls) == 1
+        from app.services.audit import audit_service
+
+        event = next(
+            event
+            for event in audit_service.list_events(limit=1000)
+            if event["action"] == "official_source.login"
+            and event["targetId"] == "qidian_com"
+            and event["summary"].get("method") == "phone"
+        )
+        assert event["outcome"] == "success"
+        assert "13800138000" not in json.dumps(event, ensure_ascii=False)
+        assert "123456" not in json.dumps(event, ensure_ascii=False)
 
 
 class TestOfficialSourceLogout:
@@ -783,6 +1131,13 @@ class TestOfficialSourceLogout:
         assert data["ok"] is True
         assert data["message"] == "登录状态已清除"
         assert calls == ["qidian_com"]
+        from app.services.audit import audit_service
+
+        assert any(
+            event["action"] == "official_source.logout"
+            and event["targetId"] == "qidian_com"
+            for event in audit_service.list_events(limit=1000)
+        )
 
 
 def test_library_book_summary_shared_mode_sanitizes_source_map_for_admin(monkeypatch):

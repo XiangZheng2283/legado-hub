@@ -7,8 +7,6 @@ import json
 import time
 from typing import Any
 
-from pathlib import Path
-
 from app.core.app_config import AppConfig
 from app.services.cookie_store import CookieStore
 from app.source_plugins.loader import PluginLoader
@@ -31,14 +29,6 @@ from app.source_plugins.errors import (
 from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
 
 import threading
-
-
-def _smoke_dir(plugin_dir: Path) -> Path:
-    preferred = plugin_dir / "smoke"
-    legacy = plugin_dir / "tests"
-    if preferred.exists():
-        return preferred
-    return legacy
 
 
 class PluginScheduler:
@@ -679,23 +669,6 @@ class PluginScheduler:
             return {"implemented": True, "sourceId": source_id, "groupId": group_id or "", "page": page, "items": [], "debug": {"error": err, "errors": [err]}}
         finally:
             await ctx._fetcher.close()
-
-    async def smoke(self, plugin_id: str, keyword: str = "凡人修仙传") -> dict:
-        from app.source_plugins.smoke import run_fixture_smoke, run_smoke
-
-        plugin = self._plugins.get(plugin_id)
-        if not plugin:
-            return {"pass": False, "error": f"plugin not found: {plugin_id}"}
-        plugin_dir = self.loader.plugins_dir / plugin_id
-        if (_smoke_dir(plugin_dir) / "smoke.yaml").exists():
-            result = await run_fixture_smoke(plugin, plugin_dir, keyword)
-        else:
-            ctx = self._make_ctx(plugin_id)
-            try:
-                result = await run_smoke(plugin, ctx, keyword)
-            finally:
-                await ctx._fetcher.close()
-        return result
 
     def _score_search_item(self, item: dict, keyword: str) -> dict:
         score = 0

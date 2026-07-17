@@ -9,6 +9,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import pytest
+
 _TEST_RUNTIME_ROOT = Path(tempfile.mkdtemp(prefix="legado-hub-pytest-"))
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -78,6 +80,15 @@ def pytest_ignore_collect(collection_path, config):
     if any(rel_str == ex or rel_str.startswith(ex + "/") for ex in _EXCLUDED):
         return True
     return None
+
+
+@pytest.fixture(autouse=True)
+def reset_subscription_rate_limiter():
+    from app.services.user_subscriptions import subscription_rate_limiter
+
+    subscription_rate_limiter.reset()
+    yield
+    subscription_rate_limiter.reset()
 
 
 def pytest_unconfigure(config):

@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: xbiquzw_net
 name: 笔尖中文
+author: Yunwei
 version: 0.1.1
 type: source
 domains:

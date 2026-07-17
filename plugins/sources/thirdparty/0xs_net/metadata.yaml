@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: 0xs_net
 name: 零点小说
+author: Yunwei
 version: 0.1.0
 type: source
 domains:

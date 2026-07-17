@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { api } from "@/lib/api"
+import { executeLibraryBookAction } from "@/lib/library-actions"
 import { LibraryPage } from "./LibraryPage"
 
 vi.mock("@/lib/auth", () => ({
@@ -11,6 +12,7 @@ vi.mock("@/lib/auth", () => ({
 }))
 
 vi.mock("@/lib/api", () => ({
+  apiErrorMessage: (error: any, fallback: string) => error?.message || fallback,
   api: {
     subscribe: {
       myLibrary: vi.fn(),
@@ -70,5 +72,27 @@ describe("LibraryPage user controls", () => {
       { status: "paused" },
     ))
     expect(api.pauseLibraryBook).not.toHaveBeenCalled()
+  })
+
+  it("refetches the library query from the error state", async () => {
+    const user = userEvent.setup()
+    ;(api.subscribe.myLibrary as any)
+      .mockRejectedValueOnce(new Error("书库暂时不可用"))
+      .mockResolvedValueOnce({ items: [] })
+    renderPage()
+
+    expect(await screen.findByText("书库暂时不可用")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "重试" }))
+
+    await waitFor(() => expect(api.subscribe.myLibrary).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText("你还没有订阅的书籍")).toBeInTheDocument()
+  })
+
+  it("rejects unknown actions without calling an archive or rebuild endpoint", () => {
+    expect(() => executeLibraryBookAction("book-1", "unexpected", false)).toThrow("不支持的书库操作")
+    expect(() => executeLibraryBookAction("book-1", "unexpected", true)).toThrow("不支持的书库操作")
+    expect(api.subscribe.updateSubscription).not.toHaveBeenCalled()
+    expect(api.archiveLibraryBook).not.toHaveBeenCalled()
+    expect(api.rebuildLibraryBook).not.toHaveBeenCalled()
   })
 })

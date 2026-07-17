@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,6 +30,7 @@ from app.services.login_browser_service import login_browser_service
 from app.services.official_auth.manager import official_auth_manager
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_settings import AI_RUNTIME_ENABLED, AggregateSettingsRepository
+from app.services.audit import audit_service
 from app.services.lexicon_updater import LexiconUpdater
 from app.services.library_books import library_books_service
 from app.services.shared_book_lock import SharedBookLockService
@@ -67,6 +69,135 @@ def _aggregate_book_settings(payload: str) -> dict:
         return json.loads(payload or "{}")
     except Exception:
         return {}
+
+
+def _reject_unknown_fields(payload: dict, allowed: set[str], *, label: str = "请求") -> None:
+    unknown = sorted(str(key) for key in payload if key not in allowed)
+    if unknown:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{label}包含不支持的字段: {', '.join(unknown)}",
+        )
+
+
+def _parse_int_field(
+    value: Any,
+    *,
+    field: str,
+    minimum: int | None = None,
+    maximum: int | None = None,
+) -> int:
+    if isinstance(value, bool):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是整数")
+    try:
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError
+        parsed = int(value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是整数")
+    if minimum is not None and parsed < minimum:
+        raise HTTPException(status_code=422, detail=f"{field} 不能小于 {minimum}")
+    if maximum is not None and parsed > maximum:
+        raise HTTPException(status_code=422, detail=f"{field} 不能大于 {maximum}")
+    return parsed
+
+
+def _parse_float_field(
+    value: Any,
+    *,
+    field: str,
+    minimum: float | None = None,
+) -> float:
+    if isinstance(value, bool):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是数字")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是数字")
+    if not math.isfinite(parsed):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是有限数字")
+    if minimum is not None and parsed < minimum:
+        raise HTTPException(status_code=422, detail=f"{field} 不能小于 {minimum:g}")
+    return parsed
+
+
+def _parse_bool_field(value: Any, *, field: str) -> bool:
+    if not isinstance(value, bool):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是布尔值")
+    return value
+
+
+def _shared_book_processing_settings(book: dict) -> dict:
+    settings = _aggregate_book_settings(str(book.get("settingsJson", "") or ""))
+    try:
+        interval_minutes = int(book.get("intervalMinutes") or settings.get("updateIntervalMinutes") or 60)
+    except (TypeError, ValueError):
+        interval_minutes = 60
+    try:
+        backlog_limit = int(settings.get("backlogChapterLimit", 25) or 25)
+    except (TypeError, ValueError):
+        backlog_limit = 25
+    return {
+        "updateIntervalMinutes": min(1440, max(10, interval_minutes)),
+        "backlogChapterLimit": min(100, max(5, backlog_limit)),
+    }
+
+
+_LIBRARY_BOOK_SETTING_FIELDS = {
+    "autoTrackUpdates",
+    "updateIntervalMinutes",
+    "backlogChapterLimit",
+    "aiAggregateEnabled",
+    "aiPurifyEnabled",
+    "primarySourceMode",
+    "sourcePriorityMode",
+    "primarySourcePriority",
+    "sourcePriority",
+}
+
+
+def _validate_library_book_settings(payload: dict) -> dict:
+    _reject_unknown_fields(payload, _LIBRARY_BOOK_SETTING_FIELDS, label="单书设置")
+    if not payload:
+        raise HTTPException(status_code=422, detail="单书设置不能为空")
+    normalized: dict[str, Any] = {}
+    for field_name in ("autoTrackUpdates", "aiAggregateEnabled", "aiPurifyEnabled"):
+        if field_name in payload:
+            normalized[field_name] = _parse_bool_field(payload[field_name], field=field_name)
+    if "updateIntervalMinutes" in payload:
+        normalized["updateIntervalMinutes"] = _parse_int_field(
+            payload["updateIntervalMinutes"],
+            field="updateIntervalMinutes",
+            minimum=10,
+            maximum=1440,
+        )
+    if "backlogChapterLimit" in payload:
+        normalized["backlogChapterLimit"] = _parse_int_field(
+            payload["backlogChapterLimit"],
+            field="backlogChapterLimit",
+            minimum=5,
+            maximum=100,
+        )
+    if "primarySourceMode" in payload:
+        value = str(payload["primarySourceMode"] or "").strip()
+        if value not in {"official", "best_progress", "best_score"}:
+            raise HTTPException(status_code=422, detail="primarySourceMode 值无效")
+        normalized["primarySourceMode"] = value
+    if "sourcePriorityMode" in payload:
+        value = str(payload["sourcePriorityMode"] or "").strip()
+        if value not in {"auto", "manual"}:
+            raise HTTPException(status_code=422, detail="sourcePriorityMode 值无效")
+        normalized["sourcePriorityMode"] = value
+    if "primarySourcePriority" in payload and "sourcePriority" in payload:
+        raise HTTPException(status_code=422, detail="不能同时提交 primarySourcePriority 和 sourcePriority")
+    priority_field = "primarySourcePriority" if "primarySourcePriority" in payload else "sourcePriority"
+    if priority_field in payload:
+        priority = payload[priority_field]
+        if not isinstance(priority, list) or any(not isinstance(item, str) for item in priority):
+            raise HTTPException(status_code=422, detail=f"{priority_field} 必须是字符串数组")
+        normalized["sourcePriority"] = list(dict.fromkeys(item.strip() for item in priority if item.strip()))
+        normalized["sourcePriorityMode"] = "manual" if normalized["sourcePriority"] else "auto"
+    return normalized
 
 
 def _apply_book_source_priority_settings(settings: dict, payload: dict) -> bool:
@@ -113,6 +244,31 @@ def _explicit_auth_identity(payload: dict | None) -> str:
         if value:
             return value
     return ""
+
+
+def _record_official_login_audit(
+    admin,
+    plugin_id: str,
+    method: str,
+    *,
+    result: dict | None = None,
+    error_code: str = "",
+) -> None:
+    authenticated = bool(result and result.get("authenticated") and _explicit_auth_identity(result))
+    audit_service.record(
+        action="official_source.login",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="official_source",
+        target_id=plugin_id,
+        source_id=plugin_id,
+        outcome="success" if authenticated else "failure",
+        summary={
+            "method": method,
+            "authenticated": authenticated,
+            "errorCode": error_code,
+        },
+    )
 
 
 def _normalize_auth_identity(payload: dict | None) -> dict:
@@ -234,6 +390,9 @@ def _load_shared_library_book_summary(book_id: str, *, admin_view: bool = False)
         "freeChapterEndIndex": int(shared_metadata.get("freeChapterEndIndex", 0) or 0),
     }
     if admin_view:
+        payload["processingSettings"] = _shared_book_processing_settings(book)
+        payload["currentPolicyVersion"] = int(book.get("currentPolicyVersion", 1) or 1)
+        payload["intervalMinutes"] = payload["processingSettings"]["updateIntervalMinutes"]
         payload["payload"] = library_books_service.load_payload(book_id)
     return payload
 
@@ -754,14 +913,6 @@ _plugin_loader = PluginLoader()
 _plugin_scheduler = get_plugin_scheduler()
 
 
-def _smoke_dir(plugin_dir: Path) -> Path:
-    preferred = plugin_dir / "smoke"
-    legacy = plugin_dir / "tests"
-    if preferred.exists():
-        return preferred
-    return legacy
-
-
 def _plugin_access_type(plugin) -> str:
     browser_mode = (plugin.metadata.browser or {}).get("mode", "none")
     return "Browser" if browser_mode == "required" else "HTTP"
@@ -780,14 +931,11 @@ def _plugin_health(plugin_id: str) -> dict:
 
     state = get_runtime_state().get_state(plugin_id)
     last_ping = state.get("lastPing") or {}
-    last_smoke = state.get("lastSmoke") or {}
     last_error = state.get("lastError") or {}
     return {
         "pingStatus": last_ping.get("status", "unknown"),
         "pingLatencyMs": last_ping.get("latencyMs", 0),
         "pingTimestamp": last_ping.get("timestamp"),
-        "lastTestResult": "pass" if last_smoke.get("pass") else "fail" if last_smoke else None,
-        "lastSmokeTimestamp": last_smoke.get("timestamp"),
         "lastError": last_error.get("message", ""),
         "lastErrorTimestamp": last_error.get("timestamp"),
     }
@@ -801,6 +949,7 @@ def list_plugins():
             {
                 "pluginId": p.metadata.id,
                 "name": p.metadata.name,
+                "author": p.metadata.author,
                 "version": p.metadata.version,
                 "enabled": p.metadata.enabled,
                 "official": p.metadata.is_official_source(),
@@ -867,6 +1016,7 @@ async def list_official_sources(request: Request):
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
+            "author": plugin.metadata.author,
             "version": plugin.metadata.version,
             "enabled": plugin.metadata.enabled,
             "domains": plugin.metadata.domains,
@@ -892,6 +1042,7 @@ def get_plugin(plugin_id: str):
     return {
         "pluginId": plugin.metadata.id,
         "name": plugin.metadata.name,
+        "author": plugin.metadata.author,
         "version": plugin.metadata.version,
         "enabled": plugin.metadata.enabled,
         "official": plugin.metadata.is_official_source(),
@@ -976,22 +1127,6 @@ async def ping_one_plugin(plugin_id: str):
         raise HTTPException(status_code=404, detail="插件不存在")
     service = SourcePingService(scheduler=_plugin_scheduler)
     result = await service.ping_one(plugin_id)
-    return result
-
-
-@console_route("post", "/plugins/{plugin_id}/smoke")
-async def smoke_plugin(plugin_id: str, payload: dict | None = None):
-    keyword = (payload or {}).get("keyword", "凡人修仙传")
-    result = await _plugin_scheduler.smoke(plugin_id, keyword=keyword)
-    from app.services.plugin_runtime_state import get_runtime_state
-
-    runtime_state = get_runtime_state()
-    runtime_state.record_smoke(
-        plugin_id,
-        passed=bool(result.get("pass")),
-        message=result.get("message", ""),
-        error=result.get("error"),
-    )
     return result
 
 
@@ -1111,13 +1246,21 @@ async def check_plugin_auth(plugin_id: str, request: Request):
 
 @console_route("post", "/plugins/{plugin_id}/cookies/clear")
 def clear_plugin_cookies(plugin_id: str, request: Request):
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
     plugin = _plugin_scheduler._plugins.get(plugin_id)
     if not plugin:
         raise HTTPException(status_code=404, detail="插件不存在")
     ctx = _plugin_scheduler._make_ctx(plugin_id)
     ctx.cookies.clear()
     CookieStore().clear(plugin_id)
+    audit_service.record(
+        action="official_source.cookies.clear",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="official_source",
+        target_id=plugin_id,
+        source_id=plugin_id,
+    )
     return {"cleared": True, "pluginId": plugin_id}
 
 
@@ -1156,7 +1299,7 @@ async def start_login_browser(plugin_id: str, request: Request):
 @console_route("get", "/plugins/{plugin_id}/login-browser/status")
 async def get_login_browser_status(plugin_id: str, request: Request):
     """Poll the status of an active login-browser session."""
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
     session = await login_browser_service.get(plugin_id)
     if not session:
         return {"pluginId": plugin_id, "status": "none", "message": "没有活跃的登录会话"}
@@ -1194,6 +1337,13 @@ async def get_login_browser_status(plugin_id: str, request: Request):
             result.update({"status": "failed", "message": f"登录态校验失败: {exc}"})
         finally:
             await login_browser_service.cleanup(plugin_id)
+        _record_official_login_audit(
+            admin,
+            plugin_id,
+            "browser",
+            result=result,
+            error_code="" if result.get("authenticated") else str(session.status or "failed"),
+        )
 
     return result
 
@@ -1235,10 +1385,18 @@ async def official_login_phone_verify(plugin_id: str, payload: dict, request: Re
 
     Payload: {"sessionId": "xxx", "phone": "13800138000", "code": "123456", "challengeToken": ""}
     """
-    auth_service.require_admin(request)
-    return _normalize_auth_identity(
-        await official_auth_manager.verify_phone_code(plugin_id, payload)
-    )
+    admin = auth_service.require_admin(request)
+    try:
+        result = _normalize_auth_identity(
+            await official_auth_manager.verify_phone_code(plugin_id, payload)
+        )
+    except Exception as exc:
+        _record_official_login_audit(
+            admin, plugin_id, "phone", error_code=type(exc).__name__
+        )
+        raise
+    _record_official_login_audit(admin, plugin_id, "phone", result=result)
+    return result
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/cookie/verify")
@@ -1247,28 +1405,44 @@ async def official_login_cookie_verify(plugin_id: str, payload: dict, request: R
 
     Payload: {"cookieText": "ywguid=...; ywkey=..."}
     """
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
     cookie_text = payload.get("cookieText", "")
     if not cookie_text:
         raise HTTPException(status_code=400, detail="缺少 Cookie 文本")
-    return _normalize_auth_identity(
-        await official_auth_manager.verify_cookie(plugin_id, cookie_text)
-    )
+    try:
+        result = _normalize_auth_identity(
+            await official_auth_manager.verify_cookie(plugin_id, cookie_text)
+        )
+    except Exception as exc:
+        _record_official_login_audit(
+            admin, plugin_id, "cookie", error_code=type(exc).__name__
+        )
+        raise
+    _record_official_login_audit(admin, plugin_id, "cookie", result=result)
+    return result
 
 
 @console_route("post", "/official-sources/{plugin_id}/login/logout")
 async def official_login_logout(plugin_id: str, request: Request):
     """Clear auth state for an official source."""
-    auth_service.require_admin(request)
-    return official_auth_manager.logout(plugin_id)
+    admin = auth_service.require_admin(request)
+    result = official_auth_manager.logout(plugin_id)
+    audit_service.record(
+        action="official_source.logout",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="official_source",
+        target_id=plugin_id,
+        source_id=plugin_id,
+    )
+    return result
 
 
 @console_route("get", "/official-sources/{plugin_id}/login/debug-trace")
 def official_login_debug_trace(plugin_id: str, request: Request):
     """Return recent login step traces for an official source.
 
-    Traces include the payload sent to the private auth_api and the raw result
-    returned by it, which is useful when comparing Web vs App identity params.
+    Sensitive request and result values are redacted at the trace-store boundary.
     """
     auth_service.require_admin(request)
     from app.services.official_auth.sessions import login_trace_store
@@ -1312,6 +1486,7 @@ def list_sources(
         items.append({
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
+            "author": plugin.metadata.author,
             "version": plugin.metadata.version,
             "enabled": plugin.metadata.enabled,
             "official": plugin.metadata.is_official_source(),
@@ -1343,6 +1518,7 @@ def get_source(source_id: str):
         "source": {
             "pluginId": plugin.metadata.id,
             "name": plugin.metadata.name,
+            "author": plugin.metadata.author,
             "version": plugin.metadata.version,
             "enabled": plugin.metadata.enabled,
             "official": plugin.metadata.is_official_source(),
@@ -1358,25 +1534,6 @@ def get_source(source_id: str):
             "lastModified": _plugin_last_modified(plugin),
         }
     }
-
-
-@console_route("post", "/sources/{source_id}/test")
-async def test_source(source_id: str, payload: dict):
-    if source_id not in _plugin_scheduler._plugins:
-        raise HTTPException(status_code=404, detail="书源不存在")
-    catalog = Catalog()
-    keyword = payload.get("keyword", "凡人修仙传")
-    page = payload.get("page", 1)
-    stage = payload.get("stage", "search")
-    proxy_mode = payload.get("proxyMode")
-    result = await catalog.test_source(
-        source_id=source_id,
-        keyword=keyword,
-        page=page,
-        stage=stage,
-        proxy_mode_override=proxy_mode,
-    )
-    return result
 
 
 @console_route("get", "/search/stream")
@@ -1640,47 +1797,6 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
         "ok": True,
         "created": bool(created.get("created")),
         "book": created.get("book"),
-    }
-
-
-# ---- Live Acceptance ----
-
-
-@console_route("post", "/plugins/{plugin_id}/live-check")
-async def run_plugin_live_check(plugin_id: str, payload: dict | None = None):
-    payload = payload or {}
-    result = await _live_acceptance_service.run_plugin_live_check(
-        plugin_id=plugin_id,
-        keyword=payload.get("keyword", "凡人修仙传"),
-        candidate_index=int(payload.get("candidateIndex", 0) or 0),
-        chapter_index=int(payload.get("chapterIndex", 0) or 0),
-        persist=True,
-    )
-    return result
-
-
-@console_route("get", "/plugins/{plugin_id}/live-checks")
-def list_plugin_live_checks(plugin_id: str, limit: int = 20, offset: int = 0):
-    return {
-        "pluginId": plugin_id,
-        "items": _live_check_repository.list_by_plugin(plugin_id, limit=limit, offset=offset),
-        "limit": limit,
-        "offset": offset,
-    }
-
-
-@console_route("get", "/plugins/{plugin_id}/live-checks/latest")
-def latest_plugin_live_check(plugin_id: str):
-    return {"pluginId": plugin_id, "item": _live_check_repository.latest_by_plugin(plugin_id)}
-
-
-@console_route("get", "/live-checks")
-def list_live_checks(limit: int = 50, offset: int = 0):
-    return {
-        "items": _live_check_repository.list_all(limit=limit, offset=offset),
-        "stats": _live_check_repository.stats(),
-        "limit": limit,
-        "offset": offset,
     }
 
 
@@ -1990,21 +2106,113 @@ def _source_pool_from_config(cfg: AppConfig) -> dict:
     }
 
 
+_SOURCE_POOL_FIELDS = {
+    "proxy",
+    "max_concurrency",
+    "source_timeout_seconds",
+    "overall_search_timeout_seconds",
+    "browser_source_timeout_seconds",
+    "browser_search_timeout_seconds",
+    "default_user_agent",
+    "officialSourceInNormalSearch",
+}
+_SOURCE_POOL_PROXY_FIELDS = {"enabled", "url", "allowAutoRetry"}
+_SEARCH_CONFIG_FIELDS = {
+    "overallTimeoutSeconds",
+    "firstResultTimeoutSeconds",
+    "sourceTimeoutSeconds",
+    "cacheTtlSeconds",
+}
+_SUBSCRIPTION_SETTING_FIELDS = {
+    "maxActivePerUser",
+    "maxNewSharedBooksPerDay",
+    "maxGlobalProvisioningBooks",
+    "rateLimitWindowSeconds",
+    "searchRateLimitPerWindow",
+    "createRateLimitPerWindow",
+    "updateRateLimitPerWindow",
+}
+_SETTINGS_FIELDS = {
+    "sourcePool",
+    "searchScoreFilter",
+    "searchConfig",
+    "contentWorkflow",
+    "subscription",
+}
+
+
 def _apply_source_pool_to_config(cfg: AppConfig, sp: dict) -> None:
-    proxy = sp.get("proxy") or {}
-    cfg.set("proxy.enabled", bool(proxy.get("enabled", cfg.proxy.enabled)))
-    cfg.set("proxy.url", str(proxy.get("url", cfg.proxy.url)))
-    cfg.set(
-        "proxy.allowAutoRetry",
-        bool(proxy.get("allowAutoRetry", cfg.proxy.allow_auto_retry)),
-    )
-    cfg.set("search.globalSourceConcurrency", int(sp.get("max_concurrency", cfg.search.global_source_concurrency)))
-    cfg.set("search.sourceTimeoutSeconds", float(sp.get("source_timeout_seconds", cfg.search.source_timeout_seconds)))
-    cfg.set("search.overallTimeoutSeconds", float(sp.get("overall_search_timeout_seconds", cfg.search.overall_timeout_seconds)))
-    cfg.set("search.browserSourceTimeoutSeconds", float(sp.get("browser_source_timeout_seconds", cfg.search.browser_source_timeout_seconds)))
-    cfg.set("search.browserSearchTimeoutSeconds", float(sp.get("browser_search_timeout_seconds", cfg.search.browser_search_timeout_seconds)))
-    cfg.set("search.defaultUserAgent", str(sp.get("default_user_agent", cfg.search.default_user_agent)))
-    cfg.set("search.officialSourceInNormalSearch", bool(sp.get("officialSourceInNormalSearch", cfg.search.official_source_in_normal_search)))
+    _reject_unknown_fields(sp, _SOURCE_POOL_FIELDS, label="sourcePool")
+    if "proxy" in sp:
+        proxy = sp["proxy"]
+        if not isinstance(proxy, dict):
+            raise HTTPException(status_code=422, detail="sourcePool.proxy 必须是对象")
+        _reject_unknown_fields(proxy, _SOURCE_POOL_PROXY_FIELDS, label="sourcePool.proxy")
+        if "enabled" in proxy:
+            cfg.set("proxy.enabled", _parse_bool_field(proxy["enabled"], field="sourcePool.proxy.enabled"))
+        if "url" in proxy:
+            cfg.set("proxy.url", str(proxy["url"] or ""))
+        if "allowAutoRetry" in proxy:
+            cfg.set(
+                "proxy.allowAutoRetry",
+                _parse_bool_field(proxy["allowAutoRetry"], field="sourcePool.proxy.allowAutoRetry"),
+            )
+    if "max_concurrency" in sp:
+        cfg.set(
+            "search.globalSourceConcurrency",
+            _parse_int_field(sp["max_concurrency"], field="sourcePool.max_concurrency", minimum=1),
+        )
+    for field_name, config_key in (
+        ("source_timeout_seconds", "search.sourceTimeoutSeconds"),
+        ("overall_search_timeout_seconds", "search.overallTimeoutSeconds"),
+        ("browser_source_timeout_seconds", "search.browserSourceTimeoutSeconds"),
+        ("browser_search_timeout_seconds", "search.browserSearchTimeoutSeconds"),
+    ):
+        if field_name in sp:
+            cfg.set(
+                config_key,
+                _parse_float_field(sp[field_name], field=f"sourcePool.{field_name}", minimum=0),
+            )
+    if "default_user_agent" in sp:
+        cfg.set("search.defaultUserAgent", str(sp["default_user_agent"] or ""))
+    if "officialSourceInNormalSearch" in sp:
+        cfg.set(
+            "search.officialSourceInNormalSearch",
+            _parse_bool_field(
+                sp["officialSourceInNormalSearch"],
+                field="sourcePool.officialSourceInNormalSearch",
+            ),
+        )
+
+
+def _apply_search_config(cfg: AppConfig, search_config: dict) -> None:
+    _reject_unknown_fields(search_config, _SEARCH_CONFIG_FIELDS, label="searchConfig")
+    for field_name, config_key, integer in (
+        ("overallTimeoutSeconds", "search.overallTimeoutSeconds", False),
+        ("firstResultTimeoutSeconds", "search.firstResultTimeoutSeconds", False),
+        ("sourceTimeoutSeconds", "search.sourceTimeoutSeconds", False),
+        ("cacheTtlSeconds", "search.cacheTtlSeconds", True),
+    ):
+        if field_name not in search_config:
+            continue
+        if integer:
+            value = _parse_int_field(search_config[field_name], field=f"searchConfig.{field_name}", minimum=0)
+        else:
+            value = _parse_float_field(search_config[field_name], field=f"searchConfig.{field_name}", minimum=0)
+        cfg.set(config_key, value)
+
+
+def _subscription_settings_from_config(cfg: AppConfig) -> dict:
+    subscription = cfg.subscription
+    return {
+        "maxActivePerUser": subscription.max_active_per_user,
+        "maxNewSharedBooksPerDay": subscription.max_new_shared_books_per_day,
+        "maxGlobalProvisioningBooks": subscription.max_global_provisioning_books,
+        "rateLimitWindowSeconds": subscription.rate_limit_window_seconds,
+        "searchRateLimitPerWindow": subscription.search_rate_limit_per_window,
+        "createRateLimitPerWindow": subscription.create_rate_limit_per_window,
+        "updateRateLimitPerWindow": subscription.update_rate_limit_per_window,
+    }
 
 
 # ---- Settings ----
@@ -2022,28 +2230,51 @@ def get_settings():
             "cacheTtlSeconds": cfg.search.cache_ttl_seconds,
         },
         "contentWorkflow": cfg.aggregate.content_workflow,
+        "subscription": _subscription_settings_from_config(cfg),
     }
     return settings
 
 
 @console_route("post", "/settings")
 def update_settings(payload: dict):
-    cfg = AppConfig.get()
-    if "sourcePool" in payload and isinstance(payload["sourcePool"], dict):
-        _apply_source_pool_to_config(cfg, payload["sourcePool"])
-    if "searchScoreFilter" in payload:
-        try:
-            score = int(payload["searchScoreFilter"])
-            if score >= 0:
-                cfg.set("search.scoreFilter", score)
-        except (TypeError, ValueError):
-            pass
-    if "contentWorkflow" in payload and isinstance(payload["contentWorkflow"], dict):
-        cfg.set("aggregate.contentWorkflow", payload["contentWorkflow"])
-    cfg.save()
+    _reject_unknown_fields(payload, _SETTINGS_FIELDS, label="settings")
+    active_config = AppConfig.get()
+    # ponytail: process-local lock matches the supported single-process deployment.
+    with AppConfig._lock:
+        cfg = AppConfig(active_config.path)
+        if "searchConfig" in payload:
+            if not isinstance(payload["searchConfig"], dict):
+                raise HTTPException(status_code=422, detail="searchConfig 必须是对象")
+            _apply_search_config(cfg, payload["searchConfig"])
+        if "sourcePool" in payload:
+            if not isinstance(payload["sourcePool"], dict):
+                raise HTTPException(status_code=422, detail="sourcePool 必须是对象")
+            _apply_source_pool_to_config(cfg, payload["sourcePool"])
+        if "searchScoreFilter" in payload:
+            cfg.set(
+                "search.scoreFilter",
+                _parse_int_field(payload["searchScoreFilter"], field="searchScoreFilter", minimum=0),
+            )
+        if "contentWorkflow" in payload:
+            if not isinstance(payload["contentWorkflow"], dict):
+                raise HTTPException(status_code=422, detail="contentWorkflow 必须是对象")
+            cfg.set("aggregate.contentWorkflow", payload["contentWorkflow"])
+        if "subscription" in payload:
+            subscription = payload["subscription"]
+            if not isinstance(subscription, dict):
+                raise HTTPException(status_code=422, detail="subscription 必须是对象")
+            _reject_unknown_fields(subscription, _SUBSCRIPTION_SETTING_FIELDS, label="subscription")
+            for field_name in _SUBSCRIPTION_SETTING_FIELDS:
+                if field_name in subscription:
+                    cfg.set(
+                        f"subscription.{field_name}",
+                        _parse_int_field(subscription[field_name], field=f"subscription.{field_name}", minimum=1),
+                    )
+        cfg.save()
+        active_config.reload()
     _plugin_scheduler.refresh_config()
     _search_service.scheduler.refresh_config()
-    return {"saved": True}
+    return {"saved": True, "subscription": _subscription_settings_from_config(active_config)}
 
 
 # ---- Aggregate Settings ----
@@ -2193,6 +2424,16 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
                 before=before,
                 after={"deleted": False, "reason": "aggregate_book_busy"},
             )
+            audit_service.record(
+                action="shared_book.delete",
+                actor_user_id=actor_user_id,
+                actor_role=actor_role,
+                target_type="shared_book",
+                target_id=book_id,
+                outcome="rejected",
+                summary={"deleted": False, "errorCode": "aggregate_book_busy"},
+                conn=conn,
+            )
             conn.commit()
         raise HTTPException(
             status_code=409,
@@ -2228,6 +2469,16 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
                     before=before,
                     after=after,
                 )
+                audit_service.record(
+                    action="shared_book.delete",
+                    actor_user_id=actor_user_id,
+                    actor_role=actor_role,
+                    target_type="shared_book",
+                    target_id=book_id,
+                    outcome="rejected",
+                    summary={"deleted": False, "errorCode": "active_subscriptions_exist"},
+                    conn=conn,
+                )
                 conn.commit()
                 raise HTTPException(
                     status_code=409,
@@ -2252,6 +2503,15 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
                 operation_type="delete",
                 before=before,
                 after={"deleted": deleted},
+            )
+            audit_service.record(
+                action="shared_book.delete",
+                actor_user_id=actor_user_id,
+                actor_role=actor_role,
+                target_type="shared_book",
+                target_id=book_id,
+                summary={"deleted": deleted},
+                conn=conn,
             )
             conn.commit()
 
@@ -2313,6 +2573,15 @@ def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: s
             operation_type=f"set_status:{status}",
             before=before,
             after={"status": status},
+        )
+        audit_service.record(
+            action="shared_book.status.update",
+            actor_user_id=actor_user_id,
+            actor_role=actor_role,
+            target_type="shared_book",
+            target_id=book_id,
+            summary={"previousStatus": before["status"], "status": status},
+            conn=conn,
         )
         conn.commit()
     return {"bookId": book_id, "status": status, "updated": cursor.rowcount > 0}
@@ -2425,9 +2694,25 @@ def delete_library_book(request: Request, book_id: str):
     return delete_aggregate_book(request, book_id)
 
 
+@console_route("get", "/library-books/{book_id}/settings")
+def get_library_book_settings(request: Request, book_id: str):
+    auth_service.require_admin(request)
+    book = library_books_service.get_book(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="书籍不存在")
+    processing_settings = _shared_book_processing_settings(book)
+    return {
+        "bookId": book_id,
+        "settings": processing_settings,
+        "currentPolicyVersion": int(book.get("currentPolicyVersion", 1) or 1),
+        "intervalMinutes": processing_settings["updateIntervalMinutes"],
+    }
+
+
 @console_route("post", "/library-books/{book_id}/settings")
 def update_library_book_settings(request: Request, book_id: str, payload: dict):
     admin = auth_service.require_admin(request)
+    normalized_payload = _validate_library_book_settings(payload)
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -2437,7 +2722,7 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
     with sqlite3.connect(DB_PATH) as conn:
         row = conn.execute(
             """
-            SELECT settings_json, current_policy_version, interval_minutes
+            SELECT settings_json, current_policy_version, interval_minutes, next_check_time
             FROM aggregate_book_tasks
             WHERE aggregate_book_id = ?
             """,
@@ -2447,40 +2732,43 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
             raise HTTPException(status_code=404, detail="书籍不存在")
 
         settings = _aggregate_book_settings(row[0] or "")
+        before_settings = dict(settings)
         current_policy_version = int(row[1] or 1)
         interval_minutes = int(row[2] or settings.get("updateIntervalMinutes", 60) or 60)
+        next_check_time = str(row[3] or "")
         policy_changed = False
 
-        if "autoTrackUpdates" in payload:
-            settings["autoTrackUpdates"] = bool(payload["autoTrackUpdates"])
-            policy_changed = True
-        if "updateIntervalMinutes" in payload:
-            settings["updateIntervalMinutes"] = min(1440, max(10, int(payload["updateIntervalMinutes"] or 60)))
+        for field_name in ("autoTrackUpdates", "aiAggregateEnabled", "aiPurifyEnabled"):
+            if field_name in normalized_payload:
+                value = normalized_payload[field_name]
+                policy_changed = policy_changed or settings.get(field_name) != value
+                settings[field_name] = value
+        if "updateIntervalMinutes" in normalized_payload:
+            settings["updateIntervalMinutes"] = normalized_payload["updateIntervalMinutes"]
             interval_minutes = settings["updateIntervalMinutes"]
-        if "backlogChapterLimit" in payload:
-            settings["backlogChapterLimit"] = min(100, max(5, int(payload["backlogChapterLimit"] or 25)))
-        if "aiAggregateEnabled" in payload:
-            settings["aiAggregateEnabled"] = bool(payload["aiAggregateEnabled"])
-            policy_changed = True
-        if "aiPurifyEnabled" in payload:
-            settings["aiPurifyEnabled"] = bool(payload["aiPurifyEnabled"])
-            policy_changed = True
-        if "primarySourceMode" in payload:
-            settings["primarySourceMode"] = str(payload["primarySourceMode"] or "official")
-            policy_changed = True
-        if _apply_book_source_priority_settings(settings, payload):
-            policy_changed = True
+            next_check_time = (
+                datetime.now(timezone.utc) + timedelta(minutes=interval_minutes)
+            ).isoformat()
+        if "backlogChapterLimit" in normalized_payload:
+            settings["backlogChapterLimit"] = normalized_payload["backlogChapterLimit"]
+        for field_name in ("primarySourceMode", "sourcePriorityMode", "sourcePriority"):
+            if field_name in normalized_payload:
+                value = normalized_payload[field_name]
+                policy_changed = policy_changed or settings.get(field_name) != value
+                settings[field_name] = value
         next_policy_version = current_policy_version + 1 if policy_changed else current_policy_version
         conn.execute(
             """
             UPDATE aggregate_book_tasks
-            SET settings_json = ?, interval_minutes = ?, current_policy_version = ?, updated_at = ?
+            SET settings_json = ?, interval_minutes = ?, current_policy_version = ?,
+                next_check_time = ?, updated_at = ?
             WHERE aggregate_book_id = ?
             """,
             (
                 json.dumps(settings, ensure_ascii=False),
                 interval_minutes,
                 next_policy_version,
+                next_check_time or None,
                 now,
                 book_id,
             ),
@@ -2489,17 +2777,44 @@ def update_library_book_settings(request: Request, book_id: str, payload: dict):
             """
             INSERT INTO aggregate_operation_logs
             (aggregate_book_id, actor_user_id, actor_role, operation_type, before_json, after_json, created_at)
-            VALUES (?, ?, 'admin', 'update_settings', '', ?, ?)
+            VALUES (?, ?, 'admin', 'update_settings', ?, ?, ?)
             """,
-            (book_id, admin.user_id, json.dumps(payload, ensure_ascii=False), now),
+            (
+                book_id,
+                admin.user_id,
+                json.dumps(before_settings, ensure_ascii=False),
+                json.dumps(normalized_payload, ensure_ascii=False),
+                now,
+            ),
+        )
+        audit_service.record(
+            action="shared_book.settings.update",
+            actor_user_id=admin.user_id,
+            actor_role=admin.role,
+            target_type="shared_book",
+            target_id=book_id,
+            summary={
+                "updateIntervalMinutes": interval_minutes,
+                "backlogChapterLimit": int(settings.get("backlogChapterLimit", 25) or 25),
+                "policyChanged": policy_changed,
+                "currentPolicyVersion": next_policy_version,
+            },
+            conn=conn,
         )
         conn.commit()
 
+    processing_settings = {
+        "updateIntervalMinutes": interval_minutes,
+        "backlogChapterLimit": int(settings.get("backlogChapterLimit", 25) or 25),
+    }
     return {
         "bookId": book_id,
         "updated": True,
         "policyChanged": policy_changed,
         "currentPolicyVersion": next_policy_version,
+        "intervalMinutes": interval_minutes,
+        "nextCheckTime": next_check_time,
+        "settings": processing_settings,
     }
 
 
@@ -2564,6 +2879,15 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
             """,
             (book_id, admin.user_id, json.dumps(payload, ensure_ascii=False), now),
         )
+        audit_service.record(
+            action="shared_book.rebuild",
+            actor_user_id=admin.user_id,
+            actor_role=admin.role,
+            target_type="shared_book",
+            target_id=book_id,
+            summary={"startChapterIndex": new_start_index},
+            conn=conn,
+        )
         conn.commit()
 
     # Clear stale shared chapter files so the bootstrap starts from a clean slate,
@@ -2596,28 +2920,55 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
 
 @console_route("post", "/library-books/{book_id}/source-map/refresh")
 async def refresh_library_book_source_map_console(request: Request, book_id: str, payload: dict | None = None):
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
     result = _manual_source_map_refresh(book_id, payload=payload)
     if asyncio.iscoroutine(result):
         result = await result
+    audit_service.record(
+        action="shared_book.source_map.refresh",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="shared_book",
+        target_id=book_id,
+        outcome="success" if result.get("ok", True) else "failure",
+        summary={"errorCode": result.get("error", "")},
+    )
     return result
 
 
 @console_route("post", "/library-books/{book_id}/repair")
 async def repair_library_book_console(request: Request, book_id: str, payload: dict | None = None):
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
     result = _manual_library_book_repair(book_id, payload=payload)
     if asyncio.iscoroutine(result):
         result = await result
+    audit_service.record(
+        action="shared_book.repair",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="shared_book",
+        target_id=book_id,
+        outcome="success" if result.get("ok", True) else "failure",
+        summary={"errorCode": result.get("error", "")},
+    )
     return result
 
 
 @console_route("post", "/library-books/{book_id}/update-check")
 async def run_library_book_update_check_console(request: Request, book_id: str):
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
     result = _manual_library_book_update_check(book_id)
     if asyncio.iscoroutine(result):
         result = await result
+    audit_service.record(
+        action="shared_book.update_check",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="shared_book",
+        target_id=book_id,
+        outcome="success" if result.get("ok", True) else "failure",
+        summary={"errorCode": result.get("error", "")},
+    )
     return result
 
 
@@ -2866,25 +3217,41 @@ def list_users(request: Request):
 
 @console_route("post", "/users")
 def create_user(request: Request, payload: dict):
-    auth_service.require_admin(request)
+    admin = auth_service.require_admin(request)
+    _reject_unknown_fields(payload, {"username", "password", "role"}, label="创建用户")
     return auth_service.create_user(
         username=str(payload.get("username", "")).strip(),
         password=str(payload.get("password", "")),
         role=str(payload.get("role", "user")),
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
     )
 
 
 @console_route("post", "/users/{user_id}/reset-password")
 def reset_user_password(request: Request, user_id: str, payload: dict):
-    auth_service.require_admin(request)
-    return auth_service.reset_password(user_id, str(payload.get("password", "")))
+    admin = auth_service.require_admin(request)
+    _reject_unknown_fields(payload, {"password"}, label="重置密码")
+    return auth_service.reset_password(
+        user_id,
+        str(payload.get("password", "")),
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+    )
 
 
 @console_route("post", "/users/{user_id}/disable")
 def disable_user(request: Request, user_id: str, payload: dict | None = None):
-    auth_service.require_admin(request)
-    disabled = True if payload is None else bool(payload.get("disabled", True))
-    return auth_service.set_disabled(user_id, disabled)
+    admin = auth_service.require_admin(request)
+    payload = payload or {}
+    _reject_unknown_fields(payload, {"disabled"}, label="用户状态")
+    disabled = True if "disabled" not in payload else _parse_bool_field(payload["disabled"], field="disabled")
+    return auth_service.set_disabled(
+        user_id,
+        disabled,
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+    )
 
 
 # ---- Progress ----
@@ -2904,8 +3271,7 @@ def get_progress():
     for p in _plugin_scheduler._plugins.values():
         state = runtime_state.get_state(p.metadata.id)
         last_ping = state.get("lastPing") or {}
-        last_smoke = state.get("lastSmoke") or {}
-        if last_ping.get("status") == "reachable" or last_smoke.get("pass") is True:
+        if last_ping.get("status") == "reachable":
             healthy_count += 1
     plugin_stats = {
         "total": plugin_count,
@@ -2950,82 +3316,13 @@ def list_rule_engines():
             {
                 "id": p.metadata.id,
                 "name": p.metadata.name,
+                "author": p.metadata.author,
                 "capabilities": p.capabilities,
                 "contractVersion": p.metadata.contract_version,
             }
             for p in plugins.values()
         ]
     }
-
-
-# ---- Verification ----
-
-@console_route("get", "/verification")
-def get_verification():
-    from app.services.plugin_runtime_state import get_runtime_state
-
-    runtime_state = get_runtime_state()
-    items = []
-    passed = 0
-    failed = 0
-    for plugin in _plugin_scheduler._plugins.values():
-        state = runtime_state.get_state(plugin.metadata.id)
-        last_smoke = state.get("lastSmoke") or {}
-        last_error = state.get("lastError") or {}
-        smoke_pass = last_smoke.get("pass")
-        if smoke_pass is True:
-            passed += 1
-        elif smoke_pass is False:
-            failed += 1
-        items.append({
-            "pluginId": plugin.metadata.id,
-            "name": plugin.metadata.name,
-            "hasFixtureSmoke": (_smoke_dir(_plugin_scheduler.loader.plugins_dir / plugin.metadata.id) / "smoke.yaml").exists(),
-            "lastSmokePass": smoke_pass,
-            "lastSmokeTimestamp": last_smoke.get("timestamp"),
-            "lastError": last_error.get("message", ""),
-            "lastErrorTimestamp": last_error.get("timestamp"),
-            "authMode": (plugin.metadata.auth or {}).get("mode", "none"),
-            "capabilities": plugin.capabilities,
-            "lastModified": _plugin_last_modified(plugin),
-        })
-    return {
-        "summary": {"passed": passed, "failed": failed, "total": len(items)},
-        "items": items,
-        "readingLoop": {
-            "source": "/api/subscribe/legado/source",
-            "search": "/api/subscribe/legado/search?keyword=凡人修仙传&page=1",
-            "detail": "/api/legado/book/{book_id}",
-            "toc": "/api/legado/book/{book_id}/toc",
-            "chapter": "/api/legado/chapter/{chapter_id}",
-        },
-        "archived": False,
-    }
-
-
-@console_route("post", "/verification/run")
-async def run_verification(payload: dict | None = None):
-    from app.services.plugin_runtime_state import get_runtime_state
-
-    runtime_state = get_runtime_state()
-    items = []
-    for plugin_id in sorted(_plugin_scheduler._plugins):
-        result = await _plugin_scheduler.smoke(plugin_id)
-        runtime_state.record_smoke(
-            plugin_id,
-            passed=bool(result.get("pass")),
-            message=result.get("message", ""),
-            error=result.get("error"),
-        )
-        items.append({
-            "pluginId": plugin_id,
-            "pass": result.get("pass", False),
-            "mode": result.get("mode", ""),
-            "errors": result.get("errors", []),
-        })
-    passed = sum(1 for item in items if item["pass"])
-    failed = len(items) - passed
-    return {"summary": {"passed": passed, "failed": failed, "total": len(items)}, "items": items, "archived": False}
 
 
 # ---- Lexicon ----
@@ -3078,10 +3375,9 @@ def get_status():
     for p in plugins.values():
         state = runtime_state.get_state(p.metadata.id)
         last_ping = state.get("lastPing") or {}
-        last_smoke = state.get("lastSmoke") or {}
-        if last_ping.get("status") == "reachable" or last_smoke.get("pass") is True:
+        if last_ping.get("status") == "reachable":
             healthy += 1
-        elif last_ping.get("status") in ("unreachable",) or last_smoke.get("pass") is False:
+        elif last_ping.get("status") == "unreachable":
             unhealthy += 1
     plugin_stats = {
         "total": total,

@@ -119,6 +119,7 @@ tags:
 可选字段：
 
 ```yaml
+author: Yunwei
 priority: 50
 enabled: true
 language: zh-CN
@@ -163,6 +164,9 @@ sourceSeed:
   upstreamFile: bundle/rules/main.json
   upstreamCommit: ""
 ```
+
+`author` 是控制台展示的插件维护者署名，不是 `search()` 或 `detail()`
+返回的书籍作者。
 
 `enabled`：加载后默认是否启用。控制台可以按书源单独开关。
 

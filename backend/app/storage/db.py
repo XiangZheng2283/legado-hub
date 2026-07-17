@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -40,6 +40,26 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_user
     ON user_sessions (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_expires
     ON user_sessions (expires_at);
+
+CREATE TABLE IF NOT EXISTS audit_events (
+    event_id TEXT PRIMARY KEY,
+    occurred_at TEXT NOT NULL,
+    actor_user_id TEXT NOT NULL DEFAULT '',
+    actor_role TEXT NOT NULL DEFAULT '',
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL DEFAULT '',
+    target_id TEXT NOT NULL DEFAULT '',
+    source_id TEXT NOT NULL DEFAULT '',
+    outcome TEXT NOT NULL DEFAULT 'success',
+    summary_json TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_events_time
+    ON audit_events (occurred_at);
+CREATE INDEX IF NOT EXISTS idx_audit_events_actor
+    ON audit_events (actor_user_id, occurred_at);
+CREATE INDEX IF NOT EXISTS idx_audit_events_target
+    ON audit_events (target_type, target_id, occurred_at);
 
 CREATE TABLE IF NOT EXISTS books (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -552,7 +572,7 @@ def initialize_database(db_path: Path | None = None) -> str:
             raise RuntimeError(
                 f"database schema {current_version} is newer than supported {SCHEMA_VERSION}"
             )
-        conn.executescript(SCHEMA_SQL)
+        conn.executescript(f"BEGIN IMMEDIATE;\n{SCHEMA_SQL}")
         _ensure_shared_library_schema(conn)
         _migrate_book_search_cache(conn)
         conn.execute(
@@ -560,6 +580,9 @@ def initialize_database(db_path: Path | None = None) -> str:
             ("version", str(SCHEMA_VERSION)),
         )
         conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
     return str(path)

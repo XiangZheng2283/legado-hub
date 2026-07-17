@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: tianxibook_com
 name: 新天禧小说
+author: Yunwei
 version: 0.1.0
 type: source
 domains:

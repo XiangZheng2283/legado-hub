@@ -23,6 +23,7 @@ from app.services.aggregate_virtual_source import (
     unpack_aggregate_chapter_url,
 )
 from app.services.live_acceptance import normalize_author_key, normalize_text
+from app.services.audit import audit_service
 from app.services.shared_book_storage import SharedBookStorage, TRACE_BEGIN
 from app.source_plugins.id_codec import (
     decode_book_id,
@@ -522,6 +523,7 @@ class LibraryBooksService:
             "archivedAt": row[33] or "",
             "createdAt": row[34] or "",
             "updatedAt": row[35] or "",
+            "intervalMinutes": int(row[36] or 60),
         }
 
     def _book_lookup_row(self, aggregate_book_id: str) -> dict[str, Any] | None:
@@ -536,7 +538,7 @@ class LibraryBooksService:
                        book_status, total_chapters, processed_chapters, visible_processed_chapters,
                        failed_chapters, status, settings_json, current_policy_version,
                        last_source_chapter_title, '', last_check_time, next_check_time, last_error,
-                       archived_at, created_at, updated_at
+                       archived_at, created_at, updated_at, interval_minutes
                 FROM aggregate_book_tasks
                 WHERE aggregate_book_id = ?
                 """,
@@ -751,6 +753,16 @@ class LibraryBooksService:
                     now,
                 ),
             )
+            audit_service.record(
+                action="shared_book.create",
+                actor_user_id=actor_user_id,
+                actor_role="user",
+                target_type="shared_book",
+                target_id=aggregate_book_id,
+                source_id=primary_source_id,
+                summary={"sharedBookCreated": True, "status": "active"},
+                conn=conn,
+            )
             conn.commit()
 
         book = self._book_lookup_row(aggregate_book_id)
@@ -796,7 +808,7 @@ class LibraryBooksService:
                        book_status, total_chapters, processed_chapters, visible_processed_chapters,
                        failed_chapters, status, settings_json, current_policy_version,
                        last_source_chapter_title, '', last_check_time, next_check_time, last_error,
-                       archived_at, created_at, updated_at
+                       archived_at, created_at, updated_at, interval_minutes
                 FROM aggregate_book_tasks
                 {where_sql}
                 ORDER BY updated_at DESC, created_at DESC
@@ -854,7 +866,7 @@ class LibraryBooksService:
                        book_status, total_chapters, processed_chapters, visible_processed_chapters,
                        failed_chapters, status, settings_json, current_policy_version,
                        last_source_chapter_title, '', last_check_time, next_check_time, last_error,
-                       archived_at, created_at, updated_at
+                       archived_at, created_at, updated_at, interval_minutes
                 FROM aggregate_book_tasks
                 WHERE canonical_name LIKE '%' || ? || '%'
                    OR canonical_author LIKE '%' || ? || '%'

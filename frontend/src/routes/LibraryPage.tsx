@@ -2,8 +2,9 @@ import { useMemo, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Search, MoreVertical, Play, Pause, Archive, RefreshCw, Trash2, Loader2 } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
+import { executeLibraryBookAction } from "@/lib/library-actions"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -80,22 +81,13 @@ export function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null)
 
-  const { data, isLoading, error: libraryError } = useQuery({
+  const { data, isLoading, error: libraryError, refetch: refetchLibrary } = useQuery({
     queryKey: ["library", isAdmin ? "admin" : "mine"],
     queryFn: () => isAdmin ? api.libraryBooks() : api.subscribe.myLibrary(),
   })
 
   const actionMutation = useMutation({
-    mutationFn: async ({ bookId, action }: { bookId: string; action: string }) => {
-      if (!isAdmin) {
-        const status = action === "resume" ? "active" : action === "pause" ? "paused" : "archived"
-        return api.subscribe.updateSubscription(bookId, { status })
-      }
-      if (action === "pause") return api.pauseLibraryBook(bookId)
-      if (action === "resume") return api.resumeLibraryBook(bookId)
-      if (action === "archive") return api.archiveLibraryBook(bookId)
-      return api.rebuildLibraryBook(bookId)
-    },
+    mutationFn: ({ bookId, action }: { bookId: string; action: string }) => executeLibraryBookAction(bookId, action, isAdmin),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["library"] }) },
   })
 
@@ -151,8 +143,13 @@ export function LibraryPage() {
 
       {(libraryError || mutationError) && (
         <Alert variant="destructive">
-          <AlertDescription>
-            {(mutationError as Error)?.message || (libraryError as Error)?.message || "书库操作失败，请稍后重试。"}
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{apiErrorMessage(mutationError || libraryError, "书库操作失败，请稍后重试。")}</span>
+            {libraryError && (
+              <Button type="button" size="sm" variant="outline" onClick={() => { void refetchLibrary() }}>
+                重试
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}

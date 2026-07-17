@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { createServer } from "node:net"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
@@ -324,10 +325,10 @@ const plugins = [
     capabilities: ["search", "detail", "toc", "chapter", "auth"],
     enabled: true,
     official: false,
-    author: "阅读官方团队",
+    author: "Yunwei",
     tags: ["小说"],
     version: "1.4.2",
-    health: { lastTestResult: "pass", pingStatus: "reachable", pingLatencyMs: 32 },
+    health: { pingStatus: "reachable", pingLatencyMs: 32 },
   },
   {
     pluginId: "com.biquge.general",
@@ -336,10 +337,10 @@ const plugins = [
     capabilities: ["search", "detail", "toc", "chapter"],
     enabled: true,
     official: false,
-    author: "社区协作者",
+    author: "Yunwei",
     tags: ["小说"],
     version: "2.1.0",
-    health: { lastTestResult: "pass", pingStatus: "reachable", pingLatencyMs: 124, successRate: 94.5 },
+    health: { pingStatus: "reachable", pingLatencyMs: 124 },
   },
   {
     pluginId: "com.copymanga",
@@ -348,10 +349,10 @@ const plugins = [
     capabilities: ["search", "detail", "toc", "chapter"],
     enabled: true,
     official: false,
-    author: "MangaFan",
+    author: "Yunwei",
     tags: ["漫画"],
     version: "1.0.5",
-    health: { lastTestResult: "pass", pingStatus: "reachable", pingLatencyMs: 184, successRate: 98.1 },
+    health: { pingStatus: "reachable", pingLatencyMs: 184 },
   },
   {
     pluginId: "net.wenku8",
@@ -360,10 +361,10 @@ const plugins = [
     capabilities: ["search", "detail", "toc", "chapter", "auth"],
     enabled: true,
     official: false,
-    author: "WenkuLover",
+    author: "Yunwei",
     tags: ["轻小说"],
     version: "1.1.2",
-    health: { lastTestResult: "untested", pingStatus: "reachable", pingLatencyMs: 245, successRate: 91.2 },
+    health: { pingStatus: "reachable", pingLatencyMs: 245 },
   },
   {
     pluginId: "com.tadu",
@@ -372,10 +373,10 @@ const plugins = [
     capabilities: ["search", "detail", "toc"],
     enabled: false,
     official: false,
-    author: "黑白调",
+    author: "Yunwei",
     tags: ["小说"],
     version: "1.0.1",
-    health: { lastTestResult: "untested", pingStatus: "unknown", pingLatencyMs: 0, successRate: 0 },
+    health: { pingStatus: "unknown", pingLatencyMs: 0 },
   },
   {
     pluginId: "net.unknown.novel",
@@ -384,10 +385,10 @@ const plugins = [
     capabilities: ["search", "chapter", "auth"],
     enabled: true,
     official: false,
-    author: "匿名贡献者",
+    author: "Yunwei",
     tags: ["小说"],
     version: "0.8.0",
-    health: { lastTestResult: "fail", pingStatus: "unreachable", pingLatencyMs: 890, successRate: 35.8 },
+    health: { pingStatus: "unreachable", pingLatencyMs: 890 },
   },
 ]
 
@@ -421,6 +422,28 @@ async function ensureDeps(projectDir) {
   if (existsSync(viteBin)) return
   console.log(`[deps] ${projectDir} 缺少 node_modules，执行 npm ci --no-audit --no-fund`)
   await run(npmCmd, ["ci", "--no-audit", "--no-fund"], projectDir, { stdio: "inherit" })
+}
+
+function reserveAvailablePort(preferredPort) {
+  return new Promise((resolvePromise, reject) => {
+    const server = createServer()
+    server.unref()
+    server.once("error", reject)
+    server.listen({ host: "127.0.0.1", port: preferredPort, exclusive: true }, () => {
+      const address = server.address()
+      const port = typeof address === "object" && address ? address.port : preferredPort
+      server.close((error) => error ? reject(error) : resolvePromise(port))
+    })
+  })
+}
+
+async function findAvailablePort(preferredPort) {
+  try {
+    return await reserveAvailablePort(preferredPort)
+  } catch (error) {
+    if (error?.code !== "EADDRINUSE") throw error
+    return reserveAvailablePort(0)
+  }
 }
 
 function startVite(projectDir, port) {
@@ -488,7 +511,17 @@ function mockApi(path, method, scenario = {}) {
     const items = scenario.plugins === "empty" ? [] : plugins
     return { items, total: items.length }
   }
+  if (path === "/api/console/plugins/ping") {
+    return { results: plugins.map((plugin) => ({ pluginId: plugin.pluginId, status: plugin.health.pingStatus, latencyMs: plugin.health.pingLatencyMs })) }
+  }
   if (path.endsWith("/attempts")) return { attempts: [] }
+  if (path.endsWith("/ping")) {
+    const pluginId = path.split("/").at(-2)
+    return { pluginId, status: "reachable", latencyMs: 32 }
+  }
+  if (path === "/api/console/plugins/reload" || path.includes("/enable") || path.includes("/batch-")) {
+    return { ok: true }
+  }
   if (path.startsWith("/api/console/plugins/")) {
     return {
       ...plugins[0],
@@ -499,9 +532,6 @@ function mockApi(path, method, scenario = {}) {
       content: { access: "authenticated" },
       browser: { mode: "none" },
     }
-  }
-  if (path === "/api/console/plugins/reload" || path.includes("/enable") || path.includes("/batch-")) {
-    return { ok: true }
   }
   if (path === "/api/console/search-jobs" && method === "POST") {
     return searchJob()
@@ -784,55 +814,58 @@ async function capture(browser, url, viewport, scenario, prepare) {
     locale: "zh-CN",
     timezoneId: "Asia/Shanghai",
   })
-  const page = await context.newPage()
-  await installMocks(page, scenario)
-  page.on("pageerror", (error) => console.warn(`[pageerror] ${url}: ${error.message}`))
-  page.on("console", (msg) => {
-    if (msg.type() === "error") console.warn(`[console] ${url}: ${msg.text()}`)
-  })
-  await page.addInitScript(() => {
-    window.EventSource = class {
-      constructor(url) {
-        setTimeout(() => this.onopen?.({}), 0)
-        if (typeof url === "string" && url.includes("book-2/logs")) {
-          const messages = [
-            { ts: "2023-10-27T14:30:00", event: "Checking for updates..." },
-            { ts: "2023-10-27T14:30:01", event: "No new chapters found." },
-            { ts: "2023-10-27T14:32:11", event: "Chapter 541 processing failed: rate limit exceeded.", errorCode: "RATE_LIMIT" },
-          ]
-          messages.forEach((msg, i) => {
-            setTimeout(() => this.onmessage?.({ data: JSON.stringify(msg) }), 50 + i * 50)
-          })
+  try {
+    const page = await context.newPage()
+    await installMocks(page, scenario)
+    page.on("pageerror", (error) => console.warn(`[pageerror] ${url}: ${error.message}`))
+    page.on("console", (msg) => {
+      if (msg.type() === "error") console.warn(`[console] ${url}: ${msg.text()}`)
+    })
+    await page.addInitScript(() => {
+      window.EventSource = class {
+        constructor(url) {
+          setTimeout(() => this.onopen?.({}), 0)
+          if (typeof url === "string" && url.includes("book-2/logs")) {
+            const messages = [
+              { ts: "2023-10-27T14:30:00", event: "Checking for updates..." },
+              { ts: "2023-10-27T14:30:01", event: "No new chapters found." },
+              { ts: "2023-10-27T14:32:11", event: "Chapter 541 processing failed: rate limit exceeded.", errorCode: "RATE_LIMIT" },
+            ]
+            messages.forEach((msg, i) => {
+              setTimeout(() => this.onmessage?.({ data: JSON.stringify(msg) }), 50 + i * 50)
+            })
+          }
         }
+        close() {}
       }
-      close() {}
-    }
-  })
-  await page.goto(url, { waitUntil: "networkidle" })
-  await page.addStyleTag({
-    content: `
-      *, *::before, *::after {
-        animation-duration: 0s !important;
-        animation-delay: 0s !important;
-        transition-duration: 0s !important;
-        caret-color: transparent !important;
-      }
-      html { scroll-behavior: auto !important; }
-    `,
-  })
-  if (prepare) await prepare(page)
-  await page.waitForLoadState("networkidle").catch(() => {})
-  await page.waitForTimeout(250)
-  await page.evaluate(() => window.scrollTo(0, 0))
-  const screenshot = await page.screenshot({ fullPage: false, animations: "disabled" })
-  await context.close()
-  return screenshot
+    })
+    await page.goto(url, { waitUntil: "networkidle" })
+    await page.addStyleTag({
+      content: `
+        *, *::before, *::after {
+          animation-duration: 0s !important;
+          animation-delay: 0s !important;
+          transition-duration: 0s !important;
+          caret-color: transparent !important;
+        }
+        html { scroll-behavior: auto !important; }
+      `,
+    })
+    if (prepare) await prepare(page)
+    await page.waitForLoadState("networkidle").catch(() => {})
+    await page.waitForTimeout(250)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    return await page.screenshot({ fullPage: false, animations: "disabled" })
+  } finally {
+    await context.close().catch(() => {})
+  }
 }
 
 async function compareImages(browser, expected, actual, threshold = 16) {
   const page = await browser.newPage({ viewport: { width: 64, height: 64 } })
-  const result = await page.evaluate(
-    async ({ expectedBase64, actualBase64, thresholdValue }) => {
+  try {
+    const result = await page.evaluate(
+      async ({ expectedBase64, actualBase64, thresholdValue }) => {
       const load = (src) =>
         new Promise((resolvePromise, reject) => {
           const img = new Image()
@@ -891,21 +924,24 @@ async function compareImages(browser, expected, actual, threshold = 16) {
         ratio: mismatch / (width * height),
         diffBase64: diffCanvas.toDataURL("image/png").split(",")[1],
       }
-    },
-    {
-      expectedBase64: expected.toString("base64"),
-      actualBase64: actual.toString("base64"),
-      thresholdValue: threshold,
-    },
-  )
-  await page.close()
-  return { ...result, diff: Buffer.from(result.diffBase64, "base64") }
+      },
+      {
+        expectedBase64: expected.toString("base64"),
+        actualBase64: actual.toString("base64"),
+        thresholdValue: threshold,
+      },
+    )
+    return { ...result, diff: Buffer.from(result.diffBase64, "base64") }
+  } finally {
+    await page.close().catch(() => {})
+  }
 }
 
 async function main() {
   await mkdir(outputDir, { recursive: true })
   await ensureDeps(frontendDir)
   if (updateBaseline) await mkdir(baselineDir, { recursive: true })
+  ports.current = await findAvailablePort(ports.current)
 
   const currentServer = startVite(frontendDir, ports.current)
   const servers = [currentServer]
@@ -981,14 +1017,19 @@ async function main() {
       overallMismatchRatio: Number(overallMismatchRatio.toFixed(6)),
       overallSimilarity: Number(overallSimilarity.toFixed(6)),
       failedRecords,
-      passed: overallSimilarity >= minimumSimilarity && failedRecords.length === 0,
-      note: "Baseline comes from approved real Console routes and states. The legacy untitled prototype is historical reference only.",
+      gateEvaluated: !updateBaseline,
+      passed: updateBaseline ? null : overallSimilarity >= minimumSimilarity && failedRecords.length === 0,
+      note: updateBaseline
+        ? "Baseline files were updated. This mode is not a release gate; run compare mode after review."
+        : "Baseline comes from approved real Console routes and states. The legacy untitled prototype is historical reference only.",
       records,
     }
     await writeFile(join(outputDir, "report.json"), `${JSON.stringify(report, null, 2)}\n`)
     await writeFile(join(outputDir, "report.md"), renderMarkdown(report))
     console.log(`\n[done] report: ${join(outputDir, "report.md")}`)
-    if (!report.passed) {
+    if (updateBaseline) {
+      console.log("[baseline] update completed; run again without --update-baseline to evaluate the gate")
+    } else if (!report.passed) {
       throw new Error(`Visual regression gate failed: overall ${(overallSimilarity * 100).toFixed(2)}%, scenarios ${failedRecords.join(", ") || "none"}`)
     }
   } finally {
@@ -1004,7 +1045,7 @@ function renderMarkdown(report) {
     `Mode: ${report.mode}`,
     `Overall similarity: ${(report.overallSimilarity * 100).toFixed(2)}%`,
     `Required similarity: ${(report.minimumSimilarity * 100).toFixed(0)}%`,
-    `Result: ${report.passed ? "PASS" : "FAIL"}`,
+    `Result: ${report.gateEvaluated ? (report.passed ? "PASS" : "FAIL") : "NOT EVALUATED"}`,
     "",
     report.note,
     "",

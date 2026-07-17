@@ -43,6 +43,7 @@ def create_plugin(
         "contractVersion": "1.0",
         "id": plugin_id,
         "name": name,
+        "author": "Yunwei",
         "version": "0.1.0",
         "type": "source",
         "domains": [domain],

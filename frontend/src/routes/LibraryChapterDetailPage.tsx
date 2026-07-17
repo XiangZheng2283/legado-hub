@@ -7,7 +7,7 @@ import {
   ScrollText,
   Waypoints,
 } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -200,7 +200,14 @@ export function LibraryChapterDetailPage() {
   }
 
   if (progressQuery.error) {
-    return <Alert variant="destructive"><AlertDescription>章节状态加载失败：{(progressQuery.error as Error).message}</AlertDescription></Alert>
+    return (
+      <Alert variant="destructive">
+        <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+          <span>章节状态加载失败：{apiErrorMessage(progressQuery.error, "请稍后重试。")}</span>
+          <Button type="button" size="sm" variant="outline" onClick={() => { void progressQuery.refetch() }}>重试</Button>
+        </AlertDescription>
+      </Alert>
+    )
   }
 
   if (!chapter || chapter.found === false) {

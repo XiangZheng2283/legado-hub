@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, type ReactNode } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import type { AuthUser } from "@/lib/auth.types"
@@ -31,19 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
     staleTime: Infinity,
   })
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      // Check if bootstrap is needed by trying to detect 403/no users
-      api.auth
-        .me()
-        .catch((err) => {
-          if (err instanceof Error && err.message.includes("401")) {
-            // Could be unauthenticated or no users; login page handles bootstrap prompt
-          }
-        })
-    }
-  }, [isLoading, user])
 
   const loginMutation = useMutation({
     mutationFn: api.auth.login,

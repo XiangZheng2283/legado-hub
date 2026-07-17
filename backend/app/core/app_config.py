@@ -107,13 +107,30 @@ class SubscriptionConfig:
     max_active_per_user: int = 100
     max_new_shared_books_per_day: int = 10
     max_global_provisioning_books: int = 20
+    rate_limit_window_seconds: int = 60
+    search_rate_limit_per_window: int = 30
+    create_rate_limit_per_window: int = 10
+    update_rate_limit_per_window: int = 60
+
+    @staticmethod
+    def _positive_int(value: Any, default: int) -> int:
+        try:
+            if isinstance(value, bool):
+                raise ValueError
+            return max(1, int(value))
+        except (TypeError, ValueError):
+            return default
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "SubscriptionConfig":
         return cls(
-            max_active_per_user=max(1, int(data.get("maxActivePerUser", 100))),
-            max_new_shared_books_per_day=max(1, int(data.get("maxNewSharedBooksPerDay", 10))),
-            max_global_provisioning_books=max(1, int(data.get("maxGlobalProvisioningBooks", 20))),
+            max_active_per_user=cls._positive_int(data.get("maxActivePerUser", 100), 100),
+            max_new_shared_books_per_day=cls._positive_int(data.get("maxNewSharedBooksPerDay", 10), 10),
+            max_global_provisioning_books=cls._positive_int(data.get("maxGlobalProvisioningBooks", 20), 20),
+            rate_limit_window_seconds=cls._positive_int(data.get("rateLimitWindowSeconds", 60), 60),
+            search_rate_limit_per_window=cls._positive_int(data.get("searchRateLimitPerWindow", 30), 30),
+            create_rate_limit_per_window=cls._positive_int(data.get("createRateLimitPerWindow", 10), 10),
+            update_rate_limit_per_window=cls._positive_int(data.get("updateRateLimitPerWindow", 60), 60),
         )
 
 

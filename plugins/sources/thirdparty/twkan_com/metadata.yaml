@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: twkan_com
 name: 台灣小說網
+author: Yunwei
 version: 0.1.1
 type: source
 domains:

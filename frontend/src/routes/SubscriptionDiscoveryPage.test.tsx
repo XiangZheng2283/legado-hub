@@ -11,6 +11,7 @@ vi.mock("@/lib/auth", () => ({
 }))
 
 vi.mock("@/lib/api", () => ({
+  apiErrorMessage: (error: any, fallback: string) => error?.message || fallback,
   api: {
     subscribe: {
       search: vi.fn(),
@@ -102,5 +103,21 @@ describe("SubscriptionDiscoveryPage", () => {
 
     expect(await screen.findByText("订阅响应缺少书籍 ID，请刷新后确认订阅状态。")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "确认订阅" })).toBeEnabled()
+  })
+
+  it("refetches the active search job from the error state", async () => {
+    const user = userEvent.setup()
+    ;(api.subscribe.searchJob as any)
+      .mockRejectedValueOnce(new Error("搜索状态暂时不可用"))
+      .mockResolvedValueOnce({ status: "completed", liveSearchPending: false, cards: [] })
+    renderPage()
+
+    await user.type(screen.getByLabelText("搜索小说或作者"), "测试")
+    await user.click(screen.getByRole("button", { name: "开始搜索" }))
+    expect(await screen.findByText("搜索状态暂时不可用")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "重试" }))
+
+    await waitFor(() => expect(api.subscribe.searchJob).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText("未找到匹配的书籍。")).toBeInTheDocument()
   })
 })

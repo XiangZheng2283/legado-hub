@@ -2,12 +2,11 @@ import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { Globe, RotateCw, Power, Search, AlertCircle, SlidersHorizontal, KeyRound } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -33,18 +32,6 @@ function getPluginCategory(p: any): string {
 function getPluginLatency(p: any): number {
   const value = Number(p.health?.pingLatencyMs ?? p.latency ?? 0)
   return Number.isFinite(value) ? value : 0
-}
-
-function getPluginSuccessRate(p: any): number | null {
-  const explicit = Number(p.health?.successRate ?? p.successRate)
-  if (!Number.isFinite(explicit)) return null
-  return Math.max(0, Math.min(100, explicit))
-}
-
-function getSuccessRateIndicatorClass(rate: number): string {
-  if (rate > 90) return "bg-emerald-500"
-  if (rate > 60) return "bg-amber-500"
-  return "bg-rose-500"
 }
 
 function getLatencyClass(latency: number): string {
@@ -78,9 +65,9 @@ export function Plugins() {
   })
   const enabledCount = plugins.filter((p: any) => p.enabled).length
   const officialAuthCount = plugins.filter((p: any) => p.enabled && (p.capabilities || []).includes("auth")).length
-  const smokePassed = plugins.filter((p: any) => p.health?.lastTestResult === "pass").length
-  const smokedTotal = plugins.filter((p: any) => ["pass", "fail"].includes(p.health?.lastTestResult)).length
-  const healthRate = smokedTotal > 0 ? ((smokePassed / smokedTotal) * 100).toFixed(1) : "0"
+  const pingReachable = plugins.filter((p: any) => p.health?.pingStatus === "reachable").length
+  const pingChecked = plugins.filter((p: any) => ["reachable", "unreachable"].includes(p.health?.pingStatus)).length
+  const pingRate = pingChecked > 0 ? ((pingReachable / pingChecked) * 100).toFixed(1) : "0"
 
   const filteredPlugins = plugins.filter((p: any) => {
     const query = searchQuery.toLowerCase()
@@ -118,9 +105,9 @@ export function Plugins() {
           <div>
             <div className="flex items-center gap-2">
               <span className="p-1.5 bg-slate-700/60 rounded-lg text-emerald-400"><Globe className="h-5 w-5" /></span>
-              <h1 className="text-2xl font-bold tracking-tight">书源规则引擎</h1>
+              <h1 className="text-2xl font-bold tracking-tight">书源管理</h1>
             </div>
-            <p className="mt-1.5 text-slate-300 text-sm max-w-2xl">提供本地规则化嗅探及官方认证双引擎。管理分布式第三方爬虫规则，并维持官方站点的免限制登录。</p>
+            <p className="mt-1.5 text-slate-300 text-sm max-w-2xl">管理第三方与官方书源的启用状态、作者信息和站点连通性。</p>
           </div>
           <Button
             variant="secondary"
@@ -145,25 +132,27 @@ export function Plugins() {
             <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono text-cyan-400">{officialAuthCount}</span><span className="text-xs text-slate-500">/{plugins.length} 支持认证</span></div>
           </div>
           <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/40">
-            <p className="text-xs text-slate-400">规则连通度</p>
-            <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono text-amber-400">{healthRate}%</span><span className="text-xs text-slate-500">测试通过率</span></div>
+            <p className="text-xs text-slate-400">Ping 连通率</p>
+            <div className="flex items-baseline gap-2 mt-1"><span className="text-xl font-bold font-mono text-amber-400">{pingRate}%</span><span className="text-xs text-slate-500">{pingChecked}/{plugins.length} 已测</span></div>
           </div>
         </div>
       </div>
 
       {(pluginsError || pingAllMutation.error || batchEnableMutation.error) && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {(pingAllMutation.error as Error)?.message || (batchEnableMutation.error as Error)?.message || (pluginsError as Error)?.message || "书源操作失败，请稍后重试。"}
-          </AlertDescription>
-        </Alert>
+          <Alert variant="destructive">
+            <AlertDescription>
+            {apiErrorMessage(pingAllMutation.error || batchEnableMutation.error || pluginsError, "书源操作失败，请稍后重试。")}
+            </AlertDescription>
+          </Alert>
       )}
 
       {/* Tabs */}
       <div className="flex justify-between items-center border-b border-slate-200 pb-px">
-        <div className="bg-slate-100/80 p-1 rounded-lg inline-flex">
+        <div className="bg-slate-100/80 p-1 rounded-lg inline-flex" role="tablist" aria-label="书源类型">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "thirdparty"}
             onClick={() => { setActiveTab("thirdparty"); setSelectedIds(new Set()) }}
             className={`px-4 py-2 text-sm font-medium transition-all rounded-md ${activeTab === "thirdparty" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
           >
@@ -175,6 +164,8 @@ export function Plugins() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "official"}
             onClick={() => { setActiveTab("official"); setSelectedIds(new Set()) }}
             className={`px-4 py-2 text-sm font-medium transition-all rounded-md ${activeTab === "official" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
           >
@@ -185,7 +176,6 @@ export function Plugins() {
             </div>
           </button>
         </div>
-        <span className="text-xs text-slate-400 font-medium font-mono hidden sm:flex">ENGINE VERSION: v3.4.0-RELEASE</span>
       </div>
 
       {/* Search + Filters */}
@@ -268,14 +258,14 @@ export function Plugins() {
                     <TableHead className="text-slate-700 font-semibold">插件标识 (ID)</TableHead>
                     <TableHead className="text-slate-700 font-semibold">格式/分类</TableHead>
                     <TableHead className="text-slate-700 font-semibold">解析能力</TableHead>
-                    <TableHead className="text-slate-700 font-semibold">健康指标</TableHead>
+                    <TableHead className="text-slate-700 font-semibold">Ping 状态</TableHead>
                     <TableHead className="text-slate-700 font-semibold">激活状态</TableHead>
                     <TableHead className="text-right text-slate-700 font-semibold pr-4">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-slate-100">
                   {filteredPlugins.map((p: any) => {
-                    const successRate = getPluginSuccessRate(p)
+                    const pingStatus = p.health?.pingStatus || "unknown"
                     return (
                     <TableRow key={p.pluginId} className={`transition-colors duration-150 hover:bg-slate-50/50 ${!p.enabled ? "opacity-70 bg-slate-50/20" : ""}`}>
                       <TableCell className="text-center py-4">
@@ -307,22 +297,20 @@ export function Plugins() {
                       <TableCell>
                         <div className="flex flex-col gap-1.5 w-28">
                           <div className="flex justify-between items-center text-[10px] text-slate-400">
+                            <span>状态:</span>
+                            <Badge
+                              variant={pingStatus === "reachable" ? "success" : pingStatus === "unreachable" ? "destructive" : "outline"}
+                              className="px-1.5 py-0 text-[9px]"
+                            >
+                              {pingStatus === "reachable" ? "可达" : pingStatus === "unreachable" ? "不可达" : "未检测"}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-slate-400">
                             <span>延时:</span>
                             <span className={`font-mono font-bold ${getLatencyClass(getPluginLatency(p))}`}>
                               {getPluginLatency(p) === 0 ? "N/A" : `${getPluginLatency(p)}ms`}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center text-[10px] text-slate-400">
-                            <span>成功率:</span>
-                            <span className="font-mono font-bold text-slate-600">{successRate == null ? "N/A" : `${successRate}%`}</span>
-                          </div>
-                          {p.enabled && successRate != null && successRate > 0 && (
-                            <Progress
-                              value={successRate}
-                              className="h-1 bg-slate-100"
-                              indicatorClassName={getSuccessRateIndicatorClass(successRate)}
-                            />
-                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -342,7 +330,7 @@ export function Plugins() {
                       <TableCell className="text-right pr-4">
                         <div className="flex justify-end">
                           <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" asChild>
-                            <Link to={`/console/plugins/${p.pluginId}`}>详情与测试</Link>
+                            <Link to={`/console/plugins/${p.pluginId}`}>详情与检测</Link>
                           </Button>
                         </div>
                       </TableCell>

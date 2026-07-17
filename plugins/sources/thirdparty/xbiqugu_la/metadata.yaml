@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: xbiqugu_la
 name: 香书小说
+author: Yunwei
 version: 0.1.1
 type: source
 domains:

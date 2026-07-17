@@ -7,6 +7,34 @@ export interface ApiErrorDetail {
   [key: string]: unknown
 }
 
+export interface ManagedUser {
+  userId: string
+  username: string
+  role: "admin" | "user"
+  disabled: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface ManagedUsersResponse {
+  items: ManagedUser[]
+  total: number
+}
+
+export interface LibraryBookProcessingSettings {
+  updateIntervalMinutes: number
+  backlogChapterLimit: number
+}
+
+export interface LibraryBookSettingsResponse {
+  bookId: string
+  settings: LibraryBookProcessingSettings
+  currentPolicyVersion: number
+  intervalMinutes: number
+  updated?: boolean
+  policyChanged?: boolean
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly detail: ApiErrorDetail
@@ -20,6 +48,45 @@ export class ApiError extends Error {
     this.status = status
     this.detail = detail
   }
+}
+
+const API_STATUS_MESSAGES: Record<number, string> = {
+  401: "登录状态已失效，请重新登录。",
+  403: "你没有权限执行此操作。",
+  404: "请求的资源不存在或已被删除。",
+  429: "操作过于频繁，请稍后重试。",
+  503: "服务暂时不可用，请稍后重试。",
+}
+
+export function apiErrorMessage(error: unknown, fallback = "请求失败，请稍后重试。"): string {
+  if (!error) return fallback
+
+  if (typeof error === "string") {
+    return error.trim() || fallback
+  }
+
+  if (typeof error === "object") {
+    const candidate = error as {
+      status?: unknown
+      message?: unknown
+      detail?: { message?: unknown }
+    }
+    const backendMessage = candidate.detail?.message
+    if (typeof backendMessage === "string" && backendMessage.trim()) {
+      return backendMessage.trim()
+    }
+
+    const status = Number(candidate.status)
+    if (Number.isInteger(status) && API_STATUS_MESSAGES[status]) {
+      return API_STATUS_MESSAGES[status]
+    }
+
+    if (typeof candidate.message === "string" && candidate.message.trim()) {
+      return candidate.message.trim()
+    }
+  }
+
+  return fallback
 }
 
 async function fetchRaw(path: string, options?: RequestInit): Promise<Response> {
@@ -139,11 +206,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ pluginIds, enabled }),
     }),
-  smokePlugin: (id: string, keyword?: string): Promise<any> =>
-    fetchJson(`/plugins/${id}/smoke`, {
-      method: "POST",
-      body: JSON.stringify({ mode: "fixture", keyword: keyword || "凡人修仙传" }),
-    }),
+  pingPlugin: (id: string): Promise<any> =>
+    fetchJson(`/plugins/${id}/ping`, { method: "POST" }),
   pingAllPlugins: (pluginIds?: string[]): Promise<any> =>
     fetchJson("/plugins/ping", { method: "POST", body: JSON.stringify({ pluginIds }) }),
   pluginAuthCheck: (id: string): Promise<any> => fetchJson(`/plugins/${id}/auth/check`, { method: "POST" }),
@@ -216,6 +280,22 @@ export const api = {
     logout: (): Promise<any> => fetchApiJson("/auth/logout", { method: "POST" }),
   },
 
+  users: {
+    list: (): Promise<ManagedUsersResponse> => fetchJson("/users"),
+    create: (payload: { username: string; password: string; role: "admin" | "user" }): Promise<ManagedUser> =>
+      fetchJson("/users", { method: "POST", body: JSON.stringify(payload) }),
+    resetPassword: (userId: string, password: string): Promise<{ userId: string; passwordReset: boolean }> =>
+      fetchJson(`/users/${userId}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      }),
+    setDisabled: (userId: string, disabled: boolean): Promise<{ userId: string; disabled: boolean }> =>
+      fetchJson(`/users/${userId}/disable`, {
+        method: "POST",
+        body: JSON.stringify({ disabled }),
+      }),
+  },
+
   // Subscription discovery (shared library)
   subscribe: {
     search: (payload: { keyword: string; page?: number }): Promise<any> =>
@@ -262,6 +342,16 @@ export const api = {
   },
   libraryBookSummary: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}`).then(normalizeLibraryDetail),
+  libraryBookSettings: (bookId: string): Promise<LibraryBookSettingsResponse> =>
+    fetchJson(`/library-books/${bookId}/settings`),
+  updateLibraryBookSettings: (
+    bookId: string,
+    payload: LibraryBookProcessingSettings,
+  ): Promise<LibraryBookSettingsResponse> =>
+    fetchJson(`/library-books/${bookId}/settings`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   libraryBookChapters: (bookId: string, params?: Record<string, string>): Promise<any> => {
     const qs = params ? `?${new URLSearchParams(params)}` : ""
     return fetchJson(`/library-books/${bookId}/chapters${qs}`).then(normalizeChapterList)

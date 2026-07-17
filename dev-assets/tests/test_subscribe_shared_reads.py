@@ -2,6 +2,7 @@
 
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,29 @@ from app.services.library_books import LibraryBooksService
 from app.services.shared_book_storage import SharedBookStorage
 from app.services.user_subscriptions import UserSubscriptionsService
 from app.storage.db import initialize_database
+
+
+_PRIVATE_RESPONSE_KEYS = {
+    "addedbyuserid",
+    "addedbyusername",
+    "aggregatepayloadjson",
+    "authorization",
+    "cookie",
+    "cookies",
+    "debug",
+    "filepath",
+    "password",
+    "passwordhash",
+    "path",
+    "primarybookurl",
+    "primarytocurl",
+    "settingsjson",
+    "sourcemap",
+    "sourcemaprefresh",
+    "sourcemapsummary",
+    "sources",
+    "trace",
+}
 
 
 @pytest.fixture
@@ -167,6 +191,47 @@ def _write_shared_files(
         chapter_index_payload=chapter_index,
         chapter_files=chapter_files,
     )
+
+
+def _reader_client(db_path: Path, username: str) -> tuple[TestClient, dict]:
+    import sqlite3
+
+    from app.services.user_auth import auth_service
+
+    password = f"{username}-password"
+    user = auth_service.get_user_by_username(username)
+    if not user:
+        user = auth_service.create_user(username, password, role="user")
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO users (user_id, username, password_hash, role)
+            VALUES (?, ?, 'test-hash', 'user')
+            """,
+            (user["userId"], username),
+        )
+        conn.commit()
+    reader = TestClient(app)
+    login = reader.post(
+        "/api/auth/login",
+        json={"username": username, "password": password},
+    )
+    assert login.status_code == 200
+    return reader, user
+
+
+def _assert_no_private_response_fields(payload) -> None:
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            assert key.casefold() not in _PRIVATE_RESPONSE_KEYS, f"private response field: {key}"
+            _assert_no_private_response_fields(value)
+    elif isinstance(payload, list):
+        for item in payload:
+            _assert_no_private_response_fields(item)
+
+    serialized = json.dumps(payload, ensure_ascii=False)
+    assert "https://example.com/book" not in serialized
+    assert "https://example.com/toc" not in serialized
 
 
 def test_get_library_book_reads_shared_metadata_not_db_sources(client, tmp_path, monkeypatch):
@@ -534,3 +599,342 @@ def test_reader_access_requires_own_subscription(client, tmp_path):
     assert reader.get(f"/api/console/library-books/{book_id}/summary").status_code == 403
     assert reader.get(f"/api/console/library-books/{book_id}/chapters").status_code == 403
     assert reader.get(f"/api/console/library-books/{book_id}/logs").status_code == 403
+
+
+def test_subscription_routes_keep_each_reader_on_their_own_relationship(client, tmp_path):
+    import app.api.subscribe as subscribe_api
+
+    db = tmp_path / "test.db"
+    storage = SharedBookStorage(root=tmp_path / "library")
+    book_id = "book-owner-complete"
+    _insert_book(db, book_id, "完整归属测试书", "作者")
+    _write_shared_files(storage, book_id, "完整归属测试书", "作者")
+
+    reader_a, user_a = _reader_client(db, "reader-owner-complete-a")
+    reader_b, user_b = _reader_client(db, "reader-owner-complete-b")
+    subscribe_api.user_subscriptions_service.ensure(
+        user_a["userId"],
+        book_id,
+        start_chapter_index=2,
+        auto_archive_on_complete=False,
+    )
+
+    search = reader_a.post("/api/subscribe/search", json={"keyword": "归属测试", "page": 1})
+    assert search.status_code == 200
+    job_id = search.json()["jobId"]
+    assert job_id
+    assert reader_b.get(f"/api/subscribe/search/{job_id}").status_code == 404
+
+    chapters = reader_a.get(f"/api/subscribe/books/{book_id}/chapters")
+    assert chapters.status_code == 200
+    chapter_id = chapters.json()["items"][0]["readChapterId"]
+    assert reader_a.get(f"/api/subscribe/chapters/{chapter_id}").status_code == 200
+
+    assert reader_b.get(f"/api/subscribe/books/{book_id}").status_code == 404
+    assert reader_b.get(f"/api/subscribe/books/{book_id}/chapters").status_code == 404
+    assert reader_b.get(f"/api/subscribe/books/{book_id}/subscription").status_code == 404
+    assert reader_b.patch(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 7},
+    ).status_code == 404
+    assert reader_b.get(f"/api/subscribe/chapters/{chapter_id}").status_code == 404
+
+    own_subscription = reader_b.put(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 7, "autoArchiveOnComplete": True},
+    )
+    assert own_subscription.status_code == 200
+    assert own_subscription.json()["subscription"]["userId"] == user_b["userId"]
+    assert own_subscription.json()["subscription"]["startChapterIndex"] == 7
+    assert reader_b.get(f"/api/subscribe/books/{book_id}").status_code == 200
+    assert reader_b.get(f"/api/subscribe/books/{book_id}/chapters").status_code == 200
+    assert reader_b.get(f"/api/subscribe/chapters/{chapter_id}").status_code == 200
+
+    subscription_a = reader_a.get(f"/api/subscribe/books/{book_id}/subscription").json()["subscription"]
+    assert subscription_a["userId"] == user_a["userId"]
+    assert subscription_a["startChapterIndex"] == 2
+    assert subscription_a["autoArchiveOnComplete"] is False
+
+
+def test_subscription_api_responses_exclude_private_fields(client, tmp_path):
+    import app.api.subscribe as subscribe_api
+
+    db = tmp_path / "test.db"
+    storage = SharedBookStorage(root=tmp_path / "library")
+    book_id = "book-private-response-scan"
+    _insert_book(db, book_id, "安全响应测试书", "作者")
+    _write_shared_files(storage, book_id, "安全响应测试书", "作者")
+    reader, user = _reader_client(db, "reader-private-response-scan")
+    subscribe_api.user_subscriptions_service.ensure(user["userId"], book_id)
+
+    responses = [
+        reader.get("/api/subscribe/library/mine"),
+        reader.get(f"/api/subscribe/books/{book_id}"),
+        reader.get(f"/api/subscribe/books/{book_id}/chapters"),
+        reader.get(f"/api/subscribe/books/{book_id}/subscription"),
+        reader.put(
+            f"/api/subscribe/books/{book_id}/subscription",
+            json={"startChapterIndex": 1, "autoArchiveOnComplete": True},
+        ),
+        reader.patch(
+            f"/api/subscribe/books/{book_id}/subscription",
+            json={"startChapterIndex": 2},
+        ),
+        reader.post("/api/subscribe/search", json={"keyword": "安全响应", "page": 1}),
+    ]
+    chapter_id = responses[2].json()["items"][0]["readChapterId"]
+    responses.append(reader.get(f"/api/subscribe/chapters/{chapter_id}"))
+
+    for response in responses:
+        assert response.status_code == 200, response.text
+        _assert_no_private_response_fields(response.json())
+
+
+def test_repeated_subscription_patch_is_a_noop_and_does_not_consume_rate_limit(
+    client, tmp_path, monkeypatch
+):
+    import sqlite3
+    from types import SimpleNamespace
+
+    import app.api.subscribe as subscribe_api
+    from app.core.app_config import AppConfig
+
+    db = tmp_path / "test.db"
+    book_id = "book-repeat-patch"
+    _insert_book(db, book_id, "重复 PATCH 测试书", "作者")
+    user_id = client.get("/api/auth/me").json()["user"]["userId"]
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO users (user_id, username, password_hash, role)
+            VALUES (?, 'repeat-patch-admin', 'test-hash', 'admin')
+            """,
+            (user_id,),
+        )
+        conn.commit()
+    subscribe_api.user_subscriptions_service.ensure(user_id, book_id)
+    limits = SimpleNamespace(
+        max_active_per_user=100,
+        max_new_shared_books_per_day=10,
+        max_global_provisioning_books=20,
+        rate_limit_window_seconds=60,
+        search_rate_limit_per_window=30,
+        create_rate_limit_per_window=10,
+        update_rate_limit_per_window=1,
+    )
+    monkeypatch.setattr(
+        AppConfig,
+        "get",
+        classmethod(lambda _cls: SimpleNamespace(subscription=limits)),
+    )
+    subscribe_api.subscription_rate_limiter.reset()
+
+    changed = client.patch(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 3, "autoArchiveOnComplete": False},
+    )
+    assert changed.status_code == 200
+    with sqlite3.connect(db) as conn:
+        counts_after_change = {
+            "operations": conn.execute(
+                "SELECT COUNT(*) FROM aggregate_operation_logs WHERE aggregate_book_id = ?",
+                (book_id,),
+            ).fetchone()[0],
+            "audits": conn.execute(
+                "SELECT COUNT(*) FROM audit_events WHERE target_id = ?",
+                (f"{user_id}:{book_id}",),
+            ).fetchone()[0],
+        }
+
+    repeated = client.patch(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 3, "autoArchiveOnComplete": False},
+    )
+    assert repeated.status_code == 200
+    assert repeated.json() == changed.json()
+    with sqlite3.connect(db) as conn:
+        assert conn.execute(
+            "SELECT COUNT(*) FROM aggregate_operation_logs WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()[0] == counts_after_change["operations"]
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit_events WHERE target_id = ?",
+            (f"{user_id}:{book_id}",),
+        ).fetchone()[0] == counts_after_change["audits"]
+
+
+def test_subscription_inputs_reject_invalid_types_with_422(client, tmp_path, monkeypatch):
+    import sqlite3
+
+    import app.api.subscribe as subscribe_api
+
+    db = tmp_path / "test.db"
+    book_id = "book-invalid-subscription-input"
+    _insert_book(db, book_id, "非法订阅输入测试书", "作者")
+    user_id = client.get("/api/auth/me").json()["user"]["userId"]
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO users (user_id, username, password_hash, role)
+            VALUES (?, 'invalid-input-admin', 'test-hash', 'admin')
+            """,
+            (user_id,),
+        )
+        conn.commit()
+
+    monkeypatch.setattr(
+        subscribe_api.subscription_search_service,
+        "find_card_group_for_user",
+        lambda _job_id, _candidate_id, _user_id: {"candidateId": "candidate-invalid"},
+    )
+    candidate = client.post(
+        "/api/subscribe/search/job-invalid/cards/candidate-invalid/subscribe",
+        json={"startChapterIndex": "abc"},
+    )
+    assert candidate.status_code == 422
+    assert candidate.json()["detail"] == "startChapterIndex 必须是大于等于 1 的整数"
+
+    put = client.put(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"startChapterIndex": 1.5},
+    )
+    assert put.status_code == 422
+    assert put.json()["detail"] == "startChapterIndex 必须是大于等于 1 的整数"
+
+    subscribe_api.user_subscriptions_service.ensure(user_id, book_id)
+    patch = client.patch(
+        f"/api/subscribe/books/{book_id}/subscription",
+        json={"autoArchiveOnComplete": "false"},
+    )
+    assert patch.status_code == 422
+    assert patch.json()["detail"] == "autoArchiveOnComplete 必须是布尔值"
+
+
+def test_concurrent_subscription_api_requests_respect_user_quota(client, tmp_path, monkeypatch):
+    import sqlite3
+    from types import SimpleNamespace
+
+    import app.api.subscribe as subscribe_api
+    from app.core.app_config import AppConfig
+
+    db = tmp_path / "test.db"
+    first_book_id = "book-api-quota-a"
+    second_book_id = "book-api-quota-b"
+    _insert_book(db, first_book_id, "并发配额书 A", "作者")
+    _insert_book(db, second_book_id, "并发配额书 B", "作者")
+    user_id = client.get("/api/auth/me").json()["user"]["userId"]
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO users (user_id, username, password_hash, role)
+            VALUES (?, 'api-quota-admin', 'test-hash', 'admin')
+            """,
+            (user_id,),
+        )
+        conn.commit()
+    limits = SimpleNamespace(
+        max_active_per_user=1,
+        max_new_shared_books_per_day=10,
+        max_global_provisioning_books=20,
+        rate_limit_window_seconds=60,
+        search_rate_limit_per_window=30,
+        create_rate_limit_per_window=10,
+        update_rate_limit_per_window=60,
+    )
+    second_client = TestClient(app)
+    assert second_client.post(
+        "/api/auth/login", json={"username": "admin", "password": "admin123"}
+    ).status_code == 200
+    monkeypatch.setattr(
+        AppConfig,
+        "get",
+        classmethod(lambda _cls: SimpleNamespace(subscription=limits)),
+    )
+    subscribe_api.subscription_rate_limiter.reset()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [
+            executor.submit(
+                request_client.put,
+                f"/api/subscribe/books/{book_id}/subscription",
+                json={"startChapterIndex": 1, "autoArchiveOnComplete": True},
+            )
+            for request_client, book_id in (
+                (client, first_book_id),
+                (second_client, second_book_id),
+            )
+        ]
+        responses = [future.result(timeout=10) for future in futures]
+
+    assert sorted(response.status_code for response in responses) == [200, 429]
+    limited = next(response for response in responses if response.status_code == 429)
+    assert limited.json()["detail"]["code"] == "subscription_limit_reached"
+    with sqlite3.connect(db) as conn:
+        active_count = conn.execute(
+            """
+            SELECT COUNT(*) FROM user_book_subscriptions
+            WHERE user_id = ? AND status IN ('active', 'paused')
+            """,
+            (user_id,),
+        ).fetchone()[0]
+    assert active_count == 1
+
+
+def test_subscription_update_rate_limit_returns_structured_429(client, tmp_path, monkeypatch):
+    import sqlite3
+    from types import SimpleNamespace
+
+    import app.api.subscribe as subscribe_api
+    from app.core.app_config import AppConfig
+
+    book_id = "book-rate-limit"
+    _insert_book(tmp_path / "test.db", book_id, "限流测试书", "作者")
+    user_id = client.get("/api/auth/me").json()["user"]["userId"]
+    with sqlite3.connect(tmp_path / "test.db") as conn:
+        conn.execute(
+            """
+            INSERT INTO users (user_id, username, password_hash, role, disabled, created_at, updated_at)
+            VALUES (?, 'rate-limit-admin', 'test-hash', 'admin', 0, datetime('now'), datetime('now'))
+            """,
+            (user_id,),
+        )
+        conn.commit()
+    subscribe_api.user_subscriptions_service.ensure(user_id, book_id)
+    limits = SimpleNamespace(
+        rate_limit_window_seconds=60,
+        search_rate_limit_per_window=10,
+        create_rate_limit_per_window=10,
+        update_rate_limit_per_window=1,
+    )
+    monkeypatch.setattr(
+        AppConfig,
+        "get",
+        classmethod(lambda _cls: SimpleNamespace(subscription=limits)),
+    )
+    subscribe_api.subscription_rate_limiter.reset()
+    try:
+        assert client.patch(
+            f"/api/subscribe/books/{book_id}/subscription",
+            json={"unknown": True},
+        ).status_code == 422
+        assert client.patch(
+            "/api/subscribe/books/missing-book/subscription",
+            json={"startChapterIndex": 2},
+        ).status_code == 404
+        assert client.patch(
+            f"/api/subscribe/books/{book_id}/subscription",
+            json={"startChapterIndex": 2},
+        ).status_code == 200
+        limited = client.patch(
+            f"/api/subscribe/books/{book_id}/subscription",
+            json={"startChapterIndex": 3},
+        )
+        assert limited.status_code == 429
+        assert limited.json()["detail"] == {
+            "code": "subscription_update_rate_limited",
+            "message": "订阅设置更新操作过于频繁，请稍后重试",
+            "retryable": True,
+            "retryAfterSeconds": 60,
+        }
+    finally:
+        subscribe_api.subscription_rate_limiter.reset()

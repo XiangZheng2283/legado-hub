@@ -14,6 +14,7 @@ import { SubscriptionDiscoveryPage } from "@/routes/SubscriptionDiscoveryPage"
 import { LibraryPage } from "@/routes/LibraryPage"
 import { LibraryBookDetailPage } from "@/routes/LibraryBookDetailPage"
 import { LibraryChapterDetailPage } from "@/routes/LibraryChapterDetailPage"
+import { UsersPage } from "@/routes/UsersPage"
 
 function ProtectedLayout() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -30,7 +31,7 @@ function ProtectedLayout() {
   return <Outlet />
 }
 
-function AdminOnly() {
+export function AdminOnly() {
   const { user } = useAuth()
   if (user?.role !== "admin") {
     return <Navigate to="/console" replace />
@@ -55,6 +56,7 @@ function AuthRouter() {
               <Route path="search" element={<SearchJobs />} />
               <Route path="official-sources" element={<OfficialSourcesPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="users" element={<UsersPage />} />
               <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />
               <Route path="admin/subscription" element={<SubscriptionDiscoveryPage mode="admin" />} />
               <Route path="admin/library" element={<LibraryPage />} />

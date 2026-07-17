@@ -77,11 +77,13 @@ Completed on 2026-07-11. The canonical entry point is `verify.ps1` at the reposi
 
 Completed on 2026-07-12. Remaining product work moves to Phase 1; this phase deliberately does not add shared-book ownership decoupling or persistent search-job recovery.
 
-### Phase 1: Controlled Subscription Ownership (Active)
+### Phase 1: Controlled Subscription Ownership (Complete)
 
 Separate the global shared-book entity from a user's personal subscription. The accepted model is one processed shared book with many user subscriptions: readers may discover and manage only their own subscriptions, while shared scheduling, source governance, recovery, rebuild, and deletion remain administrator capabilities.
 
 The visibility, ownership, progress, migration, API, plugin, and release boundaries are fixed in `docs/architecture/subscription-ownership-and-progress-control.zh-CN.md`. Schema work must follow that contract, including the prohibition on deleting an existing database during migration.
+
+Completed on 2026-07-16. The final gate covered transactional subscription quotas, owner-scoped APIs, administrator controls, official Qidian plugin synchronization and live App validation, frontend recovery semantics, all plugin validators, and a 39-scenario visual comparison. `verify.ps1` is the canonical repository verification command and rejects protected runtime-data changes.
 
 ### Deferred Until After Phase 1
 

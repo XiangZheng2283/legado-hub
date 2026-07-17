@@ -36,6 +36,12 @@ function Get-RuntimeSnapshot {
     $files = foreach ($path in $paths) {
         Get-ChildItem -LiteralPath $path -Recurse -File -Force
     }
+    $pluginRoot = Join-Path $RepoRoot "plugins"
+    if (Test-Path -LiteralPath $pluginRoot) {
+        $files = @($files) + @(
+            Get-ChildItem -LiteralPath $pluginRoot -Recurse -File -Force -Filter "Cookie.json"
+        )
+    }
     $files |
         Sort-Object FullName |
         ForEach-Object {
@@ -48,7 +54,7 @@ function Get-RuntimeSnapshot {
         }
 }
 
-$before = @(Get-RuntimeSnapshot) | ConvertTo-Json -Compress
+$before = @(Get-RuntimeSnapshot)
 $verificationError = $null
 
 try {
@@ -81,6 +87,7 @@ try {
         Invoke-Checked "Frontend lint" { & npm run lint }
         Invoke-Checked "Frontend tests" { & npx --no-install vitest run }
         Invoke-Checked "Frontend build" { & npm run build }
+        Invoke-Checked "Frontend visual compare" { & node .\visual-diff\run-visual-diff.mjs }
     }
     finally {
         Pop-Location
@@ -98,11 +105,18 @@ catch {
     $verificationError = $_
 }
 finally {
-    $after = @(Get-RuntimeSnapshot) | ConvertTo-Json -Compress
+    $after = @(Get-RuntimeSnapshot)
 }
 
-if ($before -ne $after) {
-    $message = "Verification modified backend runtime data or configuration."
+$runtimeChanges = @(
+    Compare-Object `
+        -ReferenceObject $before `
+        -DifferenceObject $after `
+        -Property Path, Length, LastWriteTimeUtc, Sha256
+)
+if ($runtimeChanges.Count -gt 0) {
+    $changedPaths = ($runtimeChanges | ForEach-Object { "$($_.SideIndicator) $($_.Path)" }) -join "; "
+    $message = "Verification modified backend runtime data or configuration: $changedPaths"
     if ($verificationError) {
         $message += " Original failure: $($verificationError.Exception.Message)"
     }

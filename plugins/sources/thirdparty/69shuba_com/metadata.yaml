@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: 69shuba_com
 name: 69书吧
+author: Yunwei
 version: 0.1.0
 type: source
 enabled: true
@@ -74,5 +75,4 @@ sourceSeed:
   upstreamId: 69shuba_com
   upstreamFile: by-site/legado/69shuba.com.json
   upstreamCommit: ""
-
 

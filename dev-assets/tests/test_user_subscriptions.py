@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier, Lock
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,6 +15,10 @@ from app.services.library_books import LibraryBooksService
 from app.services.subscription_search import SubscriptionSearchService
 from app.services.user_auth import UserAuthService
 from app.services.user_subscriptions import UserSubscriptionsService
+from app.services.user_subscriptions import (
+    SubscriptionLimitError,
+    SubscriptionRateLimiter,
+)
 from app.storage.db import initialize_database
 
 
@@ -59,6 +66,14 @@ def test_two_users_keep_independent_subscription_settings(tmp_path: Path) -> Non
         assert conn.execute(
             "SELECT status FROM aggregate_book_tasks WHERE aggregate_book_id = 'book-1'"
         ).fetchone() == ("active",)
+        audit_actions = [
+            row[0]
+            for row in conn.execute(
+                "SELECT action FROM audit_events WHERE actor_user_id = ? ORDER BY occurred_at",
+                (user_a["userId"],),
+            ).fetchall()
+        ]
+    assert audit_actions == ["subscription.create", "subscription.update"]
 
 
 def test_completed_book_archives_only_opted_in_users_and_records_audit(tmp_path: Path) -> None:
@@ -115,6 +130,76 @@ def test_resubscribe_is_idempotent_and_restores_archived_relation(tmp_path: Path
     assert second["startChapterIndex"] == 5
     assert restored_created is False
     assert restored["status"] == "active"
+
+
+def test_concurrent_ensure_cannot_exceed_user_subscription_limit(tmp_path: Path, monkeypatch) -> None:
+    from app.core.app_config import AppConfig
+
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("reader", "password")
+    _insert_book(db, "book-a")
+    _insert_book(db, "book-b")
+    limits = SimpleNamespace(max_active_per_user=1)
+    monkeypatch.setattr(
+        AppConfig,
+        "get",
+        classmethod(lambda _cls: SimpleNamespace(subscription=limits)),
+    )
+    subscriptions = UserSubscriptionsService(db)
+    start = Barrier(2)
+
+    def subscribe(book_id: str):
+        start.wait()
+        try:
+            subscriptions.ensure(user["userId"], book_id)
+            return "created"
+        except SubscriptionLimitError as exc:
+            return exc.code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(subscribe, ("book-a", "book-b")))
+
+    assert sorted(results) == ["created", "subscription_limit_reached"]
+    with sqlite3.connect(db) as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM user_book_subscriptions WHERE user_id = ? AND status = 'active'",
+            (user["userId"],),
+        ).fetchone()[0]
+    assert count == 1
+
+
+def test_subscription_rate_limiter_is_scoped_by_user_action_and_window(monkeypatch) -> None:
+    from app.core.app_config import AppConfig
+
+    now = [100.0]
+    limits = SimpleNamespace(
+        rate_limit_window_seconds=60,
+        search_rate_limit_per_window=2,
+        create_rate_limit_per_window=1,
+        update_rate_limit_per_window=1,
+    )
+    monkeypatch.setattr(
+        AppConfig,
+        "get",
+        classmethod(lambda _cls: SimpleNamespace(subscription=limits)),
+    )
+    limiter = SubscriptionRateLimiter(clock=lambda: now[0])
+
+    limiter.check("user-a", "search")
+    limiter.check("user-a", "search")
+    limiter.check("user-b", "search")
+    limiter.check("user-a", "create")
+    with pytest.raises(SubscriptionLimitError) as captured:
+        limiter.check("user-a", "search")
+    assert captured.value.code == "subscription_search_rate_limited"
+    assert captured.value.retryable is True
+    assert captured.value.retry_after_seconds == 60
+
+    now[0] += 61
+    limiter.check("user-a", "search")
+    limiter.reset()
+    limiter.check("user-a", "create")
 
 
 @pytest.mark.asyncio
@@ -196,6 +281,108 @@ async def test_concurrent_users_share_one_new_book_record(tmp_path: Path, monkey
         assert conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone() == (1,)
         assert conn.execute("SELECT COUNT(*) FROM aggregate_book_sources").fetchone() == (1,)
         assert conn.execute("SELECT COUNT(*) FROM user_book_subscriptions").fetchone() == (2,)
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit_events WHERE action = 'shared_book.create'"
+        ).fetchone() == (1,)
+
+
+@pytest.mark.asyncio
+async def test_new_shared_book_creation_is_serialized(monkeypatch) -> None:
+    import app.api.subscribe as subscribe_api
+
+    monkeypatch.setattr(subscribe_api, "_shared_book_creation_lock", Lock())
+    monkeypatch.setattr(
+        subscribe_api.auth_service,
+        "require_user",
+        lambda _request: SimpleNamespace(user_id="user-1", role="user"),
+    )
+    monkeypatch.setattr(subscribe_api.subscription_rate_limiter, "check", lambda *_args: None)
+    monkeypatch.setattr(
+        subscribe_api.subscription_search_service,
+        "find_card_group_for_user",
+        lambda _job_id, candidate_id, _user_id: {"candidateId": candidate_id},
+    )
+    monkeypatch.setattr(
+        subscribe_api.library_books_service,
+        "find_existing_book",
+        lambda _group: None,
+    )
+    monkeypatch.setattr(
+        subscribe_api.user_subscriptions_service,
+        "check_capacity",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        subscribe_api.user_subscriptions_service,
+        "ensure",
+        lambda user_id, book_id, **_kwargs: (
+            {
+                "userId": user_id,
+                "aggregateBookId": book_id,
+                "status": "active",
+                "startChapterIndex": 1,
+                "autoArchiveOnComplete": True,
+            },
+            True,
+        ),
+    )
+    active_creations = 0
+    max_active_creations = 0
+
+    async def create_book(group, *, actor_user_id):
+        nonlocal active_creations, max_active_creations
+        active_creations += 1
+        max_active_creations = max(max_active_creations, active_creations)
+        await asyncio.sleep(0.02)
+        active_creations -= 1
+        return {
+            "created": False,
+            "book": {
+                "aggregateBookId": f"book-{group['candidateId']}",
+                "name": group["candidateId"],
+                "author": "Author",
+            },
+        }
+
+    monkeypatch.setattr(
+        subscribe_api.library_books_service,
+        "create_or_get_shared_book",
+        create_book,
+    )
+
+    await asyncio.gather(
+        subscribe_api.subscribe_candidate(object(), "job", "a"),
+        subscribe_api.subscribe_candidate(object(), "job", "b"),
+    )
+
+    assert max_active_creations == 1
+
+
+def test_shared_book_creation_guard_works_across_event_loops(monkeypatch) -> None:
+    import app.api.subscribe as subscribe_api
+
+    monkeypatch.setattr(subscribe_api, "_shared_book_creation_lock", Lock())
+    counter_lock = Lock()
+    active = 0
+    max_active = 0
+
+    async def guarded_work():
+        nonlocal active, max_active
+        async with subscribe_api._shared_book_creation_guard():
+            with counter_lock:
+                active += 1
+                max_active = max(max_active, active)
+            await asyncio.sleep(0.03)
+            with counter_lock:
+                active -= 1
+
+    def run_in_loop(_index: int):
+        asyncio.run(guarded_work())
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        list(executor.map(run_in_loop, range(2)))
+
+    assert max_active == 1
 
 
 def test_my_library_is_relationship_scoped(tmp_path: Path) -> None:

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Save, RefreshCw, CheckCircle2, Loader2 } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 const settingsCardClass = "border-slate-200 bg-white shadow-sm"
 const settingsInputClass = "h-10 border-slate-200 bg-white shadow-none"
 const settingsTabTriggerClass = "data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow"
+const subscriptionRateFields = [
+  ["rateLimitWindowSeconds", "限流窗口（秒）", "搜索、订阅和设置更新共享的计数窗口。", 60],
+  ["searchRateLimitPerWindow", "每窗口搜索次数", "每个用户可发起的订阅搜索次数。", 30],
+  ["createRateLimitPerWindow", "每窗口订阅次数", "每个用户可发起的订阅创建或恢复次数。", 10],
+  ["updateRateLimitPerWindow", "每窗口设置更新次数", "每个用户可修改个人订阅设置的次数。", 60],
+] as const
 
 function secondsToMilliseconds(value: unknown, fallbackSeconds: number) {
   const seconds = Number(value ?? fallbackSeconds)
@@ -63,8 +69,8 @@ export function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordOk, setPasswordOk] = useState(false)
 
-  const { data: settingsData, error: settingsError } = useQuery({ queryKey: ["settings"], queryFn: api.settings })
-  const { data: aggData, error: aggError } = useQuery({ queryKey: ["aggregateSettings"], queryFn: api.aggregateSettings })
+  const { data: settingsData, error: settingsError, refetch: refetchSettings } = useQuery({ queryKey: ["settings"], queryFn: api.settings })
+  const { data: aggData, error: aggError, refetch: refetchAggregateSettings } = useQuery({ queryKey: ["aggregateSettings"], queryFn: api.aggregateSettings })
   const { data: lexiconData, error: lexiconError, refetch: refetchLexicon } = useQuery({ queryKey: ["lexiconStatus"], queryFn: api.lexiconStatus })
 
   const [editedSettings, setEditedSettings] = useState<Record<string, any> | null>(null)
@@ -79,6 +85,7 @@ export function SettingsPage() {
 
   const local = editedSettings || settingsData || {}
   const sp = local.sourcePool || {}
+  const subscription = local.subscription || {}
   const agg = aggForm ?? aggData ?? {}
   const wf = parseRecord(agg.contentWorkflow)
 
@@ -153,8 +160,18 @@ export function SettingsPage() {
 
       {(settingsError || aggError || saveError) && (
         <Alert variant="destructive">
-          <AlertDescription>
-            {saveError || (settingsError as Error)?.message || (aggError as Error)?.message || "设置加载失败，请刷新后重试。"}
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{saveError || apiErrorMessage(settingsError || aggError, "设置加载失败，请稍后重试。")}</span>
+            {(settingsError || aggError) && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => { void Promise.all([refetchSettings(), refetchAggregateSettings()]) }}
+              >
+                重试
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -162,6 +179,7 @@ export function SettingsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4 flex-wrap h-auto gap-2 p-2 w-full justify-start overflow-x-auto bg-slate-100 text-slate-500">
           <TabsTrigger className={settingsTabTriggerClass} value="security">账户安全</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="subscription">订阅政策</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="pool">书源池</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="agg">聚合策略</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="priority">优先级</TabsTrigger>
@@ -194,6 +212,71 @@ export function SettingsPage() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="subscription">
+          <Card className={settingsCardClass}>
+            <CardHeader>
+              <CardTitle>订阅配额</CardTitle>
+              <CardDescription>共享入库资源的全局边界，仅管理员可调整。</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SettingRow title="每用户活跃订阅上限" description="统计处理中和已暂停的个人订阅。">
+                <Input
+                  className={settingsInputClass}
+                  type="number"
+                  aria-label="每用户活跃订阅上限"
+                  min={1}
+                  step={1}
+                  value={subscription.maxActivePerUser ?? 100}
+                  onChange={(event) => setLocal({ subscription: { ...subscription, maxActivePerUser: Number(event.target.value) } })}
+                />
+              </SettingRow>
+              <SettingRow title="每日新建共享书上限" description="单个用户在 24 小时内可触发的新共享书数量。">
+                <Input
+                  className={settingsInputClass}
+                  type="number"
+                  aria-label="每日新建共享书上限"
+                  min={1}
+                  step={1}
+                  value={subscription.maxNewSharedBooksPerDay ?? 10}
+                  onChange={(event) => setLocal({ subscription: { ...subscription, maxNewSharedBooksPerDay: Number(event.target.value) } })}
+                />
+              </SettingRow>
+              <SettingRow title="全局待入库书上限" description="尚未产出首批可读章节的共享处理任务数量。">
+                <Input
+                  className={settingsInputClass}
+                  type="number"
+                  aria-label="全局待入库书上限"
+                  min={1}
+                  step={1}
+                  value={subscription.maxGlobalProvisioningBooks ?? 20}
+                  onChange={(event) => setLocal({ subscription: { ...subscription, maxGlobalProvisioningBooks: Number(event.target.value) } })}
+                />
+              </SettingRow>
+            </CardContent>
+          </Card>
+          <Card className={`mt-6 ${settingsCardClass}`}>
+            <CardHeader>
+              <CardTitle>请求频率</CardTitle>
+              <CardDescription>按用户独立计数，进程重启后自动清空。</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {subscriptionRateFields.map(([field, title, description, fallback]) => (
+                <SettingRow key={field} title={title} description={description}>
+                  <Input
+                    className={settingsInputClass}
+                    type="number"
+                    aria-label={title}
+                    min={1}
+                    step={1}
+                    value={subscription[field] ?? fallback}
+                    onChange={(event) => setLocal({ subscription: { ...subscription, [field]: Number(event.target.value) } })}
+                  />
+                </SettingRow>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
@@ -287,8 +370,13 @@ export function SettingsPage() {
                   <div><div className="text-xs text-slate-400">词条总数</div><div className="text-sm font-medium text-slate-800 mt-0.5">{lexiconData?.wordCount ?? "-"}</div></div>
                   <div><div className="text-xs text-slate-400">最后更新</div><div className="text-sm font-medium text-slate-800 mt-0.5">{lexiconData?.updatedAt ? new Date(lexiconData.updatedAt).toLocaleString() : "-"}</div></div>
                 </div>
-                {lexiconError && <p className="mt-3 text-sm text-rose-600">词库状态加载失败：{(lexiconError as Error).message}</p>}
-                {updateLexicon.error && <p className="mt-3 text-sm text-rose-600">词库同步失败：{(updateLexicon.error as Error).message}</p>}
+                {lexiconError && (
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-rose-600">
+                    <span>词库状态加载失败：{apiErrorMessage(lexiconError, "请稍后重试。")}</span>
+                    <Button type="button" size="sm" variant="outline" onClick={() => { void refetchLexicon() }}>重试</Button>
+                  </div>
+                )}
+                {updateLexicon.error && <p className="mt-3 text-sm text-rose-600">词库同步失败：{apiErrorMessage(updateLexicon.error, "请稍后重试。")}</p>}
               </div>
             </CardContent>
           </Card>

@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: example_com
 name: 示例书源
+author: Yunwei
 version: 0.1.0
 type: source
 domains:

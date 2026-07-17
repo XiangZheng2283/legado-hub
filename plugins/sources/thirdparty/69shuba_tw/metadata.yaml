@@ -1,6 +1,7 @@
 contractVersion: "1.0"
 id: 69shuba_tw
 name: 69書吧繁體
+author: Yunwei
 version: 0.1.0
 type: source
 enabled: true

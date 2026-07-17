@@ -1,12 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import {
+  Activity,
   ArrowLeft,
-  Play,
   Power,
   Puzzle,
-  ScrollText,
   Shield,
 } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -14,14 +13,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const CAPABILITY_MAP: Record<string, string> = {
@@ -51,13 +42,13 @@ export function PluginDetail() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data, isLoading, error: pluginError } = useQuery({
+  const { data, isLoading, error: pluginError, refetch: refetchPlugin } = useQuery({
     queryKey: ["plugin", pluginId],
     queryFn: () => api.plugin(pluginId!),
     enabled: !!pluginId,
   })
 
-  const { data: attemptsData, error: attemptsError } = useQuery({
+  const { data: attemptsData, error: attemptsError, refetch: refetchAttempts } = useQuery({
     queryKey: ["plugin-attempts", pluginId],
     queryFn: () => api.pluginAttempts(pluginId!),
     enabled: !!pluginId,
@@ -68,9 +59,14 @@ export function PluginDetail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] }),
   })
 
-  const smokeMutation = useMutation({
-    mutationFn: () => api.smokePlugin(pluginId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] }),
+  const pingMutation = useMutation({
+    mutationFn: () => api.pingPlugin(pluginId!),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["plugin", pluginId] }),
+        queryClient.invalidateQueries({ queryKey: ["plugin-attempts", pluginId] }),
+      ])
+    },
   })
 
   if (isLoading) {
@@ -82,7 +78,14 @@ export function PluginDetail() {
   }
 
   if (pluginError) {
-    return <Alert variant="destructive"><AlertDescription>书源加载失败：{(pluginError as Error).message}</AlertDescription></Alert>
+    return (
+      <Alert variant="destructive">
+        <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+          <span>书源加载失败：{apiErrorMessage(pluginError, "请稍后重试。")}</span>
+          <Button type="button" size="sm" variant="outline" onClick={() => { void refetchPlugin() }}>重试</Button>
+        </AlertDescription>
+      </Alert>
+    )
   }
   if (!data || data.error) {
     return (
@@ -99,16 +102,20 @@ export function PluginDetail() {
   }
 
   const p = data
-  const smokeResult = smokeMutation.data || (p.health?.lastTestResult === "pass" ? { pass: true } : p.health?.lastTestResult === "fail" ? { pass: false } : null)
   const hasAuth = p.auth?.mode && p.auth.mode !== "none"
   const attempts = attemptsData?.attempts || []
 
   return (
     <div className="space-y-5">
-      {(enableMutation.error || smokeMutation.error || attemptsError) && (
+      {(enableMutation.error || pingMutation.error || attemptsError) && (
         <Alert variant="destructive">
-          <AlertDescription>
-            {(enableMutation.error as Error)?.message || (smokeMutation.error as Error)?.message || (attemptsError as Error)?.message || "书源操作失败，请稍后重试。"}
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{apiErrorMessage(enableMutation.error || pingMutation.error || attemptsError, "书源操作失败，请稍后重试。")}</span>
+            {attemptsError && (
+              <Button type="button" size="sm" variant="outline" onClick={() => { void refetchAttempts() }}>
+                重试记录
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -157,15 +164,15 @@ export function PluginDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => smokeMutation.mutate()}
-            disabled={smokeMutation.isPending}
+            onClick={() => pingMutation.mutate()}
+            disabled={pingMutation.isPending}
           >
-            {smokeMutation.isPending ? (
+            {pingMutation.isPending ? (
               <div className="mr-1.5 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             ) : (
-              <Play className="w-4 h-4 mr-1.5" />
+              <Activity className="w-4 h-4 mr-1.5" />
             )}
-            冒烟测试
+            Ping 检测
           </Button>
           {hasAuth && (
             <Button
@@ -174,7 +181,7 @@ export function PluginDetail() {
               onClick={() => navigate("/console/official-sources")}
             >
               <Shield className="w-4 h-4 mr-1.5" />
-              前往官方源管理
+              官方源管理
             </Button>
           )}
         </div>
@@ -184,7 +191,6 @@ export function PluginDetail() {
         <TabsList>
           <TabsTrigger value="metadata">元数据</TabsTrigger>
           <TabsTrigger value="auth">认证</TabsTrigger>
-          <TabsTrigger value="results">测试结果</TabsTrigger>
           <TabsTrigger value="logs">日志</TabsTrigger>
         </TabsList>
 
@@ -197,6 +203,7 @@ export function PluginDetail() {
               <div className="grid gap-3 text-sm md:grid-cols-2">
                 <MetaItem label="ID" value={p.pluginId} />
                 <MetaItem label="版本" value={p.version || "-"} />
+                <MetaItem label="作者" value={p.author || "-"} />
                 <MetaItem label="修改时间" value={p.lastModified || "-"} />
                 <MetaItem label="书源类型" value={p.accessType || p.sourceType || "HTTP"} />
                 <MetaItem label="域名" value={p.domains?.join(", ") || "-"} />
@@ -223,18 +230,6 @@ export function PluginDetail() {
                       <span className="text-primary">可达 {p.health.pingLatencyMs}ms</span>
                     ) : p.health?.pingStatus === "unreachable" ? (
                       <span className="text-destructive">不可达</span>
-                    ) : (
-                      "-"
-                    )
-                  }
-                />
-                <MetaItem
-                  label="最近 Smoke"
-                  value={
-                    p.health?.lastTestResult === "pass" ? (
-                      <span className="text-primary">通过</span>
-                    ) : p.health?.lastTestResult === "fail" ? (
-                      <span className="text-destructive">失败</span>
                     ) : (
                       "-"
                     )
@@ -271,64 +266,6 @@ export function PluginDetail() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="results">
-          {smokeResult && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <ScrollText className="h-4 w-4" />
-                  冒烟测试结果
-                  <Badge className="ml-2" variant={smokeResult.pass ? "success" : "destructive"}>
-                    {smokeResult.pass ? "通过" : "失败"}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>阶段</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>耗时</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(smokeResult.stages || {}).map(([stage, value]: [string, any]) => (
-                      <TableRow key={stage}>
-                        <TableCell>{stage}</TableCell>
-                        <TableCell>{value.status}</TableCell>
-                        <TableCell>{value.count ?? value.contentLength ?? "-"}</TableCell>
-                        <TableCell>{value.elapsedMs ?? 0}ms</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                {smokeResult.errors?.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {smokeResult.errors.map((error: any, index: number) => (
-                      <div key={`${error.stage}-${index}`} className="rounded border border-destructive/30 p-2 text-xs">
-                        <div className="font-medium">{error.code} / {error.stage}</div>
-                        <div className="text-muted-foreground">{error.message}</div>
-                        <div className="text-muted-foreground">{error.hint}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-          {!smokeResult && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                <Play className="h-10 w-10 text-muted-foreground/50" />
-                <p className="mt-3 text-base font-semibold">还没运行过测试</p>
-                <p className="text-sm">点击上方按钮开始冒烟测试</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
         <TabsContent value="logs">
           <Card>
             <CardHeader className="pb-2">
@@ -349,11 +286,6 @@ export function PluginDetail() {
                         {a.type === "ping" && (
                           <Badge variant={a.status === "reachable" ? "success" : "destructive"} className="text-xs">
                             {a.status}
-                          </Badge>
-                        )}
-                        {a.type === "smoke" && (
-                          <Badge variant={a.pass ? "success" : "destructive"} className="text-xs">
-                            {a.pass ? "通过" : "失败"}
                           </Badge>
                         )}
                         {typeof a.latencyMs === "number" && a.latencyMs > 0 && (

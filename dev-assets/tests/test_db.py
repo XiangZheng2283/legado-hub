@@ -40,6 +40,7 @@ def test_initialize_database(tmp_path: Path) -> None:
         "aggregate_ai_usage",
         "user_sessions",
         "users",
+        "audit_events",
     }
     assert expected.issubset(tables)
 
@@ -51,7 +52,7 @@ def test_initialize_database(tmp_path: Path) -> None:
         version = conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
         ).fetchone()
-        assert version == ("9",)
+        assert version == ("10",)
 
         foreign_keys = conn.execute(
             "PRAGMA foreign_key_list(user_book_subscriptions)"
@@ -74,6 +75,59 @@ def test_initialize_database_idempotent(tmp_path: Path) -> None:
     assert db_path.exists()
 
 
+def test_schema_upgrade_rolls_back_when_migration_step_fails(tmp_path: Path, monkeypatch) -> None:
+    import app.storage.db as db_module
+
+    db_path = tmp_path / "failed-upgrade.db"
+
+    def fail_migration(_conn):
+        raise RuntimeError("migration failed")
+
+    monkeypatch.setattr(db_module, "_ensure_shared_library_schema", fail_migration)
+
+    with pytest.raises(RuntimeError, match="migration failed"):
+        db_module.initialize_database(db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        tables = {
+            row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+    assert "audit_events" not in tables
+    assert "schema_meta" not in tables
+
+
+def test_audit_service_persists_only_safe_summary_fields(tmp_path: Path) -> None:
+    from app.services.audit import AuditService
+
+    db_path = tmp_path / "audit.db"
+    service = AuditService(db_path)
+    service.record(
+        action="subscription.update",
+        actor_user_id="user-1",
+        actor_role="user",
+        target_type="subscription",
+        target_id="user-1:book-1",
+        summary={
+            "status": "paused",
+            "startChapterIndex": 12,
+            "password": "never-store-this",
+            "cookie": "ywkey=never-store-this",
+            "content": "never-store-this",
+        },
+    )
+
+    initialize_database(db_path)
+    events = service.list_events()
+    assert len(events) == 1
+    assert events[0]["summary"] == {"status": "paused", "startChapterIndex": 12}
+    with sqlite3.connect(db_path) as conn:
+        stored = conn.execute("SELECT summary_json FROM audit_events").fetchone()[0]
+    assert "never-store-this" not in stored
+
+
 def test_upgrade_preserves_users_and_sessions(tmp_path: Path) -> None:
     db_path = tmp_path / "test.db"
     initialize_database(db_path)
@@ -93,7 +147,7 @@ def test_upgrade_preserves_users_and_sessions(tmp_path: Path) -> None:
     with sqlite3.connect(db_path) as conn:
         assert conn.execute("SELECT username FROM users WHERE user_id = 'u1'").fetchone() == ("reader",)
         assert conn.execute("SELECT user_id FROM user_sessions WHERE session_id = 's1'").fetchone() == ("u1",)
-        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("9",)
+        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("10",)
         assert conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'user_book_subscriptions'"
         ).fetchone() == (1,)

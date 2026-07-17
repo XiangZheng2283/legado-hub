@@ -5,9 +5,104 @@ Sessions live in memory (not DB) and expire after 10 minutes.
 
 from __future__ import annotations
 
+import copy
+import re
 import time
 import uuid
 from typing import Any
+
+
+REDACTED = "[REDACTED]"
+MAX_ERROR_LENGTH = 500
+MAX_TRACE_STRING_LENGTH = 2000
+MAX_TRACE_ITEMS = 100
+MAX_TRACE_DEPTH = 8
+_SENSITIVE_KEYS = {
+    "authorization",
+    "bindphone",
+    "fu",
+    "inputuserid",
+    "mobile",
+    "mobilephone",
+    "password",
+    "passwd",
+    "phone",
+    "phonenumber",
+    "secret",
+    "sessionid",
+    "ywguid",
+    "ywkey",
+    "ywopenid",
+    "alk",
+    "csrftoken",
+    "qdinfo",
+}
+_PHONE_RE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
+_CODE_RE = re.compile(r"(?<!\d)\d{6}(?!\d)")
+_SECRET_ASSIGNMENT_RE = re.compile(
+    r"(?i)\b(cookie|cookies|authorization|(?:access|refresh|challenge|captcha|cmfu)?token|"
+    r"password|passwd|secret|(?:sms|validate|captcha)?code|ywguid|ywkey|ywopenid|alk|qdinfo)"
+    r"\b[\"']?\s*[:=]\s*[\"']?[^\s,;\"'}]+"
+)
+_LABELED_SECRET_RE = re.compile(
+    r"(?i)\b(token|cookie|password|secret)[-_:][a-z0-9._~+/=-]+"
+)
+
+
+def _sensitive_key(key: object) -> bool:
+    normalized = re.sub(r"[^a-z0-9]", "", str(key).casefold())
+    return (
+        normalized in _SENSITIVE_KEYS
+        or "cookie" in normalized
+        or normalized.endswith(("token", "password", "passwd", "secret", "code"))
+    )
+
+
+def _redact_text(value: object, max_length: int) -> str:
+    text = str(value or "")
+    text = _PHONE_RE.sub("[REDACTED_PHONE]", text)
+    text = _CODE_RE.sub("[REDACTED_CODE]", text)
+    text = _SECRET_ASSIGNMENT_RE.sub(lambda match: f"{match.group(1)}={REDACTED}", text)
+    text = _LABELED_SECRET_RE.sub(lambda match: f"{match.group(1)}={REDACTED}", text)
+    return text if len(text) <= max_length else f"{text[: max_length - 3]}..."
+
+
+def _redact_trace_value(value: Any, depth: int = 0) -> Any:
+    if depth >= MAX_TRACE_DEPTH:
+        return "[TRUNCATED]"
+    if isinstance(value, dict):
+        items = list(value.items())[:MAX_TRACE_ITEMS]
+        redacted = {
+            key: REDACTED if _sensitive_key(key) else _redact_trace_value(item, depth + 1)
+            for key, item in items
+        }
+        if len(value) > MAX_TRACE_ITEMS:
+            redacted["__truncated__"] = True
+        return redacted
+    if isinstance(value, list):
+        return [_redact_trace_value(item, depth + 1) for item in value[:MAX_TRACE_ITEMS]]
+    if isinstance(value, tuple):
+        return tuple(_redact_trace_value(item, depth + 1) for item in value[:MAX_TRACE_ITEMS])
+    if isinstance(value, set):
+        return [_redact_trace_value(item, depth + 1) for item in list(value)[:MAX_TRACE_ITEMS]]
+    if isinstance(value, str):
+        return _redact_text(value, MAX_TRACE_STRING_LENGTH)
+    return value
+
+
+def _redact_error(error: object) -> str:
+    return _redact_text(error, MAX_ERROR_LENGTH)
+
+
+def _safe_masked_phone(value: object) -> str:
+    phone = str(value or "").strip()
+    if not phone:
+        return ""
+    if re.fullmatch(r"1[3-9]\d\*{4}\d{4}", phone):
+        return phone
+    if re.fullmatch(r"1[3-9]\d{9}", phone):
+        return f"{phone[:3]}****{phone[-4:]}"
+    return REDACTED
 
 
 class OfficialLoginSession:
@@ -38,8 +133,8 @@ class OfficialLoginSession:
             "method": self.method,
             "status": self.status,
             "lastStep": self.last_step,
-            "lastError": self.last_error,
-            "phoneMasked": self.phone_masked,
+            "lastError": _redact_error(self.last_error),
+            "phoneMasked": _safe_masked_phone(self.phone_masked),
             "expired": self.expired(),
         }
 
@@ -106,16 +201,16 @@ class LoginTraceStore:
                 "pluginId": plugin_id,
                 "sessionId": session_id,
                 "step": step,
-                "payload": payload,
-                "result": result,
-                "error": error,
+                "payload": _redact_trace_value(payload),
+                "result": _redact_trace_value(result),
+                "error": _redact_error(error),
             }
         )
         # Keep only the most recent entries.
         self._traces[plugin_id] = self._traces[plugin_id][-self.MAX_ENTRIES_PER_PLUGIN :]
 
     def get(self, plugin_id: str) -> list[dict[str, Any]]:
-        return list(self._traces.get(plugin_id, []))
+        return copy.deepcopy(self._traces.get(plugin_id, []))
 
     def clear(self, plugin_id: str) -> None:
         self._traces.pop(plugin_id, None)

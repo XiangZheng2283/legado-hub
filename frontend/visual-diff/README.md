@@ -16,6 +16,10 @@ Update the baseline only after reviewing an intentional UI change:
 node .\visual-diff\run-visual-diff.mjs --update-baseline
 ```
 
+Baseline-update mode writes `Result: NOT EVALUATED`; it is never release-gate
+evidence. Review the updated screenshots, then run the default compare command
+again and require `Result: PASS`.
+
 The check covers desktop and mobile, admin and user roles, login, protected
 route fallback, retained management pages, detail pages, and representative
 empty/error states. It fails when either the pixel-weighted overall similarity

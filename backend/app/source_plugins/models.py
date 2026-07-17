@@ -23,6 +23,7 @@ class PluginMetadata:
     content: dict
     tags: list[str]
     # optional
+    author: str = ""
     priority: int = 50
     enabled: bool = True
     language: str = "zh-CN"
@@ -50,6 +51,7 @@ class PluginMetadata:
             auth=data.get("auth", {}),
             content=data.get("content", {}),
             tags=data.get("tags", []),
+            author=str(data.get("author", "")).strip(),
             priority=data.get("priority", 50),
             enabled=data.get("enabled", True),
             language=data.get("language", "zh-CN"),
@@ -305,7 +307,6 @@ class PluginFailure:
             "proxyUsed": self.proxy_used,
             "extra": self.extra,
         }
-
 
 
 

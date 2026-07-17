@@ -1,6 +1,6 @@
 # LegadoHub 项目边界与受控订阅交付契约
 
-> 状态：Accepted，Phase 1 起最高优先级执行基准；配额默认值已冻结
+> 状态：Accepted，Phase 1 已完成；继续作为订阅所有权与边界契约
 > 日期：2026-07-16
 > 上位产品真相：`docs/PRODUCT.md`
 > 适用范围：后端、Console、Reading/Legado 外部协议、插件运行时、官方插件同步与发布验证
@@ -467,6 +467,7 @@ PATCH /api/subscribe/books/{bookId}/subscription
 ## 13. 安全与部署边界
 
 - 默认支持本机或受信局域网单站点部署，不默认支持公网多租户。
+- Phase 1 运行模型限定为单个后端进程；内存限流和进程级共享书创建锁不提供多 worker 一致性。启用多进程前必须改为数据库预留或等价的跨进程协调与持久限流。
 - `app_config.json`、Cookie、数据库和运行日志均不得提交；API key 在 UI/API 输出中必须遮罩。
 - 本地运行配置可以由宿主保存敏感值，但必须依赖主机文件权限保护，禁止写入源码、测试夹具或日志。
 - HTTPS 部署必须设置 Session Cookie `Secure`，并正确处理可信代理协议头。
@@ -491,9 +492,9 @@ PATCH /api/subscribe/books/{bookId}/subscription
 
 ## 15. Schema 切换与当前数据决策
 
-### 15.1 当前阻断项
+### 15.1 历史阻断项（已修复）
 
-`backend/app/storage/db.py` 当前把 schema 版本作为字符串比较，并在版本较旧时调用 `path.unlink()`。因此在修复迁移机制前，**禁止直接把 `SCHEMA_VERSION` 从 8 改为 9**，否则可能删除真实数据库。
+旧实现曾把 schema 版本作为字符串比较，并在版本较旧时删除数据库。Phase 1 已改为整数版本和原地事务迁移；迁移、补列、缓存迁移与版本写入失败时整体回滚，任何升级路径都不得恢复删除 `app.db` 的行为。
 
 ### 15.2 当前工作区数据结论
 
@@ -520,7 +521,7 @@ update_tasks=0
 
 `book_records` 当前仍有搜索/目录缓存数据，但它不是用户订阅关系；是否退役由旧搜索与更新链清理阶段决定，不能借本次订阅 schema 切换顺手删除。
 
-### 15.3 v8 -> v9 原地切换
+### 15.3 v8 -> v10 原地切换（已完成）
 
 执行顺序：
 
@@ -529,7 +530,7 @@ update_tasks=0
 3. 清理共享书正文目录和 JSON 投影时只操作已确认的订阅域路径，不触碰 Cookie、配置、用户或 Session。
 4. 在事务中创建 `user_book_subscriptions`、约束和索引。
 5. 不执行 `added_by_user_id` 回填；当前没有待迁移共享书。
-6. 写入 schema version 9并提交。
+6. 写入 schema version 9并提交；后续 schema 10 仅原地增加最小审计表，同样在单一事务中完成。
 7. 验证用户、Session、Cookie、配置和非订阅域数据未变化。
 8. 初始化和切换逻辑可重复执行；失败时回滚事务，不删除数据库文件。
 
@@ -638,7 +639,7 @@ update_tasks=0
 13. 起点 WEB/APP 登录只有明确身份才成功；APP 免费全文与付费预览真实调用通过。
 14. `verify.ps1`、前端 lint/test/build、插件 validator 和视觉回归通过，且真实运行数据未被测试修改。
 
-## 20. 当前实施证据与剩余门禁
+## 20. Phase 1 完成证据与后续边界
 
 截至 2026-07-16，已完成：
 
@@ -650,11 +651,12 @@ update_tasks=0
 - Reading 目录和正文分别保留 `isVip`、`isPaid`、`previewOnly` 与 `contentAccess`，不再把 VIP 与预览压缩成同一状态。
 - QDFCCKK App 插件按普通正文接口、VIP 正文、付费预览顺序读取且不回退 Web；真实调用已验证免费全文和 VIP 预览。
 - Console 已收口为订阅与运维控制面，章节正文仅作为抽查视图。
+- 管理员用户、全局订阅配额、单书更新间隔和积压上限已接入；普通用户仍只能调整自己的订阅状态、起点和自动归档。
+- 重复 PATCH 无状态变化时不更新时间、不重复写 operation log/audit，也不消耗更新限流；API 并发配额和 owner 隔离已有回归测试。
+- 普通用户订阅响应经过递归私有字段扫描，章节正文接口不再暴露 `debug`、来源章节 ID 或内部 URL。
+- QDFCCKK WEB `0.1.4`、APP `0.2.5` 离线回归通过并同步；同步运行时文件逐项哈希一致。App 真实验证结果为搜索 20 项、目录 538 章、免费正文 2348 字、VIP 预览 182 字。
+- 根目录 `verify.ps1` 最终通过：后端 `281 passed, 5 skipped`，22 个插件 validator 全部通过，前端 `42 passed`、lint/build 通过、依赖审计 0 漏洞。
+- Console 39 个视觉场景整体一致率 `99.85%`，每个场景均不低于 98%；最低场景为 `98.25%`。
+- 发布前后对 `backend/data`、`backend/config`、`backend/generated`、`backend/runtime` 和遗留插件 Cookie 摘要复核一致，真实用户、Session、Cookie、配置和运行数据未变化。
 
-发布前仍必须完成：
-
-- 前端视觉 compare、lint、test、build。
-- 后端全部有效测试、插件 validator 与根目录 `verify.ps1`。
-- 最终 diff、安全字段和真实运行目录未被测试修改的复核。
-
-公网暴露仍不在当前承诺内；部署级 Reading 凭据、TLS、可信代理和速率限制属于公网支持前置条件。
+Phase 1 完成不包含持久化搜索任务恢复、统一数据完整性恢复入口和公网部署。公网暴露仍不在当前承诺内；部署级 Reading 凭据、TLS、可信代理和速率限制属于公网支持前置条件。

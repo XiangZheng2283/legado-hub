@@ -21,11 +21,16 @@ from fastapi import HTTPException, Request, Response, status
 
 from app.config import DB_PATH
 from app.core.app_config import AppConfig
+from app.services.audit import audit_service
 from app.storage.db import initialize_database
 
 SESSION_COOKIE_NAME = "legadohub_session"
 SESSION_TTL_DAYS = 30
 PBKDF2_ITERATIONS = 240_000
+USERNAME_MAX_LENGTH = 64
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 128
+ALLOWED_ROLES = {"admin", "user"}
 
 
 @dataclass
@@ -85,19 +90,51 @@ class UserAuthService:
             for row in rows
         ]
 
-    def create_user(self, username: str, password: str, role: str = "user") -> dict[str, Any]:
+    def _validate_username(self, username: str) -> str:
         username = str(username or "").strip()
-        password = str(password or "")
-        role = "admin" if role == "admin" else "user"
         if not username:
             raise HTTPException(status_code=400, detail="用户名不能为空")
-        if not password:
-            raise HTTPException(status_code=400, detail="密码不能为空")
+        if len(username) > USERNAME_MAX_LENGTH:
+            raise HTTPException(status_code=400, detail=f"用户名不能超过 {USERNAME_MAX_LENGTH} 个字符")
+        if any(character.isspace() or ord(character) < 32 for character in username):
+            raise HTTPException(status_code=400, detail="用户名不能包含空白或控制字符")
+        return username
+
+    def _validate_password(self, password: str) -> str:
+        password = str(password or "")
+        if len(password) < PASSWORD_MIN_LENGTH:
+            raise HTTPException(status_code=400, detail=f"密码至少需要 {PASSWORD_MIN_LENGTH} 个字符")
+        if len(password) > PASSWORD_MAX_LENGTH:
+            raise HTTPException(status_code=400, detail=f"密码不能超过 {PASSWORD_MAX_LENGTH} 个字符")
+        if any(ord(character) < 32 for character in password):
+            raise HTTPException(status_code=400, detail="密码不能包含控制字符")
+        return password
+
+    def create_user(
+        self,
+        username: str,
+        password: str,
+        role: str = "user",
+        *,
+        require_empty: bool = False,
+        actor_user_id: str = "",
+        actor_role: str = "",
+    ) -> dict[str, Any]:
+        username = self._validate_username(username)
+        password = self._validate_password(password)
+        role = str(role or "").strip()
+        if role not in ALLOWED_ROLES:
+            raise HTTPException(status_code=400, detail="角色必须是 admin 或 user")
         user_id = uuid.uuid4().hex
         now = self._now()
         password_hash = self.hash_password(password)
         try:
             with self._conn() as conn:
+                conn.execute("BEGIN IMMEDIATE")
+                if require_empty:
+                    existing = conn.execute("SELECT COUNT(*) FROM users").fetchone()
+                    if int(existing[0] or 0) > 0:
+                        raise HTTPException(status_code=409, detail="系统已存在用户，不能再次初始化管理员")
                 conn.execute(
                     """
                     INSERT INTO users (user_id, username, password_hash, role, disabled, created_at, updated_at)
@@ -105,14 +142,22 @@ class UserAuthService:
                     """,
                     (user_id, username, password_hash, role, now, now),
                 )
+                if actor_user_id:
+                    audit_service.record(
+                        action="user.create",
+                        actor_user_id=actor_user_id,
+                        actor_role=actor_role,
+                        target_type="user",
+                        target_id=user_id,
+                        summary={"role": role, "disabled": False},
+                        conn=conn,
+                    )
                 conn.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(status_code=409, detail="用户名已存在")
         return {"userId": user_id, "username": username, "role": role, "disabled": False}
 
     def bootstrap_admin(self, username: str, password: str | None = None) -> dict[str, Any]:
-        if self.user_count() > 0:
-            raise HTTPException(status_code=409, detail="系统已存在用户，不能再次初始化管理员")
         if password is None:
             password = self._admin_password_from_config()
         if not password:
@@ -123,7 +168,12 @@ class UserAuthService:
                 base64.b64encode(password.encode("utf-8")).decode("ascii"),
             )
             config.save()
-        return self.create_user(username=username, password=password, role="admin")
+        return self.create_user(
+            username=username,
+            password=password,
+            role="admin",
+            require_empty=True,
+        )
 
     def ensure_default_admin(self, username: str = "admin") -> str | None:
         if self.user_count() > 0:
@@ -140,9 +190,16 @@ class UserAuthService:
         self.bootstrap_admin(username=username, password=password)
         return password
 
-    def reset_password(self, user_id: str, password: str) -> dict[str, Any]:
-        if not password:
-            raise HTTPException(status_code=400, detail="密码不能为空")
+    def reset_password(
+        self,
+        user_id: str,
+        password: str,
+        *,
+        invalidate_sessions: bool = True,
+        actor_user_id: str = "",
+        actor_role: str = "",
+    ) -> dict[str, Any]:
+        password = self._validate_password(password)
         now = self._now()
         password_hash = self.hash_password(password)
         with self._conn() as conn:
@@ -150,6 +207,17 @@ class UserAuthService:
                 "UPDATE users SET password_hash = ?, updated_at = ? WHERE user_id = ?",
                 (password_hash, now, user_id),
             )
+            if cursor.rowcount > 0 and invalidate_sessions:
+                conn.execute("DELETE FROM user_sessions WHERE user_id = ?", (user_id,))
+            if cursor.rowcount > 0 and actor_user_id:
+                audit_service.record(
+                    action="user.password.reset",
+                    actor_user_id=actor_user_id,
+                    actor_role=actor_role,
+                    target_type="user",
+                    target_id=user_id,
+                    conn=conn,
+                )
             conn.commit()
         if cursor.rowcount <= 0:
             raise HTTPException(status_code=404, detail="用户不存在")
@@ -166,20 +234,50 @@ class UserAuthService:
 
     def change_password(self, user: AuthUser, current_password: str, new_password: str) -> dict[str, Any]:
         self.authenticate(user.username, current_password)
-        return self.reset_password(user.user_id, new_password)
+        return self.reset_password(user.user_id, new_password, invalidate_sessions=False)
 
-    def set_disabled(self, user_id: str, disabled: bool) -> dict[str, Any]:
+    def set_disabled(
+        self,
+        user_id: str,
+        disabled: bool,
+        *,
+        actor_user_id: str = "",
+        actor_role: str = "",
+    ) -> dict[str, Any]:
         now = self._now()
         with self._conn() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            target = conn.execute(
+                "SELECT role, disabled FROM users WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+            if not target:
+                raise HTTPException(status_code=404, detail="用户不存在")
+            if disabled and actor_user_id and user_id == actor_user_id:
+                raise HTTPException(status_code=409, detail="不能禁用当前登录的管理员")
+            if disabled and target[0] == "admin" and not bool(target[1]):
+                enabled_admins = conn.execute(
+                    "SELECT COUNT(*) FROM users WHERE role = 'admin' AND disabled = 0"
+                ).fetchone()
+                if int(enabled_admins[0] or 0) <= 1:
+                    raise HTTPException(status_code=409, detail="系统必须保留至少一个可用管理员")
             cursor = conn.execute(
                 "UPDATE users SET disabled = ?, updated_at = ? WHERE user_id = ?",
                 (1 if disabled else 0, now, user_id),
             )
             if disabled:
                 conn.execute("DELETE FROM user_sessions WHERE user_id = ?", (user_id,))
+            if actor_user_id:
+                audit_service.record(
+                    action="user.disable" if disabled else "user.enable",
+                    actor_user_id=actor_user_id,
+                    actor_role=actor_role,
+                    target_type="user",
+                    target_id=user_id,
+                    summary={"role": target[0], "disabled": bool(disabled)},
+                    conn=conn,
+                )
             conn.commit()
-        if cursor.rowcount <= 0:
-            raise HTTPException(status_code=404, detail="用户不存在")
         return {"userId": user_id, "disabled": bool(disabled)}
 
     def get_user_by_username(self, username: str) -> dict[str, Any] | None:

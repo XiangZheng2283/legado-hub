@@ -1,4 +1,4 @@
-"""Tests for single source test API."""
+"""Tests for source inventory and developer-only source checks."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -20,10 +20,11 @@ def setup_db(tmp_path, monkeypatch):
     yield
 
 
-def test_source_test_not_found():
+def test_source_stage_test_is_not_exposed():
     response = client.post("/api/console/sources/fake-source/test", json={"keyword": "test", "stage": "search"})
+
     assert response.status_code == 404
-    assert response.json()["detail"] == "书源不存在"
+    assert response.json()["detail"] == "Not Found"
 
 
 def test_source_list():

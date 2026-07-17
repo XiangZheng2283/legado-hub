@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router-dom"
 import { Activity, BookMarked, Database, Search, ShieldCheck, AlertCircle, BookOpen, ShieldAlert } from "lucide-react"
-import { api } from "@/lib/api"
+import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ export function Dashboard() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
 
-  const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery({ queryKey: ["status"], queryFn: api.status, enabled: isAdmin })
+  const { data: statsData, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({ queryKey: ["status"], queryFn: api.status, enabled: isAdmin })
 
   if (isAdmin) {
     const stats = statsData || {}
@@ -54,7 +54,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">{metric(pluginStats.healthy)}</div>
-              <p className="text-xs text-slate-500 mt-1">Ping & Smoke 通行</p>
+              <p className="text-xs text-slate-500 mt-1">Ping 可达</p>
             </CardContent>
           </Card>
           <Card>
@@ -70,7 +70,10 @@ export function Dashboard() {
         </div>
         {statsError && (
           <Alert variant="destructive">
-            <AlertDescription>系统状态加载失败：{(statsError as Error).message}</AlertDescription>
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+              <span>系统状态加载失败：{apiErrorMessage(statsError, "请稍后重试。")}</span>
+              <Button type="button" size="sm" variant="outline" onClick={() => { void refetchStats() }}>重试</Button>
+            </AlertDescription>
           </Alert>
         )}
         <div className="grid gap-4 md:grid-cols-2">
