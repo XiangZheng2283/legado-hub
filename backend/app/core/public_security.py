@@ -1,4 +1,4 @@
-"""Public deployment request, URL, proxy, and filesystem security boundaries."""
+"""Reader/admin request, URL, proxy, and filesystem security boundaries."""
 
 from __future__ import annotations
 
@@ -25,17 +25,24 @@ SESSION_COOKIE_NAME = "legadohub_session"
 _DNS_LABEL_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 _MAX_FORWARDED_CHAIN_LENGTH = 16
 _MAX_FORWARDED_HEADER_LENGTH = 1024
+_LAN_NETWORKS = tuple(
+    ipaddress.ip_network(value)
+    for value in (
+        "10.0.0.0/8",
+        "127.0.0.0/8",
+        "169.254.0.0/16",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "::1/128",
+        "fc00::/7",
+        "fe80::/10",
+    )
+)
+_LAN_DNS_SUFFIXES = (".home", ".home.arpa", ".lan", ".local")
 logger = logging.getLogger(__name__)
 _SECURITY_LOG_INTERVAL_SECONDS = 60
 _security_log_lock = threading.Lock()
 _security_last_log: dict[str, float] = {}
-
-
-def _enabled(name: str, default: bool = False) -> bool:
-    value = os.getenv(name, "").strip().lower()
-    if not value:
-        return default
-    return value in {"1", "true", "yes", "on"}
 
 
 def _csv(name: str) -> list[str]:
@@ -64,6 +71,8 @@ def _origin(value: str, *, label: str) -> tuple[str, str]:
 
 
 def _valid_host(host: str) -> bool:
+    if "%" in host:
+        return False
     try:
         ipaddress.ip_address(host)
         return True
@@ -87,11 +96,11 @@ def _networks(values: Iterable[str]) -> tuple[ipaddress.IPv4Network | ipaddress.
 
 @dataclass(frozen=True)
 class PublicSecurityConfig:
-    public_mode: bool
     public_base_url: str
     allowed_hosts: tuple[str, ...]
     allowed_origins: frozenset[str]
     trusted_proxies: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]
+    dynamic_base_url: bool = False
     require_https: bool = False
     enforce_origin: bool = False
 
@@ -141,73 +150,59 @@ class PublicSecurityConfig:
 
 
 def load_public_security_config() -> PublicSecurityConfig:
-    public_mode = _enabled("LEGADOHUB_PUBLIC_MODE")
-    if public_mode and _enabled("LEGADOHUB_BROWSER_DISABLE_SANDBOX"):
-        raise RuntimeError("Browser sandbox cannot be disabled in public mode.")
     configured_base = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip().rstrip("/")
-    if public_mode and not configured_base:
-        raise RuntimeError("LEGADOHUB_PUBLIC_BASE_URL is required in public mode.")
+    dynamic_base_url = not configured_base
     base_url, base_host = _origin(
         configured_base or f"http://{config.HOST}:{config.PORT}",
         label="LEGADOHUB_PUBLIC_BASE_URL",
     )
-    if public_mode and not base_url.startswith("https://"):
-        raise RuntimeError("LEGADOHUB_PUBLIC_BASE_URL must use HTTPS in public mode.")
+    require_https = base_url.startswith("https://")
 
     hosts = _csv("LEGADOHUB_ALLOWED_HOSTS")
     if not hosts:
-        hosts = [base_host] if public_mode else [base_host, "localhost", "testserver"]
+        hosts = [] if dynamic_base_url else [base_host, "localhost", "testserver"]
     normalized_hosts: list[str] = []
     for host in hosts:
         normalized = host.strip().lower().rstrip(".")
         if not normalized or "*" in normalized or not _valid_host(normalized):
             raise RuntimeError("LEGADOHUB_ALLOWED_HOSTS must contain exact host names without wildcards.")
         normalized_hosts.append(normalized)
-    if base_host not in normalized_hosts:
+    if not dynamic_base_url and base_host not in normalized_hosts:
         raise RuntimeError("LEGADOHUB_ALLOWED_HOSTS must include the public base URL host.")
 
-    origin_values = _csv("LEGADOHUB_ALLOWED_ORIGINS") or [base_url]
+    origin_values = _csv("LEGADOHUB_ALLOWED_ORIGINS")
+    if not origin_values and not dynamic_base_url:
+        origin_values = [base_url]
     origins = frozenset(_origin(value.rstrip("/"), label="LEGADOHUB_ALLOWED_ORIGINS")[0] for value in origin_values)
-    if public_mode and base_url not in origins:
+    if not dynamic_base_url and base_url not in origins:
         raise RuntimeError("LEGADOHUB_ALLOWED_ORIGINS must include LEGADOHUB_PUBLIC_BASE_URL.")
 
-    proxy_values = _csv("LEGADOHUB_TRUSTED_PROXIES")
-    if not proxy_values and not public_mode:
-        proxy_values = ["127.0.0.1/32", "::1/128"]
+    proxy_values = _csv("LEGADOHUB_TRUSTED_PROXIES") or ["127.0.0.1/32", "::1/128"]
     trusted_proxies = _networks(proxy_values)
-    if public_mode and not trusted_proxies:
-        raise RuntimeError("LEGADOHUB_TRUSTED_PROXIES is required in public mode.")
     return PublicSecurityConfig(
-        public_mode=public_mode,
         public_base_url=base_url,
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=trusted_proxies,
-        require_https=public_mode,
-        enforce_origin=public_mode,
+        dynamic_base_url=dynamic_base_url,
+        require_https=require_https,
+        enforce_origin=require_https,
     )
 
 
 def load_admin_security_config() -> PublicSecurityConfig:
     """Load the isolated management listener's host, origin, and proxy policy."""
-    public_mode = _enabled("LEGADOHUB_PUBLIC_MODE")
     configured_base = os.getenv("LEGADOHUB_ADMIN_BASE_URL", "").strip().rstrip("/")
+    dynamic_base_url = not configured_base
     base_url, base_host = _origin(
         configured_base or f"http://127.0.0.1:{config.ADMIN_PORT}",
         label="LEGADOHUB_ADMIN_BASE_URL",
     )
     require_https = base_url.startswith("https://")
-    if public_mode and not require_https and base_host not in {"127.0.0.1", "::1", "localhost"}:
-        raise RuntimeError(
-            "LEGADOHUB_ADMIN_BASE_URL must use HTTPS or a loopback host in public mode."
-        )
 
-    hosts = _csv("LEGADOHUB_ADMIN_ALLOWED_HOSTS") or [
-        base_host,
-        "127.0.0.1",
-        "localhost",
-        "testserver",
-    ]
+    hosts = _csv("LEGADOHUB_ADMIN_ALLOWED_HOSTS")
+    if not hosts and not dynamic_base_url:
+        hosts = [base_host, "127.0.0.1", "localhost", "testserver"]
     normalized_hosts: list[str] = []
     for host in hosts:
         normalized = host.strip().lower().rstrip(".")
@@ -216,35 +211,67 @@ def load_admin_security_config() -> PublicSecurityConfig:
                 "LEGADOHUB_ADMIN_ALLOWED_HOSTS must contain exact host names without wildcards."
             )
         normalized_hosts.append(normalized)
-    if base_host not in normalized_hosts:
+    if not dynamic_base_url and base_host not in normalized_hosts:
         raise RuntimeError(
             "LEGADOHUB_ADMIN_ALLOWED_HOSTS must include the admin base URL host."
         )
 
-    origin_values = _csv("LEGADOHUB_ADMIN_ALLOWED_ORIGINS") or [base_url]
+    origin_values = _csv("LEGADOHUB_ADMIN_ALLOWED_ORIGINS")
+    if not origin_values and not dynamic_base_url:
+        origin_values = [base_url]
     origins = frozenset(
         _origin(value.rstrip("/"), label="LEGADOHUB_ADMIN_ALLOWED_ORIGINS")[0]
         for value in origin_values
     )
-    if base_url not in origins:
+    if not dynamic_base_url and base_url not in origins:
         raise RuntimeError(
             "LEGADOHUB_ADMIN_ALLOWED_ORIGINS must include LEGADOHUB_ADMIN_BASE_URL."
         )
 
     proxy_values = _csv("LEGADOHUB_ADMIN_TRUSTED_PROXIES") or ["127.0.0.1/32", "::1/128"]
     return PublicSecurityConfig(
-        public_mode=public_mode,
         public_base_url=base_url,
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=_networks(proxy_values),
+        dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=True,
     )
 
 
-def get_public_base_url() -> str:
-    return load_public_security_config().public_base_url
+def _is_lan_host(host: str) -> bool:
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return _valid_host(host) and (
+            host in {"localhost", "testserver"} or host.endswith(_LAN_DNS_SUFFIXES)
+        )
+    return any(address in network for network in _LAN_NETWORKS)
+
+
+def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
+    scheme = "https" if security.request_is_https(request) else request.url.scheme.lower()
+    if scheme not in {"http", "https"}:
+        raise RuntimeError("Request scheme is not HTTP(S).")
+    origin, host = _origin(
+        f"{scheme}://{request.headers.get('host', '').strip()}",
+        label="Host",
+    )
+    if not _is_lan_host(host):
+        raise RuntimeError("Host must be a local or private-network address.")
+    return origin
+
+
+def get_public_base_url(request: Request | None = None) -> str:
+    security = (
+        getattr(request.app.state, "public_security", None)
+        if request is not None
+        else None
+    ) or load_public_security_config()
+    if request is not None and security.dynamic_base_url:
+        return _request_origin(request, security)
+    return security.public_base_url
 
 
 def normalize_public_base_url(value: str) -> str:
@@ -300,13 +327,27 @@ def _security_rejection(
 
 def install_public_security(app: FastAPI, security: PublicSecurityConfig) -> None:
     app.state.public_security = security
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(security.allowed_hosts))
+    if security.allowed_hosts:
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(security.allowed_hosts))
 
     @app.middleware("http")
     async def public_security_boundary(request: Request, call_next):
         request_id = secrets.token_hex(16)
         request.state.request_id = request_id
         api_response = request.url.path.startswith("/api/")
+        request_origin = ""
+        if security.dynamic_base_url:
+            try:
+                request_origin = _request_origin(request, security)
+            except RuntimeError:
+                return _security_rejection(
+                    security=security,
+                    request_id=request_id,
+                    event="host_rejected",
+                    status_code=400,
+                    detail="Host is not allowed",
+                    api_response=api_response,
+                )
         if security.require_https and request.url.path != "/health" and not security.request_is_https(request):
             return _security_rejection(
                 security=security,
@@ -324,7 +365,7 @@ def install_public_security(app: FastAPI, security: PublicSecurityConfig) -> Non
                     normalized_origin = _origin(origin, label="Origin")[0]
                 except RuntimeError:
                     normalized_origin = ""
-                if normalized_origin not in security.allowed_origins:
+                if normalized_origin not in security.allowed_origins and normalized_origin != request_origin:
                     return _security_rejection(
                         security=security,
                         request_id=request_id,
@@ -349,8 +390,8 @@ def install_public_security(app: FastAPI, security: PublicSecurityConfig) -> Non
         return response
 
 
-def prepare_runtime_permissions(security: PublicSecurityConfig) -> None:
-    if not security.public_mode or os.name == "nt":
+def prepare_runtime_permissions() -> None:
+    if os.name == "nt":
         return
     os.umask(0o077)
     directories = [config.CONFIG_DIR, config.COOKIE_DIR, config.DATA_DIR, config.GENERATED_DIR, config.RUNTIME_DIR]

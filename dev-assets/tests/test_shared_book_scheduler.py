@@ -620,7 +620,7 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
         started.append(("lexicon", None))
 
     class FakeAuthService:
-        def ensure_default_admin(self):
+        def ensure_default_admin(self, **_kwargs):
             return None
 
     class FakeOfficialAuthManager:

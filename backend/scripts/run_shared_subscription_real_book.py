@@ -368,13 +368,20 @@ async def main() -> int:
     created_admin_user_id = ""
     if args.ensure_admin:
         auth = UserAuthService(db_path)
-        password = auth.ensure_default_admin()
-        if password:
+        generated_passwords: list[str] = []
+        created = auth.ensure_default_admin(
+            on_generated_password=generated_passwords.append,
+        )
+        if created:
             created_admin = auth.get_user_by_username("admin") or {}
             created_admin_user_id = created_admin.get("userId", "") or ""
             admin_info = {
                 "username": "admin",
-                "password": password,
+                "password": (
+                    generated_passwords[0]
+                    if generated_passwords
+                    else "(configured outside this script)"
+                ),
                 "created": "true",
                 "userId": created_admin_user_id,
             }

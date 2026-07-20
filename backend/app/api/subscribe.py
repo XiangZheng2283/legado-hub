@@ -696,7 +696,7 @@ async def get_subscribed_chapter(request: Request, chapter_id: str):
 @router.get("/legado/source")
 @public_router.get("/legado/source")
 def get_legado_source(request: Request) -> list[dict]:
-    return generate_legado_source(get_public_base_url())
+    return generate_legado_source(get_public_base_url(request))
 
 
 @router.get("/legado/search")
@@ -713,10 +713,14 @@ def legado_search(
     parsed_page = _legado_query_int(page, field="page", minimum=1, maximum=1000)
     _legado_query_int(waitMs, field="waitMs", minimum=0, maximum=120000)
     with reading_access_limiter.guard(user.user_id, "search"):
-        return _legado_search_response(keyword=keyword, page=parsed_page)
+        return _legado_search_response(
+            keyword=keyword,
+            page=parsed_page,
+            base_api=get_public_base_url(request),
+        )
 
 
-def _legado_search_response(*, keyword: str, page: int) -> dict:
+def _legado_search_response(*, keyword: str, page: int, base_api: str) -> dict:
     if not keyword.strip():
         return {
             "implemented": True,
@@ -728,7 +732,6 @@ def _legado_search_response(*, keyword: str, page: int) -> dict:
             "liveSearchPending": False,
         }
 
-    base_api = get_public_base_url()
     published = library_books_service.page_published_books(
         keyword=keyword,
         page=page,
@@ -782,7 +785,7 @@ async def legado_explore(request: Request, sourceId: str = "", groupId: str = ""
     group_id = _validated_legado_text(groupId, field="groupId", max_length=128)
     parsed_page = _legado_query_int(page, field="page", minimum=1, maximum=1000)
     with reading_access_limiter.guard(user.user_id, "search"):
-        base_api = get_public_base_url()
+        base_api = get_public_base_url(request)
         published = library_books_service.page_published_books(page=parsed_page, page_size=20)
         items = [
             library_books_service.build_search_injected_item(book, base_api=base_api)

@@ -37,7 +37,7 @@ function Get-SharedFileSha256 {
     try {
         $sha256 = [System.Security.Cryptography.SHA256]::Create()
         try {
-            return [Convert]::ToHexString($sha256.ComputeHash($stream))
+            return ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "")
         }
         finally {
             $sha256.Dispose()

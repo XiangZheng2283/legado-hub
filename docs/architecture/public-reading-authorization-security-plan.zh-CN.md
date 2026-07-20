@@ -1,12 +1,11 @@
-# 公网 Reading 授权与安全加固实施规划
+# 历史归档：公网 Reading 授权与安全加固实施规划
 
-> 状态：Phase A-E 实现与 LAN Docker 验收完成；双端口入口隔离已在 r4 Docker/LAN 完成复验；正式公网放行待 WAF/CDN、域名 TLS、真实安卓 Reading 和外部安全工具验收
-> 日期：2026-07-19
-> 最近验证：2026-07-20，完整门禁通过，详见 `nightly-public-authorization-report-2026-07-20.zh-CN.md`
-> 适用范围：后端、Console、Reading/Legado 虚拟书源、Docker 公网部署、测试与发布门禁
-> 上位文档：`docs/PRODUCT.md`、`docs/architecture/subscription-ownership-and-progress-control.zh-CN.md`
+> 状态：已取消，不再作为产品路线或部署指南执行。
+> 原规划日期：2026-07-19；最后一次历史验证：2026-07-20。
+> 现行边界：应用只支持本机或受控局域网；外网穿透及其 TLS、反向代理、防火墙和限流由使用者自行负责。
+> 保留原因：个人授权码、Session、权限隔离、攻击面与安全测试记录仍可作为实现依据。
 
-本文件同时保留实施前基线、目标契约和发布门禁。当前代码已经完成身份契约迁移，但“实现完成”不等于“允许开放公网”；第 14、16 节要求的正式环境证据齐备前，部署仍只按受信 LAN/staging 处理。
+下文按原方案保留历史语境；其中 Compose、Caddy、WAF/TLS、公网发布步骤及“待放行”状态均已失效。现行产品边界以 `docs/PRODUCT.md` 和 README 为准。
 
 ## 实施状态摘要
 
@@ -16,15 +15,15 @@
 | Phase B | 完成 | 个人授权码、哈希 Session、schema v13、管理员密码迁移及回归测试 |
 | Phase C | 完成 | Reading Bearer 门禁、聚合源边界、原生 `loginUi`、阅读限流与评论边界 |
 | Phase D | 完成 | 普通用户/管理员双登录体验、一次性授权码展示、权限导航和明确身份刷新 |
-| Phase E | LAN 完成 | `8765` 公共路由白名单、默认监听 `0.0.0.0:8766` 的管理控制面、单进程单 lifespan、非 root/只读容器、重启持久化、Host/Origin/Cookie/安全头和边缘限流门禁均已复验；正式 WAF/TLS 未验 |
+| Phase E | LAN 完成 | `8765` 公共路由白名单、默认监听 `0.0.0.0:8766` 的管理控制面、单进程单 lifespan、非 root/只读容器、重启持久化、Host/Origin/Cookie 和安全头均已复验 |
 | Phase F | 部分完成 | 自动化攻击矩阵、LAN 攻击 smoke、真实官方插件调用完成；安卓 Reading 与外部主动扫描未验 |
-| Phase G | 本地与 LAN 门禁完成 | `verify.ps1` 通过、加密备份恢复演练通过；正式公网发布门禁尚未放行 |
+| Phase G | 本地与 LAN 门禁完成 | `verify.ps1` 通过、加密备份恢复演练通过 |
 
-## 1. 背景与决策
+## 1. 原始背景与决策（历史）
 
 实施前 LegadoHub 只承诺本机或受信局域网部署，Reading/Legado 兼容接口仍有匿名读取路径，Docker 默认直接发布 `8765`，登录、Host、TLS、速率限制和运行凭据保护尚未达到公网标准。
 
-本阶段把产品扩展为：**少量受邀用户可以通过公网使用同一 LegadoHub，每位用户只管理自己的订阅，Reading/Legado 仍是主要阅读端，管理员继续独占插件、官方源认证和全局运维权限。**
+原计划曾把产品扩展为：**少量受邀用户通过公网使用同一 LegadoHub**。该公网方向现已取消；其中“每位用户只管理自己的订阅”和 Reading/Legado 鉴权能力继续保留在局域网实例中。
 
 已确认的身份决策：
 
@@ -36,7 +35,7 @@
 6. Reading 使用 Bearer Session，Web Console 使用 HttpOnly Session Cookie；二者映射同一个 `user_sessions` 会话模型。
 7. 官方起点及其他官方源 Cookie 仍只由管理员维护，普通用户永远不能读取、导出或直接调用官方插件私有接口。
 8. 书源 JSON 可以匿名导入；搜索、详情、目录、正文、评论和订阅均必须完成授权。
-9. 不提供“关闭 Reading 鉴权”的兼容开关，避免公网部署因错误配置重新变成匿名代理。
+9. 不提供“关闭 Reading 鉴权”的兼容开关，避免实例因错误配置重新变成匿名代理。
 10. 管理员入口与公共 Reading 入口按监听端口分离：`8765` 不注册管理员认证、Console API、OpenAPI 或管理 SPA 路径；`8766` 承载管理员入口。
 11. 两个端口由同一个进程和唯一 lifespan 管理，禁止为端口分离启动第二套订阅、Ping 或词库后台任务。
 

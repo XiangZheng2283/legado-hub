@@ -1,4 +1,9 @@
 services:
+  legadohub-init:
+    command: ["--initialize-runtime", "/app/plugins/sources/thirdparty"]
+    volumes:
+      - "${LEGADOHUB_THIRDPARTY_PLUGINS_DIR:?set LEGADOHUB_THIRDPARTY_PLUGINS_DIR}:/app/plugins/sources/thirdparty:rw"
+
   legadohub:
     volumes:
       - "${LEGADOHUB_THIRDPARTY_PLUGINS_DIR:?set LEGADOHUB_THIRDPARTY_PLUGINS_DIR}:/app/plugins/sources/thirdparty:rw"

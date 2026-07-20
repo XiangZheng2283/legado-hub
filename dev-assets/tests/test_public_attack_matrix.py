@@ -272,11 +272,10 @@ def test_source_generation_rejects_js_url_injection_and_exports_no_credentials()
     assert "adminPassword" not in serialized
 
 
-def test_public_cors_rejection_has_no_wildcard_or_payload_leak(monkeypatch, caplog) -> None:
+def test_https_reader_cors_rejection_has_no_wildcard_or_payload_leak(monkeypatch, caplog) -> None:
     import app.core.public_security as security_module
 
     security_module._security_last_log.clear()
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_MODE", "1")
     monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "https://books.example.test")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.example.test")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "https://books.example.test")

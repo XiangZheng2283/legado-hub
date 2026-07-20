@@ -27,6 +27,15 @@ FRONTEND_DIST = config.FRONTEND_DIST_DIR
 logger = logging.getLogger(__name__)
 
 
+def _log_generated_admin_password(password: str) -> None:
+    """Deliver the local first-start credential once through the process console."""
+    logger.warning(
+        "首次启动已创建管理员账号。用户名：admin；随机密码：%s。"
+        "请立即登录并修改密码，此密码后续不会再次显示。",
+        password,
+    )
+
+
 class EntryPoint(StrEnum):
     """Network surface exposed by one FastAPI application instance."""
 
@@ -62,14 +71,15 @@ async def _probe_saved_plugin_cookies(official_auth_manager) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    security = app.state.public_security
-    prepare_runtime_permissions(security)
+    prepare_runtime_permissions()
     initialize_database()
     from app.services.official_auth.manager import official_auth_manager
     from app.services.user_auth import auth_service
 
-    if auth_service.ensure_default_admin():
-        logger.info("LegadoHub administrator created from LEGADOHUB_ADMIN_PASSWORD")
+    if auth_service.ensure_default_admin(
+        on_generated_password=_log_generated_admin_password,
+    ):
+        logger.info("LegadoHub administrator initialized")
 
     # Clean up jobs that were left running from a previous server process.  Their
     # workers/tasks are gone, so keeping them as "running" would make new requests

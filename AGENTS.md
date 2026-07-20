@@ -11,7 +11,7 @@ Keep the root clean; see `docs/architecture/repository-layout.md` for the bounda
 
 ## First-time setup / dev run
 
-`start.bat` (Windows) is the canonical bootstrap: it creates `.venv`, installs `backend/requirements.txt`, runs `python -m playwright install chromium`, builds the frontend, then starts uvicorn. Manual equivalent:
+Docker Compose with the published `xzixmn/legado-hub:latest` image is the recommended deployment path. `start.bat` is the Windows source-development bootstrap: it creates `.venv`, installs `backend/requirements.txt`, runs `python -m playwright install chromium`, builds the frontend, then starts uvicorn. Manual equivalent:
 
 ```
 python -m venv .venv
@@ -21,7 +21,7 @@ cd frontend && npm install && npm run build
 cd ../backend && ../.venv/Scripts/python.exe -m app.server --host 0.0.0.0 --public-port 8765 --admin-port 8766
 ```
 
-On first startup the lifespan handler initializes the SQLite DB at `backend/data/app.db` and **prints a default `admin` password** to stdout; change it after first login.
+On first startup the lifespan handler initializes the SQLite DB at `backend/data/app.db`, creates `admin`, and prints a generated high-entropy password once when no password was configured. Explicit passwords are never echoed. The product supports only local or trusted-LAN operation; external tunneling and its network security are operator-owned and do not select an application mode.
 
 ## Commands
 
@@ -64,7 +64,7 @@ This is the most likely thing to trip you up:
 - `source.py` must export a `Source` class with **async** methods matching each `capability` declared in metadata (`search`, `detail`, `toc`, `chapter`, `chapter_reviews`, `explore`, `auth`; `explore` requires `explore_groups` + `explore`).
 - `plugins/sources/official/` is gitignored — don't commit official plugins.
 - Docker images must not contain `plugins/sources/official/`; Compose mounts that host directory read-only so operators can place official plugins after deployment.
-- Docker images keep bundled third-party plugins under `/opt/legadohub/plugins/thirdparty`. The optional `docker-compose.plugins.yml` bind mount targets `/app/plugins/sources/thirdparty` directly and must be writable by `LEGADOHUB_APP_UID/GID`; the entrypoint copies the bundled set only when that directory is empty. Once populated, the host directory is authoritative and is never overwritten on startup.
+- Docker images keep bundled third-party plugins under `/opt/legadohub/plugins/thirdparty`. Default Compose bind-mounts `./plugins/sources/thirdparty` to `/app/plugins/sources/thirdparty`; the initializer fixes the mount root ownership and the entrypoint copies the bundled set only when the directory is empty. Once populated, the host directory is authoritative and is never overwritten on startup. `docker-compose.plugins.yml` only selects an alternate host path.
 - Official Qidian plugins are authored in the sibling repo `C:\Home\Workspace\UGit\QDFCCKK`; edit `source-plugin/WEB-plugin` or `source-plugin/APP-plugin` there first, then run `python sync-to-legado-hub.py --variant WEB-plugin` or `python sync-to-legado-hub.py --variant APP-plugin`. Do not hand-edit synced files under `plugins/sources/official/qidian_com_*` except for emergency inspection.
 - Authoritative contract: `docs/architecture/source-plugin-contract.md` (+ `.zh-CN.md`). Template scaffold: `plugins/templates/source_plugin/`.
 - Plugins must not own global concurrency/timeout/proxy/retry/cache/scheduling policy — those are backend runtime responsibilities.
@@ -78,20 +78,22 @@ All paths centralized in `backend/app/config.py`:
 - Runtime data under `backend/data/`: `app.db`, `browser_profiles/`, `novels/`, `lexicons/`, `cache/`, etc.
 - Generated Legado aggregate output: `backend/generated/`
 
-Do not commit DBs, cookies, `app_config.json`, or anything under `backend/data/` or `backend/runtime/`.
+Default Docker bind mounts persist these paths at repository-root `data/`, `config/`, `generated/`, `runtime/`, and `plugins/sources/thirdparty/`; official plugins are mounted read-only from `plugins/sources/official/`. A one-shot, network-disabled initializer assigns writable mount roots to the image's `legadohub` UID/GID before the non-root main service starts. Both reader and admin ports bind `0.0.0.0`; when no fixed base URL is configured, validated LAN request hosts are used to generate Reading URLs.
+
+Do not commit DBs, cookies, `app_config.json`, or anything under either the source runtime paths or repository-root Docker persistence directories.
 
 ## Browser / Playwright (Source Access Bridge)
 
-Controlled by env (see `.env.example`):
+Controlled by process environment when an override is needed:
 - `LEGADOHUB_BROWSER_ENABLED` (1/0)
 - `LEGADOHUB_BROWSER_PROVIDER`: `chromium` (embedded, requires `playwright install chromium`) or `browserless` (remote; set `LEGADOHUB_BROWSERLESS_WS` + optional `_TOKEN`)
 - `LEGADOHUB_BROWSER_PUBLIC_BASE_URL`, `LEGADOHUB_BROWSER_PROFILE_ROOT`, `LEGADOHUB_BROWSER_CONNECT_TIMEOUT_MS`, `LEGADOHUB_BROWSER_ACTION_TIMEOUT_MS`
 
-Docker builds use `node:22` frontend stage + `python:3.12-slim` runtime with `playwright install --with-deps chromium`; backend state remains in the container writable layer and is lost when the container is replaced or removed. `docker-compose.yml` exposes reader port `8765` and admin port `8766`. The admin host binding defaults to `0.0.0.0` by product decision; deployment operators own its firewall, forwarding, TLS, and management-network restrictions.
+The release workflow builds `xzixmn/legado-hub` with a `node:22` frontend stage + `python:3.12-slim` runtime and `playwright install --with-deps chromium`. `docker-compose.yml` pulls that image, exposes reader port `8765` and admin port `8766` on all interfaces, and bind-mounts persistent backend state to the host. The LAN firewall must restrict management access. The repository does not ship a public reverse proxy or tunneling deployment.
 
 ## Conventions
 
 - Default shell guidance here is PowerShell on Windows, but `start.bat` is a `.bat` entrypoint (CRLF, `@echo off`); don't rewrite it as PowerShell.
 - Source files use LF; Windows batch uses CRLF.
 - Frontend uses `@` alias to `frontend/src` (see `vite.config.ts`); ESLint allows `any` and disables `react-refresh/only-export-components` under `src/components/ui/**`.
-- No CI workflows are defined in this repo; verification is local (`pytest`, `npm run lint`, `npm run build`).
+- `.github/workflows/docker-build.yml` publishes `latest`, version-tag, and commit-SHA images to Docker Hub. Code verification remains local through `verify.ps1`.

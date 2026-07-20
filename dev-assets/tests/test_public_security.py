@@ -1,4 +1,4 @@
-"""Public deployment request and credential boundary regressions."""
+"""Reader entrypoint request and credential boundary regressions."""
 
 from __future__ import annotations
 
@@ -11,53 +11,103 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.datastructures import Headers
 
-from app.core.public_security import load_public_security_config
-from app.main import create_app
+from app.core.public_security import load_admin_security_config, load_public_security_config
+from app.main import EntryPoint, create_app
 from app.services.cookie_store import CookieStore
 from app.services.user_auth import auth_service
 
 
-PUBLIC_ORIGIN = "https://books.example.test"
+READER_ORIGIN = "https://books.example.test"
+LAN_READER_ORIGIN = "http://192.168.31.161:8765"
+LAN_ADMIN_ORIGIN = "http://192.168.31.161:8766"
 
 
-def _public_config(monkeypatch):
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_MODE", "1")
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", PUBLIC_ORIGIN)
+def _reader_config(monkeypatch):
+    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", READER_ORIGIN)
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.example.test")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", PUBLIC_ORIGIN)
+    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", READER_ORIGIN)
     monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "127.0.0.1/32")
-    monkeypatch.setenv("LEGADOHUB_BROWSER_DISABLE_SANDBOX", "0")
     return load_public_security_config()
 
 
-def test_public_config_requires_https_exact_hosts_and_trusted_proxy(monkeypatch) -> None:
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_MODE", "1")
-    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
-    with pytest.raises(RuntimeError, match="PUBLIC_BASE_URL is required"):
-        load_public_security_config()
+def _clear_network_config(monkeypatch) -> None:
+    for name in (
+        "LEGADOHUB_PUBLIC_BASE_URL",
+        "LEGADOHUB_ALLOWED_HOSTS",
+        "LEGADOHUB_ALLOWED_ORIGINS",
+        "LEGADOHUB_ADMIN_BASE_URL",
+        "LEGADOHUB_ADMIN_ALLOWED_HOSTS",
+        "LEGADOHUB_ADMIN_ALLOWED_ORIGINS",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "http://books.example.test")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.example.test")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "http://books.example.test")
-    monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "127.0.0.1/32")
-    with pytest.raises(RuntimeError, match="must use HTTPS"):
-        load_public_security_config()
 
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", PUBLIC_ORIGIN)
+def test_default_lan_uses_request_host_and_rejects_public_host(monkeypatch) -> None:
+    _clear_network_config(monkeypatch)
+    public_app = create_app(load_public_security_config())
+
+    lan_client = TestClient(public_app, base_url=LAN_READER_ORIGIN)
+    manifest = lan_client.get("/api/subscribe/legado/source")
+    assert manifest.status_code == 200
+    assert manifest.json()[0]["searchUrl"].startswith(f"{LAN_READER_ORIGIN}/api/")
+
+    public_client = TestClient(public_app, base_url="http://203.0.113.10:8765")
+    assert public_client.get("/health").status_code == 400
+
+    arbitrary_name_client = TestClient(public_app, base_url="http://evil:8765")
+    assert arbitrary_name_client.get("/health").status_code == 400
+    assert arbitrary_name_client.get(
+        "/health",
+        headers={"Host": "192.168.31.161:99999"},
+    ).status_code == 400
+    assert arbitrary_name_client.get(
+        "/health",
+        headers={"Host": "[fe80::1%25eth0]:8765"},
+    ).status_code == 400
+
+    local_name_client = TestClient(public_app, base_url="http://reader.home.arpa:8765")
+    assert local_name_client.get("/health").status_code == 200
+
+    ipv6_client = TestClient(public_app)
+    ipv6_manifest = ipv6_client.get(
+        "/api/subscribe/legado/source",
+        headers={"Host": "[fd00::20]:8765"},
+    )
+    assert ipv6_manifest.status_code == 200
+    assert ipv6_manifest.json()[0]["searchUrl"].startswith(
+        "http://[fd00::20]:8765/api/"
+    )
+
+
+def test_default_lan_admin_accepts_same_origin_only(monkeypatch) -> None:
+    _clear_network_config(monkeypatch)
+    admin_app = create_app(
+        load_admin_security_config(),
+        entrypoint=EntryPoint.ADMIN,
+        manage_runtime=False,
+    )
+    client = TestClient(admin_app, base_url=LAN_ADMIN_ORIGIN)
+
+    assert client.post("/api/missing", headers={"Origin": LAN_ADMIN_ORIGIN}).status_code == 404
+    assert client.post(
+        "/api/missing",
+        headers={"Origin": "http://192.168.31.99:8766"},
+    ).status_code == 403
+
+
+def test_reader_config_derives_https_and_rejects_wildcard_hosts(monkeypatch) -> None:
+    security = _reader_config(monkeypatch)
+    assert security.require_https is True
+    assert security.enforce_origin is True
+
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "*")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", PUBLIC_ORIGIN)
     with pytest.raises(RuntimeError, match="without wildcards"):
         load_public_security_config()
 
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.example.test")
-    monkeypatch.delenv("LEGADOHUB_TRUSTED_PROXIES", raising=False)
-    with pytest.raises(RuntimeError, match="TRUSTED_PROXIES is required"):
-        load_public_security_config()
 
-
-def test_public_app_rejects_host_and_forwarded_spoof_and_uses_fixed_urls(monkeypatch) -> None:
-    public_app = create_app(_public_config(monkeypatch))
-    secure_client = TestClient(public_app, base_url=PUBLIC_ORIGIN)
+def test_reader_app_rejects_host_and_forwarded_spoof_and_uses_fixed_urls(monkeypatch) -> None:
+    public_app = create_app(_reader_config(monkeypatch))
+    secure_client = TestClient(public_app, base_url=READER_ORIGIN)
 
     assert secure_client.get("/health").status_code == 200
     assert secure_client.get("/health", headers={"Host": "evil.invalid"}).status_code == 400
@@ -67,7 +117,7 @@ def test_public_app_rejects_host_and_forwarded_spoof_and_uses_fixed_urls(monkeyp
     )
     assert manifest.status_code == 200
     source = manifest.json()[0]
-    assert source["searchUrl"].startswith(f"{PUBLIC_ORIGIN}/api/")
+    assert source["searchUrl"].startswith(f"{READER_ORIGIN}/api/")
     assert "evil.invalid" not in str(source)
     assert manifest.headers["cache-control"] == "no-store"
     assert manifest.headers["x-content-type-options"] == "nosniff"
@@ -81,12 +131,12 @@ def test_public_app_rejects_host_and_forwarded_spoof_and_uses_fixed_urls(monkeyp
     assert rejected.status_code == 400
 
 
-def test_public_cookie_writes_require_origin_but_bearer_does_not(monkeypatch) -> None:
-    public_app = create_app(_public_config(monkeypatch))
-    browser = TestClient(public_app, base_url=PUBLIC_ORIGIN)
+def test_https_reader_cookie_writes_require_origin_but_bearer_does_not(monkeypatch) -> None:
+    public_app = create_app(_reader_config(monkeypatch))
+    browser = TestClient(public_app, base_url=READER_ORIGIN)
     login = browser.post(
         "/api/auth/login",
-        headers={"Origin": PUBLIC_ORIGIN},
+        headers={"Origin": READER_ORIGIN},
         json={"username": "admin", "password": "admin123"},
     )
     assert login.status_code == 200
@@ -102,17 +152,17 @@ def test_public_cookie_writes_require_origin_but_bearer_does_not(monkeypatch) ->
     ).status_code == 403
     assert browser.post(
         "/api/auth/logout",
-        headers={"Origin": PUBLIC_ORIGIN},
+        headers={"Origin": READER_ORIGIN},
     ).status_code == 200
 
     created = auth_service.create_access_user(f"public-{uuid.uuid4().hex[:10]}")
-    redemption_client = TestClient(public_app, base_url=PUBLIC_ORIGIN)
+    redemption_client = TestClient(public_app, base_url=READER_ORIGIN)
     redeemed = redemption_client.post(
         "/api/auth/access/redeem",
         json={"accessCode": created["accessCode"]},
     )
     assert redeemed.status_code == 200
-    bearer = TestClient(public_app, base_url=PUBLIC_ORIGIN)
+    bearer = TestClient(public_app, base_url=READER_ORIGIN)
     assert bearer.post(
         "/api/auth/access/logout",
         headers={"Authorization": f"Bearer {redeemed.json()['token']}"},
@@ -120,12 +170,13 @@ def test_public_cookie_writes_require_origin_but_bearer_does_not(monkeypatch) ->
 
 
 def test_trusted_proxy_client_ip_ignores_spoofed_leftmost_values(monkeypatch) -> None:
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_MODE", "0")
     monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "http://127.0.0.1:8765")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "127.0.0.1")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "http://127.0.0.1:8765")
     monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "10.0.0.0/24")
     security = load_public_security_config()
+    assert security.require_https is False
+    assert security.enforce_origin is False
     request = SimpleNamespace(
         client=SimpleNamespace(host="10.0.0.2"),
         headers=Headers({"X-Forwarded-For": "203.0.113.99, 198.51.100.25"}),

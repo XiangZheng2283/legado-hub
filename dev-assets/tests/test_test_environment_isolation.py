@@ -119,21 +119,55 @@ def test_docker_plugin_delivery_contract() -> None:
         (repo_root / "docker-compose.plugins.yml").read_text(encoding="utf-8")
     )
 
+    image_config = compose["x-legadohub-image"]
+    assert image_config == {
+        "image": "xzixmn/legado-hub:latest",
+        "pull_policy": "always",
+    }
     assert "plugins/sources/official" in dockerignore
     assert "plugins/sources/thirdparty" not in dockerignore
     assert "backend/runtime" in dockerignore
+    assert all(path in dockerignore for path in ("data", "config", "generated", "runtime"))
     assert "plugins/sources/thirdparty/ /opt/legadohub/plugins/thirdparty/" in dockerfile
     assert "ENTRYPOINT [\"legadohub-entrypoint\"]" in dockerfile
+    assert "USER legadohub" in dockerfile
     assert "COPY --chown=legadohub:legadohub plugins/ /app/plugins/" not in dockerfile
     assert "/opt/legadohub/plugins/thirdparty" in entrypoint
     assert "/app/plugins/sources/thirdparty" in entrypoint
     assert "cp -a" in entrypoint
     volumes = compose["services"]["legadohub"]["volumes"]
-    assert not any("/app/backend/data" in volume for volume in volumes)
-    assert not any("/app/backend/config" in volume for volume in volumes)
-    assert not any("/app/backend/generated" in volume for volume in volumes)
-    assert not any("/app/backend/runtime" in volume for volume in volumes)
+    assert "./data:/app/backend/data:rw" in volumes
+    assert "./config:/app/backend/config:rw" in volumes
+    assert "./generated:/app/backend/generated:rw" in volumes
+    assert "./runtime:/app/backend/runtime:rw" in volumes
+    assert "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty:rw" in volumes
     assert compose["services"]["legadohub"].get("read_only") is not True
+    assert compose["services"]["legadohub"]["ports"] == [
+        "0.0.0.0:8765:8765",
+        "0.0.0.0:8766:8766",
+    ]
+    assert "LEGADOHUB_PUBLIC_MODE" not in compose["services"]["legadohub"]["environment"]
+    assert not (repo_root / "docker-compose.public.yml").exists()
+    assert not (repo_root / "deploy/caddy/Caddyfile").exists()
+    assert "LEGADOHUB_PUBLIC_BASE_URL" not in compose["services"]["legadohub"]["environment"]
+    assert "runtime directory is not writable" in entrypoint
+    assert "--initialize-runtime" in entrypoint
+    assert "id -u legadohub" in entrypoint
+    assert "id -g legadohub" in entrypoint
+    assert "chown 1000:1000" not in entrypoint
+    initializer = compose["services"]["legadohub-init"]
+    assert initializer["user"] == "0:0"
+    assert initializer["command"] == [
+        "--initialize-runtime",
+        "/app/plugins/sources/thirdparty",
+    ]
+    assert initializer["network_mode"] == "none"
+    assert initializer["read_only"] is True
+    assert set(initializer["cap_add"]) == {"CHOWN", "DAC_OVERRIDE"}
+    assert compose["services"]["legadohub"]["depends_on"]["legadohub-init"] == {
+        "condition": "service_completed_successfully"
+    }
+    assert all(volume in initializer["volumes"] for volume in volumes[:5])
     assert any(
         volume.endswith(":/app/plugins/sources/official:ro")
         for volume in volumes
@@ -142,3 +176,20 @@ def test_docker_plugin_delivery_contract() -> None:
         volume.endswith(":/app/plugins/sources/thirdparty:rw")
         for volume in plugin_mount["services"]["legadohub"]["volumes"]
     )
+    assert any(
+        volume.endswith(":/app/plugins/sources/thirdparty:rw")
+        for volume in plugin_mount["services"]["legadohub-init"]["volumes"]
+    )
+    assert plugin_mount["services"]["legadohub-init"]["command"] == [
+        "--initialize-runtime",
+        "/app/plugins/sources/thirdparty",
+    ]
+
+
+def test_windows_bootstrap_does_not_require_dotenv() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    start_script = (repo_root / "start.bat").read_text(encoding="utf-8")
+
+    assert ".env.example" not in start_script
+    assert 'in (".env")' not in start_script.lower()
+    assert not (repo_root / ".env.example").exists()

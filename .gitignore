@@ -15,7 +15,6 @@ build/
 
 .env
 .env.*
-!.env.example
 secrets/
 
 logs/
@@ -29,6 +28,10 @@ backend/data/
 backend/config/cookies/
 backend/config/app_config.json
 backend/runtime/
+/data/
+/config/
+/generated/
+/runtime/
 backend/server.err
 backend/debug_stage2.py
 dev_assets_test_loader.py

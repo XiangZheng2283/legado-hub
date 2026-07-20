@@ -468,12 +468,12 @@ PATCH /api/subscribe/books/{bookId}/subscription
 
 ## 13. 安全与部署边界
 
-- 默认支持本机或受信局域网单站点部署；Phase 4 只扩展到少量受邀用户的单实例公网部署，不支持开放注册或公网多租户平台。
+- 仅支持本机或受信局域网单站点部署；外网穿透及其 TLS、代理、防火墙和限流由使用者自行负责，不属于应用模式。
 - Phase 1 运行模型限定为单个后端进程；内存限流和进程级共享书创建锁不提供多 worker 一致性。启用多进程前必须改为数据库预留或等价的跨进程协调与持久限流。
 - `app_config.json`、Cookie、数据库和运行日志均不得提交；API key 在 UI/API 输出中必须遮罩。
 - 本地运行配置可以由宿主保存敏感值，但必须依赖主机文件权限保护，禁止写入源码、测试夹具或日志。
-- HTTPS 部署必须设置 Session Cookie `Secure`，并正确处理可信代理协议头。
-- 公网支持前必须补个人授权码、Bearer Session、TLS、Allowed Hosts、可信代理、Origin/CSRF 防护、速率限制和容器/凭据保护。
+- 使用者自行接入 HTTPS 穿透时必须设置 Session Cookie `Secure`，并正确处理可信代理协议头。
+- 个人授权码、Bearer Session、Allowed Hosts、可信代理、Origin/CSRF 防护、速率限制和容器/凭据保护属于局域网多用户实例的基础安全边界。
 - bootstrap 必须是数据库事务保护的一次性操作；已有用户后永久拒绝。
 - 禁用用户必须立即撤销其全部 Session。
 - 日志不得输出密码、Cookie、Authorization、API key、手机号全文或内部正文。
@@ -664,4 +664,4 @@ update_tasks=0
 - Console 39 个视觉场景整体一致率 `99.85%`，每个场景均不低于 98%；最低场景为 `98.25%`。
 - 发布前后对 `backend/data`、`backend/config`、`backend/generated`、`backend/runtime` 和遗留插件 Cookie 摘要复核一致，真实用户、Session、Cookie、配置和运行数据未变化。
 
-Phase 1 完成不包含持久化搜索任务恢复、统一数据完整性恢复入口和公网部署。Phase 4 已接受“个人授权码 -> 用户 Session -> Reading Bearer”的公网方向，但在 `public-reading-authorization-security-plan.zh-CN.md` 的实现、攻防、Docker、真实客户端和最终门禁全部通过前，公网能力仍不属于已交付承诺。
+Phase 1 完成不包含持久化搜索任务恢复和统一数据完整性恢复入口。Phase 4 保留“个人授权码 -> 用户 Session -> Reading Bearer”作为局域网多用户鉴权能力；公网交付方向已取消。

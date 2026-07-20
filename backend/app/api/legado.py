@@ -92,7 +92,7 @@ async def get_book(request: Request, book_id: str) -> dict:
     if not library_books_service.is_virtual_book_id(book_id):
         raise HTTPException(status_code=404, detail="书籍不存在")
     with reading_access_limiter.guard(user.user_id, "metadata"):
-        base_api = get_public_base_url()
+        base_api = get_public_base_url(request)
         shared = library_books_service.legado_book_detail(book_id, base_api=base_api)
         if shared is not None:
             return shared
@@ -107,7 +107,7 @@ async def get_toc(request: Request, book_id: str) -> dict:
     if not library_books_service.is_virtual_book_id(book_id):
         raise HTTPException(status_code=404, detail="书籍不存在")
     with reading_access_limiter.guard(user.user_id, "metadata"):
-        base_api = get_public_base_url()
+        base_api = get_public_base_url(request)
         shared = library_books_service.legado_toc(book_id, base_api=base_api)
         if shared is not None:
             return shared
@@ -227,7 +227,7 @@ async def get_chapter_review_view(
                 page=parsed_page,
                 page_size=page_size,
             )
-        base_api = get_public_base_url()
+        base_api = get_public_base_url(request)
         review_view_url = f"{base_api}/api/legado/chapter/{chapter_id}/reviews/view"
         return HTMLResponse(
             render_chapter_reviews_html(

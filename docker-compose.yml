@@ -1,36 +1,55 @@
+x-legadohub-image: &legadohub-image
+  image: xzixmn/legado-hub:latest
+  pull_policy: always
+
 services:
+  legadohub-init:
+    <<: *legadohub-image
+    restart: "no"
+    user: "0:0"
+    command: ["--initialize-runtime", "/app/plugins/sources/thirdparty"]
+    volumes:
+      - "./data:/app/backend/data:rw"
+      - "./config:/app/backend/config:rw"
+      - "./generated:/app/backend/generated:rw"
+      - "./runtime:/app/backend/runtime:rw"
+      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty:rw"
+    network_mode: none
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+
   legadohub:
-    build:
-      context: .
-      args:
-        APP_UID: "${LEGADOHUB_APP_UID:-1000}"
-        APP_GID: "${LEGADOHUB_APP_GID:-1000}"
+    <<: *legadohub-image
     container_name: legadohub
     restart: unless-stopped
     init: true
+    depends_on:
+      legadohub-init:
+        condition: service_completed_successfully
     ports:
-      - "${LEGADOHUB_BIND_ADDRESS:-127.0.0.1}:${LEGADOHUB_PORT:-8765}:8765"
-      - "${LEGADOHUB_ADMIN_BIND_ADDRESS:-0.0.0.0}:${LEGADOHUB_ADMIN_PORT:-8766}:8766"
+      - "0.0.0.0:8765:8765"
+      - "0.0.0.0:8766:8766"
     environment:
       LEGADOHUB_BROWSER_PROVIDER: chromium
       LEGADOHUB_BROWSER_ENABLED: "1"
       LEGADOHUB_BROWSER_DISABLE_SANDBOX: "0"
       LEGADOHUB_BROWSER_PROFILE_ROOT: /app/backend/data/browser_profiles
-      LEGADOHUB_PUBLIC_MODE: "${LEGADOHUB_PUBLIC_MODE:-0}"
-      LEGADOHUB_PUBLIC_BASE_URL: "${LEGADOHUB_PUBLIC_BASE_URL:-http://127.0.0.1:8765}"
-      LEGADOHUB_ALLOWED_HOSTS: "${LEGADOHUB_ALLOWED_HOSTS:-127.0.0.1,localhost}"
-      LEGADOHUB_ALLOWED_ORIGINS: "${LEGADOHUB_ALLOWED_ORIGINS:-http://127.0.0.1:8765}"
-      LEGADOHUB_TRUSTED_PROXIES: "${LEGADOHUB_TRUSTED_PROXIES:-127.0.0.1/32}"
-      LEGADOHUB_ADMIN_BASE_URL: "${LEGADOHUB_ADMIN_BASE_URL:-http://127.0.0.1:8766}"
-      LEGADOHUB_ADMIN_ALLOWED_HOSTS: "${LEGADOHUB_ADMIN_ALLOWED_HOSTS:-127.0.0.1,localhost}"
-      LEGADOHUB_ADMIN_ALLOWED_ORIGINS: "${LEGADOHUB_ADMIN_ALLOWED_ORIGINS:-http://127.0.0.1:8766}"
-      LEGADOHUB_ADMIN_TRUSTED_PROXIES: "${LEGADOHUB_ADMIN_TRUSTED_PROXIES:-127.0.0.1/32}"
-      LEGADOHUB_ADMIN_PASSWORD_FILE: "${LEGADOHUB_ADMIN_PASSWORD_FILE:-}"
     volumes:
-      - "${LEGADOHUB_OFFICIAL_PLUGINS_DIR:-./plugins/sources/official}:/app/plugins/sources/official:ro"
+      - "./data:/app/backend/data:rw"
+      - "./config:/app/backend/config:rw"
+      - "./generated:/app/backend/generated:rw"
+      - "./runtime:/app/backend/runtime:rw"
+      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty:rw"
+      - "./plugins/sources/official:/app/plugins/sources/official:ro"
     tmpfs:
       - /tmp:size=512m,mode=1777
-      - /home/legadohub/.cache:size=256m,mode=700
+      - /home/legadohub/.cache:size=256m,mode=700,uid=1000,gid=1000
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -50,11 +69,7 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      legadohub_internal:
-        ipv4_address: 172.31.250.20
+      - legadohub_internal
 
 networks:
-  legadohub_internal:
-    ipam:
-      config:
-        - subnet: 172.31.250.0/24
+  legadohub_internal: {}

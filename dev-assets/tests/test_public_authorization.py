@@ -347,12 +347,71 @@ def test_first_start_environment_password_wins_over_legacy_config(tmp_path, monk
     monkeypatch.setenv("LEGADOHUB_ADMIN_PASSWORD", "environment-password")
 
     service = UserAuthService(tmp_path / "auth.db")
-    assert service.ensure_default_admin() is True
+    generated_passwords: list[str] = []
+    assert (
+        service.ensure_default_admin(
+            on_generated_password=generated_passwords.append,
+        )
+        is True
+    )
+    assert generated_passwords == []
     assert service.authenticate("admin", "environment-password").is_admin
     with pytest.raises(HTTPException):
         service.authenticate("admin", "stale-config-password")
     saved = json.loads(config_path.read_text(encoding="utf-8"))
     assert "adminPasswordBase64" not in saved.get("auth", {})
+
+
+def test_first_start_generates_admin_password_once(tmp_path, monkeypatch) -> None:
+    runtime_config = AppConfig(tmp_path / "app_config.json")
+    monkeypatch.setattr(AppConfig, "_instance", runtime_config)
+    monkeypatch.delenv("LEGADOHUB_ADMIN_PASSWORD", raising=False)
+    monkeypatch.delenv("LEGADOHUB_ADMIN_PASSWORD_FILE", raising=False)
+
+    service = UserAuthService(tmp_path / "auth.db")
+    generated_passwords: list[str] = []
+
+    assert (
+        service.ensure_default_admin(
+            on_generated_password=generated_passwords.append,
+        )
+        is True
+    )
+    assert len(generated_passwords) == 1
+    generated_password = generated_passwords[0]
+    assert len(generated_password) >= 40
+    assert service.authenticate("admin", generated_password).is_admin
+
+    repeated_passwords: list[str] = []
+    assert (
+        service.ensure_default_admin(
+            on_generated_password=repeated_passwords.append,
+        )
+        is False
+    )
+    assert repeated_passwords == []
+
+
+def test_first_start_password_file_wins_over_legacy_config(tmp_path, monkeypatch) -> None:
+    runtime_config = AppConfig(tmp_path / "app_config.json")
+    runtime_config.set(
+        "auth.adminPasswordBase64",
+        base64.b64encode(b"legacy-password-must-not-win").decode("ascii"),
+    )
+    runtime_config.save()
+    monkeypatch.setattr(AppConfig, "_instance", runtime_config)
+    monkeypatch.delenv("LEGADOHUB_ADMIN_PASSWORD", raising=False)
+    secret_file = tmp_path / "admin-password.txt"
+    secret_file.write_text("configured-file-password", encoding="utf-8")
+    monkeypatch.setenv("LEGADOHUB_ADMIN_PASSWORD_FILE", str(secret_file))
+
+    service = UserAuthService(tmp_path / "auth.db")
+    generated_passwords: list[str] = []
+    assert service.ensure_default_admin(on_generated_password=generated_passwords.append) is True
+    assert generated_passwords == []
+    assert service.authenticate("admin", "configured-file-password").is_admin
+    with pytest.raises(HTTPException):
+        service.authenticate("admin", "legacy-password-must-not-win")
 
 
 def test_bootstrap_http_endpoint_is_not_exposed(monkeypatch) -> None:

@@ -38,7 +38,6 @@ def isolated_apps(monkeypatch, tmp_path):
     (frontend_dist / "icons.svg").write_text("<svg></svg>", encoding="utf-8")
     monkeypatch.setattr(main_module, "FRONTEND_DIST", frontend_dist)
 
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_MODE", "0")
     monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", PUBLIC_ORIGIN)
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "public.test")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", PUBLIC_ORIGIN)
@@ -274,13 +273,13 @@ def test_uvicorn_dispatches_two_real_listening_sockets(isolated_apps) -> None:
     assert not thread.is_alive()
 
 
-def test_public_mode_rejects_plain_http_remote_admin_origin(monkeypatch) -> None:
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_MODE", "1")
+def test_lan_admin_origin_may_use_http(monkeypatch) -> None:
     monkeypatch.setenv("LEGADOHUB_ADMIN_BASE_URL", "http://192.0.2.30:8766")
     monkeypatch.setenv("LEGADOHUB_ADMIN_ALLOWED_HOSTS", "192.0.2.30")
     monkeypatch.setenv("LEGADOHUB_ADMIN_ALLOWED_ORIGINS", "http://192.0.2.30:8766")
-    with pytest.raises(RuntimeError, match="HTTPS or a loopback host"):
-        load_admin_security_config()
+    security = load_admin_security_config()
+    assert security.public_base_url == "http://192.0.2.30:8766"
+    assert security.require_https is False
 
 
 @pytest.mark.asyncio

@@ -19,7 +19,7 @@ from collections import OrderedDict, deque
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import HTTPException, Request, Response, status
 
@@ -42,6 +42,7 @@ AUTH_FAILURE_LIMIT = 5
 AUTH_FAILURE_WINDOW_SECONDS = 10 * 60
 AUTH_RATE_LIMIT_MAX_KEYS = 4096
 ADMIN_PASSWORD_CONFIG_MIGRATION_KEY = "auth_admin_password_config_migrated"
+GENERATED_ADMIN_PASSWORD_BYTES = 32
 _DUMMY_PASSWORD_SALT = b"legadohub-auth!"
 
 
@@ -386,7 +387,13 @@ class UserAuthService:
                 require_empty=True,
             )
 
-    def ensure_default_admin(self, username: str = "admin") -> bool:
+    def ensure_default_admin(
+        self,
+        username: str = "admin",
+        *,
+        on_generated_password: Callable[[str], None] | None = None,
+    ) -> bool:
+        """Create the first administrator, generating a local-only password when needed."""
         if self.user_count() > 0:
             self.migrate_admin_password_config(username=username)
             if self.enabled_admin_count() <= 0:
@@ -394,11 +401,13 @@ class UserAuthService:
             return False
         environment_password = read_secret("LEGADOHUB_ADMIN_PASSWORD")
         password = environment_password or self._admin_password_from_config()
+        generated_password = False
         if not password:
-            raise RuntimeError(
-                "No administrator exists. Set LEGADOHUB_ADMIN_PASSWORD before first startup."
-            )
+            password = secrets.token_urlsafe(GENERATED_ADMIN_PASSWORD_BYTES)
+            generated_password = True
         self.bootstrap_admin(username=username, password=password)
+        if generated_password and on_generated_password is not None:
+            on_generated_password(password)
         # The newly created database already contains the selected password.
         # Explicit environment configuration must not be overwritten by a stale
         # legacy app_config value during retirement.

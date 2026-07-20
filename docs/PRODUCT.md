@@ -106,23 +106,23 @@ The schema, recovery and privacy boundaries are defined in `docs/architecture/su
 
 Completed on 2026-07-17. User-owned subscription-search snapshots now persist in schema 11, completed candidate cards survive service restarts, and unfinished work is deterministically exposed as `interrupted` without replaying external searches. Owner isolation, private candidate groups, stale-write protection, malformed-snapshot recovery, temporary-database self-checks, and the real v10 -> v11 runtime migration were verified. The final gate passed 296 backend tests, 22 plugin validators, 47 frontend tests, lint/build/audit, a 39-scenario visual comparison at 99.86% overall similarity, runtime import smoke, and protected runtime-data comparison.
 
-### Phase 4: Invitation-Only Public Reading Access (In Progress)
+### Phase 4: Invitation-Only Reader Access (LAN Complete)
 
-Extend the single-instance deployment from a trusted LAN to a small invitation-only public service without changing shared-book ownership. Administrators continue to use username/password authentication. Readers use individual authorization codes that redeem into the existing user/session model, with a Bearer Session for Reading/Legado and an HttpOnly Session Cookie for the web console.
+Support multiple invited readers on one trusted-LAN instance without changing shared-book ownership. Administrators continue to use username/password authentication. Readers use individual authorization codes that redeem into the existing user/session model, with a Bearer Session for Reading/Legado and an HttpOnly Session Cookie for the web console.
 
 The runtime has two network entrypoints in one process: port `8765` registers only reader/user routes, while port `8766` registers administrator authentication and the control plane. The administrator listener binds to `0.0.0.0` by default; application-level route isolation remains mandatory, while firewall, forwarding, TLS, and management-network exposure are deployment responsibilities.
 
 The aggregate source manifest remains anonymously importable. Search, book detail, TOC, chapter, review, subscription, and all management APIs require an authenticated identity. Reading may consume `visible` shared content but must not invoke arbitrary plugin IDs, mutate subscriptions implicitly, enqueue work, or receive official-source credentials.
 
-The implementation, attack simulation, deployment, recovery, and release gates are defined in `docs/architecture/public-reading-authorization-security-plan.zh-CN.md`. Until those gates pass, the project must remain behind localhost or a trusted private network and must not be advertised as public-ready.
+The application supports only local or trusted-LAN operation. External tunneling, TLS termination, reverse proxying, firewall policy, and Internet exposure are operator-owned and do not select an application mode. The former public-deployment plan is retained only as historical security research in `docs/architecture/public-reading-authorization-security-plan.zh-CN.md`.
 
 **Exit criteria:**
 
 - Individual authorization-code issuance, reset, disable, Session revocation, and owner attribution pass automated and real-device tests.
 - Anonymous Reading APIs are closed except for the source manifest, access-code redemption, and minimal health response.
-- TLS, Trusted Host/proxy, Origin/CSRF, rate limits, secret storage, container isolation, backup, and recovery gates pass.
+- Trusted Host/proxy, Origin/CSRF, rate limits, secret storage, container isolation, backup, and recovery gates pass for the LAN deployment.
 - Controlled injection, IDOR, XSS, SSRF, header, path, replay, and resource-abuse tests find no unresolved P0/P1 issue.
-- The canonical repository gate, Docker acceptance, real Reading workflow, official plugin validation, and protected runtime-data comparison pass.
+- The canonical repository gate, LAN Docker acceptance, real Reading workflow, official plugin validation, and protected runtime-data comparison pass.
 
 ### Deferred Until After Phase 1
 
