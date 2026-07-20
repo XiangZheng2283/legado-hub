@@ -35,6 +35,14 @@ vi.mock("@/lib/api", () => ({
     deleteLibraryBook: vi.fn(),
     chapter: vi.fn(),
     streamLibraryBookLogsUrl: vi.fn(() => "/logs"),
+    reading: {
+      chapterReviews: vi.fn(),
+      chapterReviewsViewUrl: vi.fn((chapterId: string, tab: string, paragraphIds: number[] = []) => {
+        const params = new URLSearchParams({ tab })
+        if (paragraphIds.length > 0) params.set("paragraphIds", paragraphIds.join(","))
+        return `/api/legado/chapter/${encodeURIComponent(chapterId)}/reviews/view?${params}`
+      }),
+    },
     subscribe: {
       book: vi.fn(),
       chapters: vi.fn(),
@@ -101,6 +109,13 @@ describe("LibraryBookDetailPage processing settings", () => {
       },
     })
     ;(api.subscribe.chapters as any).mockResolvedValue({ items: [], total: 0, pageSize: 200 })
+    ;(api.reading.chapterReviews as any).mockResolvedValue({
+      chapterEnd: [],
+      chapterEndHot: [],
+      authorReviews: [],
+      hotParagraphReviews: [],
+      summary: { totalReviews: 0, chapterEndCount: 0 },
+    })
     ;(api.deleteLibraryBook as any).mockResolvedValue({ deleted: true })
   })
 
@@ -140,7 +155,7 @@ describe("LibraryBookDetailPage processing settings", () => {
   it("excludes preview chapters from full-text coverage and keeps ongoing tracking explicit", async () => {
     ;(api.libraryBookSummary as any).mockResolvedValueOnce({
       ...adminBook,
-      totalChapters: 10,
+      totalChapters: 8,
       processedChapters: 10,
       visibleProcessedChapters: 8,
       bookState: {
@@ -227,6 +242,112 @@ describe("LibraryBookDetailPage processing settings", () => {
     } finally {
       view.unmount()
       vi.useRealTimers()
+    }
+  })
+
+  it("pages chapter content and opens plugin-backed review views", async () => {
+    const user = userEvent.setup()
+    const readChapterId = "legadohub_ai_aggregate:chapter-test"
+    ;(api.libraryBookChapters as any).mockResolvedValue({
+      items: [{
+        chapterId: "chapter-test",
+        chapterIndex: 1,
+        title: "第一章 可读章节",
+        status: "readable",
+        hasContent: true,
+        contentLength: 3600,
+        readChapterId,
+      }],
+      total: 1,
+      pageSize: 200,
+    })
+    ;(api.chapter as any).mockResolvedValue({
+      content: Array.from({ length: 36 }, (_, index) => `这是用于模拟翻页阅读的第 ${index + 1} 个正文段落，包含足够的文本来覆盖多个阅读页面。`).join("\n"),
+    })
+    ;(api.reading.chapterReviews as any).mockResolvedValue({
+      chapterEnd: [{ id: "chapter-review" }],
+      chapterEndHot: [],
+      authorReviews: [{ id: "author-review" }],
+      hotParagraphReviews: [{
+        paragraphId: 2,
+        matchedText: "用于模拟翻页阅读",
+        matchedParagraphIndex: 12,
+        matchedParagraphCount: 1,
+        commentCount: 4,
+      }, {
+        paragraphId: 3,
+        matchedText: "这是用于模拟翻页阅读的第 25 个正文段落，包含足够的文本来覆盖多个阅读页面。",
+        matchedParagraphCount: 1,
+        commentCount: 6,
+      }, {
+        paragraphId: 4,
+        matchedText: "用于模拟翻页阅读",
+        matchedParagraphCount: 1,
+        commentCount: 8,
+      }],
+      summary: { totalReviews: 18, chapterEndCount: 13 },
+    })
+
+    const clientWidthSpy = vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(600)
+    const scrollWidthSpy = vi.spyOn(Element.prototype, "scrollWidth", "get").mockReturnValue(1848)
+    const clientRectsSpy = vi.spyOn(Element.prototype, "getClientRects").mockImplementation(function (this: Element) {
+      const value = Number((this as HTMLElement).dataset?.paragraphIndex)
+      if (!Number.isInteger(value)) return { length: 0, item: () => null } as unknown as DOMRectList
+      const page = Math.floor(value / 12)
+      const transform = (this.parentElement as HTMLElement | null)?.style.transform || ""
+      const translated = Number(transform.match(/translate3d\((-?[\d.]+)px/)?.[1] || 0)
+      const left = page * 632 + translated
+      const rect = { left, right: left + 580, top: 0, bottom: 40, width: 580, height: 40, x: left, y: 0, toJSON: () => ({}) } as DOMRect
+      return { 0: rect, length: 1, item: (index: number) => index === 0 ? rect : null } as unknown as DOMRectList
+    })
+
+    try {
+      renderPage()
+      await user.click(await screen.findByText("第一章 可读章节"))
+
+      await waitFor(() => {
+        expect(screen.getByTestId("chapter-reader-columns")).toHaveStyle({ width: "600px" })
+        expect(screen.getByTestId("chapter-reader-columns").scrollWidth).toBe(1848)
+      })
+
+      await waitFor(() => {
+        expect(api.chapter).toHaveBeenCalledWith(readChapterId)
+        expect(api.reading.chapterReviews).toHaveBeenCalledWith(readChapterId)
+        expect(screen.getByTestId("chapter-reader-page-indicator")).toHaveTextContent("1 / 3")
+      })
+
+      const previousPage = screen.getByRole("button", { name: "上一页" })
+      const nextPage = screen.getByRole("button", { name: "下一页" })
+      expect(screen.getByRole("button", { name: "页热评 0 条" })).toBeDisabled()
+      expect(previousPage).toBeDisabled()
+      expect(nextPage).toBeEnabled()
+
+      await user.click(nextPage)
+      expect(screen.getByTestId("chapter-reader-page-indicator")).toHaveTextContent("2 / 3")
+      expect(previousPage).toBeEnabled()
+
+      await waitFor(() => expect(screen.getByRole("button", { name: "页热评 4 条" })).toBeEnabled())
+      await user.click(screen.getByRole("button", { name: "页热评 4 条" }))
+      expect(screen.getByTitle("段评说评论")).toHaveAttribute(
+        "src",
+        `/api/legado/chapter/${encodeURIComponent(readChapterId)}/reviews/view?tab=paragraph&paragraphIds=2`,
+      )
+      await user.click(screen.getByRole("button", { name: "关闭评论" }))
+
+      await user.click(nextPage)
+      expect(screen.getByTestId("chapter-reader-page-indicator")).toHaveTextContent("3 / 3")
+      expect(nextPage).toBeDisabled()
+      await waitFor(() => expect(screen.getByRole("button", { name: "页热评 6 条" })).toBeEnabled())
+
+      await user.click(screen.getByRole("button", { name: "本章说 13 条评论" }))
+      expect(screen.getByTitle("本章说评论")).toHaveAttribute(
+        "src",
+        `/api/legado/chapter/${encodeURIComponent(readChapterId)}/reviews/view?tab=chapter`,
+      )
+    } finally {
+      clientWidthSpy.mockRestore()
+      scrollWidthSpy.mockRestore()
+      clientRectsSpy.mockRestore()
     }
   })
 

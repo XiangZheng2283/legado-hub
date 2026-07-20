@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from pathlib import Path
@@ -287,6 +288,63 @@ def test_shared_book_process_logger_appends_and_reads(tmp_path: Path):
     error_logs = logger.read(book_name="测试小说", author="作者甲", event="chapter_error")
     assert error_logs["total"] == 1
     assert error_logs["items"][0]["errorCode"] == "S2_SOURCE_MAP_MISSING"
+
+
+@pytest.mark.asyncio
+async def test_shared_book_process_logger_tail_preserves_partial_json_line(tmp_path: Path):
+    storage = SharedBookStorage(tmp_path / "library")
+    logger = SharedBookProcessLogger(storage=storage)
+    log_path = storage.logs_dir(book_name="测试小说", author="作者甲") / "process.jsonl"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text("", encoding="utf-8")
+
+    stream = logger.tail_stream(
+        book_name="测试小说",
+        author="作者甲",
+        poll_interval_seconds=0.01,
+        from_end=False,
+    )
+    next_record = asyncio.create_task(anext(stream))
+    with log_path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write('{"event":"chapter_')
+        handle.flush()
+    await asyncio.sleep(0.03)
+    assert not next_record.done()
+
+    with log_path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write('write","bookId":"book-1"}\n')
+    record = await asyncio.wait_for(next_record, timeout=0.5)
+    await stream.aclose()
+
+    assert record == {"event": "chapter_write", "bookId": "book-1"}
+
+
+@pytest.mark.asyncio
+async def test_shared_book_process_logger_tail_from_end_skips_existing_chinese_log(tmp_path: Path):
+    storage = SharedBookStorage(tmp_path / "library")
+    logger = SharedBookProcessLogger(storage=storage)
+    log_path = storage.logs_dir(book_name="测试小说", author="作者甲") / "process.jsonl"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text(
+        json.dumps({"event": "chapter_write", "message": "已有中文日志"}, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    stream = logger.tail_stream(
+        book_name="测试小说",
+        author="作者甲",
+        poll_interval_seconds=0.01,
+        from_end=True,
+    )
+    next_record = asyncio.create_task(anext(stream))
+    await asyncio.sleep(0.03)
+    with log_path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps({"event": "chapter_write", "message": "新增日志"}, ensure_ascii=False) + "\n")
+
+    record = await asyncio.wait_for(next_record, timeout=0.5)
+    await stream.aclose()
+
+    assert record["message"] == "新增日志"
 
 
 def test_build_chapter_progress_payload_shapes_three_nodes():

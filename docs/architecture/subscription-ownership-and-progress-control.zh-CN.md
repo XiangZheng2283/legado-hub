@@ -1,13 +1,13 @@
 # LegadoHub 项目边界与受控订阅交付契约
 
-> 状态：Accepted，Phase 1 已完成；继续作为订阅所有权与边界契约
-> 日期：2026-07-16
+> 状态：Accepted，Phase 1 已完成；Phase 4 公网授权边界实施中
+> 日期：2026-07-16，2026-07-19 修订公网授权目标
 > 上位产品真相：`docs/PRODUCT.md`
 > 适用范围：后端、Console、Reading/Legado 外部协议、插件运行时、官方插件同步与发布验证
 
 ## 1. 文档目的与优先级
 
-本文件把当前产品方向固定为：**面向本地或受信局域网部署的书源插件宿主与受控自助订阅阅读中心**。
+本文件把当前产品方向固定为：**面向自托管单实例的书源插件宿主与受控自助订阅阅读中心**。本机和受信局域网仍是默认部署方式；公网只允许使用 Phase 4 定义的受邀用户授权模式，并且必须先通过 `public-reading-authorization-security-plan.zh-CN.md` 的全部发布门禁。
 
 普通用户可以发现并订阅自己想看的书、管理自己的订阅状态和进度起点；普通用户不获得插件、书源、共享抓取任务、全局资源或其他用户数据的管理权。同一本书只维护一份共享正文和一条共享处理链。
 
@@ -74,20 +74,20 @@ Phase 1 不提供“管理员代用户订阅”。若以后增加，必须使用
 
 | 参与者 | 身份 | 可访问范围 | 不可信输入 |
 |---|---|---|---|
-| 匿名访问者 | 无会话 | 登录、一次性 bootstrap、健康检查 | 全部请求字段 |
-| 普通用户 | Web Session | 自己的搜索任务、订阅关系与订阅内容 | 搜索词、订阅配置、资源 ID |
+| 匿名访问者 | 无会话 | source manifest、授权码兑换、一次性 bootstrap、最小健康检查 | 全部请求字段 |
+| 普通用户 | Web Cookie Session 或 Reading Bearer Session | 自己的搜索任务、订阅关系与订阅内容；Reading 可读已发布共享内容 | 搜索词、订阅配置、资源 ID、授权 Header |
 | 管理员 | Admin Session | 全局控制面 | 所有手工配置与维护参数 |
-| Reading/Legado | 部署级客户端 | 已发布聚合源的兼容读取面 | 搜索词、外部 book/chapter ID |
+| Reading/Legado | 普通用户 Bearer Session | 已发布聚合源的兼容读取面与普通用户订阅入口 | 搜索词、外部 book/chapter ID、Session Token |
 | 系统调度器 | 内部服务身份 | 共享任务与章节处理 | 插件结果、文件状态、租约状态 |
 | 书源插件 | 受限运行模块 | 声明过的访问能力和自身 Cookie jar | 远端站点响应 |
 
-Reading/Legado 不是普通 Web 用户，也不是管理员。当前产品只承诺本机或受信局域网部署；在提供独立服务令牌、TLS、可信代理、Host/Origin 校验和安全 Cookie 配置前，不宣称支持直接暴露到公网。
+Reading/Legado 不是管理员，也不拥有部署级共享身份。Phase 4 起，它代表一个现有普通用户，并使用独立 Bearer Session；Web Console 使用同一用户模型的 Cookie Session。公网发布前必须完成个人授权码、TLS、可信代理、Host/Origin 校验、安全 Cookie、限流和容器边界，未通过时仍只允许本机或受信局域网部署。
 
 ```mermaid
 flowchart LR
     U["普通用户"] -->|"搜索与个人订阅"| S["订阅服务"]
     A["管理员"] -->|"全局策略与维护"| C["管理控制面"]
-    L["Reading/Legado"] -->|"部署级只读协议"| E["外部读取面"]
+    L["Reading/Legado"] -->|"用户 Bearer 只读协议"| E["外部读取面"]
     S --> R["用户订阅关系"]
     S --> B["共享书"]
     C --> B
@@ -117,6 +117,8 @@ flowchart LR
 14. 官方插件只能从其权威仓库修改后同步，宿主中的同步副本不得手改。
 15. Reading/Legado 只消费已发布共享内容；读取请求不得隐式改变订阅、共享任务、目录注册或发布状态。
 16. Console 不拥有阅读位置与阅读体验设置，不得把个人处理覆盖率包装成真实阅读进度。
+17. Reading/Legado 的资源 ID、bookId、chapterId 和 sourceId 都不是授权凭据；除匿名 source manifest 外，每次读取都必须验证当前用户 Session。
+18. 普通用户授权只能访问聚合虚拟源和已发布共享内容，不能把官方或第三方插件 ID 当作公网直读代理。
 
 ## 5. 领域边界与数据所有权
 
@@ -310,7 +312,7 @@ coverageRatio
 
 - `/api/subscribe/*`：已登录用户的个人订阅和安全阅读 DTO。
 - `/api/console/*`：管理员控制面；Phase 1 完成后不再承载普通用户运维读取。
-- `/api/legado/*` 与 `/api/subscribe/legado/*`：部署级 Reading/Legado 兼容面，不继承 Web 用户权限。
+- `/api/legado/*` 与 `/api/subscribe/legado/*`：Reading/Legado 兼容面，使用普通用户 Bearer Session；除 source manifest 外不允许匿名访问。
 - `/api/auth/*`：认证、会话与一次性初始化。
 
 普通用户详情和章节接口迁移到 `/api/subscribe` 后，现有 `access="user"` 的 Console 书籍日志、Trace 和进度接口必须改回管理员权限。共享服务层可以复用，响应 DTO 和授权检查不能复用管理员宽权限。
@@ -374,7 +376,7 @@ PATCH /api/subscribe/books/{bookId}/subscription
 - 外部 book/chapter ID 编码。
 - book、toc、chapter 和 reviews 响应字段。
 
-这些契约没有兼容测试时不得修改。外部接口只能搜索并读取已发布共享内容；搜索不创建后台源任务，详情、目录和正文读取不写数据库、不入队、不注册 TOC。匿名取消任务、修改订阅或执行维护明确禁止。公网部署前必须增加部署级凭据，不能把用户 Session Cookie 塞进书源 URL。
+这些契约没有兼容测试时不得修改。外部接口只能搜索并读取已发布共享内容；搜索不创建后台源任务，详情、目录和正文读取不写数据库、不入队、不注册 TOC。匿名取消任务、修改订阅或执行维护明确禁止。Reading 使用授权码兑换的 Bearer Session，禁止把授权码、Session Cookie 或 Bearer Token 塞进书源 URL、静态 Header 或导出的书源 JSON。
 
 ## 10. 并发、幂等与任务所有权
 
@@ -466,12 +468,12 @@ PATCH /api/subscribe/books/{bookId}/subscription
 
 ## 13. 安全与部署边界
 
-- 默认支持本机或受信局域网单站点部署，不默认支持公网多租户。
+- 默认支持本机或受信局域网单站点部署；Phase 4 只扩展到少量受邀用户的单实例公网部署，不支持开放注册或公网多租户平台。
 - Phase 1 运行模型限定为单个后端进程；内存限流和进程级共享书创建锁不提供多 worker 一致性。启用多进程前必须改为数据库预留或等价的跨进程协调与持久限流。
 - `app_config.json`、Cookie、数据库和运行日志均不得提交；API key 在 UI/API 输出中必须遮罩。
 - 本地运行配置可以由宿主保存敏感值，但必须依赖主机文件权限保护，禁止写入源码、测试夹具或日志。
 - HTTPS 部署必须设置 Session Cookie `Secure`，并正确处理可信代理协议头。
-- 公网支持前必须补 TLS、Allowed Hosts、Origin/CSRF 防护、速率限制和外部 Reading/Legado 凭据。
+- 公网支持前必须补个人授权码、Bearer Session、TLS、Allowed Hosts、可信代理、Origin/CSRF 防护、速率限制和容器/凭据保护。
 - bootstrap 必须是数据库事务保护的一次性操作；已有用户后永久拒绝。
 - 禁用用户必须立即撤销其全部 Session。
 - 日志不得输出密码、Cookie、Authorization、API key、手机号全文或内部正文。
@@ -573,6 +575,9 @@ update_tasks=0
 18. 用猜测编码、忽略解密错误或乱码正文“尽量返回内容”。
 19. 未完成真实验证就更新官方插件版本或同步到宿主。
 20. 为视觉 diff 恢复已清理页面、AI 功能、假数据或无实现控件。
+21. 为所有朋友使用同一个共享授权码，或把授权码、Session 写进书源 URL、静态 Header 和导出 JSON。
+22. 普通用户通过 `/api/legado` 直接调用 `qidian_com_app`、`qidian_com_web` 或第三方插件章节 ID。
+23. 用可选配置重新打开匿名 Reading 读取，或只在前端显示登录而不做服务端门禁。
 
 ## 18. 实施顺序
 
@@ -659,4 +664,4 @@ update_tasks=0
 - Console 39 个视觉场景整体一致率 `99.85%`，每个场景均不低于 98%；最低场景为 `98.25%`。
 - 发布前后对 `backend/data`、`backend/config`、`backend/generated`、`backend/runtime` 和遗留插件 Cookie 摘要复核一致，真实用户、Session、Cookie、配置和运行数据未变化。
 
-Phase 1 完成不包含持久化搜索任务恢复、统一数据完整性恢复入口和公网部署。公网暴露仍不在当前承诺内；部署级 Reading 凭据、TLS、可信代理和速率限制属于公网支持前置条件。
+Phase 1 完成不包含持久化搜索任务恢复、统一数据完整性恢复入口和公网部署。Phase 4 已接受“个人授权码 -> 用户 Session -> Reading Bearer”的公网方向，但在 `public-reading-authorization-security-plan.zh-CN.md` 的实现、攻防、Docker、真实客户端和最终门禁全部通过前，公网能力仍不属于已交付承诺。

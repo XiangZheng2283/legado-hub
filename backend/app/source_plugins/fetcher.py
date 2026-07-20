@@ -244,7 +244,7 @@ class Fetcher:
         req_headers.setdefault("User-Agent", self.user_agent)
         cookie_hdr = self._get_cookie_header(url)
         if cookie_hdr:
-            req_headers["Cookie"] = cookie_hdr
+            req_headers.setdefault("Cookie", cookie_hdr)
         _clear_client_cookies(client)
         try:
             resp = await client.request(
@@ -319,7 +319,7 @@ class Fetcher:
         req_headers.setdefault("User-Agent", self.user_agent)
         cookie_hdr = self._get_cookie_header(url)
         if cookie_hdr:
-            req_headers["Cookie"] = cookie_hdr
+            req_headers.setdefault("Cookie", cookie_hdr)
         proxies = None
         if proxy is not False and self.proxy_url:
             proxies = {"http": self.proxy_url, "https": self.proxy_url}

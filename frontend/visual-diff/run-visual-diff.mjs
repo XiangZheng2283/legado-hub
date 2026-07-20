@@ -33,10 +33,10 @@ const pages = [
     id: "login-error",
     title: "登录失败",
     currentPath: "/login",
-    scenario: { role: "anonymous", loginError: true },
+    scenario: { role: "anonymous", entrypoint: "admin", loginError: true },
     prepare: async (page) => {
       await page.getByLabel("密码").fill("invalid-password")
-      await page.getByRole("button", { name: "登录", exact: true }).click()
+      await page.getByRole("button", { name: "管理员登录", exact: true }).click()
       await page.getByRole("alert").waitFor()
     },
   },
@@ -145,12 +145,6 @@ const pages = [
     title: "书源筛选空态",
     currentPath: "/console/plugins",
     scenario: { role: "admin", plugins: "empty" },
-  },
-  {
-    id: "plugin-detail",
-    title: "书源详情",
-    currentPath: "/console/plugins/com.qidian.sandbox",
-    scenario: { role: "admin" },
   },
   {
     id: "official-sources",
@@ -567,6 +561,9 @@ async function installMocks(page, scenario = {}) {
 }
 
 function mockApi(path, method, scenario = {}) {
+  if (path === "/api/auth/entrypoint") {
+    return { entrypoint: scenario.entrypoint || (scenario.role === "admin" ? "admin" : "public") }
+  }
   if (path === "/api/auth/me") {
     if (scenario.role === "anonymous") return { status: 401, body: { detail: "未登录" } }
     const role = scenario.role || "admin"
@@ -576,6 +573,11 @@ function mockApi(path, method, scenario = {}) {
     if (scenario.loginError) return { status: 401, body: { detail: "用户名或密码错误" } }
     return { user: { userId: "admin", username: "管理员", role: "admin" } }
   }
+  if (path === "/api/auth/access/redeem") {
+    return { token: "visual-session", user: { userId: "user", username: "阅读用户", role: "user" } }
+  }
+  if (path === "/api/auth/logout") return { ok: true }
+  if (path === "/api/auth/bootstrap") return { status: 404, body: { detail: "Not Found" } }
   if (path === "/api/console/status") {
     return {
       health: "degraded",

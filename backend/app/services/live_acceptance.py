@@ -422,7 +422,7 @@ class LiveAcceptanceService:
         detail: dict[str, Any] = {}
         toc_items: list[dict[str, Any]] = []
         chapter: dict[str, Any] = {}
-        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "summary": {}}
+        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "hotParagraphReviews": [], "summary": {}}
         try:
             if "detail" in plugin.capabilities:
                 detail = await asyncio.wait_for(
@@ -454,6 +454,9 @@ class LiveAcceptanceService:
                                 reviews = {
                                     "paragraphs": fetched_reviews.get("paragraphs", {}),
                                     "chapterEnd": fetched_reviews.get("chapterEnd", []),
+                                    "chapterEndHot": fetched_reviews.get("chapterEndHot", []),
+                                    "authorReviews": fetched_reviews.get("authorReviews", []),
+                                    "hotParagraphReviews": fetched_reviews.get("hotParagraphReviews", []),
                                     "summary": fetched_reviews.get("summary", {}),
                                     "debug": fetched_reviews.get("debug", {}),
                                 }
@@ -517,7 +520,7 @@ class LiveAcceptanceService:
         plugin = self.scheduler._plugins.get(plugin_id)
         diagnostics: list[dict[str, Any]] = []
         started = time.perf_counter()
-        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "summary": {}}
+        reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "hotParagraphReviews": [], "summary": {}}
 
         if not plugin:
             return {
@@ -609,6 +612,7 @@ class LiveAcceptanceService:
                         "chapterEnd": fetched_reviews.get("chapterEnd", []),
                         "chapterEndHot": fetched_reviews.get("chapterEndHot", []),
                         "authorReviews": fetched_reviews.get("authorReviews", []),
+                        "hotParagraphReviews": fetched_reviews.get("hotParagraphReviews", []),
                         "summary": fetched_reviews.get("summary", {}),
                         "debug": fetched_reviews.get("debug", {}),
                     }
@@ -799,6 +803,9 @@ class LiveAcceptanceService:
             "reviews": {
                 "paragraphs": reviews.get("paragraphs", {}) if isinstance(reviews, dict) else {},
                 "chapterEnd": reviews.get("chapterEnd", []) if isinstance(reviews, dict) else [],
+                "chapterEndHot": reviews.get("chapterEndHot", []) if isinstance(reviews, dict) else [],
+                "authorReviews": reviews.get("authorReviews", []) if isinstance(reviews, dict) else [],
+                "hotParagraphReviews": reviews.get("hotParagraphReviews", []) if isinstance(reviews, dict) else [],
                 "summary": reviews.get("summary", {}) if isinstance(reviews, dict) else {},
                 "debug": reviews.get("debug", {}) if isinstance(reviews, dict) else {},
                 "passed": bool(

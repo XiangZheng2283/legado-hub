@@ -1,13 +1,45 @@
 services:
+  legadohub:
+    environment:
+      LEGADOHUB_BROWSER_PROVIDER: browserless
+      LEGADOHUB_BROWSERLESS_WS: ws://browserless:3000/chromium/playwright
+      LEGADOHUB_BROWSERLESS_TOKEN: "${LEGADOHUB_BROWSERLESS_TOKEN:?set LEGADOHUB_BROWSERLESS_TOKEN}"
+    depends_on:
+      browserless:
+        condition: service_healthy
+
   browserless:
     image: ghcr.io/browserless/chromium
     container_name: legadohub-browserless
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       CONCURRENT: "2"
       TIMEOUT: "90000"
-      TOKEN: "${LEGADOHUB_BROWSERLESS_TOKEN:-legadohub-local}"
-    volumes:
-      - ./backend/data/browser_profiles:/data/browser_profiles
+      TOKEN: "${LEGADOHUB_BROWSERLESS_TOKEN:?set LEGADOHUB_BROWSERLESS_TOKEN}"
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /home/blessuser:size=256m,mode=700,uid=999,gid=999
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD", "node", "-e", "const net=require('net');const socket=net.createConnection({host:'127.0.0.1',port:3000});const timer=setTimeout(()=>{socket.destroy();process.exit(1)},3000);socket.once('connect',()=>{clearTimeout(timer);socket.end()});socket.once('error',()=>{clearTimeout(timer);process.exit(1)})"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      legadohub_internal:
+        ipv4_address: 172.31.250.30

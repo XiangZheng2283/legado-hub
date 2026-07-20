@@ -43,15 +43,18 @@ class LoginBrowserSession:
 
         try:
             from playwright.async_api import async_playwright
+            from app.services.access_bridge.config import AccessBridgeConfig
 
             async with async_playwright() as playwright:
+                launch_args = [
+                    "--disable-dev-shm-usage",
+                    "--disable-blink-features=AutomationControlled",
+                ]
+                if AccessBridgeConfig.from_env().disable_sandbox:
+                    launch_args.append("--no-sandbox")
                 browser = await playwright.chromium.launch(
                     headless=False,
-                    args=[
-                        "--disable-dev-shm-usage",
-                        "--no-sandbox",
-                        "--disable-blink-features=AutomationControlled",
-                    ],
+                    args=launch_args,
                 )
 
                 from app.config import get_default_user_agent

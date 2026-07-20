@@ -3,19 +3,36 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from enum import StrEnum
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 
 from app import config
 from app.api import health, legado, console, auth, subscribe
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.source_ping_scheduler import SourcePingScheduler
 from app.storage.db import initialize_database
+from app.services.reading_limits import ReadingLimitError
+from app.core.public_security import (
+    PublicSecurityConfig,
+    install_public_security,
+    load_public_security_config,
+    prepare_runtime_permissions,
+)
 
 FRONTEND_DIST = config.FRONTEND_DIST_DIR
 logger = logging.getLogger(__name__)
+
+
+class EntryPoint(StrEnum):
+    """Network surface exposed by one FastAPI application instance."""
+
+    PUBLIC = "public"
+    ADMIN = "admin"
+    COMBINED = "combined"
 
 
 async def _update_lexicon_on_startup() -> None:
@@ -25,23 +42,34 @@ async def _update_lexicon_on_startup() -> None:
         await asyncio.to_thread(LexiconUpdater().check_and_update)
     except Exception:
         # Startup should never fail because the optional upstream lexicon is unavailable.
-        pass
+        logger.warning("Failed to update the optional lexicon on startup", exc_info=True)
+
+
+async def _probe_saved_plugin_cookies(official_auth_manager) -> None:
+    try:
+        from app.services.cookie_store import CookieStore
+
+        plugin_ids = CookieStore().list_plugin_ids()
+    except Exception:
+        logger.warning("Failed to enumerate saved plugin cookies", exc_info=True)
+        return
+    for plugin_id in plugin_ids:
+        try:
+            await official_auth_manager.probe_saved_cookie_file(plugin_id)
+        except Exception:
+            logger.warning("Failed to probe saved cookies for plugin %s", plugin_id, exc_info=True)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    security = app.state.public_security
+    prepare_runtime_permissions(security)
     initialize_database()
     from app.services.official_auth.manager import official_auth_manager
     from app.services.user_auth import auth_service
 
-    admin_password = auth_service.ensure_default_admin()
-    if admin_password:
-        print("")
-        print("LegadoHub default administrator created.")
-        print("  Username: admin")
-        print(f"  Password: {admin_password}")
-        print("  Change this password after logging in.")
-        print("")
+    if auth_service.ensure_default_admin():
+        logger.info("LegadoHub administrator created from LEGADOHUB_ADMIN_PASSWORD")
 
     # Clean up jobs that were left running from a previous server process.  Their
     # workers/tasks are gone, so keeping them as "running" would make new requests
@@ -54,7 +82,7 @@ async def lifespan(app: FastAPI):
             if _job["status"] in {"pending", "running"}:
                 _job_service.cancel_job(_job["jobId"])
     except Exception:
-        pass
+        logger.warning("Failed to clean up orphan search jobs", exc_info=True)
 
     try:
         from app.services.subscription_search import subscription_search_service
@@ -69,18 +97,10 @@ async def lifespan(app: FastAPI):
 
         migrate_legacy_plugin_cookies()
     except Exception:
-        pass
+        logger.warning("Failed to migrate legacy plugin cookies", exc_info=True)
 
     # On startup, probe any plugin that has a saved cookie in the host store.
-    try:
-        from app.services.cookie_store import CookieStore
-
-        cookie_store = CookieStore()
-        for plugin_id in cookie_store.list_plugin_ids():
-            await official_auth_manager.probe_saved_cookie_file(plugin_id)
-    except Exception:
-        # Startup should stay resilient even if the probe fails.
-        pass
+    await _probe_saved_plugin_cookies(official_auth_manager)
 
     stop_event = asyncio.Event()
     shared_book_scheduler = SharedBookScheduler()
@@ -108,13 +128,64 @@ async def lifespan(app: FastAPI):
             pass
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(title=config.APP_NAME, version=config.APP_VERSION, lifespan=lifespan)
-    app.include_router(health.router)
-    app.include_router(legado.router)
-    app.include_router(auth.router)
-    app.include_router(subscribe.router)
-    app.include_router(console.console_router)
+@asynccontextmanager
+async def passive_lifespan(_app: FastAPI):
+    """Keep secondary listeners from starting duplicate background workers."""
+    yield
+
+
+def create_app(
+    security_config: PublicSecurityConfig | None = None,
+    *,
+    entrypoint: EntryPoint | str = EntryPoint.COMBINED,
+    manage_runtime: bool = True,
+) -> FastAPI:
+    entrypoint = EntryPoint(entrypoint)
+    security = security_config or load_public_security_config()
+    public_entrypoint = entrypoint is EntryPoint.PUBLIC
+    app = FastAPI(
+        title=config.APP_NAME,
+        version=config.APP_VERSION,
+        lifespan=lifespan if manage_runtime else passive_lifespan,
+        docs_url=None if public_entrypoint else "/docs",
+        redoc_url=None if public_entrypoint else "/redoc",
+        openapi_url=None if public_entrypoint else "/openapi.json",
+    )
+    app.state.entrypoint = entrypoint.value
+    install_public_security(app, security)
+
+    @app.exception_handler(ReadingLimitError)
+    async def reading_limit_error_handler(_request, exc: ReadingLimitError):
+        return JSONResponse(
+            status_code=429,
+            headers={"Retry-After": str(exc.retry_after_seconds)},
+            content={
+                "detail": {
+                    "code": exc.code,
+                    "message": str(exc),
+                    "retryable": True,
+                    "retryAfterSeconds": exc.retry_after_seconds,
+                }
+            },
+        )
+    if entrypoint is EntryPoint.PUBLIC:
+        app.include_router(health.public_router)
+        app.include_router(auth.public_router)
+        app.include_router(subscribe.public_router)
+        app.include_router(legado.router)
+    elif entrypoint is EntryPoint.ADMIN:
+        app.include_router(health.router)
+        app.include_router(auth.admin_router)
+        app.include_router(subscribe.router)
+        app.include_router(legado.router)
+        app.include_router(console.console_router)
+    else:
+        app.include_router(health.router)
+        app.include_router(legado.router)
+        app.include_router(auth.router)
+        app.include_router(subscribe.router)
+        app.include_router(console.console_router)
+
     # Serve React console frontend.
     if FRONTEND_DIST.exists():
         app.mount("/console-static", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="console-static")
@@ -126,9 +197,26 @@ def create_app() -> FastAPI:
         async def console_spa():
             return FileResponse(str(FRONTEND_DIST / "index.html"))
 
-        @app.get("/console/{path:path}")
-        async def console_spa_catchall(path: str):
+        @app.get("/login")
+        async def console_login_spa():
             return FileResponse(str(FRONTEND_DIST / "index.html"))
+
+        if entrypoint is EntryPoint.PUBLIC:
+            @app.get("/console/subscription")
+            async def console_subscription_spa():
+                return FileResponse(str(FRONTEND_DIST / "index.html"))
+
+            @app.get("/console/library")
+            async def console_library_spa():
+                return FileResponse(str(FRONTEND_DIST / "index.html"))
+
+            @app.get("/console/library/{book_id}")
+            async def console_library_book_spa(book_id: str):
+                return FileResponse(str(FRONTEND_DIST / "index.html"))
+        else:
+            @app.get("/console/{path:path}")
+            async def console_spa_catchall(path: str):
+                return FileResponse(str(FRONTEND_DIST / "index.html"))
 
         @app.get("/favicon.svg")
         async def console_favicon():

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
@@ -23,6 +24,24 @@ APP_PHASE = "plugin-runtime-stage-3"
 
 HOST = "127.0.0.1"
 PORT = 8765
+ADMIN_PORT = 8766
+
+
+def read_secret(name: str) -> str:
+    """Read a secret from NAME or NAME_FILE, rejecting ambiguous configuration."""
+    value = os.getenv(name, "")
+    file_name = os.getenv(f"{name}_FILE", "").strip()
+    if value and file_name:
+        raise RuntimeError(f"Set only one of {name} and {name}_FILE.")
+    if not file_name:
+        return value
+    path = Path(file_name)
+    try:
+        if path.stat().st_size > 4096:
+            raise RuntimeError(f"{name}_FILE is too large.")
+        return path.read_text(encoding="utf-8").rstrip("\r\n")
+    except OSError as exc:
+        raise RuntimeError(f"Unable to read {name}_FILE.") from exc
 
 
 def get_default_user_agent() -> str:

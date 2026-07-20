@@ -1,0 +1,4 @@
+services:
+  legadohub:
+    volumes:
+      - "${LEGADOHUB_THIRDPARTY_PLUGINS_DIR:?set LEGADOHUB_THIRDPARTY_PLUGINS_DIR}:/app/plugins/sources/thirdparty:rw"

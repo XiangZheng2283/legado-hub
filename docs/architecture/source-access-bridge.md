@@ -72,8 +72,6 @@ services:
     environment:
       - LEGADOHUB_BROWSER_PROVIDER=chromium
       - LEGADOHUB_BROWSER_ENABLED=1
-    volumes:
-      - ./backend/data:/app/backend/data
 ```
 
 Example backend environment:
@@ -156,5 +154,4 @@ Browser simulation remains a backend capability for maintainable bypass
 strategies, rendering, search-provider access, and future controlled fetch
 flows. It must not expose verification pages, callback sessions, or Cookie
 round-trips to Reading/Legado clients.
-
 

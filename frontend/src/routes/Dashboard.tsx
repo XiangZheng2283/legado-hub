@@ -20,8 +20,8 @@ function formatUptime(value: unknown) {
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const isAdmin = user?.role === "admin"
+  const { user, entrypoint } = useAuth()
+  const isAdmin = entrypoint !== "public" && user?.role === "admin"
 
   const { data: statsData, isLoading: statsLoading, isFetching: statsFetching, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: ["status"],

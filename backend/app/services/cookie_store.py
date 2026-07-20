@@ -8,12 +8,16 @@ only provides load/save/clear/has primitives.
 from __future__ import annotations
 
 import json
+import os
+import re
+import tempfile
 from pathlib import Path
 from typing import Any
 
 from app.config import CONFIG_DIR
 
 COOKIE_DIR = CONFIG_DIR / "cookies"
+PLUGIN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 
 
 class CookieStore:
@@ -22,9 +26,14 @@ class CookieStore:
     def __init__(self, base_dir: Path | None = None):
         self.base_dir = base_dir or COOKIE_DIR
         self.base_dir.mkdir(parents=True, exist_ok=True)
+        if os.name != "nt":
+            self.base_dir.chmod(0o700)
 
     def path_for(self, plugin_id: str) -> Path:
-        return self.base_dir / f"{plugin_id}.json"
+        normalized = str(plugin_id or "").strip()
+        if not PLUGIN_ID_PATTERN.fullmatch(normalized):
+            raise ValueError("Invalid plugin id for cookie storage")
+        return self.base_dir / f"{normalized}.json"
 
     def has(self, plugin_id: str) -> bool:
         return self.path_for(plugin_id).exists()
@@ -42,10 +51,19 @@ class CookieStore:
     def save(self, plugin_id: str, payload: Any) -> None:
         path = self.path_for(plugin_id)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+        temporary_path = Path(temporary_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(json.dumps(payload, ensure_ascii=False, indent=2))
+                handle.flush()
+                os.fsync(handle.fileno())
+            if os.name != "nt":
+                temporary_path.chmod(0o600)
+            os.replace(temporary_path, path)
+        finally:
+            if temporary_path.exists():
+                temporary_path.unlink()
 
     def clear(self, plugin_id: str) -> None:
         path = self.path_for(plugin_id)
@@ -84,7 +102,11 @@ def migrate_legacy_plugin_cookies(store: CookieStore | None = None) -> dict[str,
         plugin_id = plugin_dir.name
         if not plugin_id:
             continue
-        if store.has(plugin_id):
+        try:
+            already_exists = store.has(plugin_id)
+        except ValueError:
+            continue
+        if already_exists:
             migrated[plugin_id] = False
             continue
         try:

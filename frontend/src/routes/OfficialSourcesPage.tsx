@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertCircle, LogIn, LogOut, RefreshCw, XCircle, Monitor, ShieldCheck } from "lucide-react"
+import { AlertCircle, LogIn, LogOut, RefreshCw, XCircle, Monitor } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,14 +14,24 @@ export const BROWSER_LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 const BROWSER_LOGIN_POLL_INTERVAL_MS = 3000
 
 interface OfficialSourcesPageProps {
-  embedded?: boolean
   basePlugins?: any[]
-  switcher?: ReactNode
-  toggleEnabledPending?: boolean
-  onToggleEnabled?: (pluginId: string, enabled: boolean) => void
+  headerTabs?: ReactNode
+  batchToolbar?: ReactNode
+  selectedIds?: Set<string>
+  selectionDisabled?: boolean
+  onToggleSelectAll?: () => void
+  onToggleSelected?: (pluginId: string) => void
 }
 
-export function OfficialSourcesPage({ embedded = false, basePlugins = [], switcher, toggleEnabledPending = false, onToggleEnabled }: OfficialSourcesPageProps) {
+export function OfficialSourcesPage({
+  basePlugins = [],
+  headerTabs,
+  batchToolbar,
+  selectedIds,
+  selectionDisabled = false,
+  onToggleSelectAll,
+  onToggleSelected,
+}: OfficialSourcesPageProps) {
   const queryClient = useQueryClient()
   const { data, isLoading, error: queryError, refetch } = useQuery({ queryKey: ["official-sources"], queryFn: api.officialSources, refetchInterval: 5000 })
   const [loginSession, setLoginSession] = useState<any>(null)
@@ -185,9 +195,6 @@ export function OfficialSourcesPage({ embedded = false, basePlugins = [], switch
 
   const basePluginById = new Map(basePlugins.map((plugin: any) => [plugin.pluginId, plugin]))
   const items = (data?.items || []).map((item: any) => ({ ...item, ...(basePluginById.get(item.pluginId) || {}), authStatus: item.authStatus }))
-  const enabledCount = items.filter((i: any) => i.enabled).length
-  const validCount = items.filter((i: any) => i.authStatus?.authenticated).length
-  const invalidCount = items.length - validCount
   const browserLoginBusy = Boolean(loginSession?.polling) || cancelLoginMutation.isPending
   const confirmLogout = (item: any) => {
     if (window.confirm(`确定注销 ${item.name}？已保存的登录状态将被清除。`)) {
@@ -210,13 +217,17 @@ export function OfficialSourcesPage({ embedded = false, basePlugins = [], switch
       {globalRefreshMutation.isPending ? "刷新中..." : "全局刷新状态"}
     </Button>
   )
+  const listToolbar = (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {batchToolbar}
+      {refreshAllButton}
+    </div>
+  )
+  const selectable = Boolean(onToggleSelectAll && onToggleSelected)
   const authHeaders = (
     <>
-      <TableHead className="font-semibold text-slate-700">认证模式</TableHead>
-      <TableHead className="font-semibold text-slate-700">账号状态</TableHead>
-      <TableHead className="font-semibold text-slate-700">当前账号</TableHead>
-      <TableHead className="font-semibold text-slate-700">最后检查</TableHead>
-      <TableHead className="pr-4 text-right font-semibold text-slate-700">登录操作</TableHead>
+      <TableHead className="w-44 text-center font-semibold text-slate-700">登录状态</TableHead>
+      <TableHead className="w-40 text-center font-semibold text-slate-700">登录操作</TableHead>
     </>
   )
   const listPlaceholder = (
@@ -225,28 +236,22 @@ export function OfficialSourcesPage({ embedded = false, basePlugins = [], switch
       title="官方源列表"
       description="在统一书源信息上管理账号认证与登录状态。"
       emptyMessage="暂无已配置的官方源"
-      switcher={switcher}
-      toolbar={embedded ? refreshAllButton : undefined}
+      headerTabs={headerTabs}
+      toolbar={listToolbar}
       loading={isLoading}
-      tableClassName="min-w-[1500px]"
+      selectable={selectable}
+      selectedIds={selectedIds}
+      selectionDisabled={selectionDisabled}
+      onToggleSelectAll={onToggleSelectAll}
+      onToggleSelected={onToggleSelected}
       testId="official-sources-table-boundary"
-      extraColumnCount={5}
+      extraColumnCount={2}
       extraHeaders={authHeaders}
     />
   )
 
   return (
     <div className="space-y-6">
-      {!embedded && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">官方源管理</h1>
-          <p className="mt-1 text-sm text-slate-500">管理正版官方书源的登录态与 Cookie 注入。</p>
-        </div>
-        {refreshAllButton}
-        </div>
-      )}
-
       {queryError && (
         <div role="alert" className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -264,26 +269,6 @@ export function OfficialSourcesPage({ embedded = false, basePlugins = [], switch
 
       {isLoading ? listPlaceholder : !queryError && (
         <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card className="shadow-none">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div><p className="text-xs font-medium text-slate-500">已配置官方源</p><h3 className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{items.length}</h3></div>
-              <ShieldCheck className="h-7 w-7 text-slate-300" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-none">
-          <CardContent className="p-4"><div><p className="text-xs font-medium text-slate-500">启用中</p><h3 className="mt-2 text-2xl font-semibold tabular-nums text-blue-700">{enabledCount}</h3></div></CardContent>
-        </Card>
-        <Card className="shadow-none">
-          <CardContent className="p-4"><div><p className="text-xs font-medium text-slate-500">有效登录</p><h3 className="mt-2 text-2xl font-semibold tabular-nums text-emerald-700">{validCount}</h3></div></CardContent>
-        </Card>
-        <Card className="shadow-none">
-          <CardContent className="p-4"><div><p className="text-xs font-medium text-slate-500">失效 / 未登录</p><h3 className="mt-2 text-2xl font-semibold tabular-nums text-rose-700">{invalidCount}</h3></div></CardContent>
-        </Card>
-      </div>
-
       {loginSession && (
         <Card className={loginSession.polling ? "border-blue-300 bg-blue-50/30" : ""}>
           <CardContent className="p-4">
@@ -302,13 +287,15 @@ export function OfficialSourcesPage({ embedded = false, basePlugins = [], switch
         title="官方源列表"
         description="在统一书源信息上管理账号认证与登录状态。"
         emptyMessage="暂无已配置的官方源"
-        switcher={switcher}
-        toolbar={embedded ? refreshAllButton : undefined}
-        onToggleEnabled={onToggleEnabled}
-        toggleEnabledDisabled={toggleEnabledPending}
-        tableClassName="min-w-[1500px]"
+        headerTabs={headerTabs}
+        toolbar={listToolbar}
+        selectable={selectable}
+        selectedIds={selectedIds}
+        selectionDisabled={selectionDisabled}
+        onToggleSelectAll={onToggleSelectAll}
+        onToggleSelected={onToggleSelected}
         testId="official-sources-table-boundary"
-        extraColumnCount={5}
+        extraColumnCount={2}
         extraHeaders={authHeaders}
         renderExtraCells={(item: any) => {
           const auth = item.authStatus || {}
@@ -316,26 +303,29 @@ export function OfficialSourcesPage({ embedded = false, basePlugins = [], switch
           const isRefreshing = refreshMutation.isPending && refreshMutation.variables?.pluginId === item.pluginId
           const isLoggingOut = logoutMutation.isPending && logoutMutation.variables?.pluginId === item.pluginId
           const isClearing = clearCookiesMutation.isPending && clearCookiesMutation.variables?.pluginId === item.pluginId
-          return (
-            <>
-              <TableCell><Badge variant="outline">{item.auth?.mode || "none"}</Badge></TableCell>
-              <TableCell>
-                {auth.authenticated ? <Badge variant="success">有效</Badge>
-                  : auth.hasCookies ? <Badge variant="secondary">待校验</Badge>
-                    : <Badge variant="secondary">未登录</Badge>}
+          const accountName = String(auth.accountName || "").trim()
+          const isAuthenticated = Boolean(auth.authenticated && accountName)
+            return (
+              <>
+              <TableCell className="text-center">
+                {isAuthenticated ? (
+                  <Badge variant="success" className="max-w-36 truncate">{accountName}</Badge>
+                ) : auth.hasCookies || auth.authenticated ? (
+                  <Badge variant="destructive">登录失效</Badge>
+                ) : (
+                  <Badge variant="secondary">未登录</Badge>
+                )}
               </TableCell>
-              <TableCell className="text-sm text-slate-600">{auth.accountName || "-"}</TableCell>
-              <TableCell className="text-sm text-slate-500">{auth.lastCheckedAt || "-"}</TableCell>
-              <TableCell className="py-4 pr-4 text-right">
-                <div className="flex justify-end gap-2">
-                  {auth.authenticated ? (
+              <TableCell className="py-4 text-center">
+                <div className="flex justify-center gap-2">
+                  {isAuthenticated ? (
                     <Button type="button" aria-label={`注销 ${item.name}`} aria-busy={isLoggingOut} title="注销" variant="ghost" size="sm" className="h-8" disabled={isLoggingOut} onClick={() => confirmLogout(item)}><LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-pulse" : ""}`} /></Button>
                   ) : (
-                    <Button variant="outline" size="sm" className="h-8" disabled={browserLoginBusy} onClick={() => { setSelectedPlugin({ id: item.pluginId, name: item.name }); setLoginDialogOpen(true) }}>
+                    <Button variant="outline" size="sm" className="h-8 whitespace-nowrap" disabled={browserLoginBusy} onClick={() => { setSelectedPlugin({ id: item.pluginId, name: item.name }); setLoginDialogOpen(true) }}>
                       {isCurrentSession && loginSession?.polling ? <><Monitor className="mr-1 h-3 w-3 animate-pulse" />登录中...</> : <><LogIn className="mr-1 h-3 w-3" />登录</>}
                     </Button>
                   )}
-                  {!auth.authenticated && auth.hasCookies && (
+                  {!isAuthenticated && auth.hasCookies && (
                     <Button type="button" aria-label={`清除 ${item.name} Cookie`} aria-busy={isClearing} title="清除 Cookie" variant="ghost" size="sm" className="h-8" disabled={isClearing} onClick={() => confirmClearCookies(item)}><XCircle className={`h-4 w-4 ${isClearing ? "animate-pulse" : ""}`} /></Button>
                   )}
                   <Button type="button" aria-label={`刷新 ${item.name} 登录状态`} aria-busy={isRefreshing} title="刷新登录状态" variant="ghost" size="sm" className="h-8" disabled={refreshMutation.isPending || globalRefreshMutation.isPending} onClick={() => refreshMutation.mutate({ pluginId: item.pluginId, name: item.name })}><RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} /></Button>

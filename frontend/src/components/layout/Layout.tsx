@@ -46,8 +46,8 @@ function isNavItemActive(item: NavItem, pathname: string) {
 
 export function Layout() {
   const location = useLocation()
-  const { user, logout, isLoggingOut, logoutError } = useAuth()
-  const isAdmin = user?.role === "admin"
+  const { user, entrypoint, logout, isLoggingOut, logoutError } = useAuth()
+  const isAdmin = entrypoint !== "public" && user?.role === "admin"
 
   const renderNavItem = (item: NavItem, mobile = false) => {
     if (item.adminOnly && !isAdmin) return null

@@ -53,7 +53,7 @@ def test_initialize_database(tmp_path: Path) -> None:
         version = conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
         ).fetchone()
-        assert version == ("12",)
+        assert version == ("13",)
 
         foreign_keys = conn.execute(
             "PRAGMA foreign_key_list(user_book_subscriptions)"
@@ -104,6 +104,41 @@ def test_schema_upgrade_rolls_back_when_migration_step_fails(tmp_path: Path, mon
     assert "schema_meta" not in tables
 
 
+def test_v13_session_invalidation_rolls_back_on_failure(tmp_path: Path, monkeypatch) -> None:
+    import app.storage.db as db_module
+
+    db_path = tmp_path / "failed-v13-upgrade.db"
+    db_module.initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO users (user_id, username, password_hash, role) VALUES ('u1', 'reader', 'hash', 'user')"
+        )
+        conn.execute(
+            "INSERT INTO user_sessions (session_id, user_id, expires_at) VALUES ('raw-session', 'u1', '2099-01-01')"
+        )
+        conn.execute("UPDATE schema_meta SET value = '12' WHERE key = 'version'")
+        conn.commit()
+
+    original_migration = db_module._migrate_v12_to_v13
+
+    def fail_after_session_delete(conn):
+        original_migration(conn)
+        raise RuntimeError("v13 migration failed")
+
+    monkeypatch.setattr(db_module, "_migrate_v12_to_v13", fail_after_session_delete)
+
+    with pytest.raises(RuntimeError, match="v13 migration failed"):
+        db_module.initialize_database(db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute(
+            "SELECT user_id FROM user_sessions WHERE session_id = 'raw-session'"
+        ).fetchone() == ("u1",)
+        assert conn.execute(
+            "SELECT value FROM schema_meta WHERE key = 'version'"
+        ).fetchone() == ("12",)
+
+
 def test_audit_service_persists_only_safe_summary_fields(tmp_path: Path) -> None:
     from app.services.audit import AuditService
 
@@ -133,7 +168,7 @@ def test_audit_service_persists_only_safe_summary_fields(tmp_path: Path) -> None
     assert "never-store-this" not in stored
 
 
-def test_upgrade_preserves_users_and_sessions(tmp_path: Path) -> None:
+def test_v13_upgrade_preserves_users_and_invalidates_raw_sessions(tmp_path: Path) -> None:
     db_path = tmp_path / "test.db"
     initialize_database(db_path)
     with sqlite3.connect(db_path) as conn:
@@ -151,8 +186,8 @@ def test_upgrade_preserves_users_and_sessions(tmp_path: Path) -> None:
 
     with sqlite3.connect(db_path) as conn:
         assert conn.execute("SELECT username FROM users WHERE user_id = 'u1'").fetchone() == ("reader",)
-        assert conn.execute("SELECT user_id FROM user_sessions WHERE session_id = 's1'").fetchone() == ("u1",)
-        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("12",)
+        assert conn.execute("SELECT user_id FROM user_sessions WHERE session_id = 's1'").fetchone() is None
+        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("13",)
         assert conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'user_book_subscriptions'"
         ).fetchone() == (1,)
@@ -182,7 +217,7 @@ def test_v10_upgrade_adds_subscription_search_jobs_without_touching_users(
         ).fetchone() == (1,)
         assert conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
-        ).fetchone() == ("12",)
+        ).fetchone() == ("13",)
 
 
 def test_v11_upgrade_backfills_shared_book_creator_from_create_log(tmp_path: Path) -> None:
@@ -217,7 +252,7 @@ def test_v11_upgrade_backfills_shared_book_creator_from_create_log(tmp_path: Pat
         assert creators == {"b1": "u1", "b2": "u2", "b3": ""}
         assert conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
-        ).fetchone() == ("12",)
+        ).fetchone() == ("13",)
 
 
 def test_subscription_constraints_and_cascade(tmp_path: Path) -> None:

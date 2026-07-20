@@ -5,8 +5,8 @@ Keep the root clean; see `docs/architecture/repository-layout.md` for the bounda
 
 ## Stack
 
-- **backend/**: FastAPI runtime on port `8765`. App entrypoint `app.main:app`; run commands from `backend/`.
-- **frontend/**: React 19 + Vite + shadcn/ui console. Built dist is served by the backend at `/console` and `/console-static/...` (see `app/main.py`). Vite dev server proxies `/api` and `/health` to `127.0.0.1:8765`.
+- **backend/**: FastAPI runtime with a public/reader entrypoint on `8765` and an admin entrypoint on `8766`. The deployment entrypoint is `python -m app.server`; `app.main:app` is the combined compatibility/test app. Run commands from `backend/`.
+- **frontend/**: React 19 + Vite + shadcn/ui console. The same built dist is served on both ports, while `/api/auth/entrypoint` selects the reader-only or administrator login/UI surface. Vite proxies to `8765` by default; set `VITE_LEGADOHUB_ENTRYPOINT=admin` to proxy to `8766`.
 - **plugins/**: source plugins loaded at runtime by `app/source_plugins/loader.py`, which recursively scans `plugins/sources/**/metadata.yaml`.
 
 ## First-time setup / dev run
@@ -18,7 +18,7 @@ python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r backend/requirements.txt
 .venv/Scripts/python.exe -m playwright install chromium
 cd frontend && npm install && npm run build
-cd ../backend && ../.venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8765
+cd ../backend && ../.venv/Scripts/python.exe -m app.server --host 0.0.0.0 --public-port 8765 --admin-port 8766
 ```
 
 On first startup the lifespan handler initializes the SQLite DB at `backend/data/app.db` and **prints a default `admin` password** to stdout; change it after first login.
@@ -26,7 +26,7 @@ On first startup the lifespan handler initializes the SQLite DB at `backend/data
 ## Commands
 
 Backend (run from `backend/`):
-- Run server: `python -m uvicorn app.main:app --host 0.0.0.0 --port 8765`
+- Run server: `python -m app.server --host 0.0.0.0 --public-port 8765 --admin-port 8766`
 - Tests: `pytest` (config lives in `backend/pytest.ini`; `asyncio_mode = auto`)
 - Single test: `pytest ../dev-assets/tests/test_shared_book_storage.py`
 - Maintenance scripts: `python scripts/create_source_plugin.py`, `python scripts/validate_source_plugin.py` (these are the only scripts that belong in `backend/scripts/`; put probes/benchmarks in `dev-assets/`)
@@ -63,6 +63,8 @@ This is the most likely thing to trip you up:
 - Each plugin is a directory under `plugins/sources/` (subdirs `official/`, `thirdparty/` are scanned recursively) containing `metadata.yaml` + `source.py`.
 - `source.py` must export a `Source` class with **async** methods matching each `capability` declared in metadata (`search`, `detail`, `toc`, `chapter`, `chapter_reviews`, `explore`, `auth`; `explore` requires `explore_groups` + `explore`).
 - `plugins/sources/official/` is gitignored — don't commit official plugins.
+- Docker images must not contain `plugins/sources/official/`; Compose mounts that host directory read-only so operators can place official plugins after deployment.
+- Docker images keep bundled third-party plugins under `/opt/legadohub/plugins/thirdparty`. The optional `docker-compose.plugins.yml` bind mount targets `/app/plugins/sources/thirdparty` directly and must be writable by `LEGADOHUB_APP_UID/GID`; the entrypoint copies the bundled set only when that directory is empty. Once populated, the host directory is authoritative and is never overwritten on startup.
 - Official Qidian plugins are authored in the sibling repo `C:\Home\Workspace\UGit\QDFCCKK`; edit `source-plugin/WEB-plugin` or `source-plugin/APP-plugin` there first, then run `python sync-to-legado-hub.py --variant WEB-plugin` or `python sync-to-legado-hub.py --variant APP-plugin`. Do not hand-edit synced files under `plugins/sources/official/qidian_com_*` except for emergency inspection.
 - Authoritative contract: `docs/architecture/source-plugin-contract.md` (+ `.zh-CN.md`). Template scaffold: `plugins/templates/source_plugin/`.
 - Plugins must not own global concurrency/timeout/proxy/retry/cache/scheduling policy — those are backend runtime responsibilities.
@@ -85,7 +87,7 @@ Controlled by env (see `.env.example`):
 - `LEGADOHUB_BROWSER_PROVIDER`: `chromium` (embedded, requires `playwright install chromium`) or `browserless` (remote; set `LEGADOHUB_BROWSERLESS_WS` + optional `_TOKEN`)
 - `LEGADOHUB_BROWSER_PUBLIC_BASE_URL`, `LEGADOHUB_BROWSER_PROFILE_ROOT`, `LEGADOHUB_BROWSER_CONNECT_TIMEOUT_MS`, `LEGADOHUB_BROWSER_ACTION_TIMEOUT_MS`
 
-Docker builds use `node:22` frontend stage + `python:3.12-slim` runtime with `playwright install --with-deps chromium`; `docker-compose.yml` mounts `./backend/data` and exposes `8765`.
+Docker builds use `node:22` frontend stage + `python:3.12-slim` runtime with `playwright install --with-deps chromium`; backend state remains in the container writable layer and is lost when the container is replaced or removed. `docker-compose.yml` exposes reader port `8765` and admin port `8766`. The admin host binding defaults to `0.0.0.0` by product decision; deployment operators own its firewall, forwarding, TLS, and management-network restrictions.
 
 ## Conventions
 

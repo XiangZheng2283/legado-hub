@@ -324,28 +324,45 @@ class SharedBookProcessLogger:
         lines appended after the initial seek position.
         """
         log_path = self.storage.logs_dir(book_name=book_name, author=author) / "process.jsonl"
+        existed_at_start = log_path.exists()
         while not log_path.exists():
             await asyncio.sleep(poll_interval_seconds)
-        position = log_path.stat().st_size if from_end else 0
+        position = 0
+        if from_end and existed_at_start:
+            while True:
+                try:
+                    position = len(log_path.read_text(encoding="utf-8"))
+                    break
+                except (OSError, UnicodeError):
+                    await asyncio.sleep(poll_interval_seconds)
         while True:
             await asyncio.sleep(poll_interval_seconds)
             if not log_path.exists():
                 continue
-            text = log_path.read_text(encoding="utf-8")
+            try:
+                text = log_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError):
+                continue
             if len(text) < position:
                 position = 0
             new_text = text[position:]
-            position = len(text)
-            for line in new_text.splitlines():
-                line = line.strip()
+            consumed = 0
+            for raw_line in new_text.splitlines(keepends=True):
+                line = raw_line.strip()
                 if not line:
+                    consumed += len(raw_line)
                     continue
                 try:
                     record = json.loads(line)
                 except json.JSONDecodeError:
+                    if not raw_line.endswith(("\n", "\r")):
+                        break
+                    consumed += len(raw_line)
                     continue
+                consumed += len(raw_line)
                 if isinstance(record, dict):
                     yield record
+            position += consumed
 
 
 def build_chapter_progress_payload(

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import sqlite3
 import threading
 from contextlib import asynccontextmanager
@@ -28,10 +29,35 @@ from app.services.user_subscriptions import (
 )
 from app.services.user_auth import auth_service
 from app.source_plugins.id_codec import decode_chapter_id
+from app.core.public_security import get_public_base_url
+from app.services.reading_limits import reading_access_limiter
 
 router = APIRouter(prefix="/api/subscribe")
+public_router = APIRouter(prefix="/api/subscribe")
 logger = logging.getLogger(__name__)
 _shared_book_creation_lock = threading.Lock()
+_MAX_SUBSCRIPTION_SEARCH_PAGE = 1000
+_MAX_LIBRARY_CHAPTER_PAGE = 100_000
+_MAX_LIBRARY_CHAPTER_PAGE_SIZE = 200
+_LEGADO_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
+_LIBRARY_CHAPTER_STATUSES = {
+    "all",
+    "pending",
+    "placeholder",
+    "processing",
+    "unknown",
+    "readable",
+    "supplemented",
+    "proofread_complete",
+    "fetched",
+    "preview",
+    "suspect",
+    "failed",
+    "error",
+    "fallback",
+    "processed",
+    "skipped",
+}
 
 
 @asynccontextmanager
@@ -72,6 +98,15 @@ def _limit_detail(exc: SubscriptionLimitError) -> dict:
     return detail
 
 
+def _limit_exception(exc: SubscriptionLimitError) -> HTTPException:
+    headers = (
+        {"Retry-After": str(exc.retry_after_seconds)}
+        if exc.retry_after_seconds is not None
+        else None
+    )
+    return HTTPException(status_code=429, detail=_limit_detail(exc), headers=headers)
+
+
 def _start_chapter_index(payload: dict, default: int = 1) -> int:
     value = payload.get("startChapterIndex", default)
     if isinstance(value, bool):
@@ -92,6 +127,60 @@ def _auto_archive_on_complete(payload: dict, default: bool = True) -> bool:
     if not isinstance(value, bool):
         raise HTTPException(status_code=422, detail="autoArchiveOnComplete 必须是布尔值")
     return value
+
+
+def _search_page(payload: dict) -> int:
+    value = payload.get("page", 1)
+    if value is None or value == "":
+        return 1
+    if isinstance(value, bool):
+        raise HTTPException(status_code=422, detail=f"page 必须是 1 到 {_MAX_SUBSCRIPTION_SEARCH_PAGE} 的整数")
+    if isinstance(value, int):
+        page = value
+    elif isinstance(value, str) and value.strip().isdigit():
+        page = int(value.strip())
+    else:
+        raise HTTPException(status_code=422, detail=f"page 必须是 1 到 {_MAX_SUBSCRIPTION_SEARCH_PAGE} 的整数")
+    if not 1 <= page <= _MAX_SUBSCRIPTION_SEARCH_PAGE:
+        raise HTTPException(status_code=422, detail=f"page 必须是 1 到 {_MAX_SUBSCRIPTION_SEARCH_PAGE} 的整数")
+    return page
+
+
+def _reject_legado_query_anomalies(request: Request, allowed: set[str]) -> None:
+    unknown = set(request.query_params.keys()) - allowed
+    repeated = {key for key in allowed if len(request.query_params.getlist(key)) > 1}
+    if unknown or repeated:
+        raise HTTPException(status_code=422, detail="查询参数无效")
+
+
+def _validated_legado_text(value: str, *, field: str, max_length: int) -> str:
+    normalized = str(value or "").strip()
+    if len(normalized) > max_length or any(ord(character) < 32 for character in normalized):
+        raise HTTPException(status_code=422, detail=f"{field} 长度或内容无效")
+    return normalized
+
+
+def _validated_legado_identifier(value: str, *, field: str, allow_empty: bool = False) -> str:
+    normalized = str(value or "").strip()
+    if not normalized and allow_empty:
+        return ""
+    if not normalized or len(normalized) > 128 or not _LEGADO_IDENTIFIER_PATTERN.fullmatch(normalized):
+        raise HTTPException(status_code=422, detail=f"{field} 无效")
+    return normalized
+
+
+def _legado_query_int(value: str, *, field: str, minimum: int, maximum: int) -> int:
+    normalized = str(value or "").strip()
+    if not normalized.isascii() or not normalized.isdigit():
+        raise HTTPException(status_code=422, detail=f"{field} 必须是整数")
+    parsed = int(normalized)
+    if not minimum <= parsed <= maximum:
+        raise HTTPException(status_code=422, detail=f"{field} 超出允许范围")
+    return parsed
+
+
+def _validated_aggregate_book_id(value: str) -> str:
+    return _validated_legado_identifier(value, field="aggregateBookId")
 
 
 async def _create_or_get_book_for_subscription(group: dict, user_id: str, existing: dict | None) -> dict:
@@ -215,10 +304,19 @@ def _schedule_subscription_wake(
 
 
 @router.post("/search")
+@public_router.post("/search")
 async def subscription_search(request: Request, payload: dict):
     user = auth_service.require_user(request)
-    keyword = str(payload.get("keyword", "")).strip()
-    page = int(payload.get("page", 1) or 1)
+    unknown = set(payload) - {"keyword", "page"}
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"不支持的字段: {', '.join(sorted(unknown))}")
+    raw_keyword = payload.get("keyword", "")
+    if not isinstance(raw_keyword, str):
+        raise HTTPException(status_code=422, detail="keyword 必须是字符串")
+    keyword = raw_keyword.strip()
+    if len(keyword) > 200 or any(ord(character) < 32 for character in keyword):
+        raise HTTPException(status_code=422, detail="keyword 长度或内容无效")
+    page = _search_page(payload)
     if not keyword:
         return {
             "implemented": True,
@@ -232,7 +330,7 @@ async def subscription_search(request: Request, payload: dict):
     try:
         subscription_rate_limiter.check(user.user_id, "search")
     except SubscriptionLimitError as exc:
-        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+        raise _limit_exception(exc) from exc
 
     job = subscription_search_service.create_job(
         keyword=keyword, page=page, owner_user_id=user.user_id
@@ -243,6 +341,7 @@ async def subscription_search(request: Request, payload: dict):
 
 
 @router.get("/search/{job_id}")
+@public_router.get("/search/{job_id}")
 def get_subscription_search(request: Request, job_id: str):
     user = auth_service.require_user(request)
     if not subscription_search_service.get_job_for_user(job_id, user.user_id):
@@ -251,6 +350,7 @@ def get_subscription_search(request: Request, job_id: str):
 
 
 @router.post("/search/{job_id}/cards/{candidate_id}/subscribe")
+@public_router.post("/search/{job_id}/cards/{candidate_id}/subscribe")
 async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
     group = subscription_search_service.find_card_group_for_user(
@@ -267,7 +367,7 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
     try:
         subscription_rate_limiter.check(user.user_id, "create")
     except SubscriptionLimitError as exc:
-        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+        raise _limit_exception(exc) from exc
     existing = library_books_service.find_existing_book(group)
     previous_subscription = (
         user_subscriptions_service.get(user.user_id, existing["aggregateBookId"])
@@ -298,7 +398,7 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
                 auto_archive_on_complete=auto_archive,
             )
     except SubscriptionLimitError as exc:
-        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+        raise _limit_exception(exc) from exc
     book = created["book"]
     safe_book = _safe_user_book(book)
     provisioning = library_books_service.provisioning_summary(
@@ -345,6 +445,8 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
 @router.post("/books/{aggregate_book_id}/source-map/refresh")
 async def refresh_library_book_source_map(request: Request, aggregate_book_id: str, payload: dict | None = None):
     auth_service.require_admin(request)
+    _reject_legado_query_anomalies(request, set())
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
     from app.api.console import _manual_source_map_refresh
 
     result = _manual_source_map_refresh(aggregate_book_id, payload=payload)
@@ -358,13 +460,18 @@ async def refresh_library_book_source_map(request: Request, aggregate_book_id: s
 @router.get("/library")
 def list_library(request: Request, keyword: str = ""):
     auth_service.require_admin(request)
+    _reject_legado_query_anomalies(request, {"keyword"})
+    keyword = _validated_legado_text(keyword, field="keyword", max_length=200)
     items = library_books_service.list_books(keyword=keyword, include_hidden=True)
     return {"items": items, "total": len(items)}
 
 
 @router.get("/library/mine")
+@public_router.get("/library/mine")
 def list_my_library(request: Request, keyword: str = ""):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, {"keyword"})
+    keyword = _validated_legado_text(keyword, field="keyword", max_length=200)
     items = user_subscriptions_service.list_books(
         user.user_id, library_books_service, keyword=keyword
     )
@@ -372,8 +479,11 @@ def list_my_library(request: Request, keyword: str = ""):
 
 
 @router.get("/books/{aggregate_book_id}")
+@public_router.get("/books/{aggregate_book_id}")
 def get_library_book(request: Request, aggregate_book_id: str):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, set())
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
     subscription = _require_book_access(user, aggregate_book_id)
     detail = library_books_service.get_shared_book_detail(aggregate_book_id)
     if not detail.get("found"):
@@ -396,6 +506,7 @@ def get_library_book(request: Request, aggregate_book_id: str):
 
 
 @router.get("/books/{aggregate_book_id}/chapters")
+@public_router.get("/books/{aggregate_book_id}/chapters")
 def list_library_book_chapters(
     request: Request,
     aggregate_book_id: str,
@@ -405,6 +516,16 @@ def list_library_book_chapters(
     keyword: str = "",
 ):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, {"page", "pageSize", "status", "keyword"})
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
+    if not 1 <= page <= _MAX_LIBRARY_CHAPTER_PAGE:
+        raise HTTPException(status_code=422, detail="page 超出允许范围")
+    if not 1 <= pageSize <= _MAX_LIBRARY_CHAPTER_PAGE_SIZE:
+        raise HTTPException(status_code=422, detail="pageSize 超出允许范围")
+    status = _validated_legado_text(status, field="status", max_length=32).lower() or "all"
+    if status not in _LIBRARY_CHAPTER_STATUSES:
+        raise HTTPException(status_code=422, detail="status 无效")
+    keyword = _validated_legado_text(keyword, field="keyword", max_length=200)
     _require_book_access(user, aggregate_book_id)
     return library_books_service.list_shared_chapters(
         aggregate_book_id,
@@ -416,8 +537,11 @@ def list_library_book_chapters(
 
 
 @router.get("/books/{aggregate_book_id}/subscription")
+@public_router.get("/books/{aggregate_book_id}/subscription")
 def get_subscription(request: Request, aggregate_book_id: str):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, set())
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
     subscription = user_subscriptions_service.get(user.user_id, aggregate_book_id)
     if not subscription:
         raise HTTPException(status_code=404, detail="订阅不存在")
@@ -425,8 +549,11 @@ def get_subscription(request: Request, aggregate_book_id: str):
 
 
 @router.put("/books/{aggregate_book_id}/subscription")
+@public_router.put("/books/{aggregate_book_id}/subscription")
 async def put_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, set())
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
     payload = payload or {}
     unknown = set(payload) - {"startChapterIndex", "autoArchiveOnComplete"}
     if unknown:
@@ -440,7 +567,7 @@ async def put_subscription(request: Request, aggregate_book_id: str, payload: di
     try:
         subscription_rate_limiter.check(user.user_id, "create")
     except SubscriptionLimitError as exc:
-        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+        raise _limit_exception(exc) from exc
     try:
         subscription, created = user_subscriptions_service.ensure(
             user.user_id,
@@ -451,7 +578,7 @@ async def put_subscription(request: Request, aggregate_book_id: str, payload: di
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="书籍不存在") from exc
     except SubscriptionLimitError as exc:
-        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+        raise _limit_exception(exc) from exc
     provisioning = library_books_service.provisioning_summary(
         aggregate_book_id,
         start_chapter_index=subscription["startChapterIndex"],
@@ -478,8 +605,11 @@ async def put_subscription(request: Request, aggregate_book_id: str, payload: di
 
 
 @router.patch("/books/{aggregate_book_id}/subscription")
+@public_router.patch("/books/{aggregate_book_id}/subscription")
 async def patch_subscription(request: Request, aggregate_book_id: str, payload: dict | None = None):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, set())
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
     payload = payload or {}
     unknown = set(payload) - {"status", "startChapterIndex", "autoArchiveOnComplete"}
     if unknown:
@@ -501,7 +631,7 @@ async def patch_subscription(request: Request, aggregate_book_id: str, payload: 
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except SubscriptionLimitError as exc:
-        raise HTTPException(status_code=429, detail=_limit_detail(exc)) from exc
+        raise _limit_exception(exc) from exc
     provisioning = library_books_service.provisioning_summary(
         aggregate_book_id,
         start_chapter_index=subscription["startChapterIndex"],
@@ -528,8 +658,12 @@ async def patch_subscription(request: Request, aggregate_book_id: str, payload: 
 
 
 @router.get("/chapters/{chapter_id}")
+@public_router.get("/chapters/{chapter_id}")
 async def get_subscribed_chapter(request: Request, chapter_id: str):
     user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, set())
+    if not chapter_id or len(chapter_id) > 4096 or any(ord(character) < 32 for character in chapter_id):
+        raise HTTPException(status_code=404, detail="章节不存在")
     try:
         source_id, chapter_url = decode_chapter_id(chapter_id)
         payload = unpack_aggregate_chapter_url(chapter_url)
@@ -560,18 +694,29 @@ async def get_subscribed_chapter(request: Request, chapter_id: str):
 # ---- Legado virtual source (migrated from /api/legado) ----
 
 @router.get("/legado/source")
+@public_router.get("/legado/source")
 def get_legado_source(request: Request) -> list[dict]:
-    base_api = str(request.base_url).rstrip("/")
-    return generate_legado_source(base_api)
+    return generate_legado_source(get_public_base_url())
 
 
 @router.get("/legado/search")
+@public_router.get("/legado/search")
 def legado_search(
     request: Request,
     keyword: str = "",
-    page: int = 1,
-    waitMs: int = 120000,
+    page: str = "1",
+    waitMs: str = "120000",
 ) -> dict:
+    user = auth_service.require_user(request, touch=False)
+    _reject_legado_query_anomalies(request, {"keyword", "page", "waitMs"})
+    keyword = _validated_legado_text(keyword, field="keyword", max_length=200)
+    parsed_page = _legado_query_int(page, field="page", minimum=1, maximum=1000)
+    _legado_query_int(waitMs, field="waitMs", minimum=0, maximum=120000)
+    with reading_access_limiter.guard(user.user_id, "search"):
+        return _legado_search_response(keyword=keyword, page=parsed_page)
+
+
+def _legado_search_response(*, keyword: str, page: int) -> dict:
     if not keyword.strip():
         return {
             "implemented": True,
@@ -581,10 +726,9 @@ def legado_search(
             "jobId": "",
             "status": "completed",
             "liveSearchPending": False,
-            "debug": {"sourceCount": 0},
         }
 
-    base_api = str(request.base_url).rstrip("/")
+    base_api = get_public_base_url()
     published = library_books_service.page_published_books(
         keyword=keyword,
         page=page,
@@ -602,43 +746,52 @@ def legado_search(
         "jobId": "",
         "status": "completed",
         "liveSearchPending": False,
-        "debug": {"publishedCount": published["total"]},
     }
 
 
 @router.get("/legado/search/{job_id}")
+@public_router.get("/legado/search/{job_id}")
 async def get_legado_search_status(request: Request, job_id: str) -> dict:
-    return {
-        "implemented": True,
-        "jobId": job_id,
-        "status": "unknown",
-        "items": [],
-        "liveSearchPending": False,
-        "debug": {"message": "任务不存在或已过期"},
-    }
+    user = auth_service.require_user(request, touch=False)
+    _reject_legado_query_anomalies(request, set())
+    job_id = _validated_legado_identifier(job_id, field="jobId")
+    with reading_access_limiter.guard(user.user_id, "search"):
+        return {
+            "implemented": True,
+            "jobId": job_id,
+            "status": "unknown",
+            "items": [],
+            "liveSearchPending": False,
+        }
 
 
 @router.post("/legado/search/{job_id}/cancel")
 async def cancel_legado_search(request: Request, job_id: str) -> dict:
     auth_service.require_admin(request)
+    _reject_legado_query_anomalies(request, set())
+    job_id = _validated_legado_identifier(job_id, field="jobId")
     return {"jobId": job_id, "cancelled": False}
 
 
 @router.get("/legado/explore")
-async def legado_explore(request: Request, sourceId: str = "", groupId: str = "", page: int = 1) -> dict:
-    base_api = str(request.base_url).rstrip("/")
-    published = library_books_service.page_published_books(
-        page=page,
-        page_size=20,
-    )
-    items = [
-        library_books_service.build_search_injected_item(book, base_api=base_api)
-        for book in published["items"]
-    ]
-    return {
-        "implemented": True,
-        "groupId": groupId or "published",
-        "page": published["page"],
-        "items": items,
-        "debug": {"publishedCount": published["total"]},
-    }
+@public_router.get("/legado/explore")
+async def legado_explore(request: Request, sourceId: str = "", groupId: str = "", page: str = "1") -> dict:
+    user = auth_service.require_user(request, touch=False)
+    _reject_legado_query_anomalies(request, {"sourceId", "groupId", "page"})
+    source_id = _validated_legado_identifier(sourceId, field="sourceId", allow_empty=True)
+    group_id = _validated_legado_text(groupId, field="groupId", max_length=128)
+    parsed_page = _legado_query_int(page, field="page", minimum=1, maximum=1000)
+    with reading_access_limiter.guard(user.user_id, "search"):
+        base_api = get_public_base_url()
+        published = library_books_service.page_published_books(page=parsed_page, page_size=20)
+        items = [
+            library_books_service.build_search_injected_item(book, base_api=base_api)
+            for book in published["items"]
+        ]
+        return {
+            "implemented": True,
+            "sourceId": source_id,
+            "groupId": group_id or "published",
+            "page": published["page"],
+            "items": items,
+        }

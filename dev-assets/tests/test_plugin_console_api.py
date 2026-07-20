@@ -21,6 +21,15 @@ if _login.status_code != 200:
     pytest.skip(f"admin login unavailable: {_login.status_code} {_login.text}", allow_module_level=True)
 
 
+@pytest.fixture(autouse=True)
+def refresh_module_admin_session():
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "admin123"},
+    )
+    assert response.status_code == 200
+
+
 @pytest.fixture
 def admin_client():
     """Return an authenticated TestClient for admin-only routes.
@@ -43,9 +52,36 @@ def user_client():
     if not auth_service.get_user_by_username("reader"):
         auth_service.create_user("reader", "reader123", role="user")
     test_client = TestClient(app)
-    res = test_client.post("/api/auth/login", json={"username": "reader", "password": "reader123"})
+    res = test_client.post(
+        "/api/auth/access/redeem",
+        json={"accessCode": auth_service.build_access_code("reader", "reader123")},
+    )
     assert res.status_code == 200
     return test_client
+
+
+def test_https_login_sets_secure_session_cookie():
+    secure_client = TestClient(app, base_url="https://testserver")
+
+    response = secure_client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "admin123"},
+    )
+
+    assert response.status_code == 200
+    assert "Secure" in response.headers["set-cookie"]
+
+
+def test_malformed_cache_json_is_logged_without_exposing_payload(monkeypatch):
+    from unittest.mock import Mock
+    from app.api import console as console_api
+
+    warning = Mock()
+    monkeypatch.setattr(console_api.logger, "warning", warning)
+
+    assert console_api._json_payload('{"secret":') == {}
+    warning.assert_called_once()
+    assert "secret" not in str(warning.call_args)
 
 
 def test_plugin_reload_requires_admin(admin_client, user_client):
@@ -142,10 +178,17 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
     username = f"reader-{uuid.uuid4().hex[:8]}"
     create_response = admin_client.post(
         "/api/console/users",
-        json={"username": username, "password": "initial-pass", "role": "user"},
+        json={"username": username, "role": "user"},
     )
     assert create_response.status_code == 200
     created = create_response.json()
+    initial_access_code = created["accessCode"]
+    listed_user = next(
+        item
+        for item in admin_client.get("/api/console/users").json()["items"]
+        if item["userId"] == created["userId"]
+    )
+    assert "accessCode" not in listed_user
 
     assert user_client.get("/api/console/users").status_code == 403
     assert admin_client.post(
@@ -154,7 +197,7 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
     ).status_code == 400
     assert admin_client.post(
         "/api/console/users",
-        json={"username": "weak-password", "password": "short", "role": "user"},
+        json={"username": "weak-password", "password": "short", "role": "admin"},
     ).status_code == 400
     assert admin_client.post(
         "/api/console/users",
@@ -163,23 +206,28 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
 
     reader_client = TestClient(app)
     assert reader_client.post(
-        "/api/auth/login",
-        json={"username": username, "password": "initial-pass"},
+        "/api/auth/access/redeem",
+        json={"accessCode": initial_access_code},
     ).status_code == 200
     reset_response = admin_client.post(
-        f"/api/console/users/{created['userId']}/reset-password",
-        json={"password": "replacement-pass"},
+        f"/api/console/users/{created['userId']}/reset-access-code",
+        json={},
     )
     assert reset_response.status_code == 200
+    replacement_access_code = reset_response.json()["accessCode"]
     assert reader_client.get("/api/auth/me").json()["authenticated"] is False
     assert reader_client.post(
-        "/api/auth/login",
-        json={"username": username, "password": "initial-pass"},
+        "/api/auth/access/redeem",
+        json={"accessCode": initial_access_code},
     ).status_code == 401
     assert reader_client.post(
-        "/api/auth/login",
-        json={"username": username, "password": "replacement-pass"},
+        "/api/auth/access/redeem",
+        json={"accessCode": replacement_access_code},
     ).status_code == 200
+    assert reader_client.post(
+        "/api/auth/login",
+        json={"username": username, "password": replacement_access_code},
+    ).status_code == 401
 
     assert admin_client.post(
         f"/api/console/users/{created['userId']}/disable",
@@ -201,7 +249,12 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
         for event in audit_service.list_events(limit=1000)
         if event["targetId"] == created["userId"]
     }
-    assert {"user.create", "user.password.reset", "user.disable"}.issubset(actions)
+    assert {
+        "user.create",
+        "user.access_code.issue",
+        "user.access_code.reset",
+        "user.disable",
+    }.issubset(actions)
 
 
 def test_user_management_prevents_self_and_last_admin_disable(admin_client, tmp_path):

@@ -6,7 +6,6 @@ import { Layout } from "@/components/layout/Layout"
 import { LoginPage } from "@/routes/LoginPage"
 import { Dashboard } from "@/routes/Dashboard"
 import { Plugins } from "@/routes/Plugins"
-import { PluginDetail } from "@/routes/PluginDetail"
 import { SearchJobs } from "@/routes/SearchJobs"
 import { SettingsPage } from "@/routes/SettingsPage"
 import { SubscriptionDiscoveryPage } from "@/routes/SubscriptionDiscoveryPage"
@@ -16,11 +15,28 @@ import { LibraryChapterDetailPage } from "@/routes/LibraryChapterDetailPage"
 import { UsersPage } from "@/routes/UsersPage"
 
 function ProtectedLayout() {
-  const { isLoading, isAuthenticated } = useAuth()
+  const { isLoading, isAuthenticated, authError, retryAuth } = useAuth()
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">加载中...</div>
+      </div>
+    )
+  }
+  if (authError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <div role="alert" className="w-full max-w-sm rounded-lg border border-rose-200 bg-white p-5 shadow-sm">
+          <h1 className="text-base font-semibold text-slate-900">认证服务暂时不可用</h1>
+          <p className="mt-2 text-sm text-slate-600">{authError}</p>
+          <button
+            type="button"
+            className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
+            onClick={() => { void retryAuth() }}
+          >
+            重新连接
+          </button>
+        </div>
       </div>
     )
   }
@@ -31,8 +47,8 @@ function ProtectedLayout() {
 }
 
 export function AdminOnly() {
-  const { user } = useAuth()
-  if (user?.role !== "admin") {
+  const { user, entrypoint } = useAuth()
+  if (entrypoint === "public" || user?.role !== "admin") {
     return <Navigate to="/console" replace />
   }
   return <Outlet />
@@ -51,7 +67,6 @@ function AuthRouter() {
             <Route path="library/:bookId" element={<LibraryBookDetailPage />} />
             <Route element={<AdminOnly />}>
               <Route path="plugins" element={<Plugins />} />
-              <Route path="plugins/:pluginId" element={<PluginDetail />} />
               <Route path="search" element={<SearchJobs />} />
               <Route path="official-sources" element={<Navigate to="/console/plugins?tab=official" replace />} />
               <Route path="settings" element={<SettingsPage />} />

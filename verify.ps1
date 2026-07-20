@@ -25,6 +25,29 @@ function Invoke-Checked {
     }
 }
 
+function Get-SharedFileSha256 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $stream = [System.IO.File]::Open(
+        $Path,
+        [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::ReadWrite
+    )
+    try {
+        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            return [Convert]::ToHexString($sha256.ComputeHash($stream))
+        }
+        finally {
+            $sha256.Dispose()
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
+
 function Get-RuntimeSnapshot {
     $paths = @(
         "backend/data",
@@ -49,7 +72,7 @@ function Get-RuntimeSnapshot {
                 Path = $_.FullName
                 Length = $_.Length
                 LastWriteTimeUtc = $_.LastWriteTimeUtc.ToString("o")
-                Sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
+                Sha256 = Get-SharedFileSha256 -Path $_.FullName
             }
         }
 }

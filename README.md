@@ -14,6 +14,21 @@
 
 ---
 
+## 运行入口
+
+- `http://<host>:8765`：Reading/Legado 与普通用户入口，只注册阅读、授权码和个人订阅 API。
+- `http://<host>:8766`：管理员入口，注册管理员登录、系统控制台和管理 API。
+
+使用 `start.bat` 或在 `backend/` 执行：
+
+```powershell
+python -m app.server --host 0.0.0.0 --public-port 8765 --admin-port 8766
+```
+
+管理员端口默认监听所有网卡。应用负责路由与身份隔离，部署方负责防火墙、反向代理、TLS 和允许访问的管理网段。
+
+---
+
 ## 项目里有什么
 
 ### `backend/`
@@ -40,6 +55,8 @@
 插件目录。
 
 这里放的是运行时可以直接加载的书源插件。
+
+Docker 镜像只保存第三方插件种子，官方插件不进入镜像，由宿主目录 `plugins/sources/official/` 只读挂载。使用 `docker-compose.plugins.yml` 时，宿主第三方目录直接挂载到 `/app/plugins/sources/thirdparty`；目录为空时启动脚本复制镜像种子，非空时完全保留宿主内容。后端数据不映射到宿主，替换或删除容器前必须先备份。
 
 ---
 

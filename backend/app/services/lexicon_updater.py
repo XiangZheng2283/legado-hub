@@ -179,8 +179,9 @@ class LexiconUpdater:
         tmp_dir: Path | None = None
 
         try:
-            # 1. Download to a temporary directory.
-            tmp_dir = Path(tempfile.mkdtemp(prefix="lexicon_dl_"))
+            # 1. Download beside the target so the final rename stays on one filesystem.
+            self._lexicon_dir.mkdir(parents=True, exist_ok=True)
+            tmp_dir = Path(tempfile.mkdtemp(prefix="lexicon_dl_", dir=self._lexicon_dir))
             try:
                 commit_sha = self._download_lexicon(tmp_dir)
             except Exception as exc:

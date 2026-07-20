@@ -41,6 +41,12 @@ interface LibraryBook {
   intro?: string
   wordCount?: string
   primarySourceName?: string
+  bookState?: {
+    chapterCount?: number
+    readableChapterCount?: number
+    previewChapterCount?: number
+    failedChapterCount?: number
+  }
   subscription?: {
     status: "active" | "paused" | "archived"
     startChapterIndex: number
@@ -75,8 +81,8 @@ function processStatusLabel(status: string) {
 export function LibraryPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user } = useAuth()
-  const isAdmin = user?.role === "admin"
+  const { user, entrypoint } = useAuth()
+  const isAdmin = entrypoint !== "public" && user?.role === "admin"
 
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null)
@@ -164,11 +170,32 @@ export function LibraryPage() {
           {books.map((book) => {
             const personal = book.personalProgress
             const displayStatus = isAdmin ? book.status : book.subscription?.status || "unknown"
-            const progress = isAdmin
-              ? (book.totalChapters > 0 ? Math.round((book.processedChapters / book.totalChapters) * 100) : 0)
-              : Math.round(Math.max(0, Math.min(1, personal?.coverageRatio ?? 0)) * 100)
-            const failedCount = isAdmin ? book.failedChapters : personal?.failedCount
+            const hasBookState = Number(book.bookState?.chapterCount || 0) > 0
+            const fullCount = isAdmin
+              ? Number(hasBookState ? book.bookState?.readableChapterCount : book.visibleProcessedChapters) || 0
+              : Number(personal?.fullCount || 0)
+            const previewCount = isAdmin
+              ? Number(hasBookState ? book.bookState?.previewChapterCount : 0) || 0
+              : Number(personal?.previewCount || 0)
+            const failedCount = isAdmin
+              ? Number(hasBookState ? book.bookState?.failedChapterCount : book.failedChapters) || 0
+              : Number(personal?.failedCount || 0)
+            const personalTotal = Number(personal?.fullCount || 0)
+              + Number(personal?.previewCount || 0)
+              + Number(personal?.failedCount || 0)
+              + Number(personal?.pendingCount || 0)
+            const scopeTotal = isAdmin
+              ? Math.max(Number(book.totalChapters || 0), Number(book.bookState?.chapterCount || 0))
+              : personalTotal
+            const progress = scopeTotal > 0
+              ? Math.round((Math.max(0, Math.min(fullCount, scopeTotal)) / scopeTotal) * 100)
+              : 0
             const hasError = typeof failedCount === "number" && failedCount > 0
+            const trackingCurrentChapters = book.bookStatus !== "completed"
+              && scopeTotal > 0
+              && fullCount >= scopeTotal
+              && previewCount === 0
+              && failedCount === 0
             return (
               <Card key={book.aggregateBookId} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200 relative group">
                 <Link
@@ -268,7 +295,12 @@ export function LibraryPage() {
                 <div className="p-4 border-t border-slate-100 mt-auto bg-white flex flex-col justify-end">
                   <div className="flex justify-between items-center mb-2 text-xs text-slate-500">
                     <div className="flex items-center gap-2">
-                      {processStatusLabel(displayStatus)}
+                      {trackingCurrentChapters ? (
+                        <Badge className="rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+                          <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse" />
+                          已同步 · 追更中
+                        </Badge>
+                      ) : processStatusLabel(displayStatus)}
                     </div>
                     <span>{progress}%</span>
                   </div>
@@ -283,7 +315,7 @@ export function LibraryPage() {
                     }
                   />
                   <div className="mt-2.5 text-xs text-slate-500 flex items-center gap-2">
-                    <span>{isAdmin ? `可阅读 ${book.visibleProcessedChapters}` : `全文 ${personal?.fullCount ?? 0} · 预览 ${personal?.previewCount ?? 0}`}</span>
+                    <span>{`全文 ${fullCount} · 预览 ${previewCount}`}</span>
                     <span className="text-slate-300">·</span>
                     <span className={hasError ? "text-rose-500" : ""}>
                       {typeof failedCount === "number" ? `失败 ${failedCount}` : "失败数未知"}

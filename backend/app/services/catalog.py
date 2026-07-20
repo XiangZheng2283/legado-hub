@@ -761,51 +761,70 @@ class Catalog:
         return response
 
     async def chapter_reviews(self, chapter_id: str, user_agent: str = "") -> dict:
-        try:
-            source_id, chapter_url = decode_chapter_id(chapter_id)
-        except Exception:
-            return {
-                "implemented": True,
-                "chapterId": chapter_id,
-                "paragraphs": {},
-                "chapterEnd": [],
-                "summary": {},
-                "debug": {"error": "invalid chapter_id format"},
-            }
+        from app.services.chapter_review_catalog import chapter_reviews
 
-        if source_id == VIRTUAL_SOURCE_ID:
-            try:
-                payload = unpack_aggregate_chapter_url(chapter_url)
-                source_chapter_id = payload.get("sourceChapterId", "")
-            except Exception as exc:
-                return {
-                    "implemented": True,
-                    "chapterId": chapter_id,
-                    "paragraphs": {},
-                    "chapterEnd": [],
-                    "summary": {},
-                    "debug": {"error": str(exc), "aggregate": True},
-                }
-            if not source_chapter_id:
-                return {
-                    "implemented": True,
-                    "chapterId": chapter_id,
-                    "paragraphs": {},
-                    "chapterEnd": [],
-                    "summary": {},
-                    "debug": {"error": "aggregate source has no source chapter", "aggregate": True},
-                }
-            return await self.chapter_reviews(source_chapter_id)
+        return await chapter_reviews(self.scheduler, chapter_id)
 
-        result = await self.scheduler.chapter_reviews(source_id, chapter_url)
-        return {
-            "implemented": True,
-            "chapterId": chapter_id,
-            "paragraphs": result.get("paragraphs", {}),
-            "chapterEnd": result.get("chapterEnd", []),
-            "summary": result.get("summary", {}),
-            "debug": result.get("debug", {}),
-        }
+    async def page_hot_reviews(
+        self,
+        chapter_id: str,
+        paragraph_ids: list[int],
+        *,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        from app.services.chapter_review_catalog import page_hot_reviews
+
+        return await page_hot_reviews(
+            self.scheduler,
+            chapter_id,
+            paragraph_ids,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def chapter_say(self, chapter_id: str, *, page: int = 1, page_size: int = 20) -> dict:
+        from app.services.chapter_review_catalog import chapter_say
+
+        return await chapter_say(self.scheduler, chapter_id, page=page, page_size=page_size)
+
+    async def paragraph_reviews(
+        self,
+        chapter_id: str,
+        paragraph_id: int,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        from app.services.chapter_review_catalog import paragraph_reviews
+
+        return await paragraph_reviews(
+            self.scheduler,
+            chapter_id,
+            paragraph_id,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def review_replies(
+        self,
+        chapter_id: str,
+        root_review_id: int,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+        cursor_id: int = 0,
+    ) -> dict:
+        from app.services.chapter_review_catalog import review_replies
+
+        return await review_replies(
+            self.scheduler,
+            chapter_id,
+            root_review_id,
+            page=page,
+            page_size=page_size,
+            cursor_id=cursor_id,
+        )
 
     def _should_fallback_to_cache(self, error: Any) -> bool:
         if not error:

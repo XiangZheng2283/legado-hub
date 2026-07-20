@@ -168,7 +168,6 @@
 - `/console/library/:bookId/chapters/:chapterId`
 - `/console/search`
 - `/console/plugins`
-- `/console/plugins/:pluginId`
 - `/console/official-sources`
 - `/console/settings`
 
@@ -201,7 +200,6 @@
 
 - 书籍详情
 - 章节详情
-- 书源详情
 
 结构：
 
@@ -326,7 +324,6 @@
 
 - `SearchJobs.tsx`
 - `Plugins.tsx`
-- `PluginDetail.tsx`
 - `OfficialSourcesPage.tsx`
 - `SettingsPage.tsx`
 
@@ -417,13 +414,12 @@
 
 目标：
 
-- 搜索工作台、书源页、书源详情、官方源页统一成优雅后台
+- 搜索工作台、书源页、官方源页统一成优雅后台
 
 涉及文件：
 
 - `SearchJobs.tsx`
 - `Plugins.tsx`
-- `PluginDetail.tsx`
 - `OfficialSourcesPage.tsx`
 
 完成判定：

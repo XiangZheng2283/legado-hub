@@ -51,8 +51,8 @@ const failedSearchStatuses = new Set(["failed", "timed_out", "interrupted", "unk
 export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscoveryPageProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user } = useAuth()
-  const isAdmin = user?.role === "admin" || mode === "admin"
+  const { user, entrypoint } = useAuth()
+  const isAdmin = entrypoint !== "public" && (user?.role === "admin" || mode === "admin")
 
   const [query, setQuery] = useState("")
   const [jobId, setJobId] = useState<string | null>(null)

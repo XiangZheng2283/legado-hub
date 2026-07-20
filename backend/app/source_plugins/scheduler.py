@@ -61,10 +61,7 @@ class PluginScheduler:
         }
 
     def _load_plugins(self) -> None:
-        try:
-            self._plugins = self.loader.load_all()
-        except Exception:
-            self._plugins = {}
+        self._plugins = self.loader.load_all()
         # Apply runtime enabled overrides from app_config.json on top of metadata.
         try:
             from app.core.app_config import AppConfig
@@ -517,6 +514,9 @@ class PluginScheduler:
                 "implemented": True,
                 "paragraphs": {},
                 "chapterEnd": [],
+                "chapterEndHot": [],
+                "authorReviews": [],
+                "hotParagraphReviews": [],
                 "summary": {},
                 "debug": {"error": f"plugin not found or no chapter_reviews capability: {source_id}"},
             }
@@ -535,6 +535,7 @@ class PluginScheduler:
                 "chapterEnd": raw.get("chapterEnd", []),
                 "chapterEndHot": raw.get("chapterEndHot", []),
                 "authorReviews": raw.get("authorReviews", []),
+                "hotParagraphReviews": raw.get("hotParagraphReviews", []),
                 "summary": raw.get("summary", {}),
                 "debug": debug,
             }
@@ -544,11 +545,148 @@ class PluginScheduler:
                 "implemented": True,
                 "paragraphs": {},
                 "chapterEnd": [],
+                "chapterEndHot": [],
+                "authorReviews": [],
+                "hotParagraphReviews": [],
                 "summary": {},
                 "debug": {"error": err},
             }
         finally:
             await ctx._fetcher.close()
+
+    async def _review_extension(
+        self,
+        source_id: str,
+        method_name: str,
+        chapter_url: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Call one optional method that belongs to the chapter_reviews plugin capability."""
+        plugin = self._plugins.get(source_id)
+        method = getattr(plugin.source, method_name, None) if plugin else None
+        if not plugin or "chapter_reviews" not in plugin.capabilities or not callable(method):
+            return {
+                "comments": [],
+                "totalCount": 0,
+                "hasMore": False,
+                "debug": {"error": f"plugin has no {method_name} method: {source_id}"},
+            }
+        ctx = self._make_ctx(source_id)
+        try:
+            raw = await asyncio.wait_for(
+                method(ctx, chapter_url, *args, **kwargs),
+                timeout=self.timeout_for_plugin(plugin),
+            )
+            return raw if isinstance(raw, dict) else {}
+        except Exception as exc:
+            return {
+                "comments": [],
+                "totalCount": 0,
+                "hasMore": False,
+                "debug": {"error": self._failure_for_exception(plugin, method_name, exc)},
+            }
+        finally:
+            await ctx._fetcher.close()
+
+    @staticmethod
+    def _paged_review_result(raw: dict[str, Any], **extra: Any) -> dict[str, Any]:
+        comments = raw.get("comments", []) if isinstance(raw.get("comments"), list) else []
+        return {
+            "implemented": True,
+            **extra,
+            "comments": comments,
+            "hotComments": raw.get("hotComments", []),
+            "normalComments": raw.get("normalComments", []),
+            "totalCount": raw.get("totalCount", len(comments)),
+            "page": raw.get("page", 1),
+            "pageSize": raw.get("pageSize", 20),
+            "hasMore": bool(raw.get("hasMore", False)),
+            "nextPage": raw.get("nextPage"),
+            "debug": raw.get("debug", {}) if isinstance(raw.get("debug"), dict) else {},
+        }
+
+    async def page_hot_reviews(
+        self,
+        source_id: str,
+        chapter_url: str,
+        paragraph_ids: list[int],
+        *,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        raw = await self._review_extension(
+            source_id,
+            "page_hot_reviews",
+            chapter_url,
+            paragraph_ids,
+            page=page,
+            page_size=page_size,
+        )
+        return self._paged_review_result(raw, paragraphIds=paragraph_ids)
+
+    async def chapter_say(
+        self,
+        source_id: str,
+        chapter_url: str,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        raw = await self._review_extension(
+            source_id,
+            "chapter_say",
+            chapter_url,
+            page=page,
+            page_size=page_size,
+        )
+        return self._paged_review_result(raw)
+
+    async def paragraph_reviews(
+        self,
+        source_id: str,
+        chapter_url: str,
+        paragraph_id: int,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        raw = await self._review_extension(
+            source_id,
+            "paragraph_say",
+            chapter_url,
+            paragraph_id,
+            page=page,
+            page_size=page_size,
+        )
+        return self._paged_review_result(raw, paragraphId=paragraph_id)
+
+    async def review_replies(
+        self,
+        source_id: str,
+        chapter_url: str,
+        root_review_id: int,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+        cursor_id: int = 0,
+    ) -> dict:
+        raw = await self._review_extension(
+            source_id,
+            "review_replies",
+            chapter_url,
+            root_review_id,
+            page=page,
+            page_size=page_size,
+            cursor_id=cursor_id,
+        )
+        result = self._paged_review_result(raw, rootReviewId=str(root_review_id))
+        result.update({
+            "rootReview": raw.get("rootReview"),
+            "replies": raw.get("replies", []),
+            "nextCursorId": raw.get("nextCursorId"),
+        })
+        return result
 
     async def explore_groups(self, source_id: str | None = None) -> dict:
         unsupported_reason = ""

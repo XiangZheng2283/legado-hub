@@ -200,6 +200,25 @@ async def test_startup_recovery_runs_before_periodic_loop():
 
 
 @pytest.mark.asyncio
+async def test_startup_recovery_deduplicates_duplicate_candidates():
+    processor = FakeProcessor()
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [
+            {"aggregateBookId": "book-recover", "payload": {"name": "恢复书", "author": "作者甲"}},
+            {"aggregateBookId": "book-recover", "payload": {"name": "恢复书", "author": "作者甲"}},
+        ],
+    )
+
+    result = await scheduler.startup_recovery_scan()
+
+    assert result["queuedBooks"] == 1
+    assert result["processedBooks"] == 1
+    assert processor.run_calls == ["book-recover"]
+
+
+@pytest.mark.asyncio
 async def test_periodic_loop_waits_for_recovery_completion():
     processor = FakeProcessor()
     processor.due_books = [
@@ -665,3 +684,35 @@ async def test_main_lifespan_starts_shared_book_scheduler(monkeypatch):
     assert started[1][0] == "scheduler"
     assert started[2][0] == "ping"
     assert started[3][0] == "lexicon"
+
+
+@pytest.mark.asyncio
+async def test_saved_cookie_probe_continues_after_one_plugin_failure(monkeypatch, caplog):
+    import logging
+    import types
+
+    import app.main as main_module
+
+    calls: list[str] = []
+
+    class FakeCookieStore:
+        def list_plugin_ids(self):
+            return ["broken", "healthy"]
+
+    class FakeOfficialAuthManager:
+        async def probe_saved_cookie_file(self, plugin_id: str):
+            calls.append(plugin_id)
+            if plugin_id == "broken":
+                raise RuntimeError("probe failed")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "app.services.cookie_store",
+        types.SimpleNamespace(CookieStore=FakeCookieStore),
+    )
+
+    with caplog.at_level(logging.WARNING):
+        await main_module._probe_saved_plugin_cookies(FakeOfficialAuthManager())
+
+    assert calls == ["broken", "healthy"]
+    assert "Failed to probe saved cookies for plugin broken" in caplog.text

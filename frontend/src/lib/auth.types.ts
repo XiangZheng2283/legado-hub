@@ -3,3 +3,5 @@ export interface AuthUser {
   username: string
   role: "admin" | "user"
 }
+
+export type ConsoleEntrypoint = "public" | "admin" | "combined"

@@ -63,6 +63,73 @@ def client(tmp_path, monkeypatch):
     return tc
 
 
+def test_legado_manifest_is_anonymous_but_reading_requires_valid_bearer(client):
+    import hashlib
+    import sqlite3
+    import uuid
+
+    from app.services.user_auth import auth_service
+
+    anonymous = TestClient(app)
+    manifest = anonymous.get("/api/subscribe/legado/source")
+    assert manifest.status_code == 200
+    assert manifest.json()[0]["loginUi"]
+
+    protected_paths = [
+        "/api/subscribe/legado/search?keyword=test",
+        "/api/subscribe/legado/search/missing-job",
+        "/api/subscribe/legado/explore",
+        "/api/legado/book/not-a-book-id",
+        "/api/legado/chapter/not-a-chapter-id",
+        "/api/legado/chapter/not-a-chapter-id/reviews",
+        "/api/legado/chapter/not-a-chapter-id/reviews/view",
+    ]
+    for path in protected_paths:
+        assert anonymous.get(path).status_code == 401
+
+    assert client.get(
+        "/api/subscribe/legado/search?keyword=test",
+        headers={"Authorization": "Bearer invalid-session-token"},
+    ).status_code == 401
+
+    created = auth_service.create_access_user(f"reading-{uuid.uuid4().hex[:10]}")
+    redeemed = anonymous.post(
+        "/api/auth/access/redeem",
+        json={"accessCode": created["accessCode"]},
+    )
+    assert redeemed.status_code == 200
+    token = redeemed.json()["token"]
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    with sqlite3.connect(auth_service.db_path) as conn:
+        before_last_seen = conn.execute(
+            "SELECT last_seen_at FROM user_sessions WHERE session_id = ?",
+            (token_hash,),
+        ).fetchone()[0]
+
+    bearer = TestClient(app)
+    headers = {"Authorization": f"Bearer {token}"}
+    assert bearer.get(
+        "/api/subscribe/legado/search?keyword=test",
+        headers=headers,
+    ).status_code == 200
+    assert bearer.get("/api/subscribe/legado/explore", headers=headers).status_code == 200
+
+    with sqlite3.connect(auth_service.db_path) as conn:
+        after_last_seen = conn.execute(
+            "SELECT last_seen_at FROM user_sessions WHERE session_id = ?",
+            (token_hash,),
+        ).fetchone()[0]
+    assert after_last_seen == before_last_seen
+
+
+@pytest.mark.parametrize("page", [True, "invalid", 1.5, 0, -1, 1001])
+def test_subscription_search_rejects_invalid_page(client, page):
+    response = client.post("/api/subscribe/search", json={"keyword": "页码测试", "page": page})
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "page 必须是 1 到 1000 的整数"
+
+
 def _insert_book(
     db_path: Path,
     aggregate_book_id: str,
@@ -213,8 +280,8 @@ def _reader_client(db_path: Path, username: str) -> tuple[TestClient, dict]:
         conn.commit()
     reader = TestClient(app)
     login = reader.post(
-        "/api/auth/login",
-        json={"username": username, "password": password},
+        "/api/auth/access/redeem",
+        json={"accessCode": auth_service.build_access_code(username, password)},
     )
     assert login.status_code == 200
     return reader, user
@@ -373,8 +440,8 @@ def test_legado_published_search_pages_in_database_without_metadata_reads(
     assert second.status_code == 200
     assert len(first.json()["items"]) == 20
     assert len(second.json()["items"]) == 5
-    assert first.json()["debug"]["publishedCount"] == 25
-    assert second.json()["debug"]["publishedCount"] == 25
+    assert "debug" not in first.json()
+    assert "debug" not in second.json()
     first_ids = {item["aggregateBookId"] for item in first.json()["items"]}
     second_ids = {item["aggregateBookId"] for item in second.json()["items"]}
     assert first_ids.isdisjoint(second_ids)
@@ -384,6 +451,10 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     client, tmp_path, monkeypatch
 ):
     import sqlite3
+
+    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "http://testserver")
+    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "testserver")
+    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "http://testserver")
 
     from app.core.legado_source import generate_legado_source
     from app.services.library_books import make_library_book_id
@@ -456,6 +527,16 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert source["searchUrl"].startswith("http://testserver/api/subscribe/legado/search")
     assert "waitMs" not in source["searchUrl"]
     assert source["exploreUrl"].startswith("已发布书库::http://testserver/api/subscribe/legado/explore")
+    assert source["ruleToc"]["isVip"] == "$.isVip"
+    assert source["ruleToc"]["isPay"] == "$.isPay"
+    login_ui = json.loads(source["loginUi"])
+    assert [item["name"] for item in login_ui] == ["授权码", "登录", "登录状态", "订阅管理", "退出"]
+    assert "/api/auth/access/redeem" in source["loginUrl"]
+    assert "/api/auth/access/me" in source["loginUrl"]
+    assert "/api/auth/access/logout" in source["loginUrl"]
+    assert "source.putLoginInfo(\"{}\")" in source["loginUrl"]
+    assert "java.log" not in source["loginUrl"]
+    assert "LH1." not in json.dumps(source, ensure_ascii=False)
 
     search = client.get("/api/subscribe/legado/search", params={"keyword": "阅读契约测试书"})
     assert search.status_code == 200
@@ -507,8 +588,10 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     chapters = toc.json()["chapters"]
     assert len(chapters) == 4
     assert chapters[0]["isVip"] is False
+    assert chapters[0]["isPay"] is False
     assert chapters[0]["previewOnly"] is False
     assert chapters[-1]["isVip"] is True
+    assert chapters[-1]["isPay"] is False
     assert chapters[-1]["previewOnly"] is True
 
     free = client.get(chapters[0]["chapterUrl"].replace("http://testserver", ""))
@@ -523,6 +606,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "付费预览正文" in preview.json()["content"]
     assert preview.json()["extra"]["contentAccess"] == "preview"
     assert preview.json()["isVip"] is True
+    assert preview.json()["isPay"] is False
     assert preview.json()["extra"]["previewOnly"] is True
     assert preview.json()["previewOnly"] is True
     assert len(markdown_reads) == 2
@@ -747,8 +831,10 @@ def test_reader_access_requires_own_subscription(client, tmp_path):
         conn.commit()
     reader = TestClient(app)
     login = reader.post(
-        "/api/auth/login",
-        json={"username": username, "password": "reader-password"},
+        "/api/auth/access/redeem",
+        json={
+            "accessCode": auth_service.build_access_code(username, "reader-password")
+        },
     )
     assert login.status_code == 200
 

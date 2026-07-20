@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import sys
 from pathlib import Path
@@ -23,6 +24,7 @@ class PluginLoader:
         self._plugins = {}
         if not self.plugins_dir.exists():
             return self._plugins
+
         # Recursively scan for plugin directories (supports official/ thirdparty/ etc.)
         for metadata_path in sorted(self.plugins_dir.rglob("metadata.yaml")):
             plugin_dir = metadata_path.parent
@@ -94,8 +96,9 @@ class PluginLoader:
         )
 
     def _import_module(self, dir_name: str, source_path: Path) -> Any:
+        path_key = hashlib.sha256(str(source_path.resolve()).encode("utf-8")).hexdigest()[:12]
         spec = importlib.util.spec_from_file_location(
-            f"legadohub_plugin_{dir_name}", source_path
+            f"legadohub_plugin_{dir_name}_{path_key}", source_path
         )
         if spec is None or spec.loader is None:
             raise PluginValidationError(f"Cannot import {source_path}")
@@ -109,7 +112,4 @@ class PluginLoader:
 
     def list_plugins(self) -> list[LoadedPlugin]:
         return list(self._plugins.values())
-
-
-
 

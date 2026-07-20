@@ -16,6 +16,7 @@ build/
 .env
 .env.*
 !.env.example
+secrets/
 
 logs/
 *.log
@@ -55,6 +56,10 @@ dev-assets/tests/*
 !dev-assets/tests/test_aggregate_processor_state_machine.py
 !dev-assets/tests/test_aggregate_settings.py
 !dev-assets/tests/test_plugin_console_api.py
+!dev-assets/tests/test_public_authorization.py
+!dev-assets/tests/test_public_security.py
+!dev-assets/tests/test_public_attack_matrix.py
+!dev-assets/tests/test_admin_entrypoint.py
 !dev-assets/tests/test_realtime_search_api.py
 !dev-assets/tests/test_reading_loop_api.py
 !dev-assets/tests/test_single_source_test_api.py

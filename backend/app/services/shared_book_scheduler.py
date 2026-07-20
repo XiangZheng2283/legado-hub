@@ -86,11 +86,15 @@ class SharedBookScheduler:
 
             items: list[dict[str, Any]] = []
             queued_book_ids: list[str] = []
+            queued_candidates: list[tuple[str, dict[str, Any]]] = []
+            seen_book_ids: set[str] = set()
             for item in candidates:
                 book_id = self._book_id_from_item(item)
-                if not book_id or book_id in self._recovery_pending_books:
+                if not book_id or book_id in seen_book_ids or book_id in self._recovery_pending_books:
                     continue
+                seen_book_ids.add(book_id)
                 queued_book_ids.append(book_id)
+                queued_candidates.append((book_id, item))
                 self._recovery_pending_books.add(book_id)
                 self._remember_book_context(
                     book_id,
@@ -100,9 +104,8 @@ class SharedBookScheduler:
                 )
 
             try:
-                for item in candidates:
-                    book_id = self._book_id_from_item(item)
-                    if not book_id or book_id not in self._recovery_pending_books:
+                for book_id, item in queued_candidates:
+                    if book_id not in self._recovery_pending_books:
                         continue
                     try:
                         result = await self._process_book(

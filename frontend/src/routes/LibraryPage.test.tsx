@@ -7,8 +7,10 @@ import { api } from "@/lib/api"
 import { executeLibraryBookAction } from "@/lib/library-actions"
 import { LibraryPage } from "./LibraryPage"
 
+let mockRole: "admin" | "user" = "user"
+
 vi.mock("@/lib/auth", () => ({
-  useAuth: () => ({ user: { userId: "user-1", username: "reader", role: "user" } }),
+  useAuth: () => ({ user: { userId: "user-1", username: "reader", role: mockRole } }),
 }))
 
 vi.mock("@/lib/api", () => ({
@@ -41,6 +43,7 @@ function renderPage() {
 describe("LibraryPage user controls", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockRole = "user"
     ;(api.subscribe.myLibrary as any).mockResolvedValue({
       items: [{
         aggregateBookId: "book-1",
@@ -58,11 +61,11 @@ describe("LibraryPage user controls", () => {
     ;(api.subscribe.updateSubscription as any).mockResolvedValue({ subscription: { status: "paused" } })
   })
 
-  it("shows personal coverage and pauses only the current user's subscription", async () => {
+  it("keeps preview chapters out of personal coverage and pauses only the current user's subscription", async () => {
     const user = userEvent.setup()
     renderPage()
 
-    expect(await screen.findByText("25%")).toBeInTheDocument()
+    expect(await screen.findByText("20%")).toBeInTheDocument()
     expect(screen.getByText("全文 20 · 预览 5")).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "打开《用户订阅书》操作菜单" }))
     await user.click(screen.getByRole("menuitem", { name: "暂停" }))
@@ -72,6 +75,34 @@ describe("LibraryPage user controls", () => {
       { status: "paused" },
     ))
     expect(api.pauseLibraryBook).not.toHaveBeenCalled()
+  })
+
+  it("uses readable full chapters instead of processed previews for admin coverage", async () => {
+    mockRole = "admin"
+    ;(api.libraryBooks as any).mockResolvedValue({
+      items: [{
+        aggregateBookId: "book-admin",
+        displayName: "管理员书库测试书",
+        displayAuthor: "作者",
+        totalChapters: 100,
+        processedChapters: 100,
+        visibleProcessedChapters: 80,
+        status: "active",
+        bookStatus: "ongoing",
+        bookState: {
+          chapterCount: 100,
+          readableChapterCount: 80,
+          previewChapterCount: 20,
+          failedChapterCount: 0,
+        },
+      }],
+    })
+
+    renderPage()
+
+    expect(await screen.findByText("80%")).toBeInTheDocument()
+    expect(screen.getByText("全文 80 · 预览 20")).toBeInTheDocument()
+    expect(screen.queryByText("已同步 · 追更中")).not.toBeInTheDocument()
   })
 
   it("refetches the library query from the error state", async () => {

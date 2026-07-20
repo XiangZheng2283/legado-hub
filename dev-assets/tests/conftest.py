@@ -84,10 +84,16 @@ def pytest_ignore_collect(collection_path, config):
 
 @pytest.fixture(autouse=True)
 def reset_subscription_rate_limiter():
+    from app.services.reading_limits import reading_access_limiter
+    from app.services.user_auth import auth_rate_limiter
     from app.services.user_subscriptions import subscription_rate_limiter
 
+    reading_access_limiter.reset()
+    auth_rate_limiter.reset()
     subscription_rate_limiter.reset()
     yield
+    reading_access_limiter.reset()
+    auth_rate_limiter.reset()
     subscription_rate_limiter.reset()
 
 

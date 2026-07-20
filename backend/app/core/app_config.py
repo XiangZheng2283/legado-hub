@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import base64
 import json
+import os
+import tempfile
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,6 +19,10 @@ from typing import Any
 from app.config import CONFIG_DIR
 
 APP_CONFIG_PATH = CONFIG_DIR / "app_config.json"
+
+
+class AppConfigLoadError(RuntimeError):
+    """Raised when an existing application configuration cannot be trusted."""
 
 
 @dataclass
@@ -254,24 +260,58 @@ class AppConfig:
             cls._instance = None
 
     def _load(self) -> None:
-        if self.path.exists():
-            try:
-                raw = json.loads(self.path.read_text(encoding="utf-8"))
-                self._data = raw if isinstance(raw, dict) else {}
-            except (json.JSONDecodeError, OSError):
-                self._data = {}
-        else:
+        if not self.path.exists():
             self._data = {}
+            return
+        try:
+            payload = self.path.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise AppConfigLoadError(
+                f"Unable to read existing application configuration: {self.path.name}"
+            ) from exc
+        try:
+            raw = json.loads(payload)
+        except json.JSONDecodeError as exc:
+            raise AppConfigLoadError(
+                f"Existing application configuration is not valid JSON: {self.path.name}"
+            ) from exc
+        if not isinstance(raw, dict):
+            raise AppConfigLoadError(
+                f"Existing application configuration must contain a JSON object: {self.path.name}"
+            )
+        self._data = raw
 
     def reload(self) -> None:
         self._load()
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(self._data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
+        fd, tmp_name = tempfile.mkstemp(
+            prefix=f".{self.path.name}.",
+            suffix=".tmp",
+            dir=self.path.parent,
         )
+        tmp_path = Path(tmp_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(json.dumps(self._data, ensure_ascii=False, indent=2))
+                handle.flush()
+                os.fsync(handle.fileno())
+            if os.name != "nt":
+                tmp_path.chmod(0o600)
+            os.replace(tmp_path, self.path)
+            if os.name != "nt":
+                directory_fd = os.open(
+                    self.path.parent,
+                    os.O_RDONLY | getattr(os, "O_DIRECTORY", 0),
+                )
+                try:
+                    os.fsync(directory_fd)
+                finally:
+                    os.close(directory_fd)
+        finally:
+            if tmp_path.exists():
+                tmp_path.unlink()
 
     def raw(self) -> dict[str, Any]:
         return dict(self._data)
@@ -344,3 +384,13 @@ class AppConfig:
                 current[part] = {}
             current = current[part]
         current[parts[-1]] = value
+
+    def unset(self, key: str) -> None:
+        parts = key.split(".")
+        current: Any = self._data
+        for part in parts[:-1]:
+            if not isinstance(current, dict) or part not in current:
+                return
+            current = current[part]
+        if isinstance(current, dict):
+            current.pop(parts[-1], None)

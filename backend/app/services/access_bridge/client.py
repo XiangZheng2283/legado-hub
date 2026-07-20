@@ -152,13 +152,13 @@ class LocalChromiumPlaywrightAdapter(PlaywrightAdapterBase):
 
     async def _connect(self, playwright: Any):
         try:
+            launch_args = ["--disable-dev-shm-usage"]
+            if self.config.disable_sandbox:
+                launch_args.append("--no-sandbox")
             return await playwright.chromium.launch(
                 headless=True,
                 timeout=self.config.connect_timeout_ms,
-                args=[
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                ],
+                args=launch_args,
             )
         except Exception as exc:
             raise AccessBridgeUnavailable(
@@ -302,7 +302,6 @@ class BrowserlessPlaywrightAdapter(LocalChromiumPlaywrightAdapter):
         if "/playwright" in endpoint:
             return await playwright.chromium.connect(endpoint, timeout=self.config.connect_timeout_ms)
         return await playwright.chromium.connect_over_cdp(endpoint, timeout=self.config.connect_timeout_ms)
-
 
 
 

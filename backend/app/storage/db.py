@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -601,6 +601,11 @@ def _backfill_shared_book_creators(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migrate_v12_to_v13(conn: sqlite3.Connection) -> None:
+    """Invalidate raw sessions before v13 starts storing only token hashes."""
+    conn.execute("DELETE FROM user_sessions")
+
+
 def initialize_database(db_path: Path | None = None) -> str:
     path = db_path or DB_PATH
     ensure_data_dir()
@@ -620,6 +625,8 @@ def initialize_database(db_path: Path | None = None) -> str:
         _migrate_book_search_cache(conn)
         if current_version < 12:
             _backfill_shared_book_creators(conn)
+        if current_version < 13:
+            _migrate_v12_to_v13(conn)
         conn.execute(
             "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
             ("version", str(SCHEMA_VERSION)),

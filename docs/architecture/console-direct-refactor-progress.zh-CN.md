@@ -12,7 +12,7 @@
 
 - 订阅 -> 入库 -> 详情 -> 章节正文阅读闭环（readChapterId 契约修复完成）
 - 设置页优先级编辑闭环（textarea 编辑 primarySourcePriority / candidateSourcePriority）
-- 管理页结构和视觉收口（Layout/Dashboard/SearchJobs/Plugins/PluginDetail/OfficialSources）
+- 管理页结构和视觉收口（Layout/Dashboard/SearchJobs/Plugins/OfficialSources）；重复的 PluginDetail 页面已主动删除
 - LogStream 浅色化
 - 未使用迁移残留清理
 - readChapterId 契约：db_row chapter_id 优先，否则 VIRTUAL_SOURCE_ID + make_aggregate_chapter_url + encode_chapter_id。不 fallback 到 sourceChapterId 或数字 chapterIndex。

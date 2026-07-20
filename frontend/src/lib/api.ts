@@ -21,6 +21,15 @@ export interface ManagedUsersResponse {
   total: number
 }
 
+export interface ManagedUserCreated extends ManagedUser {
+  accessCode?: string
+}
+
+export interface AccessCodeIssue {
+  userId: string
+  accessCode: string
+}
+
 export interface LibraryBookProcessingSettings {
   updateIntervalMinutes: number
   backlogChapterLimit: number
@@ -60,6 +69,31 @@ export interface SubscribeCardResponse {
   processingWakeRequested: boolean
   aggregateBookId?: string
   [key: string]: unknown
+}
+
+export type ChapterReviewTab = "author" | "chapter" | "paragraph"
+
+export interface ChapterReviewsResponse {
+  chapterEnd?: Array<Record<string, unknown>>
+  chapterEndHot?: Array<Record<string, unknown>>
+  authorReviews?: Array<Record<string, unknown>>
+  hotParagraphReviews?: Array<{
+    paragraphId?: number
+    matchedText?: string
+    matchedParagraphIndex?: number
+    matchedParagraphCount?: number
+    commentCount?: number
+    totalCommentCount?: number
+    hotCommentCount?: number
+    [key: string]: unknown
+  }>
+  paragraphs?: Record<string, Array<Record<string, unknown>>>
+  summary?: {
+    totalReviews?: number
+    chapterEndCount?: number
+    [key: string]: unknown
+  }
+  debug?: Record<string, unknown>
 }
 
 export class ApiError extends Error {
@@ -222,19 +256,11 @@ export const api = {
   status: (): Promise<any> => fetchJson("/status"),
 
   plugins: (): Promise<any> => fetchJson("/plugins"),
-  plugin: (id: string): Promise<any> => fetchJson(`/plugins/${id}`),
-  enablePlugin: (id: string, enabled: boolean): Promise<any> =>
-    fetchJson(`/plugins/${id}/enable`, {
-      method: "POST",
-      body: JSON.stringify({ enabled }),
-    }),
   batchEnablePlugins: (pluginIds: string[], enabled: boolean): Promise<any> =>
     fetchJson("/plugins/batch-enable", {
       method: "POST",
       body: JSON.stringify({ pluginIds, enabled }),
     }),
-  pingPlugin: (id: string): Promise<any> =>
-    fetchJson(`/plugins/${id}/ping`, { method: "POST" }),
   pingAllPlugins: (pluginIds?: string[]): Promise<any> =>
     fetchJson("/plugins/ping", { method: "POST", body: JSON.stringify({ pluginIds }) }),
   pluginAuthCheck: (id: string): Promise<any> => fetchJson(`/plugins/${id}/auth/check`, { method: "POST" }),
@@ -284,8 +310,6 @@ export const api = {
   searchJob: (id: string): Promise<any> => fetchJson(`/search-jobs/${id}`),
   searchJobEvents: (id: string, after?: number): Promise<any> =>
     fetchJson(`/search-jobs/${id}/events?after=${after || 0}`),
-  pluginAttempts: (id: string): Promise<any> => fetchJson(`/plugins/${id}/attempts`),
-
   settings: (): Promise<any> => fetchJson("/settings"),
   updateSettings: (payload: Record<string, any>): Promise<any> =>
     fetchJson("/settings", { method: "POST", body: JSON.stringify(payload) }),
@@ -297,11 +321,15 @@ export const api = {
 
   // Auth (session cookie based)
   auth: {
+    entrypoint: (): Promise<any> => fetchApiJson("/auth/entrypoint"),
     me: (): Promise<any> => fetchApiJson("/auth/me"),
-    bootstrap: (payload: { username: string; password: string }): Promise<any> =>
-      fetchApiJson("/auth/bootstrap", { method: "POST", body: JSON.stringify(payload) }),
     login: (payload: { username: string; password: string }): Promise<any> =>
       fetchApiJson("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+    redeemAccessCode: (accessCode: string): Promise<any> =>
+      fetchApiJson("/auth/access/redeem", {
+        method: "POST",
+        body: JSON.stringify({ accessCode }),
+      }),
     changePassword: (payload: { currentPassword: string; newPassword: string }): Promise<any> =>
       fetchApiJson("/auth/change-password", { method: "POST", body: JSON.stringify(payload) }),
     logout: (): Promise<any> => fetchApiJson("/auth/logout", { method: "POST" }),
@@ -309,12 +337,26 @@ export const api = {
 
   users: {
     list: (): Promise<ManagedUsersResponse> => fetchJson("/users"),
-    create: (payload: { username: string; password: string; role: "admin" | "user" }): Promise<ManagedUser> =>
+    create: (
+      payload:
+        | { username: string; role: "user" }
+        | { username: string; password: string; role: "admin" },
+    ): Promise<ManagedUserCreated> =>
       fetchJson("/users", { method: "POST", body: JSON.stringify(payload) }),
     resetPassword: (userId: string, password: string): Promise<{ userId: string; passwordReset: boolean }> =>
       fetchJson(`/users/${userId}/reset-password`, {
         method: "POST",
         body: JSON.stringify({ password }),
+      }),
+    resetAccessCode: (userId: string): Promise<AccessCodeIssue> =>
+      fetchJson(`/users/${userId}/reset-access-code`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    revokeSessions: (userId: string): Promise<{ userId: string; revokedSessions: number }> =>
+      fetchJson(`/users/${userId}/revoke-sessions`, {
+        method: "POST",
+        body: JSON.stringify({}),
       }),
     setDisabled: (userId: string, disabled: boolean): Promise<{ userId: string; disabled: boolean }> =>
       fetchJson(`/users/${userId}/disable`, {
@@ -360,6 +402,20 @@ export const api = {
       }),
     chapter: (chapterId: string): Promise<any> =>
       fetchApiJson(`/subscribe/chapters/${encodeURIComponent(chapterId)}`),
+  },
+
+  reading: {
+    chapterReviews: (chapterId: string): Promise<ChapterReviewsResponse> =>
+      fetchApiJson(`/legado/chapter/${encodeURIComponent(chapterId)}/reviews`),
+    chapterReviewsViewUrl: (
+      chapterId: string,
+      tab: ChapterReviewTab = "chapter",
+      paragraphIds: number[] = [],
+    ): string => {
+      const params = new URLSearchParams({ tab })
+      if (paragraphIds.length > 0) params.set("paragraphIds", paragraphIds.join(","))
+      return `/api/legado/chapter/${encodeURIComponent(chapterId)}/reviews/view?${params}`
+    },
   },
 
   // Admin shared library management

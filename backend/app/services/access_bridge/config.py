@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from app.config import DATA_DIR
+from app.config import DATA_DIR, read_secret
 
 
 def _positive_int_env(name: str, default: int) -> int:
@@ -32,6 +32,7 @@ class AccessBridgeConfig:
     profile_root: Path = DATA_DIR / "browser_profiles"
     connect_timeout_ms: int = 5000
     action_timeout_ms: int = 90000
+    disable_sandbox: bool = False
 
     default_connect_timeout_ms: int = 5000
     default_action_timeout_ms: int = 90000
@@ -53,7 +54,7 @@ class AccessBridgeConfig:
             provider=provider,
             enabled_by_env=enabled,
             browserless_ws=os.getenv("LEGADOHUB_BROWSERLESS_WS", "").strip(),
-            browserless_token=os.getenv("LEGADOHUB_BROWSERLESS_TOKEN", "").strip(),
+            browserless_token=read_secret("LEGADOHUB_BROWSERLESS_TOKEN").strip(),
             public_base_url=os.getenv("LEGADOHUB_BROWSER_PUBLIC_BASE_URL", "").strip().rstrip("/"),
             profile_root=Path(profile_root) if profile_root else DATA_DIR / "browser_profiles",
             connect_timeout_ms=_positive_int_env(
@@ -64,6 +65,8 @@ class AccessBridgeConfig:
                 "LEGADOHUB_BROWSER_ACTION_TIMEOUT_MS",
                 cls.default_action_timeout_ms,
             ),
+            disable_sandbox=os.getenv("LEGADOHUB_BROWSER_DISABLE_SANDBOX", "0").strip().lower()
+            in {"1", "true", "yes", "on"},
         )
 
     @property
@@ -81,8 +84,6 @@ class AccessBridgeConfig:
             return self.browserless_ws
         separator = "&" if "?" in self.browserless_ws else "?"
         return f"{self.browserless_ws}{separator}token={self.browserless_token}"
-
-
 
 
 

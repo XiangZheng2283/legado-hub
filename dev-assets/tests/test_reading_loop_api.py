@@ -148,62 +148,51 @@ def fixture_client(monkeypatch, tmp_path):
     initialize_database(cache_db)
     monkeypatch.setattr("app.config.DB_PATH", cache_db)
     monkeypatch.setattr("app.services.cache.DB_PATH", cache_db)
-    return TestClient(app)
+    client = TestClient(app)
+    login = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
+    assert login.status_code == 200
+    return client
 
 
-def test_reading_book_detail_uses_per_test_database(fixture_client, tmp_path):
+def test_reading_rejects_direct_plugin_book_without_database_side_effects(fixture_client, tmp_path):
     from app.source_plugins.id_codec import encode_book_id
 
     book_id = encode_book_id("fixture_reading", "https://example.com/book/1/")
 
     response = fixture_client.get(f"/api/legado/book/{book_id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 404
     with sqlite3.connect(tmp_path / "reading-cache.db") as conn:
         row = conn.execute(
             "SELECT book_id FROM book_records WHERE book_id = ?",
             (book_id,),
         ).fetchone()
-    assert row == (book_id,)
+    assert row is None
 
 
-def test_reading_api_fixture_loop(fixture_client):
-    from app.source_plugins.id_codec import encode_book_id
+def test_reading_rejects_all_direct_plugin_reader_routes(fixture_client, monkeypatch):
+    from app.services.catalog import Catalog
+    from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
 
-    # The old /api/legado/source and /api/legado/search endpoints were removed.
-    # Exercise the reader contract directly using a fixture plugin book id.
     book_id = encode_book_id("fixture_reading", "https://example.com/book/1/")
-    book_url = f"/api/legado/book/{book_id}"
+    chapter_id = encode_chapter_id("fixture_reading", "https://example.com/book/1/1.html")
 
-    detail_res = fixture_client.get(book_url)
-    assert detail_res.status_code == 200
-    detail = detail_res.json()
-    assert detail["data"]["name"] == "凡人修仙传"
-    assert detail["data"]["author"] == "忘语"
-    assert "/api/legado/book/" in detail["data"]["tocUrl"]
+    async def must_not_call(*_args, **_kwargs):
+        pytest.fail("rejected direct plugin ids must not reach Catalog")
 
-    toc_res = fixture_client.get(detail["data"]["tocUrl"].replace("http://127.0.0.1:8765", ""))
-    assert toc_res.status_code == 200
-    toc = toc_res.json()
-    assert len(toc["chapters"]) == 1
-    chapter_url = toc["chapters"][0]["chapterUrl"]
-    assert "/api/legado/chapter/" in chapter_url
+    monkeypatch.setattr(Catalog, "book_detail", must_not_call)
+    monkeypatch.setattr(Catalog, "toc", must_not_call)
+    monkeypatch.setattr(Catalog, "chapter", must_not_call)
+    monkeypatch.setattr(Catalog, "chapter_reviews", must_not_call)
 
-    chapter_res = fixture_client.get(chapter_url.replace("http://127.0.0.1:8765", ""))
-    assert chapter_res.status_code == 200
-    chapter = chapter_res.json()
-    assert "第一章" in chapter["title"]
-    assert len(chapter["content"]) > 20
-
-    chapter_id = chapter_url.rsplit("/", 1)[-1]
-    reviews_res = fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews")
-    assert reviews_res.status_code == 200
-    reviews = reviews_res.json()
-    assert reviews["paragraphs"]["1"][0]["content"] == "第一段评论"
-    assert reviews["chapterEnd"][0]["content"] == "章末评论"
+    assert fixture_client.get(f"/api/legado/book/{book_id}").status_code == 404
+    assert fixture_client.get(f"/api/legado/book/{book_id}/toc").status_code == 404
+    assert fixture_client.get(f"/api/legado/chapter/{chapter_id}").status_code == 404
+    assert fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews").status_code == 404
+    assert fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews/view").status_code == 404
 
 
-def test_reading_api_chapter_falls_back_to_cache_on_timeout(fixture_client, monkeypatch):
+def test_reading_direct_plugin_chapter_does_not_use_cached_content(fixture_client):
     from app.services.catalog import Catalog
     from app.source_plugins.id_codec import encode_chapter_id
 
@@ -222,21 +211,6 @@ def test_reading_api_chapter_falls_back_to_cache_on_timeout(fixture_client, monk
         },
     )
 
-    async def timeout_chapter(self, source_id: str, chapter_url: str):
-        return {
-            "implemented": True,
-            "chapterId": "",
-            "title": "",
-            "content": "",
-            "debug": {"error": {"code": "PLUGIN_TIMEOUT", "message": "timeout"}},
-        }
-
-    monkeypatch.setattr("app.services.catalog.PluginScheduler.chapter", timeout_chapter)
-
     chapter_res = fixture_client.get(f"/api/legado/chapter/{chapter_id}")
 
-    assert chapter_res.status_code == 200
-    chapter = chapter_res.json()
-    assert chapter["title"] == "缓存章节"
-    assert chapter["debug"]["cacheHit"] is True
-    assert chapter["debug"]["cacheReason"] == "timeout"
+    assert chapter_res.status_code == 404

@@ -384,6 +384,7 @@ class LibraryBooksService:
                     "sourceWordCount": int(db_chapter.get("sourceWordCount", 0) or 0),
                     "isVip": is_vip,
                     "isPaid": is_vip,
+                    "isPay": is_vip and not preview_only,
                     "previewOnly": preview_only,
                     "file": file_name or None,
                     "_chapterPath": chapter_path,
@@ -422,6 +423,7 @@ class LibraryBooksService:
         item["previewOnly"] = bool(trace.get("previewOnly", item.get("previewOnly", False)))
         item["isVip"] = bool(item.get("isVip", trace.get("isVip", item["previewOnly"])))
         item["isPaid"] = item["isVip"]
+        item["isPay"] = item["isVip"] and not item["previewOnly"]
         item["sourceWordCount"] = int(
             item.get("sourceWordCount", 0) or trace.get("sourceWordCount", 0) or 0
         )
@@ -1343,6 +1345,7 @@ class LibraryBooksService:
                     "updateTime": item.get("processedAt", ""),
                     "isVip": bool(item.get("isVip")),
                     "isPaid": bool(item.get("isPaid")),
+                    "isPay": bool(item.get("isPay")),
                     "previewOnly": bool(item.get("previewOnly")),
                 }
             )
@@ -1442,6 +1445,7 @@ class LibraryBooksService:
             "authRequired": preview_only,
             "isVip": is_vip,
             "isPaid": is_vip,
+            "isPay": is_vip and not preview_only,
             "previewOnly": preview_only,
             "extra": {
                 "previewOnly": preview_only,
@@ -1454,6 +1458,32 @@ class LibraryBooksService:
     def legado_chapter(self, chapter_id: str) -> dict[str, Any] | None:
         """Read one published chapter for the Reading/Legado data plane."""
         return self.read_shared_chapter(chapter_id, published_only=True)
+
+    def source_snapshot_content(
+        self,
+        aggregate_book_id: str,
+        chapter_index: int,
+        source_ids: list[str],
+    ) -> tuple[str, str]:
+        """Load the first usable official snapshot in explicit priority order."""
+        ordered_source_ids = list(dict.fromkeys(source_id for source_id in source_ids if source_id))
+        if not aggregate_book_id or chapter_index <= 0 or not ordered_source_ids:
+            return "", ""
+        with self._conn() as conn:
+            for source_id in ordered_source_ids:
+                row = conn.execute(
+                    """
+                    SELECT clean_content
+                    FROM aggregate_source_snapshots
+                    WHERE aggregate_book_id = ? AND chapter_index = ? AND source_id = ?
+                    LIMIT 1
+                    """,
+                    (aggregate_book_id, chapter_index, source_id),
+                ).fetchone()
+                content = str(row[0] or "") if row else ""
+                if content and "\ufffd" not in content and "\x00" not in content:
+                    return content, source_id
+        return "", ""
 
     def build_search_injected_items_for_groups(
         self,

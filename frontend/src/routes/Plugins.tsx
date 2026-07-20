@@ -6,6 +6,7 @@ import { api, apiErrorMessage } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SourceListTable } from "@/components/sources/SourceListTable"
 import { OfficialSourcesPage } from "./OfficialSourcesPage"
 
@@ -15,10 +16,8 @@ export function Plugins() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const activeTab: "thirdparty" | "official" = searchParams.get("tab") === "official" ? "official" : "thirdparty"
 
-  const { data, isLoading, error: pluginsError } = useQuery({ queryKey: ["plugins"], queryFn: api.plugins })
+  const { data, isLoading, error: pluginsError, refetch: refetchPlugins } = useQuery({ queryKey: ["plugins"], queryFn: api.plugins })
   const allPlugins = data?.items || []
-  const thirdPartyCount = allPlugins.filter((p: any) => !p.official).length
-  const officialCount = allPlugins.filter((p: any) => p.official).length
   const plugins = activeTab === "thirdparty" ? allPlugins.filter((p: any) => !p.official) : allPlugins.filter((p: any) => p.official)
   const pingAllMutation = useMutation({
     mutationFn: () => api.pingAllPlugins(plugins.map((p: any) => p.pluginId)),
@@ -53,31 +52,29 @@ export function Plugins() {
   }
 
   const sourceTabs = (
-    <div className="inline-flex flex-col rounded-full border border-slate-200 bg-white p-1 shadow-md" role="tablist" aria-label="书源类型">
-      <button
-        type="button"
-        role="tab"
-        title={`第三方书源，共 ${thirdPartyCount} 个`}
-        aria-label={`第三方书源，共 ${thirdPartyCount} 个`}
-        aria-selected={activeTab === "thirdparty"}
-        onClick={() => selectTab("thirdparty")}
-        className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${activeTab === "thirdparty" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
-      >
-        <SlidersHorizontal className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        role="tab"
-        title={`官方源认证，共 ${officialCount} 个`}
-        aria-label={`官方源认证，共 ${officialCount} 个`}
-        aria-selected={activeTab === "official"}
-        onClick={() => selectTab("official")}
-        className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${activeTab === "official" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
-      >
-        <KeyRound className="h-4 w-4" />
-      </button>
-    </div>
+    <Tabs value={activeTab} onValueChange={(value) => selectTab(value as "thirdparty" | "official")} className="gap-0">
+      <TabsList aria-label="书源类型" className="h-11 w-fit justify-start rounded-none bg-transparent p-0">
+        <TabsTrigger value="thirdparty" className="h-11 gap-2 rounded-none border-b-2 border-transparent px-4 py-0 data-[state=active]:border-slate-900 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+          <SlidersHorizontal className="h-4 w-4" />第三方书源
+        </TabsTrigger>
+        <TabsTrigger value="official" className="h-11 gap-2 rounded-none border-b-2 border-transparent px-4 py-0 data-[state=active]:border-slate-900 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+          <KeyRound className="h-4 w-4" />官方源
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   )
+
+  const batchActions = selectedIds.size > 0 ? (
+    <>
+      <span className="text-xs font-medium text-slate-500">已选 {selectedIds.size} 项</span>
+      <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: true })}>
+        <Power className="mr-1 h-3.5 w-3.5 text-emerald-500" />批量启用
+      </Button>
+      <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: false })}>
+        <Power className="mr-1 h-3.5 w-3.5 text-slate-400" />批量禁用
+      </Button>
+    </>
+  ) : null
 
   return (
     <div className="space-y-6">
@@ -88,46 +85,23 @@ export function Plugins() {
         </div>
       </div>
 
-      {activeTab === "official" ? (
-        <div key="official" className="space-y-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
-          {batchEnableMutation.error && (
-            <Alert variant="destructive"><AlertDescription>{apiErrorMessage(batchEnableMutation.error, "书源状态更新失败，请稍后重试。")}</AlertDescription></Alert>
-          )}
-          <OfficialSourcesPage
-            embedded
-            basePlugins={plugins}
-            switcher={sourceTabs}
-            toggleEnabledPending={batchEnableMutation.isPending}
-            onToggleEnabled={(pluginId, enabled) => batchEnableMutation.mutate({ ids: [pluginId], enabled })}
-          />
-        </div>
-      ) : (
-      <div key="thirdparty" className="space-y-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
-      {(pluginsError || pingAllMutation.error || batchEnableMutation.error) && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {apiErrorMessage(pingAllMutation.error || batchEnableMutation.error || pluginsError, "书源操作失败，请稍后重试。")}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div data-testid="source-stats" className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Card className="shadow-none">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">总插件数量</p>
+            <p className="text-xs font-medium text-slate-500">当前书源数量</p>
             <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-slate-900">{plugins.length}</span><span className="text-xs text-slate-400">规则源</span></div>
           </CardContent>
         </Card>
         <Card className="shadow-none">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">活跃启用中</p>
+            <p className="text-xs font-medium text-slate-500">已启用</p>
             <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-emerald-700">{enabledCount}</span><span className="text-xs text-slate-400">/{plugins.length} 运行中</span></div>
           </CardContent>
         </Card>
         <Card className="shadow-none">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">浏览器书源</p>
-            <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-blue-700">{browserSourceCount}</span><span className="text-xs text-slate-400">/{plugins.length} 需要浏览器</span></div>
+            <p className="text-xs font-medium text-slate-500">Browser 模式</p>
+            <div className="mt-2 flex items-baseline gap-2"><span className="text-2xl font-semibold tabular-nums text-blue-700">{browserSourceCount}</span><span className="text-xs text-slate-400">/{plugins.length} 个书源</span></div>
           </CardContent>
         </Card>
         <Card className="shadow-none">
@@ -138,33 +112,53 @@ export function Plugins() {
         </Card>
       </div>
 
+      {activeTab === "official" ? (
+        <div key="official" className="space-y-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
+          {(pluginsError || batchEnableMutation.error) && (
+            <Alert variant="destructive">
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+                <span>{apiErrorMessage(batchEnableMutation.error || pluginsError, "书源状态更新失败，请稍后重试。")}</span>
+                {pluginsError && <Button type="button" size="sm" variant="outline" onClick={() => { void refetchPlugins() }}>重试</Button>}
+              </AlertDescription>
+            </Alert>
+          )}
+          <OfficialSourcesPage
+            basePlugins={plugins}
+            headerTabs={sourceTabs}
+            batchToolbar={batchActions}
+            selectedIds={selectedIds}
+            selectionDisabled={batchEnableMutation.isPending}
+            onToggleSelectAll={toggleSelectAll}
+            onToggleSelected={handleRowCheck}
+          />
+        </div>
+      ) : (
+      <div key="thirdparty" className="space-y-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
+      {(pluginsError || pingAllMutation.error || batchEnableMutation.error) && (
+        <Alert variant="destructive">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{apiErrorMessage(pingAllMutation.error || batchEnableMutation.error || pluginsError, "书源操作失败，请稍后重试。")}</span>
+            {pluginsError && <Button type="button" size="sm" variant="outline" onClick={() => { void refetchPlugins() }}>重试</Button>}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <SourceListTable
         items={plugins}
         title="第三方书源列表"
         description="管理规则插件的启用状态与站点连通性。"
         emptyMessage="暂无第三方书源。"
-        switcher={sourceTabs}
+        headerTabs={sourceTabs}
         loading={isLoading}
         selectable
         selectedIds={selectedIds}
         selectionDisabled={batchEnableMutation.isPending}
         onToggleSelectAll={toggleSelectAll}
         onToggleSelected={handleRowCheck}
-        onToggleEnabled={(pluginId, enabled) => batchEnableMutation.mutate({ ids: [pluginId], enabled })}
-        toggleEnabledDisabled={batchEnableMutation.isPending}
+        testId="thirdparty-sources-table-boundary"
         toolbar={(
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {selectedIds.size > 0 && (
-              <>
-                <span className="text-xs font-medium text-slate-500">已选 {selectedIds.size} 项</span>
-                <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: true })}>
-                  <Power className="mr-1 h-3.5 w-3.5 text-emerald-500" />批量启用
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 bg-white text-xs" disabled={batchEnableMutation.isPending} onClick={() => batchEnableMutation.mutate({ ids: Array.from(selectedIds), enabled: false })}>
-                  <Power className="mr-1 h-3.5 w-3.5 text-slate-400" />批量禁用
-                </Button>
-              </>
-            )}
+            {batchActions}
             <Button variant="outline" disabled={pingAllMutation.isPending || plugins.length === 0} onClick={() => pingAllMutation.mutate()}>
               <RotateCw className={`mr-2 h-4 w-4 ${pingAllMutation.isPending ? "animate-spin" : ""}`} />Ping 全部
             </Button>

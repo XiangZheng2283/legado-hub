@@ -6,12 +6,14 @@ product
 
 ## Users
 
-LegadoHub has two primary local-network actors:
+LegadoHub has two primary self-hosted actors:
 
 - An operator who maintains source plugins, official-source authentication, processing health, and recovery workflows.
 - A reader who discovers books, manages subscriptions, and follows processing progress in the web console, then reads published chapters in Reading/Legado.
 
 The operator may also be the only reader in a single-user installation, but the product model must not assume that every deployment has only one user.
+
+The current public-access direction is invitation-only: each reader receives an individual authorization code mapped to an existing user identity. Open registration, anonymous reading, and a shared deployment-wide access code are not supported.
 
 ## Product Purpose
 
@@ -35,6 +37,7 @@ Success means an operator can keep the source pool healthy and recover failures,
 - AI-based chapter proofreading, rewriting, attribution, sensitive-word restoration, or quality scoring.
 - Any AI step in the subscription, chapter-processing, or reading critical path.
 - Social features, recommendation feeds, billing, or a full consumer e-reader feature set.
+- Open registration, anonymous public reading, shared-user credentials, or public access to source-plugin and official-account administration.
 - Pixel-level visual refinement while core workflows or verification gates are failing.
 
 Historical AI architecture documents remain reference material only. They do not define the active product roadmap.
@@ -102,6 +105,24 @@ Persist each user-owned subscription-search snapshot so completed cards remain a
 The schema, recovery and privacy boundaries are defined in `docs/architecture/subscription-search-persistence-plan.zh-CN.md`.
 
 Completed on 2026-07-17. User-owned subscription-search snapshots now persist in schema 11, completed candidate cards survive service restarts, and unfinished work is deterministically exposed as `interrupted` without replaying external searches. Owner isolation, private candidate groups, stale-write protection, malformed-snapshot recovery, temporary-database self-checks, and the real v10 -> v11 runtime migration were verified. The final gate passed 296 backend tests, 22 plugin validators, 47 frontend tests, lint/build/audit, a 39-scenario visual comparison at 99.86% overall similarity, runtime import smoke, and protected runtime-data comparison.
+
+### Phase 4: Invitation-Only Public Reading Access (In Progress)
+
+Extend the single-instance deployment from a trusted LAN to a small invitation-only public service without changing shared-book ownership. Administrators continue to use username/password authentication. Readers use individual authorization codes that redeem into the existing user/session model, with a Bearer Session for Reading/Legado and an HttpOnly Session Cookie for the web console.
+
+The runtime has two network entrypoints in one process: port `8765` registers only reader/user routes, while port `8766` registers administrator authentication and the control plane. The administrator listener binds to `0.0.0.0` by default; application-level route isolation remains mandatory, while firewall, forwarding, TLS, and management-network exposure are deployment responsibilities.
+
+The aggregate source manifest remains anonymously importable. Search, book detail, TOC, chapter, review, subscription, and all management APIs require an authenticated identity. Reading may consume `visible` shared content but must not invoke arbitrary plugin IDs, mutate subscriptions implicitly, enqueue work, or receive official-source credentials.
+
+The implementation, attack simulation, deployment, recovery, and release gates are defined in `docs/architecture/public-reading-authorization-security-plan.zh-CN.md`. Until those gates pass, the project must remain behind localhost or a trusted private network and must not be advertised as public-ready.
+
+**Exit criteria:**
+
+- Individual authorization-code issuance, reset, disable, Session revocation, and owner attribution pass automated and real-device tests.
+- Anonymous Reading APIs are closed except for the source manifest, access-code redemption, and minimal health response.
+- TLS, Trusted Host/proxy, Origin/CSRF, rate limits, secret storage, container isolation, backup, and recovery gates pass.
+- Controlled injection, IDOR, XSS, SSRF, header, path, replay, and resource-abuse tests find no unresolved P0/P1 issue.
+- The canonical repository gate, Docker acceptance, real Reading workflow, official plugin validation, and protected runtime-data comparison pass.
 
 ### Deferred Until After Phase 1
 

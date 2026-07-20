@@ -8,6 +8,7 @@ import { api, apiErrorMessage, type ProvisioningSummary } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { executeLibraryBookMaintenanceAction } from "@/lib/library-actions"
 import { LogStream } from "@/components/shared/LogStream"
+import { PagedChapterReader } from "@/components/reading/PagedChapterReader"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -83,8 +84,8 @@ export function LibraryBookDetailPage() {
   const { bookId } = useParams<{ bookId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user } = useAuth()
-  const isAdmin = user?.role === "admin"
+  const { user, entrypoint } = useAuth()
+  const isAdmin = entrypoint !== "public" && user?.role === "admin"
 
   const [chapterKeyword, setChapterKeyword] = useState("")
   const [chapterStatusFilter, setChapterStatusFilter] = useState("all")
@@ -201,7 +202,7 @@ export function LibraryBookDetailPage() {
     ? personal.rangeEndIndex - personal.rangeStartIndex + 1
     : 0
   const scopeTotal = isAdmin
-    ? Math.max(0, book.totalChapters || bs.chapterCount || 0)
+    ? Math.max(0, Number(book.totalChapters || 0), Number(bs.chapterCount || 0))
     : Math.max(0, personalCountTotal || personalRangeTotal)
   const pendingCount = isAdmin
     ? Math.max(0, scopeTotal - processedCount - failedCount)
@@ -694,36 +695,19 @@ export function LibraryBookDetailPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!readingChapter} onOpenChange={(open) => { if (!open) setReadingChapter(null) }}>
-        <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="p-4 md:p-6 pb-0 shrink-0">
-            <div className="flex items-center gap-3">
-              <DialogTitle className="text-xl md:text-2xl font-bold">{readingChapter?.title}</DialogTitle>
-              {previewMode && <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-transparent">预览模式</Badge>}
-            </div>
-            <DialogDescription className="text-slate-500">正文抽查 · {book.displayName} · {book.displayAuthor}</DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 text-slate-800 leading-relaxed space-y-6 text-lg bg-[#FDFBF7] mt-4 rounded-b-xl font-serif">
-            {chapterBodyQuery.isLoading ? (
-              <p className="text-slate-400 text-center pt-20">章节内容加载中…</p>
-            ) : chapterBodyQuery.error ? (
-              <Alert variant="destructive">
-                <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-                  <span>正文加载失败：{apiErrorMessage(chapterBodyQuery.error, "请稍后重试。")}</span>
-                  <Button type="button" size="sm" variant="outline" onClick={() => { void chapterBodyQuery.refetch() }}>重试</Button>
-                </AlertDescription>
-              </Alert>
-            ) : chapterBodyQuery.data?.content ? (
-              String(chapterBodyQuery.data.content)
-                .split(/\n+/)
-                .filter(Boolean)
-                .map((line, index) => <p key={index}>{line}</p>)
-            ) : (
-              <p className="text-slate-400 text-center pt-20">暂无可读正文。</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PagedChapterReader
+        key={readingChapter?.readChapterId || "chapter-reader"}
+        open={!!readingChapter}
+        onOpenChange={(open) => { if (!open) setReadingChapter(null) }}
+        chapter={readingChapter}
+        bookTitle={book.displayName}
+        bookAuthor={book.displayAuthor}
+        previewMode={previewMode}
+        content={chapterBodyQuery.data?.content}
+        contentLoading={chapterBodyQuery.isLoading}
+        contentError={chapterBodyQuery.error}
+        onRetryContent={() => { void chapterBodyQuery.refetch() }}
+      />
     </div>
   )
 }

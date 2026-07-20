@@ -6,9 +6,6 @@ from app.main import app
 from app.storage.db import initialize_database
 
 client = TestClient(app)
-_login = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
-if _login.status_code != 200:
-    pytest.skip(f"admin login unavailable: {_login.status_code} {_login.text}", allow_module_level=True)
 
 
 @pytest.fixture(autouse=True)
@@ -17,6 +14,11 @@ def setup_db(tmp_path, monkeypatch):
     monkeypatch.setattr("app.config.DB_PATH", db)
     monkeypatch.setattr("app.services.cache.DB_PATH", db)
     initialize_database(db)
+    login = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "admin123"},
+    )
+    assert login.status_code == 200
     yield
 
 

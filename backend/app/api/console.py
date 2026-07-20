@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import math
 import shutil
 import time
@@ -43,6 +44,8 @@ from app.source_plugins.id_codec import encode_chapter_id
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, make_aggregate_chapter_url
 from app.services.user_auth import auth_service
 
+logger = logging.getLogger(__name__)
+
 console_router = APIRouter(prefix="/api/console")
 _CONSOLE_STARTED_AT = time.monotonic()
 
@@ -69,7 +72,8 @@ def _write_json(path: Path, data: dict) -> None:
 def _aggregate_book_settings(payload: str) -> dict:
     try:
         return json.loads(payload or "{}")
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
+        logger.warning("Ignoring malformed aggregate book settings", exc_info=True)
         return {}
 
 
@@ -1946,7 +1950,8 @@ def _json_payload(value: str | None) -> dict:
     try:
         payload = json.loads(value)
         return payload if isinstance(payload, dict) else {}
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
+        logger.warning("Ignoring malformed cached JSON payload", exc_info=True)
         return {}
 
 
@@ -3221,10 +3226,20 @@ def list_users(request: Request):
 def create_user(request: Request, payload: dict):
     admin = auth_service.require_admin(request)
     _reject_unknown_fields(payload, {"username", "password", "role"}, label="创建用户")
+    role = str(payload.get("role", "user"))
+    username = str(payload.get("username", "")).strip()
+    if role == "user":
+        if str(payload.get("password", "")):
+            raise HTTPException(status_code=422, detail="普通用户由系统生成授权码，不能提交密码")
+        return auth_service.create_access_user(
+            username=username,
+            actor_user_id=admin.user_id,
+            actor_role=admin.role,
+        )
     return auth_service.create_user(
-        username=str(payload.get("username", "")).strip(),
+        username=username,
         password=str(payload.get("password", "")),
-        role=str(payload.get("role", "user")),
+        role=role,
         actor_user_id=admin.user_id,
         actor_role=admin.role,
     )
@@ -3234,9 +3249,34 @@ def create_user(request: Request, payload: dict):
 def reset_user_password(request: Request, user_id: str, payload: dict):
     admin = auth_service.require_admin(request)
     _reject_unknown_fields(payload, {"password"}, label="重置密码")
+    target = auth_service.get_user(user_id)
+    if target and not target.is_admin:
+        raise HTTPException(status_code=400, detail="普通用户必须重置授权码")
     return auth_service.reset_password(
         user_id,
         str(payload.get("password", "")),
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+    )
+
+
+@console_route("post", "/users/{user_id}/reset-access-code")
+def reset_user_access_code(request: Request, user_id: str, payload: dict | None = None):
+    admin = auth_service.require_admin(request)
+    _reject_unknown_fields(payload or {}, set(), label="重置授权码")
+    return auth_service.reset_access_code(
+        user_id,
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+    )
+
+
+@console_route("post", "/users/{user_id}/revoke-sessions")
+def revoke_user_sessions(request: Request, user_id: str, payload: dict | None = None):
+    admin = auth_service.require_admin(request)
+    _reject_unknown_fields(payload or {}, set(), label="撤销会话")
+    return auth_service.revoke_user_sessions(
+        user_id,
         actor_user_id=admin.user_id,
         actor_role=admin.role,
     )

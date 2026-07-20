@@ -19,12 +19,12 @@ vi.mock("@/lib/api", () => ({
   },
 }))
 
-function renderPage(embedded = false) {
+function renderPage(selection?: { selectedIds: Set<string>; onToggleSelectAll: () => void; onToggleSelected: (pluginId: string) => void }) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <OfficialSourcesPage embedded={embedded} />
+        <OfficialSourcesPage {...selection} />
       </MemoryRouter>
     </QueryClientProvider>
   )
@@ -41,23 +41,55 @@ describe("OfficialSourcesPage", () => {
       items: [{
         pluginId: "qidian_com",
         name: "起点中文网",
-        enabled: true,
+        enabled: false,
+        accessType: "Browser",
         auth: { mode: "required" },
-        authStatus: { authenticated: true, accountName: "reader" },
+        authStatus: { authenticated: true, accountName: "reader", lastCheckedAt: "2026-07-18T01:00:00Z" },
       }],
     })
   })
 
   it("embeds authentication controls without a second page heading", async () => {
-    renderPage(true)
+    const onToggleSelectAll = vi.fn()
+    const onToggleSelected = vi.fn()
+    renderPage({ selectedIds: new Set(), onToggleSelectAll, onToggleSelected })
 
-    const sourceLink = await screen.findByRole("link", { name: "起点中文网" })
-    expect(sourceLink).toHaveAttribute("href", "/console/plugins/qidian_com")
+    const sourceName = await screen.findByText("起点中文网")
     expect(screen.queryByRole("heading", { name: "官方源管理" })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "全局刷新状态" })).toBeInTheDocument()
-    expect(screen.getByRole("columnheader", { name: "格式/分类" })).toBeInTheDocument()
-    expect(screen.getByRole("columnheader", { name: "Ping 状态" })).toBeInTheDocument()
-    expect(screen.getByRole("columnheader", { name: "账号状态" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "Ping" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "登录状态" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "登录操作" })).toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: "插件标识 (ID)" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: "格式/分类" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: "激活状态" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: "认证模式" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: "当前账号" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: "最后检查" })).not.toBeInTheDocument()
+    expect(screen.getByText("reader")).toHaveClass("bg-emerald-50")
+    expect(screen.queryByText("有效")).not.toBeInTheDocument()
+    expect(screen.queryByText("已检查")).not.toBeInTheDocument()
+    expect(screen.queryByText("尚未检查")).not.toBeInTheDocument()
+    expect(screen.getByText("Browser")).toBeInTheDocument()
+    expect(sourceName.closest("tr")).toHaveClass("grayscale")
+    await userEvent.click(screen.getByRole("checkbox", { name: "选择 起点中文网" }))
+    expect(onToggleSelected).toHaveBeenCalledWith("qidian_com")
+  })
+
+  it("shows a single invalid or signed-out login label", async () => {
+    ;(api.officialSources as any).mockResolvedValue({
+      items: [
+        { pluginId: "expired", name: "失效源", enabled: true, authStatus: { authenticated: false, hasCookies: true } },
+        { pluginId: "signed-out", name: "未登录源", enabled: true, authStatus: { authenticated: false, hasCookies: false } },
+      ],
+    })
+
+    renderPage()
+
+    expect(await screen.findByText("登录失效")).toBeInTheDocument()
+    expect(screen.getByText("未登录")).toBeInTheDocument()
+    expect(screen.queryByText("有效")).not.toBeInTheDocument()
+    expect(screen.queryByText("尚未检查")).not.toBeInTheDocument()
   })
 
   it("requires confirmation before logging out an official source", async () => {
