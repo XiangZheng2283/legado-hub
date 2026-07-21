@@ -2457,48 +2457,9 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
             conn.execute("PRAGMA busy_timeout=5000")
             conn.execute("BEGIN IMMEDIATE")
             before = _aggregate_book_delete_snapshot(conn, book_id, book)
-            active_subscriptions = sum(
-                int(before["subscriptionCounts"].get(status, 0) or 0)
-                for status in ("active", "paused")
-            )
-            if active_subscriptions:
-                after = {
-                    "deleted": False,
-                    "reason": "active_subscriptions_exist",
-                    "activeSubscriptionCount": active_subscriptions,
-                }
-                _write_aggregate_operation_log(
-                    conn,
-                    book_id=book_id,
-                    actor_user_id=actor_user_id,
-                    actor_role=actor_role,
-                    operation_type="delete.rejected",
-                    before=before,
-                    after=after,
-                )
-                audit_service.record(
-                    action="shared_book.delete",
-                    actor_user_id=actor_user_id,
-                    actor_role=actor_role,
-                    target_type="shared_book",
-                    target_id=book_id,
-                    outcome="rejected",
-                    summary={"deleted": False, "errorCode": "active_subscriptions_exist"},
-                    conn=conn,
-                )
-                conn.commit()
-                raise HTTPException(
-                    status_code=409,
-                    detail={
-                        "code": "active_subscriptions_exist",
-                        "message": "仍有用户订阅该书，不能删除",
-                        "retryable": False,
-                        "activeSubscriptionCount": active_subscriptions,
-                    },
-                )
-
             conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (book_id,))
             conn.execute("DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ?", (book_id,))
+            conn.execute("DELETE FROM aggregate_ai_usage WHERE aggregate_book_id = ?", (book_id,))
             conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
             cursor = conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (book_id,))
             deleted = cursor.rowcount > 0
@@ -3252,6 +3213,8 @@ def reset_user_password(request: Request, user_id: str, payload: dict):
     target = auth_service.get_user(user_id)
     if target and not target.is_admin:
         raise HTTPException(status_code=400, detail="普通用户必须重置授权码")
+    if target and target.user_id == admin.user_id:
+        raise HTTPException(status_code=409, detail="当前账户请在账户安全中修改密码")
     return auth_service.reset_password(
         user_id,
         str(payload.get("password", "")),

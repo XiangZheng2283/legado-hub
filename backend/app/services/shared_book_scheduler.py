@@ -390,10 +390,10 @@ class SharedBookScheduler:
     async def run_manual_until_idle(
         self,
         *,
-        max_passes: int = 3,
+        max_passes: int = 6,
         retry_delays: tuple[float, ...] = (1.0, 5.0),
     ) -> dict[str, Any]:
-        """Drain manual work with bounded in-process retries.
+        """Drain manual work once, then allow up to five bounded retries.
 
         The aggregate task remains due in SQLite, so exhausting this bounded
         runner does not remove the periodic recovery path.

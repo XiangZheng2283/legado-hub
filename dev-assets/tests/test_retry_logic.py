@@ -15,6 +15,7 @@ from app.services.aggregate_processor import (
     compute_next_retry_time,
     max_retries_reached,
 )
+from app.services.aggregate_settings import RETRY_DELAYS_MINUTES
 from app.services.shared_book_errors import (
     SharedBookErrorCode,
     SharedBookRetryClass,
@@ -51,16 +52,35 @@ def _setup_db(tmp_path, *, ai_enabled=True):
     return db_path
 
 
-def _insert_chapter(db_path, aggregate_book_id, chapter_id, *, status="pending", retry_count=0, next_retry_time=None, last_error_code=""):
+def _insert_chapter(
+    db_path,
+    aggregate_book_id,
+    chapter_id,
+    *,
+    chapter_index=1,
+    status="pending",
+    retry_count=0,
+    next_retry_time=None,
+    last_error_code="",
+):
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
             INSERT OR REPLACE INTO aggregate_chapter_tasks
             (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status,
              retry_count, next_retry_time, last_error_code, created_at, updated_at)
-            VALUES (?, ?, ?, 1, 'test', ?, ?, ?, ?, datetime('now'), datetime('now'))
+            VALUES (?, ?, ?, ?, 'test', ?, ?, ?, ?, datetime('now'), datetime('now'))
             """,
-            (chapter_id, aggregate_book_id, chapter_id, status, retry_count, next_retry_time, last_error_code),
+            (
+                chapter_id,
+                aggregate_book_id,
+                chapter_id,
+                chapter_index,
+                status,
+                retry_count,
+                next_retry_time,
+                last_error_code,
+            ),
         )
         conn.commit()
 
@@ -196,6 +216,50 @@ def test_chapter_with_exhausted_retries_not_selected(tmp_path):
     assert "ch-1" not in ids
 
 
+def test_scheduled_fifth_retry_is_selected(tmp_path):
+    from datetime import datetime, timedelta, timezone
+
+    db_path = _setup_db(tmp_path)
+    _insert_book(db_path, "book-1")
+    past = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+    _insert_chapter(
+        db_path,
+        "book-1",
+        "ch-fifth",
+        status="error",
+        retry_count=len(RETRY_DELAYS_MINUTES),
+        next_retry_time=past,
+        last_error_code=SharedBookErrorCode.S1_SOURCE_FETCH_FAILED,
+    )
+
+    chapters = AggregateProcessor(db_path)._chapters_for_processing("book-1")
+
+    assert [item["chapterId"] for item in chapters] == ["ch-fifth"]
+
+
+def test_due_error_is_processed_before_pending_chapter(tmp_path):
+    from datetime import datetime, timedelta, timezone
+
+    db_path = _setup_db(tmp_path)
+    _insert_book(db_path, "book-1")
+    past = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+    _insert_chapter(db_path, "book-1", "ch-pending", chapter_index=1)
+    _insert_chapter(
+        db_path,
+        "book-1",
+        "ch-error",
+        chapter_index=10,
+        status="error",
+        retry_count=1,
+        next_retry_time=past,
+        last_error_code=SharedBookErrorCode.S1_SOURCE_FETCH_FAILED,
+    )
+
+    chapters = AggregateProcessor(db_path)._chapters_for_processing("book-1", limit=1)
+
+    assert [item["chapterId"] for item in chapters] == ["ch-error"]
+
+
 def test_chapter_with_ai_bad_request_not_selected(tmp_path):
     """Chapters with a no-retry Stage 1 error must not be re-selected."""
     db_path = _setup_db(tmp_path)
@@ -266,6 +330,36 @@ def test_handle_processing_error_short_retry_updates_backoff(tmp_path):
     assert row[0] == 1
     assert row[1]
     assert row[2] == SharedBookErrorCode.S1_SOURCE_FETCH_FAILED
+
+
+def test_exhausted_short_retries_fall_back_to_periodic_retry(tmp_path):
+    from datetime import datetime, timezone
+
+    db_path = _setup_db(tmp_path)
+    _insert_book(db_path, "book-1")
+    _insert_chapter(
+        db_path,
+        "book-1",
+        "ch-periodic",
+        status="error",
+        retry_count=len(RETRY_DELAYS_MINUTES),
+    )
+    processor = AggregateProcessor(db_path)
+
+    processor._handle_processing_error(
+        TimeoutError("connection timed out"),
+        {"chapterId": "ch-periodic", "aggregateBookId": "book-1"},
+        "source:periodic",
+    )
+
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT status, retry_count, next_retry_time FROM aggregate_chapter_tasks WHERE chapter_id = ?",
+            ("ch-periodic",),
+        ).fetchone()
+    assert row[0] == "error"
+    assert row[1] == len(RETRY_DELAYS_MINUTES)
+    assert datetime.fromisoformat(row[2]) > datetime.now(timezone.utc)
 
 
 def test_handle_processing_error_long_retry_defers_to_periodic_scan(tmp_path):

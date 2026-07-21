@@ -475,6 +475,38 @@ async def test_initial_subscription_retries_refresh_before_bootstrap_within_boun
 
 
 @pytest.mark.asyncio
+async def test_initial_subscription_allows_five_retries_after_first_failure():
+    class AlwaysFailSourceMapService(FlakySourceMapService):
+        async def refresh_for_book(self, aggregate_book_id: str, *, payload=None, force: bool = False):
+            self.refresh_calls.append(aggregate_book_id)
+            return {
+                "bookId": aggregate_book_id,
+                "success": False,
+                "refreshed": False,
+            }
+
+    source_map_service = AlwaysFailSourceMapService()
+    scheduler = SharedBookScheduler(
+        processor=FakeProcessor(),
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+        source_map_service=source_map_service,
+    )
+    scheduler.enqueue_initial_subscription(
+        "book-five-retries",
+        payload={"name": "五次重试书", "author": "作者"},
+        book_name="五次重试书",
+        author="作者",
+    )
+
+    result = await scheduler.run_manual_until_idle(retry_delays=(0.0,))
+
+    assert result["passes"] == 6
+    assert result["completed"] is False
+    assert source_map_service.refresh_calls == ["book-five-retries"] * 6
+
+
+@pytest.mark.asyncio
 async def test_periodic_pass_skips_books_already_in_recovery_queue():
     processor = FakeProcessor()
     processor.due_books = [

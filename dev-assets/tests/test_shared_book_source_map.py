@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 from app.services.library_books import LibraryBooksService
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.shared_book_storage import SharedBookStorage
+from app.source_plugins.id_codec import encode_book_id
 from app.storage.db import initialize_database
 
 
@@ -104,6 +105,31 @@ class FakeSearchCoordinator:
         return list(self.items)
 
 
+class FakeCatalog:
+    def __init__(self, chapters_by_book_id: dict[str, list[dict]]):
+        self.chapters_by_book_id = chapters_by_book_id
+        self.detail_calls: list[str] = []
+        self.toc_calls: list[str] = []
+
+    async def book_detail(self, book_id: str, user_agent: str = "") -> dict:
+        self.detail_calls.append(book_id)
+        return {
+            "implemented": True,
+            "data": {
+                "rawTocUrl": "https://m.qidian.com/book/1030000000/catalog/",
+                "chapterCount": 1,
+            },
+            "debug": {},
+        }
+
+    async def toc(self, book_id: str, user_agent: str = "") -> dict:
+        self.toc_calls.append(book_id)
+        chapters = self.chapters_by_book_id.get(book_id)
+        if chapters is None:
+            return {"implemented": True, "chapters": [], "debug": {"error": "toc unavailable"}}
+        return {"implemented": True, "chapters": list(chapters), "debug": {}}
+
+
 class FakeSourceMapService:
     def __init__(self, refresh_book_ids: set[str] | None = None):
         self.refresh_book_ids = refresh_book_ids or set()
@@ -194,6 +220,74 @@ async def test_source_map_refresh_writes_sanitized_metadata_and_private_refs(tmp
 
     refreshed_payload = LibraryBooksService(db_path=db_path, shared_book_storage=storage).load_payload("book-1")
     assert {item["sourceId"] for item in refreshed_payload["sources"]} == {"official-src", "third-src"}
+
+
+@pytest.mark.asyncio
+async def test_source_map_refresh_fills_missing_web_chapter_count_from_toc(tmp_path: Path):
+    db_path = tmp_path / "library.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    web_book_url = "https://m.qidian.com/book/1030000000/"
+    web_book_id = encode_book_id("qidian_com_web", web_book_url)
+    payload = _insert_book(
+        db_path,
+        primary_source_id="qidian_com_web",
+        payload_sources=[
+            {
+                "bookId": web_book_id,
+                "sourceId": "qidian_com_web",
+                "sourceName": "起点中文网(Web)",
+                "bookUrl": web_book_url,
+                "tocUrl": "",
+                "score": 221,
+                "lastChapter": "第九百九十九章 关底boss",
+                "chapterCount": 0,
+                "author": "作者甲",
+                "name": "测试小说",
+            }
+        ],
+    )
+    catalog = FakeCatalog(
+        {
+            web_book_id: [
+                {"index": index, "title": f"第{index}章"}
+                for index in range(1, 120)
+            ]
+        }
+    )
+
+    from app.services.shared_book_source_map import SharedBookSourceMapService
+
+    service = SharedBookSourceMapService(
+        library_books=LibraryBooksService(db_path=db_path, shared_book_storage=storage),
+        search_coordinator=FakeSearchCoordinator(
+            [
+                {
+                    "sourceId": "third-src",
+                    "sourceName": "第三方源",
+                    "bookId": "third-src:book-9",
+                    "rawBookUrl": "https://third.example/book/9",
+                    "bookUrl": "https://third.example/book/9",
+                    "name": "测试小说",
+                    "author": "作者甲",
+                    "score": 155,
+                    "lastChapter": "第101章",
+                    "chapterCount": 101,
+                }
+            ]
+        ),
+        storage=storage,
+        catalog=catalog,
+    )
+
+    result = await service.refresh_for_book("book-1", payload=payload, force=True)
+
+    assert result["success"] is True
+    assert catalog.detail_calls == [web_book_id]
+    assert catalog.toc_calls == [web_book_id]
+    refreshed_payload = LibraryBooksService(db_path=db_path, shared_book_storage=storage).load_payload("book-1")
+    web_source = next(item for item in refreshed_payload["sources"] if item["sourceId"] == "qidian_com_web")
+    assert web_source["chapterCount"] == 119
+    assert web_source["tocUrl"] == "https://m.qidian.com/book/1030000000/catalog/"
 
 
 def test_source_map_refresh_ttl_and_missing_critical_source_conditions(tmp_path: Path):

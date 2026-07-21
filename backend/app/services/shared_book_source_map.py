@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable
+from typing import Any, Callable, Protocol
 
+from app.source_plugins.id_codec import decode_book_id, encode_book_id
 from app.services.library_books import LibraryBooksService
 from app.services.live_acceptance import normalize_author_key, normalize_text
 from app.services.search_coordinator import SearchCoordinator
 from app.services.shared_book_storage import SharedBookStorage
+
+
+logger = logging.getLogger(__name__)
+
+
+class _CatalogLike(Protocol):
+    async def book_detail(self, book_id: str, user_agent: str = "") -> dict[str, Any]: ...
+
+    async def toc(self, book_id: str, user_agent: str = "") -> dict[str, Any]: ...
 
 
 def _utc_now() -> datetime:
@@ -33,12 +45,16 @@ class SharedBookSourceMapService:
         library_books: LibraryBooksService | None = None,
         search_coordinator: SearchCoordinator | None = None,
         storage: SharedBookStorage | None = None,
+        catalog: _CatalogLike | None = None,
+        chapter_count_concurrency: int = 4,
         refresh_ttl_hours: int = 24,
         now_provider: Callable[[], datetime] | None = None,
     ):
         self.library_books = library_books or LibraryBooksService()
         self.search_coordinator = search_coordinator or SearchCoordinator()
         self.storage = storage or self.library_books.shared_book_storage
+        self._catalog = catalog
+        self.chapter_count_concurrency = max(1, int(chapter_count_concurrency or 1))
         self.refresh_ttl = timedelta(hours=max(1, int(refresh_ttl_hours or 24)))
         self._now_provider = now_provider or _utc_now
 
@@ -113,6 +129,7 @@ class SharedBookSourceMapService:
             third_party_sources,
             primary_source_id=str(resolved_payload.get("primarySourceId", "") or "").strip(),
         )
+        await self._fill_missing_chapter_counts(merged_sources)
         verified_at = self._now().isoformat()
         missing_critical_source = not any(
             str(item.get("sourceId", "") or "").strip()
@@ -242,6 +259,96 @@ class SharedBookSourceMapService:
 
     def _build_summary_rows(self, sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return self.storage.build_shared_metadata({"sources": sources}).get("sourceMapSummary", [])
+
+    @staticmethod
+    def _positive_int(value: object) -> int:
+        try:
+            return max(0, int(value or 0))
+        except (TypeError, ValueError):
+            return 0
+
+    @staticmethod
+    def _catalog_book_id(source: dict[str, Any]) -> str:
+        source_id = str(source.get("sourceId", "") or "").strip()
+        if not source_id:
+            return ""
+
+        book_id = str(source.get("bookId", "") or "").strip()
+        raw_book_url = str(source.get("bookUrl", "") or "").strip()
+        candidates = [book_id]
+        if "/api/legado/book/" in raw_book_url:
+            candidates.append(raw_book_url.rsplit("/", 1)[-1])
+        for candidate in candidates:
+            try:
+                decoded_source_id, decoded_book_url = decode_book_id(candidate)
+            except Exception:
+                continue
+            if decoded_source_id == source_id and decoded_book_url:
+                return candidate
+
+        if raw_book_url and "/api/legado/book/" not in raw_book_url:
+            return encode_book_id(source_id, raw_book_url)
+        return ""
+
+    def _get_catalog(self) -> _CatalogLike:
+        if self._catalog is None:
+            from app.services.catalog import Catalog
+
+            self._catalog = Catalog()
+        return self._catalog
+
+    async def _fill_missing_chapter_counts(self, sources: list[dict[str, Any]]) -> None:
+        """Fill absent source-map chapter counts from each plugin's real TOC."""
+        missing = [
+            source
+            for source in sources
+            if isinstance(source, dict) and self._positive_int(source.get("chapterCount")) <= 0
+        ]
+        if not missing:
+            return
+
+        semaphore = asyncio.Semaphore(self.chapter_count_concurrency)
+
+        async def fill_one(source: dict[str, Any]) -> None:
+            async with semaphore:
+                await self._fill_missing_chapter_count(source)
+
+        await asyncio.gather(*(fill_one(source) for source in missing))
+
+    async def _fill_missing_chapter_count(self, source: dict[str, Any]) -> None:
+        """Resolve one missing count without failing the source-map refresh."""
+        source_id = str(source.get("sourceId", "") or "").strip()
+        book_id = self._catalog_book_id(source)
+        if not source_id or not book_id:
+            return
+
+        try:
+            catalog = self._get_catalog()
+            detail = await catalog.book_detail(book_id)
+            detail_data = detail.get("data") if isinstance(detail, dict) else None
+            if isinstance(detail_data, dict):
+                raw_toc_url = str(
+                    detail_data.get("rawTocUrl") or detail_data.get("tocUrl") or ""
+                ).strip()
+                if raw_toc_url and not str(source.get("tocUrl", "") or "").strip():
+                    source["tocUrl"] = raw_toc_url
+
+            toc = await catalog.toc(book_id)
+        except Exception:
+            logger.warning(
+                "Failed to fill chapter count for source %s",
+                source_id,
+                exc_info=True,
+            )
+            return
+
+        if not isinstance(toc, dict):
+            return
+        debug = toc.get("debug") if isinstance(toc.get("debug"), dict) else {}
+        chapters = toc.get("chapters")
+        if debug.get("error") or not isinstance(chapters, list) or not chapters:
+            return
+        source["chapterCount"] = len(chapters)
 
     def _build_private_source_refs(
         self,

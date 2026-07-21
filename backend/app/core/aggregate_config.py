@@ -57,7 +57,7 @@ def _default_progress() -> dict[str, Any]:
 def _default_config() -> dict:
     return {
         "name": "LegadoHub 聚合",
-        "version": "0.0.1",
+        "version": "0.0.2",
         "group": "聚合,LegadoHub",
         "enabled": True,
         "base_url_mode": "request_host",

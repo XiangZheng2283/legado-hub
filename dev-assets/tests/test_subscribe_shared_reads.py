@@ -122,6 +122,16 @@ def test_legado_manifest_is_anonymous_but_reading_requires_valid_bearer(client):
     assert after_last_seen == before_last_seen
 
 
+def test_legado_source_default_version_tracks_reader_rule_revision(monkeypatch):
+    import app.core.legado_source as legado_source
+
+    monkeypatch.setattr(legado_source, "load_aggregate_config", lambda: {})
+
+    source = legado_source.generate_legado_source("http://testserver")[0]
+
+    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.2)"
+
+
 @pytest.mark.parametrize("page", [True, "invalid", 1.5, 0, -1, 1001])
 def test_subscription_search_rejects_invalid_page(client, page):
     response = client.post("/api/subscribe/search", json={"keyword": "页码测试", "page": page})
@@ -534,8 +544,16 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "/api/auth/access/redeem" in source["loginUrl"]
     assert "/api/auth/access/me" in source["loginUrl"]
     assert "/api/auth/access/logout" in source["loginUrl"]
+    assert 'typeof result !== "undefined"' in source["loginUrl"]
+    assert "info.containsKey(name)" in source["loginUrl"]
+    assert "function login()" in source["loginUrl"]
     assert "source.putLoginInfo(\"{}\")" in source["loginUrl"]
     assert "java.log" not in source["loginUrl"]
+    assert "data:contentUrl;base64" in source["ruleToc"]["chapterUrl"]
+    assert "type: 'qingci'" in source["ruleToc"]["chapterUrl"]
+    assert "/reviews/view" in source["ruleToc"]["chapterUrl"]
+    assert "java.hexDecodeToString(payload)" in source["ruleContent"]["content"]
+    assert "java.ajax(contentUrl)" in source["ruleContent"]["content"]
     assert "LH1." not in json.dumps(source, ensure_ascii=False)
 
     search = client.get("/api/subscribe/legado/search", params={"keyword": "阅读契约测试书"})

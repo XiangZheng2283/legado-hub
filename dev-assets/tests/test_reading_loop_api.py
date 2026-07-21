@@ -192,6 +192,42 @@ def test_reading_rejects_all_direct_plugin_reader_routes(fixture_client, monkeyp
     assert fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews/view").status_code == 404
 
 
+def test_review_view_allows_only_same_origin_embedding(fixture_client, monkeypatch):
+    import app.api.legado as legado_api
+    from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, make_aggregate_chapter_url
+    from app.source_plugins.id_codec import encode_chapter_id
+
+    chapter_id = encode_chapter_id(
+        VIRTUAL_SOURCE_ID,
+        make_aggregate_chapter_url("book-1", "chapter-1", index=1),
+    )
+    monkeypatch.setattr(
+        legado_api.library_books_service,
+        "legado_chapter",
+        lambda _chapter_id: {"title": "第一章"},
+    )
+
+    async def empty_reviews(_chapter_id: str) -> dict:
+        return {
+            "authorReviews": [],
+            "chapterEnd": [],
+            "hotParagraphReviews": [],
+            "summary": {"totalReviews": 0, "chapterEndCount": 0},
+        }
+
+    monkeypatch.setattr(legado_api, "_chapter_reviews", empty_reviews)
+
+    api_response = fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews")
+    view_response = fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews/view")
+
+    assert api_response.status_code == 200
+    assert api_response.headers["x-frame-options"] == "DENY"
+    assert "frame-ancestors 'none'" in api_response.headers["content-security-policy"]
+    assert view_response.status_code == 200
+    assert view_response.headers["x-frame-options"] == "SAMEORIGIN"
+    assert "frame-ancestors 'self'" in view_response.headers["content-security-policy"]
+
+
 def test_reading_direct_plugin_chapter_does_not_use_cached_content(fixture_client):
     from app.services.catalog import Catalog
     from app.source_plugins.id_codec import encode_chapter_id

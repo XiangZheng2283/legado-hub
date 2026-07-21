@@ -205,7 +205,7 @@ export function UsersPage() {
                       <TableCell className="whitespace-nowrap text-slate-500">{formatDate(item.updatedAt)}</TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="icon" aria-label={resetLabel} title={resetLabel} onClick={() => { setResetPassword(""); setResetError(""); setResetTarget(item) }}><KeyRound className="h-4 w-4" /></Button>
+                          {!isCurrentUser && <Button variant="outline" size="icon" aria-label={resetLabel} title={resetLabel} onClick={() => { setResetPassword(""); setResetError(""); setResetTarget(item) }}><KeyRound className="h-4 w-4" /></Button>}
                           <Button
                             variant="outline" size="icon" aria-label={`撤销 ${item.username} 的登录会话`} title={isCurrentUser ? "当前会话请使用退出登录" : "撤销全部登录会话"}
                             disabled={isCurrentUser || revokePending}

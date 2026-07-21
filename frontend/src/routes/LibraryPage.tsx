@@ -348,7 +348,7 @@ export function LibraryPage() {
           <DialogHeader>
             <DialogTitle>删除书籍</DialogTitle>
             <DialogDescription>
-              确定要将《{bookToDelete?.displayName}》从书库中删除吗？此操作不可逆，将删除所有相关章节数据。
+              确定要将《{bookToDelete?.displayName}》从书库中删除吗？此操作不可逆，将同时移除所有用户对此书的订阅及相关章节数据。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

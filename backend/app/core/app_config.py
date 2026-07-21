@@ -143,7 +143,7 @@ class SubscriptionConfig:
 @dataclass
 class AggregateConfig:
     name: str = "LegadoHub 聚合"
-    version: str = "0.0.1"
+    version: str = "0.0.2"
     group: str = "聚合,LegadoHub"
     enabled: bool = True
     base_url_mode: str = "request_host"
@@ -154,7 +154,7 @@ class AggregateConfig:
     def from_dict(cls, data: dict[str, Any]) -> "AggregateConfig":
         return cls(
             name=str(data.get("name", "LegadoHub 聚合")),
-            version=str(data.get("version", "0.0.1")),
+            version=str(data.get("version", "0.0.2")),
             group=str(data.get("group", "聚合,LegadoHub")),
             enabled=bool(data.get("enabled", True)),
             base_url_mode=str(data.get("baseUrlMode", "request_host")),

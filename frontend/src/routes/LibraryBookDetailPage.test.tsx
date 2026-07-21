@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -173,6 +173,29 @@ describe("LibraryBookDetailPage processing settings", () => {
     expect(screen.getByRole("progressbar", { name: "当前章节全文覆盖" })).toHaveAttribute("aria-valuenow", "80")
     expect(screen.getByText("全文 8 · 预览 2 · 待处理 0 · 失败 0")).toBeInTheDocument()
     expect(screen.getByText("当前章节已同步 · 持续追更")).toBeInTheDocument()
+  })
+
+  it("shows candidate chapter counts without a misleading status column", async () => {
+    ;(api.libraryBookSummary as any).mockResolvedValueOnce({
+      ...adminBook,
+      sourceMapSummary: [
+        {
+          sourceId: "qidian_com_web",
+          sourceName: "起点中文网(Web)",
+          score: 221,
+          lastChapter: "第九百九十九章 关底boss",
+          chapterCount: 1195,
+          bookStatus: "",
+        },
+      ],
+    })
+    renderPage()
+
+    const boundary = await screen.findByTestId("candidate-sources-table-boundary")
+    expect(within(boundary).getByRole("columnheader", { name: "来源" })).toBeInTheDocument()
+    expect(within(boundary).getByRole("columnheader", { name: "章节数" })).toBeInTheDocument()
+    expect(within(boundary).queryByRole("columnheader", { name: "状态" })).not.toBeInTheDocument()
+    expect(within(boundary).getByText("1195章")).toBeInTheDocument()
   })
 
   it("refetches the book summary from the load error", async () => {

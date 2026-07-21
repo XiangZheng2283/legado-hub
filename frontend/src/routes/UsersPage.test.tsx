@@ -109,6 +109,7 @@ describe("UsersPage", () => {
     expect(readerRow).not.toBeNull()
     expect(within(adminRow!).getByRole("button", { name: "禁用" })).toBeDisabled()
     expect(within(adminRow!).getByRole("button", { name: "撤销 admin 的登录会话" })).toBeDisabled()
+    expect(within(adminRow!).queryByRole("button", { name: "重置 admin 的密码" })).not.toBeInTheDocument()
 
     await user.click(within(readerRow!).getByRole("button", { name: "重置 reader 的授权码" }))
     await user.click(screen.getByRole("button", { name: "生成新授权码" }))

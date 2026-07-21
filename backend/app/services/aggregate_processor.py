@@ -1338,13 +1338,24 @@ class AggregateProcessor:
                               status = 'error'
                               AND (next_retry_time IS NULL OR next_retry_time <= ?)
                               AND (last_error_code IS NULL OR last_error_code NOT IN ({placeholders}))
-                              AND (retry_count IS NULL OR retry_count < ?)
+                              AND (
+                                COALESCE(retry_count, 0) < ?
+                                OR (COALESCE(retry_count, 0) = ? AND next_retry_time IS NOT NULL)
+                              )
                             )
                           )
-                        ORDER BY COALESCE(chapter_index, 999999), created_at
+                        ORDER BY CASE WHEN status = 'error' THEN 0 ELSE 1 END,
+                                 COALESCE(chapter_index, 999999), created_at
                         LIMIT ?
                         """,
-                        (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), requested_limit),
+                        (
+                            aggregate_book_id,
+                            now,
+                            *terminal_codes,
+                            len(RETRY_DELAYS_MINUTES),
+                            len(RETRY_DELAYS_MINUTES),
+                            requested_limit,
+                        ),
                     ).fetchall()
                 )
             remaining_limit = max(0, requested_limit - len(rows))
@@ -1362,13 +1373,24 @@ class AggregateProcessor:
                               status = 'error'
                               AND (next_retry_time IS NULL OR next_retry_time <= ?)
                               AND (last_error_code IS NULL OR last_error_code NOT IN ({placeholders}))
-                              AND (retry_count IS NULL OR retry_count < ?)
+                              AND (
+                                COALESCE(retry_count, 0) < ?
+                                OR (COALESCE(retry_count, 0) = ? AND next_retry_time IS NOT NULL)
+                              )
                             )
-                        )
-                        ORDER BY COALESCE(chapter_index, 999999), created_at
+                          )
+                        ORDER BY CASE WHEN status = 'error' THEN 0 ELSE 1 END,
+                                 COALESCE(chapter_index, 999999), created_at
                         LIMIT ?
                         """,
-                        (aggregate_book_id, now, *terminal_codes, len(RETRY_DELAYS_MINUTES), remaining_limit),
+                        (
+                            aggregate_book_id,
+                            now,
+                            *terminal_codes,
+                            len(RETRY_DELAYS_MINUTES),
+                            len(RETRY_DELAYS_MINUTES),
+                            remaining_limit,
+                        ),
                     ).fetchall()
                 )
             remaining_limit = max(0, requested_limit - len(rows))
@@ -2621,13 +2643,32 @@ class AggregateProcessor:
             ).fetchone()
             current_retry = (row[0] if row else 0) or 0
 
-            if retry_class == SharedBookRetryClass.NO_RETRY or max_retries_reached(current_retry):
+            if retry_class == SharedBookRetryClass.NO_RETRY:
                 conn.execute(
                     """UPDATE aggregate_chapter_tasks
                        SET status = 'error', error = ?, last_error_code = ?,
                            source_alignment_json = ?, next_retry_time = NULL, updated_at = ?
                        WHERE chapter_id = ?""",
                     (str(exc), error_code, json.dumps(alignment_json, ensure_ascii=False), now, chapter_id),
+                )
+            elif max_retries_reached(current_retry):
+                periodic_retry_time = (
+                    self._now_dt()
+                    + timedelta(minutes=self.check_interval_minutes(aggregate_book_id))
+                ).isoformat()
+                conn.execute(
+                    """UPDATE aggregate_chapter_tasks
+                       SET status = 'error', error = ?, last_error_code = ?,
+                           source_alignment_json = ?, next_retry_time = ?, updated_at = ?
+                       WHERE chapter_id = ?""",
+                    (
+                        str(exc),
+                        error_code,
+                        json.dumps(alignment_json, ensure_ascii=False),
+                        periodic_retry_time,
+                        now,
+                        chapter_id,
+                    ),
                 )
             elif retry_class == SharedBookRetryClass.LONG_RETRY_SCAN:
                 conn.execute(

@@ -261,6 +261,13 @@ def test_user_management_prevents_self_and_last_admin_disable(admin_client, tmp_
     from app.services.user_auth import UserAuthService
 
     current_admin = admin_client.get("/api/auth/me").json()["user"]
+    self_reset = admin_client.post(
+        f"/api/console/users/{current_admin['userId']}/reset-password",
+        json={"password": "replacement-password"},
+    )
+    assert self_reset.status_code == 409
+    assert "账户安全" in self_reset.json()["detail"]
+
     self_disable = admin_client.post(
         f"/api/console/users/{current_admin['userId']}/disable",
         json={"disabled": True},
@@ -1339,7 +1346,7 @@ def test_delete_library_book_removes_shared_and_private_files(monkeypatch, tmp_p
     assert '"deleted": true' in operation[2]
 
 
-def test_delete_library_book_rejects_active_subscriptions(monkeypatch, tmp_path):
+def test_delete_library_book_cascades_active_subscriptions(monkeypatch, tmp_path):
     import app.api.console as console_api
     import app.config as app_config
     from app.services.library_books import LibraryBooksService
@@ -1367,22 +1374,32 @@ def test_delete_library_book_rejects_active_subscriptions(monkeypatch, tmp_path)
                       'active', datetime('now'), datetime('now'))
             """
         )
+        conn.execute(
+            """
+            INSERT INTO aggregate_ai_usage (aggregate_book_id, chapter_id, status)
+            VALUES ('book-delete', 'chapter-delete', 'success')
+            """
+        )
         conn.commit()
     UserSubscriptionsService(db_path).ensure(user["userId"], "book-delete")
 
-    with pytest.raises(HTTPException) as captured:
-        console_api._delete_aggregate_book_impl("book-delete", actor_user_id="admin-1")
+    result = console_api._delete_aggregate_book_impl("book-delete", actor_user_id="admin-1")
 
-    assert captured.value.status_code == 409
-    assert captured.value.detail["code"] == "active_subscriptions_exist"
+    assert result == {"bookId": "book-delete", "deleted": True}
     with sqlite3.connect(db_path) as conn:
         assert conn.execute(
             "SELECT 1 FROM aggregate_book_tasks WHERE aggregate_book_id = 'book-delete'"
-        ).fetchone() == (1,)
+        ).fetchone() is None
+        assert conn.execute(
+            "SELECT 1 FROM user_book_subscriptions WHERE aggregate_book_id = 'book-delete'"
+        ).fetchone() is None
+        assert conn.execute(
+            "SELECT 1 FROM aggregate_ai_usage WHERE aggregate_book_id = 'book-delete'"
+        ).fetchone() is None
         assert conn.execute(
             "SELECT operation_type FROM aggregate_operation_logs "
             "WHERE aggregate_book_id = 'book-delete' ORDER BY id DESC LIMIT 1"
-        ).fetchone() == ("delete.rejected",)
+        ).fetchone() == ("delete",)
 
 
 def test_delete_library_book_rejects_active_lease(monkeypatch, tmp_path):

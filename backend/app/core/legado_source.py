@@ -51,12 +51,39 @@ def _login_script(base_api: str) -> str:
     return f"""var LEGADOHUB_BASE = {base_literal};
 
 function legadoHubLoginInfoValue(name) {{
-    var info = source.getLoginInfoMap();
-    if (!info) return "";
+    function readValue(info) {{
+        if (!info) return null;
+        try {{
+            if (typeof info.containsKey === "function" && info.containsKey(name)) {{
+                return String(info.get(name) || "");
+            }}
+        }} catch (e) {{}}
+        try {{
+            if (typeof info.has === "function" && info.has(name)) {{
+                return String(info.get(name) || "");
+            }}
+        }} catch (e) {{}}
+        try {{
+            if (typeof info.get === "function") {{
+                var mapped = info.get(name);
+                if (mapped !== null && mapped !== undefined) return String(mapped);
+            }}
+        }} catch (e) {{}}
+        try {{
+            if (Object.prototype.hasOwnProperty.call(info, name)) return String(info[name] || "");
+        }} catch (e) {{}}
+        return null;
+    }}
+
+    var current = null;
     try {{
-        if (typeof info.get === "function") return String(info.get(name) || "");
+        if (typeof result !== "undefined") current = readValue(result);
     }} catch (e) {{}}
-    return String(info[name] || "");
+    if (current !== null) return current;
+
+    var stored = null;
+    try {{ stored = readValue(source.getLoginInfoMap()); }} catch (e) {{}}
+    return stored === null ? "" : stored;
 }}
 
 function legadoHubHeaders() {{
@@ -113,6 +140,10 @@ function legadoHubLogin() {{
     }}
 }}
 
+function login() {{
+    return legadoHubLogin();
+}}
+
 function legadoHubStatus(showMessage) {{
     try {{
         var response = legadoHubRequest("/api/auth/access/me", "GET", null);
@@ -164,7 +195,7 @@ legadoHubOriginalResponse;"""
 def _build_source(base_api: str | None = None) -> dict:
     base_api = normalize_public_base_url(base_api or get_public_base_url())
     config = load_aggregate_config()
-    version = config.get("version", "0.0.1")
+    version = config.get("version", "0.0.2")
     name = config.get("name", "LegadoHub 聚合")
     group = config.get("group", "聚合,LegadoHub")
 
@@ -237,9 +268,14 @@ def _build_source(base_api: str | None = None) -> dict:
         },
         "ruleContent": {
             "content": '@js:\n'
-            'var text = result;\n'
+            'var payload = String(result || "");\n'
             'try {\n'
-            '  var obj = JSON.parse(result);\n'
+            '  var contentUrl = String(java.hexDecodeToString(payload) || "").trim();\n'
+            '  if (/^https?:\\/\\//i.test(contentUrl)) payload = String(java.ajax(contentUrl) || "");\n'
+            '} catch (e) {}\n'
+            'var text = payload;\n'
+            'try {\n'
+            '  var obj = JSON.parse(payload);\n'
             '  text = obj.content || "";\n'
             '} catch (e) {}\n'
             'text = String(text || "").replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n");\n'

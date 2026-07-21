@@ -240,5 +240,9 @@ async def get_chapter_review_view(
                 page_hot_detail=page_hot_detail,
                 chapter_detail=chapter_detail,
                 reply_detail=reply_detail,
-            )
+            ),
+            headers={
+                "X-Frame-Options": "SAMEORIGIN",
+                "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+            },
         )

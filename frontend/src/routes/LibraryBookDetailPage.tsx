@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
 interface SourceMapSummaryItem {
-  sourceId: string; sourceName: string; score: number; chapterCount: number; lastChapter: string; bookStatus: string
+  sourceId: string; sourceName: string; score: number; chapterCount: number; lastChapter: string
 }
 interface BookStateSummary {
   status?: string; searchVisibilityStatus?: string; chapterCount?: number; processedChapterCount?: number
@@ -288,7 +288,7 @@ export function LibraryBookDetailPage() {
                     <button disabled={maintenanceBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => actionMutation.mutate("repair")}>重新计算状态</button>
                     <button disabled={maintenanceBusy} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => actionMutation.mutate("rebuild")}>重建</button>
                     <div className="h-px bg-slate-100 my-1" />
-                    <button disabled={maintenanceBusy} className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 flex items-center" onClick={() => { if (confirm("确定要删除这本书吗？")) deleteMutation.mutate() }}>
+                    <button disabled={maintenanceBusy} className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 flex items-center" onClick={() => { if (confirm("确定要删除这本书吗？此操作不可逆，将同时移除所有用户对此书的订阅及相关章节数据。")) deleteMutation.mutate() }}>
                       <Trash2 className="h-3 w-3 mr-2" /> 删除书籍
                     </button>
                   </div>
@@ -480,7 +480,6 @@ export function LibraryBookDetailPage() {
                           <TableHead className="py-2 h-auto text-xs bg-slate-50">匹配分</TableHead>
                           <TableHead className="py-2 h-auto text-xs bg-slate-50">最新章节</TableHead>
                           <TableHead className="py-2 h-auto text-xs bg-slate-50">章节数</TableHead>
-                          <TableHead className="py-2 h-auto text-xs bg-slate-50">状态</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -490,7 +489,6 @@ export function LibraryBookDetailPage() {
                             <TableCell className="py-2 text-xs">{s.score}</TableCell>
                             <TableCell className="py-2 text-xs">{s.lastChapter || "-"}</TableCell>
                             <TableCell className="py-2 text-xs">{s.chapterCount > 0 ? `${s.chapterCount}章` : "未知"}</TableCell>
-                            <TableCell className="py-2 text-xs">{s.bookStatus || "-"}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
