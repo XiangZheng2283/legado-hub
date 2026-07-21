@@ -78,7 +78,7 @@ All paths centralized in `backend/app/config.py`:
 - Runtime data under `backend/data/`: `app.db`, `browser_profiles/`, `novels/`, `lexicons/`, `cache/`, etc.
 - Generated Legado aggregate output: `backend/generated/`
 
-Default Docker bind mounts persist these paths at repository-root `data/`, `config/`, `generated/`, `runtime/`, and `plugins/sources/thirdparty/`; official plugins are mounted read-only from `plugins/sources/official/`. A one-shot, network-disabled initializer assigns writable mount roots to the image's `legadohub` UID/GID before the non-root main service starts. Both reader and admin ports bind `0.0.0.0`; when no fixed base URL is configured, validated LAN request hosts are used to generate Reading URLs.
+Default Docker bind mounts persist these paths at repository-root `data/`, `config/`, `generated/`, `runtime/`, and `plugins/sources/thirdparty/`; official plugins are mounted read-only from `plugins/sources/official/`. A one-shot, network-disabled initializer assigns writable mount roots to the image's `legadohub` UID/GID before the non-root main service starts. Both reader and admin ports bind `0.0.0.0`; when no fixed base URL is configured, validated LAN request hosts are used to generate Reading URLs. Docker may pass one exact IP or DNS host through `LEGADOHUB_EXTERNAL_HOST`; this extends the validated request hosts without replacing LAN access or changing the bind address.
 
 Do not commit DBs, cookies, `app_config.json`, or anything under either the source runtime paths or repository-root Docker persistence directories.
 

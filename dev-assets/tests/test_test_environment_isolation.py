@@ -147,6 +147,9 @@ def test_docker_plugin_delivery_contract() -> None:
         "0.0.0.0:8766:8766",
     ]
     assert "LEGADOHUB_PUBLIC_MODE" not in compose["services"]["legadohub"]["environment"]
+    assert compose["services"]["legadohub"]["environment"]["LEGADOHUB_EXTERNAL_HOST"] == (
+        "${LEGADOHUB_EXTERNAL_HOST:-}"
+    )
     assert not (repo_root / "docker-compose.public.yml").exists()
     assert not (repo_root / "deploy/caddy/Caddyfile").exists()
     assert "LEGADOHUB_PUBLIC_BASE_URL" not in compose["services"]["legadohub"]["environment"]

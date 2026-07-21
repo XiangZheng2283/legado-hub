@@ -61,6 +61,23 @@ docker compose up -d
 docker compose ps
 ```
 
+默认无需设置变量，本机和局域网地址会自动通过 Host 校验。需要通过固定公网 IP
+或域名直接访问时，只填写主机名，不带协议、端口或路径：
+
+```bash
+LEGADOHUB_EXTERNAL_HOST=54.199.231.36 docker compose up -d
+```
+
+PowerShell：
+
+```powershell
+$env:LEGADOHUB_EXTERNAL_HOST = "54.199.231.36"
+docker compose up -d
+```
+
+该变量只额外放行指定 Host；服务仍监听 `0.0.0.0`，本机和局域网访问保持可用。
+它不会开放防火墙或提供 TLS，公网部署仍应由使用者配置 HTTPS 和管理端口访问控制。
+
 服务状态变为 `healthy` 后查看首次启动日志：
 
 ```bash

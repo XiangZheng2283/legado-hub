@@ -40,6 +40,7 @@ services:
       LEGADOHUB_BROWSER_ENABLED: "1"
       LEGADOHUB_BROWSER_DISABLE_SANDBOX: "0"
       LEGADOHUB_BROWSER_PROFILE_ROOT: /app/backend/data/browser_profiles
+      LEGADOHUB_EXTERNAL_HOST: "${LEGADOHUB_EXTERNAL_HOST:-}"
     volumes:
       - "./data:/app/backend/data:rw"
       - "./config:/app/backend/config:rw"

@@ -49,6 +49,14 @@ def _csv(name: str) -> list[str]:
     return [item.strip() for item in os.getenv(name, "").split(",") if item.strip()]
 
 
+def _normalize_host(host: str) -> str:
+    normalized = host.strip().lower().rstrip(".")
+    try:
+        return str(ipaddress.ip_address(normalized))
+    except ValueError:
+        return normalized
+
+
 def _origin(value: str, *, label: str) -> tuple[str, str]:
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
@@ -57,7 +65,7 @@ def _origin(value: str, *, label: str) -> tuple[str, str]:
         raise RuntimeError(f"{label} must not contain credentials, query, or fragment.")
     if parsed.path not in {"", "/"}:
         raise RuntimeError(f"{label} must not contain a path.")
-    host = parsed.hostname.lower()
+    host = _normalize_host(parsed.hostname)
     if not _valid_host(host):
         raise RuntimeError(f"{label} contains an invalid host name.")
     default_port = 443 if parsed.scheme == "https" else 80
@@ -84,6 +92,22 @@ def _valid_host(host: str) -> bool:
     return bool(labels) and all(_DNS_LABEL_PATTERN.fullmatch(label) for label in labels)
 
 
+def _configured_external_host() -> str:
+    host = _normalize_host(os.getenv("LEGADOHUB_EXTERNAL_HOST", ""))
+    if not host:
+        return ""
+    try:
+        unspecified = ipaddress.ip_address(host).is_unspecified
+    except ValueError:
+        unspecified = False
+    if "*" in host or not _valid_host(host) or unspecified:
+        raise RuntimeError(
+            "LEGADOHUB_EXTERNAL_HOST must be one exact IP address or host name "
+            "without scheme, port, or path."
+        )
+    return host
+
+
 def _networks(values: Iterable[str]) -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
     networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
     for value in values:
@@ -100,6 +124,7 @@ class PublicSecurityConfig:
     allowed_hosts: tuple[str, ...]
     allowed_origins: frozenset[str]
     trusted_proxies: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]
+    external_host: str = ""
     dynamic_base_url: bool = False
     require_https: bool = False
     enforce_origin: bool = False
@@ -151,6 +176,7 @@ class PublicSecurityConfig:
 
 def load_public_security_config() -> PublicSecurityConfig:
     configured_base = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip().rstrip("/")
+    external_host = "" if configured_base else _configured_external_host()
     dynamic_base_url = not configured_base
     base_url, base_host = _origin(
         configured_base or f"http://{config.HOST}:{config.PORT}",
@@ -163,7 +189,7 @@ def load_public_security_config() -> PublicSecurityConfig:
         hosts = [] if dynamic_base_url else [base_host, "localhost", "testserver"]
     normalized_hosts: list[str] = []
     for host in hosts:
-        normalized = host.strip().lower().rstrip(".")
+        normalized = _normalize_host(host)
         if not normalized or "*" in normalized or not _valid_host(normalized):
             raise RuntimeError("LEGADOHUB_ALLOWED_HOSTS must contain exact host names without wildcards.")
         normalized_hosts.append(normalized)
@@ -184,6 +210,7 @@ def load_public_security_config() -> PublicSecurityConfig:
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=trusted_proxies,
+        external_host=external_host,
         dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=require_https,
@@ -193,6 +220,7 @@ def load_public_security_config() -> PublicSecurityConfig:
 def load_admin_security_config() -> PublicSecurityConfig:
     """Load the isolated management listener's host, origin, and proxy policy."""
     configured_base = os.getenv("LEGADOHUB_ADMIN_BASE_URL", "").strip().rstrip("/")
+    external_host = "" if configured_base else _configured_external_host()
     dynamic_base_url = not configured_base
     base_url, base_host = _origin(
         configured_base or f"http://127.0.0.1:{config.ADMIN_PORT}",
@@ -205,7 +233,7 @@ def load_admin_security_config() -> PublicSecurityConfig:
         hosts = [base_host, "127.0.0.1", "localhost", "testserver"]
     normalized_hosts: list[str] = []
     for host in hosts:
-        normalized = host.strip().lower().rstrip(".")
+        normalized = _normalize_host(host)
         if not normalized or "*" in normalized or not _valid_host(normalized):
             raise RuntimeError(
                 "LEGADOHUB_ADMIN_ALLOWED_HOSTS must contain exact host names without wildcards."
@@ -234,6 +262,7 @@ def load_admin_security_config() -> PublicSecurityConfig:
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=_networks(proxy_values),
+        external_host=external_host,
         dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=True,
@@ -258,8 +287,8 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
         f"{scheme}://{request.headers.get('host', '').strip()}",
         label="Host",
     )
-    if not _is_lan_host(host):
-        raise RuntimeError("Host must be a local or private-network address.")
+    if not _is_lan_host(host) and host != security.external_host:
+        raise RuntimeError("Host must be local, private-network, or explicitly configured.")
     return origin
 
 
