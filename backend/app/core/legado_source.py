@@ -17,8 +17,8 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.4"
-_READER_RULE_LAST_UPDATE_TIME = 1_784_637_186_000
+_READER_RULE_VERSION = "0.0.5"
+_READER_RULE_LAST_UPDATE_TIME = 1_784_644_161_854
 
 
 def _login_ui() -> str:
@@ -107,20 +107,13 @@ function legadoHubHeaders() {{
 }}
 
 function legadoHubRequest(path, method, body) {{
-    var response;
-    var headers = legadoHubHeaders();
-    if (method === "GET") {{
-        response = java.get(LEGADOHUB_BASE + path, headers);
-    }} else {{
-        response = java.post(
-            LEGADOHUB_BASE + path,
-            body === undefined || body === null ? "" : JSON.stringify(body),
-            headers
-        );
-    }}
-    var text = String(response.body() || "");
-    var payload = text ? JSON.parse(text) : {{}};
-    return {{status: Number(response.code()), payload: payload}};
+    var options = {{
+        method: String(method || "GET").toUpperCase(),
+        headers: legadoHubHeaders()
+    }};
+    if (body !== undefined && body !== null) options.body = JSON.stringify(body);
+    var text = String(java.ajax(LEGADOHUB_BASE + path + "," + JSON.stringify(options)) || "").trim();
+    return text ? JSON.parse(text) : {{}};
 }}
 
 function legadoHubUsername(payload) {{
@@ -135,10 +128,9 @@ function legadoHubLogin() {{
         return false;
     }}
     try {{
-        var response = legadoHubRequest("/api/auth/access/redeem", "POST", {{accessCode: code}});
-        var payload = response.payload;
+        var payload = legadoHubRequest("/api/auth/access/redeem", "POST", {{accessCode: code}});
         var username = legadoHubUsername(payload);
-        if (response.status !== 200 || !username || !payload.token) throw new Error("invalid identity");
+        if (!username || !payload.token) throw new Error("invalid identity");
         source.putLoginHeader(JSON.stringify({{Authorization: "Bearer " + String(payload.token)}}));
         source.putLoginInfo("{{}}");
         java.toast("登录成功：" + username);
@@ -155,14 +147,7 @@ function login() {{
 
 function legadoHubStatus(showMessage) {{
     try {{
-        var response = legadoHubRequest("/api/auth/access/me", "GET", null);
-        if (response.status === 401 || response.status === 403) {{
-            source.removeLoginHeader();
-            if (showMessage) java.toast("未登录或授权已失效");
-            return false;
-        }}
-        if (response.status !== 200) throw new Error("status unavailable");
-        var payload = response.payload;
+        var payload = legadoHubRequest("/api/auth/access/me", "GET", null);
         var username = legadoHubUsername(payload);
         if (username) {{
             if (showMessage) java.toast("已登录：" + username);
@@ -212,9 +197,9 @@ function legadoHubReviewCount(item) {
     return isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
-function legadoHubReviewLabel(count) {
+function legadoHubReviewLabel(count, compact) {
     count = Math.max(0, Math.floor(Number(count) || 0));
-    return count > 99 ? "99+" : String(count);
+    return compact && count > 99 ? "99+" : String(count);
 }
 
 function legadoHubNormalizeReviewText(value) {
@@ -274,31 +259,95 @@ function legadoHubReviewImage(java, svg, options) {
     return '<img src="data:image/svg+xml;base64,' + encoded + ',' + JSON.stringify(options) + '">';
 }
 
-function legadoHubParagraphReviewBubble(java, reviewUrl, count) {
-    var label = legadoHubReviewLabel(count);
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="58" height="34" viewBox="0 0 58 34">'
-        + '<path d="M8 4h42a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H24l-7 5 2-5H8a6 6 0 0 1-6-6V10a6 6 0 0 1 6-6Z" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.5"/>'
-        + '<circle cx="17" cy="16" r="2" fill="#0369a1"/><circle cx="24" cy="16" r="2" fill="#0369a1"/>'
-        + '<text x="31" y="20" fill="#075985" font-size="12" font-family="sans-serif" font-weight="700">' + label + '</text></svg>';
+function legadoHubMapValue(config, key) {
+    if (!config) return null;
+    try {
+        var direct = config[key];
+        if (direct !== null && direct !== undefined) return direct;
+    } catch (e) {}
+    try {
+        var mapped = config.get(key);
+        if (mapped !== null && mapped !== undefined) return mapped;
+    } catch (e) {}
+    return null;
+}
+
+function legadoHubSvgColor(value, fallback) {
+    var color = String(value || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
+}
+
+function legadoHubReviewTheme(java) {
+    var mode = "";
+    var themeConfig = null;
+    var readConfig = null;
+    try { mode = String(java.getThemeMode() || ""); } catch (e) {}
+    try { themeConfig = java.getThemeConfigMap(); } catch (e) {}
+    try { readConfig = java.getReadBookConfigMap(); } catch (e) {}
+    var isEInk = mode === "3";
+    var themeNight = String(legadoHubMapValue(themeConfig, "isNightTheme") || "").toLowerCase() === "true";
+    var isNight = !isEInk && (mode === "2" || themeNight);
+    var textKey = isEInk ? "textColorEInk" : (isNight ? "textColorNight" : "textColor");
+    return {
+        text: legadoHubSvgColor(
+            legadoHubMapValue(readConfig, textKey),
+            isNight ? "#b8b8b8" : "#4b5563"
+        )
+    };
+}
+
+function legadoHubPageHotReviewEntry(java, reviewUrl, count) {
+    var label = legadoHubReviewLabel(count, true);
+    var colors = legadoHubReviewTheme(java);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="280" height="72" viewBox="0 0 280 72">'
+        + '<rect x="2" y="4" width="276" height="64" rx="12" fill="' + colors.text + '" fill-opacity="0.10" stroke="' + colors.text + '" stroke-opacity="0.18" stroke-width="2"/>'
+        + '<text x="140" y="46" text-anchor="middle" fill="' + colors.text + '" fill-opacity="0.72" font-size="27" font-family="sans-serif" font-weight="500">热评 ' + label + '</text></svg>';
     return legadoHubReviewImage(java, svg, {
-        style: "TEXT",
+        style: "RIGHT",
+        width: "28%",
         click: "legadoHubOpenReviews(java, " + JSON.stringify(reviewUrl) + ")"
     });
 }
 
 function legadoHubChapterReviewEntry(java, reviewUrl, totalCount) {
-    var label = legadoHubReviewLabel(totalCount);
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="92" viewBox="0 0 720 92">'
-        + '<rect x="2" y="2" width="716" height="88" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>'
-        + '<circle cx="48" cy="46" r="24" fill="#e0f2fe"/><path d="M36 35h24a7 7 0 0 1 7 7v8a7 7 0 0 1-7 7H48l-8 6 2-6h-6a7 7 0 0 1-7-7v-8a7 7 0 0 1 7-7Z" fill="none" stroke="#0369a1" stroke-width="3"/>'
-        + '<text x="88" y="43" fill="#0f172a" font-size="22" font-family="sans-serif" font-weight="700">本章说</text>'
-        + '<text x="88" y="67" fill="#64748b" font-size="16" font-family="sans-serif">共 ' + label + ' 条评论</text>'
-        + '<path d="m674 37 10 9-10 9" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var label = legadoHubReviewLabel(totalCount, false);
+    var colors = legadoHubReviewTheme(java);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="94" viewBox="0 0 720 94">'
+        + '<rect x="2" y="2" width="716" height="90" rx="16" fill="' + colors.text + '" fill-opacity="0.08" stroke="' + colors.text + '" stroke-opacity="0.12" stroke-width="2"/>'
+        + '<text x="38" y="59" fill="' + colors.text + '" fill-opacity="0.76" font-size="28" font-family="sans-serif" font-weight="500">本章说</text>'
+        + '<text x="642" y="59" text-anchor="end" fill="' + colors.text + '" fill-opacity="0.58" font-size="24" font-family="sans-serif">' + label + ' 条评论</text>'
+        + '<path d="m675 39 12 8-12 8" fill="none" stroke="' + colors.text + '" stroke-opacity="0.52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     return legadoHubReviewImage(java, svg, {
-        style: "single",
+        style: "FULL",
         width: "100%",
         click: "legadoHubOpenReviews(java, " + JSON.stringify(reviewUrl) + ")"
     });
+}
+
+function legadoHubReviewPageBudget(java) {
+    var textSize = 20;
+    try {
+        var config = java.getReadBookConfigMap();
+        var configured = Number(legadoHubMapValue(config, "textSize"));
+        if (isFinite(configured) && configured > 0) textSize = configured;
+    } catch (e) {}
+    return Math.max(520, Math.min(1200, Math.round(900 * 20 / textSize)));
+}
+
+function legadoHubPageHotCount(items) {
+    return items.reduce(function (sum, item) {
+        return sum + legadoHubReviewCount(item);
+    }, 0);
+}
+
+function legadoHubEstimatedPageStart(paragraphOffsets, pageBudget, pageIndex, fallbackIndex) {
+    var target = Math.max(0, Math.floor(Number(fallbackIndex) || 0));
+    while (target > 0) {
+        var previousPage = Math.floor((paragraphOffsets[target - 1] || 0) / pageBudget);
+        if (previousPage !== pageIndex) break;
+        target -= 1;
+    }
+    return target;
 }
 
 function legadoHubTotalReviewCount(reviews) {
@@ -326,7 +375,14 @@ function legadoHubDecorateReviews(java, text, reviews, contentUrl) {
             lineIndexes.push(lineIndex);
         }
     });
-    var bubbles = {};
+    var paragraphOffsets = [];
+    var offset = 0;
+    paragraphs.forEach(function (paragraph) {
+        paragraphOffsets.push(offset);
+        offset += Math.max(1, legadoHubNormalizeReviewText(paragraph).length) + 8;
+    });
+    var pageBudget = legadoHubReviewPageBudget(java);
+    var pageGroups = {};
     (reviews.hotParagraphReviews || []).forEach(function (item) {
         if (!item || typeof item !== "object") return;
         var paragraphId = Number(item.paragraphId);
@@ -338,16 +394,31 @@ function legadoHubDecorateReviews(java, text, reviews, contentUrl) {
         }
         if (start < 0) return;
         var span = Math.max(1, Math.floor(Number(item.matchedParagraphCount) || 1));
-        var target = Math.min(paragraphs.length - 1, start + span - 1);
-        var viewUrl = legadoHubReviewRoot(contentUrl) + "/reviews/view?tab=paragraph&paragraphId=" + encodeURIComponent(String(Math.floor(paragraphId)));
-        var bubble = legadoHubParagraphReviewBubble(java, viewUrl, count);
-        if (!bubble) return;
-        if (!bubbles[target]) bubbles[target] = [];
-        bubbles[target].push(bubble);
+        var last = Math.min(paragraphs.length - 1, start + span - 1);
+        var itemPages = {};
+        for (var paragraphIndex = start; paragraphIndex <= last; paragraphIndex += 1) {
+            var pageIndex = Math.floor((paragraphOffsets[paragraphIndex] || 0) / pageBudget);
+            if (itemPages[pageIndex]) continue;
+            itemPages[pageIndex] = true;
+            if (!pageGroups[pageIndex]) {
+                pageGroups[pageIndex] = {items: [], paragraphIds: [], target: paragraphIndex};
+            }
+            var group = pageGroups[pageIndex];
+            group.items.push(item);
+            if (group.paragraphIds.indexOf(Math.floor(paragraphId)) < 0) {
+                group.paragraphIds.push(Math.floor(paragraphId));
+            }
+            group.target = Math.min(group.target, paragraphIndex);
+        }
     });
-    Object.keys(bubbles).forEach(function (paragraphIndex) {
-        var lineIndex = lineIndexes[Number(paragraphIndex)];
-        if (lineIndex !== undefined) lines[lineIndex] += bubbles[paragraphIndex].join("");
+    Object.keys(pageGroups).sort(function (left, right) { return Number(left) - Number(right); }).forEach(function (key) {
+        var group = pageGroups[key];
+        var viewUrl = legadoHubReviewRoot(contentUrl) + "/reviews/view?tab=paragraph&paragraphIds="
+            + encodeURIComponent(group.paragraphIds.join(","));
+        var entry = legadoHubPageHotReviewEntry(java, viewUrl, legadoHubPageHotCount(group.items));
+        var pageStart = legadoHubEstimatedPageStart(paragraphOffsets, pageBudget, Number(key), group.target);
+        var lineIndex = lineIndexes[pageStart];
+        if (entry && lineIndex !== undefined) lines[lineIndex] = entry + "\n" + lines[lineIndex];
     });
     var total = legadoHubTotalReviewCount(reviews);
     if (total > 0) {

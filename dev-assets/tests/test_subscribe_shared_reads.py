@@ -156,9 +156,10 @@ def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_
 
     source = legado_source.generate_legado_source("http://testserver")[0]
 
-    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.4)"
+    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.5)"
     assert source["bookSourceUrl"] == "LegadoHub"
-    assert source["lastUpdateTime"] == 1_784_637_186_000
+    assert source["lastUpdateTime"] == 1_784_644_161_854
+    assert source["lastUpdateTime"] > 1_784_637_186_000
 
 
 @pytest.mark.parametrize("page", [True, "invalid", 1.5, 0, -1, 1001])
@@ -732,6 +733,9 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "info.containsKey(name)" in source["loginUrl"]
     assert "function login()" in source["loginUrl"]
     assert "source.putLoginInfo(\"{}\")" in source["loginUrl"]
+    assert "java.ajax(LEGADOHUB_BASE + path" in source["loginUrl"]
+    assert "response.body()" not in source["loginUrl"]
+    assert "response.code()" not in source["loginUrl"]
     assert "java.log" not in source["loginUrl"]
     assert "data:contentUrl;base64" in source["ruleToc"]["chapterUrl"]
     assert "type: 'legadoHub'" in source["ruleToc"]["chapterUrl"]
@@ -741,7 +745,29 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert 'legadoHubReviewRoot(contentUrl) + "/reviews"' in source["ruleContent"]["content"]
     assert "hotParagraphReviews" in source["jsLib"]
     assert "matchedParagraphIndex" in source["jsLib"]
-    assert 'style: "TEXT"' in source["jsLib"]
+    assert "legadoHubPageHotReviewEntry" in source["jsLib"]
+    assert "legadoHubReviewPageBudget" in source["jsLib"]
+    assert "legadoHubEstimatedPageStart" in source["jsLib"]
+    assert "matchedParagraphCount" in source["jsLib"]
+    assert "itemPages[pageIndex]" in source["jsLib"]
+    assert "legadoHubReviewTheme" in source["jsLib"]
+    assert "java.getThemeMode()" in source["jsLib"]
+    assert "java.getThemeConfigMap()" in source["jsLib"]
+    assert "java.getReadBookConfigMap()" in source["jsLib"]
+    assert '"textColorNight"' in source["jsLib"]
+    assert '"textColorEInk"' in source["jsLib"]
+    assert "sum + legadoHubReviewCount(item)" in source["jsLib"]
+    assert "legadoHubReviewLabel(count, true)" in source["jsLib"]
+    assert "legadoHubReviewLabel(totalCount, false)" in source["jsLib"]
+    assert 'fill-opacity="0.10"' in source["jsLib"]
+    assert '>热评 ' in source["jsLib"]
+    assert 'style: "RIGHT"' in source["jsLib"]
+    assert 'width: "28%"' in source["jsLib"]
+    assert "paragraphIds=" in source["jsLib"]
+    assert "paragraphId=" not in source["jsLib"]
+    assert "legadoHubParagraphReviewBubble" not in source["jsLib"]
+    assert 'lines[lineIndex] = entry + "\\n" + lines[lineIndex]' in source["jsLib"]
+    assert 'style: "FULL"' in source["jsLib"]
     assert 'click: "legadoHubOpenReviews' in source["jsLib"]
     assert "java.showBrowser" in source["jsLib"]
     assert 'headers.set("Authorization", value)' in source["jsLib"]
