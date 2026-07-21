@@ -189,6 +189,73 @@ def test_two_users_keep_independent_subscription_settings(tmp_path: Path) -> Non
     assert audit_actions == ["subscription.create", "subscription.update"]
 
 
+def test_deleting_access_user_removes_private_state_and_keeps_shared_book(tmp_path: Path) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    auth = UserAuthService(db)
+    admin = auth.create_user("admin", "password-admin", role="admin")
+    reader = auth.create_user("reader", "password-reader")
+    other_reader = auth.create_user("other-reader", "password-other")
+    reader_id = reader["userId"]
+    reader_user = auth.get_user(reader_id)
+    assert reader_user is not None
+    reader_session = auth.create_session(reader_user)
+    assert reader_session
+    _insert_book(db)
+    UserSubscriptionsService(db).ensure(reader_id, "book-1")
+    UserSubscriptionsService(db).ensure(other_reader["userId"], "book-1")
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            "UPDATE aggregate_book_tasks SET added_by_user_id = ? WHERE aggregate_book_id = 'book-1'",
+            (reader_id,),
+        )
+        conn.execute(
+            """
+            INSERT INTO subscription_search_jobs (
+                job_id, owner_user_id, keyword, page, status,
+                payload_json, created_at, updated_at
+            ) VALUES ('reader-search', ?, 'Book', 1, 'completed', '{}', 1.0, 1.0)
+            """,
+            (reader_id,),
+        )
+        conn.commit()
+
+    deleted = auth.delete_user(
+        reader_id,
+        actor_user_id=admin["userId"],
+    )
+
+    assert deleted == {
+        "userId": reader_id,
+        "deleted": True,
+        "revokedSessions": 1,
+        "deletedSubscriptions": 1,
+        "deletedSearchJobs": 1,
+    }
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT 1 FROM users WHERE user_id = ?", (reader_id,)).fetchone() is None
+        assert conn.execute(
+            "SELECT 1 FROM user_sessions WHERE user_id = ?", (reader_id,)
+        ).fetchone() is None
+        assert conn.execute(
+            "SELECT 1 FROM user_book_subscriptions WHERE user_id = ?", (reader_id,)
+        ).fetchone() is None
+        assert conn.execute(
+            "SELECT aggregate_book_id FROM user_book_subscriptions WHERE user_id = ?",
+            (other_reader["userId"],),
+        ).fetchone() == ("book-1",)
+        assert conn.execute(
+            "SELECT 1 FROM subscription_search_jobs WHERE owner_user_id = ?", (reader_id,)
+        ).fetchone() is None
+        assert conn.execute(
+            "SELECT added_by_user_id FROM aggregate_book_tasks WHERE aggregate_book_id = 'book-1'"
+        ).fetchone() == (reader_id,)
+        assert conn.execute(
+            "SELECT action FROM audit_events WHERE target_id = ? AND action = 'user.delete'",
+            (reader_id,),
+        ).fetchone() == ("user.delete",)
+
+
 def test_completed_book_archives_only_opted_in_users_and_records_audit(tmp_path: Path) -> None:
     db = tmp_path / "app.db"
     initialize_database(db)

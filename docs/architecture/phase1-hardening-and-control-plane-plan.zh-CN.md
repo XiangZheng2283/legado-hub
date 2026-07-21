@@ -27,7 +27,7 @@
 1. Reading/Legado 负责阅读位置、翻页、字体、主题和阅读体验。
 2. 普通用户只能调整 `status`、`startChapterIndex` 和 `autoArchiveOnComplete`。
 3. 管理员才可调整全局配额、`updateIntervalMinutes` 和 `backlogChapterLimit`。
-4. Reading 数据面只读 `visible` 已发布共享内容，不隐式订阅、入队或维护。
+4. Reading 数据面可读取 `visible` 已发布共享内容和启用的第三方插件结果；官方、禁用、未知或跨声明域名的插件 ID 不开放。读取不得隐式订阅、创建聚合任务、入队或维护。
 5. APP 章节正文链固定为普通 App 正文、VIP 正文、付费预览，不回退 Web。
 6. 插件运行时不得读取或写入插件目录、用户目录或其他进程外 Cookie 文件。
 7. 当前真实用户、Session、宿主 Cookie 和配置必须保留。

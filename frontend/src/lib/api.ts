@@ -363,6 +363,13 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ disabled }),
       }),
+    deleteUser: (userId: string): Promise<{
+      userId: string
+      deleted: boolean
+      revokedSessions: number
+      deletedSubscriptions: number
+      deletedSearchJobs: number
+    }> => fetchJson(`/users/${userId}`, { method: "DELETE" }),
   },
 
   // Subscription discovery (shared library)

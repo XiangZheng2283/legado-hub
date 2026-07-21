@@ -3259,6 +3259,15 @@ def disable_user(request: Request, user_id: str, payload: dict | None = None):
     )
 
 
+@console_route("delete", "/users/{user_id}")
+def delete_user(request: Request, user_id: str):
+    admin = auth_service.require_admin(request)
+    return auth_service.delete_user(
+        user_id,
+        actor_user_id=admin.user_id,
+    )
+
+
 # ---- Progress ----
 
 @console_route("get", "/progress")

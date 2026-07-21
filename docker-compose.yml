@@ -1,19 +1,14 @@
-x-legadohub-image: &legadohub-image
-  image: xzixmn/legado-hub:latest
-  pull_policy: always
-
 services:
   legadohub-init:
-    <<: *legadohub-image
-    restart: "no"
+    image: xzixmn/legado-hub:latest
     user: "0:0"
     command: ["--initialize-runtime", "/app/plugins/sources/thirdparty"]
     volumes:
-      - "./data:/app/backend/data:rw"
-      - "./config:/app/backend/config:rw"
-      - "./generated:/app/backend/generated:rw"
-      - "./runtime:/app/backend/runtime:rw"
-      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty:rw"
+      - "./data:/app/backend/data"
+      - "./config:/app/backend/config"
+      - "./generated:/app/backend/generated"
+      - "./runtime:/app/backend/runtime"
+      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty"
     network_mode: none
     read_only: true
     security_opt:
@@ -25,28 +20,23 @@ services:
       - DAC_OVERRIDE
 
   legadohub:
-    <<: *legadohub-image
-    container_name: legadohub
+    image: xzixmn/legado-hub:latest
     restart: unless-stopped
     init: true
     depends_on:
       legadohub-init:
         condition: service_completed_successfully
     ports:
-      - "0.0.0.0:8765:8765"
-      - "0.0.0.0:8766:8766"
+      - "8765:8765"
+      - "8766:8766"
     environment:
-      LEGADOHUB_BROWSER_PROVIDER: chromium
-      LEGADOHUB_BROWSER_ENABLED: "1"
-      LEGADOHUB_BROWSER_DISABLE_SANDBOX: "0"
-      LEGADOHUB_BROWSER_PROFILE_ROOT: /app/backend/data/browser_profiles
       LEGADOHUB_EXTERNAL_HOST: "${LEGADOHUB_EXTERNAL_HOST:-}"
     volumes:
-      - "./data:/app/backend/data:rw"
-      - "./config:/app/backend/config:rw"
-      - "./generated:/app/backend/generated:rw"
-      - "./runtime:/app/backend/runtime:rw"
-      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty:rw"
+      - "./data:/app/backend/data"
+      - "./config:/app/backend/config"
+      - "./generated:/app/backend/generated"
+      - "./runtime:/app/backend/runtime"
+      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty"
       - "./plugins/sources/official:/app/plugins/sources/official:ro"
     tmpfs:
       - /tmp:size=512m,mode=1777
@@ -69,8 +59,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    networks:
-      - legadohub_internal
-
-networks:
-  legadohub_internal: {}

@@ -56,6 +56,23 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr("app.api.subscribe.user_subscriptions_service", subscription_service)
     monkeypatch.setattr("app.services.library_books.library_books_service", service)
 
+    class EmptyReadingScheduler:
+        @staticmethod
+        def _enabled_plugins():
+            return []
+
+        @staticmethod
+        def _search_priority_plugins(plugins):
+            return plugins
+
+    class EmptyReadingSearchService:
+        scheduler = EmptyReadingScheduler()
+
+    monkeypatch.setattr(
+        "app.api.subscribe._get_legado_search_service",
+        lambda: EmptyReadingSearchService(),
+    )
+
     tc = TestClient(app)
     login = tc.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
     if login.status_code != 200:
@@ -85,7 +102,13 @@ def test_legado_manifest_is_anonymous_but_reading_requires_valid_bearer(client):
         "/api/legado/chapter/not-a-chapter-id/reviews/view",
     ]
     for path in protected_paths:
-        assert anonymous.get(path).status_code == 401
+        response = anonymous.get(path)
+        assert response.status_code == 401
+        assert response.json() == {"detail": "当前未登陆，请登陆后使用。"}
+
+    console_response = anonymous.get("/api/console/chapter/invalid")
+    assert console_response.status_code == 401
+    assert console_response.json() == {"detail": "请先登录"}
 
     assert client.get(
         "/api/subscribe/legado/search?keyword=test",
@@ -122,14 +145,20 @@ def test_legado_manifest_is_anonymous_but_reading_requires_valid_bearer(client):
     assert after_last_seen == before_last_seen
 
 
-def test_legado_source_default_version_tracks_reader_rule_revision(monkeypatch):
+def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_marker(monkeypatch):
     import app.core.legado_source as legado_source
 
-    monkeypatch.setattr(legado_source, "load_aggregate_config", lambda: {})
+    monkeypatch.setattr(
+        legado_source,
+        "load_aggregate_config",
+        lambda: {"version": "0.0.1"},
+    )
 
     source = legado_source.generate_legado_source("http://testserver")[0]
 
-    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.2)"
+    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.4)"
+    assert source["bookSourceUrl"] == "LegadoHub"
+    assert source["lastUpdateTime"] == 1_784_637_186_000
 
 
 @pytest.mark.parametrize("page", [True, "invalid", 1.5, 0, -1, 1001])
@@ -457,6 +486,150 @@ def test_legado_published_search_pages_in_database_without_metadata_reads(
     assert first_ids.isdisjoint(second_ids)
 
 
+def test_legado_search_preserves_coordinator_order_without_private_fields(
+    client, monkeypatch
+):
+    import sqlite3
+
+    import app.api.subscribe as subscribe_api
+    from app.source_plugins.id_codec import encode_book_id
+
+    service = subscribe_api.library_books_service
+    published_id = "book-merged-search"
+    _insert_book(
+        service.db_path,
+        published_id,
+        "合并搜索测试书",
+        "聚合作者",
+        published=True,
+        chapter_count=1,
+        visible_chapter_count=1,
+    )
+
+    class Metadata:
+        id = "fixture_thirdparty"
+        name = "Fixture Third Party"
+        enabled = True
+
+        @staticmethod
+        def is_official_source():
+            return False
+
+    class Plugin:
+        metadata = Metadata()
+        capabilities = ["search", "detail", "toc", "chapter"]
+
+    class Scheduler:
+        @staticmethod
+        def _enabled_plugins():
+            return [Plugin()]
+
+        @staticmethod
+        def _search_priority_plugins(plugins):
+            return plugins
+
+    class Job:
+        job_id = "reader-job"
+
+    class Session:
+        status = "completed"
+
+    class SearchService:
+        scheduler = Scheduler()
+
+        @staticmethod
+        def create_job(*, keyword, page, source_ids, search_mode):
+            assert keyword == "合并搜索测试书"
+            assert page == 1
+            assert source_ids == ["fixture_thirdparty"]
+            assert search_mode == "source"
+            return Job()
+
+        @staticmethod
+        def get_session(job_id):
+            assert job_id == "reader-job"
+            return Session()
+
+        @staticmethod
+        def session_snapshot(job_id, *, base_api, include_official_sources):
+            assert job_id == "reader-job"
+            assert include_official_sources is False
+            published_book = service.page_published_books(
+                keyword="合并搜索测试书",
+                page=1,
+                page_size=20,
+            )["items"][0]
+            aggregate_item = service.build_search_injected_item(
+                published_book,
+                base_api=base_api,
+            )
+            aggregate_item["score"] = 200
+            third_party_book_id = encode_book_id(
+                "fixture_thirdparty",
+                "https://example.com/book/merged",
+            )
+            official_book_id = encode_book_id(
+                "qidian_com_app",
+                "https://m.qidian.com/book/1",
+            )
+            return {
+                "jobId": job_id,
+                "keyword": "合并搜索测试书",
+                "page": 1,
+                "status": "completed",
+                "liveSearchPending": False,
+                "items": [
+                    {
+                        "sourceId": "fixture_thirdparty",
+                        "sourceName": "Fixture Third Party",
+                        "name": "合并搜索测试书",
+                        "author": "第三方作者",
+                        "lastChapter": "第三章",
+                        "bookId": third_party_book_id,
+                        "bookUrl": "https://example.com/book/merged",
+                        "rawBookUrl": "https://example.com/book/merged",
+                        "score": 250,
+                        "debug": {"cookie": "must-not-leak"},
+                        "path": "must-not-leak",
+                    },
+                    aggregate_item,
+                    {
+                        "sourceId": "qidian_com_app",
+                        "sourceName": "Official",
+                        "name": "不应出现",
+                        "bookId": official_book_id,
+                    },
+                ],
+            }
+
+    monkeypatch.setattr(subscribe_api, "_get_legado_search_service", lambda: SearchService())
+    monkeypatch.setattr(subscribe_api, "_legado_search_owners", {})
+    with sqlite3.connect(service.db_path) as conn:
+        before_aggregate = conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone()[0]
+        before_subscriptions = conn.execute("SELECT COUNT(*) FROM user_book_subscriptions").fetchone()[0]
+
+    response = client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "合并搜索测试书", "waitMs": 0},
+    )
+
+    assert response.status_code == 200
+    items = response.json()["items"]
+    assert [item["sourceId"] for item in items] == [
+        "fixture_thirdparty",
+        "legadohub_ai_aggregate",
+    ]
+    assert items[0]["readingLastChapter"] == "Fixture Third Party · 第三章"
+    assert items[0]["bookUrl"].startswith("http://testserver/api/legado/book/")
+    assert "rawBookUrl" not in items[0]
+    assert "debug" not in items[0]
+    assert "path" not in items[0]
+    assert items[1]["aggregateBookId"] == published_id
+    with sqlite3.connect(service.db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone()[0] == before_aggregate
+        assert conn.execute("SELECT COUNT(*) FROM user_book_subscriptions").fetchone()[0] == before_subscriptions
+
+
 def test_legado_reads_only_published_shared_content_without_db_side_effects(
     client, tmp_path, monkeypatch
 ):
@@ -531,6 +704,14 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
                     int(index == 4),
                 ),
             )
+        conn.execute(
+            """
+            UPDATE aggregate_chapter_tasks
+            SET last_processed_at = '2026-07-21T03:28:03.696059+00:00'
+            WHERE aggregate_book_id = ? AND chapter_index = 1
+            """,
+            (published_id,),
+        )
         conn.commit()
 
     source = generate_legado_source("http://testserver")[0]
@@ -545,15 +726,31 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "/api/auth/access/me" in source["loginUrl"]
     assert "/api/auth/access/logout" in source["loginUrl"]
     assert 'typeof result !== "undefined"' in source["loginUrl"]
+    assert source["loginUrl"].index("var mapped = info.get(name)") < source["loginUrl"].index("info.containsKey(name)")
+    assert source["loginUrl"].index("var direct = info[name]") < source["loginUrl"].index("info.containsKey(name)")
+    assert "typeof info.get" not in source["loginUrl"]
     assert "info.containsKey(name)" in source["loginUrl"]
     assert "function login()" in source["loginUrl"]
     assert "source.putLoginInfo(\"{}\")" in source["loginUrl"]
     assert "java.log" not in source["loginUrl"]
     assert "data:contentUrl;base64" in source["ruleToc"]["chapterUrl"]
-    assert "type: 'qingci'" in source["ruleToc"]["chapterUrl"]
-    assert "/reviews/view" in source["ruleToc"]["chapterUrl"]
+    assert "type: 'legadoHub'" in source["ruleToc"]["chapterUrl"]
+    assert "qingci" not in source["ruleToc"]["chapterUrl"].lower()
     assert "java.hexDecodeToString(payload)" in source["ruleContent"]["content"]
     assert "java.ajax(contentUrl)" in source["ruleContent"]["content"]
+    assert 'legadoHubReviewRoot(contentUrl) + "/reviews"' in source["ruleContent"]["content"]
+    assert "hotParagraphReviews" in source["jsLib"]
+    assert "matchedParagraphIndex" in source["jsLib"]
+    assert 'style: "TEXT"' in source["jsLib"]
+    assert 'click: "legadoHubOpenReviews' in source["jsLib"]
+    assert "java.showBrowser" in source["jsLib"]
+    assert 'headers.set("Authorization", value)' in source["jsLib"]
+    assert "requestUrl.origin === location.origin" in source["jsLib"]
+    assert 'requestUrl.pathname.indexOf("/api/legado/chapter/") === 0' in source["jsLib"]
+    assert 'headers.delete("Authorization")' in source["jsLib"]
+    assert "legadohub_session" not in source["jsLib"]
+    assert "heightPercentage: 0.78" in source["jsLib"]
+    assert "ruleReview" not in source
     assert "LH1." not in json.dumps(source, ensure_ascii=False)
 
     search = client.get("/api/subscribe/legado/search", params={"keyword": "阅读契约测试书"})
@@ -608,6 +805,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert chapters[0]["isVip"] is False
     assert chapters[0]["isPay"] is False
     assert chapters[0]["previewOnly"] is False
+    assert chapters[0]["updateTime"] == "2026-07-21 03:28"
     assert chapters[-1]["isVip"] is True
     assert chapters[-1]["isPay"] is False
     assert chapters[-1]["previewOnly"] is True

@@ -8,6 +8,7 @@ import {
   LogOut,
   Plus,
   RefreshCw,
+  Trash2,
   UserCheck,
   Users,
   UserX,
@@ -69,6 +70,14 @@ export function UsersPage() {
     onSuccess: async (result, variables) => {
       const target = usersQuery.data?.items.find((item) => item.userId === variables.userId)
       setActionNotice(`已撤销 ${target?.username || "用户"} 的 ${result.revokedSessions} 个登录会话。`)
+      await refreshUsers()
+    },
+  })
+  const deleteMutation = useMutation({
+    mutationFn: ({ userId }: { userId: string }) => api.users.deleteUser(userId),
+    onSuccess: async (_result, variables) => {
+      const target = usersQuery.data?.items.find((item) => item.userId === variables.userId)
+      setActionNotice(`已删除普通用户 ${target?.username || "用户"}。`)
       await refreshUsers()
     },
   })
@@ -148,7 +157,7 @@ export function UsersPage() {
   const users = usersQuery.data?.items || []
   const enabledCount = users.filter((item) => !item.disabled).length
   const adminCount = users.filter((item) => item.role === "admin" && !item.disabled).length
-  const pageError = usersQuery.error || statusMutation.error || revokeMutation.error
+  const pageError = usersQuery.error || statusMutation.error || revokeMutation.error || deleteMutation.error
 
   return (
     <div className="space-y-6">
@@ -195,6 +204,7 @@ export function UsersPage() {
                   const isCurrentUser = item.userId === currentUser?.userId
                   const statusPending = statusMutation.isPending && statusMutation.variables?.userId === item.userId
                   const revokePending = revokeMutation.isPending && revokeMutation.variables?.userId === item.userId
+                  const deletePending = deleteMutation.isPending && deleteMutation.variables?.userId === item.userId
                   const resetLabel = item.role === "user" ? `重置 ${item.username} 的授权码` : `重置 ${item.username} 的密码`
                   return (
                     <TableRow key={item.userId} className={item.disabled ? "bg-slate-50/60 text-slate-500" : ""}>
@@ -204,21 +214,38 @@ export function UsersPage() {
                       <TableCell className="whitespace-nowrap text-slate-500">{formatDate(item.createdAt)}</TableCell>
                       <TableCell className="whitespace-nowrap text-slate-500">{formatDate(item.updatedAt)}</TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
-                          {!isCurrentUser && <Button variant="outline" size="icon" aria-label={resetLabel} title={resetLabel} onClick={() => { setResetPassword(""); setResetError(""); setResetTarget(item) }}><KeyRound className="h-4 w-4" /></Button>}
+                        <div className="flex justify-end gap-1">
+                          {!isCurrentUser && <Button variant="outline" size="icon" aria-label={resetLabel} title={resetLabel} disabled={deletePending} onClick={() => { setResetPassword(""); setResetError(""); setResetTarget(item) }}><KeyRound className="h-4 w-4" /></Button>}
                           <Button
                             variant="outline" size="icon" aria-label={`撤销 ${item.username} 的登录会话`} title={isCurrentUser ? "当前会话请使用退出登录" : "撤销全部登录会话"}
-                            disabled={isCurrentUser || revokePending}
+                            disabled={isCurrentUser || revokePending || deletePending}
                             onClick={() => { if (window.confirm(`确定撤销“${item.username}”的全部登录会话吗？`)) revokeMutation.mutate({ userId: item.userId }) }}
                           >{revokePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}</Button>
                           <Button
-                            variant="outline" size="sm" disabled={isCurrentUser || statusPending}
-                            title={isCurrentUser ? "不能禁用当前账户" : undefined}
+                            variant="outline" size="icon" disabled={isCurrentUser || statusPending || deletePending}
+                            aria-label={item.disabled ? "启用" : "禁用"}
+                            title={isCurrentUser ? "不能禁用当前账户" : item.disabled ? "启用账户" : "禁用账户"}
                             onClick={() => { const disabled = !item.disabled; if (!disabled || window.confirm(`确定禁用用户“${item.username}”吗？`)) statusMutation.mutate({ userId: item.userId, disabled }) }}
                           >
-                            {statusPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : item.disabled ? <UserCheck className="mr-2 h-4 w-4" /> : <UserX className="mr-2 h-4 w-4" />}
-                            {item.disabled ? "启用" : "禁用"}
+                            {statusPending ? <Loader2 className="h-4 w-4 animate-spin" /> : item.disabled ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
                           </Button>
+                          {item.role === "user" && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                              aria-label={`删除 ${item.username}`}
+                              title="删除普通用户"
+                              disabled={deletePending}
+                              onClick={() => {
+                                if (window.confirm(`确定删除普通用户“${item.username}”吗？其登录会话和个人订阅将一并删除，此操作无法撤销。`)) {
+                                  deleteMutation.mutate({ userId: item.userId })
+                                }
+                              }}
+                            >
+                              {deletePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

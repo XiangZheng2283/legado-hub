@@ -46,6 +46,7 @@ There is no command-order contract beyond: build frontend before running the ser
 - For a large task, split the work into explicit phases and run the phase-relevant tests once at the end of each phase.
 - Focused syntax checks or a single regression test are allowed while diagnosing a concrete failure; they do not replace the phase gate.
 - Before any commit, push, release, or claim that implementation is ready to commit, run the canonical full verification once with `verify.ps1`.
+- Docker, Compose, image, or deployment changes must also be accepted on the SSH host `本地测试` by default; preserve its bind-mounted runtime data and use an isolated temporary container for destructive smoke checks. A missing local Docker CLI is not a reason to skip this gate.
 - Never claim a phase or task passed without reporting the actual commands and results from its scheduled validation gate.
 
 ## Tests are split between repo and local-only `dev-assets/`

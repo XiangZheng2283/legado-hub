@@ -256,6 +256,22 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
         "user.disable",
     }.issubset(actions)
 
+    assert user_client.delete(
+        f"/api/console/users/{created['userId']}"
+    ).status_code == 403
+    deleted = admin_client.delete(f"/api/console/users/{created['userId']}")
+    assert deleted.status_code == 200
+    assert deleted.json()["deleted"] is True
+    assert all(
+        item["userId"] != created["userId"]
+        for item in admin_client.get("/api/console/users").json()["items"]
+    )
+    assert "user.delete" in {
+        event["action"]
+        for event in audit_service.list_events(limit=1000)
+        if event["targetId"] == created["userId"]
+    }
+
 
 def test_user_management_prevents_self_and_last_admin_disable(admin_client, tmp_path):
     from app.services.user_auth import UserAuthService
@@ -275,12 +291,24 @@ def test_user_management_prevents_self_and_last_admin_disable(admin_client, tmp_
     assert self_disable.status_code == 409
     assert "当前登录" in self_disable.json()["detail"]
 
+    self_delete = admin_client.delete(
+        f"/api/console/users/{current_admin['userId']}"
+    )
+    assert self_delete.status_code == 409
+    assert "管理员账户" in self_delete.json()["detail"]
+    assert admin_client.delete("/api/console/users/missing-user").status_code == 404
+
     auth = UserAuthService(tmp_path / "last-admin.db")
     only_admin = auth.bootstrap_admin("only-admin", "password-123")
     with pytest.raises(HTTPException) as captured:
         auth.set_disabled(only_admin["userId"], True, actor_user_id="different-admin")
     assert captured.value.status_code == 409
     assert "至少一个" in captured.value.detail
+    other_admin = auth.create_user("other-admin", "password-456", role="admin")
+    with pytest.raises(HTTPException) as captured_delete:
+        auth.delete_user(only_admin["userId"], actor_user_id=other_admin["userId"])
+    assert captured_delete.value.status_code == 409
+    assert "管理员账户" in captured_delete.value.detail
 
 
 def test_library_book_processing_settings_are_admin_only_and_persist(admin_client, user_client):

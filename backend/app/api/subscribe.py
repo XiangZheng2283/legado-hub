@@ -28,9 +28,10 @@ from app.services.user_subscriptions import (
     user_subscriptions_service,
 )
 from app.services.user_auth import auth_service
-from app.source_plugins.id_codec import decode_chapter_id
+from app.source_plugins.id_codec import decode_book_id, decode_chapter_id
 from app.core.public_security import get_public_base_url
 from app.services.reading_limits import reading_access_limiter
+from app.services.search_jobs import SearchJobService
 
 router = APIRouter(prefix="/api/subscribe")
 public_router = APIRouter(prefix="/api/subscribe")
@@ -40,6 +41,12 @@ _MAX_SUBSCRIPTION_SEARCH_PAGE = 1000
 _MAX_LIBRARY_CHAPTER_PAGE = 100_000
 _MAX_LIBRARY_CHAPTER_PAGE_SIZE = 200
 _LEGADO_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
+_TERMINAL_SEARCH_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
+_MAX_READING_SEARCH_OWNERS = 1024
+_legado_search_service: SearchJobService | None = None
+_legado_search_service_init_token = None
+_legado_search_owners: dict[str, set[str]] = {}
+_legado_search_owners_lock = threading.Lock()
 _LIBRARY_CHAPTER_STATUSES = {
     "all",
     "pending",
@@ -177,6 +184,162 @@ def _legado_query_int(value: str, *, field: str, minimum: int, maximum: int) -> 
     if not minimum <= parsed <= maximum:
         raise HTTPException(status_code=422, detail=f"{field} 超出允许范围")
     return parsed
+
+
+def _get_legado_search_service() -> SearchJobService:
+    global _legado_search_service, _legado_search_service_init_token
+    init_token = SearchJobService.__init__
+    if _legado_search_service is None or _legado_search_service_init_token is not init_token:
+        _legado_search_service = SearchJobService()
+        _legado_search_service_init_token = init_token
+        with _legado_search_owners_lock:
+            _legado_search_owners.clear()
+    return _legado_search_service
+
+
+def _third_party_search_source_ids(search_service: SearchJobService) -> list[str]:
+    scheduler = search_service.scheduler
+    plugins = scheduler._search_priority_plugins(scheduler._enabled_plugins())
+    return [
+        plugin.metadata.id
+        for plugin in plugins
+        if "search" in plugin.capabilities and not plugin.metadata.is_official_source()
+    ]
+
+
+def _remember_legado_search_owner(job_id: str, user_id: str) -> None:
+    with _legado_search_owners_lock:
+        owners = _legado_search_owners.setdefault(job_id, set())
+        owners.add(user_id)
+        while len(_legado_search_owners) > _MAX_READING_SEARCH_OWNERS:
+            oldest_job_id = next(iter(_legado_search_owners))
+            if oldest_job_id == job_id and len(_legado_search_owners) == 1:
+                break
+            _legado_search_owners.pop(oldest_job_id, None)
+
+
+def _owns_legado_search(job_id: str, user_id: str) -> bool:
+    with _legado_search_owners_lock:
+        return user_id in _legado_search_owners.get(job_id, set())
+
+
+def _public_search_text(value: object, *, max_length: int) -> str:
+    return str(value or "").strip()[:max_length]
+
+
+def _public_legado_search_item(
+    item: dict,
+    *,
+    base_api: str,
+    allowed_source_ids: set[str],
+) -> dict | None:
+    source_id = _public_search_text(item.get("sourceId"), max_length=128)
+    if source_id != VIRTUAL_SOURCE_ID and source_id not in allowed_source_ids:
+        return None
+    book_id = _public_search_text(item.get("bookId"), max_length=8192)
+    try:
+        encoded_source_id, _ = decode_book_id(book_id)
+    except Exception:
+        return None
+    if encoded_source_id != source_id:
+        return None
+
+    source_name = _public_search_text(
+        item.get("readingSourceName") or item.get("sourceName") or source_id,
+        max_length=200,
+    )
+    last_chapter = _public_search_text(item.get("lastChapter"), max_length=500)
+    reading_last_chapter = _public_search_text(
+        item.get("readingLastChapter")
+        or " · ".join(part for part in (source_name, last_chapter) if part),
+        max_length=800,
+    )
+    public_item = {
+        "displayType": "aggregate" if source_id == VIRTUAL_SOURCE_ID else "source",
+        "resultKind": "aggregate" if source_id == VIRTUAL_SOURCE_ID else "source",
+        "sourceId": source_id,
+        "sourceName": source_name,
+        "readingSourceName": source_name,
+        "name": _public_search_text(item.get("name"), max_length=500),
+        "author": _public_search_text(item.get("author"), max_length=300),
+        "coverUrl": _public_search_text(item.get("coverUrl"), max_length=4096),
+        "intro": _public_search_text(item.get("intro"), max_length=6000),
+        "kind": _public_search_text(item.get("kind"), max_length=500),
+        "lastChapter": last_chapter,
+        "readingLastChapter": reading_last_chapter,
+        "wordCount": item.get("wordCount", ""),
+        "bookId": book_id,
+        "bookUrl": f"{base_api}/api/legado/book/{book_id}",
+    }
+    if source_id == VIRTUAL_SOURCE_ID:
+        for key in (
+            "aggregateBookId",
+            "libraryStatus",
+            "searchVisibilityStatus",
+            "processedChapters",
+            "visibleProcessedChapters",
+            "totalChapters",
+        ):
+            if key in item:
+                public_item[key] = item[key]
+    return public_item
+
+
+def _legado_search_payload(
+    *,
+    keyword: str,
+    page: int,
+    base_api: str,
+    allowed_source_ids: set[str],
+    snapshot: dict | None = None,
+) -> dict:
+    if snapshot is None:
+        published = library_books_service.page_published_books(
+            keyword=keyword,
+            page=page,
+            page_size=20,
+        )
+        raw_items = [
+            library_books_service.build_search_injected_item(book, base_api=base_api)
+            for book in published["items"]
+        ]
+    else:
+        raw_items = snapshot.get("items", [])
+
+    items = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        public_item = _public_legado_search_item(
+            item,
+            base_api=base_api,
+            allowed_source_ids=allowed_source_ids,
+        )
+        if public_item is not None:
+            items.append(public_item)
+
+    return {
+        "implemented": True,
+        "keyword": keyword,
+        "page": page,
+        "items": items,
+        "jobId": str((snapshot or {}).get("jobId", "") or ""),
+        "status": str((snapshot or {}).get("status", "completed") or "completed"),
+        "liveSearchPending": bool((snapshot or {}).get("liveSearchPending", False)),
+    }
+
+
+async def _wait_for_legado_search(
+    search_service: SearchJobService,
+    job_id: str,
+    wait_ms: int,
+) -> None:
+    deadline = asyncio.get_running_loop().time() + (wait_ms / 1000)
+    while asyncio.get_running_loop().time() < deadline:
+        session = search_service.get_session(job_id)
+        if session is None or session.status in _TERMINAL_SEARCH_STATUSES:
+            return
+        await asyncio.sleep(0.1)
 
 
 def _validated_aggregate_book_id(value: str) -> str:
@@ -701,71 +864,107 @@ def get_legado_source(request: Request) -> list[dict]:
 
 @router.get("/legado/search")
 @public_router.get("/legado/search")
-def legado_search(
+async def legado_search(
     request: Request,
     keyword: str = "",
     page: str = "1",
     waitMs: str = "120000",
 ) -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_legado_query_anomalies(request, {"keyword", "page", "waitMs"})
     keyword = _validated_legado_text(keyword, field="keyword", max_length=200)
     parsed_page = _legado_query_int(page, field="page", minimum=1, maximum=1000)
-    _legado_query_int(waitMs, field="waitMs", minimum=0, maximum=120000)
+    parsed_wait_ms = _legado_query_int(waitMs, field="waitMs", minimum=0, maximum=120000)
     with reading_access_limiter.guard(user.user_id, "search"):
-        return _legado_search_response(
+        return await _legado_search_response(
             keyword=keyword,
             page=parsed_page,
+            wait_ms=parsed_wait_ms,
             base_api=get_public_base_url(request),
+            user_id=user.user_id,
         )
 
 
-def _legado_search_response(*, keyword: str, page: int, base_api: str) -> dict:
+async def _legado_search_response(
+    *,
+    keyword: str,
+    page: int,
+    wait_ms: int,
+    base_api: str,
+    user_id: str,
+) -> dict:
     if not keyword.strip():
-        return {
-            "implemented": True,
-            "keyword": keyword,
-            "page": page,
-            "items": [],
-            "jobId": "",
-            "status": "completed",
-            "liveSearchPending": False,
-        }
+        return _legado_search_payload(
+            keyword=keyword,
+            page=page,
+            base_api=base_api,
+            allowed_source_ids=set(),
+            snapshot={},
+        )
 
-    published = library_books_service.page_published_books(
+    search_service = _get_legado_search_service()
+    source_ids = _third_party_search_source_ids(search_service)
+    allowed_source_ids = set(source_ids)
+    if not source_ids:
+        return _legado_search_payload(
+            keyword=keyword,
+            page=page,
+            base_api=base_api,
+            allowed_source_ids=allowed_source_ids,
+        )
+
+    try:
+        job = search_service.create_job(
+            keyword=keyword,
+            page=page,
+            source_ids=source_ids,
+            search_mode="source",
+        )
+        _remember_legado_search_owner(job.job_id, user_id)
+        await _wait_for_legado_search(search_service, job.job_id, wait_ms)
+        snapshot = search_service.session_snapshot(
+            job.job_id,
+            base_api=base_api,
+            include_official_sources=False,
+        )
+    except Exception:
+        logger.exception("Reading third-party search failed")
+        snapshot = None
+
+    return _legado_search_payload(
         keyword=keyword,
         page=page,
-        page_size=20,
+        base_api=base_api,
+        allowed_source_ids=allowed_source_ids,
+        snapshot=snapshot,
     )
-    items = [
-        library_books_service.build_search_injected_item(book, base_api=base_api)
-        for book in published["items"]
-    ]
-    return {
-        "implemented": True,
-        "keyword": keyword,
-        "page": published["page"],
-        "items": items,
-        "jobId": "",
-        "status": "completed",
-        "liveSearchPending": False,
-    }
 
 
 @router.get("/legado/search/{job_id}")
 @public_router.get("/legado/search/{job_id}")
 async def get_legado_search_status(request: Request, job_id: str) -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_legado_query_anomalies(request, set())
     job_id = _validated_legado_identifier(job_id, field="jobId")
     with reading_access_limiter.guard(user.user_id, "search"):
-        return {
-            "implemented": True,
-            "jobId": job_id,
-            "status": "unknown",
-            "items": [],
-            "liveSearchPending": False,
-        }
+        if not _owns_legado_search(job_id, user.user_id):
+            raise HTTPException(status_code=404, detail="搜索任务不存在")
+        search_service = _get_legado_search_service()
+        snapshot = search_service.session_snapshot(
+            job_id,
+            base_api=get_public_base_url(request),
+            include_official_sources=False,
+        )
+        if snapshot is None:
+            raise HTTPException(status_code=404, detail="搜索任务不存在")
+        source_ids = set(_third_party_search_source_ids(search_service))
+        return _legado_search_payload(
+            keyword=str(snapshot.get("keyword", "") or ""),
+            page=int(snapshot.get("page", 1) or 1),
+            base_api=get_public_base_url(request),
+            allowed_source_ids=source_ids,
+            snapshot=snapshot,
+        )
 
 
 @router.post("/legado/search/{job_id}/cancel")
@@ -773,13 +972,14 @@ async def cancel_legado_search(request: Request, job_id: str) -> dict:
     auth_service.require_admin(request)
     _reject_legado_query_anomalies(request, set())
     job_id = _validated_legado_identifier(job_id, field="jobId")
-    return {"jobId": job_id, "cancelled": False}
+    cancelled = _get_legado_search_service().cancel_job(job_id)
+    return {"jobId": job_id, "cancelled": cancelled}
 
 
 @router.get("/legado/explore")
 @public_router.get("/legado/explore")
 async def legado_explore(request: Request, sourceId: str = "", groupId: str = "", page: str = "1") -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_legado_query_anomalies(request, {"sourceId", "groupId", "page"})
     source_id = _validated_legado_identifier(sourceId, field="sourceId", allow_empty=True)
     group_id = _validated_legado_text(groupId, field="groupId", max_length=128)

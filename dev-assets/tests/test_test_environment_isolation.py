@@ -119,11 +119,15 @@ def test_docker_plugin_delivery_contract() -> None:
         (repo_root / "docker-compose.plugins.yml").read_text(encoding="utf-8")
     )
 
-    image_config = compose["x-legadohub-image"]
-    assert image_config == {
-        "image": "xzixmn/legado-hub:latest",
-        "pull_policy": "always",
-    }
+    assert "x-legadohub-image" not in compose
+    assert all(
+        compose["services"][service]["image"] == "xzixmn/legado-hub:latest"
+        for service in ("legadohub-init", "legadohub")
+    )
+    assert all(
+        "pull_policy" not in compose["services"][service]
+        for service in ("legadohub-init", "legadohub")
+    )
     assert "plugins/sources/official" in dockerignore
     assert "plugins/sources/thirdparty" not in dockerignore
     assert "backend/runtime" in dockerignore
@@ -136,20 +140,22 @@ def test_docker_plugin_delivery_contract() -> None:
     assert "/app/plugins/sources/thirdparty" in entrypoint
     assert "cp -a" in entrypoint
     volumes = compose["services"]["legadohub"]["volumes"]
-    assert "./data:/app/backend/data:rw" in volumes
-    assert "./config:/app/backend/config:rw" in volumes
-    assert "./generated:/app/backend/generated:rw" in volumes
-    assert "./runtime:/app/backend/runtime:rw" in volumes
-    assert "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty:rw" in volumes
+    assert "./data:/app/backend/data" in volumes
+    assert "./config:/app/backend/config" in volumes
+    assert "./generated:/app/backend/generated" in volumes
+    assert "./runtime:/app/backend/runtime" in volumes
+    assert "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty" in volumes
     assert compose["services"]["legadohub"].get("read_only") is not True
     assert compose["services"]["legadohub"]["ports"] == [
-        "0.0.0.0:8765:8765",
-        "0.0.0.0:8766:8766",
+        "8765:8765",
+        "8766:8766",
     ]
-    assert "LEGADOHUB_PUBLIC_MODE" not in compose["services"]["legadohub"]["environment"]
-    assert compose["services"]["legadohub"]["environment"]["LEGADOHUB_EXTERNAL_HOST"] == (
-        "${LEGADOHUB_EXTERNAL_HOST:-}"
-    )
+    environment = compose["services"]["legadohub"]["environment"]
+    assert environment == {"LEGADOHUB_EXTERNAL_HOST": "${LEGADOHUB_EXTERNAL_HOST:-}"}
+    assert "LEGADOHUB_PUBLIC_MODE" not in environment
+    assert "container_name" not in compose["services"]["legadohub"]
+    assert "networks" not in compose["services"]["legadohub"]
+    assert "networks" not in compose
     assert not (repo_root / "docker-compose.public.yml").exists()
     assert not (repo_root / "deploy/caddy/Caddyfile").exists()
     assert "LEGADOHUB_PUBLIC_BASE_URL" not in compose["services"]["legadohub"]["environment"]
@@ -176,11 +182,11 @@ def test_docker_plugin_delivery_contract() -> None:
         for volume in volumes
     )
     assert any(
-        volume.endswith(":/app/plugins/sources/thirdparty:rw")
+        volume.endswith(":/app/plugins/sources/thirdparty")
         for volume in plugin_mount["services"]["legadohub"]["volumes"]
     )
     assert any(
-        volume.endswith(":/app/plugins/sources/thirdparty:rw")
+        volume.endswith(":/app/plugins/sources/thirdparty")
         for volume in plugin_mount["services"]["legadohub-init"]["volumes"]
     )
     assert plugin_mount["services"]["legadohub-init"]["command"] == [

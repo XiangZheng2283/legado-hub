@@ -29,6 +29,7 @@ from app.services.audit import audit_service
 from app.storage.db import initialize_database
 
 SESSION_COOKIE_NAME = "legadohub_session"
+READING_LOGIN_REQUIRED_MESSAGE = "当前未登陆，请登陆后使用。"
 SESSION_TTL_DAYS = 30
 PBKDF2_ITERATIONS = 240_000
 USERNAME_MAX_LENGTH = 64
@@ -135,6 +136,7 @@ class UserAuthService:
     def _conn(self):
         initialize_database(self.db_path)
         conn = sqlite3.connect(self.db_path)
+        conn.execute("PRAGMA foreign_keys=ON")
         try:
             yield conn
         finally:
@@ -552,6 +554,76 @@ class UserAuthService:
             conn.commit()
         return {"userId": user_id, "disabled": bool(disabled)}
 
+    def delete_user(
+        self,
+        user_id: str,
+        *,
+        actor_user_id: str,
+    ) -> dict[str, Any]:
+        """Delete an access user and their private runtime state.
+
+        Shared books and historical audit/operation records are intentionally
+        retained because they can still be used by other subscribers.
+        """
+        with self._conn() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            actor = conn.execute(
+                "SELECT role, disabled FROM users WHERE user_id = ?",
+                (actor_user_id,),
+            ).fetchone()
+            if not actor or actor[0] != "admin" or bool(actor[1]):
+                raise HTTPException(status_code=403, detail="需要可用的管理员账户")
+            target = conn.execute(
+                "SELECT role FROM users WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+            if not target:
+                raise HTTPException(status_code=404, detail="用户不存在")
+            if target[0] != "user":
+                raise HTTPException(status_code=409, detail="管理员账户不能删除")
+            if actor_user_id and user_id == actor_user_id:
+                raise HTTPException(status_code=409, detail="不能删除当前登录账户")
+
+            revoked_sessions = conn.execute(
+                "DELETE FROM user_sessions WHERE user_id = ?",
+                (user_id,),
+            ).rowcount
+            deleted_subscriptions = conn.execute(
+                "DELETE FROM user_book_subscriptions WHERE user_id = ?",
+                (user_id,),
+            ).rowcount
+            deleted_search_jobs = conn.execute(
+                "DELETE FROM subscription_search_jobs WHERE owner_user_id = ?",
+                (user_id,),
+            ).rowcount
+            conn.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+            audit_service.record(
+                action="user.delete",
+                actor_user_id=actor_user_id,
+                actor_role=actor[0],
+                target_type="user",
+                target_id=user_id,
+                summary={
+                    "role": target[0],
+                    "deleted": True,
+                    "affectedCount": (
+                        max(0, revoked_sessions)
+                        + max(0, deleted_subscriptions)
+                        + max(0, deleted_search_jobs)
+                    ),
+                },
+                conn=conn,
+            )
+            conn.commit()
+
+        return {
+            "userId": user_id,
+            "deleted": True,
+            "revokedSessions": max(0, revoked_sessions),
+            "deletedSubscriptions": max(0, deleted_subscriptions),
+            "deletedSearchJobs": max(0, deleted_search_jobs),
+        }
+
     def get_user_by_username(self, username: str) -> dict[str, Any] | None:
         with self._conn() as conn:
             row = conn.execute(
@@ -780,6 +852,16 @@ class UserAuthService:
         user = self.current_user(request, touch=touch)
         if not user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="请先登录")
+        return user
+
+    def require_reading_user(self, request: Request, *, touch: bool = True) -> AuthUser:
+        """Require a user through the public Reading data plane."""
+        user = self.current_user(request, touch=touch)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=READING_LOGIN_REQUIRED_MESSAGE,
+            )
         return user
 
     def require_admin(self, request: Request, *, touch: bool = True) -> AuthUser:

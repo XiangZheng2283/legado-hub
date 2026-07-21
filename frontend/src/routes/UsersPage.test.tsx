@@ -19,6 +19,7 @@ vi.mock("@/lib/api", () => ({
       resetAccessCode: vi.fn(),
       revokeSessions: vi.fn(),
       setDisabled: vi.fn(),
+      deleteUser: vi.fn(),
     },
   },
 }))
@@ -53,6 +54,7 @@ describe("UsersPage", () => {
     ;(api.users.resetAccessCode as any).mockResolvedValue({ userId: "user-1", accessCode: "LH1.reader.replacement" })
     ;(api.users.revokeSessions as any).mockResolvedValue({ userId: "user-1", revokedSessions: 2 })
     ;(api.users.setDisabled as any).mockResolvedValue({ userId: "user-1", disabled: true })
+    ;(api.users.deleteUser as any).mockResolvedValue({ userId: "user-1", deleted: true })
   })
 
   it("creates an access user without a password and shows the code once", async () => {
@@ -110,6 +112,7 @@ describe("UsersPage", () => {
     expect(within(adminRow!).getByRole("button", { name: "禁用" })).toBeDisabled()
     expect(within(adminRow!).getByRole("button", { name: "撤销 admin 的登录会话" })).toBeDisabled()
     expect(within(adminRow!).queryByRole("button", { name: "重置 admin 的密码" })).not.toBeInTheDocument()
+    expect(within(adminRow!).queryByRole("button", { name: "删除 admin" })).not.toBeInTheDocument()
 
     await user.click(within(readerRow!).getByRole("button", { name: "重置 reader 的授权码" }))
     await user.click(screen.getByRole("button", { name: "生成新授权码" }))
@@ -123,5 +126,21 @@ describe("UsersPage", () => {
 
     await user.click(within(readerRow!).getByRole("button", { name: "禁用" }))
     await waitFor(() => expect(api.users.setDisabled).toHaveBeenCalledWith("user-1", true))
+
+    await user.click(within(readerRow!).getByRole("button", { name: "删除 reader" }))
+    await waitFor(() => expect(api.users.deleteUser).toHaveBeenCalledWith("user-1"))
+    expect(await screen.findByText("已删除普通用户 reader。")).toBeInTheDocument()
+  })
+
+  it("keeps the user when deletion confirmation is cancelled", async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, "confirm").mockReturnValue(false)
+    renderPage()
+
+    const readerRow = (await screen.findByText("reader")).closest("tr")
+    expect(readerRow).not.toBeNull()
+    await user.click(within(readerRow!).getByRole("button", { name: "删除 reader" }))
+
+    expect(api.users.deleteUser).not.toHaveBeenCalled()
   })
 })

@@ -801,7 +801,13 @@ def render_chapter_reviews_html(
     chapter_detail: dict[str, Any] | None = None,
     reply_detail: dict[str, Any] | None = None,
 ) -> str:
-    """Render the confirmed three-tab review sheet as a standalone page."""
+    """Render the review sheet, limiting drill-down pages to paragraph reviews."""
+    paragraph_only = any(
+        isinstance(detail, dict)
+        for detail in (paragraph_detail, page_hot_detail, reply_detail)
+    )
+    if paragraph_only:
+        active_tab = "paragraph"
     active_tab = active_tab if active_tab in {"author", "chapter", "paragraph"} else "chapter"
     author_reviews = [item for item in reviews.get("authorReviews", []) if isinstance(item, dict)]
     chapter_reviews = _dedupe_reviews(reviews.get("chapterEndHot"), reviews.get("chapterEnd"))
@@ -891,6 +897,22 @@ def render_chapter_reviews_html(
             + '</section>'
         )
 
+    tabs_html = ""
+    panels_html = panel("paragraph", paragraph_scope_label, paragraph_scope_count, paragraph_html)
+    if not paragraph_only:
+        tabs_html = (
+            '<div class="review-tabs" role="tablist" aria-label="评论分类">'
+            + tab("author", "作家说", len(author_reviews))
+            + tab("chapter", "本章说", chapter_count)
+            + tab("paragraph", "段评说", paragraph_count)
+            + '</div>'
+        )
+        panels_html = (
+            panel("author", "作者补充", len(author_reviews), author_html)
+            + panel("chapter", "本章说", chapter_count, chapter_html)
+            + panels_html
+        )
+
     return (
         '<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -898,19 +920,9 @@ def render_chapter_reviews_html(
         '<main class="review-sheet"><div class="sheet-handle" aria-hidden="true"></div>'
         '<header class="sheet-header"><div class="sheet-title"><strong>本章评论</strong>'
         f'<span>{html.escape(chapter_title)} · {_count_label(total_reviews)} 条</span></div></header>'
-        '<div class="review-tabs" role="tablist" aria-label="评论分类">'
-        + tab("author", "作家说", len(author_reviews))
-        + tab("chapter", "本章说", chapter_count)
-        + tab("paragraph", "段评说", paragraph_count)
-        + '</div><div class="sheet-content">'
-        + panel("author", "作者补充", len(author_reviews), author_html)
-        + panel(
-            "chapter",
-            "本章说",
-            chapter_count,
-            chapter_html,
-        )
-        + panel("paragraph", paragraph_scope_label, paragraph_scope_count, paragraph_html)
+        + tabs_html
+        + '<div class="sheet-content">'
+        + panels_html
         + '</div></main><script>'
         + _REVIEW_SCRIPT.replace("__ACTIVE_TAB__", active_tab)
         + '</script></body></html>'

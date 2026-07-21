@@ -130,6 +130,7 @@ def fixture_client(monkeypatch, tmp_path):
     _, responses = _write_reading_plugin(tmp_path)
     from app.source_plugins.scheduler import PluginScheduler
     import app.api.legado as legado_api
+    import app.api.subscribe as subscribe_api
 
     original_init = PluginScheduler.__init__
 
@@ -148,37 +149,92 @@ def fixture_client(monkeypatch, tmp_path):
     initialize_database(cache_db)
     monkeypatch.setattr("app.config.DB_PATH", cache_db)
     monkeypatch.setattr("app.services.cache.DB_PATH", cache_db)
+    monkeypatch.setattr("app.services.search_coordinator.DB_PATH", cache_db)
+
+    from app.services.library_books import LibraryBooksService
+    from app.services.shared_book_storage import SharedBookStorage
+
+    library_service = LibraryBooksService(
+        db_path=cache_db,
+        shared_book_storage=SharedBookStorage(root=tmp_path / "library"),
+    )
+    monkeypatch.setattr(subscribe_api, "library_books_service", library_service)
+    monkeypatch.setattr(legado_api, "library_books_service", library_service)
+    monkeypatch.setattr("app.services.search_coordinator.library_books_service", library_service)
+    monkeypatch.setattr(subscribe_api, "_legado_search_service", None)
+    monkeypatch.setattr(subscribe_api, "_legado_search_service_init_token", None)
+    monkeypatch.setattr(subscribe_api, "_legado_search_owners", {})
     client = TestClient(app)
     login = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
     assert login.status_code == 200
     return client
 
 
-def test_reading_rejects_direct_plugin_book_without_database_side_effects(fixture_client, tmp_path):
-    from app.source_plugins.id_codec import encode_book_id
+def test_reading_search_and_direct_third_party_loop(fixture_client, tmp_path):
+    search = fixture_client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "凡人修仙传", "waitMs": 5000},
+    )
 
-    book_id = encode_book_id("fixture_reading", "https://example.com/book/1/")
+    assert search.status_code == 200
+    payload = search.json()
+    item = next(item for item in payload["items"] if item["sourceId"] == "fixture_reading")
+    assert item["sourceName"] == "Fixture Reading"
+    assert item["readingLastChapter"].startswith("Fixture Reading · ")
+    assert "rawBookUrl" not in item
+    assert "debug" not in item
 
-    response = fixture_client.get(f"/api/legado/book/{book_id}")
+    detail = fixture_client.get(item["bookUrl"].replace("http://testserver", ""))
+    assert detail.status_code == 200
+    detail_data = detail.json()["data"]
+    assert detail_data["name"] == "凡人修仙传"
+    assert "rawBookUrl" not in detail_data
+    assert "rawTocUrl" not in detail_data
+    assert "debug" not in detail.json()
 
-    assert response.status_code == 404
+    toc = fixture_client.get(detail_data["tocUrl"].replace("http://testserver", ""))
+    assert toc.status_code == 200
+    chapters = toc.json()["chapters"]
+    assert len(chapters) == 1
+    assert "rawChapterUrl" not in chapters[0]
+
+    chapter = fixture_client.get(chapters[0]["chapterUrl"].replace("http://testserver", ""))
+    assert chapter.status_code == 200
+    assert "Reading API 端到端 fixture 正文" in chapter.json()["content"]
+    assert "rawChapterUrl" not in chapter.json()
+    assert "debug" not in chapter.json()
+
+    reviews = fixture_client.get(
+        chapters[0]["chapterUrl"].replace("http://testserver", "") + "/reviews"
+    )
+    assert reviews.status_code == 200
+    assert reviews.json()["summary"]["totalReviews"] == 2
+
     with sqlite3.connect(tmp_path / "reading-cache.db") as conn:
-        row = conn.execute(
-            "SELECT book_id FROM book_records WHERE book_id = ?",
-            (book_id,),
-        ).fetchone()
-    assert row is None
+        assert conn.execute("SELECT COUNT(*) FROM user_book_subscriptions").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM aggregate_book_tasks").fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) FROM book_records WHERE book_id = ?",
+            (item["bookId"],),
+        ).fetchone()[0] == 1
 
 
-def test_reading_rejects_all_direct_plugin_reader_routes(fixture_client, monkeypatch):
+def test_reading_rejects_official_and_unknown_plugin_ids_before_catalog(
+    fixture_client, monkeypatch
+):
     from app.services.catalog import Catalog
     from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
 
+    catalog = Catalog()
+    plugin = catalog.scheduler._plugins["fixture_reading"]
+    monkeypatch.setattr(plugin.metadata, "tags", ["official"])
     book_id = encode_book_id("fixture_reading", "https://example.com/book/1/")
     chapter_id = encode_chapter_id("fixture_reading", "https://example.com/book/1/1.html")
+    unknown_book_id = encode_book_id("missing_plugin", "https://example.com/book/1/")
+    unknown_chapter_id = encode_chapter_id("missing_plugin", "https://example.com/book/1/1.html")
 
     async def must_not_call(*_args, **_kwargs):
-        pytest.fail("rejected direct plugin ids must not reach Catalog")
+        pytest.fail("official or unknown plugin ids must not reach Catalog")
 
     monkeypatch.setattr(Catalog, "book_detail", must_not_call)
     monkeypatch.setattr(Catalog, "toc", must_not_call)
@@ -190,9 +246,29 @@ def test_reading_rejects_all_direct_plugin_reader_routes(fixture_client, monkeyp
     assert fixture_client.get(f"/api/legado/chapter/{chapter_id}").status_code == 404
     assert fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews").status_code == 404
     assert fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews/view").status_code == 404
+    assert fixture_client.get(f"/api/legado/book/{unknown_book_id}").status_code == 404
+    assert fixture_client.get(f"/api/legado/chapter/{unknown_chapter_id}").status_code == 404
 
 
-def test_review_view_allows_only_same_origin_embedding(fixture_client, monkeypatch):
+def test_reading_rejects_third_party_urls_outside_declared_domains(
+    fixture_client, monkeypatch
+):
+    from app.services.catalog import Catalog
+    from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
+
+    async def must_not_call(*_args, **_kwargs):
+        pytest.fail("off-domain ids must not reach Catalog")
+
+    monkeypatch.setattr(Catalog, "book_detail", must_not_call)
+    monkeypatch.setattr(Catalog, "chapter", must_not_call)
+    book_id = encode_book_id("fixture_reading", "http://127.0.0.1:8766/api/console/plugins")
+    chapter_id = encode_chapter_id("fixture_reading", "http://169.254.169.254/latest/meta-data")
+
+    assert fixture_client.get(f"/api/legado/book/{book_id}").status_code == 404
+    assert fixture_client.get(f"/api/legado/chapter/{chapter_id}").status_code == 404
+
+
+def test_review_view_embedding_and_focused_paragraph_layout(fixture_client, monkeypatch):
     import app.api.legado as legado_api
     from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, make_aggregate_chapter_url
     from app.source_plugins.id_codec import encode_chapter_id
@@ -207,7 +283,7 @@ def test_review_view_allows_only_same_origin_embedding(fixture_client, monkeypat
         lambda _chapter_id: {"title": "第一章"},
     )
 
-    async def empty_reviews(_chapter_id: str) -> dict:
+    async def empty_reviews(_chapter_id: str, **_kwargs) -> dict:
         return {
             "authorReviews": [],
             "chapterEnd": [],
@@ -215,10 +291,30 @@ def test_review_view_allows_only_same_origin_embedding(fixture_client, monkeypat
             "summary": {"totalReviews": 0, "chapterEndCount": 0},
         }
 
+    async def empty_paragraph_reviews(
+        _self,
+        _chapter_id: str,
+        _paragraph_id: int,
+        *,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> dict:
+        return {
+            "comments": [],
+            "totalCount": 0,
+            "page": page,
+            "pageSize": page_size,
+            "hasMore": False,
+        }
+
     monkeypatch.setattr(legado_api, "_chapter_reviews", empty_reviews)
+    monkeypatch.setattr(legado_api.Catalog, "paragraph_reviews", empty_paragraph_reviews)
 
     api_response = fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews")
     view_response = fixture_client.get(f"/api/legado/chapter/{chapter_id}/reviews/view")
+    focused_response = fixture_client.get(
+        f"/api/legado/chapter/{chapter_id}/reviews/view?tab=paragraph&paragraphId=1"
+    )
 
     assert api_response.status_code == 200
     assert api_response.headers["x-frame-options"] == "DENY"
@@ -226,9 +322,17 @@ def test_review_view_allows_only_same_origin_embedding(fixture_client, monkeypat
     assert view_response.status_code == 200
     assert view_response.headers["x-frame-options"] == "SAMEORIGIN"
     assert "frame-ancestors 'self'" in view_response.headers["content-security-policy"]
+    assert 'data-tab="author"' in view_response.text
+    assert 'data-tab="chapter"' in view_response.text
+    assert focused_response.status_code == 200
+    assert 'data-tab="author"' not in focused_response.text
+    assert 'data-tab="chapter"' not in focused_response.text
+    assert 'data-panel="author"' not in focused_response.text
+    assert 'data-panel="chapter"' not in focused_response.text
+    assert 'data-panel="paragraph"' in focused_response.text
 
 
-def test_reading_direct_plugin_chapter_does_not_use_cached_content(fixture_client):
+def test_reading_disabled_plugin_chapter_does_not_use_cached_content(fixture_client, monkeypatch):
     from app.services.catalog import Catalog
     from app.source_plugins.id_codec import encode_chapter_id
 
@@ -246,6 +350,8 @@ def test_reading_direct_plugin_chapter_does_not_use_cached_content(fixture_clien
             "debug": {},
         },
     )
+    plugin = catalog.scheduler._plugins["fixture_reading"]
+    monkeypatch.setattr(plugin.metadata, "enabled", False)
 
     chapter_res = fixture_client.get(f"/api/legado/chapter/{chapter_id}")
 

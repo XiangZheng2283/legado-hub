@@ -9,6 +9,7 @@ import json
 import re
 import sqlite3
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -47,6 +48,18 @@ def make_library_aggregate_book_url(aggregate_book_id: str) -> str:
 
 def make_library_book_id(aggregate_book_id: str) -> str:
     return encode_book_id(VIRTUAL_SOURCE_ID, make_library_aggregate_book_url(aggregate_book_id))
+
+
+def format_reading_update_time(value: Any) -> str:
+    """Format ISO timestamps for the compact Reading chapter list."""
+    normalized = str(value or "").strip()
+    if not normalized or len(normalized) <= 10:
+        return normalized
+    try:
+        parsed = datetime.fromisoformat(normalized.replace("Z", "+00:00"))
+    except ValueError:
+        return normalized
+    return parsed.strftime("%Y-%m-%d %H:%M")
 
 
 def _normalize_book_status_text(*values: object) -> str:
@@ -1342,7 +1355,7 @@ class LibraryBooksService:
                     "index": int(item.get("chapterIndex", 0) or 0),
                     "title": item.get("title", ""),
                     "chapterUrl": f"{base_api}/api/legado/chapter/{read_chapter_id}",
-                    "updateTime": item.get("processedAt", ""),
+                    "updateTime": format_reading_update_time(item.get("processedAt", "")),
                     "isVip": bool(item.get("isVip")),
                     "isPaid": bool(item.get("isPaid")),
                     "isPay": bool(item.get("isPay")),

@@ -7,14 +7,20 @@ book reader contract remains, backed by the shared library storage.
 from __future__ import annotations
 
 import re
+from typing import Any
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from app.services.catalog import Catalog
-from app.services.library_books import library_books_service
+from app.services.library_books import format_reading_update_time, library_books_service
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID
-from app.source_plugins.id_codec import decode_chapter_id
+from app.source_plugins.id_codec import (
+    decode_book_id,
+    decode_chapter_id,
+    encode_chapter_id,
+)
 from app.services.reading_reviews import (
     chapter_review_cache,
     render_chapter_reviews_html,
@@ -66,77 +72,290 @@ def _query_int(
     return parsed
 
 
-def _require_virtual_chapter(chapter_id: str) -> None:
+def _decode_book_identity(book_id: str) -> tuple[str, str]:
     try:
-        source_id, _ = decode_chapter_id(chapter_id)
+        return decode_book_id(book_id)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="书籍不存在") from exc
+
+
+def _decode_chapter_identity(chapter_id: str) -> tuple[str, str]:
+    try:
+        return decode_chapter_id(chapter_id)
     except Exception as exc:
         raise HTTPException(status_code=404, detail="章节不存在") from exc
-    if source_id != VIRTUAL_SOURCE_ID:
-        raise HTTPException(status_code=404, detail="章节不存在")
 
 
-async def _chapter_reviews(chapter_id: str) -> dict:
+def _require_third_party_plugin(
+    catalog: Catalog,
+    source_id: str,
+    capability: str,
+    *,
+    label: str,
+    target_url: str,
+) -> None:
+    plugin = catalog.scheduler._plugins.get(source_id)
+    if (
+        not plugin
+        or not plugin.metadata.enabled
+        or plugin.metadata.is_official_source()
+        or capability not in plugin.capabilities
+    ):
+        raise HTTPException(status_code=404, detail=f"{label}不存在")
+    parsed = urlparse(target_url)
+    hostname = str(parsed.hostname or "").lower().rstrip(".")
+    allowed_hosts = {
+        str(domain or "").lower().lstrip(".").rstrip(".")
+        for domain in plugin.metadata.domains
+        if str(domain or "").strip()
+    }
+    for base_url in plugin.metadata.base_urls:
+        base_hostname = str(urlparse(str(base_url or "")).hostname or "").lower().rstrip(".")
+        if base_hostname:
+            allowed_hosts.add(base_hostname)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or not any(hostname == allowed or hostname.endswith(f".{allowed}") for allowed in allowed_hosts)
+    ):
+        raise HTTPException(status_code=404, detail=f"{label}不存在")
+
+
+def _public_text(value: Any, *, max_length: int) -> str:
+    return str(value or "").strip()[:max_length]
+
+
+def _public_book_response(
+    data: dict,
+    *,
+    source_id: str,
+    book_id: str,
+    base_api: str,
+) -> dict:
+    return {
+        "implemented": True,
+        "data": {
+            "sourceId": source_id,
+            "bookId": book_id,
+            "name": _public_text(data.get("name"), max_length=500),
+            "author": _public_text(data.get("author"), max_length=300),
+            "coverUrl": _public_text(data.get("coverUrl"), max_length=4096),
+            "intro": _public_text(data.get("intro"), max_length=12000),
+            "kind": _public_text(data.get("kind"), max_length=500),
+            "lastChapter": _public_text(data.get("lastChapter"), max_length=500),
+            "wordCount": data.get("wordCount", ""),
+            "status": _public_text(data.get("status"), max_length=100),
+            "updateTime": format_reading_update_time(data.get("updateTime", "")),
+            "bookUrl": f"{base_api}/api/legado/book/{book_id}",
+            "tocUrl": f"{base_api}/api/legado/book/{book_id}/toc",
+        },
+    }
+
+
+def _public_toc_response(
+    result: dict,
+    *,
+    source_id: str,
+    book_id: str,
+    base_api: str,
+) -> dict:
+    chapters = []
+    for position, raw in enumerate(result.get("chapters", []) or [], start=1):
+        if not isinstance(raw, dict):
+            continue
+        chapter_id = _public_text(raw.get("chapterId"), max_length=_MAX_EXTERNAL_ID_LENGTH)
+        if source_id != VIRTUAL_SOURCE_ID:
+            raw_chapter_url = _public_text(
+                raw.get("rawChapterUrl") or raw.get("chapterUrl"),
+                max_length=16_384,
+            )
+            if raw_chapter_url:
+                chapter_id = encode_chapter_id(source_id, raw_chapter_url)
+        try:
+            encoded_source_id, _ = decode_chapter_id(chapter_id)
+        except Exception:
+            continue
+        if encoded_source_id != source_id or len(chapter_id) > _MAX_EXTERNAL_ID_LENGTH:
+            continue
+        try:
+            chapter_index = int(raw.get("index", position) or position)
+        except (TypeError, ValueError):
+            chapter_index = position
+        preview_only = bool(raw.get("previewOnly", False))
+        is_vip = bool(raw.get("isVip", False))
+        is_paid = bool(raw.get("isPaid", is_vip))
+        chapters.append(
+            {
+                "sourceId": source_id,
+                "chapterId": chapter_id,
+                "index": chapter_index,
+                "title": _public_text(raw.get("title"), max_length=1000),
+                "chapterUrl": f"{base_api}/api/legado/chapter/{chapter_id}",
+                "updateTime": format_reading_update_time(raw.get("updateTime", "")),
+                "isVip": is_vip,
+                "isPaid": is_paid,
+                "isPay": bool(raw.get("isPay", is_vip and not preview_only)),
+                "previewOnly": preview_only,
+            }
+        )
+    return {
+        "implemented": True,
+        "bookId": book_id,
+        "chapters": chapters,
+    }
+
+
+def _public_chapter_response(result: dict, *, chapter_id: str) -> dict:
+    extra = result.get("extra") if isinstance(result.get("extra"), dict) else {}
+    preview_only = bool(result.get("previewOnly", extra.get("previewOnly", False)))
+    is_vip = bool(result.get("isVip", extra.get("isVip", result.get("isPaid", False))))
+    safe_extra = {
+        key: extra[key]
+        for key in ("previewOnly", "isVip", "contentAccess")
+        if key in extra and isinstance(extra[key], (str, int, float, bool, type(None)))
+    }
+    return {
+        "implemented": True,
+        "chapterId": chapter_id,
+        "title": _public_text(result.get("title"), max_length=1000),
+        "content": str(result.get("content", "") or ""),
+        "authRequired": bool(result.get("authRequired", False)),
+        "isVip": is_vip,
+        "isPaid": bool(result.get("isPaid", is_vip)),
+        "isPay": bool(result.get("isPay", is_vip and not preview_only)),
+        "previewOnly": preview_only,
+        "extra": safe_extra,
+    }
+
+
+async def _chapter_reviews(chapter_id: str, *, catalog: Catalog | None = None) -> dict:
     cached = chapter_review_cache.get(chapter_id)
     if cached is not None:
         return cached
-    reviews = await Catalog().chapter_reviews(chapter_id)
+    reviews = await (catalog or Catalog()).chapter_reviews(chapter_id)
     chapter_review_cache.set(chapter_id, reviews)
     return reviews
 
 
 @router.get("/book/{book_id}")
 async def get_book(request: Request, book_id: str) -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_query_anomalies(request, set())
     book_id = _validated_external_id(book_id, label="书籍")
-    if not library_books_service.is_virtual_book_id(book_id):
-        raise HTTPException(status_code=404, detail="书籍不存在")
+    source_id, book_url = _decode_book_identity(book_id)
     with reading_access_limiter.guard(user.user_id, "metadata"):
         base_api = get_public_base_url(request)
-        shared = library_books_service.legado_book_detail(book_id, base_api=base_api)
-        if shared is not None:
-            return shared
-    raise HTTPException(status_code=404, detail="书籍尚未发布")
+        if source_id == VIRTUAL_SOURCE_ID:
+            shared = library_books_service.legado_book_detail(book_id, base_api=base_api)
+            if shared is None:
+                raise HTTPException(status_code=404, detail="书籍尚未发布")
+            return _public_book_response(
+                dict(shared.get("data") or {}),
+                source_id=source_id,
+                book_id=book_id,
+                base_api=base_api,
+            )
+        catalog = Catalog(base_api=base_api)
+        _require_third_party_plugin(
+            catalog,
+            source_id,
+            "detail",
+            label="书籍",
+            target_url=book_url,
+        )
+        result = await catalog.book_detail(book_id)
+        data = result.get("data") if isinstance(result, dict) else None
+        if not isinstance(data, dict):
+            raise HTTPException(status_code=404, detail="书籍读取失败")
+        return _public_book_response(
+            data,
+            source_id=source_id,
+            book_id=book_id,
+            base_api=base_api,
+        )
 
 
 @router.get("/book/{book_id}/toc")
 async def get_toc(request: Request, book_id: str) -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_query_anomalies(request, set())
     book_id = _validated_external_id(book_id, label="书籍")
-    if not library_books_service.is_virtual_book_id(book_id):
-        raise HTTPException(status_code=404, detail="书籍不存在")
+    source_id, book_url = _decode_book_identity(book_id)
     with reading_access_limiter.guard(user.user_id, "metadata"):
         base_api = get_public_base_url(request)
-        shared = library_books_service.legado_toc(book_id, base_api=base_api)
-        if shared is not None:
-            return shared
-    raise HTTPException(status_code=404, detail="书籍尚未发布")
+        if source_id == VIRTUAL_SOURCE_ID:
+            shared = library_books_service.legado_toc(book_id, base_api=base_api)
+            if shared is None:
+                raise HTTPException(status_code=404, detail="书籍尚未发布")
+            return _public_toc_response(
+                shared,
+                source_id=source_id,
+                book_id=book_id,
+                base_api=base_api,
+            )
+        catalog = Catalog(base_api=base_api)
+        _require_third_party_plugin(
+            catalog,
+            source_id,
+            "toc",
+            label="书籍",
+            target_url=book_url,
+        )
+        result = await catalog.toc(book_id)
+        return _public_toc_response(
+            result,
+            source_id=source_id,
+            book_id=book_id,
+            base_api=base_api,
+        )
 
 
 @router.get("/chapter/{chapter_id}")
 async def get_chapter(request: Request, chapter_id: str) -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_query_anomalies(request, set())
     chapter_id = _validated_external_id(chapter_id, label="章节")
-    _require_virtual_chapter(chapter_id)
+    source_id, chapter_url = _decode_chapter_identity(chapter_id)
     with reading_access_limiter.guard(user.user_id, "chapter"):
-        shared = library_books_service.legado_chapter(chapter_id)
-        if shared is None:
-            raise HTTPException(status_code=404, detail="章节尚未发布")
-        return shared
+        if source_id == VIRTUAL_SOURCE_ID:
+            shared = library_books_service.legado_chapter(chapter_id)
+            if shared is None:
+                raise HTTPException(status_code=404, detail="章节尚未发布")
+            return _public_chapter_response(shared, chapter_id=chapter_id)
+        catalog = Catalog(base_api=get_public_base_url(request))
+        _require_third_party_plugin(
+            catalog,
+            source_id,
+            "chapter",
+            label="章节",
+            target_url=chapter_url,
+        )
+        result = await catalog.chapter(chapter_id)
+        return _public_chapter_response(result, chapter_id=chapter_id)
 
 
 @router.get("/chapter/{chapter_id}/reviews")
 async def get_chapter_reviews(request: Request, chapter_id: str) -> dict:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_query_anomalies(request, set())
     chapter_id = _validated_external_id(chapter_id, label="章节")
-    _require_virtual_chapter(chapter_id)
+    source_id, chapter_url = _decode_chapter_identity(chapter_id)
     with reading_access_limiter.guard(user.user_id, "reviews"):
-        if library_books_service.legado_chapter(chapter_id) is None:
-            raise HTTPException(status_code=404, detail="章节尚未发布")
-        return await _chapter_reviews(chapter_id)
+        catalog = Catalog(base_api=get_public_base_url(request))
+        if source_id == VIRTUAL_SOURCE_ID:
+            if library_books_service.legado_chapter(chapter_id) is None:
+                raise HTTPException(status_code=404, detail="章节尚未发布")
+        else:
+            _require_third_party_plugin(
+                catalog,
+                source_id,
+                "chapter_reviews",
+                label="章节",
+                target_url=chapter_url,
+            )
+        return await _chapter_reviews(chapter_id, catalog=catalog)
 
 
 @router.get("/chapter/{chapter_id}/reviews/view", response_class=HTMLResponse)
@@ -151,13 +370,13 @@ async def get_chapter_review_view(
     pageSize: str = "10",
     cursorId: str = "0",
 ) -> HTMLResponse:
-    user = auth_service.require_user(request, touch=False)
+    user = auth_service.require_reading_user(request, touch=False)
     _reject_query_anomalies(
         request,
         {"tab", "paragraphId", "paragraphIds", "rootReviewId", "page", "pageSize", "cursorId"},
     )
     chapter_id = _validated_external_id(chapter_id, label="章节")
-    _require_virtual_chapter(chapter_id)
+    source_id, chapter_url = _decode_chapter_identity(chapter_id)
     if tab not in {"author", "chapter", "paragraph"}:
         raise HTTPException(status_code=422, detail="tab 无效")
     parsed_paragraph_id = _query_int(
@@ -173,15 +392,32 @@ async def get_chapter_review_view(
         raise HTTPException(status_code=422, detail="paragraphIds 无效")
 
     with reading_access_limiter.guard(user.user_id, "reviews"):
-        chapter = library_books_service.legado_chapter(chapter_id)
-        if chapter is None:
-            raise HTTPException(status_code=404, detail="章节尚未发布")
-        reviews = await _chapter_reviews(chapter_id)
+        catalog = Catalog(base_api=get_public_base_url(request))
+        if source_id == VIRTUAL_SOURCE_ID:
+            chapter = library_books_service.legado_chapter(chapter_id)
+            if chapter is None:
+                raise HTTPException(status_code=404, detail="章节尚未发布")
+        else:
+            _require_third_party_plugin(
+                catalog,
+                source_id,
+                "chapter",
+                label="章节",
+                target_url=chapter_url,
+            )
+            _require_third_party_plugin(
+                catalog,
+                source_id,
+                "chapter_reviews",
+                label="章节",
+                target_url=chapter_url,
+            )
+            chapter = await catalog.chapter(chapter_id)
+        reviews = await _chapter_reviews(chapter_id, catalog=catalog)
         paragraph_detail = None
         page_hot_detail = None
         chapter_detail = None
         reply_detail = None
-        catalog = Catalog()
         if parsed_root_review_id is not None:
             reply_detail = await catalog.review_replies(
                 chapter_id,
