@@ -183,6 +183,7 @@ export function SettingsPage() {
   const local = editedSettings || settingsData || {}
   const sp = local.sourcePool || {}
   const subscription = local.subscription || {}
+  const chapterComment = local.chapterComment || {}
   const agg = aggForm ?? aggData ?? {}
   const wf = parseRecord(agg.contentWorkflow)
   const sourceOptions: PrioritySourceOption[] = (pluginsData?.items || []).map((plugin: any) => ({
@@ -283,6 +284,7 @@ export function SettingsPage() {
           <TabsTrigger className={settingsTabTriggerClass} value="security">账户安全</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="subscription">订阅政策</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="pool">书源池</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="comments">阅读评论</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="agg">聚合策略</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="priority">优先级</TabsTrigger>
           <TabsTrigger className={settingsTabTriggerClass} value="dict">词库</TabsTrigger>
@@ -402,6 +404,44 @@ export function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <Switch checked={sp.officialSourceInNormalSearch || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, officialSourceInNormalSearch: c } })} />
                   <span className="text-sm text-slate-600">启用</span>
+                </div>
+              </SettingRow>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="comments">
+          <Card className={settingsCardClass}>
+            <CardHeader>
+              <CardTitle>章节评论入口</CardTitle>
+              <CardDescription>控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SettingRow title="段评入口" description="在有评论的正文段落末尾显示段评数量。">
+                <div className="flex justify-end">
+                  <Switch
+                    aria-label="段评入口"
+                    checked={chapterComment.segmentEnabled ?? true}
+                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, segmentEnabled: checked } })}
+                  />
+                </div>
+              </SettingRow>
+              <SettingRow title="页热评入口" description="在当前页右上角显示热评数量，并允许下拉打开本页热评。">
+                <div className="flex justify-end">
+                  <Switch
+                    aria-label="页热评入口"
+                    checked={chapterComment.pageEnabled ?? true}
+                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, pageEnabled: checked } })}
+                  />
+                </div>
+              </SettingRow>
+              <SettingRow title="本章说入口" description="在章节末尾显示本章说汇总入口。">
+                <div className="flex justify-end">
+                  <Switch
+                    aria-label="本章说入口"
+                    checked={chapterComment.chapterEnabled ?? true}
+                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, chapterEnabled: checked } })}
+                  />
                 </div>
               </SettingRow>
             </CardContent>

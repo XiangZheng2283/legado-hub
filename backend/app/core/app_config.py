@@ -141,6 +141,26 @@ class SubscriptionConfig:
 
 
 @dataclass
+class ChapterCommentConfig:
+    segment_enabled: bool = True
+    page_enabled: bool = True
+    chapter_enabled: bool = True
+
+    @staticmethod
+    def _bool_value(data: dict[str, Any], key: str, default: bool) -> bool:
+        value = data.get(key, default)
+        return value if isinstance(value, bool) else default
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ChapterCommentConfig":
+        return cls(
+            segment_enabled=cls._bool_value(data, "segmentEnabled", True),
+            page_enabled=cls._bool_value(data, "pageEnabled", True),
+            chapter_enabled=cls._bool_value(data, "chapterEnabled", True),
+        )
+
+
+@dataclass
 class AggregateConfig:
     name: str = "LegadoHub 聚合"
     version: str = "0.0.2"
@@ -334,6 +354,10 @@ class AppConfig:
     @property
     def subscription(self) -> SubscriptionConfig:
         return SubscriptionConfig.from_dict(self._section("subscription"))
+
+    @property
+    def chapter_comment(self) -> ChapterCommentConfig:
+        return ChapterCommentConfig.from_dict(self._section("chapterComment"))
 
     @property
     def ai_provider(self) -> AIProviderConfig:

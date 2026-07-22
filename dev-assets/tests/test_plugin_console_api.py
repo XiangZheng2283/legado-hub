@@ -662,6 +662,51 @@ def test_settings_endpoint():
     res = client.get("/api/console/settings")
     assert res.status_code == 200
     assert "contentWorkflow" in res.json()
+    assert res.json()["chapterComment"] == {
+        "segmentEnabled": True,
+        "pageEnabled": True,
+        "chapterEnabled": True,
+    }
+
+
+def test_chapter_comment_settings_round_trip_and_strict_validation(admin_client):
+    from app.core.legado_source import generate_legado_source
+
+    original = admin_client.get("/api/console/settings").json()
+    try:
+        response = admin_client.post(
+            "/api/console/settings",
+            json={
+                "chapterComment": {
+                    "segmentEnabled": False,
+                    "pageEnabled": True,
+                    "chapterEnabled": False,
+                }
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["chapterComment"] == {
+            "segmentEnabled": False,
+            "pageEnabled": True,
+            "chapterEnabled": False,
+        }
+        source = generate_legado_source("http://testserver")[0]
+        display = source["ruleContent"]["chapterComment"]["display"]
+        assert display["segment"]["enabled"] is False
+        assert display["page"]["enabled"] is True
+        assert display["chapter"]["enabled"] is False
+        assert "!nativeChapterComments && false" in source["ruleContent"]["content"]
+
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"chapterComment": {"segmentEnabled": "true"}},
+        ).status_code == 422
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"chapterComment": {"unknown": True}},
+        ).status_code == 422
+    finally:
+        assert admin_client.post("/api/console/settings", json=original).status_code == 200
 
 
 def test_book_source_priority_settings_accept_new_and_legacy_names():

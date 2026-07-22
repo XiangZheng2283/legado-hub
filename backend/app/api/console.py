@@ -2139,12 +2139,18 @@ _SUBSCRIPTION_SETTING_FIELDS = {
     "createRateLimitPerWindow",
     "updateRateLimitPerWindow",
 }
+_CHAPTER_COMMENT_SETTING_FIELDS = {
+    "segmentEnabled",
+    "pageEnabled",
+    "chapterEnabled",
+}
 _SETTINGS_FIELDS = {
     "sourcePool",
     "searchScoreFilter",
     "searchConfig",
     "contentWorkflow",
     "subscription",
+    "chapterComment",
 }
 
 
@@ -2222,6 +2228,15 @@ def _subscription_settings_from_config(cfg: AppConfig) -> dict:
     }
 
 
+def _chapter_comment_settings_from_config(cfg: AppConfig) -> dict:
+    chapter_comment = cfg.chapter_comment
+    return {
+        "segmentEnabled": chapter_comment.segment_enabled,
+        "pageEnabled": chapter_comment.page_enabled,
+        "chapterEnabled": chapter_comment.chapter_enabled,
+    }
+
+
 # ---- Settings ----
 
 @console_route("get", "/settings")
@@ -2238,6 +2253,7 @@ def get_settings():
         },
         "contentWorkflow": cfg.aggregate.content_workflow,
         "subscription": _subscription_settings_from_config(cfg),
+        "chapterComment": _chapter_comment_settings_from_config(cfg),
     }
     return settings
 
@@ -2277,11 +2293,33 @@ def update_settings(payload: dict):
                         f"subscription.{field_name}",
                         _parse_int_field(subscription[field_name], field=f"subscription.{field_name}", minimum=1),
                     )
+        if "chapterComment" in payload:
+            chapter_comment = payload["chapterComment"]
+            if not isinstance(chapter_comment, dict):
+                raise HTTPException(status_code=422, detail="chapterComment 必须是对象")
+            _reject_unknown_fields(
+                chapter_comment,
+                _CHAPTER_COMMENT_SETTING_FIELDS,
+                label="chapterComment",
+            )
+            for field_name in _CHAPTER_COMMENT_SETTING_FIELDS:
+                if field_name in chapter_comment:
+                    cfg.set(
+                        f"chapterComment.{field_name}",
+                        _parse_bool_field(
+                            chapter_comment[field_name],
+                            field=f"chapterComment.{field_name}",
+                        ),
+                    )
         cfg.save()
         active_config.reload()
     _plugin_scheduler.refresh_config()
     _search_service.scheduler.refresh_config()
-    return {"saved": True, "subscription": _subscription_settings_from_config(active_config)}
+    return {
+        "saved": True,
+        "subscription": _subscription_settings_from_config(active_config),
+        "chapterComment": _chapter_comment_settings_from_config(active_config),
+    }
 
 
 # ---- Aggregate Settings ----

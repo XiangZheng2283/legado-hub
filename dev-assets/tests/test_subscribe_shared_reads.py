@@ -156,9 +156,9 @@ def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_
 
     source = legado_source.generate_legado_source("http://testserver")[0]
 
-    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.6)"
+    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.7)"
     assert source["bookSourceUrl"] == "LegadoHub"
-    assert source["lastUpdateTime"] == 1_784_660_854_072
+    assert source["lastUpdateTime"] == 1_784_698_822_467
     assert source["lastUpdateTime"] > 1_784_637_186_000
 
 
@@ -749,7 +749,8 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "var total = legadoHubChapterEndReviewCount(reviews || {});" in source["jsLib"]
     chapter_comment = source["ruleContent"]["chapterComment"]
     assert chapter_comment["protocolVersion"] == 1
-    assert chapter_comment["display"]["segment"]["enabled"] is False
+    assert chapter_comment["display"]["segment"]["enabled"] is True
+    assert chapter_comment["display"]["segment"]["preset"] == "labelCount"
     assert chapter_comment["display"]["page"]["enabled"] is True
     assert chapter_comment["display"]["chapter"]["enabled"] is True
     assert "matchedParagraphIndex" in chapter_comment["data"]

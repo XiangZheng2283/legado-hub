@@ -11,14 +11,15 @@ from pathlib import Path
 
 from app.config import GENERATED_DIR
 from app.core.aggregate_config import load_aggregate_config
+from app.core.app_config import AppConfig
 from app.core.public_security import get_public_base_url, normalize_public_base_url
 
 
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.6"
-_READER_RULE_LAST_UPDATE_TIME = 1_784_660_854_072
+_READER_RULE_VERSION = "0.0.7"
+_READER_RULE_LAST_UPDATE_TIME = 1_784_698_822_467
 
 
 def _login_ui() -> str:
@@ -622,6 +623,8 @@ def _build_source(base_api: str | None = None) -> dict:
     config = load_aggregate_config()
     name = config.get("name", "LegadoHub 聚合")
     group = config.get("group", "聚合,LegadoHub")
+    chapter_comment = AppConfig.get().chapter_comment
+    legacy_chapter_comment_enabled = "true" if chapter_comment.chapter_enabled else "false"
 
     explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
     return {
@@ -709,7 +712,7 @@ def _build_source(base_api: str | None = None) -> dict:
             'text = String(text || "").replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n");\n'
             'var nativeChapterComments = false;\n'
             'try { nativeChapterComments = !!java.hasReaderCapability("chapter-comments", 1); } catch (e) {}\n'
-            'if (!nativeChapterComments && contentUrl && chapterPayload && typeof chapterPayload.content === "string") {\n'
+            f'if (!nativeChapterComments && {legacy_chapter_comment_enabled} && contentUrl && chapterPayload && typeof chapterPayload.content === "string") {{\n'
             '  try {\n'
             '    var reviewPayload = JSON.parse(String(java.ajax(legadoHubReviewRoot(contentUrl) + "/reviews") || "{}"));\n'
             '    text = legadoHubDecorateChapterReviewOnly(java, text, reviewPayload, contentUrl);\n'
@@ -723,11 +726,21 @@ def _build_source(base_api: str | None = None) -> dict:
                 "data": _chapter_comment_data_rule(),
                 "action": _chapter_comment_action_rule(),
                 "display": {
-                    "segment": {"enabled": False, "preset": "none", "countField": "total"},
-                    "page": {"enabled": True, "preset": "pull", "countField": "total", "label": "热评"},
+                    "segment": {
+                        "enabled": chapter_comment.segment_enabled,
+                        "preset": "labelCount" if chapter_comment.segment_enabled else "none",
+                        "countField": "total",
+                        "label": "段评",
+                    },
+                    "page": {
+                        "enabled": chapter_comment.page_enabled,
+                        "preset": "pull" if chapter_comment.page_enabled else "none",
+                        "countField": "total",
+                        "label": "热评",
+                    },
                     "chapter": {
-                        "enabled": True,
-                        "preset": "summaryRow",
+                        "enabled": chapter_comment.chapter_enabled,
+                        "preset": "summaryRow" if chapter_comment.chapter_enabled else "none",
                         "countField": "total",
                         "label": "本章说",
                     },

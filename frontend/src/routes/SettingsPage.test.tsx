@@ -59,6 +59,11 @@ describe("SettingsPage subscription policy", () => {
         createRateLimitPerWindow: 10,
         updateRateLimitPerWindow: 60,
       },
+      chapterComment: {
+        segmentEnabled: true,
+        pageEnabled: true,
+        chapterEnabled: true,
+      },
     })
     ;(api.aggregateSettings as any).mockResolvedValue({ contentWorkflow: {} })
     ;(api.lexiconStatus as any).mockResolvedValue({})
@@ -115,6 +120,24 @@ describe("SettingsPage subscription policy", () => {
 
     await waitFor(() => expect(api.settings).toHaveBeenCalledTimes(2))
     expect(api.aggregateSettings).toHaveBeenCalledTimes(2)
+  })
+
+  it("saves the three reader comment entry switches", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole("tab", { name: "阅读评论" }))
+    await user.click(screen.getByRole("switch", { name: "段评入口" }))
+    await user.click(screen.getByRole("switch", { name: "页热评入口" }))
+    await user.click(screen.getByRole("button", { name: "保存配置" }))
+
+    await waitFor(() => expect(api.updateSettings).toHaveBeenCalledTimes(1))
+    const payload = (api.updateSettings as any).mock.calls[0][0]
+    expect(payload.chapterComment).toEqual({
+      segmentEnabled: false,
+      pageEnabled: false,
+      chapterEnabled: true,
+    })
   })
 
   it("reorders source priorities and saves the existing array contract", async () => {
