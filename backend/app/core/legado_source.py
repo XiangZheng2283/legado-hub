@@ -17,8 +17,8 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.5"
-_READER_RULE_LAST_UPDATE_TIME = 1_784_644_161_854
+_READER_RULE_VERSION = "0.0.6"
+_READER_RULE_LAST_UPDATE_TIME = 1_784_660_854_072
 
 
 def _login_ui() -> str:
@@ -350,17 +350,34 @@ function legadoHubEstimatedPageStart(paragraphOffsets, pageBudget, pageIndex, fa
     return target;
 }
 
+function legadoHubChapterEndReviewCount(reviews) {
+    var summary = reviews && reviews.summary && typeof reviews.summary === "object" ? reviews.summary : {};
+    var total = Number(summary.chapterEndCount || 0);
+    if (isFinite(total) && total > 0) return Math.floor(total);
+    return Math.max((reviews.chapterEnd || []).length, (reviews.chapterEndHot || []).length);
+}
+
 function legadoHubTotalReviewCount(reviews) {
     var summary = reviews && reviews.summary && typeof reviews.summary === "object" ? reviews.summary : {};
     var total = Number(summary.totalReviews || 0);
     if (isFinite(total) && total > 0) return Math.floor(total);
-    var chapter = Number(summary.chapterEndCount || 0);
-    if (!chapter) chapter = Math.max((reviews.chapterEnd || []).length, (reviews.chapterEndHot || []).length);
+    var chapter = legadoHubChapterEndReviewCount(reviews || {});
     var author = (reviews.authorReviews || []).length;
     var paragraph = (reviews.hotParagraphReviews || []).reduce(function (sum, item) {
         return sum + legadoHubReviewCount(item);
     }, 0);
     return chapter + author + paragraph;
+}
+
+function legadoHubDecorateChapterReviewOnly(java, text, reviews, contentUrl) {
+    var normalized = String(text || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    var total = legadoHubChapterEndReviewCount(reviews || {});
+    if (total <= 0) return normalized;
+    return normalized + "\n" + legadoHubChapterReviewEntry(
+        java,
+        legadoHubReviewRoot(contentUrl) + "/reviews/view?tab=chapter",
+        total
+    );
 }
 
 function legadoHubDecorateReviews(java, text, reviews, contentUrl) {
@@ -525,6 +542,81 @@ def _reader_js_lib(base_api: str) -> str:
     return "function baseUrl() { return " + base_literal + "; }\n" + _LEGADO_E_READER_JS
 
 
+def _chapter_comment_url_rule() -> str:
+    return (
+        "@js:\n"
+        "var location = String(baseUrl || '');\n"
+        "var matched = /^data:contentUrl;base64,([^,]+)/i.exec(location);\n"
+        "if (!matched) throw new Error('chapter comment content URL missing');\n"
+        "var contentUrl = String(java.base64Decode(matched[1]) || '').trim();\n"
+        "if (!/^https?:\\/\\//i.test(contentUrl)) throw new Error('invalid chapter comment content URL');\n"
+        "legadoHubReviewRoot(contentUrl) + '/reviews';"
+    )
+
+
+def _chapter_comment_data_rule() -> str:
+    return (
+        "@js:\n"
+        "var reviews = JSON.parse(String(result || '{}'));\n"
+        "var segments = [];\n"
+        "(reviews.hotParagraphReviews || []).forEach(function (item) {\n"
+        "  if (!item || typeof item !== 'object') return;\n"
+        "  var paragraphId = Number(item.paragraphId);\n"
+        "  var paragraphIndex = Number(item.matchedParagraphIndex);\n"
+        "  if (!isFinite(paragraphId) || paragraphId < 0 || !isFinite(paragraphIndex) || paragraphIndex < 0) return;\n"
+        "  var total = legadoHubReviewCount(item);\n"
+        "  if (total <= 0) return;\n"
+        "  var hot = Array.isArray(item.topReviews) ? item.topReviews.length : Number(item.hotCommentCount || 0);\n"
+        "  segments.push({\n"
+        "    id: String(Math.floor(paragraphId)),\n"
+        "    paragraphIndex: Math.floor(paragraphIndex),\n"
+        "    paragraphCount: Math.max(1, Math.floor(Number(item.matchedParagraphCount) || 1)),\n"
+        "    excerpt: String(item.matchedText || item.paragraphText || ''),\n"
+        "    counts: {total: total, hot: Math.max(0, Math.floor(hot || 0))},\n"
+        "    pageEligible: true,\n"
+        "    actionData: {paragraphId: String(Math.floor(paragraphId))}\n"
+        "  });\n"
+        "});\n"
+        "var total = legadoHubTotalReviewCount(reviews);\n"
+        "JSON.stringify({\n"
+        "  version: 1,\n"
+        "  segments: segments,\n"
+        "  chapter: total > 0 ? {label: '本章说', counts: {total: total, hot: 0}, actionData: {}} : null\n"
+        "});"
+    )
+
+
+def _chapter_comment_action_rule() -> str:
+    return (
+        "var actionEvent = JSON.parse(String(event || result || '{}'));\n"
+        "var location = String(baseUrl || '');\n"
+        "var matched = /^data:contentUrl;base64,([^,]+)/i.exec(location);\n"
+        "if (!matched) throw new Error('chapter comment content URL missing');\n"
+        "var contentUrl = String(java.base64Decode(matched[1]) || '').trim();\n"
+        "var viewRoot = legadoHubReviewRoot(contentUrl) + '/reviews/view';\n"
+        "var scope = String(actionEvent.scope || '');\n"
+        "var viewUrl = '';\n"
+        "var title = '';\n"
+        "if (scope === 'chapter') {\n"
+        "  viewUrl = viewRoot + '?tab=chapter';\n"
+        "  title = '本章说';\n"
+        "} else if (scope === 'page') {\n"
+        "  var ids = (actionEvent.segmentIds || []).map(String).filter(function (id) { return /^\\d+$/.test(id); }).slice(0, 50);\n"
+        "  if (!ids.length) throw new Error('page comment segment missing');\n"
+        "  viewUrl = viewRoot + '?tab=paragraph&paragraphIds=' + encodeURIComponent(ids.join(','));\n"
+        "  title = '页热评';\n"
+        "} else if (scope === 'segment') {\n"
+        "  var id = String(actionEvent.segmentId || (actionEvent.segmentIds || [])[0] || '');\n"
+        "  if (!/^\\d+$/.test(id)) throw new Error('segment comment id missing');\n"
+        "  viewUrl = viewRoot + '?tab=paragraph&paragraphId=' + encodeURIComponent(id);\n"
+        "  title = '段评说';\n"
+        "} else {\n"
+        "  throw new Error('unsupported chapter comment scope');\n"
+        "}\n"
+        "JSON.stringify({type: 'sourceWebView', url: viewUrl, title: title, presentation: 'bottomSheet', heightRatio: 0.78});"
+    )
+
+
 def _build_source(base_api: str | None = None) -> dict:
     base_api = normalize_public_base_url(base_api or get_public_base_url())
     config = load_aggregate_config()
@@ -615,14 +707,33 @@ def _build_source(base_api: str | None = None) -> dict:
             '  else if (chapterPayload.detail && chapterPayload.detail.message) text = chapterPayload.detail.message;\n'
             '} catch (e) {}\n'
             'text = String(text || "").replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n");\n'
-            'if (contentUrl && chapterPayload && typeof chapterPayload.content === "string") {\n'
+            'var nativeChapterComments = false;\n'
+            'try { nativeChapterComments = !!java.hasReaderCapability("chapter-comments", 1); } catch (e) {}\n'
+            'if (!nativeChapterComments && contentUrl && chapterPayload && typeof chapterPayload.content === "string") {\n'
             '  try {\n'
             '    var reviewPayload = JSON.parse(String(java.ajax(legadoHubReviewRoot(contentUrl) + "/reviews") || "{}"));\n'
-            '    text = legadoHubDecorateReviews(java, text, reviewPayload, contentUrl);\n'
+            '    text = legadoHubDecorateChapterReviewOnly(java, text, reviewPayload, contentUrl);\n'
             '  } catch (e) {}\n'
             '}\n'
             'result = /<(?:p|div)\\b/i.test(text) ? text : text.replace(/\\n\\n+/g, "<br><br>").replace(/\\n/g, "<br>");',
             "title": "$.title",
+            "chapterComment": {
+                "protocolVersion": 1,
+                "url": _chapter_comment_url_rule(),
+                "data": _chapter_comment_data_rule(),
+                "action": _chapter_comment_action_rule(),
+                "display": {
+                    "segment": {"enabled": False, "preset": "none", "countField": "total"},
+                    "page": {"enabled": True, "preset": "pull", "countField": "total", "label": "热评"},
+                    "chapter": {
+                        "enabled": True,
+                        "preset": "summaryRow",
+                        "countField": "total",
+                        "label": "本章说",
+                    },
+                },
+                "cacheTtlSeconds": 300,
+            },
         },
         "jsLib": _reader_js_lib(base_api),
     }
