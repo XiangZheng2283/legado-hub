@@ -262,6 +262,49 @@ def test_review_html_escapes_remote_text_and_rejects_untrusted_media() -> None:
     assert 'onerror="alert(1)"' not in rendered
 
 
+def test_review_html_uses_one_inline_reply_control_and_shows_paragraph_context() -> None:
+    reviews = {
+        "authorReviews": [],
+        "chapterEnd": [],
+        "hotParagraphReviews": [
+            {"paragraphId": 2, "matchedText": "第一段正文", "commentCount": 2},
+            {"paragraphId": 3, "matchedText": "第二段正文", "commentCount": 1},
+        ],
+        "summary": {"totalReviews": 3},
+    }
+    rendered = render_chapter_reviews_html(
+        chapter_title="测试章节",
+        reviews=reviews,
+        review_view_url="https://books.example.test/api/reviews",
+        active_tab="paragraph",
+        page_hot_detail={
+            "paragraphIds": [2, 3],
+            "comments": [
+                {
+                    "id": "100",
+                    "paragraphId": 2,
+                    "content": "段落热评",
+                    "replyCount": 2,
+                    "replies": [{"userName": "回复者", "content": "首条回复"}],
+                },
+                {"id": "200", "paragraphId": 3, "content": "另一段热评"},
+            ],
+            "totalCount": 3,
+        },
+    )
+
+    assert '<blockquote class="comment-paragraph">第一段正文</blockquote>' in rendered
+    assert '<blockquote class="comment-paragraph">第二段正文</blockquote>' in rendered
+    assert "官方段落" not in rendered
+    assert "展开 2 条回复" in rendered
+    assert '<div class="reply-line" data-review-id="' in rendered
+    assert "data-reply-url=" in rendered
+    assert "loadReplyDetails" in rendered
+    assert "loadedReplyUrls.has" in rendered
+    assert "查看 2 条回复" not in rendered
+    assert "reply-stack::before" not in rendered
+
+
 def test_source_generation_rejects_js_url_injection_and_exports_no_credentials() -> None:
     with pytest.raises(RuntimeError):
         generate_legado_source('https://books.example.test/\";alert(1);//')

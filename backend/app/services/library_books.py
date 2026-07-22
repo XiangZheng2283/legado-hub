@@ -1223,7 +1223,10 @@ class LibraryBooksService:
         page = max(1, int(page or 1))
         page_size = max(1, min(int(page_size or 20), 100))
         normalized_keyword = str(keyword or "").strip()
-        where = ["search_visibility_status = 'visible'"]
+        where = [
+            "search_visibility_status = 'visible'",
+            "visible_processed_chapters > 0",
+        ]
         params: list[Any] = []
         if normalized_keyword:
             where.append("(name LIKE ? COLLATE NOCASE OR author LIKE ? COLLATE NOCASE)")

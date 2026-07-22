@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
-from app.core.app_config import AppConfig
 from app.core.legado_source import generate_legado_source
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, unpack_aggregate_chapter_url
@@ -43,6 +42,8 @@ _MAX_LIBRARY_CHAPTER_PAGE = 100_000
 _MAX_LIBRARY_CHAPTER_PAGE_SIZE = 200
 _LEGADO_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 _TERMINAL_SEARCH_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
+_READING_SEARCH_TIMEOUT_MS = 60_000
+_READING_SEARCH_POLL_SECONDS = 0.1
 _MAX_READING_SEARCH_OWNERS = 1024
 _legado_search_service: SearchJobService | None = None
 _legado_search_service_init_token = None
@@ -291,16 +292,35 @@ def _legado_search_payload(
     keyword: str,
     page: int,
     base_api: str,
+    user_id: str,
     allowed_source_ids: set[str],
     snapshot: dict | None = None,
 ) -> dict:
     snapshot_items = (snapshot or {}).get("items", [])
-    raw_items = [
+    third_party_items = [
         item
         for item in snapshot_items
         if isinstance(item, dict) and item.get("sourceId") != VIRTUAL_SOURCE_ID
     ] if isinstance(snapshot_items, list) else []
+    raw_items: list[dict] = []
     if keyword.strip():
+        try:
+            subscribed_books = user_subscriptions_service.list_books(
+                user_id,
+                library_books_service,
+                keyword=keyword,
+            )
+            raw_items.extend(
+                library_books_service.build_search_injected_item(book, base_api=base_api)
+                for book in subscribed_books
+                if isinstance(book.get("subscription"), dict)
+                and book["subscription"].get("status") in {"active", "paused"}
+                and book.get("searchVisibilityStatus") == "visible"
+                and int(book.get("visibleProcessedChapters", 0) or 0) > 0
+            )
+        except Exception:
+            logger.exception("Reading subscribed-book search failed")
+
         try:
             published = library_books_service.page_published_books(
                 keyword=keyword,
@@ -313,6 +333,8 @@ def _legado_search_payload(
             )
         except Exception:
             logger.exception("Reading published-book search failed")
+
+    raw_items.extend(third_party_items)
 
     items = []
     seen_book_ids: set[str] = set()
@@ -347,21 +369,18 @@ async def _wait_for_legado_search(
     search_service: SearchJobService,
     job_id: str,
     wait_ms: int,
-) -> None:
-    """Wait only for the configured first-result window, not every slow source."""
-    try:
-        first_result_wait_ms = max(
-            0,
-            int(AppConfig.get().search.first_result_timeout_seconds * 1000),
-        )
-    except Exception:
-        first_result_wait_ms = 5_000
-    deadline = asyncio.get_running_loop().time() + (min(wait_ms, first_result_wait_ms) / 1000)
-    while asyncio.get_running_loop().time() < deadline:
+) -> bool:
+    """Collect source results until the job finishes or the caller's deadline expires."""
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + (wait_ms / 1000)
+    while True:
         session = search_service.get_session(job_id)
         if session is None or session.status in _TERMINAL_SEARCH_STATUSES:
-            return
-        await asyncio.sleep(0.1)
+            return True
+        remaining = deadline - loop.time()
+        if remaining <= 0:
+            return False
+        await asyncio.sleep(min(_READING_SEARCH_POLL_SECONDS, remaining))
 
 
 def _validated_aggregate_book_id(value: str) -> str:
@@ -890,13 +909,18 @@ async def legado_search(
     request: Request,
     keyword: str = "",
     page: str = "1",
-    waitMs: str = "120000",
+    waitMs: str = "60000",
 ) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
     _reject_legado_query_anomalies(request, {"keyword", "page", "waitMs"})
     keyword = _validated_legado_text(keyword, field="keyword", max_length=200)
     parsed_page = _legado_query_int(page, field="page", minimum=1, maximum=1000)
-    parsed_wait_ms = _legado_query_int(waitMs, field="waitMs", minimum=0, maximum=120000)
+    parsed_wait_ms = _legado_query_int(
+        waitMs,
+        field="waitMs",
+        minimum=0,
+        maximum=_READING_SEARCH_TIMEOUT_MS,
+    )
     with reading_access_limiter.guard(user.user_id, "search"):
         return await _legado_search_response(
             keyword=keyword,
@@ -920,6 +944,7 @@ async def _legado_search_response(
             keyword=keyword,
             page=page,
             base_api=base_api,
+            user_id=user_id,
             allowed_source_ids=set(),
             snapshot={},
         )
@@ -932,6 +957,7 @@ async def _legado_search_response(
             keyword=keyword,
             page=page,
             base_api=base_api,
+            user_id=user_id,
             allowed_source_ids=allowed_source_ids,
         )
 
@@ -943,7 +969,9 @@ async def _legado_search_response(
             search_mode="source",
         )
         _remember_legado_search_owner(job.job_id, user_id)
-        await _wait_for_legado_search(search_service, job.job_id, wait_ms)
+        completed = await _wait_for_legado_search(search_service, job.job_id, wait_ms)
+        if not completed:
+            search_service.cancel_job(job.job_id)
         snapshot = search_service.session_snapshot(
             job.job_id,
             base_api=base_api,
@@ -957,6 +985,7 @@ async def _legado_search_response(
         keyword=keyword,
         page=page,
         base_api=base_api,
+        user_id=user_id,
         allowed_source_ids=allowed_source_ids,
         snapshot=snapshot,
     )
@@ -984,6 +1013,7 @@ async def get_legado_search_status(request: Request, job_id: str) -> dict:
             keyword=str(snapshot.get("keyword", "") or ""),
             page=int(snapshot.get("page", 1) or 1),
             base_api=get_public_base_url(request),
+            user_id=user.user_id,
             allowed_source_ids=source_ids,
             snapshot=snapshot,
         )

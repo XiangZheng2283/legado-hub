@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import html
 import re
 import time
@@ -254,8 +255,23 @@ def _reply_row(reply: dict[str, Any], *, target_name: str) -> str:
     target_position = _review_related_position(reply)
     content = _review_content(reply.get("content"))
     text = f'<p>{content}</p>' if content else ""
+    reply_id = _review_id(reply) or hashlib.sha256(
+        "\x1f".join(
+            str(reply.get(field) or "")
+            for field in (
+                "userId",
+                "userName",
+                "replyToUserName",
+                "content",
+                "reviewTime",
+                "createTime",
+                "imageUrl",
+            )
+        ).encode("utf-8")
+    ).hexdigest()
+    reply_attr = f' data-review-id="{html.escape(reply_id, quote=True)}"'
     return (
-        '<div class="reply-line">'
+        f'<div class="reply-line"{reply_attr}>'
         + _review_avatar(reply, compact=True)
         + '<div class="reply-body"><div class="reply-heading">'
         f'<span class="reply-author">{html.escape(reply_name)}</span>'
@@ -287,11 +303,16 @@ def _review_card(
     author: bool = False,
     review_view_url: str = "",
     link_to_paragraph: bool = False,
-    allow_reply_detail: bool = True,
+    paragraph_text: str = "",
 ) -> str:
     user_name = str(review.get("userName") or "书友")
     content = str(review.get("content") or "")
     review_time = str(review.get("reviewTime") or review.get("createTime") or "")
+    review_id = _review_id(review)
+    try:
+        paragraph_id = int(review.get("paragraphId", -1))
+    except (TypeError, ValueError):
+        paragraph_id = -1
     replies = review.get("replies") if isinstance(review.get("replies"), list) else []
     replies = [reply for reply in replies if isinstance(reply, dict)]
     reply_rows = []
@@ -299,46 +320,47 @@ def _review_card(
         reply_rows.append(_reply_row(reply, target_name=user_name))
     reply_stack = ""
     reply_total = max(len(reply_rows), int(review.get("replyCount") or 0))
-    if reply_rows:
+    if reply_rows or reply_total > 0:
         toggle = ""
-        if len(reply_rows) > 1 or reply_total > 1:
+        if len(reply_rows) > 1 or reply_total > len(reply_rows):
             open_label = f"展开 {_count_label(reply_total)} 条回复"
+            reply_url_attr = ""
+            if review_view_url and review_id:
+                query_values: dict[str, Any] = {"tab": "paragraph", "rootReviewId": review_id}
+                if paragraph_id >= -1:
+                    query_values["paragraphId"] = paragraph_id
+                reply_url = f"{review_view_url}?{urlencode(query_values)}"
+                reply_url_attr = f' data-reply-url="{html.escape(reply_url, quote=True)}"'
             toggle = (
                 '<button class="reply-toggle" type="button" data-reply-toggle aria-expanded="false" '
-                f'data-open-label="{html.escape(open_label, quote=True)}" data-close-label="收起回复">'
+                + reply_url_attr
+                + f'data-open-label="{html.escape(open_label, quote=True)}" data-close-label="收起回复">'
                 f'<span class="reply-toggle-label">{html.escape(open_label)}</span>'
                 '<span aria-hidden="true">⌄</span></button>'
             )
         reply_stack = (
             '<div class="reply-stack"><div class="reply-surface">'
             + "".join(reply_rows)
+            + '</div>'
             + toggle
-            + '</div></div>'
+            + '</div>'
         )
 
     detail_links: list[str] = []
-    review_id = _review_id(review)
-    try:
-        paragraph_id = int(review.get("paragraphId", -1))
-    except (TypeError, ValueError):
-        paragraph_id = -1
     if review_view_url and link_to_paragraph and paragraph_id >= 0:
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
         detail_links.append(
             f'<a class="comment-detail-link" href="{html.escape(review_view_url, quote=True)}?{query}">查看该段评论</a>'
         )
-    if review_view_url and allow_reply_detail and review_id and reply_total > 0:
-        query_values: dict[str, Any] = {"tab": "paragraph", "rootReviewId": review_id}
-        if paragraph_id >= -1:
-            query_values["paragraphId"] = paragraph_id
-        query = urlencode(query_values)
-        detail_links.append(
-            f'<a class="comment-detail-link" href="{html.escape(review_view_url, quote=True)}?{query}">查看 {reply_total} 条回复</a>'
-        )
     detail_row = f'<div class="comment-detail-row">{"".join(detail_links)}</div>' if detail_links else ""
 
     content_html = _review_content(content)
     text_html = f'<p class="comment-text">{content_html}</p>' if content_html else ""
+    paragraph_html = (
+        f'<blockquote class="comment-paragraph">{html.escape(paragraph_text.strip())}</blockquote>'
+        if paragraph_text.strip()
+        else ""
+    )
     review_attr = f' data-review-id="{html.escape(review_id, quote=True)}"' if review_id else ""
     return (
         f'<article class="comment-item"{review_attr}>'
@@ -350,6 +372,7 @@ def _review_card(
         + '</div>'
         + f'<time>{html.escape(review_time)}</time></div>'
         + _review_reply_context(review)
+        + paragraph_html
         + text_html
         + _review_media(review)
         + '<div class="comment-meta">'
@@ -459,16 +482,9 @@ def _paragraph_groups(
     rendered: list[str] = []
     for item in groups:
         paragraph_id = int(item.get("paragraphId", 0) or 0)
-        comment_count = int(
-            item.get("commentCount")
-            or item.get("totalCommentCount")
-            or item.get("hotCommentCount")
-            or 0
-        )
         detail_comments = []
         if selected_paragraph_id == paragraph_id and isinstance(paragraph_detail, dict):
             detail_comments = paragraph_detail.get("comments") or []
-            comment_count = max(comment_count, int(paragraph_detail.get("totalCount") or 0))
         comments = (
             detail_comments
             if selected_paragraph_id == paragraph_id and isinstance(paragraph_detail, dict)
@@ -489,9 +505,6 @@ def _paragraph_groups(
         rendered.append(
             f'<article class="paragraph-group" data-paragraph-id="{paragraph_id}">'
             f'<p class="paragraph-quote">“{html.escape(str(item.get("matchedText") or item.get("paragraphText") or ""))}”</p>'
-            '<div class="paragraph-summary">'
-            f'<strong>官方段落 {paragraph_id}</strong>'
-            f'<span class="hot-count">热评 {_count_label(comment_count)}</span></div>'
             + comment_html
             + (
                 ""
@@ -524,6 +537,7 @@ def _page_hot_review_list(
     detail: dict[str, Any],
     *,
     review_view_url: str,
+    paragraph_texts: dict[str, str],
 ) -> str:
     comments = [item for item in detail.get("comments", []) if isinstance(item, dict)]
     body = _folded_list(
@@ -532,6 +546,7 @@ def _page_hot_review_list(
                 review,
                 review_view_url=review_view_url,
                 link_to_paragraph=True,
+                paragraph_text=paragraph_texts.get(str(review.get("paragraphId")), ""),
             )
             for review in comments
         ],
@@ -560,17 +575,11 @@ def _reply_detail_list(
 ) -> str:
     root = detail.get("rootReview") if isinstance(detail.get("rootReview"), dict) else None
     replies = [item for item in detail.get("replies", []) if isinstance(item, dict)]
-    items = []
-    if root is not None:
-        items.append(_review_card(root, review_view_url=review_view_url, allow_reply_detail=False))
-    items.extend(
-        _review_card(reply, review_view_url=review_view_url, allow_reply_detail=False)
-        for reply in replies
-    )
+    target_name = str((root or {}).get("userName") or "书友")
     body = _folded_list(
-        items,
+        [_reply_row(reply, target_name=target_name) for reply in replies],
         list_id="reply-detail-comments",
-        visible_count=6,
+        visible_count=10,
         empty_message="该评论暂未返回回复",
         open_label="展开当前批次回复",
         close_label="收起当前批次回复",
@@ -583,11 +592,13 @@ def _reply_detail_list(
             "rootReviewId": detail.get("rootReviewId") or "",
         },
         cursor=True,
+        auto_load=True,
+        list_id="reply-detail-comments",
     )
 
 
 _REVIEW_CSS = """
-:root{color-scheme:light;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:0;--paper:#fbfcfc;--ink:#202a33;--muted:#6f7c86;--faint:#98a3ab;--line:#dce2e6;--line-soft:#e9edef;--blue:#3f7398;--blue-soft:#edf4f8;--green:#39765e;--green-soft:#edf7f2;--rose:#a15462}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100dvh;background:var(--paper);color:var(--ink)}button{font:inherit;letter-spacing:0}.review-sheet{width:min(720px,100%);margin:0 auto;background:var(--paper)}.sheet-handle{width:36px;height:4px;margin:9px auto 3px;border-radius:999px;background:#cbd3d8}.sheet-header{display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:5px 20px 8px}.sheet-title strong{display:block;font-size:16px}.sheet-title span{display:block;margin-top:3px;color:var(--faint);font-size:11px}.review-tabs{display:grid;grid-template-columns:repeat(3,1fr);padding:0 16px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line)}.review-tab{position:relative;min-height:46px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600}.review-tab[aria-selected=true]{color:var(--ink)}.review-tab[aria-selected=true]::after{content:"";position:absolute;right:18%;bottom:-1px;left:18%;height:2px;background:var(--blue)}.review-tab small{margin-left:4px;color:var(--faint);font-size:10px}.sheet-content{overflow-y:auto}.review-panel{display:none;padding:0 20px 20px}.review-panel.active{display:block}.scope-row{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:1px solid var(--line-soft);color:var(--muted);font-size:12px}.scope-row strong{color:var(--blue);font-size:12px}.comment-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;padding:16px 0;border-bottom:1px solid var(--line-soft)}.comment-avatar{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:50%;background:#e8edf0;color:#4f626f;font-size:11px;font-weight:700}.comment-avatar.author{background:var(--green-soft);color:var(--green)}.comment-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.comment-head strong{font-size:12px}.comment-head time{color:var(--faint);font-size:10px}.author-badge{margin-left:6px;padding:2px 5px;border-radius:4px;background:var(--green-soft);color:var(--green);font-size:9px}.comment-text{margin:7px 0 0;color:#34424c;font-size:13px;line-height:1.65}.comment-meta{display:flex;gap:14px;margin-top:8px;color:var(--faint);font-size:10px}.comment-detail-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px}.comment-detail-link{color:var(--blue);font-size:10px;font-weight:600;text-decoration:none}.reply-stack{position:relative;margin-top:12px;padding-bottom:11px}.reply-stack::before,.reply-stack::after{content:"";position:absolute;right:7px;bottom:4px;left:7px;height:24px;border:1px solid #dbe3e7;border-radius:6px;background:#edf1f3}.reply-stack::after{right:13px;bottom:0;left:13px;background:#e5ebee}.reply-stack.open{padding-bottom:0}.reply-stack.open::before,.reply-stack.open::after{opacity:0}.reply-surface{position:relative;z-index:1;overflow:hidden;border:1px solid #d7e0e5;border-radius:6px;background:#f5f8f9}.reply-line{padding:9px 11px;color:#56656f;font-size:11px;line-height:1.55}.reply-line+.reply-line{display:none;border-top:1px solid #e2e8eb}.reply-stack.open .reply-line{display:block}.reply-line p{margin:3px 0 0;color:#3c4a54}.reply-author{color:var(--blue);font-weight:700}.reply-target{color:#725d87;font-weight:600}.reply-arrow{margin:0 5px;color:var(--faint)}.reply-toggle{display:flex;width:100%;min-height:32px;align-items:center;justify-content:space-between;padding:0 11px;border:0;border-top:1px solid #e2e8eb;background:#f0f4f6;color:#526f82;cursor:pointer;font-size:10px;font-weight:600}.fold-toggle{display:block;width:100%;min-height:36px;border:0;border-top:1px solid var(--line-soft);background:transparent;color:var(--blue);cursor:pointer;font-size:11px;font-weight:600}.pagination-row{display:flex;justify-content:center;gap:12px;padding:14px 0 2px}.pagination-row a{min-width:88px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;color:var(--blue);font-size:11px;font-weight:600;text-align:center;text-decoration:none}.paragraph-group{padding:15px 0 8px;border-bottom:1px solid var(--line-soft)}.paragraph-quote{margin:0;padding-left:11px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.paragraph-summary{display:flex;align-items:center;justify-content:space-between;margin-top:9px}.paragraph-summary strong{font-size:12px}.hot-count{color:var(--rose);font-size:11px;font-weight:700}.paragraph-more{display:inline-block;margin:12px 0 4px;color:var(--blue);font-size:11px;text-decoration:none}.empty-state{padding:24px 0;color:var(--faint);font-size:12px;text-align:center}@media(max-width:640px){.review-panel{padding-right:16px;padding-left:16px}}
+:root{color-scheme:light;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:0;--paper:#fbfcfc;--ink:#202a33;--muted:#6f7c86;--faint:#98a3ab;--line:#dce2e6;--line-soft:#e9edef;--blue:#3f7398;--blue-soft:#edf4f8;--green:#39765e;--green-soft:#edf7f2;--rose:#a15462}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100dvh;background:var(--paper);color:var(--ink)}button{font:inherit;letter-spacing:0}.review-sheet{width:min(720px,100%);margin:0 auto;background:var(--paper)}.sheet-handle{width:36px;height:4px;margin:9px auto 3px;border-radius:999px;background:#cbd3d8}.sheet-header{display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:5px 20px 8px}.sheet-title strong{display:block;font-size:16px}.sheet-title span{display:block;margin-top:3px;color:var(--faint);font-size:11px}.review-tabs{display:grid;grid-template-columns:repeat(3,1fr);padding:0 16px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line)}.review-tab{position:relative;min-height:46px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600}.review-tab[aria-selected=true]{color:var(--ink)}.review-tab[aria-selected=true]::after{content:"";position:absolute;right:18%;bottom:-1px;left:18%;height:2px;background:var(--blue)}.review-tab small{margin-left:4px;color:var(--faint);font-size:10px}.sheet-content{overflow-y:auto}.review-panel{display:none;padding:0 20px 20px}.review-panel.active{display:block}.scope-row{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:1px solid var(--line-soft);color:var(--muted);font-size:12px}.scope-row strong{color:var(--blue);font-size:12px}.comment-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;padding:16px 0;border-bottom:1px solid var(--line-soft)}.comment-avatar{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:50%;background:#e8edf0;color:#4f626f;font-size:11px;font-weight:700}.comment-avatar.author{background:var(--green-soft);color:var(--green)}.comment-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.comment-head strong{font-size:12px}.comment-head time{color:var(--faint);font-size:10px}.author-badge{margin-left:6px;padding:2px 5px;border-radius:4px;background:var(--green-soft);color:var(--green);font-size:9px}.comment-paragraph{margin:7px 0 0;padding-left:9px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.comment-text{margin:7px 0 0;color:#34424c;font-size:13px;line-height:1.65}.comment-meta{display:flex;gap:14px;margin-top:8px;color:var(--faint);font-size:10px}.comment-detail-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px}.comment-detail-link{color:var(--blue);font-size:10px;font-weight:600;text-decoration:none}.reply-stack{margin-top:10px;padding-left:10px;border-left:2px solid var(--line)}.reply-surface{overflow:hidden}.reply-line{display:grid;padding:8px 0;color:#56656f;font-size:11px;line-height:1.55}.reply-line+.reply-line{display:none;border-top:1px solid var(--line-soft)}.reply-stack.open .reply-line{display:grid}.reply-line p{margin:3px 0 0;color:#3c4a54}.reply-author{color:var(--blue);font-weight:700}.reply-target{color:#725d87;font-weight:600}.reply-arrow{margin:0 5px;color:var(--faint)}.reply-toggle{display:flex;min-height:30px;align-items:center;gap:6px;padding:6px 0 0;border:0;background:transparent;color:#526f82;cursor:pointer;font-size:10px;font-weight:600}.fold-toggle{display:block;width:100%;min-height:36px;border:0;border-top:1px solid var(--line-soft);background:transparent;color:var(--blue);cursor:pointer;font-size:11px;font-weight:600}.pagination-row{display:flex;justify-content:center;gap:12px;padding:14px 0 2px}.pagination-row a{min-width:88px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;color:var(--blue);font-size:11px;font-weight:600;text-align:center;text-decoration:none}.paragraph-group{padding:15px 0 8px;border-bottom:1px solid var(--line-soft)}.paragraph-quote{margin:0;padding-left:11px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.paragraph-more{display:inline-block;margin:12px 0 4px;color:var(--blue);font-size:11px;text-decoration:none}.empty-state{padding:24px 0;color:var(--faint);font-size:12px;text-align:center}@media(max-width:640px){.review-panel{padding-right:16px;padding-left:16px}}
 .review-sheet{display:flex;height:100dvh;flex-direction:column}.sheet-content{min-height:0;flex:1}
 .comment-body{min-width:0}.comment-avatar{position:relative;flex:none;overflow:visible}.avatar-fallback{position:relative;z-index:0}.avatar-photo{position:absolute;z-index:1;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#e8edf0}.avatar-frame{position:absolute;z-index:2;top:-4px;left:-4px;width:calc(100% + 8px);height:calc(100% + 8px);object-fit:contain;pointer-events:none}.comment-avatar.compact{width:24px;height:24px;font-size:9px}.comment-avatar.compact .avatar-frame{top:-3px;left:-3px;width:calc(100% + 6px);height:calc(100% + 6px)}.comment-head{align-items:flex-start}.comment-identity{display:flex;min-width:0;align-items:center;flex-wrap:wrap;gap:5px}.comment-identity strong{overflow-wrap:anywhere}.identity-tags{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px}.position-badge,.related-position,.title-badge{display:inline-flex;min-height:18px;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:600;line-height:1.3}.position-badge{background:var(--green-soft);color:var(--green)}.related-position{margin-left:3px;background:#f0edf5;color:#725d87}.title-badge{border:1px solid #dce3e7;background:#f7f9fa;color:#5d6b75}.title-badge img{width:14px;height:14px;object-fit:contain}.comment-text,.reply-line p{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap}.comment-emoticon{display:inline-block;width:22px;height:22px;object-fit:contain;vertical-align:middle}.comment-emoticon-fallback{display:inline-flex;min-height:20px;align-items:center;padding:1px 5px;border:1px solid #dce3e7;border-radius:4px;background:#f3f6f7;color:#687984;font-size:10px;vertical-align:middle}.comment-media-wrap{margin-top:9px}.comment-media{display:block;width:auto;max-width:min(280px,100%);max-height:320px;border:1px solid var(--line-soft);border-radius:6px;background:#f2f5f6;object-fit:contain}.reply-line{grid-template-columns:24px minmax(0,1fr);gap:8px}.reply-body{min-width:0}.reply-heading{display:flex;align-items:center;flex-wrap:wrap;gap:3px}.reply-heading .identity-tags{gap:3px}.reply-line p{margin:4px 0 0}.reply-line .comment-media{max-width:min(200px,100%);max-height:220px}@media(max-width:640px){.comment-media{max-height:240px}.reply-line .comment-media{max-height:180px}}
 [hidden]{display:none!important}
@@ -604,6 +615,7 @@ const scrollRoot = document.querySelector(".sheet-content");
 const loadedUrls = new Set();
 let loading = false;
 let observer;
+let replyObserver;
 
 function activePanel() {
   return document.querySelector(".review-panel.active");
@@ -617,18 +629,69 @@ function applyFold(list, open) {
   list.dataset.open = String(open);
 }
 
+function setReplyOpen(button, open) {
+  const stack = button.closest(".reply-stack");
+  stack.classList.toggle("open", open);
+  button.setAttribute("aria-expanded", String(open));
+  button.querySelector(".reply-toggle-label").textContent = open
+    ? button.dataset.closeLabel
+    : button.dataset.openLabel;
+  replyObserver.unobserve(button);
+  if (open && button.dataset.nextReplyUrl) replyObserver.observe(button);
+}
+
+async function loadReplyDetails(button, url) {
+  if (!url || button.dataset.loading) return false;
+  const loadedReplyUrls = button.loadedReplyUrls || new Set();
+  if (loadedReplyUrls.has(url)) return false;
+  button.dataset.loading = "true";
+  button.disabled = true;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const source = new DOMParser().parseFromString(await response.text(), "text/html");
+    const sourceList = source.getElementById("reply-detail-comments");
+    const surface = button.closest(".reply-stack")?.querySelector(".reply-surface");
+    if (!sourceList || !surface) throw new Error("回复分页结构不完整");
+    appendUnique(surface, sourceList);
+    const next = source.querySelector(
+      '[data-auto-pagination][data-list-id="reply-detail-comments"] [data-next-page]'
+    );
+    loadedReplyUrls.add(url);
+    button.loadedReplyUrls = loadedReplyUrls;
+    button.dataset.loaded = "true";
+    button.dataset.nextReplyUrl = next?.href && !loadedReplyUrls.has(next.href) ? next.href : "";
+    delete button.dataset.replyError;
+    return true;
+  } catch (error) {
+    button.dataset.replyError = "true";
+    button.querySelector(".reply-toggle-label").textContent = "加载失败，点击重试";
+    return false;
+  } finally {
+    button.disabled = false;
+    delete button.dataset.loading;
+  }
+}
+
 function bindReplyToggles(root = document) {
   root.querySelectorAll("[data-reply-toggle]").forEach((button) => {
     if (button.dataset.bound) return;
     button.dataset.bound = "true";
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const stack = button.closest(".reply-stack");
-      const open = !stack.classList.contains("open");
-      stack.classList.toggle("open", open);
-      button.setAttribute("aria-expanded", String(open));
-      button.querySelector(".reply-toggle-label").textContent = open
-        ? button.dataset.closeLabel
-        : button.dataset.openLabel;
+      const open = stack.classList.contains("open");
+      if (open && button.dataset.replyError !== "true") {
+        setReplyOpen(button, false);
+        return;
+      }
+      const replyUrl = button.dataset.loaded === "true"
+        ? button.dataset.nextReplyUrl
+        : button.dataset.replyUrl;
+      if (replyUrl) {
+        button.querySelector(".reply-toggle-label").textContent = "正在加载回复...";
+        if (!await loadReplyDetails(button, replyUrl)) return;
+      }
+      setReplyOpen(button, true);
     });
   });
 }
@@ -775,15 +838,29 @@ function activate(name, resetScroll = false) {
   arm();
 }
 
-document.querySelectorAll("[data-fold-list]").forEach((list) => applyFold(list, false));
-bindReplyToggles();
-bindFoldToggles();
 observer = new IntersectionObserver(
   (entries) => {
     if (entries.some((entry) => entry.isIntersecting)) loadNext();
   },
   { root: scrollRoot, rootMargin: "0px 0px 120px 0px" },
 );
+replyObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(async (entry) => {
+      const button = entry.target;
+      if (!entry.isIntersecting || !button.dataset.nextReplyUrl || button.dataset.loading) return;
+      replyObserver.unobserve(button);
+      const loaded = await loadReplyDetails(button, button.dataset.nextReplyUrl);
+      if (loaded && button.closest(".reply-stack")?.classList.contains("open") && button.dataset.nextReplyUrl) {
+        replyObserver.observe(button);
+      }
+    });
+  },
+  { root: scrollRoot, rootMargin: "0px 0px 100px 0px" },
+);
+document.querySelectorAll("[data-fold-list]").forEach((list) => applyFold(list, false));
+bindReplyToggles();
+bindFoldToggles();
 tabs.forEach((tab) => tab.addEventListener("click", () => activate(tab.dataset.tab, true)));
 activate("__ACTIVE_TAB__");
 """
@@ -863,7 +940,14 @@ def render_chapter_reviews_html(
         paragraph_scope_label = "评论回复"
         paragraph_scope_count = int(reply_detail.get("totalCount") or 0)
     elif isinstance(page_hot_detail, dict):
-        paragraph_html = _page_hot_review_list(page_hot_detail, review_view_url=review_view_url)
+        paragraph_html = _page_hot_review_list(
+            page_hot_detail,
+            review_view_url=review_view_url,
+            paragraph_texts={
+                str(item.get("paragraphId")): str(item.get("matchedText") or item.get("paragraphText") or "")
+                for item in matched_paragraphs
+            },
+        )
         paragraph_scope_label = "当前页热评"
         paragraph_scope_count = int(page_hot_detail.get("totalCount") or 0)
     else:
@@ -874,7 +958,7 @@ def render_chapter_reviews_html(
             paragraph_detail=paragraph_detail,
         )
         paragraph_scope_label = (
-            f"官方段落 {selected_paragraph_id}"
+            "段落评论"
             if selected_paragraph_id is not None
             else f"{len(matched_paragraphs)} 个热门段落"
         )
