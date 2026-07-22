@@ -18,7 +18,7 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.9"
+_READER_RULE_VERSION = "0.0.10"
 _READER_RULE_LAST_UPDATE_TIME = 1_784_734_266_373
 
 
@@ -318,6 +318,7 @@ def _chapter_comment_data_rule() -> str:
 
 def _chapter_comment_action_rule() -> str:
     return (
+        "@js:\n"
         "var actionEvent = JSON.parse(String(event || result || '{}'));\n"
         "var location = String(baseUrl || '');\n"
         "var matched = /^data:contentUrl;base64,([^,]+)/i.exec(location);\n"

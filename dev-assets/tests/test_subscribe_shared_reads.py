@@ -1050,6 +1050,9 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "chapterPreviews.length >= 3" in chapter_comment["data"]
     assert "var key = '$' + String" in chapter_comment["data"]
     assert "legadoHubChapterEndReviewCount(reviews)" in chapter_comment["data"]
+    assert chapter_comment["url"].startswith("@js:")
+    assert chapter_comment["data"].startswith("@js:")
+    assert chapter_comment["action"].startswith("@js:")
     assert "scope === 'page'" in chapter_comment["action"]
     assert "scope === 'segment'" in chapter_comment["action"]
     assert "scope === 'chapter'" in chapter_comment["action"]
