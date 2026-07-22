@@ -322,6 +322,12 @@ def _review_card(
     reply_total = max(len(reply_rows), int(review.get("replyCount") or 0))
     if reply_rows or reply_total > 0:
         toggle = ""
+        reply_surface_id = f"reply-surface-{review_id}" if review_id else ""
+        reply_surface_attr = (
+            f' id="{html.escape(reply_surface_id, quote=True)}"'
+            if reply_surface_id
+            else ""
+        )
         if len(reply_rows) > 1 or reply_total > len(reply_rows):
             open_label = f"展开 {_count_label(reply_total)} 条回复"
             reply_url_attr = ""
@@ -331,15 +337,21 @@ def _review_card(
                     query_values["paragraphId"] = paragraph_id
                 reply_url = f"{review_view_url}?{urlencode(query_values)}"
                 reply_url_attr = f' data-reply-url="{html.escape(reply_url, quote=True)}"'
+            controls_attr = (
+                f' aria-controls="{html.escape(reply_surface_id, quote=True)}"'
+                if reply_surface_id
+                else ""
+            )
             toggle = (
                 '<button class="reply-toggle" type="button" data-reply-toggle aria-expanded="false" '
                 + reply_url_attr
+                + controls_attr
                 + f'data-open-label="{html.escape(open_label, quote=True)}" data-close-label="收起回复">'
                 f'<span class="reply-toggle-label">{html.escape(open_label)}</span>'
                 '<span aria-hidden="true">⌄</span></button>'
             )
         reply_stack = (
-            '<div class="reply-stack"><div class="reply-surface">'
+            f'<div class="reply-stack"><div class="reply-surface"{reply_surface_attr}>'
             + "".join(reply_rows)
             + '</div>'
             + toggle
@@ -350,7 +362,7 @@ def _review_card(
     if review_view_url and link_to_paragraph and paragraph_id >= 0:
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
         detail_links.append(
-            f'<a class="comment-detail-link" href="{html.escape(review_view_url, quote=True)}?{query}">查看该段评论</a>'
+            f'<a class="comment-detail-link" href="{html.escape(review_view_url, quote=True)}?{query}">查看该段全部评论</a>'
         )
     detail_row = f'<div class="comment-detail-row">{"".join(detail_links)}</div>' if detail_links else ""
 
@@ -407,6 +419,7 @@ def _folded_list(
         auto_toggle_attr = ' data-auto-fold-toggle="true"' if auto_load else ""
         toggle = (
             f'<button class="fold-toggle" type="button" data-fold-toggle="{html.escape(list_id, quote=True)}" '
+            f'aria-controls="{html.escape(list_id, quote=True)}" aria-expanded="false" '
             f'{auto_toggle_attr} '
             f'data-open-label="{html.escape(open_label, quote=True)}" '
             f'data-close-label="{html.escape(close_label, quote=True)}">{html.escape(open_label)}</button>'
@@ -477,7 +490,7 @@ def _paragraph_groups(
     if selected_paragraph_id is not None:
         groups = [item for item in groups if int(item.get("paragraphId", -1)) == selected_paragraph_id]
     if not groups:
-        return _empty_state("当前章节没有可可靠定位的页热评")
+        return _empty_state("本章暂无可定位的段评")
 
     rendered: list[str] = []
     for item in groups:
@@ -497,7 +510,7 @@ def _paragraph_groups(
             [_review_card(review, review_view_url=review_view_url) for review in comments],
             list_id=f"paragraph-comments-{paragraph_id}",
             visible_count=10 if is_detail else 2,
-            empty_message="该热段暂未返回评论正文",
+            empty_message="该段暂未返回评论",
             open_label="加载更多评论" if is_detail else "展开更多评论",
             close_label="收起评论",
             auto_load=is_detail,
@@ -517,7 +530,7 @@ def _paragraph_groups(
         rendered,
         list_id="hot-paragraph-groups",
         visible_count=10,
-        empty_message="当前章节没有可可靠定位的页热评",
+        empty_message="本章暂无可定位的段评",
         open_label="加载更多热门段落",
         close_label="收起热门段落",
         auto_load=True,
@@ -598,7 +611,7 @@ def _reply_detail_list(
 
 
 _REVIEW_CSS = """
-:root{color-scheme:light;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:0;--paper:#fbfcfc;--ink:#202a33;--muted:#6f7c86;--faint:#98a3ab;--line:#dce2e6;--line-soft:#e9edef;--blue:#3f7398;--blue-soft:#edf4f8;--green:#39765e;--green-soft:#edf7f2;--rose:#a15462}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100dvh;background:var(--paper);color:var(--ink)}button{font:inherit;letter-spacing:0}.review-sheet{width:min(720px,100%);margin:0 auto;background:var(--paper)}.sheet-handle{width:36px;height:4px;margin:9px auto 3px;border-radius:999px;background:#cbd3d8}.sheet-header{display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:5px 20px 8px}.sheet-title strong{display:block;font-size:16px}.sheet-title span{display:block;margin-top:3px;color:var(--faint);font-size:11px}.review-tabs{display:grid;grid-template-columns:repeat(3,1fr);padding:0 16px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line)}.review-tab{position:relative;min-height:46px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600}.review-tab[aria-selected=true]{color:var(--ink)}.review-tab[aria-selected=true]::after{content:"";position:absolute;right:18%;bottom:-1px;left:18%;height:2px;background:var(--blue)}.review-tab small{margin-left:4px;color:var(--faint);font-size:10px}.sheet-content{overflow-y:auto}.review-panel{display:none;padding:0 20px 20px}.review-panel.active{display:block}.scope-row{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:1px solid var(--line-soft);color:var(--muted);font-size:12px}.scope-row strong{color:var(--blue);font-size:12px}.comment-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;padding:16px 0;border-bottom:1px solid var(--line-soft)}.comment-avatar{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:50%;background:#e8edf0;color:#4f626f;font-size:11px;font-weight:700}.comment-avatar.author{background:var(--green-soft);color:var(--green)}.comment-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.comment-head strong{font-size:12px}.comment-head time{color:var(--faint);font-size:10px}.author-badge{margin-left:6px;padding:2px 5px;border-radius:4px;background:var(--green-soft);color:var(--green);font-size:9px}.comment-paragraph{margin:7px 0 0;padding-left:9px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.comment-text{margin:7px 0 0;color:#34424c;font-size:13px;line-height:1.65}.comment-meta{display:flex;gap:14px;margin-top:8px;color:var(--faint);font-size:10px}.comment-detail-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px}.comment-detail-link{color:var(--blue);font-size:10px;font-weight:600;text-decoration:none}.reply-stack{margin-top:10px;padding-left:10px;border-left:2px solid var(--line)}.reply-surface{overflow:hidden}.reply-line{display:grid;padding:8px 0;color:#56656f;font-size:11px;line-height:1.55}.reply-line+.reply-line{display:none;border-top:1px solid var(--line-soft)}.reply-stack.open .reply-line{display:grid}.reply-line p{margin:3px 0 0;color:#3c4a54}.reply-author{color:var(--blue);font-weight:700}.reply-target{color:#725d87;font-weight:600}.reply-arrow{margin:0 5px;color:var(--faint)}.reply-toggle{display:flex;min-height:30px;align-items:center;gap:6px;padding:6px 0 0;border:0;background:transparent;color:#526f82;cursor:pointer;font-size:10px;font-weight:600}.fold-toggle{display:block;width:100%;min-height:36px;border:0;border-top:1px solid var(--line-soft);background:transparent;color:var(--blue);cursor:pointer;font-size:11px;font-weight:600}.pagination-row{display:flex;justify-content:center;gap:12px;padding:14px 0 2px}.pagination-row a{min-width:88px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;color:var(--blue);font-size:11px;font-weight:600;text-align:center;text-decoration:none}.paragraph-group{padding:15px 0 8px;border-bottom:1px solid var(--line-soft)}.paragraph-quote{margin:0;padding-left:11px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.paragraph-more{display:inline-block;margin:12px 0 4px;color:var(--blue);font-size:11px;text-decoration:none}.empty-state{padding:24px 0;color:var(--faint);font-size:12px;text-align:center}@media(max-width:640px){.review-panel{padding-right:16px;padding-left:16px}}
+:root{color-scheme:light;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:0;--paper:#fbfcfc;--ink:#202a33;--muted:#6f7c86;--faint:#98a3ab;--line:#dce2e6;--line-soft:#e9edef;--blue:#3f7398;--blue-soft:#edf4f8;--green:#39765e;--green-soft:#edf7f2;--rose:#a15462}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100dvh;background:var(--paper);color:var(--ink)}button{font:inherit;letter-spacing:0}.review-sheet{width:min(720px,100%);margin:0 auto;background:var(--paper)}.sheet-handle{width:36px;height:4px;margin:9px auto 3px;border-radius:999px;background:#cbd3d8}.sheet-header{display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:5px 20px 8px}.sheet-title strong{display:block;font-size:16px}.sheet-title span{display:block;margin-top:3px;color:var(--faint);font-size:11px}.review-tabs{display:grid;grid-template-columns:repeat(2,1fr);padding:0 16px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line)}.review-tab{position:relative;min-height:46px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600}.review-tab[aria-selected=true]{color:var(--ink)}.review-tab[aria-selected=true]::after{content:"";position:absolute;right:18%;bottom:-1px;left:18%;height:2px;background:var(--blue)}.review-tab small{margin-left:4px;color:var(--faint);font-size:10px}.sheet-content{overflow-y:auto}.review-panel{display:none;padding:0 20px 20px}.review-panel.active{display:block}.scope-row{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:1px solid var(--line-soft);color:var(--muted);font-size:12px}.scope-row strong{color:var(--blue);font-size:12px}.comment-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;padding:16px 0;border-bottom:1px solid var(--line-soft)}.comment-avatar{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:50%;background:#e8edf0;color:#4f626f;font-size:11px;font-weight:700}.comment-avatar.author{background:var(--green-soft);color:var(--green)}.comment-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.comment-head strong{font-size:12px}.comment-head time{color:var(--faint);font-size:10px}.author-badge{margin-left:6px;padding:2px 5px;border-radius:4px;background:var(--green-soft);color:var(--green);font-size:9px}.comment-paragraph{margin:7px 0 0;padding-left:9px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.comment-text{margin:7px 0 0;color:#34424c;font-size:13px;line-height:1.65}.comment-meta{display:flex;gap:14px;margin-top:8px;color:var(--faint);font-size:10px}.comment-detail-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px}.comment-detail-link{color:var(--blue);font-size:10px;font-weight:600;text-decoration:none}.reply-stack{margin-top:10px;padding-left:10px;border-left:2px solid var(--line)}.reply-surface{overflow:hidden}.reply-line{display:grid;padding:8px 0;color:#56656f;font-size:11px;line-height:1.55}.reply-line+.reply-line{display:none;border-top:1px solid var(--line-soft)}.reply-stack.open .reply-line{display:grid}.reply-line p{margin:3px 0 0;color:#3c4a54}.reply-author{color:var(--blue);font-weight:700}.reply-target{color:#725d87;font-weight:600}.reply-arrow{margin:0 5px;color:var(--faint)}.reply-toggle{display:flex;min-height:30px;align-items:center;gap:6px;padding:6px 0 0;border:0;background:transparent;color:#526f82;cursor:pointer;font-size:10px;font-weight:600}.fold-toggle{display:block;width:100%;min-height:36px;border:0;border-top:1px solid var(--line-soft);background:transparent;color:var(--blue);cursor:pointer;font-size:11px;font-weight:600}.pagination-row{display:flex;justify-content:center;gap:12px;padding:14px 0 2px}.pagination-row a{min-width:88px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;color:var(--blue);font-size:11px;font-weight:600;text-align:center;text-decoration:none}.paragraph-group{padding:15px 0 8px;border-bottom:1px solid var(--line-soft)}.paragraph-quote{margin:0;padding-left:11px;border-left:2px solid #a9bfcc;color:#586873;font-family:"Songti SC",SimSun,serif;font-size:12px;line-height:1.6}.paragraph-more{display:inline-block;margin:12px 0 4px;color:var(--blue);font-size:11px;text-decoration:none}.empty-state{padding:24px 0;color:var(--faint);font-size:12px;text-align:center}@media(max-width:640px){.review-panel{padding-right:16px;padding-left:16px}}
 .review-sheet{display:flex;height:100dvh;flex-direction:column}.sheet-content{min-height:0;flex:1}
 .comment-body{min-width:0}.comment-avatar{position:relative;flex:none;overflow:visible}.avatar-fallback{position:relative;z-index:0}.avatar-photo{position:absolute;z-index:1;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#e8edf0}.avatar-frame{position:absolute;z-index:2;top:-4px;left:-4px;width:calc(100% + 8px);height:calc(100% + 8px);object-fit:contain;pointer-events:none}.comment-avatar.compact{width:24px;height:24px;font-size:9px}.comment-avatar.compact .avatar-frame{top:-3px;left:-3px;width:calc(100% + 6px);height:calc(100% + 6px)}.comment-head{align-items:flex-start}.comment-identity{display:flex;min-width:0;align-items:center;flex-wrap:wrap;gap:5px}.comment-identity strong{overflow-wrap:anywhere}.identity-tags{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px}.position-badge,.related-position,.title-badge{display:inline-flex;min-height:18px;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:600;line-height:1.3}.position-badge{background:var(--green-soft);color:var(--green)}.related-position{margin-left:3px;background:#f0edf5;color:#725d87}.title-badge{border:1px solid #dce3e7;background:#f7f9fa;color:#5d6b75}.title-badge img{width:14px;height:14px;object-fit:contain}.comment-text,.reply-line p{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap}.comment-emoticon{display:inline-block;width:22px;height:22px;object-fit:contain;vertical-align:middle}.comment-emoticon-fallback{display:inline-flex;min-height:20px;align-items:center;padding:1px 5px;border:1px solid #dce3e7;border-radius:4px;background:#f3f6f7;color:#687984;font-size:10px;vertical-align:middle}.comment-media-wrap{margin-top:9px}.comment-media{display:block;width:auto;max-width:min(280px,100%);max-height:320px;border:1px solid var(--line-soft);border-radius:6px;background:#f2f5f6;object-fit:contain}.reply-line{grid-template-columns:24px minmax(0,1fr);gap:8px}.reply-body{min-width:0}.reply-heading{display:flex;align-items:center;flex-wrap:wrap;gap:3px}.reply-heading .identity-tags{gap:3px}.reply-line p{margin:4px 0 0}.reply-line .comment-media{max-width:min(200px,100%);max-height:220px}@media(max-width:640px){.comment-media{max-height:240px}.reply-line .comment-media{max-height:180px}}
 [hidden]{display:none!important}
@@ -702,6 +715,8 @@ function ensureStatus(panel) {
     status = document.createElement("button");
     status.type = "button";
     status.className = "load-status";
+    status.setAttribute("aria-live", "polite");
+    status.setAttribute("aria-atomic", "true");
     status.hidden = true;
     status.addEventListener("click", () => {
       if (status.classList.contains("error")) loadNext(panel);
@@ -747,6 +762,7 @@ function bindFoldToggles(root = document) {
       const list = document.getElementById(button.dataset.foldToggle);
       const open = list.dataset.open !== "true";
       applyFold(list, open);
+      button.setAttribute("aria-expanded", String(open));
       button.textContent = open ? button.dataset.closeLabel : button.dataset.openLabel;
     });
   });
@@ -832,8 +848,16 @@ function arm() {
 }
 
 function activate(name, resetScroll = false) {
-  tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.tab === name)));
-  panels.forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === name));
+  tabs.forEach((tab) => {
+    const selected = tab.dataset.tab === name;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  });
+  panels.forEach((panel) => {
+    const selected = panel.dataset.panel === name;
+    panel.classList.toggle("active", selected);
+    panel.hidden = !selected;
+  });
   if (resetScroll) scrollRoot.scrollTop = 0;
   arm();
 }
@@ -885,8 +909,7 @@ def render_chapter_reviews_html(
     )
     if paragraph_only:
         active_tab = "paragraph"
-    active_tab = active_tab if active_tab in {"author", "chapter", "paragraph"} else "chapter"
-    author_reviews = [item for item in reviews.get("authorReviews", []) if isinstance(item, dict)]
+    active_tab = active_tab if active_tab in {"chapter", "paragraph"} else "chapter"
     chapter_reviews = _dedupe_reviews(reviews.get("chapterEndHot"), reviews.get("chapterEnd"))
     matched_paragraphs = [
         item
@@ -899,15 +922,7 @@ def render_chapter_reviews_html(
     )
     summary = reviews.get("summary") if isinstance(reviews.get("summary"), dict) else {}
     chapter_count = int(summary.get("chapterEndCount") or len(chapter_reviews))
-    total_reviews = int(summary.get("totalReviews") or len(chapter_reviews) + paragraph_count)
-    author_html = _folded_list(
-        [_review_card(review, author=True) for review in author_reviews],
-        list_id="author-comments",
-        visible_count=1,
-        empty_message="本章没有作家补充",
-        open_label="展开更多作家说",
-        close_label="收起作家说",
-    )
+    total_reviews = int(summary.get("totalReviews") or chapter_count + paragraph_count)
     chapter_page_reviews = (
         [item for item in chapter_detail.get("comments", []) if isinstance(item, dict)]
         if isinstance(chapter_detail, dict)
@@ -970,40 +985,66 @@ def render_chapter_reviews_html(
 
     def tab(name: str, label: str, count: int) -> str:
         selected = "true" if active_tab == name else "false"
-        return f'<button class="review-tab" type="button" role="tab" data-tab="{name}" aria-selected="{selected}">{label}<small>{_count_label(count)}</small></button>'
-
-    def panel(name: str, label: str, count: int, body: str) -> str:
-        active = " active" if active_tab == name else ""
+        tab_index = "0" if active_tab == name else "-1"
         return (
-            f'<section class="review-panel{active}" data-panel="{name}" role="tabpanel">'
+            f'<button class="review-tab" id="review-tab-{name}" type="button" role="tab" '
+            f'data-tab="{name}" aria-controls="review-panel-{name}" '
+            f'aria-selected="{selected}" tabindex="{tab_index}">'
+            f'{label}<small>{_count_label(count)}</small></button>'
+        )
+
+    def panel(name: str, label: str, count: int, body: str, *, tabbed: bool = True) -> str:
+        active = " active" if active_tab == name else ""
+        hidden = "" if active_tab == name else " hidden"
+        semantics = (
+            f' id="review-panel-{name}" role="tabpanel" aria-labelledby="review-tab-{name}"'
+            if tabbed
+            else f' role="region" aria-label="{html.escape(label, quote=True)}"'
+        )
+        return (
+            f'<section class="review-panel{active}" data-panel="{name}"{semantics}{hidden}>'
             f'<div class="scope-row"><span>{label}</span><strong>{_count_label(count)} 条</strong></div>'
             + body
             + '</section>'
         )
 
     tabs_html = ""
-    panels_html = panel("paragraph", paragraph_scope_label, paragraph_scope_count, paragraph_html)
+    panels_html = panel(
+        "paragraph",
+        paragraph_scope_label,
+        paragraph_scope_count,
+        paragraph_html,
+        tabbed=not paragraph_only,
+    )
     if not paragraph_only:
         tabs_html = (
             '<div class="review-tabs" role="tablist" aria-label="评论分类">'
-            + tab("author", "作家说", len(author_reviews))
             + tab("chapter", "本章说", chapter_count)
             + tab("paragraph", "段评说", paragraph_count)
             + '</div>'
         )
         panels_html = (
-            panel("author", "作者补充", len(author_reviews), author_html)
-            + panel("chapter", "本章说", chapter_count, chapter_html)
+            panel("chapter", "本章说", chapter_count, chapter_html)
             + panels_html
         )
+
+    if isinstance(reply_detail, dict):
+        view_title = "评论回复"
+    elif isinstance(page_hot_detail, dict):
+        view_title = "页热评"
+    elif selected_paragraph_id is not None:
+        view_title = "段落评论"
+    else:
+        view_title = "本章评论"
+    view_count = paragraph_scope_count if paragraph_only else total_reviews
 
     return (
         '<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        f'<title>{html.escape(chapter_title)} · 本章评论</title><style>{_REVIEW_CSS}</style></head><body>'
+        f'<title>{html.escape(chapter_title)} · {view_title}</title><style>{_REVIEW_CSS}</style></head><body>'
         '<main class="review-sheet"><div class="sheet-handle" aria-hidden="true"></div>'
-        '<header class="sheet-header"><div class="sheet-title"><strong>本章评论</strong>'
-        f'<span>{html.escape(chapter_title)} · {_count_label(total_reviews)} 条</span></div></header>'
+        f'<header class="sheet-header"><div class="sheet-title"><strong>{view_title}</strong>'
+        f'<span>{html.escape(chapter_title)} · {_count_label(view_count)} 条</span></div></header>'
         + tabs_html
         + '<div class="sheet-content">'
         + panels_html

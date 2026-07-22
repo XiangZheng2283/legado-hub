@@ -695,7 +695,8 @@ def test_chapter_comment_settings_round_trip_and_strict_validation(admin_client)
         assert display["segment"]["enabled"] is False
         assert display["page"]["enabled"] is True
         assert display["chapter"]["enabled"] is False
-        assert "!nativeChapterComments && false" in source["ruleContent"]["content"]
+        assert source["ruleContent"]["chapterComment"]["protocolVersion"] == 2
+        assert "nativeChapterComments" not in source["ruleContent"]["content"]
 
         assert admin_client.post(
             "/api/console/settings",

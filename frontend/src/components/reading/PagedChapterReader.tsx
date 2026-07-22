@@ -50,11 +50,43 @@ function countChapterReviews(reviews?: ChapterReviewsResponse): number {
   return Math.max(reviews.chapterEnd?.length || 0, reviews.chapterEndHot?.length || 0)
 }
 
-function countAllReviews(reviews?: ChapterReviewsResponse): number {
-  if (!reviews) return 0
-  const summaryCount = Number(reviews.summary?.totalReviews || 0)
-  if (summaryCount > 0) return summaryCount
-  return countChapterReviews(reviews) + countParagraphReviews(reviews) + (reviews.authorReviews?.length || 0)
+interface ReviewPreview {
+  id: string
+  userName: string
+  content: string
+}
+
+function reviewStringField(review: Record<string, unknown>, fields: string[]): string {
+  for (const field of fields) {
+    const value = review[field]
+    if (typeof value === "string" && value.trim()) return value.trim()
+  }
+  return ""
+}
+
+function collectReviewPreviews(
+  groups: Array<Array<Record<string, unknown>> | undefined>,
+  limit: number,
+): ReviewPreview[] {
+  const previews: ReviewPreview[] = []
+  const seen = new Set<string>()
+  for (const group of groups) {
+    for (const review of group || []) {
+      const content = reviewStringField(review, ["content", "Content"])
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\[fn=\d+\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+      if (!content) continue
+      const userName = reviewStringField(review, ["userName", "UserName", "nickName"])
+      const id = reviewStringField(review, ["id", "reviewId"]) || `${userName}\u0000${content}`
+      if (seen.has(id)) continue
+      seen.add(id)
+      previews.push({ id, userName, content })
+      if (previews.length >= limit) return previews
+    }
+  }
+  return previews
 }
 
 function reviewCommentCount(item: NonNullable<ChapterReviewsResponse["hotParagraphReviews"]>[number]): number {
@@ -254,9 +286,16 @@ export function PagedChapterReader({
   }, [currentPage, goToPage, open, reviewTab])
 
   const chapterReviewCount = countChapterReviews(reviewsQuery.data)
-  const totalReviewCount = countAllReviews(reviewsQuery.data)
+  const authorPreview = collectReviewPreviews([reviewsQuery.data?.authorReviews], 1)[0]
+  const chapterPreviews = collectReviewPreviews(
+    [reviewsQuery.data?.chapterEndHot, reviewsQuery.data?.chapterEnd],
+    3,
+  )
   const currentPageReviews = pageReviewSummaries[currentPage] || { commentCount: 0, paragraphIds: [] }
   const wordCount = chapter?.sourceWordCount || chapter?.contentLength || String(content || "").replace(/\s/g, "").length
+  const reviewViewTitle = reviewTab === "paragraph"
+    ? (reviewParagraphIds.length > 0 ? "页热评" : "段落评论")
+    : "本章评论"
 
   const openReviews = (tab: ChapterReviewTab, paragraphIds: number[] = []) => {
     if (!chapterId) return
@@ -340,20 +379,46 @@ export function PagedChapterReader({
                   {paragraphs.map((line, index) => (
                     <p key={index} data-paragraph-index={index} className="mb-[1.12em] text-justify indent-[2em]">{line}</p>
                   ))}
-                  <button
-                    type="button"
-                    className="mt-8 grid w-full break-inside-avoid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-slate-300 bg-white/65 p-3 text-left font-sans shadow-sm transition-colors hover:border-slate-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-                    onClick={() => openReviews("chapter")}
-                    disabled={reviewsQuery.isLoading || reviewsQuery.isError}
-                    aria-label={`本章说 ${chapterReviewCount} 条评论`}
-                  >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-700"><MessageCircle className="h-5 w-5" /></span>
-                    <span className="min-w-0">
-                      <strong className="block text-sm text-slate-800">本章说</strong>
-                      <span className="mt-1 block text-xs text-slate-500">共 {totalReviewCount.toLocaleString("zh-CN")} 条评论</span>
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-slate-400" />
-                  </button>
+                  {authorPreview && (
+                    <aside
+                      data-testid="chapter-author-say"
+                      className="mt-8 break-inside-avoid rounded-md border border-stone-300 bg-white/55 p-4 font-sans shadow-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <strong className="truncate text-sm text-slate-800">{authorPreview.userName || bookAuthor || "作者"}</strong>
+                        <Badge className="shrink-0 border-transparent bg-indigo-100 text-indigo-700 hover:bg-indigo-100">作家说</Badge>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">{authorPreview.content}</p>
+                    </aside>
+                  )}
+                  {chapterReviewCount > 0 && (
+                    <button
+                      type="button"
+                      className="mt-4 block w-full break-inside-avoid rounded-md border border-slate-300 bg-white/65 p-3 text-left font-sans shadow-sm transition-colors hover:border-slate-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => openReviews("chapter")}
+                      disabled={reviewsQuery.isLoading || reviewsQuery.isError}
+                      aria-label={`本章说 ${chapterReviewCount} 条评论`}
+                    >
+                      <span className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-700"><MessageCircle className="h-5 w-5" /></span>
+                        <span className="min-w-0">
+                          <strong className="block text-sm text-slate-800">本章说</strong>
+                          <span className="mt-1 block text-xs text-slate-500">共 {chapterReviewCount.toLocaleString("zh-CN")} 条评论</span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                      </span>
+                      {chapterPreviews.length > 0 && (
+                        <span className="mt-3 block divide-y divide-stone-200 border-t border-stone-200">
+                          {chapterPreviews.map((preview) => (
+                            <span key={preview.id} className="grid grid-cols-[minmax(72px,auto)_minmax(0,1fr)] gap-3 py-2 text-xs leading-5">
+                              <strong className="truncate font-medium text-slate-600">{preview.userName || "书友"}</strong>
+                              <span className="line-clamp-1 text-slate-500">{preview.content}</span>
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </article>
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-slate-400">暂无可读正文。</div>
@@ -387,14 +452,14 @@ export function PagedChapterReader({
 
           {reviewTab && chapterId && (
             <div className="absolute inset-0 z-30 flex items-end justify-center bg-slate-950/45 p-0 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) setReviewTab(null) }}>
-              <section className="relative h-[min(82dvh,700px)] w-full max-w-[720px] overflow-hidden rounded-t-2xl border border-b-0 border-slate-300 bg-white shadow-2xl sm:h-[min(78dvh,700px)] sm:rounded-b-lg sm:border-b" role="dialog" aria-label="本章评论">
+              <section className="relative h-[min(82dvh,700px)] w-full max-w-[720px] overflow-hidden rounded-t-2xl border border-b-0 border-slate-300 bg-white shadow-2xl sm:h-[min(78dvh,700px)] sm:rounded-b-lg sm:border-b" role="dialog" aria-label={reviewViewTitle}>
                 <Button type="button" variant="ghost" size="icon" className="absolute right-3 top-3 z-10 h-8 w-8 bg-white/90" onClick={() => setReviewTab(null)} aria-label="关闭评论" title="关闭评论">
                   <X className="h-4 w-4" />
                 </Button>
                 <iframe
                   className="h-full w-full border-0"
                   src={api.reading.chapterReviewsViewUrl(chapterId, reviewTab, reviewParagraphIds)}
-                  title={reviewTab === "paragraph" ? "段评说评论" : "本章说评论"}
+                  title={reviewViewTitle}
                 />
               </section>
             </div>

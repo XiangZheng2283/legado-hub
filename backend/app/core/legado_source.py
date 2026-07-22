@@ -18,8 +18,8 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.8"
-_READER_RULE_LAST_UPDATE_TIME = 1_784_719_299_194
+_READER_RULE_VERSION = "0.0.9"
+_READER_RULE_LAST_UPDATE_TIME = 1_784_734_266_373
 
 
 def _reader_rule_last_update_time(config: AppConfig) -> int:
@@ -207,159 +207,6 @@ function legadoHubReviewCount(item) {
     return isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
-function legadoHubReviewLabel(count, compact) {
-    count = Math.max(0, Math.floor(Number(count) || 0));
-    return compact && count > 99 ? "99+" : String(count);
-}
-
-function legadoHubNormalizeReviewText(value) {
-    return String(value || "")
-        .replace(/<[^>]+>/g, "")
-        .replace(/^\s*[#>*+-]+\s*/, "")
-        .replace(/\s+/g, "")
-        .replace(/[^0-9A-Za-z\u3400-\u9fff]/g, "");
-}
-
-function legadoHubReviewMatchScore(candidate, needle) {
-    if (!candidate || !needle) return 0;
-    if (candidate === needle) return 1;
-    var shorter = Math.min(candidate.length, needle.length);
-    var longer = Math.max(candidate.length, needle.length);
-    if (shorter < 12) return 0;
-    if (candidate.indexOf(needle) >= 0 || needle.indexOf(candidate) >= 0) {
-        var coverage = shorter / longer;
-        return coverage >= 0.45 ? 0.82 + coverage * 0.18 : 0;
-    }
-    function grams(value) {
-        var counts = {};
-        for (var index = 0; index < value.length - 1; index += 1) {
-            var gram = value.slice(index, index + 2);
-            counts[gram] = (counts[gram] || 0) + 1;
-        }
-        return counts;
-    }
-    var left = grams(candidate);
-    var right = grams(needle);
-    var overlap = 0;
-    Object.keys(left).forEach(function (gram) {
-        overlap += Math.min(left[gram], right[gram] || 0);
-    });
-    return (2 * overlap) / Math.max(1, candidate.length + needle.length - 2);
-}
-
-function legadoHubFindReviewParagraph(paragraphs, matchedText) {
-    var needle = legadoHubNormalizeReviewText(matchedText);
-    if (!needle) return -1;
-    var ranked = paragraphs.map(function (paragraph, index) {
-        return {
-            index: index,
-            score: legadoHubReviewMatchScore(legadoHubNormalizeReviewText(paragraph), needle)
-        };
-    }).sort(function (left, right) { return right.score - left.score; });
-    var exact = ranked.filter(function (item) { return item.score === 1; });
-    if (exact.length === 1) return exact[0].index;
-    if (exact.length > 1 || !ranked.length || ranked[0].score < 0.72) return -1;
-    if (ranked.length > 1 && ranked[0].score - ranked[1].score < 0.08) return -1;
-    return ranked[0].index;
-}
-
-function legadoHubReviewImage(java, svg, options) {
-    var encoded = String(java.base64Encode(svg) || "");
-    if (!encoded) return "";
-    return '<img src="data:image/svg+xml;base64,' + encoded + ',' + JSON.stringify(options) + '">';
-}
-
-function legadoHubMapValue(config, key) {
-    if (!config) return null;
-    try {
-        var direct = config[key];
-        if (direct !== null && direct !== undefined) return direct;
-    } catch (e) {}
-    try {
-        var mapped = config.get(key);
-        if (mapped !== null && mapped !== undefined) return mapped;
-    } catch (e) {}
-    return null;
-}
-
-function legadoHubSvgColor(value, fallback) {
-    var color = String(value || "").trim();
-    return /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
-}
-
-function legadoHubReviewTheme(java) {
-    var mode = "";
-    var themeConfig = null;
-    var readConfig = null;
-    try { mode = String(java.getThemeMode() || ""); } catch (e) {}
-    try { themeConfig = java.getThemeConfigMap(); } catch (e) {}
-    try { readConfig = java.getReadBookConfigMap(); } catch (e) {}
-    var isEInk = mode === "3";
-    var themeNight = String(legadoHubMapValue(themeConfig, "isNightTheme") || "").toLowerCase() === "true";
-    var isNight = !isEInk && (mode === "2" || themeNight);
-    var textKey = isEInk ? "textColorEInk" : (isNight ? "textColorNight" : "textColor");
-    return {
-        text: legadoHubSvgColor(
-            legadoHubMapValue(readConfig, textKey),
-            isNight ? "#b8b8b8" : "#4b5563"
-        )
-    };
-}
-
-function legadoHubPageHotReviewEntry(java, reviewUrl, count) {
-    var label = legadoHubReviewLabel(count, true);
-    var colors = legadoHubReviewTheme(java);
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="280" height="72" viewBox="0 0 280 72">'
-        + '<rect x="2" y="4" width="276" height="64" rx="12" fill="' + colors.text + '" fill-opacity="0.10" stroke="' + colors.text + '" stroke-opacity="0.18" stroke-width="2"/>'
-        + '<text x="140" y="46" text-anchor="middle" fill="' + colors.text + '" fill-opacity="0.72" font-size="27" font-family="sans-serif" font-weight="500">热评 ' + label + '</text></svg>';
-    return legadoHubReviewImage(java, svg, {
-        style: "RIGHT",
-        width: "28%",
-        click: "legadoHubOpenReviews(java, " + JSON.stringify(reviewUrl) + ")"
-    });
-}
-
-function legadoHubChapterReviewEntry(java, reviewUrl, totalCount) {
-    var label = legadoHubReviewLabel(totalCount, false);
-    var colors = legadoHubReviewTheme(java);
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="94" viewBox="0 0 720 94">'
-        + '<rect x="2" y="2" width="716" height="90" rx="16" fill="' + colors.text + '" fill-opacity="0.08" stroke="' + colors.text + '" stroke-opacity="0.12" stroke-width="2"/>'
-        + '<text x="38" y="59" fill="' + colors.text + '" fill-opacity="0.76" font-size="28" font-family="sans-serif" font-weight="500">本章说</text>'
-        + '<text x="642" y="59" text-anchor="end" fill="' + colors.text + '" fill-opacity="0.58" font-size="24" font-family="sans-serif">' + label + ' 条评论</text>'
-        + '<path d="m675 39 12 8-12 8" fill="none" stroke="' + colors.text + '" stroke-opacity="0.52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    return legadoHubReviewImage(java, svg, {
-        style: "FULL",
-        width: "100%",
-        click: "legadoHubOpenReviews(java, " + JSON.stringify(reviewUrl) + ")"
-    });
-}
-
-function legadoHubReviewPageBudget(java) {
-    var textSize = 20;
-    try {
-        var config = java.getReadBookConfigMap();
-        var configured = Number(legadoHubMapValue(config, "textSize"));
-        if (isFinite(configured) && configured > 0) textSize = configured;
-    } catch (e) {}
-    return Math.max(520, Math.min(1200, Math.round(900 * 20 / textSize)));
-}
-
-function legadoHubPageHotCount(items) {
-    return items.reduce(function (sum, item) {
-        return sum + legadoHubReviewCount(item);
-    }, 0);
-}
-
-function legadoHubEstimatedPageStart(paragraphOffsets, pageBudget, pageIndex, fallbackIndex) {
-    var target = Math.max(0, Math.floor(Number(fallbackIndex) || 0));
-    while (target > 0) {
-        var previousPage = Math.floor((paragraphOffsets[target - 1] || 0) / pageBudget);
-        if (previousPage !== pageIndex) break;
-        target -= 1;
-    }
-    return target;
-}
-
 function legadoHubChapterEndReviewCount(reviews) {
     var summary = reviews && reviews.summary && typeof reviews.summary === "object" ? reviews.summary : {};
     var total = Number(summary.chapterEndCount || 0);
@@ -367,183 +214,6 @@ function legadoHubChapterEndReviewCount(reviews) {
     return Math.max((reviews.chapterEnd || []).length, (reviews.chapterEndHot || []).length);
 }
 
-function legadoHubTotalReviewCount(reviews) {
-    var summary = reviews && reviews.summary && typeof reviews.summary === "object" ? reviews.summary : {};
-    var total = Number(summary.totalReviews || 0);
-    if (isFinite(total) && total > 0) return Math.floor(total);
-    var chapter = legadoHubChapterEndReviewCount(reviews || {});
-    var author = (reviews.authorReviews || []).length;
-    var paragraph = (reviews.hotParagraphReviews || []).reduce(function (sum, item) {
-        return sum + legadoHubReviewCount(item);
-    }, 0);
-    return chapter + author + paragraph;
-}
-
-function legadoHubDecorateChapterReviewOnly(java, text, reviews, contentUrl) {
-    var normalized = String(text || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-    var total = legadoHubChapterEndReviewCount(reviews || {});
-    if (total <= 0) return normalized;
-    return normalized + "\n" + legadoHubChapterReviewEntry(
-        java,
-        legadoHubReviewRoot(contentUrl) + "/reviews/view?tab=chapter",
-        total
-    );
-}
-
-function legadoHubDecorateReviews(java, text, reviews, contentUrl) {
-    if (!reviews || typeof reviews !== "object") return text;
-    var normalized = String(text || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-    var lines = normalized.split("\n");
-    var paragraphs = [];
-    var lineIndexes = [];
-    lines.forEach(function (line, lineIndex) {
-        if (String(line).trim()) {
-            paragraphs.push(line);
-            lineIndexes.push(lineIndex);
-        }
-    });
-    var paragraphOffsets = [];
-    var offset = 0;
-    paragraphs.forEach(function (paragraph) {
-        paragraphOffsets.push(offset);
-        offset += Math.max(1, legadoHubNormalizeReviewText(paragraph).length) + 8;
-    });
-    var pageBudget = legadoHubReviewPageBudget(java);
-    var pageGroups = {};
-    (reviews.hotParagraphReviews || []).forEach(function (item) {
-        if (!item || typeof item !== "object") return;
-        var paragraphId = Number(item.paragraphId);
-        var count = legadoHubReviewCount(item);
-        if (!isFinite(paragraphId) || paragraphId < 0 || count <= 0) return;
-        var start = Number(item.matchedParagraphIndex);
-        if (!isFinite(start) || Math.floor(start) !== start || start < 0 || start >= paragraphs.length) {
-            start = legadoHubFindReviewParagraph(paragraphs, item.matchedText || item.paragraphText || "");
-        }
-        if (start < 0) return;
-        var span = Math.max(1, Math.floor(Number(item.matchedParagraphCount) || 1));
-        var last = Math.min(paragraphs.length - 1, start + span - 1);
-        var itemPages = {};
-        for (var paragraphIndex = start; paragraphIndex <= last; paragraphIndex += 1) {
-            var pageIndex = Math.floor((paragraphOffsets[paragraphIndex] || 0) / pageBudget);
-            if (itemPages[pageIndex]) continue;
-            itemPages[pageIndex] = true;
-            if (!pageGroups[pageIndex]) {
-                pageGroups[pageIndex] = {items: [], paragraphIds: [], target: paragraphIndex};
-            }
-            var group = pageGroups[pageIndex];
-            group.items.push(item);
-            if (group.paragraphIds.indexOf(Math.floor(paragraphId)) < 0) {
-                group.paragraphIds.push(Math.floor(paragraphId));
-            }
-            group.target = Math.min(group.target, paragraphIndex);
-        }
-    });
-    Object.keys(pageGroups).sort(function (left, right) { return Number(left) - Number(right); }).forEach(function (key) {
-        var group = pageGroups[key];
-        var viewUrl = legadoHubReviewRoot(contentUrl) + "/reviews/view?tab=paragraph&paragraphIds="
-            + encodeURIComponent(group.paragraphIds.join(","));
-        var entry = legadoHubPageHotReviewEntry(java, viewUrl, legadoHubPageHotCount(group.items));
-        var pageStart = legadoHubEstimatedPageStart(paragraphOffsets, pageBudget, Number(key), group.target);
-        var lineIndex = lineIndexes[pageStart];
-        if (entry && lineIndex !== undefined) lines[lineIndex] = entry + "\n" + lines[lineIndex];
-    });
-    var total = legadoHubTotalReviewCount(reviews);
-    if (total > 0) {
-        lines.push(legadoHubChapterReviewEntry(
-            java,
-            legadoHubReviewRoot(contentUrl) + "/reviews/view?tab=chapter",
-            total
-        ));
-    }
-    return lines.join("\n");
-}
-
-function legadoHubReviewPreload() {
-    return [
-        'function installLegadoHubReviewBridge() {',
-        '  if (window.__legadoHubReviewBridgeInstalled) return;',
-        '  window.__legadoHubReviewBridgeInstalled = true;',
-        '  if (!window.__legadoHubNativeFetch) window.__legadoHubNativeFetch = window.fetch.bind(window);',
-        '  function authorization() {',
-        '    try {',
-        '      var raw = String(source.getLoginHeader() || "{}");',
-        '      var stored = JSON.parse(raw);',
-        '      return String(stored.Authorization || stored.authorization || "");',
-        '    } catch (e) { return ""; }',
-        '  }',
-        '  window.fetch = function (input, init) {',
-        '    var requestInit = Object.assign({}, init || {});',
-        '    var inherited = (typeof Request !== "undefined" && input instanceof Request) ? input.headers : undefined;',
-        '    var headers = new Headers(requestInit.headers || inherited);',
-        '    var requestUrl = null;',
-        '    try { requestUrl = new URL((typeof Request !== "undefined" && input instanceof Request) ? input.url : String(input), location.href); } catch (e) {}',
-        '    if (requestUrl && requestUrl.origin === location.origin && requestUrl.pathname.indexOf("/api/legado/chapter/") === 0) {',
-        '      var value = authorization();',
-        '      if (value) headers.set("Authorization", value);',
-        '    } else { headers.delete("Authorization"); }',
-        '    requestInit.headers = headers;',
-        '    requestInit.credentials = "same-origin";',
-        '    return window.__legadoHubNativeFetch(input, requestInit);',
-        '  };',
-        '  document.addEventListener("click", function (event) {',
-        '    var target = event.target && event.target.closest ? event.target.closest("a[href]") : null;',
-        '    if (!target) return;',
-        '    var nextUrl;',
-        '    try { nextUrl = new URL(target.href, location.href); } catch (e) { return; }',
-        '    if (nextUrl.origin !== location.origin || nextUrl.pathname.indexOf("/reviews/view") < 0) return;',
-        '    event.preventDefault();',
-        '    window.fetch(nextUrl.href).then(function (response) {',
-        '      if (!response.ok) throw new Error("HTTP " + response.status);',
-        '      return response.text();',
-        '    }).then(function (html) {',
-        '      var bootstrap = "<scr" + "ipt>(" + installLegadoHubReviewBridge.toString() + ")();</scr" + "ipt>";',
-        '      var nextHtml = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, "$&" + bootstrap) : bootstrap + html;',
-        '      window.__legadoHubReviewBridgeInstalled = false;',
-        '      try { history.pushState({}, "", nextUrl.href); } catch (e) {}',
-        '      document.open();',
-        '      document.write(nextHtml);',
-        '      document.close();',
-        '    }).catch(function () { try { java.toast("评论加载失败，请稍后重试"); } catch (e) {} });',
-        '  }, true);',
-        '}',
-        'installLegadoHubReviewBridge();'
-    ].join("\n");
-}
-
-function legadoHubOpenReviews(java, reviewUrl) {
-    try {
-        var page = String(java.ajax(reviewUrl) || "");
-        if (!/<html[\s>]/i.test(page)) {
-            var message = "评论加载失败，请检查授权状态";
-            try {
-                var payload = JSON.parse(page);
-                if (typeof payload.detail === "string" && payload.detail) message = payload.detail;
-            } catch (e) {}
-            java.toast(message);
-            return false;
-        }
-        java.showBrowser(
-            reviewUrl,
-            page,
-            legadoHubReviewPreload(),
-            JSON.stringify({
-                state: 3,
-                heightPercentage: 0.78,
-                setFitToContents: false,
-                skipCollapsed: true,
-                isHideable: true,
-                expandedCornersRadius: 18,
-                backgroundDimAmount: 0.45,
-                dismissOnTouchOutside: true,
-                scrollNoDraggable: true
-            })
-        );
-        return true;
-    } catch (e) {
-        java.toast("评论加载失败，请稍后重试");
-        return false;
-    }
-}
 """
 
 
@@ -590,26 +260,57 @@ def _chapter_comment_data_rule() -> str:
         "var chapterHot = Array.isArray(reviews.chapterEndHot) ? reviews.chapterEndHot : [];\n"
         "var chapterEnd = Array.isArray(reviews.chapterEnd) ? reviews.chapterEnd : [];\n"
         "var chapterItems = chapterHot.concat(chapterEnd);\n"
-        "var preview = '';\n"
-        "chapterItems.some(function (item) {\n"
-        "  var content = String(item && (item.content || item.Content) || '')\n"
+        "function cleanReviewPreview(item) {\n"
+        "  return String(item && (item.content || item.Content) || '')\n"
         "    .replace(/<[^>]*>/g, ' ')\n"
         "    .replace(/\\[fn=\\d+\\]/g, '')\n"
         "    .replace(/\\s+/g, ' ')\n"
         "    .trim();\n"
+        "}\n"
+        "function cleanReviewUser(item) {\n"
+        "  return String(item && (item.userName || item.UserName || item.nickName) || '')\n"
+        "    .replace(/<[^>]*>/g, ' ')\n"
+        "    .replace(/\\s+/g, ' ')\n"
+        "    .trim();\n"
+        "}\n"
+        "var chapterPreviews = [];\n"
+        "var seenChapterPreviews = {};\n"
+        "chapterItems.some(function (item) {\n"
+        "  var content = cleanReviewPreview(item);\n"
         "  if (!content) return false;\n"
-        "  preview = content.slice(0, 512);\n"
+        "  var user = cleanReviewUser(item);\n"
+        "  var value = (user ? user + '：' : '') + content;\n"
+        "  var key = '$' + String(item && (item.id || item.reviewId) || value);\n"
+        "  if (seenChapterPreviews[key]) return false;\n"
+        "  seenChapterPreviews[key] = true;\n"
+        "  chapterPreviews.push(value.slice(0, 512));\n"
+        "  return chapterPreviews.length >= 3;\n"
+        "});\n"
+        "var authorItems = Array.isArray(reviews.authorReviews) ? reviews.authorReviews : [];\n"
+        "var author = null;\n"
+        "authorItems.some(function (item) {\n"
+        "  var content = cleanReviewPreview(item);\n"
+        "  if (!content) return false;\n"
+        "  var authorPreview = content.slice(0, 512);\n"
+        "  author = {\n"
+        "    label: cleanReviewUser(item) || '作者',\n"
+        "    badge: '作家说',\n"
+        "    counts: {total: 0, hot: 0},\n"
+        "    actionData: null,\n"
+        "    previews: [authorPreview]\n"
+        "  };\n"
         "  return true;\n"
         "});\n"
         "var chapterTotal = legadoHubChapterEndReviewCount(reviews);\n"
         "JSON.stringify({\n"
-        "  version: 1,\n"
+        "  version: 2,\n"
         "  segments: segments,\n"
+        "  author: author,\n"
         "  chapter: chapterTotal > 0 ? {\n"
         "    label: '本章说',\n"
         "    counts: {total: chapterTotal, hot: chapterHot.length},\n"
         "    actionData: {},\n"
-        "    preview: preview || null\n"
+        "    previews: chapterPreviews\n"
         "  } : null\n"
         "});"
     )
@@ -653,7 +354,6 @@ def _build_source(base_api: str | None = None) -> dict:
     group = config.get("group", "聚合,LegadoHub")
     app_config = AppConfig.get()
     chapter_comment = app_config.chapter_comment
-    legacy_chapter_comment_enabled = "true" if chapter_comment.chapter_enabled else "false"
 
     explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
     return {
@@ -739,18 +439,10 @@ def _build_source(base_api: str | None = None) -> dict:
             '  else if (chapterPayload.detail && chapterPayload.detail.message) text = chapterPayload.detail.message;\n'
             '} catch (e) {}\n'
             'text = String(text || "").replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n");\n'
-            'var nativeChapterComments = false;\n'
-            'try { nativeChapterComments = !!java.hasReaderCapability("chapter-comments", 1); } catch (e) {}\n'
-            f'if (!nativeChapterComments && {legacy_chapter_comment_enabled} && contentUrl && chapterPayload && typeof chapterPayload.content === "string") {{\n'
-            '  try {\n'
-            '    var reviewPayload = JSON.parse(String(java.ajax(legadoHubReviewRoot(contentUrl) + "/reviews") || "{}"));\n'
-            '    text = legadoHubDecorateChapterReviewOnly(java, text, reviewPayload, contentUrl);\n'
-            '  } catch (e) {}\n'
-            '}\n'
             'result = /<(?:p|div)\\b/i.test(text) ? text : text.replace(/\\n\\n+/g, "<br><br>").replace(/\\n/g, "<br>");',
             "title": "$.title",
             "chapterComment": {
-                "protocolVersion": 1,
+                "protocolVersion": 2,
                 "url": _chapter_comment_url_rule(),
                 "data": _chapter_comment_data_rule(),
                 "action": _chapter_comment_action_rule(),

@@ -377,7 +377,7 @@ async def get_chapter_review_view(
     )
     chapter_id = _validated_external_id(chapter_id, label="章节")
     source_id, chapter_url = _decode_chapter_identity(chapter_id)
-    if tab not in {"author", "chapter", "paragraph"}:
+    if tab not in {"chapter", "paragraph"}:
         raise HTTPException(status_code=422, detail="tab 无效")
     parsed_paragraph_id = _query_int(
         paragraphId, field="paragraphId", minimum=-1, maximum=_MAX_NUMERIC_ID

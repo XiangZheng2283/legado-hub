@@ -322,14 +322,19 @@ def test_review_view_embedding_and_focused_paragraph_layout(fixture_client, monk
     assert view_response.status_code == 200
     assert view_response.headers["x-frame-options"] == "SAMEORIGIN"
     assert "frame-ancestors 'self'" in view_response.headers["content-security-policy"]
-    assert 'data-tab="author"' in view_response.text
+    assert 'data-tab="author"' not in view_response.text
     assert 'data-tab="chapter"' in view_response.text
+    assert "grid-template-columns:repeat(2,1fr)" in view_response.text
+    assert "grid-template-columns:repeat(3,1fr)" not in view_response.text
     assert focused_response.status_code == 200
     assert 'data-tab="author"' not in focused_response.text
     assert 'data-tab="chapter"' not in focused_response.text
     assert 'data-panel="author"' not in focused_response.text
     assert 'data-panel="chapter"' not in focused_response.text
     assert 'data-panel="paragraph"' in focused_response.text
+    assert fixture_client.get(
+        f"/api/legado/chapter/{chapter_id}/reviews/view?tab=author"
+    ).status_code == 422
 
 
 def test_reading_disabled_plugin_chapter_does_not_use_cached_content(fixture_client, monkeypatch):

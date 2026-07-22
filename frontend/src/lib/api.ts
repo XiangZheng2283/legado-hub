@@ -71,7 +71,7 @@ export interface SubscribeCardResponse {
   [key: string]: unknown
 }
 
-export type ChapterReviewTab = "author" | "chapter" | "paragraph"
+export type ChapterReviewTab = "chapter" | "paragraph"
 
 export interface ChapterReviewsResponse {
   chapterEnd?: Array<Record<string, unknown>>

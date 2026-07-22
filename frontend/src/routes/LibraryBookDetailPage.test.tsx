@@ -288,9 +288,17 @@ describe("LibraryBookDetailPage processing settings", () => {
       content: Array.from({ length: 36 }, (_, index) => `这是用于模拟翻页阅读的第 ${index + 1} 个正文段落，包含足够的文本来覆盖多个阅读页面。`).join("\n"),
     })
     ;(api.reading.chapterReviews as any).mockResolvedValue({
-      chapterEnd: [{ id: "chapter-review" }],
-      chapterEndHot: [],
-      authorReviews: [{ id: "author-review" }],
+      chapterEnd: [
+        { id: "chapter-hot-1", userName: "书友甲", content: "第一条章末热评" },
+        { id: "chapter-review", userName: "书友丁", content: "普通章末评论" },
+      ],
+      chapterEndHot: [
+        { id: "chapter-hot-1", userName: "书友甲", content: "第一条章末热评" },
+        { id: "chapter-hot-2", userName: "书友乙", content: "第二条章末热评" },
+        { id: "chapter-hot-3", userName: "书友丙", content: "第三条章末热评" },
+        { id: "chapter-hot-4", userName: "书友丁", content: "不应显示的第四条热评" },
+      ],
+      authorReviews: [{ id: "author-review", userName: "作者甲", content: "这是作者留在章末的补充" }],
       hotParagraphReviews: [{
         paragraphId: 2,
         matchedText: "用于模拟翻页阅读",
@@ -338,6 +346,12 @@ describe("LibraryBookDetailPage processing settings", () => {
         expect(api.reading.chapterReviews).toHaveBeenCalledWith(readChapterId)
         expect(screen.getByTestId("chapter-reader-page-indicator")).toHaveTextContent("1 / 3")
       })
+      expect(screen.getByTestId("chapter-author-say")).toHaveTextContent("作者甲")
+      expect(screen.getByTestId("chapter-author-say")).toHaveTextContent("这是作者留在章末的补充")
+      expect(screen.getByText("第一条章末热评")).toBeInTheDocument()
+      expect(screen.getByText("第二条章末热评")).toBeInTheDocument()
+      expect(screen.getByText("第三条章末热评")).toBeInTheDocument()
+      expect(screen.queryByText("不应显示的第四条热评")).not.toBeInTheDocument()
 
       const previousPage = screen.getByRole("button", { name: "上一页" })
       const nextPage = screen.getByRole("button", { name: "下一页" })
@@ -351,7 +365,7 @@ describe("LibraryBookDetailPage processing settings", () => {
 
       await waitFor(() => expect(screen.getByRole("button", { name: "页热评 4 条" })).toBeEnabled())
       await user.click(screen.getByRole("button", { name: "页热评 4 条" }))
-      expect(screen.getByTitle("段评说评论")).toHaveAttribute(
+      expect(screen.getByTitle("页热评")).toHaveAttribute(
         "src",
         `/api/legado/chapter/${encodeURIComponent(readChapterId)}/reviews/view?tab=paragraph&paragraphIds=2`,
       )
@@ -363,7 +377,7 @@ describe("LibraryBookDetailPage processing settings", () => {
       await waitFor(() => expect(screen.getByRole("button", { name: "页热评 6 条" })).toBeEnabled())
 
       await user.click(screen.getByRole("button", { name: "本章说 13 条评论" }))
-      expect(screen.getByTitle("本章说评论")).toHaveAttribute(
+      expect(screen.getByTitle("本章评论")).toHaveAttribute(
         "src",
         `/api/legado/chapter/${encodeURIComponent(readChapterId)}/reviews/view?tab=chapter`,
       )

@@ -3,7 +3,7 @@
 ## 基准
 
 - 定制客户端：[XziXmn/legado-X](https://github.com/XziXmn/legado-X)，从 `legado-E` 同步上游能力。
-- `chapterComment` 是通用书源契约，不得依赖 LegadoHub 或起点专有类型；普通 Legado 客户端继续使用章末兼容入口。
+- `chapterComment` 是通用书源契约，不得依赖 LegadoHub 或起点专有类型；评论能力只面向支持该协议的定制客户端。
 - 定制能力默认只在 `legado-X` 分支维护，不向上游提交。
 
 ## 登录
@@ -18,14 +18,14 @@
 ## 正文与评论
 
 1. 章节 URL 继续使用 `data:*;base64` 和非空 `type` 传递真实正文 URL，这是 `AnalyzeUrl` 返回十六进制正文 URL 所需的通用机制。
-2. 不使用 `qingci`、`ruleReview` 或站点专有客户端协议；定制客户端只消费通用 `chapterComment` v1 数据。
-3. 定制客户端通过 `chapterComment.url/data/action` 请求同章节的 `/reviews`；普通客户端仅由 `ruleContent` 追加章末兼容入口。后端评论仍统一经过 `Catalog -> 插件 chapter_reviews`。
+2. 不使用 `qingci`、`ruleReview` 或站点专有客户端协议；定制客户端只消费通用 `chapterComment` v2 数据。
+3. 定制客户端通过 `chapterComment.url/data/action` 请求同章节的 `/reviews`；普通客户端不显示评论入口。后端评论仍统一经过 `Catalog -> 插件 chapter_reviews`。
 4. 热评使用后端的 `matchedParagraphIndex` 和 `matchedParagraphCount` 定位聚合正文；字段缺失或越界时，客户端规则再做一次保守模糊匹配。
 5. 段评按聚合正文中的真实段落锚点绘制为“小对话气泡 + 数字”；视觉尺寸跟随正文画笔并设置上下限，点击热区独立保持可触达尺寸。书源只能选择受支持的显示预设，不能注入原生布局。
 6. 页热评由客户端在真实分页后按当前页段落聚合，显示在阅读页顶部标题行；下拉打开当前页热门评论集合，集合页不显示作家说和本章说。
-7. 章末追加全宽“本章说 / N 条评论”入口，并可显示 `chapterEndHot` 第一条有效正文的最多两行摘要；热门列表没有有效正文时回退 `chapterEnd`。点击仍打开作家说、本章说、段评说及回复的现有 HTML 页面。`preview` 是可选字段，旧书源不提供时保持单行入口。
-8. 原生入口统一使用 `ReadBookConfig.textColor`、阅读字体和标题/正文画笔比例适配日间、夜间及墨水屏；普通客户端兼容入口继续读取 `getThemeMode`、`getThemeConfigMap` 和 `getReadBookConfigMap` 生成 SVG。
-9. 原生段评和页热评只能使用完成排版后的 `TextPage`/段落投影定位；普通客户端无页级浮层能力，只保留章末入口，禁止用负边距或伪绝对定位冒充页级入口。
+7. 章末先直接显示不可点击的“作家说”补充卡片，再追加全宽“本章说 / N 条评论”入口。本章说优先显示 `chapterEndHot` 的 1 至 3 条有效摘要，不足时按顺序回退 `chapterEnd`；v2 只使用 `previews` 数组。点击本章说后的 HTML 页面只显示本章说、段评说及其回复，作家说不再作为弹窗 Tab。
+8. 原生入口统一使用 `ReadBookConfig.textColor`、阅读字体和标题/正文画笔比例适配日间、夜间及墨水屏。
+9. 原生段评和页热评只能使用完成排版后的 `TextPage`/段落投影定位；不支持 v2 的客户端不显示评论，禁止用正文图片、负边距或伪绝对定位模拟入口。
 10. `legado-X` 会预加载当前章及相邻章节的正文和评论摘要。每次执行都必须由该章自己的 `contentUrl` 派生评论地址，禁止用全局状态猜测当前章；`/reviews` 摘要与热段预览会随正文预加载，完整段评、本章说后续页和回复只在用户点击后通过插件扩展分页加载。
 11. 目录 `updateTime` 只在 Reading 输出层格式化为 `YYYY-MM-DD HH:mm`；内部处理时间继续保留完整 ISO 时间。
 
@@ -48,14 +48,14 @@
 
 ## 评论弹窗授权
 
-`legado-E` 的 `showBrowser` 不会自动继承书源 Bearer Header，因此采用以下流程：
+`legado-X` 使用来源隔离的原生评论弹窗，流程如下：
 
-1. 图片点击脚本先通过 `java.ajax(reviewUrl)` 携带书源登录 Header 获取首屏 HTML。
-2. 再将 HTML、基础 URL、预注入脚本和固定高度配置传给 `java.showBrowser`。
-3. 预注入脚本只为与当前页面同源且路径以 `/api/legado/chapter/` 开头的 `fetch` 请求附加 Bearer。
-4. token 不进入 URL、不写入生成书源、不转发给外部头像或媒体域名，也不写入 WebView Cookie。
-5. 评论内部链接通过同一受限 `fetch` 桥加载，保持分页和回复入口可用。
-6. 弹窗高度固定为屏幕高度的 `78%`，不随评论数量变化。
+1. 客户端执行书源 `chapterComment.action`，只接受受限的 `sourceWebView` 动作。
+2. 动作 URL 必须与摘要 URL 同源；客户端固定 DNS 解析结果并拒绝跨源跳转、私网元数据地址及凭据查询参数。
+3. 首屏 HTML 由客户端使用书源 Header 和 Cookie 获取，再交给 `SOURCE_SCOPED` 模式的 `BottomWebViewDialog`。
+4. 后续同源请求继续经过来源隔离的网络上下文；认证信息不会转发给外部头像或媒体域名。
+5. token 不进入 URL、不写入生成书源、不写日志，也不写入外部域 Cookie。
+6. 弹窗高度由客户端固定，不随评论数量变化。
 
 ## 禁止项
 
