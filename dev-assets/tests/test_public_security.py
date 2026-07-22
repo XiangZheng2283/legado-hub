@@ -32,7 +32,6 @@ def _reader_config(monkeypatch):
 
 def _clear_network_config(monkeypatch) -> None:
     for name in (
-        "LEGADOHUB_EXTERNAL_HOST",
         "LEGADOHUB_PUBLIC_BASE_URL",
         "LEGADOHUB_ALLOWED_HOSTS",
         "LEGADOHUB_ALLOWED_ORIGINS",
@@ -43,95 +42,53 @@ def _clear_network_config(monkeypatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
-def test_external_host_extends_lan_access_without_allowing_arbitrary_hosts(monkeypatch) -> None:
+def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
+    monkeypatch,
+) -> None:
     _clear_network_config(monkeypatch)
-    external_host = "203.0.113.10"
-    external_reader_origin = f"http://{external_host}:8765"
-    external_admin_origin = f"http://{external_host}:8766"
-    monkeypatch.setenv("LEGADOHUB_EXTERNAL_HOST", external_host)
-
     reader_security = load_public_security_config()
-    admin_security = load_admin_security_config()
     assert reader_security.dynamic_base_url is True
-    assert admin_security.dynamic_base_url is True
-    assert reader_security.external_host == external_host
-    assert admin_security.external_host == external_host
-
     reader_app = create_app(reader_security, manage_runtime=False)
-    external_reader = TestClient(reader_app, base_url=external_reader_origin)
-    external_manifest = external_reader.get("/api/subscribe/legado/source")
-    assert external_manifest.status_code == 200
-    assert external_manifest.json()[0]["searchUrl"].startswith(
-        f"{external_reader_origin}/api/"
+    proxy_origin = "http://books.example.test:8765"
+    lan_proxy = TestClient(
+        reader_app,
+        base_url=proxy_origin,
+        client=("192.168.31.161", 50000),
     )
+    manifest = lan_proxy.get("/api/subscribe/legado/source")
+    assert manifest.status_code == 200
+    assert manifest.json()[0]["searchUrl"].startswith(f"{proxy_origin}/api/")
 
-    lan_reader = TestClient(reader_app, base_url=LAN_READER_ORIGIN)
-    lan_manifest = lan_reader.get("/api/subscribe/legado/source")
-    assert lan_manifest.status_code == 200
-    assert lan_manifest.json()[0]["searchUrl"].startswith(f"{LAN_READER_ORIGIN}/api/")
-    assert TestClient(reader_app, base_url="http://evil.invalid:8765").get(
-        "/health"
-    ).status_code == 400
+    public_ipv4_peer = TestClient(
+        reader_app,
+        base_url=LAN_READER_ORIGIN,
+        client=("203.0.113.20", 50000),
+    )
+    assert public_ipv4_peer.get("/health").status_code == 400
 
+    ipv6_proxy = TestClient(
+        reader_app,
+        base_url=proxy_origin,
+        client=("2001:db8::20", 50000),
+    )
+    assert ipv6_proxy.get("/health").status_code == 200
+
+    admin_security = load_admin_security_config()
+    assert admin_security.dynamic_base_url is True
     admin_app = create_app(
         admin_security,
         entrypoint=EntryPoint.ADMIN,
         manage_runtime=False,
     )
-    assert TestClient(admin_app, base_url=external_admin_origin).post(
+    admin_origin = "http://admin.example.test:8766"
+    assert TestClient(
+        admin_app,
+        base_url=admin_origin,
+        client=("192.168.31.161", 50000),
+    ).post(
         "/api/missing",
-        headers={"Origin": external_admin_origin},
+        headers={"Origin": admin_origin},
     ).status_code == 404
-    assert TestClient(admin_app, base_url=LAN_ADMIN_ORIGIN).post(
-        "/api/missing",
-        headers={"Origin": LAN_ADMIN_ORIGIN},
-    ).status_code == 404
-
-
-@pytest.mark.parametrize(
-    "value",
-    (
-        "0.0.0.0",
-        "::",
-        "224.0.0.1",
-        "ff02::1",
-        "https://books.example.test",
-        "books.example.test:8765",
-        "*",
-    ),
-)
-def test_external_host_rejects_bind_addresses_and_non_host_values(
-    monkeypatch,
-    value: str,
-) -> None:
-    _clear_network_config(monkeypatch)
-    monkeypatch.setenv("LEGADOHUB_EXTERNAL_HOST", value)
-
-    with pytest.raises(RuntimeError, match="LEGADOHUB_EXTERNAL_HOST"):
-        load_public_security_config()
-
-
-@pytest.mark.parametrize(
-    ("configured_host", "request_host", "normalized_host"),
-    (
-        ("books.example.test.", "books.example.test.:8765", "books.example.test"),
-        ("2001:0db8::20", "[2001:db8::20]:8765", "2001:db8::20"),
-        ("203.0.113.10", "[::ffff:203.0.113.10]:8765", "203.0.113.10"),
-    ),
-)
-def test_external_host_normalizes_equivalent_dns_and_ip_forms(
-    monkeypatch,
-    configured_host: str,
-    request_host: str,
-    normalized_host: str,
-) -> None:
-    _clear_network_config(monkeypatch)
-    monkeypatch.setenv("LEGADOHUB_EXTERNAL_HOST", configured_host)
-    security = load_public_security_config()
-    app = create_app(security, manage_runtime=False)
-
-    assert security.external_host == normalized_host
-    assert TestClient(app).get("/health", headers={"Host": request_host}).status_code == 200
 
 
 def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> None:

@@ -49,7 +49,7 @@ function ProtectedLayout() {
 export function AdminOnly() {
   const { user, entrypoint } = useAuth()
   if (entrypoint === "public" || user?.role !== "admin") {
-    return <Navigate to="/console" replace />
+    return <Navigate to="/" replace />
   }
   return <Outlet />
 }
@@ -60,8 +60,11 @@ function AuthRouter() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedLayout />}>
-          <Route path="/console" element={<Layout />}>
+          <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
+          </Route>
+          <Route path="/console" element={<Layout />}>
+            <Route index element={<Navigate to="/" replace />} />
             <Route path="subscription" element={<SubscriptionDiscoveryPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="library/:bookId" element={<LibraryBookDetailPage />} />
@@ -77,7 +80,7 @@ function AuthRouter() {
             </Route>
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/console" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

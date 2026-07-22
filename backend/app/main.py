@@ -203,6 +203,10 @@ def create_app(
         if assets_dir.exists():
             app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="console-assets")
 
+        @app.get("/")
+        async def root_spa():
+            return FileResponse(str(FRONTEND_DIST / "index.html"))
+
         @app.get("/console")
         async def console_spa():
             return FileResponse(str(FRONTEND_DIST / "index.html"))

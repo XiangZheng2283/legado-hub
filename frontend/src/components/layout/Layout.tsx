@@ -22,7 +22,7 @@ interface NavItem {
 }
 
 const mainNav: NavItem[] = [
-  { name: "仪表盘", href: "/console", icon: LayoutDashboard },
+  { name: "仪表盘", href: "/", icon: LayoutDashboard },
   { name: "订阅", href: "/console/subscription", icon: Search, aliases: ["/console/admin/subscription"] },
   { name: "书库", href: "/console/library", icon: Library, aliases: ["/console/admin/library"] },
 ]
@@ -35,7 +35,7 @@ const adminNav: NavItem[] = [
 ]
 
 function isPathActive(pathname: string, path: string) {
-  return path === "/console"
+  return path === "/"
     ? pathname === path
     : pathname === path || pathname.startsWith(`${path}/`)
 }
@@ -56,7 +56,7 @@ export function Layout() {
       <NavLink
         key={item.name}
         to={item.href}
-        end={item.href === "/console"}
+        end={item.href === "/"}
         aria-current={active ? "page" : undefined}
         className={cn(
           "group flex w-full items-center rounded-md py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.98]",

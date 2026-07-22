@@ -24,7 +24,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      navigate("/console", { replace: true })
+      navigate("/", { replace: true })
     }
   }, [isLoading, navigate, user])
 
@@ -56,7 +56,7 @@ export function LoginPage() {
         await login(username.trim(), password)
         setPassword("")
       }
-      navigate("/console", { replace: true })
+      navigate("/", { replace: true })
     } catch (loginError) {
       setError(apiErrorMessage(loginError, "登录失败，请稍后重试。"))
     } finally {

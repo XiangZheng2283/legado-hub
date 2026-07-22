@@ -173,7 +173,7 @@ def test_docker_plugin_delivery_contract() -> None:
         "8766:8766",
     ]
     environment = _env_map(compose["services"]["legadohub"]["environment"])
-    assert environment.get("LEGADOHUB_EXTERNAL_HOST") == "${LEGADOHUB_EXTERNAL_HOST:-}"
+    assert "LEGADOHUB_EXTERNAL_HOST" not in environment
     assert environment.get("TZ") == "Asia/Shanghai"
     assert environment.get("PUID") == "1000"
     assert environment.get("PGID") == "1000"
@@ -218,7 +218,8 @@ def test_docker_plugin_delivery_contract() -> None:
     assert "docker run -d" in readme
     assert "--log-opt max-size=10m" in readme
     assert "--security-opt no-new-privileges:true" in readme
-    assert "docker compose restart` 不会应用新的环境变量" in readme
+    plain_readme = readme.replace("**", "")
+    assert "docker compose restart` 不会应用新的环境变量" in plain_readme
     assert "exec gosu" in entrypoint
     assert any(
         volume.endswith(":/app/plugins/sources/official:ro")

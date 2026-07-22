@@ -23,12 +23,6 @@ services:
       - PUID=1000 # 运行用户 ID（改成 NAS/宿主实际用户，例如 1000）
       - PGID=1000 # 运行用户组 ID（改成 NAS/宿主实际用户组）
       - LEGADOHUB_CHOWN_DATA=${LEGADOHUB_CHOWN_DATA:-0} # 仅迁移旧数据权限时临时设为 1
-      # 可选：固定访问主机名或 IP，不要带协议 / 端口 / 路径
-      # 用于生成 Reading 可打开的链接；留空则按请求 Host / 局域网探测
-      - LEGADOHUB_EXTERNAL_HOST=${LEGADOHUB_EXTERNAL_HOST:-}
-      # 示例：
-      # - LEGADOHUB_EXTERNAL_HOST=192.168.1.20
-      # - LEGADOHUB_EXTERNAL_HOST=legadohub.lan
     volumes:
       # 数据与配置持久化（必需）
       # 默认相对路径 = compose 文件所在目录；NAS 请改成绝对路径

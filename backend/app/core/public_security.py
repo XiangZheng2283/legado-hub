@@ -95,23 +95,6 @@ def _valid_host(host: str) -> bool:
     return bool(labels) and all(_DNS_LABEL_PATTERN.fullmatch(label) for label in labels)
 
 
-def _configured_external_host() -> str:
-    host = _normalize_host(os.getenv("LEGADOHUB_EXTERNAL_HOST", ""))
-    if not host:
-        return ""
-    try:
-        address = ipaddress.ip_address(host)
-        invalid_ip = address.is_unspecified or address.is_multicast
-    except ValueError:
-        invalid_ip = False
-    if "*" in host or not _valid_host(host) or invalid_ip:
-        raise RuntimeError(
-            "LEGADOHUB_EXTERNAL_HOST must be one exact IP address or host name "
-            "without scheme, port, or path."
-        )
-    return host
-
-
 def _networks(values: Iterable[str]) -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
     networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
     for value in values:
@@ -128,7 +111,6 @@ class PublicSecurityConfig:
     allowed_hosts: tuple[str, ...]
     allowed_origins: frozenset[str]
     trusted_proxies: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]
-    external_host: str = ""
     dynamic_base_url: bool = False
     require_https: bool = False
     enforce_origin: bool = False
@@ -180,7 +162,6 @@ class PublicSecurityConfig:
 
 def load_public_security_config() -> PublicSecurityConfig:
     configured_base = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip().rstrip("/")
-    external_host = "" if configured_base else _configured_external_host()
     dynamic_base_url = not configured_base
     base_url, base_host = _origin(
         configured_base or f"http://{config.HOST}:{config.PORT}",
@@ -214,7 +195,6 @@ def load_public_security_config() -> PublicSecurityConfig:
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=trusted_proxies,
-        external_host=external_host,
         dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=require_https,
@@ -224,7 +204,6 @@ def load_public_security_config() -> PublicSecurityConfig:
 def load_admin_security_config() -> PublicSecurityConfig:
     """Load the isolated management listener's host, origin, and proxy policy."""
     configured_base = os.getenv("LEGADOHUB_ADMIN_BASE_URL", "").strip().rstrip("/")
-    external_host = "" if configured_base else _configured_external_host()
     dynamic_base_url = not configured_base
     base_url, base_host = _origin(
         configured_base or f"http://127.0.0.1:{config.ADMIN_PORT}",
@@ -266,7 +245,6 @@ def load_admin_security_config() -> PublicSecurityConfig:
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=_networks(proxy_values),
-        external_host=external_host,
         dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=True,
@@ -290,6 +268,17 @@ def _is_default_allowed_host(host: str) -> bool:
     )
 
 
+def _dynamic_host_client_allowed(request: Request) -> bool | None:
+    immediate = request.client.host if request.client and request.client.host else ""
+    normalized = _normalize_host(immediate)
+    try:
+        ipaddress.ip_address(normalized)
+    except ValueError:
+        # ASGI tests and internal transports may identify clients by name.
+        return None
+    return _is_default_allowed_host(normalized)
+
+
 def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
     scheme = "https" if security.request_is_https(request) else request.url.scheme.lower()
     if scheme not in {"http", "https"}:
@@ -298,9 +287,12 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
         f"{scheme}://{request.headers.get('host', '').strip()}",
         label="Host",
     )
-    if not _is_default_allowed_host(host) and host != security.external_host:
+    client_allowed = _dynamic_host_client_allowed(request)
+    if client_allowed is False or (
+        client_allowed is None and not _is_default_allowed_host(host)
+    ):
         raise RuntimeError(
-            "Host must be local, private-network, IPv6, or explicitly configured."
+            "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
         )
     return origin
 

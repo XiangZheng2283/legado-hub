@@ -20,7 +20,7 @@ function renderGuard() {
   return render(
     <MemoryRouter initialEntries={["/console/settings"]}>
       <Routes>
-        <Route path="/console" element={<div>用户首页</div>} />
+        <Route path="/" element={<div>用户首页</div>} />
         <Route element={<AdminOnly />}>
           <Route path="/console/settings" element={<div>订阅政策</div>} />
         </Route>

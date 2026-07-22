@@ -124,6 +124,9 @@ def test_public_listener_exposes_only_reader_and_user_routes(isolated_apps) -> N
             pass
 
     assert client.get("/login").status_code == 200
+    root = client.get("/", follow_redirects=False)
+    assert root.status_code == 200
+    assert "LegadoHub" in root.text
     assert client.get("/console").status_code == 200
     assert client.get("/console/subscription").status_code == 200
     assert client.get("/console/library/book-a").status_code == 200
@@ -149,6 +152,9 @@ def test_admin_listener_exposes_management_but_not_access_code_redemption(isolat
     assert client.get("/openapi.json").status_code == 200
     assert client.get("/docs").status_code == 200
     assert client.get("/redoc").status_code == 200
+    root = client.get("/", follow_redirects=False)
+    assert root.status_code == 200
+    assert "LegadoHub" in root.text
     assert client.get("/console/plugins").status_code == 200
     assert client.get("/assets/app.js").status_code == 200
 

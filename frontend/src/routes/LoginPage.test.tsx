@@ -25,7 +25,7 @@ function renderPage() {
     <MemoryRouter initialEntries={["/login"]}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/console" element={<div>控制台</div>} />
+        <Route path="/" element={<div>控制台</div>} />
       </Routes>
     </MemoryRouter>,
   )
