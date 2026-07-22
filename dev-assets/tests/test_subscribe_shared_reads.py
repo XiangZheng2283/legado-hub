@@ -1,6 +1,7 @@
 """Tests that /api/subscribe/books/* reads from shared files, not DB truth."""
 
 import json
+import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -156,10 +157,45 @@ def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_
 
     source = legado_source.generate_legado_source("http://testserver")[0]
 
-    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.7)"
+    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.8)"
     assert source["bookSourceUrl"] == "LegadoHub"
-    assert source["lastUpdateTime"] == 1_784_698_822_467
+    assert source["lastUpdateTime"] >= 1_784_719_299_194
     assert source["lastUpdateTime"] > 1_784_637_186_000
+
+
+def test_legado_source_update_marker_advances_with_comment_settings(tmp_path, monkeypatch):
+    import app.core.legado_source as legado_source
+    from app.core.app_config import AppConfig
+
+    config_path = tmp_path / "app_config.json"
+    config_path.write_text(
+        json.dumps({"chapterComment": {"segmentEnabled": True}}),
+        encoding="utf-8",
+    )
+    runtime_config = AppConfig(config_path)
+    monkeypatch.setattr(
+        legado_source.AppConfig,
+        "get",
+        staticmethod(lambda: runtime_config),
+    )
+
+    before = legado_source.generate_legado_source("http://testserver")[0]
+    next_update_time = before["lastUpdateTime"] + 2_000
+    config_path.write_text(
+        json.dumps({"chapterComment": {"segmentEnabled": False}}),
+        encoding="utf-8",
+    )
+    os.utime(
+        config_path,
+        ns=(next_update_time * 1_000_000, next_update_time * 1_000_000),
+    )
+    runtime_config.reload()
+
+    after = legado_source.generate_legado_source("http://testserver")[0]
+
+    assert after["lastUpdateTime"] == next_update_time
+    assert after["lastUpdateTime"] > before["lastUpdateTime"]
+    assert after["ruleContent"]["chapterComment"]["display"]["segment"]["enabled"] is False
 
 
 @pytest.mark.parametrize("page", [True, "invalid", 1.5, 0, -1, 1001])
@@ -487,6 +523,78 @@ def test_legado_published_search_pages_in_database_without_metadata_reads(
     assert first_ids.isdisjoint(second_ids)
 
 
+def test_legado_search_includes_published_book_when_third_party_snapshot_is_empty(client):
+    import app.api.subscribe as subscribe_api
+
+    aggregate_book_id = "book-empty-third-party-search"
+    _insert_book(
+        subscribe_api.library_books_service.db_path,
+        aggregate_book_id,
+        "空快照聚合书",
+        "聚合作者",
+        published=True,
+        chapter_count=1,
+        visible_chapter_count=1,
+    )
+
+    result = subscribe_api._legado_search_payload(
+        keyword="空快照聚合书",
+        page=1,
+        base_api="http://testserver",
+        allowed_source_ids={"fixture_thirdparty"},
+        snapshot={
+            "jobId": "empty-third-party-job",
+            "status": "completed",
+            "items": [],
+        },
+    )
+
+    assert [item["aggregateBookId"] for item in result["items"]] == [aggregate_book_id]
+    assert result["items"][0]["sourceId"] == "legadohub_ai_aggregate"
+
+
+@pytest.mark.asyncio
+async def test_legado_search_wait_is_capped_by_first_result_window(monkeypatch):
+    import app.api.subscribe as subscribe_api
+
+    class SearchSettings:
+        first_result_timeout_seconds = 0.2
+
+    class RuntimeConfig:
+        search = SearchSettings()
+
+    class RunningSession:
+        status = "running"
+
+    class SearchService:
+        @staticmethod
+        def get_session(_job_id):
+            return RunningSession()
+
+    class Clock:
+        now = 0.0
+
+        def time(self):
+            return self.now
+
+    clock = Clock()
+
+    async def advance_clock(seconds):
+        clock.now += seconds
+
+    monkeypatch.setattr(subscribe_api.AppConfig, "get", staticmethod(lambda: RuntimeConfig()))
+    monkeypatch.setattr(subscribe_api.asyncio, "get_running_loop", lambda: clock)
+    monkeypatch.setattr(subscribe_api.asyncio, "sleep", advance_clock)
+
+    await subscribe_api._wait_for_legado_search(
+        SearchService(),
+        "slow-reader-job",
+        120_000,
+    )
+
+    assert 0.2 <= clock.now < 0.3
+
+
 def test_legado_search_preserves_coordinator_order_without_private_fields(
     client, monkeypatch
 ):
@@ -750,12 +858,16 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     chapter_comment = source["ruleContent"]["chapterComment"]
     assert chapter_comment["protocolVersion"] == 1
     assert chapter_comment["display"]["segment"]["enabled"] is True
-    assert chapter_comment["display"]["segment"]["preset"] == "labelCount"
+    assert chapter_comment["display"]["segment"]["preset"] == "count"
     assert chapter_comment["display"]["page"]["enabled"] is True
     assert chapter_comment["display"]["chapter"]["enabled"] is True
     assert "matchedParagraphIndex" in chapter_comment["data"]
     assert "matchedParagraphCount" in chapter_comment["data"]
     assert "pageEligible: true" in chapter_comment["data"]
+    assert "chapterEndHot" in chapter_comment["data"]
+    assert "chapterHot.concat(chapterEnd)" in chapter_comment["data"]
+    assert "preview: preview || null" in chapter_comment["data"]
+    assert "legadoHubChapterEndReviewCount(reviews)" in chapter_comment["data"]
     assert "scope === 'page'" in chapter_comment["action"]
     assert "scope === 'segment'" in chapter_comment["action"]
     assert "scope === 'chapter'" in chapter_comment["action"]

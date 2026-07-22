@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
+from app.core.app_config import AppConfig
 from app.core.legado_source import generate_legado_source
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, unpack_aggregate_chapter_url
@@ -293,20 +294,28 @@ def _legado_search_payload(
     allowed_source_ids: set[str],
     snapshot: dict | None = None,
 ) -> dict:
-    if snapshot is None:
-        published = library_books_service.page_published_books(
-            keyword=keyword,
-            page=page,
-            page_size=20,
-        )
-        raw_items = [
-            library_books_service.build_search_injected_item(book, base_api=base_api)
-            for book in published["items"]
-        ]
-    else:
-        raw_items = snapshot.get("items", [])
+    snapshot_items = (snapshot or {}).get("items", [])
+    raw_items = [
+        item
+        for item in snapshot_items
+        if isinstance(item, dict) and item.get("sourceId") != VIRTUAL_SOURCE_ID
+    ] if isinstance(snapshot_items, list) else []
+    if keyword.strip():
+        try:
+            published = library_books_service.page_published_books(
+                keyword=keyword,
+                page=page,
+                page_size=20,
+            )
+            raw_items.extend(
+                library_books_service.build_search_injected_item(book, base_api=base_api)
+                for book in published["items"]
+            )
+        except Exception:
+            logger.exception("Reading published-book search failed")
 
     items = []
+    seen_book_ids: set[str] = set()
     for item in raw_items:
         if not isinstance(item, dict):
             continue
@@ -315,8 +324,13 @@ def _legado_search_payload(
             base_api=base_api,
             allowed_source_ids=allowed_source_ids,
         )
-        if public_item is not None:
-            items.append(public_item)
+        if public_item is None:
+            continue
+        book_id = public_item["bookId"]
+        if book_id in seen_book_ids:
+            continue
+        seen_book_ids.add(book_id)
+        items.append(public_item)
 
     return {
         "implemented": True,
@@ -334,7 +348,15 @@ async def _wait_for_legado_search(
     job_id: str,
     wait_ms: int,
 ) -> None:
-    deadline = asyncio.get_running_loop().time() + (wait_ms / 1000)
+    """Wait only for the configured first-result window, not every slow source."""
+    try:
+        first_result_wait_ms = max(
+            0,
+            int(AppConfig.get().search.first_result_timeout_seconds * 1000),
+        )
+    except Exception:
+        first_result_wait_ms = 5_000
+    deadline = asyncio.get_running_loop().time() + (min(wait_ms, first_result_wait_ms) / 1000)
     while asyncio.get_running_loop().time() < deadline:
         session = search_service.get_session(job_id)
         if session is None or session.status in _TERMINAL_SEARCH_STATUSES:

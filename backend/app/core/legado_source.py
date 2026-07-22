@@ -18,8 +18,17 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.7"
-_READER_RULE_LAST_UPDATE_TIME = 1_784_698_822_467
+_READER_RULE_VERSION = "0.0.8"
+_READER_RULE_LAST_UPDATE_TIME = 1_784_719_299_194
+
+
+def _reader_rule_last_update_time(config: AppConfig) -> int:
+    """Advance Reading's source marker when runtime source settings change."""
+    try:
+        config_modified_at = config.path.stat().st_mtime_ns // 1_000_000
+    except OSError:
+        return _READER_RULE_LAST_UPDATE_TIME
+    return max(_READER_RULE_LAST_UPDATE_TIME, config_modified_at)
 
 
 def _login_ui() -> str:
@@ -578,11 +587,30 @@ def _chapter_comment_data_rule() -> str:
         "    actionData: {paragraphId: String(Math.floor(paragraphId))}\n"
         "  });\n"
         "});\n"
-        "var total = legadoHubTotalReviewCount(reviews);\n"
+        "var chapterHot = Array.isArray(reviews.chapterEndHot) ? reviews.chapterEndHot : [];\n"
+        "var chapterEnd = Array.isArray(reviews.chapterEnd) ? reviews.chapterEnd : [];\n"
+        "var chapterItems = chapterHot.concat(chapterEnd);\n"
+        "var preview = '';\n"
+        "chapterItems.some(function (item) {\n"
+        "  var content = String(item && (item.content || item.Content) || '')\n"
+        "    .replace(/<[^>]*>/g, ' ')\n"
+        "    .replace(/\\[fn=\\d+\\]/g, '')\n"
+        "    .replace(/\\s+/g, ' ')\n"
+        "    .trim();\n"
+        "  if (!content) return false;\n"
+        "  preview = content.slice(0, 512);\n"
+        "  return true;\n"
+        "});\n"
+        "var chapterTotal = legadoHubChapterEndReviewCount(reviews);\n"
         "JSON.stringify({\n"
         "  version: 1,\n"
         "  segments: segments,\n"
-        "  chapter: total > 0 ? {label: '本章说', counts: {total: total, hot: 0}, actionData: {}} : null\n"
+        "  chapter: chapterTotal > 0 ? {\n"
+        "    label: '本章说',\n"
+        "    counts: {total: chapterTotal, hot: chapterHot.length},\n"
+        "    actionData: {},\n"
+        "    preview: preview || null\n"
+        "  } : null\n"
         "});"
     )
 
@@ -623,7 +651,8 @@ def _build_source(base_api: str | None = None) -> dict:
     config = load_aggregate_config()
     name = config.get("name", "LegadoHub 聚合")
     group = config.get("group", "聚合,LegadoHub")
-    chapter_comment = AppConfig.get().chapter_comment
+    app_config = AppConfig.get()
+    chapter_comment = app_config.chapter_comment
     legacy_chapter_comment_enabled = "true" if chapter_comment.chapter_enabled else "false"
 
     explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
@@ -631,7 +660,7 @@ def _build_source(base_api: str | None = None) -> dict:
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
         "bookSourceGroup": group,
         "bookSourceUrl": "LegadoHub",
-        "lastUpdateTime": _READER_RULE_LAST_UPDATE_TIME,
+        "lastUpdateTime": _reader_rule_last_update_time(app_config),
         "bookSourceType": 0,
         "enabled": True,
         "enabledCookieJar": True,
@@ -728,9 +757,9 @@ def _build_source(base_api: str | None = None) -> dict:
                 "display": {
                     "segment": {
                         "enabled": chapter_comment.segment_enabled,
-                        "preset": "labelCount" if chapter_comment.segment_enabled else "none",
+                        "preset": "count" if chapter_comment.segment_enabled else "none",
                         "countField": "total",
-                        "label": "段评",
+                        "label": "",
                     },
                     "page": {
                         "enabled": chapter_comment.page_enabled,
