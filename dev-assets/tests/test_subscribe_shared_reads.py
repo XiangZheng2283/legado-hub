@@ -157,9 +157,9 @@ def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_
 
     source = legado_source.generate_legado_source("http://testserver")[0]
 
-    assert source["bookSourceName"] == "LegadoHub 聚合(0.0.8)"
+    assert source["bookSourceName"] == f"LegadoHub 聚合({legado_source._READER_RULE_VERSION})"
     assert source["bookSourceUrl"] == "LegadoHub"
-    assert source["lastUpdateTime"] >= 1_784_719_299_194
+    assert source["lastUpdateTime"] >= legado_source._READER_RULE_LAST_UPDATE_TIME
     assert source["lastUpdateTime"] > 1_784_637_186_000
 
 
@@ -1053,9 +1053,11 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert chapter_comment["url"].startswith("@js:")
     assert chapter_comment["data"].startswith("@js:")
     assert chapter_comment["action"].startswith("@js:")
-    assert "scope === 'page'" in chapter_comment["action"]
-    assert "scope === 'segment'" in chapter_comment["action"]
-    assert "scope === 'chapter'" in chapter_comment["action"]
+    assert "commentScope === 'page'" in chapter_comment["action"]
+    assert "commentScope === 'segment'" in chapter_comment["action"]
+    assert "commentScope === 'chapter'" in chapter_comment["action"]
+    assert "chapter.getAbsoluteURL" in chapter_comment["action"]
+    assert "typeof baseCandidate !== 'function'" in chapter_comment["action"]
     assert "sourceWebView" in chapter_comment["action"]
     assert "paragraphIds=" in chapter_comment["action"]
     assert "Authorization" not in chapter_comment["action"]
@@ -1063,7 +1065,8 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "legadoHubReviewTheme" not in source["jsLib"]
     assert "legadoHubOpenReviews" not in source["jsLib"]
     assert "legadohub_session" not in source["jsLib"]
-    assert "heightPercentage: 0.78" in source["jsLib"]
+    assert "heightPercentage: 0.78" not in source["jsLib"]
+    assert "heightRatio: 0.78" in chapter_comment["action"]
     assert "ruleReview" not in source
     assert "LH1." not in json.dumps(source, ensure_ascii=False)
 

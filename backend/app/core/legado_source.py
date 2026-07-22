@@ -18,8 +18,9 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.10"
-_READER_RULE_LAST_UPDATE_TIME = 1_784_734_266_373
+_READER_RULE_VERSION = "0.0.11"
+# Reading only refreshes a book source when lastUpdateTime increases.
+_READER_RULE_LAST_UPDATE_TIME = 1_784_740_000_000
 
 
 def _reader_rule_last_update_time(config: AppConfig) -> int:
@@ -317,34 +318,66 @@ def _chapter_comment_data_rule() -> str:
 
 
 def _chapter_comment_action_rule() -> str:
+    # Client executes this via source.evalJS (not AnalyzeUrl). Bindings include
+    # chapter/event/result/baseUrl, but jsLib also defines function baseUrl(), so
+    # prefer chapter.getAbsoluteURL() and only treat baseUrl as a string location.
     return (
         "@js:\n"
-        "var actionEvent = JSON.parse(String(event || result || '{}'));\n"
-        "var location = String(baseUrl || '');\n"
+        "var rawEvent = event;\n"
+        "if (rawEvent == null || rawEvent === undefined || rawEvent === '') rawEvent = result;\n"
+        "if (rawEvent == null || rawEvent === undefined || rawEvent === '') rawEvent = '{}';\n"
+        "var actionEvent = JSON.parse(String(rawEvent));\n"
+        "var location = '';\n"
+        "try {\n"
+        "  if (chapter != null && chapter.getAbsoluteURL) location = String(chapter.getAbsoluteURL() || '');\n"
+        "} catch (e1) {}\n"
+        "if (!location) {\n"
+        "  try {\n"
+        "    if (chapter != null && chapter.url) location = String(chapter.url || '');\n"
+        "  } catch (e2) {}\n"
+        "}\n"
+        "if (!location) {\n"
+        "  try {\n"
+        "    var baseCandidate = baseUrl;\n"
+        "    if (typeof baseCandidate !== 'function') location = String(baseCandidate || '');\n"
+        "  } catch (e3) {}\n"
+        "}\n"
+        "var contentUrl = '';\n"
         "var matched = /^data:contentUrl;base64,([^,]+)/i.exec(location);\n"
-        "if (!matched) throw new Error('chapter comment content URL missing');\n"
-        "var contentUrl = String(java.base64Decode(matched[1]) || '').trim();\n"
-        "var viewRoot = legadoHubReviewRoot(contentUrl) + '/reviews/view';\n"
-        "var scope = String(actionEvent.scope || '');\n"
+        "if (matched) {\n"
+        "  contentUrl = String(java.base64Decode(matched[1]) || '').trim();\n"
+        "} else {\n"
+        "  var bare = String(location || '').split(/\\s*,\\s*(?=\\{)/)[0].trim();\n"
+        "  if (/^https?:\\/\\//i.test(bare)) contentUrl = bare;\n"
+        "}\n"
+        "if (!/^https?:\\/\\//i.test(contentUrl)) throw new Error('chapter comment content URL missing');\n"
+        "contentUrl = contentUrl.replace(/\\/+$/, '');\n"
+        "var viewRoot = contentUrl + '/reviews/view';\n"
+        "var commentScope = String(actionEvent.scope || '');\n"
         "var viewUrl = '';\n"
-        "var title = '';\n"
-        "if (scope === 'chapter') {\n"
+        "var sheetTitle = '';\n"
+        "if (commentScope === 'chapter') {\n"
         "  viewUrl = viewRoot + '?tab=chapter';\n"
-        "  title = '本章说';\n"
-        "} else if (scope === 'page') {\n"
-        "  var ids = (actionEvent.segmentIds || []).map(String).filter(function (id) { return /^\\d+$/.test(id); }).slice(0, 50);\n"
+        "  sheetTitle = '本章说';\n"
+        "} else if (commentScope === 'page') {\n"
+        "  var ids = [];\n"
+        "  var segmentIds = actionEvent.segmentIds || [];\n"
+        "  for (var i = 0; i < segmentIds.length && ids.length < 50; i++) {\n"
+        "    var sid = String(segmentIds[i] || '');\n"
+        "    if (/^\\d+$/.test(sid)) ids.push(sid);\n"
+        "  }\n"
         "  if (!ids.length) throw new Error('page comment segment missing');\n"
         "  viewUrl = viewRoot + '?tab=paragraph&paragraphIds=' + encodeURIComponent(ids.join(','));\n"
-        "  title = '页热评';\n"
-        "} else if (scope === 'segment') {\n"
+        "  sheetTitle = '页热评';\n"
+        "} else if (commentScope === 'segment') {\n"
         "  var id = String(actionEvent.segmentId || (actionEvent.segmentIds || [])[0] || '');\n"
         "  if (!/^\\d+$/.test(id)) throw new Error('segment comment id missing');\n"
         "  viewUrl = viewRoot + '?tab=paragraph&paragraphId=' + encodeURIComponent(id);\n"
-        "  title = '段评说';\n"
+        "  sheetTitle = '段评说';\n"
         "} else {\n"
         "  throw new Error('unsupported chapter comment scope');\n"
         "}\n"
-        "JSON.stringify({type: 'sourceWebView', url: viewUrl, title: title, presentation: 'bottomSheet', heightRatio: 0.78});"
+        "JSON.stringify({type: 'sourceWebView', url: viewUrl, title: sheetTitle, presentation: 'bottomSheet', heightRatio: 0.78});"
     )
 
 
