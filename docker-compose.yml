@@ -1,16 +1,11 @@
 services:
-  legadohub-init:
+  # LegadoHub | 小说聚合订阅（Reading / Legado 后端）
+  # 入口以 root 启动，按 PUID/PGID 修正挂载权限后降权运行
+  legadohub:
     image: xzixmn/legado-hub:latest
-    user: "0:0"
-    command: ["--initialize-runtime", "/app/plugins/sources/thirdparty"]
-    volumes:
-      - "./data:/app/backend/data"
-      - "./config:/app/backend/config"
-      - "./generated:/app/backend/generated"
-      - "./runtime:/app/backend/runtime"
-      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty"
-    network_mode: none
-    read_only: true
+    container_name: legadohub
+    restart: always
+    init: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -18,44 +13,73 @@ services:
     cap_add:
       - CHOWN
       - DAC_OVERRIDE
-
-  legadohub:
-    image: xzixmn/legado-hub:latest
-    restart: unless-stopped
-    init: true
-    depends_on:
-      legadohub-init:
-        condition: service_completed_successfully
+      - SETGID
+      - SETUID
     ports:
-      - "8765:8765"
-      - "8766:8766"
+      - '8765:8765' # 用户入口 / Reading 书源地址
+      - '8766:8766' # 管理控制台（请用防火墙限制访问来源）
     environment:
-      LEGADOHUB_EXTERNAL_HOST: "${LEGADOHUB_EXTERNAL_HOST:-}"
+      - TZ=Asia/Shanghai # 时区
+      - PUID=1000 # 运行用户 ID（改成 NAS/宿主实际用户，例如 1000）
+      - PGID=1000 # 运行用户组 ID（改成 NAS/宿主实际用户组）
+      - LEGADOHUB_CHOWN_DATA=${LEGADOHUB_CHOWN_DATA:-0} # 仅迁移旧数据权限时临时设为 1
+      # 可选：固定访问主机名或 IP，不要带协议 / 端口 / 路径
+      # 用于生成 Reading 可打开的链接；留空则按请求 Host / 局域网探测
+      - LEGADOHUB_EXTERNAL_HOST=${LEGADOHUB_EXTERNAL_HOST:-}
+      # 示例：
+      # - LEGADOHUB_EXTERNAL_HOST=192.168.1.20
+      # - LEGADOHUB_EXTERNAL_HOST=legadohub.lan
     volumes:
-      - "./data:/app/backend/data"
-      - "./config:/app/backend/config"
-      - "./generated:/app/backend/generated"
-      - "./runtime:/app/backend/runtime"
-      - "./plugins/sources/thirdparty:/app/plugins/sources/thirdparty"
-      - "./plugins/sources/official:/app/plugins/sources/official:ro"
-    tmpfs:
-      - /tmp:size=512m,mode=1777
-      - /home/legadohub/.cache:size=256m,mode=700,uid=1000,gid=1000
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    pids_limit: 256
-    mem_limit: 2g
-    cpus: 2.0
-    healthcheck:
-      test: ["CMD", "python", "-c", "import json, urllib.request as u; assert json.load(u.urlopen('http://127.0.0.1:8765/api/auth/entrypoint', timeout=3))['entrypoint'] == 'public'; assert json.load(u.urlopen('http://127.0.0.1:8766/api/auth/entrypoint', timeout=3))['entrypoint'] == 'admin'"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      # 数据与配置持久化（必需）
+      # 默认相对路径 = compose 文件所在目录；NAS 请改成绝对路径
+      - './data:/app/backend/data' # 数据库、书库、章节缓存、浏览器资料
+      - './config:/app/backend/config' # 应用配置、插件 Cookie
+      - './generated:/app/backend/generated' # 生成的聚合书源
+      - './runtime:/app/backend/runtime' # 插件运行状态
+      - './plugins/sources/thirdparty:/app/plugins/sources/thirdparty' # 第三方插件（空目录首次从镜像种子填充）
+      - './plugins/sources/official:/app/plugins/sources/official:ro' # 官方插件（只读，需自行放入）
+      # 示例：飞牛 / 绿联等
+      # - '/vol1/1000/appdata/legado-hub/data:/app/backend/data'
+      # - '/vol1/1000/appdata/legado-hub/config:/app/backend/config'
+      # - '/vol1/1000/appdata/legado-hub/generated:/app/backend/generated'
+      # - '/vol1/1000/appdata/legado-hub/runtime:/app/backend/runtime'
+      # - '/vol1/1000/appdata/legado-hub/plugins/thirdparty:/app/plugins/sources/thirdparty'
+      # - '/vol1/1000/appdata/legado-hub/plugins/official:/app/plugins/sources/official:ro'
+      # 示例：群晖
+      # - '/volume1/docker/legado-hub/data:/app/backend/data'
+      # - '/volume1/docker/legado-hub/config:/app/backend/config'
+      # - '/volume1/docker/legado-hub/generated:/app/backend/generated'
+      # - '/volume1/docker/legado-hub/runtime:/app/backend/runtime'
+      # - '/volume1/docker/legado-hub/plugins/thirdparty:/app/plugins/sources/thirdparty'
+      # - '/volume1/docker/legado-hub/plugins/official:/app/plugins/sources/official:ro'
+      # 示例：普通 Linux
+      # - '/opt/legado-hub/data:/app/backend/data'
+      # - '/opt/legado-hub/config:/app/backend/config'
+      # - '/opt/legado-hub/generated:/app/backend/generated'
+      # - '/opt/legado-hub/runtime:/app/backend/runtime'
+      # - '/opt/legado-hub/plugins/thirdparty:/app/plugins/sources/thirdparty'
+      # - '/opt/legado-hub/plugins/official:/app/plugins/sources/official:ro'
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      - legadohub_internal
+    # 健康检查：用户口 + 管理口都需就绪
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import json, urllib.request as u; assert json.load(u.urlopen('http://127.0.0.1:8765/api/auth/entrypoint', timeout=3))['entrypoint'] == 'public'; assert json.load(u.urlopen('http://127.0.0.1:8766/api/auth/entrypoint', timeout=3))['entrypoint'] == 'admin'",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+networks:
+  legadohub_internal:
+    driver: bridge

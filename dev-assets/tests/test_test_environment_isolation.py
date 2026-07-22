@@ -114,32 +114,54 @@ def test_docker_plugin_delivery_contract() -> None:
     dockerignore = (repo_root / ".dockerignore").read_text(encoding="utf-8").splitlines()
     dockerfile = (repo_root / "Dockerfile").read_text(encoding="utf-8")
     entrypoint = (repo_root / "deploy/docker/entrypoint.sh").read_text(encoding="utf-8")
+    readme = (repo_root / "README.md").read_text(encoding="utf-8")
     compose = yaml.safe_load((repo_root / "docker-compose.yml").read_text(encoding="utf-8"))
     plugin_mount = yaml.safe_load(
         (repo_root / "docker-compose.plugins.yml").read_text(encoding="utf-8")
     )
+    browserless_mount = yaml.safe_load(
+        (repo_root / "docker-compose.browserless.yml").read_text(encoding="utf-8")
+    )
 
     assert "x-legadohub-image" not in compose
-    assert all(
-        compose["services"][service]["image"] == "xzixmn/legado-hub:latest"
-        for service in ("legadohub-init", "legadohub")
-    )
-    assert all(
-        "pull_policy" not in compose["services"][service]
-        for service in ("legadohub-init", "legadohub")
-    )
+    assert "legadohub-init" not in compose["services"]
+    assert compose["services"]["legadohub"]["image"] == "xzixmn/legado-hub:latest"
+    assert "pull_policy" not in compose["services"]["legadohub"]
+    assert "depends_on" not in compose["services"]["legadohub"]
     assert "plugins/sources/official" in dockerignore
     assert "plugins/sources/thirdparty" not in dockerignore
     assert "backend/runtime" in dockerignore
     assert all(path in dockerignore for path in ("data", "config", "generated", "runtime"))
     assert "plugins/sources/thirdparty/ /opt/legadohub/plugins/thirdparty/" in dockerfile
     assert "ENTRYPOINT [\"legadohub-entrypoint\"]" in dockerfile
-    assert "USER legadohub" in dockerfile
+    assert "USER root" in dockerfile
+    assert "USER legadohub" not in dockerfile
+    assert "gosu" in dockerfile
     assert "COPY --chown=legadohub:legadohub plugins/ /app/plugins/" not in dockerfile
     assert "/opt/legadohub/plugins/thirdparty" in entrypoint
     assert "/app/plugins/sources/thirdparty" in entrypoint
     assert "cp -a" in entrypoint
-    volumes = compose["services"]["legadohub"]["volumes"]
+    assert "gosu" in entrypoint
+    assert "PUID" in entrypoint
+    assert "PGID" in entrypoint
+
+    def _volume_targets(entries: list[object]) -> list[str]:
+        return [str(item).strip("'\"") for item in entries if isinstance(item, str) and ":" in str(item)]
+
+    def _env_map(raw: object) -> dict[str, str]:
+        if isinstance(raw, dict):
+            return {str(key): str(value) for key, value in raw.items()}
+        if isinstance(raw, list):
+            parsed: dict[str, str] = {}
+            for item in raw:
+                text = str(item)
+                key, sep, value = text.partition("=")
+                if sep:
+                    parsed[key] = value
+            return parsed
+        raise AssertionError(f"unexpected environment shape: {type(raw)!r}")
+
+    volumes = _volume_targets(compose["services"]["legadohub"]["volumes"])
     assert "./data:/app/backend/data" in volumes
     assert "./config:/app/backend/config" in volumes
     assert "./generated:/app/backend/generated" in volumes
@@ -150,49 +172,63 @@ def test_docker_plugin_delivery_contract() -> None:
         "8765:8765",
         "8766:8766",
     ]
-    environment = compose["services"]["legadohub"]["environment"]
-    assert environment == {"LEGADOHUB_EXTERNAL_HOST": "${LEGADOHUB_EXTERNAL_HOST:-}"}
+    environment = _env_map(compose["services"]["legadohub"]["environment"])
+    assert environment.get("LEGADOHUB_EXTERNAL_HOST") == "${LEGADOHUB_EXTERNAL_HOST:-}"
+    assert environment.get("TZ") == "Asia/Shanghai"
+    assert environment.get("PUID") == "1000"
+    assert environment.get("PGID") == "1000"
+    assert environment.get("LEGADOHUB_CHOWN_DATA") == "${LEGADOHUB_CHOWN_DATA:-0}"
+    assert "UMASK" not in environment
     assert "LEGADOHUB_PUBLIC_MODE" not in environment
-    assert "container_name" not in compose["services"]["legadohub"]
-    assert "networks" not in compose["services"]["legadohub"]
-    assert "networks" not in compose
+    assert "LEGADOHUB_PUBLIC_BASE_URL" not in environment
+    assert compose["services"]["legadohub"]["container_name"] == "legadohub"
+    assert compose["services"]["legadohub"]["security_opt"] == [
+        "no-new-privileges:true"
+    ]
+    assert compose["services"]["legadohub"]["cap_drop"] == ["ALL"]
+    assert set(compose["services"]["legadohub"]["cap_add"]) == {
+        "CHOWN",
+        "DAC_OVERRIDE",
+        "SETGID",
+        "SETUID",
+    }
+    assert "network_mode" not in compose["services"]["legadohub"]
+    assert compose["services"]["legadohub"]["networks"] == ["legadohub_internal"]
+    assert compose["networks"]["legadohub_internal"]["driver"] == "bridge"
+    assert "networks" not in browserless_mount
+    assert browserless_mount["services"]["browserless"]["networks"] == [
+        "legadohub_internal"
+    ]
+    assert compose["services"]["legadohub"]["logging"] == {
+        "driver": "json-file",
+        "options": {"max-size": "10m", "max-file": "3"},
+    }
     assert not (repo_root / "docker-compose.public.yml").exists()
     assert not (repo_root / "deploy/caddy/Caddyfile").exists()
-    assert "LEGADOHUB_PUBLIC_BASE_URL" not in compose["services"]["legadohub"]["environment"]
     assert "runtime directory is not writable" in entrypoint
     assert "--initialize-runtime" in entrypoint
-    assert "id -u legadohub" in entrypoint
-    assert "id -g legadohub" in entrypoint
-    assert "chown 1000:1000" not in entrypoint
-    initializer = compose["services"]["legadohub-init"]
-    assert initializer["user"] == "0:0"
-    assert initializer["command"] == [
-        "--initialize-runtime",
-        "/app/plugins/sources/thirdparty",
-    ]
-    assert initializer["network_mode"] == "none"
-    assert initializer["read_only"] is True
-    assert set(initializer["cap_add"]) == {"CHOWN", "DAC_OVERRIDE"}
-    assert compose["services"]["legadohub"]["depends_on"]["legadohub-init"] == {
-        "condition": "service_completed_successfully"
-    }
-    assert all(volume in initializer["volumes"] for volume in volumes[:5])
+    assert "LEGADOHUB_CHOWN_DATA" in entrypoint
+    assert "app.db-wal" in entrypoint
+    assert "app.db-journal" in entrypoint
+    assert "must not run as root" in entrypoint
+    assert "as_app_user test -w" in entrypoint
+    assert "for data_entry in /app/backend/data/*" in entrypoint
+    assert "UMASK" not in entrypoint
+    assert "UMASK" not in dockerfile
+    assert "docker run -d" in readme
+    assert "--log-opt max-size=10m" in readme
+    assert "--security-opt no-new-privileges:true" in readme
+    assert "docker compose restart` 不会应用新的环境变量" in readme
+    assert "exec gosu" in entrypoint
     assert any(
         volume.endswith(":/app/plugins/sources/official:ro")
         for volume in volumes
     )
+    assert list(plugin_mount["services"]) == ["legadohub"]
     assert any(
         volume.endswith(":/app/plugins/sources/thirdparty")
         for volume in plugin_mount["services"]["legadohub"]["volumes"]
     )
-    assert any(
-        volume.endswith(":/app/plugins/sources/thirdparty")
-        for volume in plugin_mount["services"]["legadohub-init"]["volumes"]
-    )
-    assert plugin_mount["services"]["legadohub-init"]["command"] == [
-        "--initialize-runtime",
-        "/app/plugins/sources/thirdparty",
-    ]
 
 
 def test_windows_bootstrap_does_not_require_dotenv() -> None:
