@@ -90,7 +90,15 @@ def test_external_host_extends_lan_access_without_allowing_arbitrary_hosts(monke
 
 @pytest.mark.parametrize(
     "value",
-    ("0.0.0.0", "::", "https://books.example.test", "books.example.test:8765", "*"),
+    (
+        "0.0.0.0",
+        "::",
+        "224.0.0.1",
+        "ff02::1",
+        "https://books.example.test",
+        "books.example.test:8765",
+        "*",
+    ),
 )
 def test_external_host_rejects_bind_addresses_and_non_host_values(
     monkeypatch,
@@ -108,6 +116,7 @@ def test_external_host_rejects_bind_addresses_and_non_host_values(
     (
         ("books.example.test.", "books.example.test.:8765", "books.example.test"),
         ("2001:0db8::20", "[2001:db8::20]:8765", "2001:db8::20"),
+        ("203.0.113.10", "[::ffff:203.0.113.10]:8765", "203.0.113.10"),
     ),
 )
 def test_external_host_normalizes_equivalent_dns_and_ip_forms(
@@ -125,7 +134,7 @@ def test_external_host_normalizes_equivalent_dns_and_ip_forms(
     assert TestClient(app).get("/health", headers={"Host": request_host}).status_code == 200
 
 
-def test_default_lan_uses_request_host_and_rejects_public_host(monkeypatch) -> None:
+def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> None:
     _clear_network_config(monkeypatch)
     public_app = create_app(load_public_security_config())
 
@@ -160,6 +169,34 @@ def test_default_lan_uses_request_host_and_rejects_public_host(monkeypatch) -> N
     assert ipv6_manifest.json()[0]["searchUrl"].startswith(
         "http://[fd00::20]:8765/api/"
     )
+
+    public_ipv6_manifest = ipv6_client.get(
+        "/api/subscribe/legado/source",
+        headers={"Host": "[2001:4860:4860::8888]:8765"},
+    )
+    assert public_ipv6_manifest.status_code == 200
+    assert public_ipv6_manifest.json()[0]["searchUrl"].startswith(
+        "http://[2001:4860:4860::8888]:8765/api/"
+    )
+
+    mapped_lan_manifest = ipv6_client.get(
+        "/api/subscribe/legado/source",
+        headers={"Host": "[::ffff:192.168.31.161]:8765"},
+    )
+    assert mapped_lan_manifest.status_code == 200
+    assert mapped_lan_manifest.json()[0]["searchUrl"].startswith(
+        "http://192.168.31.161:8765/api/"
+    )
+
+    for rejected_host in (
+        "[::]:8765",
+        "[ff02::1]:8765",
+        "[::ffff:203.0.113.10]:8765",
+    ):
+        assert ipv6_client.get(
+            "/health",
+            headers={"Host": rejected_host},
+        ).status_code == 400
 
 
 def test_default_lan_admin_accepts_same_origin_only(monkeypatch) -> None:

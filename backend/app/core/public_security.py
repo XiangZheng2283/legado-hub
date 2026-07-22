@@ -52,7 +52,10 @@ def _csv(name: str) -> list[str]:
 def _normalize_host(host: str) -> str:
     normalized = host.strip().lower().rstrip(".")
     try:
-        return str(ipaddress.ip_address(normalized))
+        address = ipaddress.ip_address(normalized)
+        if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+            address = address.ipv4_mapped
+        return str(address)
     except ValueError:
         return normalized
 
@@ -97,10 +100,11 @@ def _configured_external_host() -> str:
     if not host:
         return ""
     try:
-        unspecified = ipaddress.ip_address(host).is_unspecified
+        address = ipaddress.ip_address(host)
+        invalid_ip = address.is_unspecified or address.is_multicast
     except ValueError:
-        unspecified = False
-    if "*" in host or not _valid_host(host) or unspecified:
+        invalid_ip = False
+    if "*" in host or not _valid_host(host) or invalid_ip:
         raise RuntimeError(
             "LEGADOHUB_EXTERNAL_HOST must be one exact IP address or host name "
             "without scheme, port, or path."
@@ -269,14 +273,21 @@ def load_admin_security_config() -> PublicSecurityConfig:
     )
 
 
-def _is_lan_host(host: str) -> bool:
+def _is_default_allowed_host(host: str) -> bool:
     try:
         address = ipaddress.ip_address(host)
     except ValueError:
         return _valid_host(host) and (
             host in {"localhost", "testserver"} or host.endswith(_LAN_DNS_SUFFIXES)
         )
-    return any(address in network for network in _LAN_NETWORKS)
+    if isinstance(address, ipaddress.IPv6Address):
+        if address.ipv4_mapped is None:
+            return not address.is_unspecified and not address.is_multicast
+        address = address.ipv4_mapped
+    return any(
+        address.version == network.version and address in network
+        for network in _LAN_NETWORKS
+    )
 
 
 def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
@@ -287,8 +298,10 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
         f"{scheme}://{request.headers.get('host', '').strip()}",
         label="Host",
     )
-    if not _is_lan_host(host) and host != security.external_host:
-        raise RuntimeError("Host must be local, private-network, or explicitly configured.")
+    if not _is_default_allowed_host(host) and host != security.external_host:
+        raise RuntimeError(
+            "Host must be local, private-network, IPv6, or explicitly configured."
+        )
     return origin
 
 
