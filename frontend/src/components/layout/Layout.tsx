@@ -80,8 +80,10 @@ export function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside className="sticky top-0 hidden h-screen w-64 self-start flex-col bg-white border-r border-slate-200 md:flex">
+    // h-screen + min-h-0 keeps scroll inside <main> so tab height changes never
+    // toggle the window scrollbar (which shifts centered content left/right).
+    <div className="flex h-screen overflow-hidden bg-slate-50">
+      <aside className="hidden h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex h-16 flex-shrink-0 items-center px-6">
           <BookOpen className="h-6 w-6 text-slate-800" />
           <span className="ml-3 text-lg font-bold tracking-tight text-slate-900">LegadoHub</span>
@@ -117,8 +119,8 @@ export function Layout() {
           </div>
         </div>
       </aside>
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm md:hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm md:hidden">
           <div className="flex items-center">
             <BookOpen className="h-6 w-6 text-slate-800" />
             <span className="ml-3 text-lg font-bold tracking-tight text-slate-900">LegadoHub</span>
@@ -159,8 +161,8 @@ export function Layout() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 flex flex-col">
-          <div className="mx-auto max-w-6xl w-full flex-1">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-slate-50 p-6 [scrollbar-gutter:stable] md:p-8">
+          <div className="mx-auto w-full max-w-6xl flex-1">
             {logoutError && (
               <div role="alert" className="mb-4 flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                 <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
