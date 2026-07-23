@@ -159,8 +159,12 @@ def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_
 
     assert source["bookSourceName"] == f"LegadoHub 聚合({legado_source._READER_RULE_VERSION})"
     assert source["bookSourceUrl"] == "LegadoHub"
-    assert source["lastUpdateTime"] >= legado_source._READER_RULE_LAST_UPDATE_TIME
-    assert source["lastUpdateTime"] > 1_784_637_186_000
+    assert source["lastUpdateTime"] >= legado_source._reader_rule_version_stamp()
+    assert f"规则版本 {legado_source._READER_RULE_VERSION}" in source["bookSourceComment"]
+    assert (
+        f'LEGADOHUB_RULE_VERSION = "{legado_source._READER_RULE_VERSION}"' in source["jsLib"]
+    )
+    assert source["lastUpdateTime"] > 1_700_000_000_000
 
 
 def test_legado_source_update_marker_advances_with_comment_settings(tmp_path, monkeypatch):

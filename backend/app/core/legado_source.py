@@ -16,20 +16,42 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 
 
 # Reading identifies this source by bookSourceUrl and only offers updates when
-# lastUpdateTime increases. Keep this release pair code-owned so persisted
-# aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.15"
-# Reading only refreshes a book source when lastUpdateTime increases.
-_READER_RULE_LAST_UPDATE_TIME = 1_784_770_000_000
+# lastUpdateTime increases. Release discipline (change both on every rule ship):
+# 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
+# 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
+#    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
+_READER_RULE_VERSION = "0.0.16"
+# 2026-07-23 release marker (ms). Bump this whenever _READER_RULE_VERSION bumps.
+_READER_RULE_RELEASED_AT_MS = 1_784_800_000_000
+
+
+def _reader_rule_version_stamp(version: str = _READER_RULE_VERSION) -> int:
+    """Secondary monotonic component derived from X.Y.Z (not a wall clock)."""
+    parts = str(version or "0").strip().split(".")
+    nums: list[int] = []
+    for part in parts[:3]:
+        try:
+            nums.append(max(0, int(part)))
+        except ValueError:
+            nums.append(0)
+    while len(nums) < 3:
+        nums.append(0)
+    major, minor, patch = nums
+    return major * 100_000_000 + minor * 100_000 + patch * 100
 
 
 def _reader_rule_last_update_time(config: AppConfig) -> int:
-    """Advance Reading's source marker when runtime source settings change."""
+    """Reading update signal: max(release marker+version, AppConfig mtime).
+
+    Embedding version only in bookSourceName is not enough — clients key off
+    lastUpdateTime. RELEASED_AT_MS + version stamp must rise on each ship.
+    """
+    floor = _READER_RULE_RELEASED_AT_MS + _reader_rule_version_stamp()
     try:
         config_modified_at = config.path.stat().st_mtime_ns // 1_000_000
     except OSError:
-        return _READER_RULE_LAST_UPDATE_TIME
-    return max(_READER_RULE_LAST_UPDATE_TIME, config_modified_at)
+        return floor
+    return max(floor, config_modified_at)
 
 
 def _login_ui() -> str:
@@ -240,10 +262,17 @@ function legadoHubChapterEndReviewCount(reviews) {
 
 def _reader_js_lib(base_api: str) -> str:
     base_literal = json.dumps(base_api.rstrip("/"), ensure_ascii=False)
+    version_literal = json.dumps(_READER_RULE_VERSION, ensure_ascii=False)
     # baseUrl() is the historical helper; legadoHubSourceBase() is collision-safe
     # when AnalyzeRule binds the name baseUrl to a chapter data: URL.
+    # LEGADOHUB_RULE_VERSION must change whenever rules change so Reading's
+    # imported source body is not "same content, only title renamed".
     return (
-        "function baseUrl() { return "
+        "var LEGADOHUB_RULE_VERSION = "
+        + version_literal
+        + ";\n"
+        + "function legadoHubRuleVersion() { return LEGADOHUB_RULE_VERSION; }\n"
+        + "function baseUrl() { return "
         + base_literal
         + "; }\n"
         + "function legadoHubSourceBase() { return "
@@ -433,7 +462,11 @@ def _build_source(base_api: str | None = None) -> dict:
         "loginUi": _login_ui(),
         "loginUrl": _login_script(base_api),
         "loginCheckJs": _login_check_script(),
-        "bookSourceComment": "搜索同时显示已发布共享书和启用的第三方书源；官方源仍只用于后台聚合，新增订阅及运维操作统一在 Web Console 完成。",
+        "bookSourceComment": (
+            f"规则版本 {_READER_RULE_VERSION}。"
+            "搜索同时显示已发布共享书和启用的第三方书源；官方源仍只用于后台聚合，"
+            "新增订阅及运维操作统一在 Web Console 完成。"
+        ),
         # Progressive: page1 library + short third-party batch; page2+ continue
         # the same server job for new remotes (see subscribe._legado_search_response).
         "searchUrl": (
