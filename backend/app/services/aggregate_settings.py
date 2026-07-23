@@ -88,7 +88,9 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "sourceCandidateLimit": 6,
     "purifyMode": "conservative",
     "primarySourceMode": "official",
-    "primarySourcePriority": ["qidian_com_app"],  # Ordered list of preferred primary source IDs.
+    # Empty by default: do not pre-seed qidian_com_app (often absent / gitignored).
+    # Operators add installed official plugins via settings when available.
+    "primarySourcePriority": [],
     "candidateSourcePriority": [],  # Ordered list of third-party source IDs for VIP completion.
     "minSourceScore": 100,
     "aiEnabled": False,

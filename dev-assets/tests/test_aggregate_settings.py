@@ -64,7 +64,7 @@ def test_aggregate_settings_defaults_include_shared_book_flags(tmp_path, monkeyp
     assert settings["contentWorkflow"]["aiFailureRateThreshold"] == 0.0
     assert settings["contentWorkflow"]["aiCircuitBreakerCooldownMinutes"] == 30
     assert settings["contentWorkflow"]["stage3PeakHourSkipEnabled"] is False
-    assert settings["contentWorkflow"]["primarySourcePriority"] == ["qidian_com_app"]
+    assert settings["contentWorkflow"]["primarySourcePriority"] == []
     assert settings["contentWorkflow"]["candidateSourcePriority"] == []
     assert settings["contentWorkflow"]["aiEnabled"] is False
 

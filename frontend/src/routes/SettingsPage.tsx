@@ -83,34 +83,44 @@ interface PrioritySourceOption {
   official: boolean
 }
 
-function PriorityListEditor({ title, description, items, options, onChange }: { title: string; description: string; items: string[]; options: PrioritySourceOption[]; onChange: (items: string[]) => void }) {
+function PriorityListEditor({ title, description, items, options, optionsReady = true, onChange }: { title: string; description: string; items: string[]; options: PrioritySourceOption[]; optionsReady?: boolean; onChange: (items: string[]) => void }) {
   const editorId = useId()
   const [sourceToAdd, setSourceToAdd] = useState("")
   const sourceById = new Map(options.map((option) => [option.pluginId, option]))
-  const availableOptions = options.filter((option) => !items.includes(option.pluginId))
+  // Never list uninstalled plugin IDs (e.g. gitignored official app source).
+  const visibleItems = items.filter((item) => sourceById.has(item))
+  const availableOptions = options.filter((option) => !visibleItems.includes(option.pluginId))
+
+  useEffect(() => {
+    // Wait until plugins query settled so an empty options list is intentional.
+    if (!optionsReady) return
+    if (visibleItems.length === items.length && visibleItems.every((id, index) => id === items[index])) return
+    onChange(visibleItems)
+  }, [optionsReady, items, visibleItems, onChange])
+
   const focusAfterUpdate = (selector: string) => {
     setTimeout(() => (document.getElementById(editorId)?.querySelector(selector) as HTMLElement | null)?.focus(), 0)
   }
 
   const moveItem = (from: number, to: number) => {
-    if (to < 0 || to >= items.length) return
-    const next = [...items]
+    if (to < 0 || to >= visibleItems.length) return
+    const next = [...visibleItems]
     ;[next[from], next[to]] = [next[to], next[from]]
     onChange(next)
     focusAfterUpdate(`[data-row-index="${to}"] [data-row-focus]`)
   }
 
   const removeItem = (index: number) => {
-    const next = items.filter((_, itemIndex) => itemIndex !== index)
+    const next = visibleItems.filter((_, itemIndex) => itemIndex !== index)
     onChange(next)
     focusAfterUpdate(next.length > 0 ? `[data-row-index="${Math.min(index, next.length - 1)}"] [data-row-focus]` : "[data-add-source]")
   }
 
   const addItem = (pluginId: string) => {
-    if (!pluginId || items.includes(pluginId)) return
-    onChange([...items, pluginId])
+    if (!pluginId || visibleItems.includes(pluginId) || !sourceById.has(pluginId)) return
+    onChange([...visibleItems, pluginId])
     setSourceToAdd("")
-    focusAfterUpdate(`[data-row-index="${items.length}"] [data-row-focus]`)
+    focusAfterUpdate(`[data-row-index="${visibleItems.length}"] [data-row-focus]`)
   }
 
   return (
@@ -120,14 +130,14 @@ function PriorityListEditor({ title, description, items, options, onChange }: { 
           <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
           <p className="mt-1 text-sm text-slate-500">{description}</p>
         </div>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{items.filter((item) => item.trim()).length} 个源</span>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{visibleItems.length} 个源</span>
       </div>
 
-      {items.length === 0 ? (
+      {visibleItems.length === 0 ? (
         <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">暂未配置，运行时使用默认顺序。</div>
       ) : (
         <div className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200 bg-white">
-          {items.map((item, index) => {
+          {visibleItems.map((item, index) => {
             const source = sourceById.get(item)
             return (
             <div key={`${item}-${index}`} data-row-index={index} className="flex items-center gap-2 p-3">
@@ -138,15 +148,15 @@ function PriorityListEditor({ title, description, items, options, onChange }: { 
                 tabIndex={-1}
                 className="min-w-0 flex-1"
               >
-                <div className="truncate text-sm font-medium text-slate-900">{source?.name || "未知书源"}</div>
+                <div className="truncate text-sm font-medium text-slate-900">{source?.name || item}</div>
                 <div className="truncate font-mono text-xs text-slate-400">{item}</div>
               </div>
-              <Badge variant={source ? "secondary" : "outline"} className="shrink-0 text-[10px]">
-                {source ? (source.official ? "官方" : "第三方") : "未安装"}
+              <Badge variant="secondary" className="shrink-0 text-[10px]">
+                {source?.official ? "官方" : "第三方"}
               </Badge>
               <div className="flex shrink-0 items-center">
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`将${title}第 ${index + 1} 项上移`} title="上移" disabled={index === 0} onClick={() => moveItem(index, index - 1)}><ArrowUp className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`将${title}第 ${index + 1} 项下移`} title="下移" disabled={index === items.length - 1} onClick={() => moveItem(index, index + 1)}><ArrowDown className="h-4 w-4" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={`将${title}第 ${index + 1} 项下移`} title="下移" disabled={index === visibleItems.length - 1} onClick={() => moveItem(index, index + 1)}><ArrowDown className="h-4 w-4" /></Button>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700" aria-label={`删除${title}第 ${index + 1} 项`} title="删除" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
@@ -190,7 +200,7 @@ export function SettingsPage() {
   const { data: settingsData, error: settingsError, refetch: refetchSettings } = useQuery({ queryKey: ["settings"], queryFn: api.settings })
   const { data: aggData, error: aggError, refetch: refetchAggregateSettings } = useQuery({ queryKey: ["aggregateSettings"], queryFn: api.aggregateSettings })
   const { data: lexiconData, error: lexiconError, refetch: refetchLexicon } = useQuery({ queryKey: ["lexiconStatus"], queryFn: api.lexiconStatus })
-  const { data: pluginsData, error: pluginsError, refetch: refetchPlugins } = useQuery({ queryKey: ["plugins"], queryFn: api.plugins })
+  const { data: pluginsData, error: pluginsError, isSuccess: pluginsReady, refetch: refetchPlugins } = useQuery({ queryKey: ["plugins"], queryFn: api.plugins })
 
   const [editedSettings, setEditedSettings] = useState<Record<string, any> | null>(null)
   const [aggForm, setAggForm] = useState<Record<string, any> | null>(null)
@@ -443,6 +453,7 @@ export function SettingsPage() {
                 description="用于目录对齐和元数据抓取。"
                 items={Array.isArray(wf.primarySourcePriority) ? wf.primarySourcePriority.map(String) : []}
                 options={sourceOptions.filter((source) => source.official)}
+                optionsReady={pluginsReady}
                 onChange={(items) => setAgg({ contentWorkflow: { ...wf, primarySourcePriority: items } })}
               />
               <div className="border-t border-slate-100 pt-8">
@@ -451,6 +462,7 @@ export function SettingsPage() {
                   description="用于补全 VIP 预览或读取失败的章节。"
                   items={Array.isArray(wf.candidateSourcePriority) ? wf.candidateSourcePriority.map(String) : []}
                   options={sourceOptions.filter((source) => !source.official)}
+                  optionsReady={pluginsReady}
                   onChange={(items) => setAgg({ contentWorkflow: { ...wf, candidateSourcePriority: items } })}
                 />
               </div>
