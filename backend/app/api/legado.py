@@ -6,6 +6,7 @@ book reader contract remains, backed by the shared library storage.
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 from urllib.parse import urlparse
@@ -30,6 +31,7 @@ from app.core.public_security import get_public_base_url
 from app.services.reading_limits import reading_access_limiter
 
 router = APIRouter(prefix="/api/legado")
+logger = logging.getLogger(__name__)
 _EXTERNAL_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+:[A-Za-z0-9_-]+$")
 _MAX_EXTERNAL_ID_LENGTH = 8192
 _MAX_NUMERIC_ID = 2**63 - 1
@@ -239,6 +241,35 @@ async def _chapter_reviews(chapter_id: str, *, catalog: Catalog | None = None) -
     return reviews
 
 
+async def _strip_author_say_from_chapter_content(
+    *,
+    chapter_id: str,
+    content: str,
+    catalog: Catalog | None = None,
+) -> str:
+    """If 作家说 is already cached for this chapter, remove the same copy from body.
+
+    Durable stripping happens at subscription processing (fetch + purify).
+    Reading path only uses the review cache so chapter reads stay free of
+    extra review-network or storage side effects.
+    """
+    from app.services.author_say_strip import (
+        extract_author_say_texts,
+        strip_overlapping_author_say,
+    )
+
+    _ = catalog  # reserved for optional warm-path callers
+    if not content or not content.strip():
+        return content
+    reviews = chapter_review_cache.get(chapter_id)
+    if not isinstance(reviews, dict):
+        return content
+    author_texts = extract_author_say_texts(reviews)
+    if not author_texts:
+        return content
+    return strip_overlapping_author_say(content, author_texts)
+
+
 @router.get("/book/{book_id}")
 async def get_book(request: Request, book_id: str) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
@@ -319,12 +350,18 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
     chapter_id = _validated_external_id(chapter_id, label="章节")
     source_id, chapter_url = _decode_chapter_identity(chapter_id)
     with reading_access_limiter.guard(user.user_id, "chapter"):
+        catalog = Catalog(base_api=get_public_base_url(request))
         if source_id == VIRTUAL_SOURCE_ID:
             shared = library_books_service.legado_chapter(chapter_id)
             if shared is None:
                 raise HTTPException(status_code=404, detail="章节尚未发布")
+            content = await _strip_author_say_from_chapter_content(
+                chapter_id=chapter_id,
+                content=str(shared.get("content", "") or ""),
+                catalog=catalog,
+            )
+            shared = {**shared, "content": content}
             return _public_chapter_response(shared, chapter_id=chapter_id)
-        catalog = Catalog(base_api=get_public_base_url(request))
         _require_third_party_plugin(
             catalog,
             source_id,
@@ -333,6 +370,12 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
             target_url=chapter_url,
         )
         result = await catalog.chapter(chapter_id)
+        content = await _strip_author_say_from_chapter_content(
+            chapter_id=chapter_id,
+            content=str(result.get("content", "") or ""),
+            catalog=catalog,
+        )
+        result = {**result, "content": content}
         return _public_chapter_response(result, chapter_id=chapter_id)
 
 

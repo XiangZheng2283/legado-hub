@@ -42,13 +42,15 @@ _MAX_LIBRARY_CHAPTER_PAGE = 100_000
 _MAX_LIBRARY_CHAPTER_PAGE_SIZE = 200
 _LEGADO_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 _TERMINAL_SEARCH_STATUSES = {"completed", "partial", "timed_out", "failed", "cancelled"}
-_READING_SEARCH_TIMEOUT_MS = 60_000
+# Reading search: library first, stream third-party hits, hard-stop at 120s.
+_READING_SEARCH_TIMEOUT_MS = 120_000
 _READING_SEARCH_POLL_SECONDS = 0.1
 _MAX_READING_SEARCH_OWNERS = 1024
 _legado_search_service: SearchJobService | None = None
 _legado_search_service_init_token = None
 _legado_search_owners: dict[str, set[str]] = {}
 _legado_search_owners_lock = threading.Lock()
+_legado_search_deadline_tasks: set[asyncio.Task[None]] = set()
 _LIBRARY_CHAPTER_STATUSES = {
     "all",
     "pending",
@@ -287,6 +289,49 @@ def _public_legado_search_item(
     return public_item
 
 
+def _collect_library_search_items(
+    *,
+    keyword: str,
+    page: int,
+    base_api: str,
+    user_id: str,
+) -> list[dict]:
+    """Subscription library first, then published shared books (same keyword)."""
+    raw_items: list[dict] = []
+    if not keyword.strip():
+        return raw_items
+    try:
+        subscribed_books = user_subscriptions_service.list_books(
+            user_id,
+            library_books_service,
+            keyword=keyword,
+        )
+        raw_items.extend(
+            library_books_service.build_search_injected_item(book, base_api=base_api)
+            for book in subscribed_books
+            if isinstance(book.get("subscription"), dict)
+            and book["subscription"].get("status") in {"active", "paused"}
+            and book.get("searchVisibilityStatus") == "visible"
+            and int(book.get("visibleProcessedChapters", 0) or 0) > 0
+        )
+    except Exception:
+        logger.exception("Reading subscribed-book search failed")
+
+    try:
+        published = library_books_service.page_published_books(
+            keyword=keyword,
+            page=page,
+            page_size=20,
+        )
+        raw_items.extend(
+            library_books_service.build_search_injected_item(book, base_api=base_api)
+            for book in published["items"]
+        )
+    except Exception:
+        logger.exception("Reading published-book search failed")
+    return raw_items
+
+
 def _legado_search_payload(
     *,
     keyword: str,
@@ -295,6 +340,7 @@ def _legado_search_payload(
     user_id: str,
     allowed_source_ids: set[str],
     snapshot: dict | None = None,
+    library_items: list[dict] | None = None,
 ) -> dict:
     snapshot_items = (snapshot or {}).get("items", [])
     third_party_items = [
@@ -303,36 +349,17 @@ def _legado_search_payload(
         if isinstance(item, dict) and item.get("sourceId") != VIRTUAL_SOURCE_ID
     ] if isinstance(snapshot_items, list) else []
     raw_items: list[dict] = []
-    if keyword.strip():
-        try:
-            subscribed_books = user_subscriptions_service.list_books(
-                user_id,
-                library_books_service,
-                keyword=keyword,
-            )
-            raw_items.extend(
-                library_books_service.build_search_injected_item(book, base_api=base_api)
-                for book in subscribed_books
-                if isinstance(book.get("subscription"), dict)
-                and book["subscription"].get("status") in {"active", "paused"}
-                and book.get("searchVisibilityStatus") == "visible"
-                and int(book.get("visibleProcessedChapters", 0) or 0) > 0
-            )
-        except Exception:
-            logger.exception("Reading subscribed-book search failed")
-
-        try:
-            published = library_books_service.page_published_books(
+    if library_items is not None:
+        raw_items.extend(library_items)
+    elif keyword.strip():
+        raw_items.extend(
+            _collect_library_search_items(
                 keyword=keyword,
                 page=page,
-                page_size=20,
+                base_api=base_api,
+                user_id=user_id,
             )
-            raw_items.extend(
-                library_books_service.build_search_injected_item(book, base_api=base_api)
-                for book in published["items"]
-            )
-        except Exception:
-            logger.exception("Reading published-book search failed")
+        )
 
     raw_items.extend(third_party_items)
 
@@ -365,22 +392,72 @@ def _legado_search_payload(
     }
 
 
+def _third_party_live_item_count(search_service: SearchJobService, job_id: str) -> int:
+    session = search_service.get_session(job_id)
+    if session is None:
+        return 0
+    live = getattr(session, "live_items", None) or []
+    return len(live) if isinstance(live, list) else 0
+
+
 async def _wait_for_legado_search(
     search_service: SearchJobService,
     job_id: str,
     wait_ms: int,
-) -> bool:
-    """Collect source results until the job finishes or the caller's deadline expires."""
+    *,
+    stop_on_first_result: bool = True,
+    library_has_results: bool = False,
+) -> str:
+    """Wait until the first HTTP response for a reading search can be sent.
+
+    Returns one of:
+    - ``"ready"``: library hit and/or first third-party hit (job may still run)
+    - ``"terminal"``: job finished before any early-ready signal
+    - ``"deadline"``: wait_ms elapsed without terminal status
+
+    Early ``ready`` does **not** mean the remote search should stop. Callers must
+    keep the job running and only cancel at the hard 120s deadline.
+    """
+    if library_has_results:
+        return "ready"
+
     loop = asyncio.get_running_loop()
-    deadline = loop.time() + (wait_ms / 1000)
+    deadline = loop.time() + max(0, wait_ms) / 1000
     while True:
         session = search_service.get_session(job_id)
         if session is None or session.status in _TERMINAL_SEARCH_STATUSES:
-            return True
+            return "terminal"
+        if stop_on_first_result and _third_party_live_item_count(search_service, job_id) > 0:
+            return "ready"
         remaining = deadline - loop.time()
         if remaining <= 0:
-            return False
+            return "deadline"
         await asyncio.sleep(min(_READING_SEARCH_POLL_SECONDS, remaining))
+
+
+async def _enforce_legado_search_deadline(
+    search_service: SearchJobService,
+    job_id: str,
+    wait_ms: int,
+) -> None:
+    """Hard-stop a reading search job after wait_ms; leave earlier results intact."""
+    try:
+        await asyncio.sleep(max(0, wait_ms) / 1000)
+        session = search_service.get_session(job_id)
+        if session is None or session.status in _TERMINAL_SEARCH_STATUSES:
+            return
+        search_service.cancel_job(job_id)
+    except Exception:
+        logger.debug("Failed to enforce reading search deadline for %s", job_id, exc_info=True)
+
+
+def _track_legado_deadline_task(task: asyncio.Task[None]) -> None:
+    _legado_search_deadline_tasks.add(task)
+
+    def _done(done: asyncio.Task[None]) -> None:
+        _legado_search_deadline_tasks.discard(done)
+
+    task.add_done_callback(_done)
 
 
 def _validated_aggregate_book_id(value: str) -> str:
@@ -909,7 +986,7 @@ async def legado_search(
     request: Request,
     keyword: str = "",
     page: str = "1",
-    waitMs: str = "60000",
+    waitMs: str = "120000",
 ) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
     _reject_legado_query_anomalies(request, {"keyword", "page", "waitMs"})
@@ -947,7 +1024,17 @@ async def _legado_search_response(
             user_id=user_id,
             allowed_source_ids=set(),
             snapshot={},
+            library_items=[],
         )
+
+    # 1) Subscription / shared library first (fast, local).
+    library_items = _collect_library_search_items(
+        keyword=keyword,
+        page=page,
+        base_api=base_api,
+        user_id=user_id,
+    )
+    library_has_results = bool(library_items)
 
     search_service = _get_legado_search_service()
     source_ids = _third_party_search_source_ids(search_service)
@@ -959,8 +1046,12 @@ async def _legado_search_response(
             base_api=base_api,
             user_id=user_id,
             allowed_source_ids=allowed_source_ids,
+            library_items=library_items,
         )
 
+    # 2) Third-party live search continues in the background until the hard
+    #    deadline. First HTTP response returns as soon as library/first hit is ready.
+    snapshot: dict | None = None
     try:
         job = search_service.create_job(
             keyword=keyword,
@@ -969,14 +1060,47 @@ async def _legado_search_response(
             search_mode="source",
         )
         _remember_legado_search_owner(job.job_id, user_id)
-        completed = await _wait_for_legado_search(search_service, job.job_id, wait_ms)
-        if not completed:
-            search_service.cancel_job(job.job_id)
+        # Hard-stop only at wait_ms (default 120s). Early response must not cancel.
+        deadline_task = asyncio.create_task(
+            _enforce_legado_search_deadline(search_service, job.job_id, wait_ms)
+        )
+        _track_legado_deadline_task(deadline_task)
+
+        wait_state = await _wait_for_legado_search(
+            search_service,
+            job.job_id,
+            wait_ms,
+            stop_on_first_result=True,
+            library_has_results=library_has_results,
+        )
+        # Only cancel when the first response itself waited out the full window.
+        # Early "ready" keeps plugins running; a background deadline task hard-stops later.
+        if wait_state == "deadline":
+            session = search_service.get_session(job.job_id)
+            if session is not None and session.status not in _TERMINAL_SEARCH_STATUSES:
+                search_service.cancel_job(job.job_id)
+
         snapshot = search_service.session_snapshot(
             job.job_id,
             base_api=base_api,
             include_official_sources=False,
         )
+        if isinstance(snapshot, dict) and wait_state == "ready":
+            # First payload is ready, but remote search may still be accumulating.
+            session = search_service.get_session(job.job_id)
+            if session is not None and session.status not in _TERMINAL_SEARCH_STATUSES:
+                snapshot = {
+                    **snapshot,
+                    "status": str(session.status or "running"),
+                    "liveSearchPending": True,
+                }
+        elif isinstance(snapshot, dict) and wait_state == "deadline":
+            if snapshot.get("status") not in _TERMINAL_SEARCH_STATUSES:
+                snapshot = {
+                    **snapshot,
+                    "status": "timed_out",
+                    "liveSearchPending": False,
+                }
     except Exception:
         logger.exception("Reading third-party search failed")
         snapshot = None
@@ -988,6 +1112,7 @@ async def _legado_search_response(
         user_id=user_id,
         allowed_source_ids=allowed_source_ids,
         snapshot=snapshot,
+        library_items=library_items,
     )
 
 

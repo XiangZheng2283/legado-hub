@@ -1840,7 +1840,8 @@ class AggregateProcessor:
                         payload={"step": "正在从候选源补全章节"},
                     )
                     candidate_result = await self._try_candidate_content(
-                        catalog, chapter, payload, primary_source_id
+                        catalog, chapter, payload, primary_source_id,
+                        official_word_count=source_word_count,
                     )
                     if candidate_result and candidate_result.get("content"):
                         self._log_chapter_step(
@@ -1964,7 +1965,8 @@ class AggregateProcessor:
                     payload={"step": "正在从候选源补全章节"},
                 )
                 candidate_result = await self._try_candidate_content(
-                    catalog, chapter, payload, primary_source_id
+                    catalog, chapter, payload, primary_source_id,
+                    official_word_count=source_word_count,
                 )
                 if candidate_result and candidate_result.get("content"):
                     self._log_chapter_step(
@@ -2032,7 +2034,8 @@ class AggregateProcessor:
                 payload={"step": "正在从候选源补全章节"},
             )
             candidate_result = await self._try_candidate_content(
-                catalog, chapter, payload, primary_source_id
+                catalog, chapter, payload, primary_source_id,
+                official_word_count=source_word_count,
             )
             if candidate_result and candidate_result.get("content"):
                 self._log_chapter_step(
@@ -2096,14 +2099,38 @@ class AggregateProcessor:
                 "lexiconRestored": False,
             }
 
-        # 字数校验（initial 阶段仅记录偏差）
-        word_count_result = self._validate_word_count(
-            selected_content, source_word_count,
-            enforce=False,
+        # 若本章有「作家说」，去掉正文末尾与之重叠的镜像附加（避免与评论系统重复）
+        author_strip = await self._strip_embedded_author_say(
+            catalog=catalog,
+            chapter=chapter,
+            content=selected_content,
             aggregate_book_id=aggregate_book_id,
             chapter_index=chapter_index,
-            source_id=primary_source_id,
         )
+        selected_content = author_strip["content"]
+        if author_strip.get("stripped"):
+            lexicon_result = {
+                **lexicon_result,
+                "authorSayStripped": True,
+                "authorSayRemovedChars": author_strip.get("removedChars", 0),
+            }
+
+        # 官方直出：仅记录偏差。第三方补全：按官方字数硬门禁，不达标拒绝写入。
+        enforce_word_count = bool(fallback_source_id) and int(source_word_count or 0) > 0
+        word_count_result = self._validate_word_count(
+            selected_content, source_word_count,
+            enforce=enforce_word_count,
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+            source_id=fallback_source_id or primary_source_id,
+        )
+        if enforce_word_count and not word_count_result.get("passed"):
+            raise ValueError(
+                "word_count_mismatch "
+                f"actual={word_count_result.get('actual')} "
+                f"expected={word_count_result.get('expected')} "
+                f"ratio={word_count_result.get('ratio')}"
+            )
 
         # 写入结果
         status = "fallback" if fallback_source_id else "processed"
@@ -2154,12 +2181,20 @@ class AggregateProcessor:
                 "fallback": bool(fallback_source_id)}
 
     async def _try_candidate_content(
-        self, catalog, chapter: dict, payload: dict, primary_source_id: str
+        self,
+        catalog,
+        chapter: dict,
+        payload: dict,
+        primary_source_id: str,
+        *,
+        official_word_count: int = 0,
     ) -> dict | None:
         """Try to get full content from candidate sources.
 
         For preview chapters, prefer title-fuzzy matching + preview alignment.
         For empty chapters, fall back to chapter-index/title matching.
+        When official_word_count is known, candidate body must pass the same
+        90%–120% word-count gate used after purify (补全后校对).
         """
         from app.services.aggregate_alignment import (
             align_candidate_chapter,
@@ -2182,6 +2217,10 @@ class AggregateProcessor:
             source_id=primary_source_id,
         )
         official_preview = str(official_snapshot or "").strip()
+        try:
+            official_word_count = int(official_word_count or 0)
+        except (TypeError, ValueError):
+            official_word_count = 0
 
         attempted_source_ids: list[str] = []
 
@@ -2352,11 +2391,18 @@ class AggregateProcessor:
                                     "contentLength": len(cand_content or ""),
                                 },
                             )
+                    # Prefer official baseline so short third-party bodies cannot
+                    # pass as "full" merely because the mirror omits wordCount.
+                    gate_word_count = (
+                        official_word_count
+                        if official_word_count > 0
+                        else candidate_word_count
+                    )
                     cls = classify_source_content(
                         cand_content,
                         source_id=cand_source_id,
                         is_official=is_official,
-                        source_word_count=candidate_word_count,
+                        source_word_count=gate_word_count,
                         preview_only_hint=candidate_preview_only,
                         extra=cand_result.get("extra") if isinstance(cand_result.get("extra"), dict) else {},
                         is_paid=candidate_is_paid,
@@ -2373,6 +2419,8 @@ class AggregateProcessor:
                                 "sourceId": cand_source_id,
                                 "classification": cls.get("classification", ""),
                                 "contentLength": len(cand_content or ""),
+                                "officialWordCount": official_word_count,
+                                "gateWordCount": gate_word_count,
                             },
                         )
                         continue
@@ -2392,6 +2440,34 @@ class AggregateProcessor:
                             },
                         )
                         continue
+
+                    if official_word_count > 0:
+                        word_gate = self._validate_word_count(
+                            cand_content,
+                            official_word_count,
+                            enforce=True,
+                            aggregate_book_id=aggregate_book_id,
+                            chapter_index=target_index,
+                            source_id=cand_source_id,
+                        )
+                        if not word_gate.get("passed"):
+                            self._log_chapter_step(
+                                aggregate_book_id=aggregate_book_id,
+                                chapter_index=target_index,
+                                title=target_title,
+                                event="candidate_rejected",
+                                stage="stage2",
+                                payload={
+                                    "step": "候选章节与官方字数不符",
+                                    "sourceId": cand_source_id,
+                                    "actual": word_gate.get("actual"),
+                                    "expected": word_gate.get("expected"),
+                                    "ratio": word_gate.get("ratio"),
+                                    "lowerBound": word_gate.get("lowerBound"),
+                                    "upperBound": word_gate.get("upperBound"),
+                                },
+                            )
+                            continue
 
                     alignment_json = build_source_alignment_json(
                         selected_content_source="candidate",
@@ -3807,6 +3883,73 @@ class AggregateProcessor:
                 "lexiconRestored": False,
             },
         }
+
+    async def _strip_embedded_author_say(
+        self,
+        *,
+        catalog,
+        chapter: dict,
+        content: str,
+        aggregate_book_id: str = "",
+        chapter_index: int | None = None,
+    ) -> dict[str, Any]:
+        """Drop mirror-appended 作家说 that already exists in authorReviews."""
+        from app.services.author_say_strip import (
+            extract_author_say_texts,
+            strip_overlapping_author_say,
+        )
+        from app.services.reading_reviews import chapter_review_cache
+
+        original = content or ""
+        if not original.strip():
+            return {"content": original, "stripped": False, "removedChars": 0}
+
+        review_chapter_id = str(
+            chapter.get("sourceChapterId") or chapter.get("chapterId") or ""
+        ).strip()
+        if not review_chapter_id:
+            return {"content": original, "stripped": False, "removedChars": 0}
+
+        reviews = chapter_review_cache.get(review_chapter_id)
+        if reviews is None and catalog is not None:
+            try:
+                reviews = await catalog.chapter_reviews(review_chapter_id)
+                if isinstance(reviews, dict):
+                    chapter_review_cache.set(review_chapter_id, reviews)
+            except Exception:
+                self._log_chapter_step(
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_index=chapter_index,
+                    title=str(chapter.get("title", "") or ""),
+                    event="author_say_fetch_failed",
+                    stage="stage1",
+                    payload={"step": "作家说拉取失败，跳过正文去重", "chapterId": review_chapter_id},
+                )
+                return {"content": original, "stripped": False, "removedChars": 0}
+
+        author_texts = extract_author_say_texts(reviews)
+        if not author_texts:
+            return {"content": original, "stripped": False, "removedChars": 0}
+
+        cleaned = strip_overlapping_author_say(original, author_texts)
+        removed = max(0, len(original) - len(cleaned))
+        if removed <= 0 or cleaned == original:
+            return {"content": original, "stripped": False, "removedChars": 0}
+
+        self._log_chapter_step(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+            title=str(chapter.get("title", "") or ""),
+            event="author_say_stripped",
+            stage="stage1",
+            payload={
+                "step": "正文已去除与作家说重叠内容",
+                "chapterId": review_chapter_id,
+                "authorSayCount": len(author_texts),
+                "removedChars": removed,
+            },
+        )
+        return {"content": cleaned, "stripped": True, "removedChars": removed}
 
     def _extract_source_word_count(self, chapter_result: dict[str, Any]) -> int:
         if not isinstance(chapter_result, dict):
