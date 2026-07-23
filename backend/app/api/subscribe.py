@@ -48,8 +48,8 @@ _TERMINAL_SEARCH_STATUSES = {"completed", "partial", "timed_out", "failed", "can
 # page1 short-wait → return library + first remotes; page2+ short-wait → new remotes;
 # job hard-stop at 120s. Do not hold a single page for the full 120s.
 _READING_SEARCH_TIMEOUT_MS = 120_000
-_READING_SEARCH_PAGE1_WAIT_MS = 3_000
-_READING_SEARCH_FOLLOW_WAIT_MS = 8_000
+_READING_SEARCH_PAGE1_WAIT_MS = 6_000
+_READING_SEARCH_FOLLOW_WAIT_MS = 20_000
 _READING_SEARCH_POLL_SECONDS = 0.1
 _MAX_READING_SEARCH_OWNERS = 1024
 _legado_search_service: SearchJobService | None = None

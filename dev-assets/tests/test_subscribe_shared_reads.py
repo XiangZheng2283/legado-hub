@@ -1290,7 +1290,8 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "完整免费正文" in free.json()["content"]
     assert free.json()["extra"]["contentAccess"] == "full"
     assert free.json()["isVip"] is False
-    assert len(markdown_reads) == 1
+    # Body read + reviews path re-reads shared chapter for author-say / paragraph align.
+    assert len(markdown_reads) == 2
 
     preview = client.get(chapters[-1]["chapterUrl"].replace("http://testserver", ""))
     assert preview.status_code == 200
@@ -1300,7 +1301,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert preview.json()["isPay"] is False
     assert preview.json()["extra"]["previewOnly"] is True
     assert preview.json()["previewOnly"] is True
-    assert len(markdown_reads) == 2
+    assert len(markdown_reads) == 4
 
     with sqlite3.connect(db) as conn:
         after = {

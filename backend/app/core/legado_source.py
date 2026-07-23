@@ -18,9 +18,9 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.14"
+_READER_RULE_VERSION = "0.0.15"
 # Reading only refreshes a book source when lastUpdateTime increases.
-_READER_RULE_LAST_UPDATE_TIME = 1_784_760_000_000
+_READER_RULE_LAST_UPDATE_TIME = 1_784_770_000_000
 
 
 def _reader_rule_last_update_time(config: AppConfig) -> int:
@@ -440,7 +440,8 @@ def _build_source(base_api: str | None = None) -> dict:
             f"{base_api}/api/subscribe/legado/search"
             f"?keyword={{{{key}}}}&page={{{{page}}}}"
         ),
-        "respondTime": 20000,
+        # Slightly above page2 short-wait (20s) so follow-up search pages can finish.
+        "respondTime": 25000,
         "exploreUrl": explore_url,
         "ruleSearch": {
             "bookList": "$.items",

@@ -247,21 +247,28 @@ async def _strip_author_say_from_chapter_content(
     content: str,
     catalog: Catalog | None = None,
 ) -> str:
-    """If 作家说 is already cached for this chapter, remove the same copy from body.
+    """Fetch chapter reviews and strip embedded 作家说 from the body when present.
 
-    Durable stripping happens at subscription processing (fetch + purify).
-    Reading path only uses the review cache so chapter reads stay free of
-    extra review-network or storage side effects.
+    Reading path always tries the reviews API (cached via chapter_review_cache).
+    Subscription processing still does durable strip at write time; this covers
+    already-stored chapters and third-party bodies that still carry author notes.
     """
     from app.services.author_say_strip import (
         extract_author_say_texts,
         strip_overlapping_author_say,
     )
 
-    _ = catalog  # reserved for optional warm-path callers
     if not content or not content.strip():
         return content
-    reviews = chapter_review_cache.get(chapter_id)
+    try:
+        reviews = await _chapter_reviews(chapter_id, catalog=catalog)
+    except Exception:
+        logger.debug(
+            "author-say strip skipped; reviews unavailable for %s",
+            chapter_id,
+            exc_info=True,
+        )
+        return content
     if not isinstance(reviews, dict):
         return content
     author_texts = extract_author_say_texts(reviews)
