@@ -554,12 +554,14 @@ def test_legado_search_includes_published_book_when_third_party_snapshot_is_empt
     assert result["items"][0]["sourceId"] == "legadohub_ai_aggregate"
 
 
+
 @pytest.mark.asyncio
-async def test_legado_search_wait_uses_the_full_caller_window(monkeypatch):
+async def test_legado_search_wait_page_window(monkeypatch):
     import app.api.subscribe as subscribe_api
 
     class RunningSession:
         status = "running"
+        live_items: list = []
 
     class SearchService:
         @staticmethod
@@ -584,154 +586,21 @@ async def test_legado_search_wait_uses_the_full_caller_window(monkeypatch):
         SearchService(),
         "slow-reader-job",
         650,
+        stop_on_first_result=True,
     )
-
     assert completed == "deadline"
     assert 0.65 <= clock.now < 0.66
 
 
 @pytest.mark.asyncio
-async def test_legado_search_cancels_unfinished_job_at_caller_deadline(client, monkeypatch):
+async def test_legado_search_wait_stops_on_first_third_party_item(monkeypatch):
     import app.api.subscribe as subscribe_api
     from app.source_plugins.id_codec import encode_book_id
 
-    partial_book_id = encode_book_id(
+    book_id = encode_book_id(
         "fixture_thirdparty",
-        "https://example.com/book/finished-before-deadline",
+        "https://example.com/book/first-hit",
     )
-
-    class Job:
-        job_id = "reader-deadline-job"
-
-    class SearchService:
-        cancelled_job_ids: list[str] = []
-
-        @staticmethod
-        def create_job(*, keyword, page, source_ids, search_mode):
-            assert keyword == "截止搜索测试"
-            assert page == 1
-            assert source_ids == ["fixture_thirdparty"]
-            assert search_mode == "source"
-            return Job()
-
-        @classmethod
-        def cancel_job(cls, job_id):
-            cls.cancelled_job_ids.append(job_id)
-            return True
-
-        @staticmethod
-        def session_snapshot(job_id, *, base_api, include_official_sources):
-            assert job_id == Job.job_id
-            assert base_api == "http://testserver"
-            assert include_official_sources is False
-            return {
-                "jobId": job_id,
-                "keyword": "截止搜索测试",
-                "page": 1,
-                "status": "cancelled",
-                "liveSearchPending": False,
-                "items": [
-                    {
-                        "sourceId": "fixture_thirdparty",
-                        "sourceName": "Fixture Third Party",
-                        "name": "截止前已返回",
-                        "author": "测试作者",
-                        "bookId": partial_book_id,
-                    }
-                ],
-            }
-
-    async def expired_wait(
-        search_service,
-        job_id,
-        wait_ms,
-        *,
-        stop_on_first_result=True,
-        library_has_results=False,
-    ):
-        assert isinstance(search_service, SearchService)
-        assert job_id == Job.job_id
-        assert wait_ms == 120_000
-        assert stop_on_first_result is True
-        assert library_has_results is False
-        return "deadline"
-
-    async def no_deadline_task(*_args, **_kwargs):
-        return None
-
-    service = SearchService()
-
-    class RunningSession:
-        status = "running"
-        live_items: list = []
-
-    service.get_session = staticmethod(lambda _job_id: RunningSession())  # type: ignore[method-assign]
-    monkeypatch.setattr(subscribe_api, "_get_legado_search_service", lambda: service)
-    monkeypatch.setattr(
-        subscribe_api,
-        "_third_party_search_source_ids",
-        lambda _service: ["fixture_thirdparty"],
-    )
-    monkeypatch.setattr(subscribe_api, "_wait_for_legado_search", expired_wait)
-    monkeypatch.setattr(subscribe_api, "_enforce_legado_search_deadline", no_deadline_task)
-    monkeypatch.setattr(subscribe_api, "_legado_search_owners", {})
-    monkeypatch.setattr(
-        subscribe_api,
-        "_collect_library_search_items",
-        lambda **_kwargs: [],
-    )
-
-    result = await subscribe_api._legado_search_response(
-        keyword="截止搜索测试",
-        page=1,
-        wait_ms=120_000,
-        base_api="http://testserver",
-        user_id="reader-deadline",
-    )
-
-    assert service.cancelled_job_ids == [Job.job_id]
-    assert result["jobId"] == Job.job_id
-    assert result["status"] == "cancelled"
-    assert result["liveSearchPending"] is False
-    assert [item["bookId"] for item in result["items"]] == [partial_book_id]
-
-
-def test_legado_search_defaults_to_one_twenty_seconds_and_rejects_longer_wait(
-    client, monkeypatch
-):
-    import app.api.subscribe as subscribe_api
-
-    observed_waits: list[int] = []
-
-    async def fake_search_response(**kwargs):
-        observed_waits.append(kwargs["wait_ms"])
-        return {"items": [], "status": "completed", "liveSearchPending": False}
-
-    monkeypatch.setattr(subscribe_api, "_legado_search_response", fake_search_response)
-
-    default_response = client.get(
-        "/api/subscribe/legado/search",
-        params={"keyword": "默认超时边界"},
-    )
-    exact_response = client.get(
-        "/api/subscribe/legado/search",
-        params={"keyword": "精确超时边界", "waitMs": 120_000},
-    )
-    too_long_response = client.get(
-        "/api/subscribe/legado/search",
-        params={"keyword": "超时边界", "waitMs": 120_001},
-    )
-
-    assert default_response.status_code == 200
-    assert exact_response.status_code == 200
-    assert observed_waits == [120_000, 120_000]
-    assert too_long_response.status_code == 422
-    assert too_long_response.json()["detail"] == "waitMs 超出允许范围"
-
-
-@pytest.mark.asyncio
-async def test_legado_search_wait_stops_on_first_third_party_item(monkeypatch):
-    import app.api.subscribe as subscribe_api
 
     class Session:
         def __init__(self):
@@ -758,7 +627,13 @@ async def test_legado_search_wait_stops_on_first_third_party_item(monkeypatch):
         clock.now += seconds
         polls["n"] += 1
         if polls["n"] >= 2:
-            session.live_items = [{"name": "命中"}]
+            session.live_items = [
+                {
+                    "sourceId": "fixture_thirdparty",
+                    "name": "命中",
+                    "bookId": book_id,
+                }
+            ]
 
     monkeypatch.setattr(subscribe_api.asyncio, "get_running_loop", lambda: clock)
     monkeypatch.setattr(subscribe_api.asyncio, "sleep", advance_clock)
@@ -768,35 +643,17 @@ async def test_legado_search_wait_stops_on_first_third_party_item(monkeypatch):
         "first-hit-job",
         120_000,
         stop_on_first_result=True,
-        library_has_results=False,
+        known_book_ids=set(),
+        base_api="http://testserver",
+        allowed_source_ids={"fixture_thirdparty"},
     )
-
     assert completed == "ready"
     assert clock.now < 1.0
 
 
 @pytest.mark.asyncio
-async def test_legado_search_wait_returns_immediately_when_library_has_hits():
-    import app.api.subscribe as subscribe_api
-
-    class SearchService:
-        @staticmethod
-        def get_session(_job_id):
-            raise AssertionError("should not poll when library already has results")
-
-    completed = await subscribe_api._wait_for_legado_search(
-        SearchService(),
-        "library-hit-job",
-        120_000,
-        stop_on_first_result=True,
-        library_has_results=True,
-    )
-    assert completed == "ready"
-
-
-@pytest.mark.asyncio
-async def test_legado_search_early_ready_does_not_cancel_background_job(monkeypatch):
-    """First hit returns immediately, but remote search keeps running until deadline."""
+async def test_legado_search_page1_short_wait_keeps_job_running(monkeypatch):
+    """page=1 returns after short wait; does not cancel the third-party job."""
     import app.api.subscribe as subscribe_api
     from app.source_plugins.id_codec import encode_book_id
 
@@ -806,13 +663,14 @@ async def test_legado_search_early_ready_does_not_cancel_background_job(monkeypa
     )
 
     class Job:
-        job_id = "reader-early-ready-job"
+        job_id = "reader-page1-job"
 
     class SearchService:
         cancelled_job_ids: list[str] = []
 
         @staticmethod
         def create_job(*, keyword, page, source_ids, search_mode):
+            assert page == 1
             return Job()
 
         @classmethod
@@ -832,7 +690,7 @@ async def test_legado_search_early_ready_does_not_cancel_background_job(monkeypa
         def session_snapshot(job_id, *, base_api, include_official_sources):
             return {
                 "jobId": job_id,
-                "keyword": "早返回不取消",
+                "keyword": "分页续搜",
                 "page": 1,
                 "status": "running",
                 "liveSearchPending": True,
@@ -863,6 +721,7 @@ async def test_legado_search_early_ready_does_not_cancel_background_job(monkeypa
     monkeypatch.setattr(subscribe_api, "_wait_for_legado_search", ready_wait)
     monkeypatch.setattr(subscribe_api, "_enforce_legado_search_deadline", no_deadline)
     monkeypatch.setattr(subscribe_api, "_legado_search_owners", {})
+    monkeypatch.setattr(subscribe_api, "_legado_search_progress", {})
     monkeypatch.setattr(
         subscribe_api,
         "_collect_library_search_items",
@@ -870,9 +729,9 @@ async def test_legado_search_early_ready_does_not_cancel_background_job(monkeypa
     )
 
     result = await subscribe_api._legado_search_response(
-        keyword="早返回不取消",
+        keyword="分页续搜",
         page=1,
-        wait_ms=120_000,
+        wait_ms=0,
         base_api="http://testserver",
         user_id="reader-early",
     )
@@ -880,7 +739,122 @@ async def test_legado_search_early_ready_does_not_cancel_background_job(monkeypa
     assert service.cancelled_job_ids == []
     assert result["liveSearchPending"] is True
     assert result["status"] == "running"
+    assert result["jobId"] == Job.job_id
     assert [item["bookId"] for item in result["items"]] == [partial_book_id]
+
+
+@pytest.mark.asyncio
+async def test_legado_search_page2_returns_only_new_third_party_items(monkeypatch):
+    import app.api.subscribe as subscribe_api
+    from app.source_plugins.id_codec import encode_book_id
+
+    first_id = encode_book_id(
+        "fixture_thirdparty", "https://example.com/book/one"
+    )
+    second_id = encode_book_id(
+        "fixture_thirdparty", "https://example.com/book/two"
+    )
+
+    class SearchService:
+        @staticmethod
+        def get_session(_job_id):
+            class Running:
+                status = "running"
+                live_items = []
+
+            return Running()
+
+        @staticmethod
+        def session_snapshot(job_id, *, base_api, include_official_sources):
+            return {
+                "jobId": job_id,
+                "status": "running",
+                "items": [
+                    {
+                        "sourceId": "fixture_thirdparty",
+                        "name": "第一本",
+                        "bookId": first_id,
+                    },
+                    {
+                        "sourceId": "fixture_thirdparty",
+                        "name": "第二本",
+                        "bookId": second_id,
+                    },
+                ],
+            }
+
+        @staticmethod
+        def cancel_job(_job_id):
+            return True
+
+    async def ready_wait(*_args, **_kwargs):
+        return "ready"
+
+    service = SearchService()
+    monkeypatch.setattr(subscribe_api, "_get_legado_search_service", lambda: service)
+    monkeypatch.setattr(
+        subscribe_api,
+        "_third_party_search_source_ids",
+        lambda _service: ["fixture_thirdparty"],
+    )
+    monkeypatch.setattr(subscribe_api, "_wait_for_legado_search", ready_wait)
+    monkeypatch.setattr(
+        subscribe_api,
+        "_legado_search_owners",
+        {"job-continue": {"reader-page2"}},
+    )
+    monkeypatch.setattr(
+        subscribe_api,
+        "_legado_search_progress",
+        {
+            "reader-page2\n分页续搜": {
+                "job_id": "job-continue",
+                "started_at": __import__("time").time(),
+                "emitted_ids": {first_id},
+            }
+        },
+    )
+
+    result = await subscribe_api._legado_search_response(
+        keyword="分页续搜",
+        page=2,
+        wait_ms=0,
+        base_api="http://testserver",
+        user_id="reader-page2",
+    )
+    assert [item["bookId"] for item in result["items"]] == [second_id]
+    assert result["jobId"] == "job-continue"
+
+
+def test_legado_search_wait_ms_bounds(client, monkeypatch):
+    import app.api.subscribe as subscribe_api
+
+    observed: list[int] = []
+
+    async def fake_search_response(**kwargs):
+        observed.append(kwargs["wait_ms"])
+        return {"items": [], "status": "completed", "liveSearchPending": False}
+
+    monkeypatch.setattr(subscribe_api, "_legado_search_response", fake_search_response)
+
+    default_response = client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "默认超时边界"},
+    )
+    exact_response = client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "精确超时边界", "waitMs": 120_000},
+    )
+    too_long_response = client.get(
+        "/api/subscribe/legado/search",
+        params={"keyword": "超时边界", "waitMs": 120_001},
+    )
+
+    assert default_response.status_code == 200
+    assert exact_response.status_code == 200
+    assert observed == [0, 120_000]
+    assert too_long_response.status_code == 422
+    assert too_long_response.json()["detail"] == "waitMs 超出允许范围"
 
 
 def test_legado_search_prioritizes_current_reader_subscription_without_private_fields(
