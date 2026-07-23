@@ -711,10 +711,14 @@ def test_chapter_comment_settings_round_trip_and_strict_validation(admin_client)
         assert admin_client.post("/api/console/settings", json=original).status_code == 200
 
 
-def test_reading_access_public_base_url_round_trip_and_overrides_source_base(admin_client):
+def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_client):
     from app.core.app_config import AppConfig
     from app.core.legado_source import generate_legado_source
-    from app.core.public_security import get_public_base_url
+    from app.core.public_security import (
+        get_public_base_url,
+        reading_public_base_allowlist,
+    )
+    from starlette.requests import Request
 
     original = admin_client.get("/api/console/settings").json()
     try:
@@ -727,10 +731,50 @@ def test_reading_access_public_base_url_round_trip_and_overrides_source_base(adm
             "publicBaseUrl": "https://book.example.com:2087",
         }
         AppConfig.get().reload()
-        assert get_public_base_url() == "https://book.example.com:2087"
-        source = generate_legado_source()[0]
-        assert source["searchUrl"].startswith("https://book.example.com:2087/")
-        assert 'function legadoHubSourceBase() { return "https://book.example.com:2087"; }' in source["jsLib"]
+        assert reading_public_base_allowlist() == frozenset({"https://book.example.com:2087"})
+        # Offline generation must not force the allowlist origin.
+        assert not get_public_base_url().startswith("https://book.example.com")
+        source = generate_legado_source("http://192.168.1.10:8765")[0]
+        assert source["searchUrl"].startswith("http://192.168.1.10:8765/")
+
+        # 127.0.0.1 is a default trusted proxy, so X-Forwarded-Proto is honored.
+        public_scope = {
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": "GET",
+            "scheme": "http",
+            "path": "/api/subscribe/legado/source",
+            "raw_path": b"/api/subscribe/legado/source",
+            "query_string": b"",
+            "headers": [
+                (b"host", b"book.example.com:2087"),
+                (b"x-forwarded-proto", b"https"),
+            ],
+            "client": ("127.0.0.1", 12345),
+            "server": ("0.0.0.0", 8765),
+            "app": admin_client.app,
+        }
+        public_request = Request(public_scope)
+        assert get_public_base_url(public_request) == "https://book.example.com:2087"
+        public_source = generate_legado_source(get_public_base_url(public_request))[0]
+        assert public_source["searchUrl"].startswith("https://book.example.com:2087/")
+
+        foreign_scope = dict(public_scope)
+        foreign_scope["headers"] = [
+            (b"host", b"other.example.com:2087"),
+            (b"x-forwarded-proto", b"https"),
+        ]
+        try:
+            get_public_base_url(Request(foreign_scope))
+            raise AssertionError("foreign public host should be rejected")
+        except RuntimeError as exc:
+            assert "allowlisted" in str(exc)
+
+        lan_scope = dict(public_scope)
+        lan_scope["headers"] = [(b"host", b"192.168.1.10:8765")]
+        lan_scope["scheme"] = "http"
+        assert get_public_base_url(Request(lan_scope)) == "http://192.168.1.10:8765"
 
         assert admin_client.post(
             "/api/console/settings",
@@ -751,6 +795,13 @@ def test_reading_access_public_base_url_round_trip_and_overrides_source_base(adm
         )
         assert cleared.status_code == 200
         assert cleared.json()["readingAccess"]["publicBaseUrl"] == ""
+        AppConfig.get().reload()
+        assert reading_public_base_allowlist() == frozenset()
+        try:
+            get_public_base_url(public_request)
+            raise AssertionError("public host without allowlist should be rejected")
+        except RuntimeError as exc:
+            assert "allowlisted" in str(exc)
     finally:
         assert admin_client.post("/api/console/settings", json=original).status_code == 200
         AppConfig.get().reload()

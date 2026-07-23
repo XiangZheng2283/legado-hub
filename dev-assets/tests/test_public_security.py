@@ -44,8 +44,16 @@ def _clear_network_config(monkeypatch) -> None:
 
 def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     monkeypatch,
+    tmp_path,
 ) -> None:
+    from app.core.app_config import AppConfig
+
     _clear_network_config(monkeypatch)
+    config_path = tmp_path / "app_config.json"
+    config_path.write_text("{}", encoding="utf-8")
+    AppConfig.reset()
+    monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
+
     reader_security = load_public_security_config()
     assert reader_security.dynamic_base_url is True
     reader_app = create_app(reader_security, manage_runtime=False)
@@ -55,7 +63,21 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
         base_url=proxy_origin,
         client=("192.168.31.161", 50000),
     )
-    manifest = lan_proxy.get("/api/subscribe/legado/source")
+    # Public Host through LAN reverse-proxy is denied until allowlisted.
+    assert lan_proxy.get("/api/subscribe/legado/source").status_code == 400
+
+    cfg = AppConfig(config_path)
+    cfg.set("readingAccess.publicBaseUrl", proxy_origin)
+    cfg.save()
+    AppConfig.reset()
+    monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
+
+    allowlisted = TestClient(
+        reader_app,
+        base_url=proxy_origin,
+        client=("192.168.31.161", 50000),
+    )
+    manifest = allowlisted.get("/api/subscribe/legado/source")
     assert manifest.status_code == 200
     assert manifest.json()[0]["searchUrl"].startswith(f"{proxy_origin}/api/")
 

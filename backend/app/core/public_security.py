@@ -114,6 +114,8 @@ class PublicSecurityConfig:
     dynamic_base_url: bool = False
     require_https: bool = False
     enforce_origin: bool = False
+    # Reader entry only: public Host must match settings allowlist.
+    enforce_reading_public_allowlist: bool = False
 
     def is_trusted_proxy(self, host: str) -> bool:
         try:
@@ -198,6 +200,7 @@ def load_public_security_config() -> PublicSecurityConfig:
         dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=require_https,
+        enforce_reading_public_allowlist=True,
     )
 
 
@@ -248,6 +251,7 @@ def load_admin_security_config() -> PublicSecurityConfig:
         dynamic_base_url=dynamic_base_url,
         require_https=require_https,
         enforce_origin=True,
+        enforce_reading_public_allowlist=False,
     )
 
 
@@ -294,37 +298,55 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
         raise RuntimeError(
             "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
         )
+    # Reader entry: public hostnames (CF/domain) only when allowlisted in settings.
+    # LAN/localhost Hosts keep working without registration. Admin entry skips this.
+    if security.enforce_reading_public_allowlist and not _is_default_allowed_host(host):
+        allowlist = reading_public_base_allowlist()
+        if not allowlist or origin not in allowlist:
+            raise RuntimeError("Public Host is not allowlisted")
     return origin
 
 
-def _configured_reading_public_base_url() -> str:
-    """Prefer operator UI setting over env/dynamic Host when present."""
+def reading_public_base_allowlist() -> frozenset[str]:
+    """Operator-registered public reading origins (settings UI). Empty = no public Host."""
     try:
         from app.core.app_config import AppConfig
 
         configured = str(AppConfig.get().reading_access.public_base_url or "").strip()
     except Exception:
-        return ""
+        return frozenset()
     if not configured:
-        return ""
+        return frozenset()
     try:
-        return normalize_public_base_url(configured)
+        return frozenset({normalize_public_base_url(configured)})
     except RuntimeError:
-        # Stale/invalid stored values fall back to env/dynamic resolution.
-        return ""
+        # Stale/invalid stored values do not open the public gate.
+        return frozenset()
 
 
 def get_public_base_url(request: Request | None = None) -> str:
-    configured = _configured_reading_public_base_url()
-    if configured:
-        return configured
+    """Resolve the reading base for this request (or offline default).
+
+    Priority for live requests:
+    1. Fixed env ``LEGADOHUB_PUBLIC_BASE_URL`` when set (non-dynamic mode)
+    2. Request Host + trusted ``X-Forwarded-Proto`` (dynamic mode), subject to
+       public-host allowlist from settings
+
+    Settings ``readingAccess.publicBaseUrl`` is a whitelist for public Hosts,
+    not a force-rewrite of every generated source.
+    """
     security = (
         getattr(request.app.state, "public_security", None)
         if request is not None
         else None
     ) or load_public_security_config()
-    if request is not None and security.dynamic_base_url:
-        return _request_origin(request, security)
+    if request is not None:
+        if security.dynamic_base_url:
+            return _request_origin(request, security)
+        return security.public_base_url
+    if not security.dynamic_base_url:
+        return security.public_base_url
+    # Offline/script path: never invent a public origin from the allowlist alone.
     return security.public_base_url
 
 

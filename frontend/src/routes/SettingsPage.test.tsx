@@ -143,11 +143,12 @@ describe("SettingsPage subscription policy", () => {
     })
   })
 
-  it("saves the reading public base URL", async () => {
+  it("saves the reading public base allowlist URL", async () => {
     const user = userEvent.setup()
     renderPage()
 
     await user.click(await screen.findByRole("tab", { name: "阅读" }))
+    expect(screen.getByText("公网访问白名单")).toBeInTheDocument()
     const baseInput = screen.getByLabelText("对外访问基址")
     await user.clear(baseInput)
     await user.type(baseInput, "https://book.example.com:2087")

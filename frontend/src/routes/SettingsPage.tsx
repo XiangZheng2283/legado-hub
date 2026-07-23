@@ -322,12 +322,14 @@ export function SettingsPage() {
         <TabsContent value="reading">
           <Card className={settingsCardClass}>
             <CardHeader>
-              <CardTitle>对外访问基址</CardTitle>
-              <CardDescription>阅读端访问本服务的地址。公网/反代填 HTTPS 域名，仅局域网可填内网 IP。</CardDescription>
+              <CardTitle>公网访问白名单</CardTitle>
+              <CardDescription>
+                仅登记后的公网 origin 可通过 CF/反代访问并生成书源。留空则只允许局域网 Host。书源地址仍按本次实际访问生成。
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <SettingRow
-                title="访问地址"
+                title="允许的公网地址"
                 description="例如 https://book.example.com:2087，不要带路径。"
               >
                 <Input
@@ -338,7 +340,9 @@ export function SettingsPage() {
                   onChange={(event) => setLocal({ readingAccess: { ...readingAccess, publicBaseUrl: event.target.value } })}
                 />
               </SettingRow>
-              <p className="mt-3 text-xs text-slate-500">保存后请在阅读端更新书源并刷新目录。</p>
+              <p className="mt-3 text-xs text-slate-500">
+                用该公网地址打开阅读入口并更新书源后才会写入公网链接；局域网访问仍生成局域网地址。
+              </p>
             </CardContent>
           </Card>
           <Card className={`mt-6 ${settingsCardClass}`}>
