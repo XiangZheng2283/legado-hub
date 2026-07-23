@@ -256,7 +256,8 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl pb-24">
+    <>
+    <div className="mx-auto w-full max-w-4xl space-y-6 pb-28">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">系统设置</h1>
         <p className="mt-1 text-sm text-slate-500">配置 LegadoHub 的核心运行参数。</p>
@@ -322,14 +323,12 @@ export function SettingsPage() {
           <Card className={settingsCardClass}>
             <CardHeader>
               <CardTitle>对外访问基址</CardTitle>
-              <CardDescription>
-                生成阅读书源、章节与评论地址时优先使用这里填写的 origin。CF/反代请填公网 HTTPS；留空则回退环境变量或请求 Host。
-              </CardDescription>
+              <CardDescription>阅读端访问本服务的地址。公网/反代填 HTTPS 域名，仅局域网可填内网 IP。</CardDescription>
             </CardHeader>
             <CardContent>
               <SettingRow
-                title="公网域名或 IP"
-                description="例如 https://book.example.com:2087 或 http://192.168.1.10:8765。只填 origin，不要带路径。"
+                title="访问地址"
+                description="例如 https://book.example.com:2087，不要带路径。"
               >
                 <Input
                   className={settingsInputClass}
@@ -339,9 +338,7 @@ export function SettingsPage() {
                   onChange={(event) => setLocal({ readingAccess: { ...readingAccess, publicBaseUrl: event.target.value } })}
                 />
               </SettingRow>
-              <p className="mt-3 text-xs text-slate-500">
-                修改后请在阅读端更新书源，并刷新书籍目录，旧章节里的局域网地址才会被替换。
-              </p>
+              <p className="mt-3 text-xs text-slate-500">保存后请在阅读端更新书源并刷新目录。</p>
             </CardContent>
           </Card>
           <Card className={`mt-6 ${settingsCardClass}`}>
@@ -532,15 +529,30 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
 
-      <div className="fixed bottom-0 left-0 right-0 md:left-64 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex justify-end z-20">
-        <div className="max-w-4xl w-full mx-auto flex justify-end gap-3 items-center px-4 md:px-0">
-          {isSaved && <span className="text-sm text-emerald-600 flex items-center"><CheckCircle2 className="h-4 w-4 mr-1.5" /> 已保存</span>}
-          <Button onClick={handleSave} disabled={!hasChanges || isSaving} className={`min-w-[120px] ${hasChanges ? "bg-blue-600 shadow-md hover:bg-blue-700" : "bg-slate-800"}`}>
-            {isSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> 保存中</> : <><Save className="h-4 w-4 mr-2" /> 保存配置</>}
-          </Button>
+      {/*
+        Keep the save bar pinned to the content column on every tab:
+        viewport fixed + match Layout main padding (p-6/md:p-8), max-w-6xl shell, then max-w-4xl settings column.
+      */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 md:left-64">
+        <div className="pointer-events-none mx-auto w-full max-w-6xl px-6 pb-4 pt-2 md:px-8">
+          <div className="pointer-events-auto flex w-full max-w-4xl items-center justify-end gap-3 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+            {isSaved && (
+              <span className="mr-auto text-sm text-emerald-600 flex items-center">
+                <CheckCircle2 className="h-4 w-4 mr-1.5" /> 已保存
+              </span>
+            )}
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className={`min-w-[120px] ${hasChanges ? "bg-blue-600 shadow-md hover:bg-blue-700" : "bg-slate-800"}`}
+            >
+              {isSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> 保存中</> : <><Save className="h-4 w-4 mr-2" /> 保存配置</>}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
