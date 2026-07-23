@@ -296,7 +296,7 @@ def test_review_html_uses_one_inline_reply_control_and_shows_paragraph_context()
     assert '<blockquote class="comment-paragraph">第一段正文</blockquote>' in rendered
     assert '<blockquote class="comment-paragraph">第二段正文</blockquote>' in rendered
     assert "官方段落" not in rendered
-    assert "展开 2 条回复" in rendered
+    assert "展开2条回复" in rendered
     assert '<div class="reply-line" data-review-id="' in rendered
     assert "data-reply-url=" in rendered
     assert "loadReplyDetails" in rendered

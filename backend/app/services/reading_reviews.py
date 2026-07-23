@@ -270,18 +270,29 @@ def _reply_row(reply: dict[str, Any], *, target_name: str) -> str:
         ).encode("utf-8")
     ).hexdigest()
     reply_attr = f' data-review-id="{html.escape(reply_id, quote=True)}"'
+    reply_time = str(reply.get("reviewTime") or reply.get("createTime") or "")
+    like_label = _count_label(reply.get("likeNum"))
     return (
         f'<div class="reply-line"{reply_attr}>'
         + _review_avatar(reply, compact=True)
         + '<div class="reply-body"><div class="reply-heading">'
         f'<span class="reply-author">{html.escape(reply_name)}</span>'
         + _review_identity_tags(reply)
-        + '<span class="reply-arrow">回复</span>'
-        f'<span class="reply-target">{html.escape(reply_target)}</span>{target_position}'
+        + (
+            f'<span class="reply-arrow">▶</span>'
+            f'<span class="reply-target">{html.escape(reply_target)}</span>{target_position}'
+            if reply_target and reply_target != reply_name
+            else ""
+        )
         + '</div>'
         + text
         + _review_media(reply)
-        + '</div></div>'
+        + '<div class="reply-meta">'
+        + (f'<time>{html.escape(reply_time)}</time>' if reply_time else "")
+        + '<span class="meta-reply-btn">回复</span>'
+        + f'<span class="meta-like" title="点赞"><span class="meta-icon meta-icon-like" aria-hidden="true"></span>'
+        + f'<span class="meta-count">{like_label}</span></span>'
+        + '</div></div></div>'
     )
 
 
@@ -329,7 +340,7 @@ def _review_card(
             else ""
         )
         if len(reply_rows) > 1 or reply_total > len(reply_rows):
-            open_label = f"展开 {_count_label(reply_total)} 条回复"
+            open_label = f"展开{_count_label(reply_total)}条回复"
             reply_url_attr = ""
             if review_view_url and review_id:
                 query_values: dict[str, Any] = {"tab": "paragraph", "rootReviewId": review_id}
@@ -346,9 +357,9 @@ def _review_card(
                 '<button class="reply-toggle" type="button" data-reply-toggle aria-expanded="false" '
                 + reply_url_attr
                 + controls_attr
-                + f'data-open-label="{html.escape(open_label, quote=True)}" data-close-label="收起回复">'
+                + f'data-open-label="{html.escape(open_label, quote=True)}" data-close-label="收起">'
                 f'<span class="reply-toggle-label">{html.escape(open_label)}</span>'
-                '<span aria-hidden="true">⌄</span></button>'
+                '<span class="reply-toggle-chevron" aria-hidden="true"></span></button>'
             )
         reply_stack = (
             f'<div class="reply-stack"><div class="reply-surface"{reply_surface_attr}>'
@@ -358,13 +369,11 @@ def _review_card(
             + '</div>'
         )
 
-    detail_links: list[str] = []
+    # Page-hot / overview: whole card jumps to that paragraph's reviews (no extra link).
+    paragraph_href = ""
     if review_view_url and link_to_paragraph and paragraph_id >= 0:
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
-        detail_links.append(
-            f'<a class="comment-detail-link" href="{html.escape(review_view_url, quote=True)}?{query}">查看该段全部评论</a>'
-        )
-    detail_row = f'<div class="comment-detail-row">{"".join(detail_links)}</div>' if detail_links else ""
+        paragraph_href = f"{review_view_url}?{query}"
 
     content_html = _review_content(content)
     text_html = f'<p class="comment-text">{content_html}</p>' if content_html else ""
@@ -374,25 +383,37 @@ def _review_card(
         else ""
     )
     review_attr = f' data-review-id="{html.escape(review_id, quote=True)}"' if review_id else ""
+    item_classes = "comment-item"
+    jump_attr = ""
+    if paragraph_href:
+        item_classes += " comment-item--jump"
+        jump_attr = (
+            f' data-paragraph-href="{html.escape(paragraph_href, quote=True)}"'
+            ' role="link" tabindex="0" title="查看该段全部评论"'
+        )
     return (
-        f'<article class="comment-item"{review_attr}>'
+        f'<article class="{item_classes}"{review_attr}{jump_attr}>'
         + _review_avatar(review, author=author)
         + '<div class="comment-body">'
         + '<div class="comment-head">'
         + f'<div class="comment-identity"><strong>{html.escape(user_name)}</strong>'
         + _review_identity_tags(review, author=author)
-        + '</div>'
-        + f'<time>{html.escape(review_time)}</time></div>'
+        + '</div></div>'
         + _review_reply_context(review)
         + paragraph_html
         + text_html
         + _review_media(review)
         + '<div class="comment-meta">'
-        + f'<span>赞 {_count_label(review.get("likeNum"))}</span>'
-        + f'<span>回复 {_count_label(review.get("replyCount"))}</span>'
-        + '</div>'
+        + '<div class="comment-meta-left">'
+        + (f'<time>{html.escape(review_time)}</time>' if review_time else "")
+        + '<span class="meta-reply-btn">回复</span></div>'
+        + '<div class="comment-meta-right">'
+        + f'<span class="meta-like" title="点赞"><span class="meta-icon meta-icon-like" aria-hidden="true"></span>'
+        + f'<span class="meta-count">{_count_label(review.get("likeNum"))}</span></span>'
+        + f'<span class="meta-reply-count" title="回复"><span class="meta-icon meta-icon-reply" aria-hidden="true"></span>'
+        + f'<span class="meta-count">{_count_label(review.get("replyCount"))}</span></span>'
+        + '</div></div>'
         + reply_stack
-        + detail_row
         + '</div></article>'
     )
 
@@ -507,7 +528,15 @@ def _paragraph_groups(
         is_detail = selected_paragraph_id == paragraph_id and isinstance(paragraph_detail, dict)
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
         comment_html = _folded_list(
-            [_review_card(review, review_view_url=review_view_url) for review in comments],
+            [
+                _review_card(
+                    review,
+                    review_view_url=review_view_url,
+                    # Overview: tap a top comment to open that paragraph's full list.
+                    link_to_paragraph=not is_detail,
+                )
+                for review in comments
+            ],
             list_id=f"paragraph-comments-{paragraph_id}",
             visible_count=10 if is_detail else 2,
             empty_message="该段暂未返回评论",
@@ -515,15 +544,20 @@ def _paragraph_groups(
             close_label="收起评论",
             auto_load=is_detail,
         )
+        quote_text = str(item.get("matchedText") or item.get("paragraphText") or "").strip()
+        quote_jump = ""
+        if not is_detail and review_view_url:
+            quote_jump = (
+                f' data-paragraph-href="{html.escape(review_view_url + "?" + query, quote=True)}"'
+                ' role="link" tabindex="0" title="查看该段全部评论"'
+            )
         rendered.append(
             f'<article class="paragraph-group" data-paragraph-id="{paragraph_id}">'
-            f'<p class="paragraph-quote">“{html.escape(str(item.get("matchedText") or item.get("paragraphText") or ""))}”</p>'
+            f'<div class="paragraph-quote-block{" paragraph-quote-block--jump" if quote_jump else ""}"{quote_jump}>'
+            '<div class="paragraph-quote-label">原文</div>'
+            f'<p class="paragraph-quote">{html.escape(quote_text)}</p>'
+            '</div>'
             + comment_html
-            + (
-                ""
-                if selected_paragraph_id == paragraph_id
-                else f'<a class="paragraph-more" href="{html.escape(review_view_url, quote=True)}?{query}">查看该段全部评论</a>'
-            )
             + '</article>'
         )
     body = _folded_list(
@@ -613,22 +647,28 @@ def _reply_detail_list(
 
 
 _REVIEW_CSS = """
+/* Douyin-like airy comment stream; colors stay CSS-var for client theme inject */
 :root{
   color-scheme:light;
   font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   letter-spacing:0;
-  --paper:#f7f8fa;
-  --ink:#1c2430;
-  --muted:#667080;
-  --faint:#8b95a3;
-  --line:#d8dee6;
-  --line-soft:#e8edf2;
-  --blue:#3b82f6;
-  --blue-soft:#edf3ff;
+  --paper:#ffffff;
+  --ink:#161823;
+  --muted:#73747b;
+  --faint:#a3a4ab;
+  --name:#73747b;
+  --line:#f0f0f2;
+  --line-soft:#f5f5f7;
+  --blue:#2f5dff;
+  --blue-soft:#eef2ff;
+  --link:#576b95;
   --green:#0f9f6e;
   --green-soft:#e7f7f0;
-  --rose:#c2415a;
-  --quote:#5b6b78;
+  --rose:#fe2c55;
+  --author-bg:#fe2c55;
+  --author-fg:#ffffff;
+  --quote:#73747b;
+  --quote-line:#d0d1d6;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
@@ -639,7 +679,7 @@ body{
   -webkit-text-size-adjust:100%;
 }
 button{font:inherit;letter-spacing:0;color:inherit}
-a{color:var(--blue)}
+a{color:var(--link)}
 
 .review-sheet{
   display:flex;
@@ -650,79 +690,113 @@ a{color:var(--blue)}
   background:var(--paper);
 }
 
-/* Tabs: keep underline style, roomier hit area, lighter count */
+/* Tabs: left-weighted underline like modern comment shells */
 .review-tabs{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
+  display:flex;
   flex:none;
-  padding:2px 8px 0;
-  border-bottom:1px solid var(--line-soft);
+  gap:4px;
+  padding:0 16px;
+  border-bottom:1px solid var(--line);
 }
 .review-tab{
   position:relative;
   min-height:44px;
+  padding:0 14px;
   border:0;
   background:transparent;
   color:var(--muted);
   cursor:pointer;
-  font-size:14px;
-  font-weight:600;
+  font-size:15px;
+  font-weight:500;
   transition:color .15s ease;
 }
-.review-tab[aria-selected=true]{color:var(--ink)}
+.review-tab[aria-selected=true]{
+  color:var(--ink);
+  font-weight:700;
+}
 .review-tab[aria-selected=true]::after{
   content:"";
   position:absolute;
-  right:20%;
-  bottom:-1px;
-  left:20%;
-  height:2px;
-  border-radius:2px 2px 0 0;
-  background:var(--blue);
+  bottom:0;
+  left:50%;
+  width:28px;
+  height:3px;
+  border-radius:3px 3px 0 0;
+  background:var(--ink);
+  transform:translateX(-50%);
 }
 .review-tab small{
-  margin-left:5px;
+  margin-left:4px;
   color:var(--faint);
-  font-size:11px;
+  font-size:12px;
   font-weight:500;
 }
+.review-tab[aria-selected=true] small{color:var(--muted)}
 
 .sheet-content{
   min-height:0;
   flex:1;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
-  padding:4px 0 max(16px,env(safe-area-inset-bottom,0px));
+  touch-action:pan-y;
+  padding:0 0 max(12px,env(safe-area-inset-bottom,0px));
 }
-.review-panel{display:none;padding:4px 16px 8px}
-.review-panel.active{display:block}
+.review-panel{
+  display:none;
+  padding:4px 16px 12px;
+}
+.review-panel.active{
+  display:block;
+  animation:review-panel-in .18s ease;
+}
+@keyframes review-panel-in{
+  from{opacity:.35;transform:translateY(4px)}
+  to{opacity:1;transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .review-panel.active{animation:none}
+}
 
-/* Comment list: more air, softer dividers, vars only */
+/* Root comments: spacing only, no hard card chrome */
 .comment-item{
   display:grid;
-  grid-template-columns:38px minmax(0,1fr);
+  grid-template-columns:40px minmax(0,1fr);
   gap:12px;
-  padding:18px 2px;
-  border-bottom:1px solid var(--line-soft);
+  padding:16px 0;
+  border-bottom:0;
 }
-.comment-item:last-child{border-bottom-color:transparent}
+.comment-item+.comment-item{
+  border-top:1px solid var(--line-soft);
+}
+.comment-item--jump{
+  cursor:pointer;
+  border-radius:8px;
+  transition:background-color .12s ease;
+}
+.comment-item--jump:active{
+  background:color-mix(in srgb, var(--ink) 4%, var(--paper));
+}
+.comment-item--jump:focus-visible{
+  outline:2px solid var(--blue);
+  outline-offset:2px;
+}
 .comment-body{min-width:0}
 .comment-avatar{
   position:relative;
   display:inline-flex;
   flex:none;
   overflow:visible;
-  width:38px;
-  height:38px;
+  width:40px;
+  height:40px;
   align-items:center;
   justify-content:center;
   border-radius:50%;
   background:var(--line-soft);
   color:var(--muted);
-  font-size:12px;
+  font-size:13px;
   font-weight:700;
 }
-.comment-avatar.author{background:var(--green-soft);color:var(--green)}
+.comment-avatar.author{background:color-mix(in srgb, var(--rose) 12%, var(--paper));color:var(--rose)}
 .avatar-fallback{position:relative;z-index:0}
 .avatar-photo{
   position:absolute;z-index:1;inset:0;
@@ -733,40 +807,29 @@ a{color:var(--blue)}
 }
 .avatar-frame{
   position:absolute;z-index:2;
-  top:-4px;left:-4px;
-  width:calc(100% + 8px);height:calc(100% + 8px);
+  top:-5px;left:-5px;
+  width:calc(100% + 10px);height:calc(100% + 10px);
   object-fit:contain;pointer-events:none;
 }
-.comment-avatar.compact{width:26px;height:26px;font-size:10px}
+.comment-avatar.compact{width:28px;height:28px;font-size:11px}
 .comment-avatar.compact .avatar-frame{
   top:-3px;left:-3px;
   width:calc(100% + 6px);height:calc(100% + 6px);
 }
 
-.comment-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-}
+.comment-head{display:block}
 .comment-identity{
   display:flex;
   min-width:0;
   align-items:center;
   flex-wrap:wrap;
-  gap:5px;
+  gap:6px;
 }
 .comment-identity strong{
-  font-size:13px;
-  font-weight:700;
+  color:var(--name);
+  font-size:14px;
+  font-weight:500;
   overflow-wrap:anywhere;
-}
-.comment-head time{
-  flex:none;
-  color:var(--faint);
-  font-size:11px;
-  line-height:1.4;
-  white-space:nowrap;
 }
 .identity-tags{
   display:inline-flex;
@@ -780,41 +843,60 @@ a{color:var(--blue)}
 .related-position,
 .title-badge{
   display:inline-flex;
-  min-height:18px;
+  min-height:16px;
   align-items:center;
-  gap:3px;
-  padding:1px 6px;
-  border-radius:6px;
+  gap:2px;
+  padding:0 5px;
+  border-radius:4px;
   font-size:10px;
   font-weight:600;
-  line-height:1.3;
+  line-height:16px;
 }
-.author-badge,.position-badge{background:var(--green-soft);color:var(--green)}
+.author-badge{
+  background:var(--author-bg);
+  color:var(--author-fg);
+  border-radius:3px;
+}
+.position-badge{background:var(--green-soft);color:var(--green)}
 .related-position{margin-left:2px;background:var(--blue-soft);color:var(--blue)}
 .title-badge{
-  border:1px solid var(--line-soft);
-  background:color-mix(in srgb, var(--ink) 4%, var(--paper));
+  border:0;
+  background:color-mix(in srgb, var(--ink) 5%, var(--paper));
   color:var(--muted);
 }
 .title-badge img{width:14px;height:14px;object-fit:contain}
 
-.comment-paragraph,
-.paragraph-quote{
-  margin:10px 0 0;
-  padding:10px 12px;
-  border-left:3px solid var(--line);
-  border-radius:0 10px 10px 0;
-  background:color-mix(in srgb, var(--ink) 3.5%, var(--paper));
-  color:var(--quote);
-  font-family:"Songti SC","Noto Serif SC",SimSun,serif;
-  font-size:13px;
-  line-height:1.7;
+/* 原文 block */
+.paragraph-quote-block{
+  margin:4px 0 8px;
+  padding:0 0 4px;
 }
+.paragraph-quote-label{
+  margin-bottom:6px;
+  color:var(--faint);
+  font-size:12px;
+  font-weight:500;
+}
+.paragraph-quote,
+.comment-paragraph{
+  margin:0;
+  padding:0 0 0 10px;
+  border-left:2px solid var(--quote-line);
+  border-radius:0;
+  background:transparent;
+  color:var(--quote);
+  font-family:inherit;
+  font-size:13px;
+  line-height:1.6;
+}
+.comment-paragraph{margin-top:8px}
+
 .comment-text{
-  margin:8px 0 0;
+  margin:6px 0 0;
   color:var(--ink);
-  font-size:14px;
-  line-height:1.75;
+  font-size:15px;
+  line-height:1.55;
+  font-weight:400;
 }
 .comment-text,.reply-line p{
   overflow-wrap:anywhere;
@@ -822,30 +904,70 @@ a{color:var(--blue)}
   white-space:pre-wrap;
 }
 
+/* Meta: time · 回复  left; heart/count right */
 .comment-meta{
   display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:8px;
   color:var(--faint);
   font-size:12px;
 }
-.comment-meta span{
+.comment-meta-left,
+.comment-meta-right,
+.reply-meta{
   display:inline-flex;
   align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
   min-height:22px;
 }
-.comment-detail-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  margin-top:8px;
-}
-.comment-detail-link{
-  color:var(--blue);
+.comment-meta-right{gap:14px;margin-left:auto}
+.comment-meta time,
+.reply-meta time{
+  color:var(--faint);
   font-size:12px;
-  font-weight:600;
-  text-decoration:none;
+  white-space:nowrap;
+}
+.meta-reply-btn{
+  color:var(--faint);
+  font-size:12px;
+  font-weight:500;
+  background:transparent;
+  border:0;
+  padding:0;
+  cursor:default;
+}
+.meta-like,
+.meta-reply-count{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  color:var(--faint);
+  font-size:12px;
+}
+.meta-count{font-variant-numeric:tabular-nums}
+.meta-icon{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  background:currentColor;
+  opacity:.85;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-position:center;
+  mask-position:center;
+}
+.meta-icon-like{
+  -webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 21s-6.5-4.35-9.2-8.2C1.1 10.5 1.5 7.2 4 5.5 6.1 4.1 8.7 4.6 10 6.2 11.3 4.6 13.9 4.1 16 5.5c2.5 1.7 2.9 5 1.2 7.3C18.5 16.65 12 21 12 21z'/></svg>");
+  mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 21s-6.5-4.35-9.2-8.2C1.1 10.5 1.5 7.2 4 5.5 6.1 4.1 8.7 4.6 10 6.2 11.3 4.6 13.9 4.1 16 5.5c2.5 1.7 2.9 5 1.2 7.3C18.5 16.65 12 21 12 21z'/></svg>");
+}
+.meta-icon-reply{
+  -webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12a8.5 8.5 0 0 1-8.5 8.5H5l-3 3V12A8.5 8.5 0 1 1 21 12z'/></svg>");
+  mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12a8.5 8.5 0 0 1-8.5 8.5H5l-3 3V12A8.5 8.5 0 1 1 21 12z'/></svg>");
 }
 
 .comment-reply-context{
@@ -853,70 +975,98 @@ a{color:var(--blue)}
   align-items:center;
   flex-wrap:wrap;
   gap:4px;
-  margin-top:6px;
+  margin-top:4px;
   color:var(--faint);
-  font-size:11px;
+  font-size:12px;
 }
-.comment-reply-context strong{color:var(--blue);font-size:11px}
+.comment-reply-context strong{color:var(--link);font-size:12px;font-weight:500}
 
-/* Replies: hierarchy by indent + rail, no rounded box */
+/* Replies: pure hierarchy indent, no rounded box */
 .reply-stack{
   margin-top:10px;
-  margin-left:2px;
-  padding:2px 0 0 12px;
+  margin-left:0;
+  padding:0;
   border:0;
-  border-left:2px solid var(--line);
   background:transparent;
-  border-radius:0;
 }
 .reply-surface{overflow:hidden}
 .reply-line{
   display:grid;
-  grid-template-columns:26px minmax(0,1fr);
-  gap:8px;
-  padding:8px 0;
+  grid-template-columns:28px minmax(0,1fr);
+  gap:10px;
+  padding:10px 0 4px;
   color:var(--muted);
-  font-size:12px;
-  line-height:1.55;
+  font-size:13px;
+  line-height:1.5;
 }
 .reply-line+.reply-line{
   display:none;
-  border-top:0;
-  padding-top:6px;
 }
 .reply-stack.open .reply-line{display:grid}
-.reply-stack.open .reply-line+.reply-line{
-  /* open state: light separation without boxing */
-  box-shadow:inset 0 1px 0 var(--line-soft);
-}
 .reply-body{min-width:0}
 .reply-heading{
   display:flex;
   align-items:center;
   flex-wrap:wrap;
-  gap:3px;
+  gap:4px;
 }
 .reply-heading .identity-tags{gap:3px}
-.reply-line p{margin:4px 0 0;color:var(--ink);opacity:.92}
-.reply-author{color:var(--blue);font-weight:700}
-.reply-target{color:var(--muted);font-weight:600}
-.reply-arrow{margin:0 5px;color:var(--faint)}
+.reply-line p{
+  margin:4px 0 0;
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.5;
+}
+.reply-author{color:var(--name);font-weight:500;font-size:13px}
+.reply-target{color:var(--name);font-weight:500;font-size:13px}
+.reply-arrow{
+  margin:0 2px;
+  color:var(--faint);
+  font-size:9px;
+  transform:scaleX(.85);
+}
+.reply-meta{
+  margin-top:6px;
+  width:100%;
+}
+.reply-meta .meta-like{margin-left:auto}
+
 .reply-toggle{
   display:inline-flex;
-  min-height:30px;
+  position:relative;
+  min-height:28px;
   align-items:center;
-  gap:5px;
-  margin-top:2px;
-  padding:2px 0;
+  gap:6px;
+  margin:4px 0 0 38px;
+  padding:4px 0;
   border:0;
-  border-radius:0;
   background:transparent;
-  color:var(--blue);
+  color:var(--faint);
   cursor:pointer;
-  font-size:12px;
-  font-weight:600;
+  font-size:13px;
+  font-weight:500;
 }
-.reply-toggle:active{opacity:.75}
+.reply-toggle::before{
+  content:"";
+  display:inline-block;
+  width:20px;
+  height:1px;
+  background:var(--line);
+  margin-right:2px;
+}
+.reply-toggle-chevron{
+  display:inline-block;
+  width:0;height:0;
+  border-left:4px solid transparent;
+  border-right:4px solid transparent;
+  border-top:5px solid currentColor;
+  opacity:.75;
+}
+.reply-stack.open .reply-toggle-chevron{
+  border-top:0;
+  border-bottom:5px solid currentColor;
+}
+.reply-toggle:active{opacity:.7}
 
 .fold-toggle{
   display:block;
@@ -924,55 +1074,70 @@ a{color:var(--blue)}
   min-height:40px;
   margin-top:4px;
   border:0;
-  border-radius:10px;
+  border-radius:0;
   background:transparent;
-  color:var(--blue);
+  color:var(--faint);
   cursor:pointer;
   font-size:13px;
-  font-weight:600;
+  font-weight:500;
 }
-.fold-toggle:active{opacity:.75}
+.fold-toggle:active{opacity:.7}
 
 .pagination-row{
   display:flex;
   justify-content:center;
   gap:10px;
-  padding:16px 0 4px;
+  padding:14px 0 4px;
 }
 .pagination-row a{
-  min-width:96px;
-  min-height:36px;
+  min-width:0;
+  min-height:32px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding:0 14px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  color:var(--blue);
-  font-size:12px;
-  font-weight:600;
+  padding:0 8px;
+  border:0;
+  border-radius:0;
+  color:var(--faint);
+  font-size:13px;
+  font-weight:500;
   text-decoration:none;
-  background:color-mix(in srgb, var(--ink) 2%, var(--paper));
+  background:transparent;
+}
+.pagination-row a::before{
+  content:"";
+  display:inline-block;
+  width:16px;
+  height:1px;
+  margin-right:8px;
+  background:var(--line);
 }
 
-.paragraph-group{
-  padding:16px 0 10px;
-  border-bottom:1px solid var(--line-soft);
+.paragraph-group{padding:12px 0 4px}
+.paragraph-group+.paragraph-group{
+  margin-top:8px;
+  border-top:1px solid var(--line-soft);
+  padding-top:16px;
 }
-.paragraph-group:last-child{border-bottom:0}
-.paragraph-more{
-  display:inline-block;
-  margin:12px 0 2px;
-  color:var(--blue);
-  font-size:12px;
-  font-weight:600;
-  text-decoration:none;
+.paragraph-quote-block--jump{
+  cursor:pointer;
+  border-radius:8px;
+  padding:8px 10px;
+  margin:0 -10px 8px;
+  transition:background-color .12s ease;
+}
+.paragraph-quote-block--jump:active{
+  background:color-mix(in srgb, var(--ink) 4%, var(--paper));
+}
+.paragraph-quote-block--jump:focus-visible{
+  outline:2px solid var(--blue);
+  outline-offset:2px;
 }
 
 .empty-state{
-  padding:36px 12px;
+  padding:48px 12px;
   color:var(--faint);
-  font-size:13px;
+  font-size:14px;
   text-align:center;
 }
 .load-status{
@@ -982,25 +1147,25 @@ a{color:var(--blue)}
   border:0;
   background:transparent;
   color:var(--faint);
-  font-size:12px;
+  font-size:13px;
   text-align:center;
 }
 .load-status.error{color:var(--rose);cursor:pointer}
 
 .comment-emoticon{
   display:inline-block;
-  width:22px;height:22px;
+  width:20px;height:20px;
   object-fit:contain;
-  vertical-align:middle;
+  vertical-align:text-bottom;
 }
 .comment-emoticon-fallback{
   display:inline-flex;
-  min-height:20px;
+  min-height:18px;
   align-items:center;
-  padding:1px 6px;
-  border:1px solid var(--line-soft);
-  border-radius:6px;
-  background:color-mix(in srgb, var(--ink) 3%, var(--paper));
+  padding:0 5px;
+  border:0;
+  border-radius:4px;
+  background:var(--line-soft);
   color:var(--muted);
   font-size:11px;
   vertical-align:middle;
@@ -1009,40 +1174,40 @@ a{color:var(--blue)}
 .comment-media{
   display:block;
   width:auto;
-  max-width:min(280px,100%);
-  max-height:320px;
-  border:1px solid var(--line-soft);
-  border-radius:10px;
-  background:color-mix(in srgb, var(--ink) 3%, var(--paper));
+  max-width:min(240px,72%);
+  max-height:280px;
+  border:0;
+  border-radius:4px;
+  background:var(--line-soft);
   object-fit:contain;
 }
 .reply-line .comment-media{
-  max-width:min(200px,100%);
-  max-height:220px;
-  border-radius:8px;
+  max-width:min(180px,70%);
+  max-height:200px;
+  border-radius:4px;
 }
 
 .position-title-image,.title-image,.related-position-image{
-  display:inline-flex;height:18px;align-items:center;
+  display:inline-flex;height:16px;align-items:center;
 }
 .position-title-image img,.title-image img,.related-position-image img{
-  display:block;width:auto;height:18px;max-width:100px;object-fit:contain;
+  display:block;width:auto;height:16px;max-width:96px;object-fit:contain;
 }
-.related-position-image{margin-left:3px}
+.related-position-image{margin-left:2px}
 
 [hidden]{display:none!important}
 
 @media (max-width:640px){
   .review-panel{padding-right:14px;padding-left:14px}
-  .comment-media{max-height:240px}
-  .reply-line .comment-media{max-height:180px}
+  .review-tabs{padding-right:8px;padding-left:8px}
+  .comment-media{max-height:220px}
+  .reply-line .comment-media{max-height:160px}
 }
 
-/* Fallback when color-mix unsupported */
 @supports not (background:color-mix(in srgb, #000 10%, #fff)){
-  .comment-paragraph,.paragraph-quote{background:var(--line-soft)}
-  .title-badge,.comment-emoticon-fallback,.comment-media,.pagination-row a{
-    background:var(--paper);
+  .comment-avatar.author{background:#ffe8ed;color:var(--rose)}
+  .title-badge,.comment-emoticon-fallback,.comment-media{
+    background:var(--line-soft);
   }
 }
 """
@@ -1309,9 +1474,145 @@ replyObserver = new IntersectionObserver(
   },
   { root: scrollRoot, rootMargin: "0px 0px 100px 0px" },
 );
+function paragraphJumpTarget(node) {
+  return node?.closest?.("[data-paragraph-href]") || null;
+}
+
+function shouldIgnoreParagraphJump(target) {
+  return Boolean(
+    target.closest(
+      "a,button,input,textarea,select,label,.reply-stack,.reply-toggle,.fold-toggle,.pagination-row,.meta-like,.meta-reply-count"
+    )
+  );
+}
+
+function goParagraphHref(el) {
+  const href = el?.dataset?.paragraphHref;
+  if (href) window.location.href = href;
+}
+
+function bindParagraphJumps() {
+  document.addEventListener("click", (event) => {
+    if (shouldIgnoreParagraphJump(event.target)) return;
+    const jump = paragraphJumpTarget(event.target);
+    if (!jump) return;
+    event.preventDefault();
+    goParagraphHref(jump);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const jump = event.target?.closest?.("[data-paragraph-href]");
+    if (!jump || event.target !== jump) return;
+    event.preventDefault();
+    goParagraphHref(jump);
+  });
+}
+
+function bindTabSwipe() {
+  /* Chapter / paragraph tabs only — page-hot & reply drill-downs have a single panel. */
+  if (!scrollRoot || tabs.length < 2) return;
+  const order = tabs.map((tab) => tab.dataset.tab).filter(Boolean);
+  if (order.length < 2) return;
+
+  const threshold = 56;
+  const axisLock = 10;
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+  let axis = ""; /* "" | "h" | "v" */
+
+  const onStart = (clientX, clientY) => {
+    tracking = true;
+    axis = "";
+    startX = clientX;
+    startY = clientY;
+  };
+
+  const onMove = (clientX, clientY) => {
+    if (!tracking || axis) return;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+    if (Math.abs(dx) < axisLock && Math.abs(dy) < axisLock) return;
+    axis = Math.abs(dx) > Math.abs(dy) * 1.15 ? "h" : "v";
+  };
+
+  const onEnd = (clientX) => {
+    if (!tracking) return;
+    tracking = false;
+    if (axis !== "h") return;
+    const dx = clientX - startX;
+    if (Math.abs(dx) < threshold) return;
+    const current = activePanel()?.dataset.panel || order[0];
+    const index = order.indexOf(current);
+    if (index < 0) return;
+    if (dx < 0 && index < order.length - 1) {
+      activate(order[index + 1], true); /* swipe left → next (段评说) */
+    } else if (dx > 0 && index > 0) {
+      activate(order[index - 1], true); /* swipe right → prev (本章说) */
+    }
+  };
+
+  scrollRoot.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length !== 1) return;
+      onStart(event.touches[0].clientX, event.touches[0].clientY);
+    },
+    { passive: true }
+  );
+  scrollRoot.addEventListener(
+    "touchmove",
+    (event) => {
+      if (!tracking || event.touches.length !== 1) return;
+      onMove(event.touches[0].clientX, event.touches[0].clientY);
+    },
+    { passive: true }
+  );
+  scrollRoot.addEventListener(
+    "touchend",
+    (event) => {
+      if (!tracking) return;
+      const touch = event.changedTouches[0];
+      onEnd(touch ? touch.clientX : startX);
+    },
+    { passive: true }
+  );
+  scrollRoot.addEventListener("touchcancel", () => {
+    tracking = false;
+    axis = "";
+  }, { passive: true });
+
+  /* Pointer drag for desktop / mouse-emulated WebView debugging */
+  let pointerId = null;
+  scrollRoot.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.pointerType === "touch") return; /* touch path above */
+    pointerId = event.pointerId;
+    onStart(event.clientX, event.clientY);
+  });
+  scrollRoot.addEventListener("pointermove", (event) => {
+    if (pointerId !== event.pointerId) return;
+    onMove(event.clientX, event.clientY);
+  });
+  const endPointer = (event) => {
+    if (pointerId !== event.pointerId) return;
+    pointerId = null;
+    onEnd(event.clientX);
+  };
+  scrollRoot.addEventListener("pointerup", endPointer);
+  scrollRoot.addEventListener("pointercancel", (event) => {
+    if (pointerId !== event.pointerId) return;
+    pointerId = null;
+    tracking = false;
+    axis = "";
+  });
+}
+
 document.querySelectorAll("[data-fold-list]").forEach((list) => applyFold(list, false));
 bindReplyToggles();
 bindFoldToggles();
+bindParagraphJumps();
+bindTabSwipe();
 tabs.forEach((tab) => tab.addEventListener("click", () => activate(tab.dataset.tab, true)));
 activate("__ACTIVE_TAB__");
 """
