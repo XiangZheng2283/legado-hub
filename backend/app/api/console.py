@@ -2144,6 +2144,9 @@ _CHAPTER_COMMENT_SETTING_FIELDS = {
     "pageEnabled",
     "chapterEnabled",
 }
+_READING_ACCESS_SETTING_FIELDS = {
+    "publicBaseUrl",
+}
 _SETTINGS_FIELDS = {
     "sourcePool",
     "searchScoreFilter",
@@ -2151,6 +2154,7 @@ _SETTINGS_FIELDS = {
     "contentWorkflow",
     "subscription",
     "chapterComment",
+    "readingAccess",
 }
 
 
@@ -2237,6 +2241,28 @@ def _chapter_comment_settings_from_config(cfg: AppConfig) -> dict:
     }
 
 
+def _reading_access_settings_from_config(cfg: AppConfig) -> dict:
+    return {
+        "publicBaseUrl": cfg.reading_access.public_base_url,
+    }
+
+
+def _parse_public_base_url_field(value: object, *, field: str) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise HTTPException(status_code=422, detail=f"{field} 必须是字符串")
+    text = value.strip().rstrip("/")
+    if not text:
+        return ""
+    from app.core.public_security import normalize_public_base_url
+
+    try:
+        return normalize_public_base_url(text)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=422, detail=f"{field} 无效：{exc}") from exc
+
+
 # ---- Settings ----
 
 @console_route("get", "/settings")
@@ -2254,6 +2280,7 @@ def get_settings():
         "contentWorkflow": cfg.aggregate.content_workflow,
         "subscription": _subscription_settings_from_config(cfg),
         "chapterComment": _chapter_comment_settings_from_config(cfg),
+        "readingAccess": _reading_access_settings_from_config(cfg),
     }
     return settings
 
@@ -2311,6 +2338,23 @@ def update_settings(payload: dict):
                             field=f"chapterComment.{field_name}",
                         ),
                     )
+        if "readingAccess" in payload:
+            reading_access = payload["readingAccess"]
+            if not isinstance(reading_access, dict):
+                raise HTTPException(status_code=422, detail="readingAccess 必须是对象")
+            _reject_unknown_fields(
+                reading_access,
+                _READING_ACCESS_SETTING_FIELDS,
+                label="readingAccess",
+            )
+            if "publicBaseUrl" in reading_access:
+                cfg.set(
+                    "readingAccess.publicBaseUrl",
+                    _parse_public_base_url_field(
+                        reading_access["publicBaseUrl"],
+                        field="readingAccess.publicBaseUrl",
+                    ),
+                )
         cfg.save()
         active_config.reload()
     _plugin_scheduler.refresh_config()
@@ -2319,6 +2363,7 @@ def update_settings(payload: dict):
         "saved": True,
         "subscription": _subscription_settings_from_config(active_config),
         "chapterComment": _chapter_comment_settings_from_config(active_config),
+        "readingAccess": _reading_access_settings_from_config(active_config),
     }
 
 

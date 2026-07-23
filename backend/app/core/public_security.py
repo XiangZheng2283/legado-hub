@@ -297,7 +297,27 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
     return origin
 
 
+def _configured_reading_public_base_url() -> str:
+    """Prefer operator UI setting over env/dynamic Host when present."""
+    try:
+        from app.core.app_config import AppConfig
+
+        configured = str(AppConfig.get().reading_access.public_base_url or "").strip()
+    except Exception:
+        return ""
+    if not configured:
+        return ""
+    try:
+        return normalize_public_base_url(configured)
+    except RuntimeError:
+        # Stale/invalid stored values fall back to env/dynamic resolution.
+        return ""
+
+
 def get_public_base_url(request: Request | None = None) -> str:
+    configured = _configured_reading_public_base_url()
+    if configured:
+        return configured
     security = (
         getattr(request.app.state, "public_security", None)
         if request is not None

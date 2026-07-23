@@ -550,8 +550,10 @@ def _page_hot_review_list(
     detail: dict[str, Any],
     *,
     review_view_url: str,
-    paragraph_texts: dict[str, str],
+    paragraph_texts: dict[str, str] | None = None,
 ) -> str:
+    # Page-hot view is a flat hot-list: keep jump links, never render paragraph quotes.
+    _ = paragraph_texts
     comments = [item for item in detail.get("comments", []) if isinstance(item, dict)]
     body = _folded_list(
         [
@@ -559,7 +561,7 @@ def _page_hot_review_list(
                 review,
                 review_view_url=review_view_url,
                 link_to_paragraph=True,
-                paragraph_text=paragraph_texts.get(str(review.get("paragraphId")), ""),
+                paragraph_text="",
             )
             for review in comments
         ],
@@ -958,10 +960,6 @@ def render_chapter_reviews_html(
         paragraph_html = _page_hot_review_list(
             page_hot_detail,
             review_view_url=review_view_url,
-            paragraph_texts={
-                str(item.get("paragraphId")): str(item.get("matchedText") or item.get("paragraphText") or "")
-                for item in matched_paragraphs
-            },
         )
         paragraph_scope_label = "当前页热评"
         paragraph_scope_count = int(page_hot_detail.get("totalCount") or 0)

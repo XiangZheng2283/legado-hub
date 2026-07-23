@@ -152,7 +152,7 @@ function PriorityListEditor({ title, description, items, options, onChange }: { 
 
 export function SettingsPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState("pool")
+  const [activeTab, setActiveTab] = useState("reading")
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -184,6 +184,7 @@ export function SettingsPage() {
   const sp = local.sourcePool || {}
   const subscription = local.subscription || {}
   const chapterComment = local.chapterComment || {}
+  const readingAccess = local.readingAccess || {}
   const agg = aggForm ?? aggData ?? {}
   const wf = parseRecord(agg.contentWorkflow)
   const sourceOptions: PrioritySourceOption[] = (pluginsData?.items || []).map((plugin: any) => ({
@@ -281,16 +282,13 @@ export function SettingsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4 flex-wrap h-auto gap-2 p-2 w-full justify-start overflow-x-auto bg-slate-100 text-slate-500">
-          <TabsTrigger className={settingsTabTriggerClass} value="security">账户安全</TabsTrigger>
-          <TabsTrigger className={settingsTabTriggerClass} value="subscription">订阅政策</TabsTrigger>
-          <TabsTrigger className={settingsTabTriggerClass} value="pool">书源池</TabsTrigger>
-          <TabsTrigger className={settingsTabTriggerClass} value="comments">阅读评论</TabsTrigger>
-          <TabsTrigger className={settingsTabTriggerClass} value="agg">聚合策略</TabsTrigger>
-          <TabsTrigger className={settingsTabTriggerClass} value="priority">优先级</TabsTrigger>
-          <TabsTrigger className={settingsTabTriggerClass} value="dict">词库</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="account">账户</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="reading">阅读</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="sources">书源</TabsTrigger>
+          <TabsTrigger className={settingsTabTriggerClass} value="system">系统</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="security">
+        <TabsContent value="account">
           <Card>
             <CardHeader><CardTitle>修改密码</CardTitle><CardDescription>定期修改密码有助于保护您的账户安全。</CardDescription></CardHeader>
             <CardContent>
@@ -320,7 +318,119 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="subscription">
+        <TabsContent value="reading">
+          <Card className={settingsCardClass}>
+            <CardHeader>
+              <CardTitle>对外访问基址</CardTitle>
+              <CardDescription>
+                生成阅读书源、章节与评论地址时优先使用这里填写的 origin。CF/反代请填公网 HTTPS；留空则回退环境变量或请求 Host。
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SettingRow
+                title="公网域名或 IP"
+                description="例如 https://book.example.com:2087 或 http://192.168.1.10:8765。只填 origin，不要带路径。"
+              >
+                <Input
+                  className={settingsInputClass}
+                  aria-label="对外访问基址"
+                  placeholder="https://book.example.com:2087"
+                  value={readingAccess.publicBaseUrl ?? ""}
+                  onChange={(event) => setLocal({ readingAccess: { ...readingAccess, publicBaseUrl: event.target.value } })}
+                />
+              </SettingRow>
+              <p className="mt-3 text-xs text-slate-500">
+                修改后请在阅读端更新书源，并刷新书籍目录，旧章节里的局域网地址才会被替换。
+              </p>
+            </CardContent>
+          </Card>
+          <Card className={`mt-6 ${settingsCardClass}`}>
+            <CardHeader>
+              <CardTitle>章节评论入口</CardTitle>
+              <CardDescription>控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SettingRow title="段评入口" description="在有评论的正文段落末尾显示段评数量。">
+                <div className="flex justify-end">
+                  <Switch
+                    aria-label="段评入口"
+                    checked={chapterComment.segmentEnabled ?? true}
+                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, segmentEnabled: checked } })}
+                  />
+                </div>
+              </SettingRow>
+              <SettingRow title="页热评入口" description="在当前页右上角显示热评数量，并允许下拉打开本页热评。">
+                <div className="flex justify-end">
+                  <Switch
+                    aria-label="页热评入口"
+                    checked={chapterComment.pageEnabled ?? true}
+                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, pageEnabled: checked } })}
+                  />
+                </div>
+              </SettingRow>
+              <SettingRow title="本章说入口" description="在章节末尾显示本章说汇总入口。">
+                <div className="flex justify-end">
+                  <Switch
+                    aria-label="本章说入口"
+                    checked={chapterComment.chapterEnabled ?? true}
+                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, chapterEnabled: checked } })}
+                  />
+                </div>
+              </SettingRow>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sources">
+          <Card className={settingsCardClass}>
+            <CardHeader><CardTitle>并发与超时</CardTitle><CardDescription>控制搜索和解析时的并发数量与超时熔断时间。</CardDescription></CardHeader>
+            <CardContent>
+              <SettingRow title="最大并发搜索数" description="同时向多少个书源发起搜索请求。过高可能导致内存溢出。"><Input className={settingsInputClass} type="number" value={sp.max_concurrency || 3} onChange={(e) => setLocal({ sourcePool: { ...sp, max_concurrency: +e.target.value } })} /></SettingRow>
+              <SettingRow title="单源超时 (ms)" description="等待一个普通源响应的最长时间。"><Input className={settingsInputClass} type="number" value={secondsToMilliseconds(sp.source_timeout_seconds, 20)} onChange={(e) => setLocal({ sourcePool: { ...sp, source_timeout_seconds: millisecondsToSeconds(e.target.value) } })} /></SettingRow>
+              <SettingRow title="浏览器模式搜索超时 (ms)" description="等待 Headless 浏览器搜索结果。"><Input className={settingsInputClass} type="number" value={secondsToMilliseconds(sp.browser_search_timeout_seconds, 60)} onChange={(e) => setLocal({ sourcePool: { ...sp, browser_search_timeout_seconds: millisecondsToSeconds(e.target.value) } })} /></SettingRow>
+              <SettingRow title="搜索评分过滤" description="低于此分数的搜索结果会被直接丢弃。"><Input className={settingsInputClass} type="number" value={local.searchScoreFilter ?? 40} onChange={(e) => setLocal({ searchScoreFilter: +e.target.value })} /></SettingRow>
+            </CardContent>
+          </Card>
+          <Card className={`mt-6 ${settingsCardClass}`}>
+            <CardHeader><CardTitle>网络代理与标识</CardTitle></CardHeader>
+            <CardContent>
+              <SettingRow title="默认 User-Agent" description="向第三方书源发起 HTTP 请求时使用的标识。"><Input className={settingsInputClass} value={sp.default_user_agent || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, default_user_agent: e.target.value } })} /></SettingRow>
+              <SettingRow title="代理 URL (Proxy)" description="配置 HTTP/SOCKS 代理用于访问受限书源。"><Input className={settingsInputClass} value={sp.proxy?.url || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), url: e.target.value } } })} /></SettingRow>
+              <SettingRow title="官方源参与普通搜索" description="是否在常规聚合搜索中包含官方书源。">
+                <div className="flex items-center gap-2">
+                  <Switch checked={sp.officialSourceInNormalSearch || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, officialSourceInNormalSearch: c } })} />
+                  <span className="text-sm text-slate-600">启用</span>
+                </div>
+              </SettingRow>
+            </CardContent>
+          </Card>
+          <Card className={`mt-6 ${settingsCardClass}`}>
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle>书源优先级</CardTitle>
+              <CardDescription>列表顺序就是处理顺序，排在上方的书源会被优先使用。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8 p-6">
+              <PriorityListEditor
+                title="官方主源优先级"
+                description="用于目录对齐和元数据抓取。"
+                items={Array.isArray(wf.primarySourcePriority) ? wf.primarySourcePriority.map(String) : []}
+                options={sourceOptions.filter((source) => source.official)}
+                onChange={(items) => setAgg({ contentWorkflow: { ...wf, primarySourcePriority: items } })}
+              />
+              <div className="border-t border-slate-100 pt-8">
+                <PriorityListEditor
+                  title="补全源优先级"
+                  description="用于补全 VIP 预览或读取失败的章节。"
+                  items={Array.isArray(wf.candidateSourcePriority) ? wf.candidateSourcePriority.map(String) : []}
+                  options={sourceOptions.filter((source) => !source.official)}
+                  onChange={(items) => setAgg({ contentWorkflow: { ...wf, candidateSourcePriority: items } })}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="system">
           <Card className={settingsCardClass}>
             <CardHeader>
               <CardTitle>订阅配额</CardTitle>
@@ -383,110 +493,14 @@ export function SettingsPage() {
               ))}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="pool">
-          <Card className={settingsCardClass}>
-            <CardHeader><CardTitle>并发与超时</CardTitle><CardDescription>控制搜索和解析时的并发数量与超时熔断时间。</CardDescription></CardHeader>
-            <CardContent>
-              <SettingRow title="最大并发搜索数" description="同时向多少个书源发起搜索请求。过高可能导致内存溢出。"><Input className={settingsInputClass} type="number" value={sp.max_concurrency || 3} onChange={(e) => setLocal({ sourcePool: { ...sp, max_concurrency: +e.target.value } })} /></SettingRow>
-              <SettingRow title="单源超时 (ms)" description="等待一个普通源响应的最长时间。"><Input className={settingsInputClass} type="number" value={secondsToMilliseconds(sp.source_timeout_seconds, 20)} onChange={(e) => setLocal({ sourcePool: { ...sp, source_timeout_seconds: millisecondsToSeconds(e.target.value) } })} /></SettingRow>
-              <SettingRow title="浏览器模式搜索超时 (ms)" description="等待 Headless 浏览器搜索结果。"><Input className={settingsInputClass} type="number" value={secondsToMilliseconds(sp.browser_search_timeout_seconds, 60)} onChange={(e) => setLocal({ sourcePool: { ...sp, browser_search_timeout_seconds: millisecondsToSeconds(e.target.value) } })} /></SettingRow>
-              <SettingRow title="搜索评分过滤" description="低于此分数的搜索结果会被直接丢弃。"><Input className={settingsInputClass} type="number" value={local.searchScoreFilter ?? 40} onChange={(e) => setLocal({ searchScoreFilter: +e.target.value })} /></SettingRow>
-            </CardContent>
-          </Card>
           <Card className={`mt-6 ${settingsCardClass}`}>
-            <CardHeader><CardTitle>网络代理与标识</CardTitle></CardHeader>
-            <CardContent>
-              <SettingRow title="默认 User-Agent" description="向第三方书源发起 HTTP 请求时使用的标识。"><Input className={settingsInputClass} value={sp.default_user_agent || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, default_user_agent: e.target.value } })} /></SettingRow>
-              <SettingRow title="代理 URL (Proxy)" description="配置 HTTP/SOCKS 代理用于访问受限书源。"><Input className={settingsInputClass} value={sp.proxy?.url || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), url: e.target.value } } })} /></SettingRow>
-              <SettingRow title="官方源参与普通搜索" description="是否在常规聚合搜索中包含官方书源。">
-                <div className="flex items-center gap-2">
-                  <Switch checked={sp.officialSourceInNormalSearch || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, officialSourceInNormalSearch: c } })} />
-                  <span className="text-sm text-slate-600">启用</span>
-                </div>
-              </SettingRow>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="comments">
-          <Card className={settingsCardClass}>
-            <CardHeader>
-              <CardTitle>章节评论入口</CardTitle>
-              <CardDescription>控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SettingRow title="段评入口" description="在有评论的正文段落末尾显示段评数量。">
-                <div className="flex justify-end">
-                  <Switch
-                    aria-label="段评入口"
-                    checked={chapterComment.segmentEnabled ?? true}
-                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, segmentEnabled: checked } })}
-                  />
-                </div>
-              </SettingRow>
-              <SettingRow title="页热评入口" description="在当前页右上角显示热评数量，并允许下拉打开本页热评。">
-                <div className="flex justify-end">
-                  <Switch
-                    aria-label="页热评入口"
-                    checked={chapterComment.pageEnabled ?? true}
-                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, pageEnabled: checked } })}
-                  />
-                </div>
-              </SettingRow>
-              <SettingRow title="本章说入口" description="在章节末尾显示本章说汇总入口。">
-                <div className="flex justify-end">
-                  <Switch
-                    aria-label="本章说入口"
-                    checked={chapterComment.chapterEnabled ?? true}
-                    onCheckedChange={(checked) => setLocal({ chapterComment: { ...chapterComment, chapterEnabled: checked } })}
-                  />
-                </div>
-              </SettingRow>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="agg">
-          <Card>
-            <CardHeader><CardTitle>聚合策略</CardTitle><CardDescription>配置候选源数量、检查间隔和源优先级。</CardDescription></CardHeader>
+            <CardHeader><CardTitle>聚合策略</CardTitle><CardDescription>配置候选源数量、检查间隔等聚合运行参数。</CardDescription></CardHeader>
             <CardContent>
               <SettingRow title="候选书源数量" description="为每本书保留最多几个高质量备选源用于容灾。"><Input type="number" value={wf.sourceCandidateLimit || 6} onChange={(e) => setAgg({ contentWorkflow: { ...wf, sourceCandidateLimit: +e.target.value } })} /></SettingRow>
               <SettingRow title="自动更新间隔(分钟)" description="后台自动检查书籍更新的频率。"><Input type="number" value={wf.aggregateCheckIntervalMinutes ?? 30} onChange={(e) => setAgg({ contentWorkflow: { ...wf, aggregateCheckIntervalMinutes: +e.target.value } })} /></SettingRow>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="priority">
-          <Card className={settingsCardClass}>
-            <CardHeader className="border-b border-slate-100">
-              <CardTitle>书源优先级</CardTitle>
-              <CardDescription>列表顺序就是处理顺序，排在上方的书源会被优先使用。</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8 p-6">
-              <PriorityListEditor
-                title="官方主源优先级"
-                description="用于目录对齐和元数据抓取。"
-                items={Array.isArray(wf.primarySourcePriority) ? wf.primarySourcePriority.map(String) : []}
-                options={sourceOptions.filter((source) => source.official)}
-                onChange={(items) => setAgg({ contentWorkflow: { ...wf, primarySourcePriority: items } })}
-              />
-              <div className="border-t border-slate-100 pt-8">
-                <PriorityListEditor
-                  title="补全源优先级"
-                  description="用于补全 VIP 预览或读取失败的章节。"
-                  items={Array.isArray(wf.candidateSourcePriority) ? wf.candidateSourcePriority.map(String) : []}
-                  options={sourceOptions.filter((source) => !source.official)}
-                  onChange={(items) => setAgg({ contentWorkflow: { ...wf, candidateSourcePriority: items } })}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="dict">
-          <Card>
+          <Card className={`mt-6 ${settingsCardClass}`}>
             <CardHeader><CardTitle>净化词库管理</CardTitle><CardDescription>用于修复乱码、屏蔽词和谐以及统一内容格式。</CardDescription></CardHeader>
             <CardContent>
                 <div className="bg-slate-50 p-4 rounded-lg mt-2 border border-slate-100">

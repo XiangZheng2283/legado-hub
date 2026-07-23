@@ -667,6 +667,7 @@ def test_settings_endpoint():
         "pageEnabled": True,
         "chapterEnabled": True,
     }
+    assert "publicBaseUrl" in res.json()["readingAccess"]
 
 
 def test_chapter_comment_settings_round_trip_and_strict_validation(admin_client):
@@ -708,6 +709,51 @@ def test_chapter_comment_settings_round_trip_and_strict_validation(admin_client)
         ).status_code == 422
     finally:
         assert admin_client.post("/api/console/settings", json=original).status_code == 200
+
+
+def test_reading_access_public_base_url_round_trip_and_overrides_source_base(admin_client):
+    from app.core.app_config import AppConfig
+    from app.core.legado_source import generate_legado_source
+    from app.core.public_security import get_public_base_url
+
+    original = admin_client.get("/api/console/settings").json()
+    try:
+        response = admin_client.post(
+            "/api/console/settings",
+            json={"readingAccess": {"publicBaseUrl": "https://book.example.com:2087/"}},
+        )
+        assert response.status_code == 200
+        assert response.json()["readingAccess"] == {
+            "publicBaseUrl": "https://book.example.com:2087",
+        }
+        AppConfig.get().reload()
+        assert get_public_base_url() == "https://book.example.com:2087"
+        source = generate_legado_source()[0]
+        assert source["searchUrl"].startswith("https://book.example.com:2087/")
+        assert 'function legadoHubSourceBase() { return "https://book.example.com:2087"; }' in source["jsLib"]
+
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"readingAccess": {"publicBaseUrl": "not-a-url"}},
+        ).status_code == 422
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"readingAccess": {"publicBaseUrl": "https://book.example.com/path"}},
+        ).status_code == 422
+        assert admin_client.post(
+            "/api/console/settings",
+            json={"readingAccess": {"unknown": True}},
+        ).status_code == 422
+
+        cleared = admin_client.post(
+            "/api/console/settings",
+            json={"readingAccess": {"publicBaseUrl": ""}},
+        )
+        assert cleared.status_code == 200
+        assert cleared.json()["readingAccess"]["publicBaseUrl"] == ""
+    finally:
+        assert admin_client.post("/api/console/settings", json=original).status_code == 200
+        AppConfig.get().reload()
 
 
 def test_book_source_priority_settings_accept_new_and_legacy_names():

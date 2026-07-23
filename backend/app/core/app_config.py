@@ -161,6 +161,19 @@ class ChapterCommentConfig:
 
 
 @dataclass
+class ReadingAccessConfig:
+    """Operator-facing reading entry base used by generated book sources."""
+
+    public_base_url: str = ""
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ReadingAccessConfig":
+        return cls(
+            public_base_url=str(data.get("publicBaseUrl", "") or "").strip().rstrip("/"),
+        )
+
+
+@dataclass
 class AggregateConfig:
     name: str = "LegadoHub 聚合"
     version: str = "0.0.2"
@@ -358,6 +371,10 @@ class AppConfig:
     @property
     def chapter_comment(self) -> ChapterCommentConfig:
         return ChapterCommentConfig.from_dict(self._section("chapterComment"))
+
+    @property
+    def reading_access(self) -> ReadingAccessConfig:
+        return ReadingAccessConfig.from_dict(self._section("readingAccess"))
 
     @property
     def ai_provider(self) -> AIProviderConfig:

@@ -64,6 +64,9 @@ describe("SettingsPage subscription policy", () => {
         pageEnabled: true,
         chapterEnabled: true,
       },
+      readingAccess: {
+        publicBaseUrl: "",
+      },
     })
     ;(api.aggregateSettings as any).mockResolvedValue({ contentWorkflow: {} })
     ;(api.lexiconStatus as any).mockResolvedValue({})
@@ -84,7 +87,7 @@ describe("SettingsPage subscription policy", () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole("tab", { name: "订阅政策" }))
+    await user.click(await screen.findByRole("tab", { name: "系统" }))
     const activeLimit = screen.getByLabelText("每用户活跃订阅上限")
     const searchLimit = screen.getByLabelText("每窗口搜索次数")
     await user.clear(activeLimit)
@@ -126,7 +129,7 @@ describe("SettingsPage subscription policy", () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole("tab", { name: "阅读评论" }))
+    await user.click(await screen.findByRole("tab", { name: "阅读" }))
     await user.click(screen.getByRole("switch", { name: "段评入口" }))
     await user.click(screen.getByRole("switch", { name: "页热评入口" }))
     await user.click(screen.getByRole("button", { name: "保存配置" }))
@@ -140,6 +143,23 @@ describe("SettingsPage subscription policy", () => {
     })
   })
 
+  it("saves the reading public base URL", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole("tab", { name: "阅读" }))
+    const baseInput = screen.getByLabelText("对外访问基址")
+    await user.clear(baseInput)
+    await user.type(baseInput, "https://book.example.com:2087")
+    await user.click(screen.getByRole("button", { name: "保存配置" }))
+
+    await waitFor(() => expect(api.updateSettings).toHaveBeenCalledTimes(1))
+    const payload = (api.updateSettings as any).mock.calls[0][0]
+    expect(payload.readingAccess).toEqual({
+      publicBaseUrl: "https://book.example.com:2087",
+    })
+  })
+
   it("reorders source priorities and saves the existing array contract", async () => {
     const user = userEvent.setup()
     ;(api.aggregateSettings as any).mockResolvedValue({
@@ -150,7 +170,7 @@ describe("SettingsPage subscription policy", () => {
     })
     renderPage()
 
-    await user.click(await screen.findByRole("tab", { name: "优先级" }))
+    await user.click(await screen.findByRole("tab", { name: "书源" }))
     const moveButton = screen.getByRole("button", { name: "将官方主源优先级第 1 项下移" })
     await user.click(moveButton)
     await waitFor(() => expect(screen.getByLabelText("官方主源优先级第 2 项")).toHaveFocus())
@@ -171,7 +191,7 @@ describe("SettingsPage subscription policy", () => {
     })
     renderPage()
 
-    await user.click(await screen.findByRole("tab", { name: "优先级" }))
+    await user.click(await screen.findByRole("tab", { name: "书源" }))
     await user.selectOptions(screen.getByRole("combobox", { name: "添加补全源优先级" }), "new_candidate")
     expect(screen.getByLabelText("补全源优先级第 1 项")).toHaveTextContent("new_candidate")
     await user.click(screen.getByRole("button", { name: "保存配置" }))
