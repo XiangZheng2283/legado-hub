@@ -1029,6 +1029,10 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "legadoHubDecorateChapterReviewOnly" not in source["jsLib"]
     assert "legadoHubDecorateReviews" not in source["jsLib"]
     assert "function legadoHubChapterEndReviewCount" in source["jsLib"]
+    assert "function legadoHubSourceBase" in source["jsLib"]
+    assert "function legadoHubRewriteApiUrl" in source["jsLib"]
+    assert "legadoHubRewriteApiUrl(contentUrl)" in source["ruleContent"]["content"]
+    assert "legadoHubRewriteApiUrl(contentUrl)" in source["ruleToc"]["chapterUrl"]
     chapter_comment = source["ruleContent"]["chapterComment"]
     assert chapter_comment["protocolVersion"] == 2
     assert chapter_comment["display"]["segment"]["enabled"] is True
@@ -1058,6 +1062,8 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "commentScope === 'chapter'" in chapter_comment["action"]
     assert "chapter.getAbsoluteURL" in chapter_comment["action"]
     assert "typeof baseCandidate !== 'function'" in chapter_comment["action"]
+    assert "legadoHubRewriteApiUrl(contentUrl)" in chapter_comment["action"]
+    assert "legadoHubRewriteApiUrl(contentUrl)" in chapter_comment["url"]
     assert "sourceWebView" in chapter_comment["action"]
     assert "paragraphIds=" in chapter_comment["action"]
     assert "Authorization" not in chapter_comment["action"]

@@ -18,9 +18,9 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # Reading identifies this source by bookSourceUrl and only offers updates when
 # lastUpdateTime increases. Keep this release pair code-owned so persisted
 # aggregate configuration cannot pin an older generated rule revision.
-_READER_RULE_VERSION = "0.0.11"
+_READER_RULE_VERSION = "0.0.12"
 # Reading only refreshes a book source when lastUpdateTime increases.
-_READER_RULE_LAST_UPDATE_TIME = 1_784_740_000_000
+_READER_RULE_LAST_UPDATE_TIME = 1_784_745_000_000
 
 
 def _reader_rule_last_update_time(config: AppConfig) -> int:
@@ -202,6 +202,26 @@ function legadoHubReviewRoot(contentUrl) {
     return String(contentUrl || "").split("?")[0].replace(/\/+$/, "");
 }
 
+// Rewrite absolute Hub API URLs to the origin baked into this book source.
+// Chapter/toc snapshots may still carry a LAN host from an earlier request;
+// comments and content should follow the source entry (CF/public or LAN).
+// Do NOT call baseUrl() here: AnalyzeRule often binds baseUrl to the chapter
+// data: URL and that string shadows the jsLib helper.
+function legadoHubRewriteApiUrl(absoluteUrl) {
+    var value = String(absoluteUrl || "").trim();
+    if (!/^https?:\/\//i.test(value)) return value;
+    var configured = "";
+    try {
+        configured = String(legadoHubSourceBase() || "").trim().replace(/\/+$/, "");
+    } catch (e) {
+        configured = "";
+    }
+    if (!/^https?:\/\//i.test(configured)) return value.replace(/\/+$/, "");
+    var pathWithQuery = value.replace(/^https?:\/\/[^\/?#]+/i, "");
+    if (!pathWithQuery) pathWithQuery = "/";
+    return configured + pathWithQuery;
+}
+
 function legadoHubReviewCount(item) {
     if (!item) return 0;
     var count = Number(item.commentCount || item.totalCommentCount || item.hotCommentCount || 0);
@@ -220,7 +240,17 @@ function legadoHubChapterEndReviewCount(reviews) {
 
 def _reader_js_lib(base_api: str) -> str:
     base_literal = json.dumps(base_api.rstrip("/"), ensure_ascii=False)
-    return "function baseUrl() { return " + base_literal + "; }\n" + _LEGADO_E_READER_JS
+    # baseUrl() is the historical helper; legadoHubSourceBase() is collision-safe
+    # when AnalyzeRule binds the name baseUrl to a chapter data: URL.
+    return (
+        "function baseUrl() { return "
+        + base_literal
+        + "; }\n"
+        + "function legadoHubSourceBase() { return "
+        + base_literal
+        + "; }\n"
+        + _LEGADO_E_READER_JS
+    )
 
 
 def _chapter_comment_url_rule() -> str:
@@ -231,7 +261,7 @@ def _chapter_comment_url_rule() -> str:
         "if (!matched) throw new Error('chapter comment content URL missing');\n"
         "var contentUrl = String(java.base64Decode(matched[1]) || '').trim();\n"
         "if (!/^https?:\\/\\//i.test(contentUrl)) throw new Error('invalid chapter comment content URL');\n"
-        "legadoHubReviewRoot(contentUrl) + '/reviews';"
+        "legadoHubReviewRoot(legadoHubRewriteApiUrl(contentUrl)) + '/reviews';"
     )
 
 
@@ -351,7 +381,7 @@ def _chapter_comment_action_rule() -> str:
         "  if (/^https?:\\/\\//i.test(bare)) contentUrl = bare;\n"
         "}\n"
         "if (!/^https?:\\/\\//i.test(contentUrl)) throw new Error('chapter comment content URL missing');\n"
-        "contentUrl = contentUrl.replace(/\\/+$/, '');\n"
+        "contentUrl = legadoHubRewriteApiUrl(contentUrl).replace(/\\/+$/, '');\n"
         "var viewRoot = contentUrl + '/reviews/view';\n"
         "var commentScope = String(actionEvent.scope || '');\n"
         "var viewUrl = '';\n"
@@ -448,6 +478,7 @@ def _build_source(base_api: str | None = None) -> dict:
             "chapterUrl": (
                 "<js>\n"
                 "var contentUrl = String(result.chapterUrl || '');\n"
+                "try { contentUrl = legadoHubRewriteApiUrl(contentUrl); } catch (e) {}\n"
                 "var metadata = {type: 'legadoHub'};\n"
                 "`data:contentUrl;base64,${java.base64Encode(contentUrl)},${JSON.stringify(metadata)}`;\n"
                 "</js>"
@@ -462,6 +493,7 @@ def _build_source(base_api: str | None = None) -> dict:
             'var contentUrl = "";\n'
             'try {\n'
             '  contentUrl = String(java.hexDecodeToString(payload) || "").trim();\n'
+            '  try { contentUrl = legadoHubRewriteApiUrl(contentUrl); } catch (e0) {}\n'
             '  if (/^https?:\\/\\//i.test(contentUrl)) payload = String(java.ajax(contentUrl) || "");\n'
             '} catch (e) {}\n'
             'var text = payload;\n'
