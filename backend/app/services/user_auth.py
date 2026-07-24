@@ -282,6 +282,52 @@ class UserAuthService:
         parsed = cls._parse_access_code(access_code)
         return parsed[0] if parsed else "invalid"
 
+    @staticmethod
+    def build_access_subscription_links(
+        access_code: str,
+        *,
+        public_base: str = "",
+        lan_base: str = "",
+    ) -> dict[str, str]:
+        """Build personal source/subscription URLs that embed the access code.
+
+        Source URLs bake the code into book-source JSON (Reading auto-login).
+        Subscription URLs hit ``/api/auth/access/enter`` so the browser gets a
+        session cookie without re-typing the code on the SPA login form.
+        """
+        from urllib.parse import quote
+
+        code = str(access_code or "").strip()
+        if not code:
+            return {}
+        q = quote(code, safe="")
+        next_q = quote("/console/subscription", safe="")
+        links: dict[str, str] = {}
+        public = str(public_base or "").strip().rstrip("/")
+        lan = str(lan_base or "").strip().rstrip("/")
+
+        def _pair(base: str) -> tuple[str, str]:
+            source = f"{base}/api/subscribe/legado/source?code={q}"
+            subscription = f"{base}/api/auth/access/enter?code={q}&next={next_q}"
+            return source, subscription
+
+        if public:
+            source, subscription = _pair(public)
+            links["publicSourceUrl"] = source
+            links["publicSubscriptionUrl"] = subscription
+        if lan and lan != public:
+            source, subscription = _pair(lan)
+            links["lanSourceUrl"] = source
+            links["lanSubscriptionUrl"] = subscription
+        # Preferred single-copy targets for the admin UI.
+        if public:
+            links["sourceUrl"] = links["publicSourceUrl"]
+            links["subscriptionUrl"] = links["publicSubscriptionUrl"]
+        elif lan:
+            links["sourceUrl"] = links["lanSourceUrl"]
+            links["subscriptionUrl"] = links["lanSubscriptionUrl"]
+        return links
+
     def create_access_user(
         self,
         username: str,

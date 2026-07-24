@@ -21,11 +21,19 @@ export interface ManagedUsersResponse {
   total: number
 }
 
-export interface ManagedUserCreated extends ManagedUser {
+export interface SubscriptionAccessLinks {
   accessCode?: string
+  sourceUrl?: string
+  subscriptionUrl?: string
+  publicSourceUrl?: string
+  publicSubscriptionUrl?: string
+  lanSourceUrl?: string
+  lanSubscriptionUrl?: string
 }
 
-export interface AccessCodeIssue {
+export interface ManagedUserCreated extends ManagedUser, SubscriptionAccessLinks {}
+
+export interface AccessCodeIssue extends SubscriptionAccessLinks {
   userId: string
   accessCode: string
 }

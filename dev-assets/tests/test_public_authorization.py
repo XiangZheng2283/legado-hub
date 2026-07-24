@@ -443,3 +443,97 @@ def test_access_payload_rejects_unknown_fields() -> None:
         json={"accessCode": "invalid", "redirect": "https://evil.invalid"},
     )
     assert response.status_code == 422
+
+
+def test_build_access_subscription_links_embed_code_and_enter_path() -> None:
+    code = "LH1.dGVzdA.secret-value"
+    links = UserAuthService.build_access_subscription_links(
+        code,
+        public_base="https://books.example.com",
+        lan_base="http://192.168.1.10:8765",
+    )
+    assert links["sourceUrl"] == (
+        "https://books.example.com/api/subscribe/legado/source?code=LH1.dGVzdA.secret-value"
+    )
+    assert links["subscriptionUrl"].startswith(
+        "https://books.example.com/api/auth/access/enter?code="
+    )
+    assert "next=%2Fconsole%2Fsubscription" in links["subscriptionUrl"]
+    assert links["lanSourceUrl"].startswith("http://192.168.1.10:8765/api/subscribe/legado/source?code=")
+    assert "/api/auth/access/enter?" in links["lanSubscriptionUrl"]
+    assert UserAuthService.build_access_subscription_links("") == {}
+
+
+def test_access_enter_sets_session_cookie_and_redirects() -> None:
+    created = _create_access_user()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/auth/access/enter",
+        params={"code": created["accessCode"], "next": "/console/subscription"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert response.headers["location"] == "/console/subscription"
+    assert "legadohub_session=" in response.headers.get("set-cookie", "")
+    assert response.headers["cache-control"] == "no-store"
+
+    me = client.get("/api/auth/me")
+    assert me.status_code == 200
+    assert me.json()["authenticated"] is True
+    assert me.json()["user"]["username"] == created["username"]
+
+
+def test_access_enter_invalid_code_redirects_to_login() -> None:
+    client = TestClient(app, follow_redirects=False)
+    response = client.get(
+        "/api/auth/access/enter",
+        params={"code": "LH1.invalid.invalid", "next": "/console/subscription"},
+    )
+    assert response.status_code == 302
+    location = response.headers["location"]
+    assert location.startswith("/login?")
+    assert "error=invalid_code" in location
+    assert "next=" in location
+
+
+def test_access_enter_blocks_open_redirect() -> None:
+    created = _create_access_user()
+    client = TestClient(app, follow_redirects=False)
+    response = client.get(
+        "/api/auth/access/enter",
+        params={"code": created["accessCode"], "next": "https://evil.invalid/phish"},
+    )
+    assert response.status_code == 302
+    assert response.headers["location"] == "/console/subscription"
+
+
+def test_personal_legado_source_embeds_bound_access_code() -> None:
+    created = _create_access_user()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/subscribe/legado/source",
+        params={"code": created["accessCode"]},
+    )
+    assert response.status_code == 200
+    sources = response.json()
+    assert len(sources) == 1
+    source = sources[0]
+    code_literal = json.dumps(created["accessCode"], ensure_ascii=False)
+    assert f"var LEGADOHUB_ACCESS_CODE = {code_literal}" in source["loginUrl"]
+    assert f"var LEGADOHUB_ACCESS_CODE = {code_literal}" in source["jsLib"]
+    assert "本源已绑定个人" in source["loginUi"] or "绑定个人订阅" in source["loginUi"]
+    assert "绑定个人授权码" in source["bookSourceComment"]
+
+    rejected = client.get(
+        "/api/subscribe/legado/source",
+        params={"code": "LH1.invalid.invalid"},
+    )
+    assert rejected.status_code == 401
+
+    anonymous = client.get("/api/subscribe/legado/source")
+    assert anonymous.status_code == 200
+    anon_source = anonymous.json()[0]
+    assert 'var LEGADOHUB_ACCESS_CODE = ""' in anon_source["loginUrl"]

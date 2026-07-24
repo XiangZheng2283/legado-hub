@@ -5,7 +5,10 @@ Copyright (c) 2026 moo. All rights reserved.
 
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.services.audit import audit_service
@@ -102,20 +105,33 @@ def login(payload: AdminLoginRequest, request: Request, response: Response):
     return {"ok": True, "user": _user_payload(user)}
 
 
-@_access_router.post("/access/redeem")
-def redeem_access_code(payload: AccessCodeRequest, request: Request, response: Response):
-    identifier = auth_service.access_code_identifier(payload.access_code)
+def _safe_next_path(value: str | None) -> str:
+    """Allow only same-site relative paths (block open redirects)."""
+    raw = str(value or "").strip() or "/console/subscription"
+    if not raw.startswith("/") or raw.startswith("//"):
+        return "/console/subscription"
+    parsed = urlparse(raw)
+    if parsed.scheme or parsed.netloc:
+        return "/console/subscription"
+    path = parsed.path or "/console/subscription"
+    if not path.startswith("/"):
+        return "/console/subscription"
+    query = f"?{parsed.query}" if parsed.query else ""
+    return f"{path}{query}"
+
+
+def _authenticate_access_code(access_code: str, request: Request) -> tuple[object, str]:
+    """Validate access code and create a session. Returns (user, session_id)."""
+    identifier = auth_service.access_code_identifier(access_code)
     keys = _rate_limit_keys(request, "access", identifier)
     _check_rate_limit(keys)
     try:
-        user = auth_service.authenticate_access_code(payload.access_code)
+        user = auth_service.authenticate_access_code(access_code)
     except HTTPException as exc:
         if exc.status_code in {401, 403}:
             auth_rate_limiter.record_failure(*keys)
         raise
     session_id = auth_service.create_session(user)
-    auth_service.set_session_cookie(response, session_id, secure=request_uses_https(request))
-    _set_private_response(response)
     audit_service.record(
         action="user.access_code.redeem",
         actor_user_id=user.user_id,
@@ -124,12 +140,45 @@ def redeem_access_code(payload: AccessCodeRequest, request: Request, response: R
         target_id=user.user_id,
         summary={"authenticated": True},
     )
+    return user, session_id
+
+
+@_access_router.post("/access/redeem")
+def redeem_access_code(payload: AccessCodeRequest, request: Request, response: Response):
+    user, session_id = _authenticate_access_code(payload.access_code, request)
+    auth_service.set_session_cookie(response, session_id, secure=request_uses_https(request))
+    _set_private_response(response)
     return {
         "ok": True,
         "token": session_id,
         "expiresAt": auth_service.session_expires_at(session_id),
         "user": _user_payload(user),
     }
+
+
+@_access_router.get("/access/enter")
+def enter_with_access_code(
+    request: Request,
+    code: str = "",
+    next: str = "/console/subscription",
+):
+    """Browser entry: exchange access code for session cookie and redirect.
+
+    Used by personal subscription links and the Reading「订阅管理」button so
+    users do not re-type the access code in the web console.
+    """
+    access_code = str(code or "").strip()
+    target = _safe_next_path(next)
+    if not access_code:
+        return RedirectResponse(url=f"/login?next={target}", status_code=302)
+    try:
+        _user, session_id = _authenticate_access_code(access_code, request)
+    except HTTPException:
+        return RedirectResponse(url=f"/login?next={target}&error=invalid_code", status_code=302)
+    redirect = RedirectResponse(url=target, status_code=302)
+    auth_service.set_session_cookie(redirect, session_id, secure=request_uses_https(request))
+    redirect.headers["Cache-Control"] = "no-store"
+    return redirect
 
 
 @_common_router.post("/logout")

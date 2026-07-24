@@ -183,6 +183,13 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
     assert create_response.status_code == 200
     created = create_response.json()
     initial_access_code = created["accessCode"]
+    # Personal subscription links (when a base URL is available) must embed the code.
+    if created.get("sourceUrl"):
+        assert initial_access_code in created["sourceUrl"]
+        assert "/api/subscribe/legado/source?code=" in created["sourceUrl"]
+    if created.get("subscriptionUrl"):
+        assert "/api/auth/access/enter?code=" in created["subscriptionUrl"]
+        assert "next=" in created["subscriptionUrl"]
     listed_user = next(
         item
         for item in admin_client.get("/api/console/users").json()["items"]
@@ -214,7 +221,12 @@ def test_user_management_validates_payload_and_invalidates_reset_sessions(admin_
         json={},
     )
     assert reset_response.status_code == 200
-    replacement_access_code = reset_response.json()["accessCode"]
+    reset_body = reset_response.json()
+    replacement_access_code = reset_body["accessCode"]
+    assert replacement_access_code != initial_access_code
+    if reset_body.get("sourceUrl"):
+        assert replacement_access_code in reset_body["sourceUrl"]
+        assert initial_access_code not in reset_body["sourceUrl"]
     assert reader_client.get("/api/auth/me").json()["authenticated"] is False
     assert reader_client.post(
         "/api/auth/access/redeem",

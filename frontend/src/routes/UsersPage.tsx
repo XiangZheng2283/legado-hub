@@ -27,6 +27,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 interface IssuedAccessCode {
   username: string
   accessCode: string
+  sourceUrl?: string
+  subscriptionUrl?: string
+  publicSourceUrl?: string
+  publicSubscriptionUrl?: string
+  lanSourceUrl?: string
+  lanSubscriptionUrl?: string
 }
 
 function formatDate(value?: string) {
@@ -52,7 +58,7 @@ export function UsersPage() {
   const [resetting, setResetting] = useState(false)
   const [resetError, setResetError] = useState("")
   const [issuedAccessCode, setIssuedAccessCode] = useState<IssuedAccessCode | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copiedKey, setCopiedKey] = useState<string>("")
   const [actionNotice, setActionNotice] = useState("")
 
   const usersQuery = useQuery({ queryKey: ["users"], queryFn: api.users.list })
@@ -102,7 +108,7 @@ export function UsersPage() {
   }
   const closeIssuedDialog = () => {
     setIssuedAccessCode(null)
-    setCopied(false)
+    setCopiedKey("")
   }
 
   const submitCreate = async (event: React.FormEvent) => {
@@ -115,7 +121,16 @@ export function UsersPage() {
         : await api.users.create({ username: username.trim(), password, role: "admin" })
       if (role === "user") {
         if (!result.accessCode) throw new Error("服务端未返回授权码")
-        setIssuedAccessCode({ username: result.username, accessCode: result.accessCode })
+        setIssuedAccessCode({
+          username: result.username,
+          accessCode: result.accessCode,
+          sourceUrl: result.sourceUrl,
+          subscriptionUrl: result.subscriptionUrl,
+          publicSourceUrl: result.publicSourceUrl,
+          publicSubscriptionUrl: result.publicSubscriptionUrl,
+          lanSourceUrl: result.lanSourceUrl,
+          lanSubscriptionUrl: result.lanSubscriptionUrl,
+        })
       }
       closeCreateDialog()
       await refreshUsers()
@@ -135,7 +150,16 @@ export function UsersPage() {
       if (resetTarget.role === "user") {
         const result = await api.users.resetAccessCode(resetTarget.userId)
         if (!result.accessCode) throw new Error("服务端未返回授权码")
-        setIssuedAccessCode({ username: resetTarget.username, accessCode: result.accessCode })
+        setIssuedAccessCode({
+          username: resetTarget.username,
+          accessCode: result.accessCode,
+          sourceUrl: result.sourceUrl,
+          subscriptionUrl: result.subscriptionUrl,
+          publicSourceUrl: result.publicSourceUrl,
+          publicSubscriptionUrl: result.publicSubscriptionUrl,
+          lanSourceUrl: result.lanSourceUrl,
+          lanSubscriptionUrl: result.lanSubscriptionUrl,
+        })
       } else {
         await api.users.resetPassword(resetTarget.userId, resetPassword)
       }
@@ -148,10 +172,10 @@ export function UsersPage() {
     }
   }
 
-  const copyAccessCode = async () => {
-    if (!issuedAccessCode || !navigator.clipboard) return
-    await navigator.clipboard.writeText(issuedAccessCode.accessCode)
-    setCopied(true)
+  const copyText = async (key: string, value?: string) => {
+    if (!value || !navigator.clipboard) return
+    await navigator.clipboard.writeText(value)
+    setCopiedKey(key)
   }
 
   const users = usersQuery.data?.items || []
@@ -164,7 +188,7 @@ export function UsersPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">用户管理</h1>
-          <p className="mt-1 text-sm text-slate-500">普通用户使用个人授权码，管理员使用密码。</p>
+          <p className="mt-1 text-sm text-slate-500">普通用户使用个人授权码 / 专属订阅链接；重新生成后旧链接立即失效。管理员使用密码。</p>
         </div>
         <Button onClick={openCreateDialog}><Plus className="mr-2 h-4 w-4" />新建用户</Button>
       </div>
@@ -278,23 +302,86 @@ export function UsersPage() {
       <Dialog open={!!resetTarget} onOpenChange={(open) => { if (!open) closeResetDialog() }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{resetTarget?.role === "user" ? "重置授权码" : "重置密码"}</DialogTitle>
-            <DialogDescription>{resetTarget?.role === "user" ? `旧授权码和 ${resetTarget.username} 的现有会话将立即失效。` : resetTarget?.username || "管理员"}</DialogDescription>
+            <DialogTitle>{resetTarget?.role === "user" ? "重新生成订阅凭证" : "重置密码"}</DialogTitle>
+            <DialogDescription>
+              {resetTarget?.role === "user"
+                ? `将为 ${resetTarget.username} 生成新授权码与专属订阅链接；旧码、旧链接与现有登录会话立即失效。`
+                : resetTarget?.username || "管理员"}
+            </DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={submitReset}>
             {resetTarget?.role === "admin" && <div className="space-y-2"><Label htmlFor="managed-user-reset-password">新密码</Label><Input id="managed-user-reset-password" type="password" autoComplete="new-password" minLength={8} maxLength={128} value={resetPassword} onChange={(event) => setResetPassword(event.target.value)} /></div>}
             {resetError && <Alert variant="destructive"><AlertDescription>{resetError}</AlertDescription></Alert>}
-            <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={closeResetDialog}>取消</Button><Button type="submit" disabled={resetting || (resetTarget?.role === "admin" && resetPassword.length < 8)}>{resetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{resetTarget?.role === "user" ? "生成新授权码" : "重置密码"}</Button></div>
+            <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={closeResetDialog}>取消</Button><Button type="submit" disabled={resetting || (resetTarget?.role === "admin" && resetPassword.length < 8)}>{resetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{resetTarget?.role === "user" ? "生成新链接" : "重置密码"}</Button></div>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!issuedAccessCode} onOpenChange={(open) => { if (!open) closeIssuedDialog() }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>个人授权码</DialogTitle><DialogDescription>{issuedAccessCode?.username}，此授权码关闭后不再显示。</DialogDescription></DialogHeader>
-          <div className="flex min-w-0 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
-            <code className="min-w-0 flex-1 break-all text-sm text-slate-800">{issuedAccessCode?.accessCode}</code>
-            <Button type="button" variant="outline" size="icon" title="复制授权码" aria-label="复制授权码" onClick={copyAccessCode}>{copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}</Button>
+          <DialogHeader>
+            <DialogTitle>个人订阅凭证</DialogTitle>
+            <DialogDescription>
+              {issuedAccessCode?.username}：授权码与专属链接仅此显示一次。用户导入书源链接后无需再输码；重新生成后旧链接立即失效。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 text-xs font-medium text-slate-500">授权码</div>
+              <div className="flex min-w-0 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+                <code className="min-w-0 flex-1 break-all text-sm text-slate-800">{issuedAccessCode?.accessCode}</code>
+                <Button type="button" variant="outline" size="icon" title="复制授权码" aria-label="复制授权码" onClick={() => { void copyText("code", issuedAccessCode?.accessCode) }}>
+                  {copiedKey === "code" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            {(issuedAccessCode?.sourceUrl || issuedAccessCode?.publicSourceUrl || issuedAccessCode?.lanSourceUrl) && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-slate-500">专属书源链接（Reading 导入）</div>
+                {([
+                  ["source", "默认", issuedAccessCode.sourceUrl],
+                  ["publicSource", "公网", issuedAccessCode.publicSourceUrl],
+                  ["lanSource", "内网", issuedAccessCode.lanSourceUrl],
+                ] as const).filter(([, , url]) => !!url).map(([key, label, url]) => (
+                  <div key={key} className="flex min-w-0 items-start gap-2 rounded-md border border-slate-200 bg-white p-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] text-slate-400">{label}</div>
+                      <code className="break-all text-xs text-slate-700">{url}</code>
+                    </div>
+                    <Button type="button" variant="outline" size="icon" title={`复制${label}书源链接`} aria-label={`复制${label}书源链接`} onClick={() => { void copyText(key, url) }}>
+                      {copiedKey === key ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(issuedAccessCode?.subscriptionUrl || issuedAccessCode?.publicSubscriptionUrl || issuedAccessCode?.lanSubscriptionUrl) && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-slate-500">专属订阅页链接（浏览器打开即登录）</div>
+                {([
+                  ["sub", "默认", issuedAccessCode.subscriptionUrl],
+                  ["publicSub", "公网", issuedAccessCode.publicSubscriptionUrl],
+                  ["lanSub", "内网", issuedAccessCode.lanSubscriptionUrl],
+                ] as const).filter(([, , url]) => !!url).map(([key, label, url]) => (
+                  <div key={key} className="flex min-w-0 items-start gap-2 rounded-md border border-slate-200 bg-white p-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] text-slate-400">{label}</div>
+                      <code className="break-all text-xs text-slate-700">{url}</code>
+                    </div>
+                    <Button type="button" variant="outline" size="icon" title={`复制${label}订阅链接`} aria-label={`复制${label}订阅链接`} onClick={() => { void copyText(key, url) }}>
+                      {copiedKey === key ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!issuedAccessCode?.sourceUrl && !issuedAccessCode?.publicSourceUrl && !issuedAccessCode?.lanSourceUrl && (
+              <Alert>
+                <AlertDescription>
+                  未配置公网地址时，可先把授权码发给用户，或在「设置 → 阅读 → 允许的公网地址」登记 origin 后重新生成链接。
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
           <div className="flex justify-end"><Button onClick={closeIssuedDialog}>关闭</Button></div>
         </DialogContent>

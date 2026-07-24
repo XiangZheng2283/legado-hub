@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useRef, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { BookOpen, KeyRound, Loader2, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,8 +10,15 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 
+function safeNextPath(raw: string | null): string {
+  const value = (raw || "").trim()
+  if (!value.startsWith("/") || value.startsWith("//")) return "/"
+  return value
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, entrypoint, isLoading, authError, retryAuth, login, loginWithAccessCode } = useAuth()
   const [mode, setMode] = useState<"access" | "admin">("access")
   const [accessCode, setAccessCode] = useState("")
@@ -19,19 +26,56 @@ export function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [autoRedeeming, setAutoRedeeming] = useState(false)
+  const attemptedAutoCodeRef = useRef<string>("")
   const effectiveEntrypoint = entrypoint || "combined"
   const effectiveMode = effectiveEntrypoint === "admin" ? "admin" : effectiveEntrypoint === "public" ? "access" : mode
+  const nextPath = safeNextPath(searchParams.get("next"))
 
   useEffect(() => {
     if (!isLoading && user) {
-      navigate("/", { replace: true })
+      navigate(nextPath, { replace: true })
     }
-  }, [isLoading, navigate, user])
+  }, [isLoading, navigate, nextPath, user])
 
-  if (isLoading) {
+  // Personal subscription link / book-source open: ?code= auto-login (once per code).
+  useEffect(() => {
+    if (isLoading || user || effectiveMode === "admin" || autoRedeeming) return
+    const code = (searchParams.get("code") || "").trim()
+    if (!code) {
+      if (searchParams.get("error") === "invalid_code") {
+        setError("订阅链接无效或已重置，请联系管理员重新发放。")
+      }
+      return
+    }
+    if (attemptedAutoCodeRef.current === code) return
+    attemptedAutoCodeRef.current = code
+    let cancelled = false
+    setAutoRedeeming(true)
+    setError(null)
+    void (async () => {
+      try {
+        await loginWithAccessCode(code)
+        if (!cancelled) navigate(nextPath, { replace: true })
+      } catch (loginError) {
+        if (!cancelled) {
+          setAccessCode(code)
+          setError(apiErrorMessage(loginError, "订阅链接登录失败，请检查链接是否已重置。"))
+        }
+      } finally {
+        if (!cancelled) setAutoRedeeming(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [autoRedeeming, effectiveMode, isLoading, loginWithAccessCode, navigate, nextPath, searchParams, user])
+
+  if (isLoading || autoRedeeming) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        {autoRedeeming && <p className="text-sm text-slate-500">正在通过订阅链接登录…</p>}
       </div>
     )
   }
@@ -56,7 +100,7 @@ export function LoginPage() {
         await login(username.trim(), password)
         setPassword("")
       }
-      navigate("/", { replace: true })
+      navigate(nextPath, { replace: true })
     } catch (loginError) {
       setError(apiErrorMessage(loginError, "登录失败，请稍后重试。"))
     } finally {
@@ -68,7 +112,7 @@ export function LoginPage() {
     <form onSubmit={handleSubmit} className="space-y-4">
       {effectiveMode === "access" ? (
         <div className="space-y-2">
-          <Label htmlFor="access-code">授权码</Label>
+          <Label htmlFor="access-code">授权码 / 订阅链接</Label>
           <Input
             id="access-code"
             type="password"
@@ -76,7 +120,9 @@ export function LoginPage() {
             onChange={(e) => setAccessCode(e.target.value)}
             autoComplete="current-password"
             autoFocus
+            placeholder="粘贴授权码，或通过专属链接自动登录"
           />
+          <p className="text-xs text-slate-500">管理员可发放「专属书源/订阅链接」，打开后无需再手动输入。</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -95,57 +141,47 @@ export function LoginPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      {authError && (
+        <Alert variant="destructive">
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span>{authError}</span>
+            <Button type="button" variant="outline" size="sm" onClick={() => { void retryAuth() }}>重试</Button>
+          </AlertDescription>
+        </Alert>
+      )}
       <Button
         type="submit"
         className="w-full"
         disabled={submitting}
       >
         {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {effectiveMode === "access" ? "使用授权码登录" : "管理员登录"}
+        登录
       </Button>
     </form>
   )
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background p-4">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <BookOpen className="h-5 w-5" />
-        </div>
-        <span className="text-xl font-semibold tracking-tight text-foreground">LegadoHub</span>
-      </div>
-
-      <Card className="w-full max-w-sm border-border bg-card shadow-sm">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md shadow-sm">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-lg">{effectiveEntrypoint === "admin" ? "管理员登录" : "登录 LegadoHub"}</CardTitle>
+          <div className="flex items-center gap-2 text-slate-900">
+            <BookOpen className="h-5 w-5" />
+            <CardTitle className="text-xl">LegadoHub</CardTitle>
+          </div>
           <CardDescription>
-            {effectiveEntrypoint === "public"
-              ? "输入个人授权码，进入订阅和书库。"
-              : effectiveEntrypoint === "admin"
-                ? "使用管理员账户进入系统控制台。"
-                : "受邀用户使用个人授权码，管理员使用管理账户。"}
+            {effectiveMode === "access" ? "读者登录：授权码或专属订阅链接" : "管理员登录"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {authError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription className="space-y-3">
-                <p>{authError}</p>
-                <Button type="button" size="sm" variant="outline" onClick={() => { void retryAuth() }}>
-                  重新连接
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
-          {effectiveEntrypoint === "combined" ? (
-            <Tabs value={mode} onValueChange={(value) => { setMode(value as "access" | "admin"); setError(null) }}>
-              <TabsList className="mb-4 grid w-full grid-cols-2">
-                <TabsTrigger value="access"><KeyRound className="mr-2 h-4 w-4" />授权码</TabsTrigger>
-                <TabsTrigger value="admin"><ShieldCheck className="mr-2 h-4 w-4" />管理员</TabsTrigger>
+        <CardContent className="space-y-4">
+          {effectiveEntrypoint === "combined" && (
+            <Tabs value={effectiveMode} onValueChange={(v) => setMode(v as "access" | "admin")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="access"><KeyRound className="mr-1.5 h-3.5 w-3.5" />授权码</TabsTrigger>
+                <TabsTrigger value="admin"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" />管理员</TabsTrigger>
               </TabsList>
-              {loginForm}
             </Tabs>
-          ) : loginForm}
+          )}
+          {loginForm}
         </CardContent>
       </Card>
     </div>

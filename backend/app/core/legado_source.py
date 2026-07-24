@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.17"
-# 2026-07-24 dual LAN/public source identity (ms). Bump with _READER_RULE_VERSION.
-_READER_RULE_RELEASED_AT_MS = 1_784_900_000_000
+_READER_RULE_VERSION = "0.0.18"
+# 2026-07-24 per-user access-code source links (ms). Bump with _READER_RULE_VERSION.
+_READER_RULE_RELEASED_AT_MS = 1_784_950_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -64,9 +64,20 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
     return max(floor, config_modified_at)
 
 
-def _login_ui() -> str:
+def _login_ui(*, bound_access_code: bool = False) -> str:
+    """Login form for Reading. Bound sources still show optional code override."""
+    auth_hint = (
+        "本源已绑定个人订阅链接，点「登录」将自动鉴权；也可另填授权码覆盖。"
+        if bound_access_code
+        else "请输入管理员发放的个人授权码，或使用专属订阅链接导入书源。"
+    )
     return json.dumps(
         [
+            {
+                "name": "提示",
+                "type": "text",
+                "default": auth_hint,
+            },
             {"name": "授权码", "type": "password"},
             {
                 "name": "登录",
@@ -97,9 +108,19 @@ def _login_ui() -> str:
     )
 
 
-def _login_script(base_api: str) -> str:
+def _login_script(base_api: str, *, access_code: str | None = None) -> str:
     base_literal = json.dumps(base_api.rstrip("/"), ensure_ascii=False)
+    access_literal = json.dumps(str(access_code or ""), ensure_ascii=False)
     return f"""var LEGADOHUB_BASE = {base_literal};
+var LEGADOHUB_ACCESS_CODE = {access_literal};
+
+function legadoHubBoundAccessCode() {{
+    try {{
+        return String(LEGADOHUB_ACCESS_CODE || "").trim();
+    }} catch (e) {{
+        return "";
+    }}
+}}
 
 function legadoHubLoginInfoValue(name) {{
     function readValue(info) {{
@@ -164,20 +185,52 @@ function legadoHubUsername(payload) {{
     return typeof username === "string" ? username.trim() : "";
 }}
 
+function legadoHubHasLoginHeader() {{
+    try {{
+        var raw = source.getLoginHeader();
+        var stored = typeof raw === "string" ? JSON.parse(raw || "{{}}") : raw;
+        var authorization = stored && (stored.Authorization || stored.authorization);
+        return !!(authorization && String(authorization).trim());
+    }} catch (e) {{
+        return false;
+    }}
+}}
+
+function legadoHubRedeemAccessCode(code, showMessage) {{
+    var payload = legadoHubRequest("/api/auth/access/redeem", "POST", {{accessCode: String(code || "")}});
+    var username = legadoHubUsername(payload);
+    if (!username || !payload.token) throw new Error("invalid identity");
+    source.putLoginHeader(JSON.stringify({{Authorization: "Bearer " + String(payload.token)}}));
+    source.putLoginInfo("{{}}");
+    if (showMessage) java.toast("登录成功：" + username);
+    return true;
+}}
+
+function legadoHubEnsureAuth(showMessage) {{
+    if (legadoHubHasLoginHeader()) return true;
+    var code = legadoHubLoginInfoValue("授权码").trim();
+    if (!code) code = legadoHubBoundAccessCode();
+    if (!code) {{
+        if (showMessage) java.toast("请输入授权码，或使用管理员发放的专属订阅链接导入书源");
+        return false;
+    }}
+    try {{
+        return legadoHubRedeemAccessCode(code, !!showMessage);
+    }} catch (e) {{
+        if (showMessage) java.toast("登录失败，请检查授权码是否已重置或服务是否可用");
+        return false;
+    }}
+}}
+
 function legadoHubLogin() {{
     var code = legadoHubLoginInfoValue("授权码").trim();
+    if (!code) code = legadoHubBoundAccessCode();
     if (!code) {{
         java.toast("请输入授权码");
         return false;
     }}
     try {{
-        var payload = legadoHubRequest("/api/auth/access/redeem", "POST", {{accessCode: code}});
-        var username = legadoHubUsername(payload);
-        if (!username || !payload.token) throw new Error("invalid identity");
-        source.putLoginHeader(JSON.stringify({{Authorization: "Bearer " + String(payload.token)}}));
-        source.putLoginInfo("{{}}");
-        java.toast("登录成功：" + username);
-        return true;
+        return legadoHubRedeemAccessCode(code, true);
     }} catch (e) {{
         java.toast("登录失败，请检查授权码或服务状态");
         return false;
@@ -190,6 +243,17 @@ function login() {{
 
 function legadoHubStatus(showMessage) {{
     try {{
+        if (!legadoHubHasLoginHeader()) {{
+            if (legadoHubBoundAccessCode()) {{
+                if (!legadoHubEnsureAuth(false)) {{
+                    if (showMessage) java.toast("未登录或授权已失效");
+                    return false;
+                }}
+            }} else {{
+                if (showMessage) java.toast("未登录或授权已失效");
+                return false;
+            }}
+        }}
         var payload = legadoHubRequest("/api/auth/access/me", "GET", null);
         var username = legadoHubUsername(payload);
         if (username) {{
@@ -197,6 +261,14 @@ function legadoHubStatus(showMessage) {{
             return true;
         }}
         source.removeLoginHeader();
+        if (legadoHubBoundAccessCode() && legadoHubEnsureAuth(false)) {{
+            payload = legadoHubRequest("/api/auth/access/me", "GET", null);
+            username = legadoHubUsername(payload);
+            if (username) {{
+                if (showMessage) java.toast("已登录：" + username);
+                return true;
+            }}
+        }}
         if (showMessage) java.toast("未登录或授权已失效");
         return false;
     }} catch (e) {{
@@ -206,7 +278,12 @@ function legadoHubStatus(showMessage) {{
 }}
 
 function legadoHubOpenSubscriptions() {{
-    java.startBrowser(LEGADOHUB_BASE + "/console/subscription", "订阅管理");
+    var code = legadoHubLoginInfoValue("授权码").trim();
+    if (!code) code = legadoHubBoundAccessCode();
+    var next = encodeURIComponent("/console/subscription");
+    var url = LEGADOHUB_BASE + "/api/auth/access/enter?next=" + next;
+    if (code) url += "&code=" + encodeURIComponent(code);
+    java.startBrowser(url, "订阅管理");
 }}
 
 function legadoHubLogout() {{
@@ -224,6 +301,7 @@ def _login_check_script() -> str:
     return """var legadoHubOriginalResponse = result;
 try {
     eval(String(source.loginUrl));
+    legadoHubEnsureAuth(false);
     legadoHubStatus(false);
 } catch (e) {}
 legadoHubOriginalResponse;"""
@@ -270,16 +348,21 @@ function legadoHubChapterEndReviewCount(reviews) {
 """
 
 
-def _reader_js_lib(base_api: str) -> str:
+def _reader_js_lib(base_api: str, *, access_code: str | None = None) -> str:
     base_literal = json.dumps(base_api.rstrip("/"), ensure_ascii=False)
     version_literal = json.dumps(_READER_RULE_VERSION, ensure_ascii=False)
+    access_literal = json.dumps(str(access_code or ""), ensure_ascii=False)
     # baseUrl() is the historical helper; legadoHubSourceBase() is collision-safe
     # when AnalyzeRule binds the name baseUrl to a chapter data: URL.
     # LEGADOHUB_RULE_VERSION must change whenever rules change so Reading's
     # imported source body is not "same content, only title renamed".
+    # LEGADOHUB_ACCESS_CODE is set only for personalized subscription links.
     return (
         "var LEGADOHUB_RULE_VERSION = "
         + version_literal
+        + ";\n"
+        + "var LEGADOHUB_ACCESS_CODE = "
+        + access_literal
         + ";\n"
         + "function legadoHubRuleVersion() { return LEGADOHUB_RULE_VERSION; }\n"
         + "function baseUrl() { return "
@@ -465,17 +548,27 @@ def _source_identity_for_base(base_api: str) -> tuple[str, str, str, bool]:
     return _LAN_BOOK_SOURCE_URL, display, ",".join(parts), True
 
 
-def _build_source(base_api: str | None = None) -> dict:
+def _build_source(
+    base_api: str | None = None,
+    *,
+    access_code: str | None = None,
+) -> dict:
     base_api = normalize_public_base_url(base_api or get_public_base_url())
     book_source_url, name, group, is_lan = _source_identity_for_base(base_api)
     app_config = AppConfig.get()
     chapter_comment = app_config.chapter_comment
+    bound = bool(str(access_code or "").strip())
 
     explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
     network_note = (
         "本条为内网书源（bookSourceUrl=LegadoHub-LAN），可与公网书源并存；"
         if is_lan
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
+    )
+    bind_note = (
+        "本源已绑定个人授权码（专属订阅链接）；点登录可自动鉴权，订阅管理无需再输码。"
+        if bound
+        else "导入公共书源后请用授权码登录；管理员也可发放带 code 的专属订阅链接。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
@@ -487,12 +580,13 @@ def _build_source(base_api: str | None = None) -> dict:
         "enabledCookieJar": True,
         "enabledExplore": bool(explore_url),
         "header": "",
-        "loginUi": _login_ui(),
-        "loginUrl": _login_script(base_api),
+        "loginUi": _login_ui(bound_access_code=bound),
+        "loginUrl": _login_script(base_api, access_code=access_code),
         "loginCheckJs": _login_check_script(),
         "bookSourceComment": (
             f"规则版本 {_READER_RULE_VERSION}。"
             f"{network_note}"
+            f"{bind_note}"
             "搜索同时显示已发布共享书和启用的第三方书源；官方源仍只用于后台聚合，"
             "新增订阅及运维操作统一在 Web Console 完成。"
         ),
@@ -604,12 +698,16 @@ def _build_source(base_api: str | None = None) -> dict:
                 "cacheTtlSeconds": 300,
             },
         },
-        "jsLib": _reader_js_lib(base_api),
+        "jsLib": _reader_js_lib(base_api, access_code=access_code),
     }
 
 
-def generate_legado_source(base_api: str | None = None) -> list[dict]:
-    return [_build_source(base_api)]
+def generate_legado_source(
+    base_api: str | None = None,
+    *,
+    access_code: str | None = None,
+) -> list[dict]:
+    return [_build_source(base_api, access_code=access_code)]
 
 
 def write_legado_source() -> str:

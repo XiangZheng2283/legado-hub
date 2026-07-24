@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { queryClient } from "@/lib/query"
 import { AuthProvider, useAuth } from "@/lib/auth"
@@ -15,6 +15,7 @@ import { LibraryChapterDetailPage } from "@/routes/LibraryChapterDetailPage"
 import { UsersPage } from "@/routes/UsersPage"
 
 function ProtectedLayout() {
+  const location = useLocation()
   const { isLoading, isAuthenticated, authError, retryAuth } = useAuth()
   if (isLoading) {
     return (
@@ -41,7 +42,17 @@ function ProtectedLayout() {
     )
   }
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    // Preserve personal ?code= so LoginPage can auto-redeem without re-entry.
+    const params = new URLSearchParams(location.search)
+    const code = (params.get("code") || "").trim()
+    if (code) params.delete("code")
+    const cleanedSearch = params.toString()
+    const nextPath = `${location.pathname}${cleanedSearch ? `?${cleanedSearch}` : ""}`
+    const loginParams = new URLSearchParams()
+    if (nextPath && nextPath !== "/") loginParams.set("next", nextPath)
+    if (code) loginParams.set("code", code)
+    const qs = loginParams.toString()
+    return <Navigate to={qs ? `/login?${qs}` : "/login"} replace />
   }
   return <Outlet />
 }

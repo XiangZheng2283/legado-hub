@@ -1075,8 +1075,38 @@ async def get_subscribed_chapter(request: Request, chapter_id: str):
 
 @router.get("/legado/source")
 @public_router.get("/legado/source")
-def get_legado_source(request: Request) -> list[dict]:
-    return generate_legado_source(get_public_base_url(request))
+def get_legado_source(request: Request, code: str = "") -> list[dict]:
+    """Anonymous book-source JSON, optionally bound to a personal access code.
+
+    ``?code=`` personalizes the source so Reading can auto-login and open the
+    subscription console without re-entering the access code. Invalid codes
+    return 401 (same family as redeem).
+    """
+    from app.core.public_security import request_client_ip
+    from app.services.user_auth import AuthRateLimitError, auth_rate_limiter
+
+    access_code = str(code or "").strip()
+    if access_code:
+        identifier = auth_service.access_code_identifier(access_code)
+        keys = (f"access:ip:{request_client_ip(request)}", f"access:id:{identifier}")
+        try:
+            auth_rate_limiter.check(*keys)
+        except AuthRateLimitError as exc:
+            raise HTTPException(
+                status_code=429,
+                headers={"Retry-After": str(exc.retry_after_seconds)},
+                detail="认证尝试过于频繁",
+            ) from exc
+        try:
+            auth_service.authenticate_access_code(access_code)
+        except HTTPException as exc:
+            if exc.status_code in {401, 403}:
+                auth_rate_limiter.record_failure(*keys)
+            raise
+    return generate_legado_source(
+        get_public_base_url(request),
+        access_code=access_code or None,
+    )
 
 
 @router.get("/legado/search")

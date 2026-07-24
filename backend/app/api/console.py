@@ -3266,6 +3266,31 @@ def list_users(request: Request):
     return {"items": items, "total": len(items)}
 
 
+def _subscription_links_for_access_code(access_code: str, request: Request) -> dict:
+    """Attach personal source/subscription URLs for a just-issued access code."""
+    from app.core.public_security import (
+        effective_public_base_url,
+        get_public_base_url,
+        is_lan_reading_base,
+    )
+
+    public = effective_public_base_url()
+    try:
+        request_base = get_public_base_url(request)
+    except Exception:
+        request_base = ""
+    lan = ""
+    if request_base and is_lan_reading_base(request_base):
+        lan = request_base
+    if not public and request_base and not is_lan_reading_base(request_base):
+        public = request_base
+    return auth_service.build_access_subscription_links(
+        access_code,
+        public_base=public,
+        lan_base=lan,
+    )
+
+
 @console_route("post", "/users")
 def create_user(request: Request, payload: dict):
     admin = auth_service.require_admin(request)
@@ -3275,11 +3300,15 @@ def create_user(request: Request, payload: dict):
     if role == "user":
         if str(payload.get("password", "")):
             raise HTTPException(status_code=422, detail="普通用户由系统生成授权码，不能提交密码")
-        return auth_service.create_access_user(
+        result = auth_service.create_access_user(
             username=username,
             actor_user_id=admin.user_id,
             actor_role=admin.role,
         )
+        code = str(result.get("accessCode") or "")
+        if code:
+            result.update(_subscription_links_for_access_code(code, request))
+        return result
     return auth_service.create_user(
         username=username,
         password=str(payload.get("password", "")),
@@ -3310,11 +3339,15 @@ def reset_user_password(request: Request, user_id: str, payload: dict):
 def reset_user_access_code(request: Request, user_id: str, payload: dict | None = None):
     admin = auth_service.require_admin(request)
     _reject_unknown_fields(payload or {}, set(), label="重置授权码")
-    return auth_service.reset_access_code(
+    result = auth_service.reset_access_code(
         user_id,
         actor_user_id=admin.user_id,
         actor_role=admin.role,
     )
+    code = str(result.get("accessCode") or "")
+    if code:
+        result.update(_subscription_links_for_access_code(code, request))
+    return result
 
 
 @console_route("post", "/users/{user_id}/revoke-sessions")
