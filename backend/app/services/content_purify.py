@@ -15,13 +15,23 @@ logger = logging.getLogger(__name__)
 
 CHAPTER_TITLE_RE = re.compile(r"^(#\s*)?第[一二三四五六七八九十百零\d]+章.*$")
 
+# 6 / 9 separator variants: = ＝ . 。 ． and optional junk (+ ＋ or rare glyphs like ꁘ).
+_SIX_NINE = r"6\s*[=＝.。．]\s*9"
+_BOOK_BA = r"[书書][_＿\s'′]*吧"
+
 # Inline / residual watermarks (full phrases first, then 69 fragments like bare 6=9+).
 INLINE_AD_RES: tuple[re.Pattern[str], ...] = (
     re.compile(
-        r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
+        rf"无错版本在读[！!]?\s*{_SIX_NINE}\s*[+＋]?\s*{_BOOK_BA}\s*首发本小说[。．.]?"
     ),
     re.compile(r"无错版本在读[！!]?"),
-    re.compile(r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"),
+    re.compile(rf"{_SIX_NINE}\s*[+＋]?\s*{_BOOK_BA}\s*首发本小说[。．.]?"),
+    # 更多最新热门小说在6.9ꁘ書吧看！
+    re.compile(
+        rf"更多最新热门小说在\s*{_SIX_NINE}\s*.{{0,4}}{_BOOK_BA}\s*看[！!]?"
+    ),
+    re.compile(rf"最新热门小说在\s*{_SIX_NINE}\s*.{{0,4}}{_BOOK_BA}\s*看[！!]?"),
+    re.compile(r"更多最新热门小说在"),
     # 正确内（容在%六九%书'吧读！{
     re.compile(
         r"正确内[（(]?\s*容在\s*[%％]?\s*六九\s*[%％]?\s*书[''′]?\s*吧\s*读[！!]?\s*[\{｛]?"
@@ -29,10 +39,11 @@ INLINE_AD_RES: tuple[re.Pattern[str], ...] = (
     re.compile(r"正确内[（(]?\s*容在"),
     re.compile(r"[%％]\s*六九\s*[%％]\s*书[''′]?\s*吧"),
     # Residual fragments after partial strip (screenshot: lone line 6=9+)
-    re.compile(r"(?m)^\s*6\s*[=＝]\s*9\s*[+＋]?\s*$"),
-    re.compile(r"6\s*[=＝]\s*9\s*[+＋]"),
+    re.compile(rf"(?m)^\s*{_SIX_NINE}\s*[+＋]?\s*$"),
+    re.compile(rf"{_SIX_NINE}\s*[+＋]"),
+    re.compile(rf"{_SIX_NINE}\s*.{{0,4}}{_BOOK_BA}"),
     re.compile(r"(?m)^\s*[%％]\s*六九\s*[%％]\s*$"),
-    re.compile(r"(?m)^\s*书[_＿'′]?\s*吧\s*$"),
+    re.compile(r"(?m)^\s*[书書][_＿'′]?\s*吧\s*$"),
     re.compile(r"[%％]\s*六九\s*[%％]"),
 )
 
@@ -49,15 +60,18 @@ GLOBAL_AD_PATTERNS: list[str] = [
     # 69 书吧类混淆水印：无错版本在读！6=9+书_吧首发本小说。
     r"无错版本在读",
     r"首发本小说",
-    r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
-    r"新?69\s*书\s*吧",
+    r"更多最新热门小说在",
+    r"热门小说在\s*6",
+    rf"{_SIX_NINE}\s*[+＋]?\s*{_BOOK_BA}",
+    rf"{_SIX_NINE}\s*.{{0,4}}{_BOOK_BA}",
+    r"新?69\s*[书書]\s*吧",
     r"阅读sto55|爱75奇书屋",
     # 正确内（容在%六九%书'吧读！{
     r"正确内.?容在",
     r"[%％]\s*六九\s*[%％]",
-    r"书[''′]?\s*吧\s*读",
-    # Residuals: bare 6=9+ (line containing this fragment is dropped)
-    r"6\s*[=＝]\s*9\s*[+＋]",
+    r"[书書][''′]?\s*吧\s*(?:读|看)",
+    # Residuals: bare 6=9+ / 6.9 (line containing this fragment is dropped)
+    rf"{_SIX_NINE}\s*[+＋]",
 ]
 
 
