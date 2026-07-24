@@ -20,6 +20,8 @@ FULL_CONTENT_MIN_LENGTH = 200
 HEAD_PREVIEW_SIMILARITY_THRESHOLD = 0.35
 RELAXED_PREVIEW_SIMILARITY_THRESHOLD = 0.50
 RELAXED_HEAD_PREVIEW_SIMILARITY_THRESHOLD = 0.50
+CROSS_SOURCE_CONTENT_SIMILARITY_THRESHOLD = 0.72
+CROSS_SOURCE_COMPARE_MAX = 3000
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -159,6 +161,14 @@ def _sliding_preview_similarity(preview: str, candidate_content: str) -> float:
         sim = SequenceMatcher(None, norm_preview, window, autojunk=False).ratio()
         best = max(best, sim)
     return best
+
+
+def cross_source_content_similarity(left: str, right: str) -> float:
+    """Compare candidate bodies while preserving sentence order."""
+    return _sequence_similarity(
+        str(left or "")[:CROSS_SOURCE_COMPARE_MAX],
+        str(right or "")[:CROSS_SOURCE_COMPARE_MAX],
+    )
 
 
 # ── classification ───────────────────────────────────────────────────────────

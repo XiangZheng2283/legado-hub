@@ -85,7 +85,7 @@ DEFAULT_CONTENT_WORKFLOW: dict[str, Any] = {
     "processAggregateOnRead": True,
     "aggregateCheckIntervalMinutes": 30,
     "returnOnlyAggregateSource": False,
-    "sourceCandidateLimit": 6,
+    "sourceCandidateLimit": 0,  # 0 表示所有启用候选源参与交叉比对。
     "purifyMode": "conservative",
     "primarySourceMode": "official",
     # Empty by default: do not pre-seed qidian_com_app (often absent / gitignored).

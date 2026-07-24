@@ -883,8 +883,8 @@ def test_candidate_toc_search_uses_index_window(tmp_path, monkeypatch):
     assert not any(f"{i}.html" in url for url in decoded_urls for i in [1, 2, 8, 9, 10, 20])
 
 
-def test_stage2_uses_highest_priority_source_first_and_stops_on_success(tmp_path, monkeypatch):
-    """Stage 2 should try the highest-priority source first and stop once one readable supplement succeeds."""
+def test_stage2_reads_all_candidates_and_keeps_priority_with_consensus(tmp_path, monkeypatch):
+    """Stage 2 should compare every valid candidate before selecting a consensus."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_first_source"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -932,11 +932,36 @@ def test_stage2_uses_highest_priority_source_first_and_stops_on_success(tmp_path
     assert row["alignment"]["candidateSourceId"] == "candidate_a"
     assert row["fallbackSourceId"] == "candidate_a"
     assert any(chapter_id.startswith("candidate_a") for chapter_id in fetched_candidate_ids)
-    assert not any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
+    assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
 
 
-def test_stage2_continues_to_next_source_when_first_source_is_invalid(tmp_path, monkeypatch):
-    """Stage 2 should skip an invalid first source and accept the next readable supplement result."""
+def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
+    processor = AggregateProcessor(db_path=tmp_path / "test.db")
+    opening = "冬日阴云，寒风阵阵。季觉站在寥落破败的厂区前面，鼓起勇气发问。"
+    paragraphs = [
+        opening,
+        "中年人即答，告诉他欢迎进厂。",
+        "而季觉的神情顿时一言难尽起来。",
+        "延建带着大家召开了第一次重组会议。",
+        "所有人开始讨论生产线的具体问题。",
+    ]
+    ordered = "\n\n".join(paragraphs * 12)
+    disordered = "\n\n".join([
+        paragraphs[0], paragraphs[3], paragraphs[1], paragraphs[4], paragraphs[2],
+    ] * 12)
+
+    selected, consensus = processor._select_consistent_candidate([
+        {"source_id": "scrambled", "content": disordered, "alignment_json": {}},
+        {"source_id": "normal_a", "content": ordered, "alignment_json": {}},
+        {"source_id": "normal_b", "content": ordered, "alignment_json": {}},
+    ])
+
+    assert selected and selected["source_id"] == "normal_a"
+    assert next(item for item in consensus if item["sourceId"] == "scrambled")["supportCount"] == 0
+
+
+def test_stage2_keeps_preview_when_only_one_candidate_is_valid(tmp_path, monkeypatch):
+    """A lone supplement cannot establish that its sentence order is trustworthy."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_second_source"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -979,14 +1004,14 @@ def test_stage2_continues_to_next_source_when_first_source_is_invalid(tmp_path, 
     row = _get_chapter_row(db_path, ch_id)
     assert row["status"] == "fallback"
     assert row["content"] != ""
-    assert row["alignment"]["candidateSourceId"] == "candidate_b"
-    assert row["fallbackSourceId"] == "candidate_b"
+    assert row["alignment"]["candidateSourceId"] == ""
+    assert row["previewOnly"] is True
     assert any(chapter_id.startswith("candidate_a") for chapter_id in fetched_candidate_ids)
     assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
 
 
-def test_stage2_can_match_nearby_index_when_title_drift_is_severe(tmp_path, monkeypatch):
-    """When candidate titles drift badly, Stage 2 should still try nearby TOC entries and let preview alignment decide."""
+def test_stage2_keeps_preview_for_solitary_nearby_title_match(tmp_path, monkeypatch):
+    """A nearby-title match still needs an independent content confirmation."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_nearby_index_drift"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -1029,9 +1054,10 @@ def test_stage2_can_match_nearby_index_when_title_drift_is_severe(tmp_path, monk
 
     row = _get_chapter_row(db_path, ch_id)
     assert row["status"] == "fallback"
-    assert row["alignment"]["candidateSourceId"] == "candidate_src"
-    assert row["fallbackSourceId"] == "candidate_src"
-    assert len(row["content"]) > len(preview)
+    assert row["alignment"]["candidateSourceId"] == ""
+    assert row["previewOnly"] is True
+    assert row["fallbackSourceId"] == "official_src"
+    assert row["content"] == preview
 
 
 def test_stage2_rejects_candidate_that_is_not_longer_than_official_preview(tmp_path, monkeypatch):

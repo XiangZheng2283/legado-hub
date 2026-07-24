@@ -155,16 +155,32 @@ def test_legado_source_release_ignores_stale_runtime_version_and_updates_client_
         lambda: {"version": "0.0.1"},
     )
 
+    # testserver is treated as LAN/local (same as localhost).
     source = legado_source.generate_legado_source("http://testserver")[0]
 
-    assert source["bookSourceName"] == f"LegadoHub 聚合({legado_source._READER_RULE_VERSION})"
-    assert source["bookSourceUrl"] == "LegadoHub"
+    assert source["bookSourceName"] == (
+        f"LegadoHub 聚合·内网({legado_source._READER_RULE_VERSION})"
+    )
+    assert source["bookSourceUrl"] == "LegadoHub-LAN"
+    assert "内网" in source["bookSourceGroup"]
     assert source["lastUpdateTime"] >= legado_source._reader_rule_version_stamp()
     assert f"规则版本 {legado_source._READER_RULE_VERSION}" in source["bookSourceComment"]
+    assert "LegadoHub-LAN" in source["bookSourceComment"]
     assert (
         f'LEGADOHUB_RULE_VERSION = "{legado_source._READER_RULE_VERSION}"' in source["jsLib"]
     )
     assert source["lastUpdateTime"] > 1_700_000_000_000
+
+    public = legado_source.generate_legado_source("https://books.example.com")[0]
+    assert public["bookSourceName"] == f"LegadoHub 聚合({legado_source._READER_RULE_VERSION})"
+    assert public["bookSourceUrl"] == "LegadoHub"
+    assert public["bookSourceUrl"] != source["bookSourceUrl"]
+    assert "内网" not in public["bookSourceName"]
+    assert "公网书源" in public["bookSourceComment"]
+
+    lan_ip = legado_source.generate_legado_source("http://192.168.1.10:8765")[0]
+    assert lan_ip["bookSourceUrl"] == "LegadoHub-LAN"
+    assert "·内网" in lan_ip["bookSourceName"]
 
 
 def test_legado_source_update_marker_advances_with_comment_settings(tmp_path, monkeypatch):

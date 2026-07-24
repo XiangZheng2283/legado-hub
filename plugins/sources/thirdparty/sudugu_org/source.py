@@ -14,7 +14,7 @@ class Source:
     id = "sudugu_org"
     name = "速读谷"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-24"
     base_url = "https://www.sudugu.org"
 
     async def search(self, ctx, keyword: str, page: int):
@@ -130,9 +130,8 @@ class Source:
 
     def _chapter_stem(self, url: str) -> str:
         path = url.split("?")[0].split("#")[0]
-        if "_" in path:
-            return path.rsplit("_", 1)[0]
-        return path.rsplit(".", 1)[0] if "." in path else path
+        stem = path.rsplit(".", 1)[0] if "." in path else path
+        return re.sub(r"[-_]\d+$", "", stem)
 
     def _clean_chapter_content(self, html: str) -> str:
         soup = BeautifulSoup(html or "", "html.parser")

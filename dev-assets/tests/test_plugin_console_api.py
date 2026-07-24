@@ -736,6 +736,8 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
         assert not get_public_base_url().startswith("https://book.example.com")
         source = generate_legado_source("http://192.168.1.10:8765")[0]
         assert source["searchUrl"].startswith("http://192.168.1.10:8765/")
+        assert source["bookSourceUrl"] == "LegadoHub-LAN"
+        assert "·内网" in source["bookSourceName"]
 
         # 127.0.0.1 is a default trusted proxy, so X-Forwarded-Proto is honored.
         public_scope = {
@@ -759,6 +761,8 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
         assert get_public_base_url(public_request) == "https://book.example.com:2087"
         public_source = generate_legado_source(get_public_base_url(public_request))[0]
         assert public_source["searchUrl"].startswith("https://book.example.com:2087/")
+        assert public_source["bookSourceUrl"] == "LegadoHub"
+        assert "·内网" not in public_source["bookSourceName"]
 
         foreign_scope = dict(public_scope)
         foreign_scope["headers"] = [

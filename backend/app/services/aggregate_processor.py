@@ -2162,6 +2162,7 @@ class AggregateProcessor:
             official_word_count = 0
 
         attempted_source_ids: list[str] = []
+        accepted_candidates: list[dict[str, Any]] = []
 
         for cand in candidates:
             cand_source_id = cand.get("sourceId", "")
@@ -2451,23 +2452,24 @@ class AggregateProcessor:
                             )
                             continue
 
+                    accepted_candidates.append({
+                        "content": cand_content,
+                        "source_id": cand_source_id,
+                        "alignment_json": alignment_json,
+                    })
                     self._log_chapter_step(
                         aggregate_book_id=aggregate_book_id,
                         chapter_index=target_index,
                         title=target_title,
-                        event="candidate_accepted",
+                        event="candidate_validated",
                         stage="stage2",
                         payload={
-                            "step": "候选章节通过校验",
+                            "step": "候选章节通过单源校验，等待交叉比对",
                             "sourceId": cand_source_id,
                             "contentLength": len(cand_content or ""),
                         },
                     )
-                    return {
-                        "content": cand_content,
-                        "source_id": cand_source_id,
-                        "alignment_json": alignment_json,
-                    }
+                    break
                 except Exception as exc:
                     self._log_chapter_step(
                         aggregate_book_id=aggregate_book_id,
@@ -2515,6 +2517,38 @@ class AggregateProcessor:
                         }
                     continue
 
+        selected_candidate, consensus = self._select_consistent_candidate(accepted_candidates)
+        if selected_candidate:
+            alignment_json = dict(selected_candidate["alignment_json"])
+            alignment_json["crossSourceConsensus"] = consensus
+            selected_candidate["alignment_json"] = alignment_json
+            self._log_chapter_step(
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=target_index,
+                title=target_title,
+                event="candidate_accepted",
+                stage="stage2",
+                payload={
+                    "step": "候选章节通过交叉比对",
+                    "sourceId": selected_candidate["source_id"],
+                    "contentLength": len(selected_candidate["content"] or ""),
+                    "consensus": consensus,
+                },
+            )
+            return selected_candidate
+        if accepted_candidates:
+            self._log_chapter_step(
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=target_index,
+                title=target_title,
+                event="candidate_consensus_failed",
+                stage="stage2",
+                payload={
+                    "step": "候选正文缺少交叉比对支持，拒绝发布",
+                    "sourceIds": [item["source_id"] for item in accepted_candidates],
+                    "consensus": consensus,
+                },
+            )
         if attempted_source_ids:
             self._log_chapter_step(
                 aggregate_book_id=aggregate_book_id,
@@ -2540,6 +2574,43 @@ class AggregateProcessor:
             payload={"step": "没有可用候选源"},
         )
         return None
+
+    def _select_consistent_candidate(
+        self,
+        candidates: list[dict[str, Any]],
+    ) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+        """Select the earliest candidate supported by another ordered body."""
+        from app.services.aggregate_alignment import (
+            CROSS_SOURCE_CONTENT_SIMILARITY_THRESHOLD,
+            cross_source_content_similarity,
+        )
+
+        consensus: list[dict[str, Any]] = []
+        ranked: list[tuple[int, float, int, dict[str, Any]]] = []
+        for index, candidate in enumerate(candidates):
+            scores: list[float] = []
+            peers: list[str] = []
+            for peer in candidates:
+                if peer is candidate:
+                    continue
+                score = cross_source_content_similarity(
+                    candidate.get("content", ""), peer.get("content", "")
+                )
+                if score >= CROSS_SOURCE_CONTENT_SIMILARITY_THRESHOLD:
+                    scores.append(score)
+                    peers.append(str(peer.get("source_id", "")))
+            consensus.append({
+                "sourceId": candidate.get("source_id", ""),
+                "supportingSourceIds": peers,
+                "supportCount": len(peers),
+                "averageSimilarity": round(sum(scores) / len(scores), 4) if scores else 0.0,
+            })
+            if scores:
+                ranked.append((len(scores), sum(scores) / len(scores), index, candidate))
+        if not ranked:
+            return None, consensus
+        ranked.sort(key=lambda item: (-item[0], -item[1], item[2]))
+        return ranked[0][3], consensus
 
     def _match_candidate_toc_entries(
         self,
