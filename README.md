@@ -261,6 +261,14 @@ Set-Location ../backend
 
 ---
 
+## 友情链接
+
+- [LuckyIsland](https://github.com/thisxiaoyuQAQ/LuckyIsland) — Windows 灵动岛式桌面胶囊
+- [LINUX DO](https://linux.do/) — 社区论坛
+- [LINUX DO Credit](https://credit.linux.do/) — 积分乐园
+
+---
+
 ## 许可
 
 本仓库当前未附带 `LICENSE` 文件。在作者明确声明许可协议前，请勿默认按开源许可再分发或商用。
