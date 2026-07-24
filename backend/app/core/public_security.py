@@ -163,32 +163,39 @@ class PublicSecurityConfig:
 
 
 def load_public_security_config() -> PublicSecurityConfig:
-    configured_base = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip().rstrip("/")
-    dynamic_base_url = not configured_base
-    base_url, base_host = _origin(
-        configured_base or f"http://{config.HOST}:{config.PORT}",
-        label="LEGADOHUB_PUBLIC_BASE_URL",
+    """Reader security: Host is taken from the request; no PUBLIC_BASE_URL env.
+
+    Optional ``LEGADOHUB_ALLOWED_HOSTS`` / ``_ORIGINS`` still enable TrustedHost
+    and cookie Origin checks for locked-down deploys. Optional
+    ``LEGADOHUB_REQUIRE_HTTPS=1`` forces HTTPS. Public book-source link base is
+    only ``readingAccess.publicBaseUrl`` in AppConfig (settings UI).
+    """
+    base_url, _base_host = _origin(
+        f"http://{config.HOST}:{config.PORT}",
+        label="default reader base",
     )
-    require_https = base_url.startswith("https://")
 
     hosts = _csv("LEGADOHUB_ALLOWED_HOSTS")
-    if not hosts:
-        hosts = [] if dynamic_base_url else [base_host, "localhost", "testserver"]
     normalized_hosts: list[str] = []
     for host in hosts:
         normalized = _normalize_host(host)
         if not normalized or "*" in normalized or not _valid_host(normalized):
             raise RuntimeError("LEGADOHUB_ALLOWED_HOSTS must contain exact host names without wildcards.")
         normalized_hosts.append(normalized)
-    if not dynamic_base_url and base_host not in normalized_hosts:
-        raise RuntimeError("LEGADOHUB_ALLOWED_HOSTS must include the public base URL host.")
 
     origin_values = _csv("LEGADOHUB_ALLOWED_ORIGINS")
-    if not origin_values and not dynamic_base_url:
-        origin_values = [base_url]
-    origins = frozenset(_origin(value.rstrip("/"), label="LEGADOHUB_ALLOWED_ORIGINS")[0] for value in origin_values)
-    if not dynamic_base_url and base_url not in origins:
-        raise RuntimeError("LEGADOHUB_ALLOWED_ORIGINS must include LEGADOHUB_PUBLIC_BASE_URL.")
+    origins = frozenset(
+        _origin(value.rstrip("/"), label="LEGADOHUB_ALLOWED_ORIGINS")[0]
+        for value in origin_values
+    )
+
+    require_https = os.getenv("LEGADOHUB_REQUIRE_HTTPS", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    if not require_https and origins:
+        require_https = all(item.startswith("https://") for item in origins)
 
     proxy_values = _csv("LEGADOHUB_TRUSTED_PROXIES") or ["127.0.0.1/32", "::1/128"]
     trusted_proxies = _networks(proxy_values)
@@ -197,10 +204,10 @@ def load_public_security_config() -> PublicSecurityConfig:
         allowed_hosts=tuple(dict.fromkeys(normalized_hosts)),
         allowed_origins=origins,
         trusted_proxies=trusted_proxies,
-        dynamic_base_url=dynamic_base_url,
+        dynamic_base_url=True,
         require_https=require_https,
-        enforce_origin=require_https,
-        enforce_reading_public_allowlist=True,
+        enforce_origin=require_https or bool(origins),
+        enforce_reading_public_allowlist=False,
     )
 
 
@@ -348,7 +355,7 @@ def parse_public_base_urls(raw: str) -> list[str]:
 
 
 def settings_public_base_urls() -> list[str]:
-    """``readingAccess.publicBaseUrl`` as ordered list (settings may list many ports)."""
+    """``readingAccess.publicBaseUrl`` from settings (single origin → 0..1 items)."""
     try:
         from app.core.app_config import AppConfig
 
@@ -359,42 +366,35 @@ def settings_public_base_urls() -> list[str]:
 
 
 def settings_public_base_url() -> str:
-    """Primary public origin from settings (first listed), or empty."""
+    """Configured 公网书源地址 from settings UI, or empty."""
     urls = settings_public_base_urls()
     return urls[0] if urls else ""
 
 
-def env_public_base_urls() -> list[str]:
-    """Deploy-time bootstrap origins from ``LEGADOHUB_PUBLIC_BASE_URL``."""
-    raw = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip()
-    return parse_public_base_urls(raw)
-
-
-def env_public_base_url() -> str:
-    """Primary deploy-time bootstrap origin (first listed)."""
-    urls = env_public_base_urls()
-    return urls[0] if urls else ""
-
-
 def effective_public_base_urls() -> list[str]:
-    """Configured public origins: **settings list > env list**. Empty = LAN-only."""
-    settings = settings_public_base_urls()
-    if settings:
-        return settings
-    return env_public_base_urls()
+    """Configured public book-source origins (settings only)."""
+    return settings_public_base_urls()
 
 
 def effective_public_base_url() -> str:
-    """Primary configured public origin: **settings > env**. Empty = LAN-only public Hosts.
+    """Primary **公网书源地址** for issued links (settings only).
 
-    Used for preferred issued links. Full allowlist is
-    ``effective_public_base_urls()`` / ``reading_public_base_allowlist()``.
+    Empty means issued-link UI falls back to request Host / LAN only.
+    Does **not** gate HTTP Host acceptance.
     """
-    urls = effective_public_base_urls()
-    return urls[0] if urls else ""
+    return settings_public_base_url()
 
 
 def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
+    """Resolve request origin from Host / forwarded proto.
+
+    Public Host access control is **not** enforced here — put perimeter rules
+    on reverse proxy / WAF (e.g. 雷池). Optional ``readingAccess.publicBaseUrl``
+    only affects preferred issued book-source links, not whether a Host is served.
+
+    LAN Host spoofing from a public peer is still rejected so generated
+    book-source bases cannot be forced to private IPs over the Internet.
+    """
     scheme = "https" if security.request_is_https(request) else request.url.scheme.lower()
     if scheme not in {"http", "https"}:
         raise RuntimeError("Request scheme is not HTTP(S).")
@@ -402,69 +402,98 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
         f"{scheme}://{request.headers.get('host', '').strip()}",
         label="Host",
     )
-    # LAN / local Hosts: no registration needed, but the peer must still be
-    # local/private (or an unnamed test transport). Public clients cannot spoof
-    # a LAN Host from the Internet.
+    # Reject unusable IP literals (not an access allowlist — just invalid Hosts).
+    try:
+        address = ipaddress.ip_address(host)
+        if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
+            address = address.ipv4_mapped
+        if address.is_unspecified or address.is_multicast:
+            raise RuntimeError("Host is not allowed")
+    except ValueError:
+        pass
+
     if _is_default_allowed_host(host):
         client_allowed = _dynamic_host_client_allowed(request)
         if client_allowed is False:
             raise RuntimeError(
-                "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
+                "LAN Host requires a local/private client address."
             )
         return origin
 
-    # Public Hostnames (domain / public IP Host): must match settings>env
-    # allowlist. Once allowlisted, any client IP may reach the reader entry
-    # (APIs remain behind auth codes). Enables public VPS without a private peer.
+    # Public domain / public IP Host: accept any valid origin (auth still required
+    # for APIs). Perimeter filtering is operator-owned (WAF / 雷池 / firewall).
+    # Legacy allowlist flag kept for forks that re-enable it.
     if security.enforce_reading_public_allowlist:
         allowlist = reading_public_base_allowlist()
-        if not allowlist or origin not in allowlist:
+        if not allowlist or not public_origin_is_allowlisted(origin, allowlist):
             raise RuntimeError("Public Host is not allowlisted")
         return origin
 
-    client_allowed = _dynamic_host_client_allowed(request)
-    if client_allowed is False or client_allowed is None:
-        raise RuntimeError(
-            "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
-        )
     return origin
 
 
 def reading_public_base_allowlist() -> frozenset[str]:
     """Public origins allowed for reading Host: settings UI > env bootstrap.
 
-    Supports multiple origins (different ports / reverse-proxy vs direct).
-    Empty means only LAN/local Hosts are accepted under dynamic mode.
+    Supports multiple origins. Prefer portless HTTPS/HTTP (443/80); non-default
+    ports remain valid when explicitly listed. Empty means only LAN/local Hosts
+    are accepted under dynamic mode.
     """
     return frozenset(effective_public_base_urls())
+
+
+def public_origin_is_allowlisted(origin: str, allowlist: frozenset[str] | None = None) -> bool:
+    """True if request origin is allowed for public reading Host checks.
+
+    Matching rules (after normalization):
+    1. Exact origin match (scheme + host + non-default port).
+    2. Same scheme + host as any allowlisted origin — **port ignored**.
+       So listing ``https://book.example.com`` also allows ``:2087`` reverse
+       proxies and direct ``:8765`` on that hostname.
+    """
+    allowed = allowlist if allowlist is not None else reading_public_base_allowlist()
+    if not allowed:
+        return False
+    try:
+        request_origin = normalize_public_base_url(origin)
+    except RuntimeError:
+        return False
+    if request_origin in allowed:
+        return True
+    try:
+        req_parts = urlsplit(request_origin)
+        req_host = _normalize_host(req_parts.hostname or "")
+        req_scheme = (req_parts.scheme or "").lower()
+    except Exception:
+        return False
+    if not req_host or req_scheme not in {"http", "https"}:
+        return False
+    for item in allowed:
+        try:
+            parts = urlsplit(item)
+            host = _normalize_host(parts.hostname or "")
+            scheme = (parts.scheme or "").lower()
+        except Exception:
+            continue
+        if host and host == req_host and scheme == req_scheme:
+            return True
+    return False
 
 
 def get_public_base_url(request: Request | None = None) -> str:
     """Resolve the reading base for this request (or offline default).
 
-    Priority:
-    1. Dynamic mode: request Host (+ trusted ``X-Forwarded-Proto``), subject to
-       public-host allowlist (settings ``publicBaseUrl`` > env).
-    2. Fixed mode (env ``LEGADOHUB_PUBLIC_BASE_URL`` at process start): return
-       **settings > env** so UI can override the deploy variable without rebuild.
-    3. Offline/script: fixed settings/env when present, else process default base.
-       Does not invent a public origin solely from allowlist when unset.
+    With a request: use Host / trusted forwarded proto (dynamic).
+    Offline: process default base (not the settings 公网书源地址 — that is only
+    for issued subscription links via ``effective_public_base_url``).
     """
     security = (
         getattr(request.app.state, "public_security", None)
         if request is not None
         else None
     ) or load_public_security_config()
-    configured = effective_public_base_url()
     if request is not None:
-        if security.dynamic_base_url:
-            return _request_origin(request, security)
-        # Fixed TrustedHost deploy: settings override env-loaded base.
-        return configured or security.public_base_url
-    if not security.dynamic_base_url:
-        return configured or security.public_base_url
-    # Offline + dynamic: do not force settings/env into offline generators unless
-    # a fixed env base was baked into security at process start (already handled).
+        return _request_origin(request, security)
     return security.public_base_url
 
 

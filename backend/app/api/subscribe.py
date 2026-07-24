@@ -1076,40 +1076,42 @@ async def get_subscribed_chapter(request: Request, chapter_id: str):
 @router.get("/legado/source")
 @public_router.get("/legado/source")
 def get_legado_source(request: Request, code: str = "") -> list[dict]:
-    """Anonymous book-source JSON, optionally bound to a personal access code.
+    """Personal book-source JSON bound to a user access code.
 
-    ``?code=`` personalizes the source so Reading can auto-login and open the
-    subscription console without re-entering the access code. Invalid codes
+    Requires ``?code=`` (no anonymous/public source export). Invalid codes
     return 401 (same family as redeem).
     """
-    from app.core.public_security import request_client_ip
+    from app.core.public_security import reading_base_url, request_client_ip
     from app.services.user_auth import AuthRateLimitError, auth_rate_limiter
 
     access_code = str(code or "").strip()
-    if access_code:
-        identifier = auth_service.access_code_identifier(access_code)
-        keys = (f"access:ip:{request_client_ip(request)}", f"access:id:{identifier}")
-        try:
-            auth_rate_limiter.check(*keys)
-        except AuthRateLimitError as exc:
-            raise HTTPException(
-                status_code=429,
-                headers={"Retry-After": str(exc.retry_after_seconds)},
-                detail="认证尝试过于频繁",
-            ) from exc
-        try:
-            auth_service.authenticate_access_code(access_code)
-        except HTTPException as exc:
-            if exc.status_code in {401, 403}:
-                auth_rate_limiter.record_failure(*keys)
-            raise
-    from app.core.public_security import reading_base_url
+    if not access_code:
+        raise HTTPException(
+            status_code=401,
+            detail="请使用管理员发放的专属书源链接（需带 code 参数）",
+        )
+    identifier = auth_service.access_code_identifier(access_code)
+    keys = (f"access:ip:{request_client_ip(request)}", f"access:id:{identifier}")
+    try:
+        auth_rate_limiter.check(*keys)
+    except AuthRateLimitError as exc:
+        raise HTTPException(
+            status_code=429,
+            headers={"Retry-After": str(exc.retry_after_seconds)},
+            detail="认证尝试过于频繁",
+        ) from exc
+    try:
+        auth_service.authenticate_access_code(access_code)
+    except HTTPException as exc:
+        if exc.status_code in {401, 403}:
+            auth_rate_limiter.record_failure(*keys)
+        raise
 
     # Always bake the reader entrypoint (8765), never admin (8766) — access/enter
     # and Reading APIs only exist on the public listener.
     return generate_legado_source(
         reading_base_url(request),
-        access_code=access_code or None,
+        access_code=access_code,
     )
 
 

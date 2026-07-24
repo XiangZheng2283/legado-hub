@@ -370,23 +370,23 @@ export function SettingsPage() {
 
         <TabsContent value="reading" className={tabPanelClass}>
           <SettingsCard
-            title="公网访问白名单"
-            description="仅登记后的公网 origin 可通过域名/反代访问并生成书源。优先级：此处设置 > 环境变量 LEGADOHUB_PUBLIC_BASE_URL > 仅局域网。留空且无环境变量时只允许局域网 Host。"
+            title="公网书源地址"
+            description="用于生成专属书源里的公网地址，否则只生成局域网链接。不拦截访问；公网入口请用雷池/防火墙控制。"
           >
             <SettingRow
-              title="允许的公网地址"
-              description="可填多个 origin（含端口），每行一个或用逗号分隔。第一项用作默认书源/订阅链接，全部进入访问白名单。不要带路径。"
+              title="公网书源地址"
+              description="单个 origin，含协议；非 80/443 请写端口。不要带路径。"
             >
-              <textarea
-                className={`${settingsInputClass} min-h-[88px] resize-y py-2 font-mono text-xs leading-relaxed`}
-                aria-label="对外访问基址"
-                placeholder={"https://book.example.com:2087\nhttp://203.0.113.10:8765"}
+              <Input
+                className={settingsInputClass}
+                aria-label="公网书源地址"
+                placeholder="https://book.example.com:2087"
                 value={readingAccess.publicBaseUrl ?? ""}
                 onChange={(event) => setLocal({ readingAccess: { ...readingAccess, publicBaseUrl: event.target.value } })}
               />
             </SettingRow>
             <p className="mt-3 text-xs text-slate-500">
-              示例：反代端口与直连端口可同时登记。局域网 Host 无需填写。优先级：此处设置 &gt; 环境变量 &gt; 仅局域网。改完立即生效。
+              示例：<code className="text-[11px]">https://book.example.com:2087</code>。改完立即生效。
             </p>
           </SettingsCard>
           <SettingsCard title="章节评论入口" description="控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。">

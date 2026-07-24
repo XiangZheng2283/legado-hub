@@ -89,7 +89,12 @@ def test_legado_manifest_is_anonymous_but_reading_requires_valid_bearer(client):
     from app.services.user_auth import auth_service
 
     anonymous = TestClient(app)
-    manifest = anonymous.get("/api/subscribe/legado/source")
+    assert anonymous.get("/api/subscribe/legado/source").status_code == 401
+    created = auth_service.create_access_user(f"source-{uuid.uuid4().hex[:8]}")
+    manifest = anonymous.get(
+        "/api/subscribe/legado/source",
+        params={"code": created["accessCode"]},
+    )
     assert manifest.status_code == 200
     assert manifest.json()[0]["loginUi"]
 
@@ -1090,9 +1095,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
 ):
     import sqlite3
 
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "http://testserver")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "testserver")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "http://testserver")
+    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
 
     from app.core.legado_source import generate_legado_source
     from app.services.library_books import make_library_book_id

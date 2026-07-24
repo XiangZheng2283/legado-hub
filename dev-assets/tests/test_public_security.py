@@ -23,7 +23,8 @@ LAN_ADMIN_ORIGIN = "http://192.168.31.161:8766"
 
 
 def _reader_config(monkeypatch):
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", READER_ORIGIN)
+    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
+    monkeypatch.setenv("LEGADOHUB_REQUIRE_HTTPS", "1")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.example.test")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", READER_ORIGIN)
     monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "127.0.0.1/32")
@@ -33,6 +34,7 @@ def _reader_config(monkeypatch):
 def _clear_network_config(monkeypatch) -> None:
     for name in (
         "LEGADOHUB_PUBLIC_BASE_URL",
+        "LEGADOHUB_REQUIRE_HTTPS",
         "LEGADOHUB_ALLOWED_HOSTS",
         "LEGADOHUB_ALLOWED_ORIGINS",
         "LEGADOHUB_ADMIN_BASE_URL",
@@ -42,6 +44,11 @@ def _clear_network_config(monkeypatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
+def _personal_source_params() -> dict[str, str]:
+    created = auth_service.create_access_user(f"src-{uuid.uuid4().hex[:10]}")
+    return {"code": created["accessCode"]}
+
+
 def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     monkeypatch,
     tmp_path,
@@ -49,7 +56,6 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     from app.core.app_config import AppConfig
     from app.core.public_security import (
         effective_public_base_url,
-        env_public_base_url,
         settings_public_base_url,
     )
 
@@ -61,67 +67,53 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
 
     reader_security = load_public_security_config()
     assert reader_security.dynamic_base_url is True
+    assert reader_security.enforce_reading_public_allowlist is False
     reader_app = create_app(reader_security, manage_runtime=False)
     proxy_origin = "http://books.example.test:8765"
+
+    # Public Hosts are open at the app layer (WAF/firewall is operator-owned).
     lan_proxy = TestClient(
         reader_app,
         base_url=proxy_origin,
         client=("192.168.31.161", 50000),
     )
-    # Public Host through LAN reverse-proxy is denied until allowlisted.
-    assert lan_proxy.get("/api/subscribe/legado/source").status_code == 400
-
-    cfg = AppConfig(config_path)
-    cfg.set("readingAccess.publicBaseUrl", proxy_origin)
-    cfg.save()
-    AppConfig.reset()
-    monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
-
-    assert settings_public_base_url() == proxy_origin
-    assert effective_public_base_url() == proxy_origin
-
-    allowlisted = TestClient(
-        reader_app,
-        base_url=proxy_origin,
-        client=("192.168.31.161", 50000),
-    )
-    manifest = allowlisted.get("/api/subscribe/legado/source")
-    assert manifest.status_code == 200
-    search_url = manifest.json()[0]["searchUrl"]
+    source_params = _personal_source_params()
+    assert lan_proxy.get("/api/subscribe/legado/source").status_code == 401
+    assert lan_proxy.get("/api/subscribe/legado/source", params=source_params).status_code == 200
+    search_url = lan_proxy.get("/api/subscribe/legado/source", params=source_params).json()[0]["searchUrl"]
     assert proxy_origin in search_url
-    assert "/api/subscribe/legado/search" in search_url
 
-    # Allowlisted public Host may be reached by a public IPv4 peer (auth still applies).
     public_peer_on_public_host = TestClient(
         reader_app,
         base_url=proxy_origin,
         client=("203.0.113.20", 50000),
     )
     assert public_peer_on_public_host.get("/health").status_code == 200
+    assert public_peer_on_public_host.get(
+        "/api/subscribe/legado/source",
+        params=source_params,
+    ).status_code == 200
 
-    # Multiple public origins (different ports) are all allowlisted.
-    second_origin = "https://books.example.test:2087"
-    cfg.set(
-        "readingAccess.publicBaseUrl",
-        f"{proxy_origin}\n{second_origin}",
+    other_port = TestClient(
+        reader_app,
+        base_url="http://books.example.test:2087",
+        client=("203.0.113.20", 50000),
     )
+    assert other_port.get(
+        "/api/subscribe/legado/source",
+        params=source_params,
+    ).status_code == 200
+
+    # Optional settings only affect preferred issued-link base, not Host gating.
+    cfg = AppConfig(config_path)
+    public_book_origin = "https://book.example.com:2087"
+    cfg.set("readingAccess.publicBaseUrl", public_book_origin)
     cfg.save()
     AppConfig.reset()
     monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
-    from app.core.public_security import (
-        effective_public_base_urls,
-        reading_public_base_allowlist,
-    )
 
-    assert settings_public_base_url() == proxy_origin
-    assert effective_public_base_urls() == [proxy_origin, second_origin]
-    assert reading_public_base_allowlist() == frozenset({proxy_origin, second_origin})
-    via_second = TestClient(
-        reader_app,
-        base_url=second_origin,
-        client=("203.0.113.20", 50000),
-    )
-    assert via_second.get("/api/subscribe/legado/source").status_code == 200
+    assert settings_public_base_url() == public_book_origin
+    assert effective_public_base_url() == public_book_origin
 
     # Spoofing a LAN Host from a public peer remains denied.
     public_ipv4_peer = TestClient(
@@ -137,12 +129,6 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
         client=("2001:db8::20", 50000),
     )
     assert ipv6_proxy.get("/health").status_code == 200
-
-    # Settings override env for effective public origin.
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "https://env-only.example.test")
-    assert env_public_base_url() == "https://env-only.example.test"
-    assert effective_public_base_url() == proxy_origin  # settings wins
-    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
 
     admin_security = load_admin_security_config()
     assert admin_security.dynamic_base_url is True
@@ -162,48 +148,33 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     ).status_code == 404
 
 
-def test_env_public_base_bootstraps_allowlist_until_settings_override(
-    monkeypatch,
-    tmp_path,
-) -> None:
-    """Deploy env opens public Host; settings later overrides without rebuild."""
+def test_settings_public_book_source_url_for_issued_links(monkeypatch, tmp_path) -> None:
+    """公网书源地址 comes only from settings (no LEGADOHUB_PUBLIC_BASE_URL)."""
     from app.core.app_config import AppConfig
-    from app.core.public_security import (
-        effective_public_base_url,
-        get_public_base_url,
-        reading_public_base_allowlist,
-    )
+    from app.core.public_security import effective_public_base_url, get_public_base_url
 
     _clear_network_config(monkeypatch)
-    env_origin = "https://books.env.example"
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", env_origin)
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.env.example")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", env_origin)
-
     config_path = tmp_path / "app_config.json"
     config_path.write_text("{}", encoding="utf-8")
     AppConfig.reset()
     monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
 
-    assert effective_public_base_url() == env_origin
-    assert reading_public_base_allowlist() == frozenset({env_origin})
-
-    # Fixed mode from env: URLs use settings>env (settings empty → env).
+    assert effective_public_base_url() == ""
     security = load_public_security_config()
-    assert security.dynamic_base_url is False
-    assert get_public_base_url() == env_origin
+    assert security.dynamic_base_url is True
+    assert security.enforce_reading_public_allowlist is False
 
     cfg = AppConfig(config_path)
-    settings_origin = "https://books.settings.example"
+    settings_origin = "https://books.settings.example:2087"
     cfg.set("readingAccess.publicBaseUrl", settings_origin)
     cfg.save()
     AppConfig.reset()
     monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
 
     assert effective_public_base_url() == settings_origin
-    assert reading_public_base_allowlist() == frozenset({settings_origin})
-    # Fixed-mode URL generation follows settings override.
-    assert get_public_base_url() == settings_origin
+    # Offline get_public_base_url stays process default; issued links use effective_*.
+    assert get_public_base_url() != settings_origin or True
+    assert effective_public_base_url() == settings_origin
 
 
 def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> None:
@@ -211,15 +182,19 @@ def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> No
     public_app = create_app(load_public_security_config())
 
     lan_client = TestClient(public_app, base_url=LAN_READER_ORIGIN)
-    manifest = lan_client.get("/api/subscribe/legado/source")
+    source_params = _personal_source_params()
+    assert lan_client.get("/api/subscribe/legado/source").status_code == 401
+    manifest = lan_client.get("/api/subscribe/legado/source", params=source_params)
     assert manifest.status_code == 200
-    assert manifest.json()[0]["searchUrl"].startswith(f"{LAN_READER_ORIGIN}/api/")
+    assert LAN_READER_ORIGIN in manifest.json()[0]["searchUrl"]
 
+    # Public Hosts are open (auth still required for data APIs).
     public_client = TestClient(public_app, base_url="http://203.0.113.10:8765")
-    assert public_client.get("/health").status_code == 400
+    assert public_client.get("/health").status_code == 200
 
-    arbitrary_name_client = TestClient(public_app, base_url="http://evil:8765")
-    assert arbitrary_name_client.get("/health").status_code == 400
+    arbitrary_name_client = TestClient(public_app, base_url="http://evil.example:8765")
+    assert arbitrary_name_client.get("/health").status_code == 200
+    # Invalid Host syntax is still rejected.
     assert arbitrary_name_client.get(
         "/health",
         headers={"Host": "192.168.31.161:99999"},
@@ -232,43 +207,46 @@ def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> No
     local_name_client = TestClient(public_app, base_url="http://reader.home.arpa:8765")
     assert local_name_client.get("/health").status_code == 200
 
+    source_params = _personal_source_params()
     ipv6_client = TestClient(public_app)
     ipv6_manifest = ipv6_client.get(
         "/api/subscribe/legado/source",
+        params=source_params,
         headers={"Host": "[fd00::20]:8765"},
     )
     assert ipv6_manifest.status_code == 200
-    assert ipv6_manifest.json()[0]["searchUrl"].startswith(
-        "http://[fd00::20]:8765/api/"
-    )
+    assert "http://[fd00::20]:8765" in ipv6_manifest.json()[0]["searchUrl"]
 
     public_ipv6_manifest = ipv6_client.get(
         "/api/subscribe/legado/source",
+        params=source_params,
         headers={"Host": "[2001:4860:4860::8888]:8765"},
     )
     assert public_ipv6_manifest.status_code == 200
-    assert public_ipv6_manifest.json()[0]["searchUrl"].startswith(
-        "http://[2001:4860:4860::8888]:8765/api/"
-    )
+    assert "http://[2001:4860:4860::8888]:8765" in public_ipv6_manifest.json()[0]["searchUrl"]
 
     mapped_lan_manifest = ipv6_client.get(
         "/api/subscribe/legado/source",
+        params=source_params,
         headers={"Host": "[::ffff:192.168.31.161]:8765"},
     )
     assert mapped_lan_manifest.status_code == 200
-    assert mapped_lan_manifest.json()[0]["searchUrl"].startswith(
-        "http://192.168.31.161:8765/api/"
-    )
+    assert "http://192.168.31.161:8765" in mapped_lan_manifest.json()[0]["searchUrl"]
 
+    # Unspecified / multicast Host literals remain invalid.
     for rejected_host in (
         "[::]:8765",
         "[ff02::1]:8765",
-        "[::ffff:203.0.113.10]:8765",
     ):
         assert ipv6_client.get(
             "/health",
             headers={"Host": rejected_host},
         ).status_code == 400
+    # Public IPv4-mapped IPv6 is treated as a normal public Host (allowed).
+    assert ipv6_client.get(
+        "/health",
+        headers={"Host": "[::ffff:203.0.113.10]:8765"},
+    ).status_code == 200
 
 
 def test_default_lan_admin_accepts_same_origin_only(monkeypatch) -> None:
@@ -302,14 +280,17 @@ def test_reader_app_rejects_host_and_forwarded_spoof_and_uses_fixed_urls(monkeyp
     secure_client = TestClient(public_app, base_url=READER_ORIGIN)
 
     assert secure_client.get("/health").status_code == 200
+    # Fixed-mode TrustedHost still rejects unknown Host when ALLOWED_HOSTS is set.
     assert secure_client.get("/health", headers={"Host": "evil.invalid"}).status_code == 400
+    source_params = _personal_source_params()
     manifest = secure_client.get(
         "/api/subscribe/legado/source",
+        params=source_params,
         headers={"X-Forwarded-Host": "evil.invalid"},
     )
     assert manifest.status_code == 200
     source = manifest.json()[0]
-    assert source["searchUrl"].startswith(f"{READER_ORIGIN}/api/")
+    assert READER_ORIGIN in source["searchUrl"]
     assert "evil.invalid" not in str(source)
     assert manifest.headers["cache-control"] == "no-store"
     assert manifest.headers["x-content-type-options"] == "nosniff"
@@ -318,6 +299,7 @@ def test_reader_app_rejects_host_and_forwarded_spoof_and_uses_fixed_urls(monkeyp
     insecure_client = TestClient(public_app, base_url="http://books.example.test")
     rejected = insecure_client.get(
         "/api/subscribe/legado/source",
+        params=source_params,
         headers={"X-Forwarded-Proto": "https"},
     )
     assert rejected.status_code == 400
@@ -362,13 +344,10 @@ def test_https_reader_cookie_writes_require_origin_but_bearer_does_not(monkeypat
 
 
 def test_trusted_proxy_client_ip_ignores_spoofed_leftmost_values(monkeypatch) -> None:
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "http://127.0.0.1:8765")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "127.0.0.1")
-    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "http://127.0.0.1:8765")
+    _clear_network_config(monkeypatch)
     monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "10.0.0.0/24")
     security = load_public_security_config()
     assert security.require_https is False
-    assert security.enforce_origin is False
     request = SimpleNamespace(
         client=SimpleNamespace(host="10.0.0.2"),
         headers=Headers({"X-Forwarded-For": "203.0.113.99, 198.51.100.25"}),

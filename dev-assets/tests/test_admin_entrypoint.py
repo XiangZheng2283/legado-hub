@@ -38,7 +38,7 @@ def isolated_apps(monkeypatch, tmp_path):
     (frontend_dist / "icons.svg").write_text("<svg></svg>", encoding="utf-8")
     monkeypatch.setattr(main_module, "FRONTEND_DIST", frontend_dist)
 
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", PUBLIC_ORIGIN)
+    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "public.test")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", PUBLIC_ORIGIN)
     monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "127.0.0.1/32")
@@ -66,9 +66,13 @@ def test_public_listener_exposes_only_reader_and_user_routes(isolated_apps) -> N
 
     assert client.get("/api/auth/entrypoint").json() == {"entrypoint": "public"}
     assert client.get("/health").status_code == 200
-    assert client.get("/api/subscribe/legado/source").status_code == 200
+    assert client.get("/api/subscribe/legado/source").status_code == 401
 
     created = auth_service.create_access_user(f"port-reader-{uuid.uuid4().hex[:10]}")
+    assert client.get(
+        "/api/subscribe/legado/source",
+        params={"code": created["accessCode"]},
+    ).status_code == 200
     redeemed = client.post(
         "/api/auth/access/redeem",
         json={"accessCode": created["accessCode"]},

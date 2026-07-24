@@ -524,8 +524,9 @@ def test_personal_legado_source_embeds_bound_access_code() -> None:
     code_literal = json.dumps(created["accessCode"], ensure_ascii=False)
     assert f"var LEGADOHUB_ACCESS_CODE = {code_literal}" in source["loginUrl"]
     assert f"var LEGADOHUB_ACCESS_CODE = {code_literal}" in source["jsLib"]
-    assert "本源已绑定个人" in source["loginUi"] or "绑定个人订阅" in source["loginUi"]
-    assert "绑定个人授权码" in source["bookSourceComment"]
+    assert "legadoHubOpenSubscriptions" in source["loginUi"]
+    assert "legadoHubOpenLibrary" in source["loginUi"]
+    assert "专属" in source["bookSourceComment"] or "自动鉴权" in source["bookSourceComment"]
 
     rejected = client.get(
         "/api/subscribe/legado/source",
@@ -534,6 +535,5 @@ def test_personal_legado_source_embeds_bound_access_code() -> None:
     assert rejected.status_code == 401
 
     anonymous = client.get("/api/subscribe/legado/source")
-    assert anonymous.status_code == 200
-    anon_source = anonymous.json()[0]
-    assert 'var LEGADOHUB_ACCESS_CODE = ""' in anon_source["loginUrl"]
+    assert anonymous.status_code == 401
+    assert "专属书源" in str(anonymous.json().get("detail", ""))

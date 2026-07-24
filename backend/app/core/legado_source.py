@@ -716,9 +716,9 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "专属链接（带 code）：搜索/目录/正文自动鉴权；登录页仅「订阅 / 书库」。"
+        "专属书源：搜索/目录/正文自动鉴权；登录页提供「订阅 / 书库」入口。"
         if bound
-        else "公共链接（无 code）：未登录时跳转登录页；请改用专属链接以自动鉴权。"
+        else "请使用管理员发放的专属书源链接导入。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",

@@ -415,7 +415,7 @@ export function UsersPage() {
                 ) : (
                   <Alert>
                     <AlertDescription>
-                      尚未生成书源链接。请先在「设置 → 阅读 → 允许的公网地址」登记地址后重新生成，或先复制下方授权码。
+                      尚未生成公网书源链接。可在「设置 → 阅读 → 公网书源地址」填写后重新生成，或使用内网链接 / 下方授权码。
                     </AlertDescription>
                   </Alert>
                 )}

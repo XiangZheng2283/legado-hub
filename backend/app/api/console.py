@@ -2249,29 +2249,22 @@ def _reading_access_settings_from_config(cfg: AppConfig) -> dict:
 
 
 def _parse_public_base_url_field(value: object, *, field: str) -> str:
-    """Accept one or more origins (comma / newline / semicolon separated)."""
+    """Accept a single public book-source origin (no multi-line list)."""
     if value is None:
         return ""
     if not isinstance(value, str):
         raise HTTPException(status_code=422, detail=f"{field} 必须是字符串")
-    text = value.strip()
+    text = value.strip().rstrip("/")
     if not text:
         return ""
-    from app.core.public_security import normalize_public_base_url, parse_public_base_urls
+    if any(sep in text for sep in ("\n", "\r", ",", ";")) or " " in text.strip():
+        raise HTTPException(status_code=422, detail=f"{field} 只支持单个地址，请勿填写多个")
+    from app.core.public_security import normalize_public_base_url
 
-    # Validate every token; reject the whole field if any entry is invalid.
-    raw_parts = [p.strip().rstrip("/") for p in re.split(r"[\s,;]+", text) if p.strip()]
-    if not raw_parts:
-        return ""
-    normalized: list[str] = []
-    for part in raw_parts:
-        try:
-            normalized.append(normalize_public_base_url(part))
-        except RuntimeError as exc:
-            raise HTTPException(status_code=422, detail=f"{field} 无效：{exc}（条目：{part}）") from exc
-    # Re-run through parser for stable de-dupe / order.
-    urls = parse_public_base_urls("\n".join(normalized))
-    return "\n".join(urls)
+    try:
+        return normalize_public_base_url(text)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=422, detail=f"{field} 无效：{exc}") from exc
 
 
 # ---- Settings ----

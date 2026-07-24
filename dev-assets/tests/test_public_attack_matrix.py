@@ -319,7 +319,8 @@ def test_https_reader_cors_rejection_has_no_wildcard_or_payload_leak(monkeypatch
     import app.core.public_security as security_module
 
     security_module._security_last_log.clear()
-    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "https://books.example.test")
+    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
+    monkeypatch.setenv("LEGADOHUB_REQUIRE_HTTPS", "1")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.example.test")
     monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", "https://books.example.test")
     monkeypatch.setenv("LEGADOHUB_TRUSTED_PROXIES", "127.0.0.1/32")
