@@ -20,7 +20,7 @@ class Source:
     id = "69shuba_com"
     name = "69书吧"
     contract_version = "1.0"
-    last_modified = "2026-07-24"
+    last_modified = "2026-07-25"
     base_url = "https://www.69shuba.com"
     base_urls = ["https://www.69shuba.com", "https://www.69shuba.cx"]
     headers = {"accept-language": "zh-CN,zh;q=0.9"}
@@ -28,17 +28,25 @@ class Source:
 
     # Whole-line ads, including obfuscated watermarks like:
     # 无错版本在读！6=9+书_吧首发本小说。
+    # 正确内（容在%六九%书'吧读！{
     _AD_LINE_RE = re.compile(
         r"(?m)^.*(?:"
         r"新69书吧|69书吧|"
         r"无错版本在读|"
         r"首发本小说|"
         r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧|"
+        r"正确内.?容在|"
+        r"[%％]\s*六九\s*[%％]|"
+        r"书[''′]?\s*吧\s*读|"
         r"阅读sto55|爱75奇书屋"
         r").*$"
     )
     _INLINE_AD_RE = re.compile(
+        r"(?:"
         r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
+        r"|"
+        r"正确内[（(]?\s*容在\s*[%％]?\s*六九\s*[%％]?\s*书[''′]?\s*吧\s*读[！!]?\s*[\{｛]?"
+        r")"
     )
 
     @classmethod
@@ -49,6 +57,9 @@ class Source:
             r"首发本小说",
             r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
             r"新?69\s*书\s*吧",
+            r"正确内.?容在",
+            r"[%％]\s*六九\s*[%％]",
+            r"书[''′]?\s*吧\s*读",
             r"阅读sto55|爱75奇书屋",
         ]
     explore_defs = [
