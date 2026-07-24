@@ -162,104 +162,16 @@ class AggregateProcessor:
         return patterns
 
     def _ad_patterns_for_source(self, source_id: str | None) -> list[str]:
-        """Return plugin-specific patterns merged with global defaults (deduped)."""
-        combined: list[str] = []
-        seen: set[str] = set()
-        plugin_patterns = self._source_ad_patterns.get(source_id or "") or []
-        for pat in list(plugin_patterns) + self._global_ad_patterns():
-            if not pat or pat in seen:
-                continue
-            seen.add(pat)
-            combined.append(pat)
-        return combined
-
-    def _compile_ad_patterns(self, patterns: list[str]) -> re.Pattern[str]:
-        """Compile a list of regex patterns into a single multiline pattern."""
-        if not patterns:
-            # Match nothing.
-            return re.compile(r"(?!.*)", re.MULTILINE)
-        escaped = [f"(?:{p})" for p in patterns]
-        return re.compile(r"(?im)^.*(?:" + "|".join(escaped) + r").*$")
-
-    # Inline watermarks that may be glued to prose without a line break.
-    _INLINE_AD_RES: tuple[re.Pattern[str], ...] = (
-        re.compile(
-            r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
-        ),
-        re.compile(r"无错版本在读[！!]?"),
-        re.compile(r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"),
-    )
-
-    def _global_ad_patterns(self) -> list[str]:
-        """Global fallback ad patterns used when no plugin-specific patterns exist."""
-        return [
-            r"最新网址|最新地址|最新域名|最新章节地址",
-            r"本章未完|本章未完.*点击下一页",
-            r"请收藏|请记住本书首发域名",
-            r"手机用户请浏览|手机阅读",
-            r"百度搜索|百度搜",
-            r"天才一秒|笔趣阁",
-            r"一秒记住.*\.com|一秒记住.*\.net",
-            r"亲,.*收藏|加入书签",
-            r"www\.|\.com|\.net|\.org",
-            # 69 书吧类混淆水印：无错版本在读！6=9+书_吧首发本小说。
-            r"无错版本在读",
-            r"首发本小说",
-            r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
-            r"新?69\s*书\s*吧",
-            r"阅读sto55|爱75奇书屋",
-        ]
-
-    def _strip_inline_ads(self, text: str) -> str:
-        """Remove known inline watermarks that are not whole-line only."""
-        for pattern in self._INLINE_AD_RES:
-            text = pattern.sub("", text)
-        return text
+        """Plugin-specific patterns for the given source (may be empty)."""
+        if source_id and source_id in self._source_ad_patterns:
+            return list(self._source_ad_patterns[source_id])
+        return []
 
     def _purify_content(self, content: str, source_id: str | None = None) -> str:
-        """Unified content purification with plugin-specific ad patterns.
+        """Unified content purification with plugin-specific ad patterns."""
+        from app.services.content_purify import purify_content
 
-        Steps:
-        1. Basic cleanup: normalize line endings, strip trailing whitespace, compress blank lines.
-        2. Ad/watermark removal: remove plugin+global ad lines, inline 69-style watermarks, duplicate titles.
-        3. Integrity check: if cleaned content is too short or shrunk >50%, fall back to basic cleanup only.
-        """
-        if not content:
-            return content
-
-        original_length = len(content)
-
-        # Step 1: Basic cleanup.
-        text = content.replace("\r\n", "\n").replace("\r", "\n")
-        text = re.sub(r"[ \t]+\n", "\n", text)
-        text = re.sub(r"\n{3,}", "\n\n", text)
-        basic_text = text.strip()
-
-        # Step 2: Ad/watermark removal.
-        # Inline first: whole-line patterns use ^.*….*$ and would wipe a long
-        # paragraph that only embeds a short watermark (then integrity reverts).
-        text = self._strip_inline_ads(basic_text)
-        ad_re = self._compile_ad_patterns(self._ad_patterns_for_source(source_id))
-        text = ad_re.sub("", text)
-        text = re.sub(r"\n{3,}", "\n\n", text)
-
-        # Remove duplicate chapter-title lines.
-        seen_titles: set[str] = set()
-        kept_lines: list[str] = []
-        for line in text.splitlines():
-            stripped = line.strip()
-            title_key = stripped.lstrip("#").strip()
-            if self._CHAPTER_TITLE_RE.match(stripped) and title_key in seen_titles:
-                continue
-            seen_titles.add(title_key)
-            kept_lines.append(line)
-        text = "\n".join(kept_lines)
-
-        # Step 3: Integrity check.
-        cleaned_length = len(text)
-        if cleaned_length < 50 or (original_length > 100 and cleaned_length < original_length * 0.5):
-            return basic_text
-        return text.strip()
+        return purify_content(content, ad_patterns=self._ad_patterns_for_source(source_id))
 
     def _purify_content_with_lexicon(
         self, content: str, source_id: str | None = None
@@ -3047,7 +2959,6 @@ class AggregateProcessor:
             logger.debug("Failed to read chapter file: %s", content_file_path, exc_info=True)
             return ""
 
-    _CHAPTER_TITLE_RE = re.compile(r"^(#\s*)?第[一二三四五六七八九十百零\d]+章.*$")
 
     def _normalize_content_light(self, content: str) -> str:
         """Lightweight normalization without aggressive purification."""

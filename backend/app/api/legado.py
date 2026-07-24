@@ -241,6 +241,21 @@ async def _chapter_reviews(chapter_id: str, *, catalog: Catalog | None = None) -
     return reviews
 
 
+def _purify_chapter_content_for_reading(
+    content: str,
+    *,
+    source_id: str | None = None,
+) -> str:
+    """Read-path ad/watermark gate (same pure rules as write-time purify).
+
+    Covers already-stored library chapters and third-party direct reads without
+    waiting for reprocessing. Safe/no-op when patterns do not match.
+    """
+    from app.services.content_purify import purify_for_reading
+
+    return purify_for_reading(content, source_id=source_id)
+
+
 async def _strip_author_say_from_chapter_content(
     *,
     chapter_id: str,
@@ -275,6 +290,26 @@ async def _strip_author_say_from_chapter_content(
     if not author_texts:
         return content
     return strip_overlapping_author_say(content, author_texts)
+
+
+async def _apply_reading_content_gates(
+    *,
+    chapter_id: str,
+    content: str,
+    source_id: str | None = None,
+    catalog: Catalog | None = None,
+) -> str:
+    """Reading delivery gates: ad purify first, then 作家说 strip.
+
+    Order matches write-time processing (purify → author-say). Purify is sync
+    and local; author-say may fetch cached reviews.
+    """
+    cleaned = _purify_chapter_content_for_reading(content, source_id=source_id)
+    return await _strip_author_say_from_chapter_content(
+        chapter_id=chapter_id,
+        content=cleaned,
+        catalog=catalog,
+    )
 
 
 @router.get("/book/{book_id}")
@@ -362,9 +397,10 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
             shared = library_books_service.legado_chapter(chapter_id)
             if shared is None:
                 raise HTTPException(status_code=404, detail="章节尚未发布")
-            content = await _strip_author_say_from_chapter_content(
+            content = await _apply_reading_content_gates(
                 chapter_id=chapter_id,
                 content=str(shared.get("content", "") or ""),
+                source_id=source_id,
                 catalog=catalog,
             )
             shared = {**shared, "content": content}
@@ -377,9 +413,10 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
             target_url=chapter_url,
         )
         result = await catalog.chapter(chapter_id)
-        content = await _strip_author_say_from_chapter_content(
+        content = await _apply_reading_content_gates(
             chapter_id=chapter_id,
             content=str(result.get("content", "") or ""),
+            source_id=source_id,
             catalog=catalog,
         )
         result = {**result, "content": content}
