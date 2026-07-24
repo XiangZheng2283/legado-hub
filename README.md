@@ -143,6 +143,117 @@ docker run -d \
 
 ---
 
+## 公网部署（VPS / 域名 / 公网 IP）
+
+默认按**本机或受控局域网**设计：未配置公网地址时，阅读口只接受局域网 Host；公网客户端直接访问公网 IPv4 会被拒绝（`400 Host is not allowed`）。  
+服务本身仍监听 `0.0.0.0`，容器可正常启动；需要的是登记**允许的公网 origin**。
+
+### 公网地址优先级
+
+```
+控制台「设置 → 阅读 → 允许的公网地址」
+  > 环境变量 LEGADOHUB_PUBLIC_BASE_URL
+  > 仅局域网自动识别
+```
+
+- **部署时**：可在 `docker-compose.yml` 的 `environment` 里写入变量做首次引导  
+- **之后**：在管理后台保存「允许的公网地址」即可覆盖变量，**无需重建容器**  
+- **局域网访问**：仍按实际访问 Host 生成内网书源（与公网为双源身份，见下文）
+
+### 1. 环境变量（可选，首次引导）
+
+在 `docker-compose.yml` 的 `legadohub.environment` 中增加（域名或公网 IP 均可）：
+
+**域名 + HTTPS（推荐，经反代终止 TLS）**
+
+```yaml
+- LEGADOHUB_PUBLIC_BASE_URL=https://book.example.com
+- LEGADOHUB_ALLOWED_HOSTS=book.example.com
+- LEGADOHUB_ALLOWED_ORIGINS=https://book.example.com
+# 反代所在网段（Docker 网桥 / 本机反代按实际填写）
+- LEGADOHUB_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
+```
+
+**公网 IP + 直连 HTTP（无域名时）**
+
+```yaml
+- LEGADOHUB_PUBLIC_BASE_URL=http://203.0.113.10:8765
+- LEGADOHUB_ALLOWED_HOSTS=203.0.113.10
+- LEGADOHUB_ALLOWED_ORIGINS=http://203.0.113.10:8765
+```
+
+说明：
+
+| 项 | 要求 |
+|----|------|
+| origin 格式 | 必须 `http://` 或 `https://` 开头，**不要带路径**（如 `/api`） |
+| 端口 | 非 80/443 时必须写在 origin 与访问地址中 |
+| 一致性 | 浏览器、Reading 导入地址、白名单 origin 的协议/主机/端口须一致 |
+| 固定 HTTPS | 配置了 `https://` 的 `LEGADOHUB_PUBLIC_BASE_URL` 时，阅读口会要求 HTTPS |
+
+修改环境变量后需重新创建容器才能生效：
+
+```bash
+docker compose up -d --force-recreate legadohub
+```
+
+### 2. 控制台设置（推荐，可覆盖变量）
+
+1. 从**可访问的入口**打开管理后台（首次可先在本机/内网用 `http://服务器局域网IP:8766`，或已放行防火墙的 `http://公网IP:8766`）
+2. 登录后打开 **设置 → 阅读 → 公网访问白名单 → 允许的公网地址**
+3. 填入与对外访问一致的 origin，例如：
+   - `https://book.example.com`
+   - `http://203.0.113.10:8765`
+4. 保存后立即生效；此后**设置优先于** `LEGADOHUB_PUBLIC_BASE_URL`
+
+### 3. 防火墙与反代建议
+
+| 端口 | 用途 | 建议 |
+|------|------|------|
+| `8765` | 用户 / Reading 书源 | 可经域名反代或公网放行；务必配合授权码 |
+| `8766` | 管理后台 | **不要对全网裸奔**；限制来源 IP、VPN 或仅内网 |
+
+TLS、反向代理（Caddy / Nginx / Cloudflare 等）由部署者自行配置；应用不内置公网证书与反代。
+
+### 4. 接入书源（公网）
+
+在 Reading / Legado 中导入：
+
+```
+https://你的域名/api/subscribe/legado/source
+# 或
+http://你的公网IP:8765/api/subscribe/legado/source
+```
+
+须与已登记的公网 origin 一致。用该地址打开阅读入口并更新书源后，生成的链接才会是公网地址。
+
+### 5. 公网与局域网双源
+
+| 导入方式 | 书源身份（示意） |
+|----------|------------------|
+| 公网域名 / 公网 IP | `LegadoHub`（公网） |
+| 局域网 IP | `LegadoHub-LAN`（内网，名称带「·内网」） |
+
+两套可同时存在；授权与进度按书源分开。日常建议按当前网络只启用对应那一套再搜索。
+
+### 6. 自检
+
+```bash
+# 容器健康
+docker compose ps
+
+# 入口（本机）
+curl -s http://127.0.0.1:8765/api/auth/entrypoint
+curl -s http://127.0.0.1:8766/api/auth/entrypoint
+
+# 公网（将地址换成你的 origin）
+curl -sI https://book.example.com/api/auth/entrypoint
+```
+
+若返回 `400 Host is not allowed`，说明当前 Host 未进入白名单（设置或环境变量），或协议/端口与登记不一致。
+
+---
+
 ## 两种使用方式
 
 导入聚合书源后，Reading / Legado 提供两种使用方式：
@@ -211,12 +322,18 @@ docker compose exec -T legadohub \
 重启时若目录为空，入口脚本会从镜像种子恢复默认第三方插件。本地的自定义修改无法恢复，除非有备份。
 </details>
 
+<details>
+<summary>公网 VPS 上提示 Host is not allowed？</summary>
+
+未配置公网白名单时，阅读口会拒绝公网 Host。请设置环境变量 `LEGADOHUB_PUBLIC_BASE_URL`（及配套 `ALLOWED_HOSTS` / `ORIGINS`），或在管理后台「设置 → 阅读 → 允许的公网地址」登记与访问一致的 origin（可用域名或公网 IP）。详见 [公网部署](#公网部署vps--域名--公网-ip)。
+</details>
+
 ---
 
 ## 安全与使用边界
 
-- 默认面向本机或受控局域网部署。如需外网访问，域名、TLS、反向代理、防火墙策略由部署者自行负责。
-- 不支持开放注册、匿名阅读或公网模式。
+- 默认面向本机或受控局域网部署。公网访问须登记允许的公网 origin（控制台设置优先于环境变量），详见 [公网部署](#公网部署vps--域名--公网-ip)。
+- TLS、反向代理、防火墙与管理口（`8766`）暴露范围由部署者负责；不提供开放注册与匿名阅读。
 - 请仅在有权访问和处理相应内容的前提下使用，并遵守目标站点服务条款与当地法律法规。
 - 本项目并非 Legado 官方项目，不保证第三方书源的持续可用性。
 
