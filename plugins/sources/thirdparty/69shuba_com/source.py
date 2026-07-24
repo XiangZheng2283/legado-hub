@@ -26,26 +26,31 @@ class Source:
     headers = {"accept-language": "zh-CN,zh;q=0.9"}
     impersonate = "chrome120"
 
-    # Whole-line ads, including obfuscated watermarks like:
-    # 无错版本在读！6=9+书_吧首发本小说。
-    # 正确内（容在%六九%书'吧读！{
+    # Whole-line ads, including obfuscated watermarks and bare residuals (6=9+).
     _AD_LINE_RE = re.compile(
         r"(?m)^.*(?:"
         r"新69书吧|69书吧|"
         r"无错版本在读|"
         r"首发本小说|"
         r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧|"
+        r"6\s*[=＝]\s*9\s*[+＋]|"
         r"正确内.?容在|"
         r"[%％]\s*六九\s*[%％]|"
         r"书[''′]?\s*吧\s*读|"
         r"阅读sto55|爱75奇书屋"
         r").*$"
+        r"|(?m)^\s*6\s*[=＝]\s*9\s*[+＋]?\s*$"
+        r"|(?m)^\s*书[_＿'′]?\s*吧\s*$"
     )
     _INLINE_AD_RE = re.compile(
         r"(?:"
         r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
         r"|"
         r"正确内[（(]?\s*容在\s*[%％]?\s*六九\s*[%％]?\s*书[''′]?\s*吧\s*读[！!]?\s*[\{｛]?"
+        r"|"
+        r"6\s*[=＝]\s*9\s*[+＋]"
+        r"|"
+        r"[%％]\s*六九\s*[%％]"
         r")"
     )
 
@@ -56,6 +61,7 @@ class Source:
             r"无错版本在读",
             r"首发本小说",
             r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
+            r"6\s*[=＝]\s*9\s*[+＋]",
             r"新?69\s*书\s*吧",
             r"正确内.?容在",
             r"[%％]\s*六九\s*[%％]",

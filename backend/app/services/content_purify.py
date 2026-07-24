@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 CHAPTER_TITLE_RE = re.compile(r"^(#\s*)?第[一二三四五六七八九十百零\d]+章.*$")
 
-# Inline watermarks that may be glued to prose without a line break.
+# Inline / residual watermarks (full phrases first, then 69 fragments like bare 6=9+).
 INLINE_AD_RES: tuple[re.Pattern[str], ...] = (
     re.compile(
         r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
@@ -28,6 +28,12 @@ INLINE_AD_RES: tuple[re.Pattern[str], ...] = (
     ),
     re.compile(r"正确内[（(]?\s*容在"),
     re.compile(r"[%％]\s*六九\s*[%％]\s*书[''′]?\s*吧"),
+    # Residual fragments after partial strip (screenshot: lone line 6=9+)
+    re.compile(r"(?m)^\s*6\s*[=＝]\s*9\s*[+＋]?\s*$"),
+    re.compile(r"6\s*[=＝]\s*9\s*[+＋]"),
+    re.compile(r"(?m)^\s*[%％]\s*六九\s*[%％]\s*$"),
+    re.compile(r"(?m)^\s*书[_＿'′]?\s*吧\s*$"),
+    re.compile(r"[%％]\s*六九\s*[%％]"),
 )
 
 GLOBAL_AD_PATTERNS: list[str] = [
@@ -50,6 +56,8 @@ GLOBAL_AD_PATTERNS: list[str] = [
     r"正确内.?容在",
     r"[%％]\s*六九\s*[%％]",
     r"书[''′]?\s*吧\s*读",
+    # Residuals: bare 6=9+ (line containing this fragment is dropped)
+    r"6\s*[=＝]\s*9\s*[+＋]",
 ]
 
 

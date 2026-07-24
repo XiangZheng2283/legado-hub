@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 69hsw_com
 name: 69书屋
 author: Yunwei
-version: 0.1.3
+version: 0.1.4
 type: source
 enabled: true
 domains:
@@ -33,6 +33,7 @@ adPatterns:
   - "无错版本在读"
   - "首发本小说"
   - "6\\s*[=＝]\\s*9\\s*[+＋]?\\s*书[_＿\\s]*吧"
+  - "6\\s*[=＝]\\s*9\\s*[+＋]"
   - "新?69\\s*书\\s*[吧屋]"
   - "正确内.?容在"
   - "[%％]\\s*六九\\s*[%％]"
