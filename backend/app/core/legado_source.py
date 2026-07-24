@@ -28,8 +28,8 @@ from app.core.public_security import (
 # - FORMAL app release (git tag vX.Y.Z): bump BOTH — version (shown in name /
 #   comment / jsLib) and RELEASED_AT_MS.
 _READER_RULE_VERSION = "0.0.25"
-# Last beta marker (login sheet: subscribe + library only). Bump this alone for tests.
-_READER_RULE_RELEASED_AT_MS = 1_785_020_000_000
+# Last beta marker: header no-ajax so login sheet can open (ms). Bump this alone for tests.
+_READER_RULE_RELEASED_AT_MS = 1_785_030_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -68,22 +68,15 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 
 
 def _login_ui(*, bound_access_code: bool = False) -> str:
-    """Reading source sheet: console shortcuts only (auth is automatic or via 401).
+    """Reading source sheet: 订阅 + 书库 only (no tip/password/login buttons).
 
-    Buttons: 订阅管理 + 书库. No login/status/logout — personal links auto-auth
-    on each request; public sources without code still get 401 → this sheet.
+    Avoid type=text tip rows — some clients fail to open the sheet when the only
+    non-button control is a fake tip field. Auth is automatic for personal links.
     """
-    auth_hint = (
-        "专属链接已带凭证，搜索/阅读会自动登录。"
-        "点下方打开网页订阅或个人书库。"
-        if bound_access_code
-        else "请使用管理员发放的带 code 专属书源链接（自动登录）。"
-        "点下方可打开网页订阅或书库（需已登录）。"
-    )
+    del bound_access_code  # reserved for future copy variants
     btn = {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48}
     return json.dumps(
         [
-            {"name": "提示", "type": "text", "default": auth_hint},
             {
                 "name": "订阅",
                 "type": "button",
@@ -190,12 +183,56 @@ function legadoHubAjax(url, method, body) {{
 """
 
 
-def _request_header_rule(base_api: str, *, access_code: str | None = None) -> str:
-    """AnalyzeUrl header for search / book / toc / explore (same token path)."""
+def _request_header_rule(base_api: str = "", *, access_code: str | None = None) -> str:
+    """AnalyzeUrl header: inject stored Bearer only — never network.
+
+    Reading evaluates book-source header when opening the login sheet. Any
+    java.ajax / redeem here prevents the sheet from appearing. Token redeem
+    happens in searchUrl / legadoHubAjax / loginCheckJs instead.
+    """
+    del base_api, access_code
     return (
         "@js:\n"
-        + _auth_runtime_js(base_api, access_code=access_code)
-        + "\nJSON.stringify(legadoHubAuthHeaders());"
+        "var h = {\"Accept\": \"application/json\"};\n"
+        "try {\n"
+        "  var raw = source.getLoginHeader();\n"
+        "  var st = typeof raw === \"string\" ? JSON.parse(raw || \"{}\") : (raw || {});\n"
+        "  var a = st && (st.Authorization || st.authorization);\n"
+        "  if (a && String(a).trim()) h.Authorization = String(a);\n"
+        "} catch (e) {}\n"
+        "JSON.stringify(h);"
+    )
+
+
+def _search_url_rule(base_api: str) -> str:
+    """Search entry: resolve token (bound code / stored header) then hit API."""
+    base = json.dumps(str(base_api or "").rstrip("/"), ensure_ascii=False)
+    # key/page are injected by AnalyzeUrl for searchUrl @js.
+    return (
+        "@js:\n"
+        "try { if (typeof legadoHubResolveAuth === \"function\") legadoHubResolveAuth(); } catch (e0) {}\n"
+        "var _base = " + base + ";\n"
+        "var _key = \"\";\n"
+        "var _page = \"1\";\n"
+        "try { _key = String(key != null ? key : \"\"); } catch (e1) { _key = \"\"; }\n"
+        "try { _page = String(page != null ? page : \"1\"); } catch (e2) { _page = \"1\"; }\n"
+        "_base + \"/api/subscribe/legado/search?keyword=\" + encodeURIComponent(_key) + \"&page=\" + encodeURIComponent(_page);"
+    )
+
+
+def _explore_url_rule(base_api: str) -> str:
+    """Explore entry with pre-request token resolve (same as search)."""
+    base = str(base_api or "").rstrip("/")
+    # Keep group title prefix; URL body is @js so token is attached before GET.
+    return (
+        "已发布书库::@js:\n"
+        "try { if (typeof legadoHubResolveAuth === \"function\") legadoHubResolveAuth(); } catch (e0) {}\n"
+        "var _base = "
+        + json.dumps(base, ensure_ascii=False)
+        + ";\n"
+        "var _page = \"1\";\n"
+        "try { _page = String(page != null ? page : \"1\"); } catch (e1) { _page = \"1\"; }\n"
+        "_base + \"/api/subscribe/legado/explore?page=\" + encodeURIComponent(_page);"
     )
 
 
@@ -672,7 +709,7 @@ def _build_source(
     chapter_comment = app_config.chapter_comment
     bound = bool(str(access_code or "").strip())
 
-    explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
+    explore_url = _explore_url_rule(base_api)
     network_note = (
         "本条为内网书源（bookSourceUrl=LegadoHub-LAN），可与公网书源并存；"
         if is_lan
@@ -691,8 +728,9 @@ def _build_source(
         "bookSourceType": 0,
         "enabled": True,
         "enabledCookieJar": True,
-        "enabledExplore": bool(explore_url),
-        "header": _request_header_rule(base_api, access_code=access_code),
+        "enabledExplore": True,
+        # Header must stay free of java.ajax — login sheet evaluates it on open.
+        "header": _request_header_rule(),
         "loginUi": _login_ui(bound_access_code=bound),
         "loginUrl": _login_script(base_api, access_code=access_code),
         "loginCheckJs": _login_check_script(),
@@ -705,10 +743,7 @@ def _build_source(
         ),
         # Progressive: page1 library + short third-party batch; page2+ continue
         # the same server job for new remotes (see subscribe._legado_search_response).
-        "searchUrl": (
-            f"{base_api}/api/subscribe/legado/search"
-            f"?keyword={{{{key}}}}&page={{{{page}}}}"
-        ),
+        "searchUrl": _search_url_rule(base_api),
         # Slightly above page2 short-wait (20s) so follow-up search pages can finish.
         "respondTime": 25000,
         "exploreUrl": explore_url,
