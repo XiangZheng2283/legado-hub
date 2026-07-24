@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.21"
-# 2026-07-24 restore full login actions on bound sources (ms). Bump with _READER_RULE_VERSION.
-_READER_RULE_RELEASED_AT_MS = 1_784_980_000_000
+_READER_RULE_VERSION = "0.0.22"
+# 2026-07-24 remove header @js that blocked Reading login sheet (ms).
+_READER_RULE_RELEASED_AT_MS = 1_784_990_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -65,94 +65,49 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 
 
 def _login_ui(*, bound_access_code: bool = False) -> str:
-    """Login form for Reading.
+    """Login form for Reading (stable full sheet).
 
-    Keep a full, stable action row for both public and bound sources. Reading's
-    login sheet layout expects text/password fields plus action buttons; a
-    subscribe/logout-only sheet left some clients with an empty panel after open.
-    Bound sources still silent-auth via header; the login button just refreshes
-    the session from the embedded code (or an optional override).
+    Do not put network/eval side effects in book-source ``header``: Reading may
+    evaluate header when opening the login sheet and a failing @js leaves no UI.
+    Bound codes still auto-fill via loginUrl + loginCheckJs; user taps 登录 once
+    if the client has no session yet.
     """
-    # One style object per button (do not reuse a shared dict identity in the
-    # source JSON consumers that mutate style maps).
-    def _btn(basis: float = 0.48) -> dict:
-        return {"layout_flexGrow": 1, "layout_flexBasisPercent": basis}
-
-    if bound_access_code:
-        tip = (
-            "已绑定个人凭证：搜索/阅读会自动登录。"
-            "也可点「登录」刷新会话，「订阅管理」打开网页控制台。"
-        )
-    else:
-        tip = (
-            "请输入管理员发放的个人授权码后点「登录」。"
-            "推荐改用带 ?code= 的专属书源链接（导入后自动登录）。"
-        )
-    items = [
-        {
-            "name": "提示",
-            "type": "text",
-            "default": tip,
-        },
-        {"name": "授权码", "type": "password"},
-        {
-            "name": "登录",
-            "type": "button",
-            "action": "legadoHubLogin()",
-            "style": _btn(0.48),
-        },
-        {
-            "name": "登录状态",
-            "type": "button",
-            "action": "legadoHubStatus(true)",
-            "style": _btn(0.48),
-        },
-        {
-            "name": "订阅管理",
-            "type": "button",
-            "action": "legadoHubOpenSubscriptions()",
-            "style": _btn(0.48),
-        },
-        {
-            "name": "退出",
-            "type": "button",
-            "action": "legadoHubLogout()",
-            "style": _btn(0.48),
-        },
-    ]
-    return json.dumps(items, ensure_ascii=False)
-
-
-def _request_header_rule() -> str:
-    """Attach Bearer when present; optionally silent-redeem bound/public codes.
-
-    Header JS must stay side-effect light: never throw out of the script, and
-    only call ensureAuth when LoginHeader is empty (avoid login ajax on every
-    request after the first successful redeem).
-    """
-    return (
-        "@js:\n"
-        "var headers = {\"Accept\": \"application/json\"};\n"
-        "try {\n"
-        "  eval(String(source.loginUrl));\n"
-        "  var hasAuth = false;\n"
-        "  try {\n"
-        "    var raw0 = source.getLoginHeader();\n"
-        "    var st0 = typeof raw0 === \"string\" ? JSON.parse(raw0 || \"{}\") : raw0;\n"
-        "    var a0 = st0 && (st0.Authorization || st0.authorization);\n"
-        "    hasAuth = !!(a0 && String(a0).trim());\n"
-        "  } catch (e0) { hasAuth = false; }\n"
-        "  if (!hasAuth) {\n"
-        "    try { legadoHubEnsureAuth(false); } catch (e1) {}\n"
-        "  }\n"
-        "  try {\n"
-        "    var raw = source.getLoginHeader();\n"
-        "    var stored = typeof raw === \"string\" ? JSON.parse(raw || \"{}\") : raw;\n"
-        "    var authorization = stored && (stored.Authorization || stored.authorization);\n"
-        "    if (authorization) headers.Authorization = String(authorization);\n"
-        "  } catch (e2) {}\n"
-        "} catch (e) {}\n"
-        "JSON.stringify(headers);"
+    auth_hint = (
+        "本源已绑定个人订阅链接，点「登录」即可鉴权（一般不用再填授权码）。"
+        if bound_access_code
+        else "请输入管理员发放的个人授权码，或使用专属订阅链接导入书源。"
+    )
+    btn = {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48}
+    return json.dumps(
+        [
+            {"name": "提示", "type": "text", "default": auth_hint},
+            {"name": "授权码", "type": "password"},
+            {
+                "name": "登录",
+                "type": "button",
+                "action": "legadoHubLogin()",
+                "style": dict(btn),
+            },
+            {
+                "name": "登录状态",
+                "type": "button",
+                "action": "legadoHubStatus(true)",
+                "style": dict(btn),
+            },
+            {
+                "name": "订阅管理",
+                "type": "button",
+                "action": "legadoHubOpenSubscriptions()",
+                "style": dict(btn),
+            },
+            {
+                "name": "退出",
+                "type": "button",
+                "action": "legadoHubLogout()",
+                "style": dict(btn),
+            },
+        ],
+        ensure_ascii=False,
     )
 
 
@@ -346,18 +301,13 @@ function legadoHubLogout() {{
 
 
 def _login_check_script() -> str:
-    # Keep session warm / re-redeem after expiry. First-request auth is handled by
-    # header @js (legadoHubEnsureAuth) so Reading does not stop on “点击登录去授权”.
+    # Keep simple: re-eval login helpers, ensure session if bound code exists.
+    # Must not throw; return original response body for Reading to keep parsing.
     return """var legadoHubOriginalResponse = result;
 try {
     eval(String(source.loginUrl));
-    var body = String(legadoHubOriginalResponse == null ? "" : legadoHubOriginalResponse);
-    var needAuth = /当前未登陆|未登陆|请登陆后使用/i.test(body) || !legadoHubHasLoginHeader();
-    if (needAuth) {
-        legadoHubEnsureAuth(false);
-    } else {
-        legadoHubStatus(false);
-    }
+    legadoHubEnsureAuth(false);
+    legadoHubStatus(false);
 } catch (e) {}
 legadoHubOriginalResponse;"""
 
@@ -621,7 +571,7 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "本源已绑定个人授权码（专属订阅链接）；请求时静默登录，登录页可手动刷新会话。"
+        "本源已绑定个人授权码（专属订阅链接）；点登录即可鉴权，订阅管理可开网页控制台。"
         if bound
         else "导入公共书源后请用授权码登录；推荐改用带 code 的专属订阅链接。"
     )
@@ -634,7 +584,8 @@ def _build_source(
         "enabled": True,
         "enabledCookieJar": True,
         "enabledExplore": bool(explore_url),
-        "header": _request_header_rule(),
+        # Keep empty: header @js that evals loginUrl/ajax broke Reading login sheet open.
+        "header": "",
         "loginUi": _login_ui(bound_access_code=bound),
         "loginUrl": _login_script(base_api, access_code=access_code),
         "loginCheckJs": _login_check_script(),
