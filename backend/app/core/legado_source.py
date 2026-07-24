@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.22"
-# 2026-07-24 remove header @js that blocked Reading login sheet (ms).
-_READER_RULE_RELEASED_AT_MS = 1_784_990_000_000
+_READER_RULE_VERSION = "0.0.23"
+# 2026-07-24 per-request token via self-contained header redeem (ms).
+_READER_RULE_RELEASED_AT_MS = 1_785_000_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -65,17 +65,13 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 
 
 def _login_ui(*, bound_access_code: bool = False) -> str:
-    """Login form for Reading (stable full sheet).
-
-    Do not put network/eval side effects in book-source ``header``: Reading may
-    evaluate header when opening the login sheet and a failing @js leaves no UI.
-    Bound codes still auto-fill via loginUrl + loginCheckJs; user taps 登录 once
-    if the client has no session yet.
-    """
+    """Login form for Reading (full sheet; auth is normally automatic)."""
     auth_hint = (
-        "本源已绑定个人订阅链接，点「登录」即可鉴权（一般不用再填授权码）。"
+        "已绑定个人凭证：搜索/阅读请求会自动带登录态，一般不用点登录。"
+        "异常时再点「登录」刷新，或用「订阅管理」打开网页。"
         if bound_access_code
-        else "请输入管理员发放的个人授权码，或使用专属订阅链接导入书源。"
+        else "请输入授权码后点「登录」一次；之后请求会自动沿用会话。"
+        "更推荐导入带 code 的专属书源链接（全程自动登录）。"
     )
     btn = {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48}
     return json.dumps(
@@ -108,6 +104,76 @@ def _login_ui(*, bound_access_code: bool = False) -> str:
             },
         ],
         ensure_ascii=False,
+    )
+
+
+def _request_header_rule(base_api: str, *, access_code: str | None = None) -> str:
+    """Per-request Authorization: reuse LoginHeader or silent-redeem access code.
+
+    Self-contained (does **not** eval ``loginUrl``). The earlier header that
+    eval'd the full login script broke Reading's login sheet. This only:
+    1) reads existing Bearer from source LoginHeader;
+    2) if missing, redeems bound code (or form 授权码) via one POST;
+    3) stores Bearer for later requests;
+    4) always returns JSON headers and never throws out of the script.
+    """
+    base_literal = json.dumps(str(base_api or "").rstrip("/"), ensure_ascii=False)
+    access_literal = json.dumps(str(access_code or ""), ensure_ascii=False)
+    return (
+        "@js:\n"
+        "var h = {\"Accept\": \"application/json\"};\n"
+        "try {\n"
+        "  var auth = \"\";\n"
+        "  try {\n"
+        "    var raw = source.getLoginHeader();\n"
+        "    var st = typeof raw === \"string\" ? JSON.parse(raw || \"{}\") : (raw || {});\n"
+        "    auth = st && (st.Authorization || st.authorization) || \"\";\n"
+        "  } catch (e0) { auth = \"\"; }\n"
+        "  if (!String(auth || \"\").trim()) {\n"
+        "    var code = " + access_literal + ";\n"
+        "    if (!String(code || \"\").trim()) {\n"
+        "      try {\n"
+        "        var info = source.getLoginInfoMap();\n"
+        "        if (info) {\n"
+        "          try {\n"
+        "            var v = info.get(\"授权码\");\n"
+        "            if (v !== null && v !== undefined) code = String(v);\n"
+        "          } catch (e1) {}\n"
+        "          if (!String(code || \"\").trim()) {\n"
+        "            try { code = String(info[\"授权码\"] || \"\"); } catch (e2) {}\n"
+        "          }\n"
+        "        }\n"
+        "      } catch (e3) {}\n"
+        "    }\n"
+        "    code = String(code || \"\").trim();\n"
+        "    var base = " + base_literal + ";\n"
+        "    if (code && base) {\n"
+        "      try {\n"
+        "        var body = JSON.stringify({accessCode: code});\n"
+        "        var opt = {\n"
+        "          method: \"POST\",\n"
+        "          headers: {\n"
+        "            \"Accept\": \"application/json\",\n"
+        "            \"Content-Type\": \"application/json\"\n"
+        "          },\n"
+        "          body: body\n"
+        "        };\n"
+        "        var text = String(java.ajax(base + \"/api/auth/access/redeem,\" + JSON.stringify(opt)) || \"\").trim();\n"
+        "        if (text) {\n"
+        "          var payload = JSON.parse(text);\n"
+        "          if (payload && payload.token) {\n"
+        "            auth = \"Bearer \" + String(payload.token);\n"
+        "            try {\n"
+        "              source.putLoginHeader(JSON.stringify({Authorization: auth}));\n"
+        "            } catch (e4) {}\n"
+        "          }\n"
+        "        }\n"
+        "      } catch (e5) {}\n"
+        "    }\n"
+        "  }\n"
+        "  if (String(auth || \"\").trim()) h.Authorization = String(auth);\n"
+        "} catch (e) {}\n"
+        "JSON.stringify(h);"
     )
 
 
@@ -301,13 +367,19 @@ function legadoHubLogout() {{
 
 
 def _login_check_script() -> str:
-    # Keep simple: re-eval login helpers, ensure session if bound code exists.
-    # Must not throw; return original response body for Reading to keep parsing.
+    # After 401, drop stale Bearer so the next request header redeems again.
     return """var legadoHubOriginalResponse = result;
 try {
     eval(String(source.loginUrl));
-    legadoHubEnsureAuth(false);
-    legadoHubStatus(false);
+    var body = String(legadoHubOriginalResponse == null ? "" : legadoHubOriginalResponse);
+    if (/当前未登陆|未登陆|请登陆后使用|Unauthorized/i.test(body)) {
+        try { source.removeLoginHeader(); } catch (e0) {}
+        try { legadoHubEnsureAuth(false); } catch (e1) {}
+    } else if (!legadoHubHasLoginHeader()) {
+        try { legadoHubEnsureAuth(false); } catch (e2) {}
+    } else {
+        try { legadoHubStatus(false); } catch (e3) {}
+    }
 } catch (e) {}
 legadoHubOriginalResponse;"""
 
@@ -571,9 +643,9 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "本源已绑定个人授权码（专属订阅链接）；点登录即可鉴权，订阅管理可开网页控制台。"
+        "本源已绑定个人授权码（专属订阅链接）；每次请求自动附带/刷新登录态。"
         if bound
-        else "导入公共书源后请用授权码登录；推荐改用带 code 的专属订阅链接。"
+        else "导入公共书源后请先用授权码登录一次；推荐改用带 code 的专属订阅链接（全程自动）。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
@@ -584,8 +656,7 @@ def _build_source(
         "enabled": True,
         "enabledCookieJar": True,
         "enabledExplore": bool(explore_url),
-        # Keep empty: header @js that evals loginUrl/ajax broke Reading login sheet open.
-        "header": "",
+        "header": _request_header_rule(base_api, access_code=access_code),
         "loginUi": _login_ui(bound_access_code=bound),
         "loginUrl": _login_script(base_api, access_code=access_code),
         "loginCheckJs": _login_check_script(),
