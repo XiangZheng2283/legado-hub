@@ -102,4 +102,7 @@ The release workflow builds `xzixmn/legado-hub` with a `node:22` frontend stage 
   - push tag `v*` → `vX.Y.Z` + `latest` + `sha-<short>` (formal release)
   - Prefer LAN test hosts on `beta`; production on `vX.Y.Z` or `latest`
   - Bump root `VERSION` + `CHANGELOG.md` when cutting a formal tag
+- Reading book-source rule markers (`backend/app/core/legado_source.py`):
+  - **Beta / daily rule tests**: only bump `_READER_RULE_RELEASED_AT_MS` (wall-clock ms) so `lastUpdateTime` rises and Reading offers update. Do **not** change `_READER_RULE_VERSION` (display name).
+  - **Formal release** (`v*` tag): bump both `_READER_RULE_VERSION` and `_READER_RULE_RELEASED_AT_MS`.
 - Code verification remains local through `verify.ps1`.

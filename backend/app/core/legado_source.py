@@ -20,12 +20,15 @@ from app.core.public_security import (
 
 
 # Reading identifies this source by bookSourceUrl and only offers updates when
-# lastUpdateTime increases. Release discipline (change both on every rule ship):
-# 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
-# 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
-#    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
+# lastUpdateTime increases (not when the display version string changes alone).
+#
+# Release discipline (do not mix):
+# - BETA / daily rule tests: ONLY bump _READER_RULE_RELEASED_AT_MS to wall-clock
+#   now (ms). Keep _READER_RULE_VERSION unchanged so the name does not churn.
+# - FORMAL app release (git tag vX.Y.Z): bump BOTH — version (shown in name /
+#   comment / jsLib) and RELEASED_AT_MS.
 _READER_RULE_VERSION = "0.0.25"
-# 2026-07-24 login sheet: subscribe + library only (ms).
+# Last beta marker (login sheet: subscribe + library only). Bump this alone for tests.
 _READER_RULE_RELEASED_AT_MS = 1_785_020_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
@@ -51,10 +54,10 @@ def _reader_rule_version_stamp(version: str = _READER_RULE_VERSION) -> int:
 
 
 def _reader_rule_last_update_time(config: AppConfig) -> int:
-    """Reading update signal: max(release marker+version, AppConfig mtime).
+    """Reading update signal: max(RELEASED_AT + version stamp, AppConfig mtime).
 
-    Embedding version only in bookSourceName is not enough — clients key off
-    lastUpdateTime. RELEASED_AT_MS + version stamp must rise on each ship.
+    Clients key off lastUpdateTime. For beta rule ships, only RELEASED_AT_MS
+    needs to increase; the version stamp is stable between formal releases.
     """
     floor = _READER_RULE_RELEASED_AT_MS + _reader_rule_version_stamp()
     try:
