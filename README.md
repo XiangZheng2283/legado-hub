@@ -6,19 +6,20 @@
 
 ## 解决什么问题
 
-使用 Reading 或 Legado 阅读小说的用户普遍面临书源不稳定的问题：单个书源频繁失效，更换书源需要重新搜索和登录，多人使用时各自维护一套书源，重复消耗时间和带宽。
+用「阅读」看小说的人，多少都被书源折腾过：
 
-LegadoHub 采用**服务端订阅聚合**模式：将书源维护和章节处理统一放在后端，管理员统一管理书源与用户，读者只需搜索、订阅和阅读。
+- 书源说挂就挂，换源意味着重新搜索、重新登录；
+- 多台设备、多人使用，各自维护一套书源，同一本书重复抓取，浪费时间也浪费带宽。
 
-核心设计：
+LegadoHub 的做法是把这些麻烦事集中到服务端：**书源由管理员统一维护，章节由服务端统一抓取缓存，读者只要搜索、订阅、阅读。**
 
-- **共享书库**：每本书入库后成为全局共享资产，多人订阅同一本书共享一份章节缓存，各自独立管理进度
-- **主源优先，候选补全**：官方源作为主源获取章节正文；当主源仅返回 VIP 预览时，自动从第三方候选源补全完整内容
-- **后台持续处理**：章节从主源获取后按序缓存落盘，连载期间持续跟踪更新，不因单源状态波动丢失已有数据
-- **关注点分离**：管理员一次性维护书源和用户，读者只需要搜索、订阅、打开阅读器
+- **共享书库**：一本书入库后全站共享。多人订阅同一本书，共用一份章节缓存，阅读进度各记各的；
+- **主源失效，候选补全**：正文优先从官方源（主源）获取；主源只给 VIP 预览时，自动从第三方候选源补全完整章节；
+- **抓到的就是自己的**：章节抓取后按序缓存落盘，连载期间持续追更。之后源再怎么波动，已入库的章节始终可读；
+- **各管各的事**：管理员一次性配好书源和用户，读者只管找书、看书。
 
 ```
-管理员安装插件、登录官方源 → 创建用户分配授权码
+管理员安装插件、登录官方源 → 创建用户、发放授权码
                 ↓
 用户搜索并订阅 → 服务端从主源抓取章节、候选源补全
                 ↓
@@ -29,11 +30,11 @@ LegadoHub 采用**服务端订阅聚合**模式：将书源维护和章节处理
 
 ## 快速开始
 
-推荐使用 Docker Compose；不使用 Compose 时可直接跳到 [Docker CLI](#docker-cli)。
+推荐用 Docker Compose 部署；不用 Compose 的话，直接跳到 [Docker CLI](#docker-cli)。
 
 ### 前提条件
 
-一台安装了 Docker 的机器（NAS、VPS、本地均可），端口 `8765` 和 `8766` 空闲。
+一台装了 Docker 的机器（NAS、VPS、本地电脑都行），`8765` 和 `8766` 端口空闲。
 
 ### 1. 准备目录
 
@@ -49,22 +50,22 @@ curl -fsSL -o docker-compose.yml \
   https://raw.githubusercontent.com/XziXmn/legado-hub/main/docker-compose.yml
 ```
 
-编辑 `docker-compose.yml`，需要关注的部分：
+打开 `docker-compose.yml`，通常只有这几处需要留意：
 
 | 配置项 | 说明 |
 |--------|------|
-| `PUID` / `PGID` | 宿主机的用户和组 ID（默认 `1000`，大多数场景无需修改） |
-| `volumes` 左侧路径 | NAS 用户将相对路径替换为绝对路径（文件内已附群晖、飞牛等注释示例） |
-| `ports` | 仅在端口冲突时修改左侧宿主端口 |
+| `PUID` / `PGID` | 宿主机用户和组 ID，默认 `1000`，大多数场景不用改 |
+| `volumes` 左侧路径 | NAS 用户建议改成绝对路径（文件里附了群晖、飞牛的注释示例） |
+| `ports` | 只有端口冲突时才改左侧的宿主端口 |
 
-更换过 `PUID` / `PGID` 或旧书库属主不正确时，可执行一次完整修权：
+如果之前改过 `PUID` / `PGID`，或者旧书库的文件属主不对，先执行一次属主修正：
 
 ```bash
 LEGADOHUB_CHOWN_DATA=1 docker compose up -d --force-recreate legadohub
 docker compose up -d --force-recreate legadohub
 ```
 
-`docker compose restart` **不会**应用新的环境变量，不能用于这次迁移。
+注意：这里不能用 `docker compose restart`，restart 不会加载新的环境变量。
 
 ### 3. 启动
 
@@ -73,9 +74,7 @@ docker compose pull
 docker compose up -d
 ```
 
-首次拉取镜像较大（内含 Chromium），约数十秒后容器状态变为 `healthy`。
-
-验证两个入口均可达：
+镜像比较大（内置 Chromium），首次拉取需要等一会儿。看到容器状态变成 `healthy` 就说明启动完成。顺手验证两个入口：
 
 ```bash
 curl -s http://127.0.0.1:8765/api/auth/entrypoint   # → "entrypoint":"public"
@@ -84,40 +83,40 @@ curl -s http://127.0.0.1:8766/api/auth/entrypoint   # → "entrypoint":"admin"
 
 ### 4. 获取管理员密码
 
-首次启动自动创建账号 `admin`，高熵随机密码仅在日志中打印一次：
+首次启动会自动创建 `admin` 账号，随机密码只在日志里打印一次：
 
 ```bash
 docker compose logs legadohub | grep -i password
 ```
 
-若错过日志，执行重置：
+错过了也没关系，直接重置：
 
 ```bash
 docker compose exec -T legadohub \
   python /app/backend/scripts/reset_user_password.py --username admin
 ```
 
-登录后建议前往 **设置 → 账户安全** 修改密码。
+登录后建议去 **设置 → 账户安全** 修改密码。
 
 ### 5. 初始配置
 
-1. 打开管理后台 `http://服务器IP:8766`，使用 `admin` 登录
-2. 安装书源插件（第三方插件随镜像附带；官方插件需放入 `plugins/sources/official/` 后重启容器）
-3. 在「用户管理」创建普通用户，**立即保存授权码**（对话框关闭后不再显示明文）
+1. 打开管理后台 `http://服务器IP:8766`，用 `admin` 登录；
+2. 安装书源插件：第三方插件已随镜像附带；官方插件需要放入 `plugins/sources/official/` 后重启容器；
+3. 在「用户管理」创建普通用户，**授权码请当场保存**——对话框关闭后不再显示明文。
 
 ### 6. 接入 Reading / Legado
 
-在阅读器中通过以下地址添加书源：
+在阅读器中添加书源，地址填：
 
 ```
 http://服务器IP:8765/api/subscribe/legado/source
 ```
 
-导入后在书源管理页启用本书源，即可进入搜索与阅读。从搜索结果进入书籍详情页即开始阅读，阅读器展现的正是经过服务端聚合处理后的章节列表。
+导入后在书源管理页启用本书源，就能开始搜索和阅读了。从搜索结果进入书籍详情页，你看到的就是服务端聚合处理后的章节列表。
 
 ### Docker CLI
 
-不使用 Compose 时，在已经准备好数据目录的 `/opt/legado-hub` 中运行：
+不用 Compose 时，在已建好数据目录的 `/opt/legado-hub` 下运行：
 
 ```bash
 docker pull xzixmn/legado-hub:latest
@@ -145,36 +144,35 @@ docker run -d \
 
 ## 公网部署（VPS / 域名 / 公网 IP）
 
-默认按**本机或受控局域网**设计：未配置公网地址时，阅读口只接受局域网 Host；公网客户端直接访问公网 IPv4 会被拒绝（`400 Host is not allowed`）。  
-服务本身仍监听 `0.0.0.0`，容器可正常启动；需要的是登记**允许的公网 origin**。
+LegadoHub 默认只服务本机和局域网：没配置公网地址时，阅读口只认局域网的 Host，公网访问会被直接拒绝（`400 Host is not allowed`）。这是有意的安全策略——容器本身监听 `0.0.0.0`、可以正常启动，你要做的只是把**对外访问的地址登记进白名单**。
 
 ### 公网地址优先级
 
 ```
-控制台「设置 → 阅读 → 允许的公网地址」
+管理后台「设置 → 阅读 → 允许的公网地址」
   > 环境变量 LEGADOHUB_PUBLIC_BASE_URL
   > 仅局域网自动识别
 ```
 
-- **部署时**：可在 `docker-compose.yml` 的 `environment` 里写入变量做首次引导  
-- **之后**：在管理后台保存「允许的公网地址」即可覆盖变量，**无需重建容器**  
-- **局域网访问**：仍按实际访问 Host 生成内网书源（与公网为双源身份，见下文）
+- **部署时**：可以在 `docker-compose.yml` 的 `environment` 里写好变量，完成首次引导；
+- **之后**：在管理后台保存「允许的公网地址」即可覆盖环境变量，**不用重建容器**；
+- **局域网访问不受影响**：内网访问仍按实际 Host 生成内网书源（与公网书源是两套身份，见下文）。
 
-### 1. 环境变量（可选，首次引导）
+### 1. 环境变量（可选，用于首次引导）
 
-在 `docker-compose.yml` 的 `legadohub.environment` 中增加（域名或公网 IP 均可）：
+在 `docker-compose.yml` 的 `legadohub.environment` 里加（域名和公网 IP 二选一）：
 
-**域名 + HTTPS（推荐，经反代终止 TLS）**
+**域名 + HTTPS（推荐，TLS 在反代上终止）**
 
 ```yaml
 - LEGADOHUB_PUBLIC_BASE_URL=https://book.example.com
 - LEGADOHUB_ALLOWED_HOSTS=book.example.com
 - LEGADOHUB_ALLOWED_ORIGINS=https://book.example.com
-# 反代所在网段（Docker 网桥 / 本机反代按实际填写）
+# 反代所在网段（Docker 网桥 / 本机反代按实际情况填）
 - LEGADOHUB_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
 ```
 
-**公网 IP + 直连 HTTP（无域名时）**
+**公网 IP + HTTP 直连（没有域名时）**
 
 ```yaml
 - LEGADOHUB_PUBLIC_BASE_URL=http://203.0.113.10:8765
@@ -182,16 +180,16 @@ docker run -d \
 - LEGADOHUB_ALLOWED_ORIGINS=http://203.0.113.10:8765
 ```
 
-说明：
+几个容易踩的坑：
 
 | 项 | 要求 |
 |----|------|
-| origin 格式 | 必须 `http://` 或 `https://` 开头，**不要带路径**（如 `/api`） |
-| 端口 | 非 80/443 时必须写在 origin 与访问地址中 |
-| 一致性 | 浏览器、Reading 导入地址、白名单 origin 的协议/主机/端口须一致 |
-| 固定 HTTPS | 配置了 `https://` 的 `LEGADOHUB_PUBLIC_BASE_URL` 时，阅读口会要求 HTTPS |
+| origin 格式 | 必须以 `http://` 或 `https://` 开头，**不要带路径**（比如 `/api`） |
+| 端口 | 非 80/443 端口必须写进 origin，访问地址也要带上 |
+| 前后一致 | 浏览器地址、Reading 导入地址、白名单 origin 的协议/主机/端口必须完全一致 |
+| 固定 HTTPS | 一旦 `LEGADOHUB_PUBLIC_BASE_URL` 配成 `https://`，阅读口就只接受 HTTPS |
 
-修改环境变量后需重新创建容器才能生效：
+改完环境变量要重建容器才生效：
 
 ```bash
 docker compose up -d --force-recreate legadohub
@@ -199,21 +197,21 @@ docker compose up -d --force-recreate legadohub
 
 ### 2. 控制台设置（推荐，可覆盖变量）
 
-1. 从**可访问的入口**打开管理后台（首次可先在本机/内网用 `http://服务器局域网IP:8766`，或已放行防火墙的 `http://公网IP:8766`）
-2. 登录后打开 **设置 → 阅读 → 公网访问白名单 → 允许的公网地址**
-3. 填入与对外访问一致的 origin，例如：
+1. 先从一个**能访问的入口**打开管理后台：比如内网的 `http://服务器局域网IP:8766`，或防火墙已放行的 `http://公网IP:8766`；
+2. 登录后进入 **设置 → 阅读 → 公网访问白名单 → 允许的公网地址**；
+3. 填入和对外访问地址一致的 origin，例如：
    - `https://book.example.com`
    - `http://203.0.113.10:8765`
-4. 保存后立即生效；此后**设置优先于** `LEGADOHUB_PUBLIC_BASE_URL`
+4. 保存立即生效，并且从此**优先于**环境变量 `LEGADOHUB_PUBLIC_BASE_URL`。
 
 ### 3. 防火墙与反代建议
 
 | 端口 | 用途 | 建议 |
 |------|------|------|
-| `8765` | 用户 / Reading 书源 | 可经域名反代或公网放行；务必配合授权码 |
-| `8766` | 管理后台 | **不要对全网裸奔**；限制来源 IP、VPN 或仅内网 |
+| `8765` | 用户 / Reading 书源 | 可以走域名反代或公网放行，但务必配合授权码使用 |
+| `8766` | 管理后台 | **别裸奔**：限制来源 IP、走 VPN，或干脆只对局域网开放 |
 
-TLS、反向代理（Caddy / Nginx / Cloudflare 等）由部署者自行配置；应用不内置公网证书与反代。
+TLS 和反向代理（Caddy / Nginx / Cloudflare 等）需要自己配置，应用不内置证书和反代。
 
 ### 4. 接入书源（公网）
 
@@ -225,7 +223,7 @@ https://你的域名/api/subscribe/legado/source
 http://你的公网IP:8765/api/subscribe/legado/source
 ```
 
-须与已登记的公网 origin 一致。用该地址打开阅读入口并更新书源后，生成的链接才会是公网地址。
+地址必须和已登记的公网 origin 一致。用这个地址打开过阅读入口并更新书源后，生成的链接才会是公网地址。
 
 ### 5. 公网与局域网双源
 
@@ -234,36 +232,36 @@ http://你的公网IP:8765/api/subscribe/legado/source
 | 公网域名 / 公网 IP | `LegadoHub`（公网） |
 | 局域网 IP | `LegadoHub-LAN`（内网，名称带「·内网」） |
 
-两套可同时存在；授权与进度按书源分开。日常建议按当前网络只启用对应那一套再搜索。
+两套书源可以同时存在，但授权和进度各自独立。日常建议人在哪个网络就只启用哪一套，免得搜索结果混在一起。
 
 ### 6. 自检
 
 ```bash
-# 容器健康
+# 容器健康状态
 docker compose ps
 
-# 入口（本机）
+# 本机入口
 curl -s http://127.0.0.1:8765/api/auth/entrypoint
 curl -s http://127.0.0.1:8766/api/auth/entrypoint
 
-# 公网（将地址换成你的 origin）
+# 公网入口（换成你的 origin）
 curl -sI https://book.example.com/api/auth/entrypoint
 ```
 
-若返回 `400 Host is not allowed`，说明当前 Host 未进入白名单（设置或环境变量），或协议/端口与登记不一致。
+如果公网返回 `400 Host is not allowed`，说明当前 Host 不在白名单里，或者协议/端口和登记的不一致，回上面两步检查一下。
 
 ---
 
 ## 两种使用方式
 
-导入聚合书源后，Reading / Legado 提供两种使用方式：
+导入聚合书源后，在 Reading / Legado 里有两种用法：
 
 | 方式 | 说明 |
 |------|------|
-| **直接搜索第三方源** | 无需订阅，但需先用授权码登录；随后可在阅读器中直接搜索启用中的第三方书源。搜索结果独立显示，阅读器按常规流程获取章节。适合临时阅读。 |
-| **订阅后阅读共享库** | 在书源界面输入授权码登录后，可以进入订阅控制台搜索并创建订阅。订阅书籍的章节由服务端持续处理：主源获取正文，候选源补全 VIP 预览，结果缓存落盘。优势：即使主源与第三方源后续不稳定，已处理的章节也始终可读。 |
+| **直接搜索第三方源** | 用授权码登录后，直接在阅读器里搜索已启用的第三方书源，随搜随看，不经过订阅流程。适合临时读一本。 |
+| **订阅后阅读共享库** | 在订阅控制台搜索并创建订阅，之后章节由服务端持续处理：主源抓正文、候选源补全 VIP 预览、结果缓存落盘。之后源再不稳定，已处理的章节也始终可读。适合长期追更。 |
 
-**两者可以混合使用**：搜索结果中既包含第三方源的实时结果，也包含已入库的共享库聚合条目。
+两种方式可以混着用：搜索结果里既有第三方源的实时结果，也有已入库的共享库条目。
 
 ---
 
@@ -271,38 +269,38 @@ curl -sI https://book.example.com/api/auth/entrypoint
 
 | 功能 | 说明 |
 |------|------|
-| 共享书库 | 每本书入库后为全局资产，多人订阅共享一份章节缓存 |
-| 主源优先，候选补全 | 官方源为主源获取章节；主源仅有 VIP 预览时，自动从第三方候选源补全正文 |
-| 自动更新 | 连载期间持续检查更新，新章节按序抓取处理 |
-| 邀请制多用户 | 管理员创建用户并分配独立授权码，互不干扰 |
-| 入口分离 | `8765` 面向用户与阅读器，`8766` 面向管理员（建议防火墙限制来源） |
+| 共享书库 | 每本书入库后全站共享，多人订阅共用一份章节缓存 |
+| 主源优先，候选补全 | 正文优先从官方源获取；主源只有 VIP 预览时，自动从第三方候选源补全 |
+| 自动追更 | 连载期间持续检查更新，新章节按序抓取入库 |
+| 邀请制多用户 | 管理员创建用户、发放独立授权码，互不干扰 |
+| 双入口分离 | `8765` 面向用户和阅读器，`8766` 面向管理员（建议只对可信来源开放） |
 
 ---
 
 ## 常见问题
 
 <details>
-<summary>为什么在 Reading 中搜不到刚订阅的书？</summary>
+<summary>为什么在 Reading 里搜不到刚订阅的书？</summary>
 
-Reading 仅展示已发布且具备可读章节的书籍。请先在 Web 控制台「我的书库」确认至少已有可读章节并已发布。
+Reading 只展示已发布且有可读章节的书。先到 Web 控制台「我的书库」确认书已发布、并且至少有一章可读。
 </details>
 
 <details>
-<summary>为什么部分章节仅有预览？</summary>
+<summary>为什么部分章节只有预览？</summary>
 
-服务不会绕过目标站的付费规则。当主源账号无完整权限、且所有候选源也未能补全时，章节可能仅保留预览内容。
+服务不会绕过目标站的付费规则。如果主源账号没有完整权限、所有候选源也没能补全，章节就只能保留预览内容。
 </details>
 
 <details>
-<summary>书源可达，正文仍然获取失败？</summary>
+<summary>书源显示可达，正文还是获取失败？</summary>
 
-“可达”仅表示网络连通，不保证页面结构、登录态或章节权限有效。请以书籍详情页的具体错误信息为准。
+「可达」只代表网络能连上，不代表页面结构、登录状态或章节权限没问题。具体原因看书详情页里的错误信息。
 </details>
 
 <details>
-<summary>多个用户可以订阅同一本书吗？</summary>
+<summary>多个用户能订阅同一本书吗？</summary>
 
-可以。系统为每本书维护一份共享章节数据，各用户独立保存订阅关系与阅读进度。
+可以。每本书只有一份共享的章节数据，订阅关系和阅读进度各自独立保存。
 </details>
 
 <details>
@@ -313,29 +311,29 @@ docker compose exec -T legadohub \
   python /app/backend/scripts/reset_user_password.py --username admin
 ```
 
-此命令生成新密码并撤销该管理员的所有现有会话。
+会生成新密码，同时踢掉该管理员的所有登录会话。
 </details>
 
 <details>
 <summary>第三方插件目录被清空了？</summary>
 
-重启时若目录为空，入口脚本会从镜像种子恢复默认第三方插件。本地的自定义修改无法恢复，除非有备份。
+重启时如果目录是空的，启动脚本会从镜像里恢复默认的第三方插件。你自己改过的版本不会恢复，除非事先备份过。
 </details>
 
 <details>
 <summary>公网 VPS 上提示 Host is not allowed？</summary>
 
-未配置公网白名单时，阅读口会拒绝公网 Host。请设置环境变量 `LEGADOHUB_PUBLIC_BASE_URL`（及配套 `ALLOWED_HOSTS` / `ORIGINS`），或在管理后台「设置 → 阅读 → 允许的公网地址」登记与访问一致的 origin（可用域名或公网 IP）。详见 [公网部署](#公网部署vps--域名--公网-ip)。
+阅读口默认不认公网 Host。设置环境变量 `LEGADOHUB_PUBLIC_BASE_URL`（连同 `ALLOWED_HOSTS` / `ALLOWED_ORIGINS`），或在管理后台「设置 → 阅读 → 允许的公网地址」登记与访问地址一致的 origin（域名或公网 IP 都行）。详见 [公网部署](#公网部署vps--域名--公网-ip)。
 </details>
 
 ---
 
 ## 安全与使用边界
 
-- 默认面向本机或受控局域网部署。公网访问须登记允许的公网 origin（控制台设置优先于环境变量），详见 [公网部署](#公网部署vps--域名--公网-ip)。
-- TLS、反向代理、防火墙与管理口（`8766`）暴露范围由部署者负责；不提供开放注册与匿名阅读。
-- 请仅在有权访问和处理相应内容的前提下使用，并遵守目标站点服务条款与当地法律法规。
-- 本项目并非 Legado 官方项目，不保证第三方书源的持续可用性。
+- 默认面向本机或受控局域网。要公网访问，请先登记允许的公网 origin（管理后台的设置优先于环境变量），详见 [公网部署](#公网部署vps--域名--公网-ip)。
+- TLS、反向代理、防火墙、管理口（`8766`）的暴露范围，都由部署者自己把关；项目不提供开放注册和匿名阅读。
+- 请只在有权访问和处理相应内容的前提下使用，遵守目标站点的服务条款和当地法律法规。
+- 本项目不是 Legado 官方项目，也不保证任何第三方书源的持续可用性。
 
 ---
 
@@ -347,7 +345,7 @@ docker compose exec -T legadohub \
 | 书源插件开发规范 | [docs/architecture/source-plugin-contract.zh-CN.md](docs/architecture/source-plugin-contract.zh-CN.md) |
 | 插件编写教程 | [docs/skills/book-source-craft/README.md](docs/skills/book-source-craft/README.md) |
 | 产品边界与设计原则 | [docs/PRODUCT.md](docs/PRODUCT.md) |
-| 全量校验 | `verify.ps1` |
+| 完整校验脚本 | `verify.ps1` |
 
 Windows 本地开发：
 
@@ -362,13 +360,13 @@ Set-Location ../backend
 ../.venv/Scripts/python.exe -m app.server --host 0.0.0.0 --public-port 8765 --admin-port 8766
 ```
 
-或直接运行 `.\start.bat`。
+也可以直接跑 `.\start.bat`。
 
 ---
 
 ## 贡献
 
-问题反馈与功能建议请提交至 [GitHub Issues](https://github.com/XziXmn/legado-hub/issues)。
+问题反馈和功能建议，欢迎到 [GitHub Issues](https://github.com/XziXmn/legado-hub/issues) 提。
 
 ---
 
