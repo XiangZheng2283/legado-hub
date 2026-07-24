@@ -12,7 +12,11 @@ from pathlib import Path
 from app.config import GENERATED_DIR
 from app.core.aggregate_config import load_aggregate_config
 from app.core.app_config import AppConfig
-from app.core.public_security import get_public_base_url, normalize_public_base_url
+from app.core.public_security import (
+    get_public_base_url,
+    is_lan_reading_base,
+    normalize_public_base_url,
+)
 
 
 # Reading identifies this source by bookSourceUrl and only offers updates when
@@ -20,9 +24,15 @@ from app.core.public_security import get_public_base_url, normalize_public_base_
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.16"
-# 2026-07-23 release marker (ms). Bump this whenever _READER_RULE_VERSION bumps.
-_READER_RULE_RELEASED_AT_MS = 1_784_800_000_000
+_READER_RULE_VERSION = "0.0.17"
+# 2026-07-24 dual LAN/public source identity (ms). Bump with _READER_RULE_VERSION.
+_READER_RULE_RELEASED_AT_MS = 1_784_900_000_000
+
+# Dual source identity: public vs LAN imports coexist in Reading.
+_PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
+_LAN_BOOK_SOURCE_URL = "LegadoHub-LAN"
+_LAN_NAME_MARK = "·内网"
+_LAN_GROUP_MARK = "内网"
 
 
 def _reader_rule_version_stamp(version: str = _READER_RULE_VERSION) -> int:
@@ -440,19 +450,37 @@ def _chapter_comment_action_rule() -> str:
     )
 
 
+def _source_identity_for_base(base_api: str) -> tuple[str, str, str, bool]:
+    """Return (bookSourceUrl, display name stem, group, is_lan) for this base."""
+    config = load_aggregate_config()
+    name = str(config.get("name") or "LegadoHub 聚合").strip() or "LegadoHub 聚合"
+    group = str(config.get("group") or "聚合,LegadoHub").strip() or "聚合,LegadoHub"
+    lan = is_lan_reading_base(base_api)
+    if not lan:
+        return _PUBLIC_BOOK_SOURCE_URL, name, group, False
+    display = name if _LAN_NAME_MARK in name else f"{name}{_LAN_NAME_MARK}"
+    parts = [part.strip() for part in group.split(",") if part.strip()]
+    if _LAN_GROUP_MARK not in parts:
+        parts.append(_LAN_GROUP_MARK)
+    return _LAN_BOOK_SOURCE_URL, display, ",".join(parts), True
+
+
 def _build_source(base_api: str | None = None) -> dict:
     base_api = normalize_public_base_url(base_api or get_public_base_url())
-    config = load_aggregate_config()
-    name = config.get("name", "LegadoHub 聚合")
-    group = config.get("group", "聚合,LegadoHub")
+    book_source_url, name, group, is_lan = _source_identity_for_base(base_api)
     app_config = AppConfig.get()
     chapter_comment = app_config.chapter_comment
 
     explore_url = f"已发布书库::{base_api}/api/subscribe/legado/explore?page={{{{page}}}}"
+    network_note = (
+        "本条为内网书源（bookSourceUrl=LegadoHub-LAN），可与公网书源并存；"
+        if is_lan
+        else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
+    )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
         "bookSourceGroup": group,
-        "bookSourceUrl": "LegadoHub",
+        "bookSourceUrl": book_source_url,
         "lastUpdateTime": _reader_rule_last_update_time(app_config),
         "bookSourceType": 0,
         "enabled": True,
@@ -464,6 +492,7 @@ def _build_source(base_api: str | None = None) -> dict:
         "loginCheckJs": _login_check_script(),
         "bookSourceComment": (
             f"规则版本 {_READER_RULE_VERSION}。"
+            f"{network_note}"
             "搜索同时显示已发布共享书和启用的第三方书源；官方源仍只用于后台聚合，"
             "新增订阅及运维操作统一在 Web Console 完成。"
         ),

@@ -272,6 +272,38 @@ def _is_default_allowed_host(host: str) -> bool:
     )
 
 
+def is_lan_reading_base(base_url: str) -> bool:
+    """True when a reading base URL host is private/local (LAN dual-source identity).
+
+    Used to choose ``LegadoHub-LAN`` vs ``LegadoHub`` for bookSourceUrl/name so
+    public and intranet imports can coexist in Reading. Broader than
+    ``_is_default_allowed_host`` for bare public IPv6: only private/loopback/
+    link-local ranges and known LAN DNS suffixes count as 内网.
+    """
+    raw = str(base_url or "").strip()
+    if not raw:
+        return False
+    try:
+        origin = normalize_public_base_url(raw)
+    except RuntimeError:
+        return False
+    host = (urlsplit(origin).hostname or "").strip().lower()
+    if not host:
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return host in {"localhost", "testserver"} or host.endswith(_LAN_DNS_SUFFIXES)
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
+        address = address.ipv4_mapped
+    if address.is_loopback or address.is_private or address.is_link_local:
+        return True
+    return any(
+        address.version == network.version and address in network
+        for network in _LAN_NETWORKS
+    )
+
+
 def _dynamic_host_client_allowed(request: Request) -> bool | None:
     immediate = request.client.host if request.client and request.client.host else ""
     normalized = _normalize_host(immediate)

@@ -42,7 +42,10 @@
 
 ## 书源更新
 
-1. `bookSourceUrl` 固定为稳定唯一值，更新时不得改变，否则 Reading 会把它识别成新书源。
+1. 公网与内网**双源并存**：按导入时的 reading base Host 分叉身份。
+   - 公网域名：`bookSourceUrl=LegadoHub`，显示名保持配置原名。
+   - 局域网/私网 IP / localhost：`bookSourceUrl=LegadoHub-LAN`，显示名追加 `·内网`，分组追加 `内网`。
+   - 同一网络身份内 `bookSourceUrl` 保持稳定，更新时不得在公网/内网之间互换，否则 Reading 会当成另一书源。
 2. 生成规则版本由代码发布常量维护；`lastUpdateTime` 取发布常量与持久化配置文件修改时间的较大值，使评论入口设置变化能被 Reading 识别，同时避免无变化请求反复制造更新。
 3. `legado-E` 只在相同 `bookSourceUrl` 下发现新的 `lastUpdateTime` 时标记更新；`bookSourceName` 中的版本号只用于展示。
 
