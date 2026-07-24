@@ -269,9 +269,10 @@ Set-Location ../backend
 
 ## 许可
 
-本仓库当前未附带 `LICENSE` 文件。在作者明确声明许可协议前，请勿默认按开源许可再分发或商用。
+[MIT License](LICENSE)。源码、文档与仓库附属资源均按 MIT 授权，可自由使用、修改、分发与商用，须保留版权声明。
 
 ---
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docker Image](https://img.shields.io/badge/Docker-xzixmn%2Flegado--hub-2496ED?logo=docker)](https://hub.docker.com/r/xzixmn/legado-hub)
 [![GitHub](https://img.shields.io/badge/GitHub-XziXmn-181717?logo=github)](https://github.com/XziXmn/legado-hub)
