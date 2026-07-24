@@ -1103,8 +1103,12 @@ def get_legado_source(request: Request, code: str = "") -> list[dict]:
             if exc.status_code in {401, 403}:
                 auth_rate_limiter.record_failure(*keys)
             raise
+    from app.core.public_security import reading_base_url
+
+    # Always bake the reader entrypoint (8765), never admin (8766) — access/enter
+    # and Reading APIs only exist on the public listener.
     return generate_legado_source(
-        get_public_base_url(request),
+        reading_base_url(request),
         access_code=access_code or None,
     )
 

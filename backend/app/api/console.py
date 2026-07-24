@@ -3270,13 +3270,14 @@ def _subscription_links_for_access_code(access_code: str, request: Request) -> d
     """Attach personal source/subscription URLs for a just-issued access code."""
     from app.core.public_security import (
         effective_public_base_url,
+        ensure_reader_entrypoint_origin,
         get_public_base_url,
         is_lan_reading_base,
     )
 
-    public = effective_public_base_url()
+    public = ensure_reader_entrypoint_origin(effective_public_base_url())
     try:
-        request_base = get_public_base_url(request)
+        request_base = ensure_reader_entrypoint_origin(get_public_base_url(request))
     except Exception:
         request_base = ""
     lan = ""

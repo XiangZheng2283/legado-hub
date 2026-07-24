@@ -29,7 +29,7 @@ from app.core.public_security import (
 #   comment / jsLib) and RELEASED_AT_MS.
 _READER_RULE_VERSION = "0.0.25"
 # Last beta marker: header no-ajax so login sheet can open (ms). Bump this alone for tests.
-_READER_RULE_RELEASED_AT_MS = 1_785_030_000_000
+_READER_RULE_RELEASED_AT_MS = 1_785_040_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"

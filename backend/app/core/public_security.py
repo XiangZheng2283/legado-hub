@@ -411,7 +411,7 @@ def get_public_base_url(request: Request | None = None) -> str:
        public-host allowlist (settings ``publicBaseUrl`` > env).
     2. Fixed mode (env ``LEGADOHUB_PUBLIC_BASE_URL`` at process start): return
        **settings > env** so UI can override the deploy variable without rebuild.
-    3. Offline/script: fixed settings>env when present, else process default base.
+    3. Offline/script: fixed settings/env when present, else process default base.
        Does not invent a public origin solely from allowlist when unset.
     """
     security = (
@@ -430,6 +430,52 @@ def get_public_base_url(request: Request | None = None) -> str:
     # Offline + dynamic: do not force settings/env into offline generators unless
     # a fixed env base was baked into security at process start (already handled).
     return security.public_base_url
+
+
+def reading_base_url(request: Request | None = None) -> str:
+    """Base URL for Reading book-source JSON and access/enter links.
+
+    Always targets the **reader** entrypoint port. Admin console is often on
+    ``ADMIN_PORT`` (8766); baking that into LEGADOHUB_BASE makes
+    ``/api/auth/access/enter`` 404 because access routes only register on the
+    public listener.
+    """
+    return ensure_reader_entrypoint_origin(get_public_base_url(request))
+
+
+def ensure_reader_entrypoint_origin(base: str) -> str:
+    """Rewrite admin-port origins to the reader port; leave other origins as-is."""
+    from urllib.parse import urlsplit, urlunsplit
+
+    from app.config import ADMIN_PORT, PORT as PUBLIC_PORT
+
+    raw = str(base or "").strip().rstrip("/")
+    if not raw:
+        return ""
+    try:
+        normalized = normalize_public_base_url(raw)
+    except Exception:
+        normalized = raw
+    parts = urlsplit(normalized if "://" in normalized else f"http://{normalized}")
+    host = parts.hostname or ""
+    if not host:
+        return normalized
+    port = parts.port
+    scheme = (parts.scheme or "http").lower()
+    if port != ADMIN_PORT:
+        return normalized.rstrip("/")
+    # Admin port → reader port (preserve host + scheme).
+    if (scheme == "http" and PUBLIC_PORT == 80) or (scheme == "https" and PUBLIC_PORT == 443):
+        netloc = host
+    else:
+        netloc = f"{host}:{PUBLIC_PORT}"
+    userinfo = ""
+    if parts.username:
+        userinfo = parts.username
+        if parts.password:
+            userinfo += f":{parts.password}"
+        userinfo += "@"
+    return urlunsplit((scheme, f"{userinfo}{netloc}", "", "", "")).rstrip("/")
 
 
 def normalize_public_base_url(value: str) -> str:

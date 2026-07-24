@@ -7,8 +7,9 @@ from enum import StrEnum
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi import Request
 from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app import config
 from app.api import health, legado, console, auth, subscribe
@@ -189,6 +190,22 @@ def create_app(
         app.include_router(subscribe.router)
         app.include_router(legado.router)
         app.include_router(console.console_router)
+
+        # Compat: old book sources baked admin port (8766) into LEGADOHUB_BASE.
+        # Access redeem/enter only exist on the reader listener — bounce GET enter.
+        @app.get("/api/auth/access/enter")
+        async def admin_access_enter_redirect(request: Request):
+            host = (request.headers.get("host") or "127.0.0.1").split(":")[0]
+            scheme = "https" if request.url.scheme == "https" else "http"
+            # Prefer forwarded proto when behind TLS terminator.
+            xf_proto = (request.headers.get("x-forwarded-proto") or "").split(",")[0].strip()
+            if xf_proto in {"http", "https"}:
+                scheme = xf_proto
+            qs = request.url.query
+            target = f"{scheme}://{host}:{config.PORT}/api/auth/access/enter"
+            if qs:
+                target = f"{target}?{qs}"
+            return RedirectResponse(url=target, status_code=307)
     else:
         app.include_router(health.router)
         app.include_router(legado.router)
