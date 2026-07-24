@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { api, apiErrorMessage, type ManagedUser } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
+import { copyTextToClipboard } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -59,6 +60,7 @@ export function UsersPage() {
   const [resetError, setResetError] = useState("")
   const [issuedAccessCode, setIssuedAccessCode] = useState<IssuedAccessCode | null>(null)
   const [copiedKey, setCopiedKey] = useState<string>("")
+  const [copyError, setCopyError] = useState("")
   const [actionNotice, setActionNotice] = useState("")
 
   const usersQuery = useQuery({ queryKey: ["users"], queryFn: api.users.list })
@@ -109,6 +111,7 @@ export function UsersPage() {
   const closeIssuedDialog = () => {
     setIssuedAccessCode(null)
     setCopiedKey("")
+    setCopyError("")
   }
 
   const submitCreate = async (event: React.FormEvent) => {
@@ -173,9 +176,18 @@ export function UsersPage() {
   }
 
   const copyText = async (key: string, value?: string) => {
-    if (!value || !navigator.clipboard) return
-    await navigator.clipboard.writeText(value)
-    setCopiedKey(key)
+    if (!value) {
+      setCopyError("没有可复制的内容。")
+      return
+    }
+    try {
+      await copyTextToClipboard(value)
+      setCopiedKey(key)
+      setCopyError("")
+    } catch {
+      setCopiedKey("")
+      setCopyError("复制失败：请手动选中文本复制（HTTP 局域网环境可能限制剪贴板）。")
+    }
   }
 
   const users = usersQuery.data?.items || []
@@ -380,6 +392,11 @@ export function UsersPage() {
                 <AlertDescription>
                   未配置公网地址时，可先把授权码发给用户，或在「设置 → 阅读 → 允许的公网地址」登记 origin 后重新生成链接。
                 </AlertDescription>
+              </Alert>
+            )}
+            {copyError && (
+              <Alert variant="destructive">
+                <AlertDescription>{copyError}</AlertDescription>
               </Alert>
             )}
           </div>
