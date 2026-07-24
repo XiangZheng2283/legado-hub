@@ -148,8 +148,8 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     ).status_code == 404
 
 
-def test_settings_public_book_source_url_for_issued_links(monkeypatch, tmp_path) -> None:
-    """公网书源地址 comes only from settings (no LEGADOHUB_PUBLIC_BASE_URL)."""
+def test_settings_public_book_source_url_overrides_environment_fallback(monkeypatch, tmp_path) -> None:
+    """公网书源地址 uses the deployment value until settings override it."""
     from app.core.app_config import AppConfig
     from app.core.public_security import effective_public_base_url, get_public_base_url
 
@@ -159,7 +159,9 @@ def test_settings_public_book_source_url_for_issued_links(monkeypatch, tmp_path)
     AppConfig.reset()
     monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
 
-    assert effective_public_base_url() == ""
+    environment_origin = "https://books.environment.example:2087"
+    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", environment_origin)
+    assert effective_public_base_url() == environment_origin
     security = load_public_security_config()
     assert security.dynamic_base_url is True
     assert security.enforce_reading_public_allowlist is False
@@ -172,9 +174,8 @@ def test_settings_public_book_source_url_for_issued_links(monkeypatch, tmp_path)
     monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
 
     assert effective_public_base_url() == settings_origin
-    # Offline get_public_base_url stays process default; issued links use effective_*.
-    assert get_public_base_url() != settings_origin or True
-    assert effective_public_base_url() == settings_origin
+    # Request/offline base resolution remains independent from issued-link defaults.
+    assert get_public_base_url() != settings_origin
 
 
 def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> None:

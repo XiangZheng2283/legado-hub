@@ -35,14 +35,6 @@ interface PageReviewSummary {
   paragraphIds: number[]
 }
 
-function countParagraphReviews(reviews?: ChapterReviewsResponse): number {
-  if (!reviews) return 0
-  return (reviews.hotParagraphReviews || []).reduce((total, item) => {
-    if (!item?.matchedText) return total
-    return total + Number(item.commentCount || item.totalCommentCount || item.hotCommentCount || 0)
-  }, 0)
-}
-
 function countChapterReviews(reviews?: ChapterReviewsResponse): number {
   if (!reviews) return 0
   const summaryCount = Number(reviews.summary?.chapterEndCount || 0)

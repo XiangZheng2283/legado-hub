@@ -148,7 +148,7 @@ describe("SettingsPage subscription policy", () => {
     renderPage()
 
     await user.click(await screen.findByRole("tab", { name: "阅读" }))
-    expect(screen.getByText("公网书源地址")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "公网书源地址" })).toBeInTheDocument()
     const baseInput = screen.getByLabelText("公网书源地址")
     await user.clear(baseInput)
     await user.type(baseInput, "https://book.example.com:2087")

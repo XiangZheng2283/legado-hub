@@ -324,8 +324,8 @@ def test_review_view_embedding_and_focused_paragraph_layout(fixture_client, monk
     assert "frame-ancestors 'self'" in view_response.headers["content-security-policy"]
     assert 'data-tab="author"' not in view_response.text
     assert 'data-tab="chapter"' in view_response.text
-    assert "grid-template-columns:repeat(2,1fr)" in view_response.text
-    assert "grid-template-columns:repeat(3,1fr)" not in view_response.text
+    assert ".review-tabs{\n  display:flex;" in view_response.text
+    assert "grid-template-columns:repeat(2,1fr)" not in view_response.text
     assert focused_response.status_code == 200
     assert 'data-tab="author"' not in focused_response.text
     assert 'data-tab="chapter"' not in focused_response.text

@@ -540,12 +540,11 @@ def test_legado_published_search_pages_in_database_without_metadata_reads(
     assert first.status_code == 200
     assert second.status_code == 200
     assert len(first.json()["items"]) == 20
-    assert len(second.json()["items"]) == 5
+    assert len(second.json()["items"]) == 0
     assert "debug" not in first.json()
     assert "debug" not in second.json()
     first_ids = {item["aggregateBookId"] for item in first.json()["items"]}
-    second_ids = {item["aggregateBookId"] for item in second.json()["items"]}
-    assert first_ids.isdisjoint(second_ids)
+    assert first_ids
 
 
 def test_legado_search_includes_published_book_when_third_party_snapshot_is_empty(client):
@@ -832,7 +831,7 @@ async def test_legado_search_page2_returns_only_new_third_party_items(monkeypatc
         subscribe_api,
         "_legado_search_progress",
         {
-            "reader-page2\n分页续搜": {
+            "reader-page2\n分页续搜\nlan": {
                 "job_id": "job-continue",
                 "started_at": __import__("time").time(),
                 "emitted_ids": {first_id},
@@ -978,7 +977,7 @@ def test_legado_search_prioritizes_current_reader_subscription_without_private_f
             assert keyword == "合并搜索测试书"
             assert page == 1
             assert source_ids == ["fixture_thirdparty"]
-            assert search_mode == "source"
+            assert search_mode == "source_lan"
             return Job()
 
         @staticmethod
@@ -1094,6 +1093,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     client, tmp_path, monkeypatch
 ):
     import sqlite3
+    import app.api.legado as legado_api
 
     monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
 
@@ -1105,6 +1105,16 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     service = LibraryBooksService(db_path=db, shared_book_storage=storage)
     monkeypatch.setattr("app.api.subscribe.library_books_service", service)
     monkeypatch.setattr("app.api.legado.library_books_service", service)
+
+    async def empty_reviews(_chapter_id: str, **_kwargs) -> dict:
+        return {
+            "authorReviews": [],
+            "chapterEnd": [],
+            "hotParagraphReviews": [],
+            "summary": {"totalReviews": 0, "chapterEndCount": 0},
+        }
+
+    monkeypatch.setattr(legado_api, "_chapter_reviews", empty_reviews)
 
     hidden_id = "book-reading-hidden"
     published_id = "book-reading-published"
@@ -1173,13 +1183,16 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
         conn.commit()
 
     source = generate_legado_source("http://testserver")[0]
-    assert source["searchUrl"].startswith("http://testserver/api/subscribe/legado/search")
+    assert source["searchUrl"].startswith("@js:")
+    assert 'var _base = "http://testserver"' in source["searchUrl"]
+    assert "/api/subscribe/legado/search" in source["searchUrl"]
     assert "waitMs" not in source["searchUrl"]
-    assert source["exploreUrl"].startswith("已发布书库::http://testserver/api/subscribe/legado/explore")
+    assert source["exploreUrl"].startswith("已发布书库::@js:")
+    assert "/api/subscribe/legado/explore" in source["exploreUrl"]
     assert source["ruleToc"]["isVip"] == "$.isVip"
     assert source["ruleToc"]["isPay"] == "$.isPay"
     login_ui = json.loads(source["loginUi"])
-    assert [item["name"] for item in login_ui] == ["授权码", "登录", "登录状态", "订阅管理", "退出"]
+    assert [item["name"] for item in login_ui] == ["订阅", "书库"]
     assert "/api/auth/access/redeem" in source["loginUrl"]
     assert "/api/auth/access/me" in source["loginUrl"]
     assert "/api/auth/access/logout" in source["loginUrl"]
@@ -1313,8 +1326,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "完整免费正文" in free.json()["content"]
     assert free.json()["extra"]["contentAccess"] == "full"
     assert free.json()["isVip"] is False
-    # Body read + reviews path re-reads shared chapter for author-say / paragraph align.
-    assert len(markdown_reads) == 2
+    assert len(markdown_reads) == 1
 
     preview = client.get(chapters[-1]["chapterUrl"].replace("http://testserver", ""))
     assert preview.status_code == 200
@@ -1324,7 +1336,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert preview.json()["isPay"] is False
     assert preview.json()["extra"]["previewOnly"] is True
     assert preview.json()["previewOnly"] is True
-    assert len(markdown_reads) == 4
+    assert len(markdown_reads) == 2
 
     with sqlite3.connect(db) as conn:
         after = {

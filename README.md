@@ -34,12 +34,12 @@ LegadoHub 的做法是把这些麻烦事集中到服务端：**书源由管理�
 
 | 通道 | 标签 | 何时更新 | 用途 |
 |------|------|----------|------|
-| **正式** | `v0.1.0`、`latest` | 打 Git tag `v*` 之后 | 长期运行 / 对外推荐 |
+| **正式** | `v0.2.0`、`latest` | 打 Git tag `v*` 之后 | 长期运行 / 对外推荐 |
 | **开发测试** | `beta` | 每次推送到 `main` | 试新功能 |
 
 ```bash
 docker pull xzixmn/legado-hub:latest   # 正式
-docker pull xzixmn/legado-hub:v0.1.0   # 钉死正式版
+docker pull xzixmn/legado-hub:v0.2.0   # 钉死正式版
 docker pull xzixmn/legado-hub:beta     # 开发测试
 ```
 
@@ -187,6 +187,8 @@ docker run -d \
 - 非 80/443 端口必须写上，并和浏览器 / Reading 的实际访问方式保持一致
 - **只影响**「用户管理」生成的专属链接里的公网部分；**不填则只生成局域网链接**
 - 不决定能不能从公网打开服务（那是防火墙/反代的事）
+
+首次部署也可以设置 `LEGADOHUB_PUBLIC_BASE_URL=https://book.example.com`。后台保存的公网书源地址优先于该变量，并立即生效；变量不参与 Host 放行或 HTTPS 强制。
 
 ### 端口建议
 

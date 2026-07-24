@@ -237,18 +237,17 @@ def test_direct_plugin_and_path_traversal_ids_never_reach_catalog(monkeypatch) -
 
 def test_review_html_escapes_remote_text_and_rejects_untrusted_media() -> None:
     payload = {
-        "authorReviews": [
+        "authorReviews": [],
+        "chapterEnd": [
             {
                 "id": "1",
                 "userName": '<img src=x onerror="alert(1)">',
                 "content": "<script>alert(1)</script>[fn=1]",
                 "mediaUrl": "javascript:alert(1)",
-                "authorSay": True,
             }
         ],
-        "chapterEnd": [],
         "hotParagraphReviews": [],
-        "summary": {"totalReviews": 1, "chapterEndCount": 0},
+        "summary": {"totalReviews": 1, "chapterEndCount": 1},
     }
     rendered = render_chapter_reviews_html(
         chapter_title='<img src=x onerror="chapter()">',
@@ -293,8 +292,10 @@ def test_review_html_uses_one_inline_reply_control_and_shows_paragraph_context()
         },
     )
 
-    assert '<blockquote class="comment-paragraph">第一段正文</blockquote>' in rendered
-    assert '<blockquote class="comment-paragraph">第二段正文</blockquote>' in rendered
+    assert "段落热评" in rendered
+    assert "另一段热评" in rendered
+    assert "第一段正文" not in rendered
+    assert "第二段正文" not in rendered
     assert "官方段落" not in rendered
     assert "展开2条回复" in rendered
     assert '<div class="reply-line" data-review-id="' in rendered

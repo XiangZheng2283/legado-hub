@@ -72,7 +72,7 @@ describe("UsersPage", () => {
       role: "user",
     }))
     expect(await screen.findByText("LH1.new-reader.secret")).toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "关闭" }))
+    await user.click(screen.getByRole("button", { name: "完成" }))
     expect(screen.queryByText("LH1.new-reader.secret")).not.toBeInTheDocument()
   })
 
@@ -115,10 +115,10 @@ describe("UsersPage", () => {
     expect(within(adminRow!).queryByRole("button", { name: "删除 admin" })).not.toBeInTheDocument()
 
     await user.click(within(readerRow!).getByRole("button", { name: "重置 reader 的授权码" }))
-    await user.click(screen.getByRole("button", { name: "生成新授权码" }))
+    await user.click(screen.getByRole("button", { name: "生成新链接" }))
     await waitFor(() => expect(api.users.resetAccessCode).toHaveBeenCalledWith("user-1"))
     expect(await screen.findByText("LH1.reader.replacement")).toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "关闭" }))
+    await user.click(screen.getByRole("button", { name: "完成" }))
 
     await user.click(within(readerRow!).getByRole("button", { name: "撤销 reader 的登录会话" }))
     await waitFor(() => expect(api.users.revokeSessions).toHaveBeenCalledWith("user-1"))

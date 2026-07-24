@@ -371,7 +371,7 @@ export function SettingsPage() {
         <TabsContent value="reading" className={tabPanelClass}>
           <SettingsCard
             title="公网书源地址"
-            description="用于生成专属书源里的公网地址，否则只生成局域网链接。不拦截访问；公网入口请用雷池/防火墙控制。"
+            description="用于生成专属书源里的公网地址；此处设置优先于部署变量。不拦截访问，公网入口请用雷池或防火墙控制。"
           >
             <SettingRow
               title="公网书源地址"
@@ -386,7 +386,7 @@ export function SettingsPage() {
               />
             </SettingRow>
             <p className="mt-3 text-xs text-slate-500">
-              示例：<code className="text-[11px]">https://book.example.com:2087</code>。改完立即生效。
+              示例：<code className="text-[11px]">https://book.example.com:2087</code>。留空时使用 LEGADOHUB_PUBLIC_BASE_URL，改完立即生效。
             </p>
           </SettingsCard>
           <SettingsCard title="章节评论入口" description="控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。">

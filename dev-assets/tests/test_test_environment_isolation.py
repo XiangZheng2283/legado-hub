@@ -180,7 +180,7 @@ def test_docker_plugin_delivery_contract() -> None:
     assert environment.get("LEGADOHUB_CHOWN_DATA") == "${LEGADOHUB_CHOWN_DATA:-0}"
     assert "UMASK" not in environment
     assert "LEGADOHUB_PUBLIC_MODE" not in environment
-    assert "LEGADOHUB_PUBLIC_BASE_URL" not in environment
+    assert environment.get("LEGADOHUB_PUBLIC_BASE_URL") == "${LEGADOHUB_PUBLIC_BASE_URL:-}"
     assert compose["services"]["legadohub"]["container_name"] == "legadohub"
     assert compose["services"]["legadohub"]["security_opt"] == [
         "no-new-privileges:true"
@@ -219,7 +219,7 @@ def test_docker_plugin_delivery_contract() -> None:
     assert "--log-opt max-size=10m" in readme
     assert "--security-opt no-new-privileges:true" in readme
     plain_readme = readme.replace("**", "")
-    assert "docker compose restart` 不会应用新的环境变量" in plain_readme
+    assert "不要用 `docker compose restart` 加载新环境变量。" in plain_readme
     assert "exec gosu" in entrypoint
     assert any(
         volume.endswith(":/app/plugins/sources/official:ro")

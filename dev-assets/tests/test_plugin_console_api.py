@@ -723,7 +723,7 @@ def test_chapter_comment_settings_round_trip_and_strict_validation(admin_client)
         assert admin_client.post("/api/console/settings", json=original).status_code == 200
 
 
-def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_client):
+def test_reading_access_public_base_url_is_link_preference_not_host_allowlist(admin_client):
     from app.core.app_config import AppConfig
     from app.core.legado_source import generate_legado_source
     from app.core.public_security import (
@@ -748,7 +748,8 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
         # (Allowlist is for request Host admission / live get_public_base_url.)
         assert not get_public_base_url().startswith("https://book.example.com")
         source = generate_legado_source("http://192.168.1.10:8765")[0]
-        assert source["searchUrl"].startswith("http://192.168.1.10:8765/")
+        assert source["searchUrl"].startswith("@js:")
+        assert 'var _base = "http://192.168.1.10:8765"' in source["searchUrl"]
         assert source["bookSourceUrl"] == "LegadoHub-LAN"
         assert "·内网" in source["bookSourceName"]
 
@@ -773,7 +774,8 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
         public_request = Request(public_scope)
         assert get_public_base_url(public_request) == "https://book.example.com:2087"
         public_source = generate_legado_source(get_public_base_url(public_request))[0]
-        assert public_source["searchUrl"].startswith("https://book.example.com:2087/")
+        assert public_source["searchUrl"].startswith("@js:")
+        assert 'var _base = "https://book.example.com:2087"' in public_source["searchUrl"]
         assert public_source["bookSourceUrl"] == "LegadoHub"
         assert "·内网" not in public_source["bookSourceName"]
 
@@ -782,11 +784,7 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
             (b"host", b"other.example.com:2087"),
             (b"x-forwarded-proto", b"https"),
         ]
-        try:
-            get_public_base_url(Request(foreign_scope))
-            raise AssertionError("foreign public host should be rejected")
-        except RuntimeError as exc:
-            assert "allowlisted" in str(exc)
+        assert get_public_base_url(Request(foreign_scope)) == "https://other.example.com:2087"
 
         lan_scope = dict(public_scope)
         lan_scope["headers"] = [(b"host", b"192.168.1.10:8765")]
@@ -814,11 +812,7 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
         assert cleared.json()["readingAccess"]["publicBaseUrl"] == ""
         AppConfig.get().reload()
         assert reading_public_base_allowlist() == frozenset()
-        try:
-            get_public_base_url(public_request)
-            raise AssertionError("public host without allowlist should be rejected")
-        except RuntimeError as exc:
-            assert "allowlisted" in str(exc)
+        assert get_public_base_url(public_request) == "https://book.example.com:2087"
     finally:
         assert admin_client.post("/api/console/settings", json=original).status_code == 200
         AppConfig.get().reload()

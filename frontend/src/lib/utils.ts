@@ -44,7 +44,7 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   textarea.select()
   textarea.setSelectionRange(0, value.length)
 
-  let ok = false
+  let ok: boolean
   try {
     ok = document.execCommand("copy")
   } finally {

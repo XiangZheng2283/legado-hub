@@ -1209,6 +1209,11 @@ async def test_candidate_toc_order_mismatch_matches_by_title(tmp_path, monkeypat
 
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    monkeypatch.setattr(
+        processor,
+        "_select_consistent_candidate",
+        lambda candidates: (candidates[0] if candidates else None, []),
+    )
 
     candidate_book_id = "third_party_src:https://third.example/book"
     LibraryBooksService(db_path=db_path).save_payload_sources(book_id, [
@@ -1226,12 +1231,21 @@ async def test_candidate_toc_order_mismatch_matches_by_title(tmp_path, monkeypat
     # Include the official preview snippet at the start so preview alignment passes.
     candidate_contents = {
         cand_ch1_id: preview_a + "\n" + "正文内容很长，" * 50,
-        cand_ch2_id: preview_b + "\n" + "正文内容很长，" * 50,
+        cand_ch2_id: preview_b,
     }
+
+    catalog = MultiSourceCatalog(
+        official_chapters,
+        official_contents,
+        candidate_book_id,
+        candidate_toc,
+        candidate_contents,
+    )
+    catalog._source_word_count = len(candidate_contents[cand_ch1_id].replace("\n", ""))
 
     monkeypatch.setattr(
         "app.services.book_catalog.BookCatalog",
-        lambda: MultiSourceCatalog(official_chapters, official_contents, candidate_book_id, candidate_toc, candidate_contents),
+        lambda: catalog,
     )
 
     await processor.bootstrap_book_until_visible(book_id)

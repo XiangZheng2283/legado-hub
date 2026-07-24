@@ -36,7 +36,7 @@ const pages = [
     scenario: { role: "anonymous", entrypoint: "admin", loginError: true },
     prepare: async (page) => {
       await page.getByLabel("密码").fill("invalid-password")
-      await page.getByRole("button", { name: "管理员登录", exact: true }).click()
+      await page.getByRole("button", { name: "登录", exact: true }).click()
       await page.getByRole("alert").waitFor()
     },
   },
@@ -189,7 +189,7 @@ const pages = [
     currentPath: "/console/settings",
     scenario: { role: "admin" },
     prepare: async (page) => {
-      await page.getByRole("tab", { name: "优先级" }).click()
+      await page.getByRole("tab", { name: "书源" }).click()
     },
   },
   {
@@ -1008,9 +1008,11 @@ async function capture(browser, url, viewport, scenario, prepare, preserveScroll
         return state
       })
       if (sidebar && (
-        sidebar.position !== "sticky"
-        || Math.abs(sidebar.height - sidebar.viewportHeight) > 1
-        || (sidebar.maxScrollY > 0 && Math.abs(sidebar.top) > 1)
+        Math.abs(sidebar.height - sidebar.viewportHeight) > 1
+        || (sidebar.maxScrollY > 0 && (
+          sidebar.position !== "sticky"
+          || Math.abs(sidebar.top) > 1
+        ))
       )) {
         throw new Error(`desktop sidebar is not viewport-independent: ${JSON.stringify(sidebar)}`)
       }

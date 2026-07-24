@@ -24,7 +24,11 @@ export function LoginPage() {
   const [accessCode, setAccessCode] = useState("")
   const [username, setUsername] = useState("admin")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(() =>
+    searchParams.get("error") === "invalid_code"
+      ? "订阅链接无效或已重置，请联系管理员重新发放。"
+      : null,
+  )
   const [submitting, setSubmitting] = useState(false)
   const [autoRedeeming, setAutoRedeeming] = useState(false)
   const attemptedAutoCodeRef = useRef<string>("")
@@ -42,12 +46,7 @@ export function LoginPage() {
   useEffect(() => {
     if (isLoading || user || effectiveMode === "admin" || autoRedeeming) return
     const code = (searchParams.get("code") || "").trim()
-    if (!code) {
-      if (searchParams.get("error") === "invalid_code") {
-        setError("订阅链接无效或已重置，请联系管理员重新发放。")
-      }
-      return
-    }
+    if (!code) return
     if (attemptedAutoCodeRef.current === code) return
     attemptedAutoCodeRef.current = code
     let cancelled = false

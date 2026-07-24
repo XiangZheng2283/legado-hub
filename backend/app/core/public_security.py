@@ -163,12 +163,13 @@ class PublicSecurityConfig:
 
 
 def load_public_security_config() -> PublicSecurityConfig:
-    """Reader security: Host is taken from the request; no PUBLIC_BASE_URL env.
+    """Reader security: Host is taken from the request.
 
     Optional ``LEGADOHUB_ALLOWED_HOSTS`` / ``_ORIGINS`` still enable TrustedHost
     and cookie Origin checks for locked-down deploys. Optional
     ``LEGADOHUB_REQUIRE_HTTPS=1`` forces HTTPS. Public book-source link base is
-    only ``readingAccess.publicBaseUrl`` in AppConfig (settings UI).
+    selected by ``readingAccess.publicBaseUrl`` first, then by the optional
+    ``LEGADOHUB_PUBLIC_BASE_URL`` deploy-time fallback.
     """
     base_url, _base_host = _origin(
         f"http://{config.HOST}:{config.PORT}",
@@ -371,26 +372,33 @@ def settings_public_base_url() -> str:
     return urls[0] if urls else ""
 
 
+def env_public_base_urls() -> list[str]:
+    """Deploy-time fallback for the public book-source origin."""
+    return parse_public_base_urls(os.getenv("LEGADOHUB_PUBLIC_BASE_URL", ""))
+
+
 def effective_public_base_urls() -> list[str]:
-    """Configured public book-source origins (settings only)."""
-    return settings_public_base_urls()
+    """Configured public origins: settings override the deploy-time fallback."""
+    settings = settings_public_base_urls()
+    return settings if settings else env_public_base_urls()
 
 
 def effective_public_base_url() -> str:
-    """Primary **公网书源地址** for issued links (settings only).
+    """Primary **公网书源地址** for issued links (settings > environment).
 
     Empty means issued-link UI falls back to request Host / LAN only.
     Does **not** gate HTTP Host acceptance.
     """
-    return settings_public_base_url()
+    urls = effective_public_base_urls()
+    return urls[0] if urls else ""
 
 
 def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
     """Resolve request origin from Host / forwarded proto.
 
     Public Host access control is **not** enforced here — put perimeter rules
-    on reverse proxy / WAF (e.g. 雷池). Optional ``readingAccess.publicBaseUrl``
-    only affects preferred issued book-source links, not whether a Host is served.
+    on reverse proxy / WAF (e.g. 雷池). The configured public base URL only
+    affects preferred issued book-source links, not whether a Host is served.
 
     LAN Host spoofing from a public peer is still rejected so generated
     book-source bases cannot be forced to private IPs over the Internet.

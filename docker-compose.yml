@@ -3,13 +3,13 @@ services:
   # 入口以 root 启动，按 PUID/PGID 修正挂载权限后降权运行
   #
   # 镜像通道（二选一，勿混用心态）：
-  #   latest / v0.1.0  — 正式发行（默认 latest = 当前正式版）
+  #   latest / v0.2.0  — 正式发行（默认 latest = 当前正式版）
   #   beta             — 开发测试，随 main 滚动，可能不稳定
   #   sha-<commit>     — 钉死某次构建，便于回滚
   legadohub:
     image: xzixmn/legado-hub:latest
     # image: xzixmn/legado-hub:beta          # 开发测试机
-    # image: xzixmn/legado-hub:v0.1.0        # 钉死正式版
+    # image: xzixmn/legado-hub:v0.2.0        # 钉死正式版
     container_name: legadohub
     restart: always
     init: true
@@ -30,9 +30,9 @@ services:
       - PUID=1000 # 运行用户 ID（改成 NAS/宿主实际用户，例如 1000）
       - PGID=1000 # 运行用户组 ID（改成 NAS/宿主实际用户组）
       - LEGADOHUB_CHOWN_DATA=${LEGADOHUB_CHOWN_DATA:-0} # 仅迁移旧数据权限时临时设为 1
+      - LEGADOHUB_PUBLIC_BASE_URL=${LEGADOHUB_PUBLIC_BASE_URL:-} # 可选：首次部署生成公网专属书源链接；后台设置优先
       # 可选：信任的反代网段（用于识别真实客户端 IP）
       # - LEGADOHUB_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
-      # 公网书源地址请在控制台「设置 → 阅读 → 公网书源地址」配置（不填则只生成局域网链接）
     volumes:
       # 数据与配置持久化（必需）
       # 默认相对路径 = compose 文件所在目录；NAS 请改成绝对路径
