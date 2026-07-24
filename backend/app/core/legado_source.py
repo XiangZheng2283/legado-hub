@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.19"
-# 2026-07-24 silent auth header for bound personal links (ms). Bump with _READER_RULE_VERSION.
-_READER_RULE_RELEASED_AT_MS = 1_784_960_000_000
+_READER_RULE_VERSION = "0.0.20"
+# 2026-07-24 bound-source login UI: subscribe + logout only (ms). Bump with _READER_RULE_VERSION.
+_READER_RULE_RELEASED_AT_MS = 1_784_970_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -65,49 +65,72 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 
 
 def _login_ui(*, bound_access_code: bool = False) -> str:
-    """Login form for Reading. Bound sources still show optional code override."""
-    auth_hint = (
-        "本源已绑定个人凭证：搜索/阅读时会自动登录，一般无需再点「登录」。"
-        "若仍提示未登录，点「登录状态」检查，或重装管理员发的专属书源链接。"
-        if bound_access_code
-        else "请输入管理员发放的个人授权码后点「登录」。"
-        "更推荐导入带 ?code= 的专属书源链接，导入后会自动登录。"
-    )
-    return json.dumps(
-        [
+    """Login form for Reading.
+
+    Bound personal sources only expose console shortcuts — silent header auth
+    redeems the embedded access code. Public sources still need the code form.
+    """
+    btn = {
+        "layout_flexGrow": 1,
+        "layout_flexBasisPercent": 0.48,
+    }
+    if bound_access_code:
+        items = [
             {
                 "name": "提示",
                 "type": "text",
-                "default": auth_hint,
+                "default": "已绑定个人订阅凭证，搜索与阅读会自动登录。",
+            },
+            {
+                "name": "订阅管理",
+                "type": "button",
+                "action": "legadoHubOpenSubscriptions()",
+                "style": btn,
+            },
+            {
+                "name": "退出",
+                "type": "button",
+                "action": "legadoHubLogout()",
+                "style": btn,
+            },
+        ]
+    else:
+        items = [
+            {
+                "name": "提示",
+                "type": "text",
+                "default": (
+                    "请输入管理员发放的个人授权码后点「登录」。"
+                    "更推荐导入带 ?code= 的专属书源链接（导入后自动登录，登录页仅保留订阅与退出）。"
+                ),
             },
             {"name": "授权码", "type": "password"},
             {
                 "name": "登录",
                 "type": "button",
                 "action": "legadoHubLogin()",
-                "style": {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48},
+                "style": btn,
             },
             {
                 "name": "登录状态",
                 "type": "button",
                 "action": "legadoHubStatus(true)",
-                "style": {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48},
+                "style": btn,
             },
             {
                 "name": "订阅管理",
                 "type": "button",
                 "action": "legadoHubOpenSubscriptions()",
-                "style": {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48},
+                "style": btn,
             },
             {
                 "name": "退出",
                 "type": "button",
                 "action": "legadoHubLogout()",
-                "style": {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48},
+                "style": btn,
             },
-        ],
-        ensure_ascii=False,
-    )
+        ]
+    return json.dumps(items, ensure_ascii=False)
 
 
 def _request_header_rule() -> str:
@@ -598,9 +621,9 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "本源已绑定个人授权码（专属订阅链接）；请求时静默登录，一般无需再点登录。"
+        "本源已绑定个人授权码（专属订阅链接）；请求时静默登录，登录页仅「订阅管理 / 退出」。"
         if bound
-        else "导入公共书源后请用授权码登录；管理员也可发放带 code 的专属订阅链接（推荐）。"
+        else "导入公共书源后请用授权码登录；推荐改用带 code 的专属订阅链接。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
