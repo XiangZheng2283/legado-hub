@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.24"
-# 2026-07-24 unified token auth for search/toc/chapter (ms).
-_READER_RULE_RELEASED_AT_MS = 1_785_010_000_000
+_READER_RULE_VERSION = "0.0.25"
+# 2026-07-24 login sheet: subscribe + library only (ms).
+_READER_RULE_RELEASED_AT_MS = 1_785_020_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -65,46 +65,32 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 
 
 def _login_ui(*, bound_access_code: bool = False) -> str:
-    """Login form for Reading.
+    """Reading source sheet: console shortcuts only (auth is automatic or via 401).
 
-    Auth model:
-    - personal link with ?code= → every request auto-redeems/attaches Bearer
-    - plain public source without code → 401 then Reading opens this login sheet
+    Buttons: 订阅管理 + 书库. No login/status/logout — personal links auto-auth
+    on each request; public sources without code still get 401 → this sheet.
     """
     auth_hint = (
-        "专属链接已带凭证：搜索/目录/正文会自动登录，一般无需操作。"
-        "异常时可点「登录」刷新，「订阅管理」打开网页。"
+        "专属链接已带凭证，搜索/阅读会自动登录。"
+        "点下方打开网页订阅或个人书库。"
         if bound_access_code
-        else "当前为公共书源（无个人凭证）。请输入授权码并点「登录」；"
-        "或改用管理员发放的带 code 专属书源链接以全程自动登录。"
+        else "请使用管理员发放的带 code 专属书源链接（自动登录）。"
+        "点下方可打开网页订阅或书库（需已登录）。"
     )
     btn = {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48}
     return json.dumps(
         [
             {"name": "提示", "type": "text", "default": auth_hint},
-            {"name": "授权码", "type": "password"},
             {
-                "name": "登录",
-                "type": "button",
-                "action": "legadoHubLogin()",
-                "style": dict(btn),
-            },
-            {
-                "name": "登录状态",
-                "type": "button",
-                "action": "legadoHubStatus(true)",
-                "style": dict(btn),
-            },
-            {
-                "name": "订阅管理",
+                "name": "订阅",
                 "type": "button",
                 "action": "legadoHubOpenSubscriptions()",
                 "style": dict(btn),
             },
             {
-                "name": "退出",
+                "name": "书库",
                 "type": "button",
-                "action": "legadoHubLogout()",
+                "action": "legadoHubOpenLibrary()",
                 "style": dict(btn),
             },
         ],
@@ -379,13 +365,23 @@ function legadoHubStatus(showMessage) {{
     }}
 }}
 
-function legadoHubOpenSubscriptions() {{
+function legadoHubOpenConsolePath(path, title) {{
     var code = legadoHubLoginInfoValue("授权码").trim();
     if (!code) code = legadoHubBoundAccessCode();
-    var next = encodeURIComponent("/console/subscription");
+    var target = String(path || "/console/subscription");
+    if (target.charAt(0) !== "/") target = "/" + target;
+    var next = encodeURIComponent(target);
     var url = LEGADOHUB_BASE + "/api/auth/access/enter?next=" + next;
     if (code) url += "&code=" + encodeURIComponent(code);
-    java.startBrowser(url, "订阅管理");
+    java.startBrowser(url, String(title || "LegadoHub"));
+}}
+
+function legadoHubOpenSubscriptions() {{
+    legadoHubOpenConsolePath("/console/subscription", "订阅");
+}}
+
+function legadoHubOpenLibrary() {{
+    legadoHubOpenConsolePath("/console/library", "书库");
 }}
 
 function legadoHubLogout() {{
@@ -680,9 +676,9 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "专属链接（带 code）：搜索/目录/正文统一自动鉴权。"
+        "专属链接（带 code）：搜索/目录/正文自动鉴权；登录页仅「订阅 / 书库」。"
         if bound
-        else "公共链接（无 code）：未登录时跳转登录；登录后会话自动沿用。"
+        else "公共链接（无 code）：未登录时跳转登录页；请改用专属链接以自动鉴权。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
