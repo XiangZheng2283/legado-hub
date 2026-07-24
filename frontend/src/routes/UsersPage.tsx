@@ -57,6 +57,34 @@ function issuedSourceLinks(issued: IssuedAccessCode) {
   return { primary, lan: showLan ? lan : "" }
 }
 
+function CopyIconButton({
+  copied,
+  label,
+  onCopy,
+}: {
+  copied: boolean
+  label: string
+  onCopy: () => void
+}) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className="h-9 w-9 shrink-0"
+      title={copied ? "已复制" : label}
+      aria-label={copied ? "已复制" : label}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        onCopy()
+      }}
+    >
+      {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+    </Button>
+  )
+}
+
 export function UsersPage() {
   const queryClient = useQueryClient()
   const { user: currentUser } = useAuth()
@@ -187,19 +215,25 @@ export function UsersPage() {
     }
   }
 
-  const copyText = async (key: string, value?: string) => {
-    if (!value) {
+  const copyText = (key: string, value?: string) => {
+    const text = String(value ?? "").trim()
+    if (!text) {
       setCopyError("没有可复制的内容。")
       return
     }
-    try {
-      await copyTextToClipboard(value)
-      setCopiedKey(key)
-      setCopyError("")
-    } catch {
-      setCopiedKey("")
-      setCopyError("复制失败：请手动选中文本复制（HTTP 局域网环境可能限制剪贴板）。")
-    }
+    void (async () => {
+      try {
+        await copyTextToClipboard(text)
+        setCopiedKey(key)
+        setCopyError("")
+        window.setTimeout(() => {
+          setCopiedKey((current) => (current === key ? "" : current))
+        }, 2000)
+      } catch {
+        setCopiedKey("")
+        setCopyError("复制失败：请长按选中文本手动复制。")
+      }
+    })()
   }
 
   const users = usersQuery.data?.items || []
@@ -357,20 +391,23 @@ export function UsersPage() {
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-slate-800">书源链接</div>
                     <div className="flex min-w-0 items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
-                      <code className="min-w-0 flex-1 break-all text-xs leading-relaxed text-slate-800">{primary}</code>
-                      <Button type="button" size="sm" onClick={() => { void copyText("source", primary) }}>
-                        {copiedKey === "source" ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
-                        {copiedKey === "source" ? "已复制" : "复制"}
-                      </Button>
+                      <code className="min-w-0 flex-1 select-all break-all text-xs leading-relaxed text-slate-800">{primary}</code>
+                      <CopyIconButton
+                        copied={copiedKey === "source"}
+                        label="复制书源链接"
+                        onCopy={() => copyText("source", primary)}
+                      />
                     </div>
                     {lan ? (
                       <div className="space-y-1">
                         <div className="text-xs text-slate-500">内网（可选）</div>
                         <div className="flex min-w-0 items-start gap-2 rounded-md border border-slate-100 bg-white p-2">
-                          <code className="min-w-0 flex-1 break-all text-[11px] text-slate-600">{lan}</code>
-                          <Button type="button" variant="outline" size="icon" title="复制内网书源" aria-label="复制内网书源" onClick={() => { void copyText("lanSource", lan) }}>
-                            {copiedKey === "lanSource" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-                          </Button>
+                          <code className="min-w-0 flex-1 select-all break-all text-[11px] text-slate-600">{lan}</code>
+                          <CopyIconButton
+                            copied={copiedKey === "lanSource"}
+                            label="复制内网书源"
+                            onCopy={() => copyText("lanSource", lan)}
+                          />
                         </div>
                       </div>
                     ) : null}
@@ -385,11 +422,13 @@ export function UsersPage() {
 
                 <div className="space-y-2 border-t border-slate-100 pt-3">
                   <div className="text-xs text-slate-500">授权码（备用）</div>
-                  <div className="flex min-w-0 items-center gap-2">
-                    <code className="min-w-0 flex-1 break-all rounded bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600">{issuedAccessCode.accessCode}</code>
-                    <Button type="button" variant="ghost" size="icon" title="复制授权码" aria-label="复制授权码" onClick={() => { void copyText("code", issuedAccessCode.accessCode) }}>
-                      {copiedKey === "code" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-                    </Button>
+                  <div className="flex min-w-0 items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5">
+                    <code className="min-w-0 flex-1 select-all break-all text-[11px] text-slate-600">{issuedAccessCode.accessCode}</code>
+                    <CopyIconButton
+                      copied={copiedKey === "code"}
+                      label="复制授权码"
+                      onCopy={() => copyText("code", issuedAccessCode.accessCode)}
+                    />
                   </div>
                 </div>
 
