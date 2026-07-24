@@ -28,7 +28,9 @@ class Source:
 
     # Whole-line ads, including obfuscated watermarks and bare residuals (6=9+).
     _AD_LINE_RE = re.compile(
-        r"(?m)^.*(?:"
+        r"(?m)^(?:\s*6\s*[=＝]\s*9\s*[+＋]?\s*"
+        r"|\s*书[_＿'′]?\s*吧\s*"
+        r"|.*(?:"
         r"新69书吧|69书吧|"
         r"无错版本在读|"
         r"首发本小说|"
@@ -38,9 +40,8 @@ class Source:
         r"[%％]\s*六九\s*[%％]|"
         r"书[''′]?\s*吧\s*读|"
         r"阅读sto55|爱75奇书屋"
-        r").*$"
-        r"|(?m)^\s*6\s*[=＝]\s*9\s*[+＋]?\s*$"
-        r"|(?m)^\s*书[_＿'′]?\s*吧\s*$"
+        r").*"
+        r")$"
     )
     _INLINE_AD_RE = re.compile(
         r"(?:"
