@@ -97,4 +97,9 @@ The release workflow builds `xzixmn/legado-hub` with a `node:22` frontend stage 
 - Default shell guidance here is PowerShell on Windows, but `start.bat` is a `.bat` entrypoint (CRLF, `@echo off`); don't rewrite it as PowerShell.
 - Source files use LF; Windows batch uses CRLF.
 - Frontend uses `@` alias to `frontend/src` (see `vite.config.ts`); ESLint allows `any` and disables `react-refresh/only-export-components` under `src/components/ui/**`.
-- `.github/workflows/docker-build.yml` publishes `latest`, version-tag, and commit-SHA images to Docker Hub. Code verification remains local through `verify.ps1`.
+- `.github/workflows/docker-build.yml` image channels:
+  - push `main` → `beta` + `sha-<short>` only (dev/test; does **not** move `latest`)
+  - push tag `v*` → `vX.Y.Z` + `latest` + `sha-<short>` (formal release)
+  - Prefer LAN test hosts on `beta`; production on `vX.Y.Z` or `latest`
+  - Bump root `VERSION` + `CHANGELOG.md` when cutting a formal tag
+- Code verification remains local through `verify.ps1`.

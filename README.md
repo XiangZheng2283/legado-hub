@@ -28,9 +28,34 @@ LegadoHub 的做法是把这些麻烦事集中到服务端：**书源由管理�
 
 ---
 
+## 镜像通道
+
+开发会频繁合入 `main`，但**正式镜像不会跟着每次提交跳**。Docker Hub 上分两轨：
+
+| 通道 | 标签 | 何时更新 | 用途 |
+|------|------|----------|------|
+| **正式** | `v0.1.0`、`latest` | 仅当你确认发版、打 Git tag `v*` 之后 | 公网 / 长期运行 / 对外推荐 |
+| **开发测试** | `beta` | 每次推送到 `main` | 局域网试新功能 |
+| **钉死** | `sha-<短哈希>` | 每次构建附带 | 回滚、对账 |
+
+```bash
+# 正式（默认 compose）
+docker pull xzixmn/legado-hub:latest
+# 或钉死某一正式版
+docker pull xzixmn/legado-hub:v0.1.0
+
+# 开发测试
+docker pull xzixmn/legado-hub:beta
+```
+
+发版节奏：日常只推 `beta` → 你在测试机验收 → 确认后再打 `vX.Y.Z`，CI 才更新 `latest` 与版本 tag。  
+版本记录见 [CHANGELOG.md](CHANGELOG.md)；仓库根目录 [VERSION](VERSION) 为当前正式号。
+
+---
+
 ## 快速开始
 
-推荐用 Docker Compose 部署；不用 Compose 的话，直接跳到 [Docker CLI](#docker-cli)。
+推荐用 Docker Compose 部署；不用 Compose 的话，直接跳到 [Docker CLI](#docker-cli)。默认拉取 **正式** 镜像 `latest`。
 
 ### 前提条件
 
