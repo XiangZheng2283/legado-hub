@@ -315,7 +315,8 @@ async def _apply_reading_content_gates(
 @router.get("/book/{book_id}")
 async def get_book(request: Request, book_id: str) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
-    _reject_query_anomalies(request, set())
+    # ``lane`` is an optional dual-source disambiguator from search bookUrl; ignored.
+    _reject_query_anomalies(request, {"lane"})
     book_id = _validated_external_id(book_id, label="书籍")
     source_id, book_url = _decode_book_identity(book_id)
     with reading_access_limiter.guard(user.user_id, "metadata"):
@@ -353,7 +354,7 @@ async def get_book(request: Request, book_id: str) -> dict:
 @router.get("/book/{book_id}/toc")
 async def get_toc(request: Request, book_id: str) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
-    _reject_query_anomalies(request, set())
+    _reject_query_anomalies(request, {"lane"})
     book_id = _validated_external_id(book_id, label="书籍")
     source_id, book_url = _decode_book_identity(book_id)
     with reading_access_limiter.guard(user.user_id, "metadata"):
@@ -388,7 +389,7 @@ async def get_toc(request: Request, book_id: str) -> dict:
 @router.get("/chapter/{chapter_id}")
 async def get_chapter(request: Request, chapter_id: str) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
-    _reject_query_anomalies(request, set())
+    _reject_query_anomalies(request, {"lane"})
     chapter_id = _validated_external_id(chapter_id, label="章节")
     source_id, chapter_url = _decode_chapter_identity(chapter_id)
     with reading_access_limiter.guard(user.user_id, "chapter"):
@@ -426,7 +427,7 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
 @router.get("/chapter/{chapter_id}/reviews")
 async def get_chapter_reviews(request: Request, chapter_id: str) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
-    _reject_query_anomalies(request, set())
+    _reject_query_anomalies(request, {"lane"})
     chapter_id = _validated_external_id(chapter_id, label="章节")
     source_id, chapter_url = _decode_chapter_identity(chapter_id)
     with reading_access_limiter.guard(user.user_id, "reviews"):
@@ -460,7 +461,16 @@ async def get_chapter_review_view(
     user = auth_service.require_reading_user(request, touch=False)
     _reject_query_anomalies(
         request,
-        {"tab", "paragraphId", "paragraphIds", "rootReviewId", "page", "pageSize", "cursorId"},
+        {
+            "tab",
+            "paragraphId",
+            "paragraphIds",
+            "rootReviewId",
+            "page",
+            "pageSize",
+            "cursorId",
+            "lane",
+        },
     )
     chapter_id = _validated_external_id(chapter_id, label="章节")
     source_id, chapter_url = _decode_chapter_identity(chapter_id)

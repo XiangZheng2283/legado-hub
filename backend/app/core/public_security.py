@@ -304,6 +304,11 @@ def is_lan_reading_base(base_url: str) -> bool:
     )
 
 
+def reading_network_lane(base_url: str) -> str:
+    """Stable lane id for dual-source isolation: ``lan`` or ``public``."""
+    return "lan" if is_lan_reading_base(base_url) else "public"
+
+
 def _dynamic_host_client_allowed(request: Request) -> bool | None:
     immediate = request.client.host if request.client and request.client.host else ""
     normalized = _normalize_host(immediate)

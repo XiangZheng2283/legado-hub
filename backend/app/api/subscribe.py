@@ -31,7 +31,7 @@ from app.services.user_subscriptions import (
 )
 from app.services.user_auth import auth_service
 from app.source_plugins.id_codec import decode_book_id, decode_chapter_id
-from app.core.public_security import get_public_base_url
+from app.core.public_security import get_public_base_url, reading_network_lane
 from app.services.reading_limits import reading_access_limiter
 from app.services.search_jobs import SearchJobService
 
@@ -239,6 +239,20 @@ def _public_search_text(value: object, *, max_length: int) -> str:
     return str(value or "").strip()[:max_length]
 
 
+def _lane_source_name(source_name: str, *, lane: str, is_aggregate: bool) -> str:
+    """Keep LAN aggregate results visually distinct from the public channel.
+
+    Third-party plugin names stay unchanged; only Hub library/aggregate rows get
+    the ·内网 mark so multi-source UI does not look like one fused catalog.
+    """
+    name = (source_name or "").strip()
+    if lane != "lan" or not is_aggregate:
+        return name
+    if "·内网" in name or name.endswith("内网"):
+        return name
+    return f"{name}·内网" if name else "LegadoHub·内网"
+
+
 def _public_legado_search_item(
     item: dict,
     *,
@@ -256,9 +270,15 @@ def _public_legado_search_item(
     if encoded_source_id != source_id:
         return None
 
-    source_name = _public_search_text(
-        item.get("readingSourceName") or item.get("sourceName") or source_id,
-        max_length=200,
+    lane = reading_network_lane(base_api)
+    is_aggregate = source_id == VIRTUAL_SOURCE_ID
+    source_name = _lane_source_name(
+        _public_search_text(
+            item.get("readingSourceName") or item.get("sourceName") or source_id,
+            max_length=200,
+        ),
+        lane=lane,
+        is_aggregate=is_aggregate,
     )
     last_chapter = _public_search_text(item.get("lastChapter"), max_length=500)
     reading_last_chapter = _public_search_text(
@@ -266,9 +286,15 @@ def _public_legado_search_item(
         or " · ".join(part for part in (source_name, last_chapter) if part),
         max_length=800,
     )
+    # Lane-scoped bookUrl host already differs; for multi-source fusion, also
+    # stamp a stable lane token into the public bookUrl query so Reading does
+    # not collapse LAN/public rows that share the same bookId path.
+    book_url = f"{base_api}/api/legado/book/{book_id}"
+    if lane == "lan":
+        book_url = f"{book_url}?lane=lan"
     public_item = {
-        "displayType": "aggregate" if source_id == VIRTUAL_SOURCE_ID else "source",
-        "resultKind": "aggregate" if source_id == VIRTUAL_SOURCE_ID else "source",
+        "displayType": "aggregate" if is_aggregate else "source",
+        "resultKind": "aggregate" if is_aggregate else "source",
         "sourceId": source_id,
         "sourceName": source_name,
         "readingSourceName": source_name,
@@ -281,7 +307,8 @@ def _public_legado_search_item(
         "readingLastChapter": reading_last_chapter,
         "wordCount": item.get("wordCount", ""),
         "bookId": book_id,
-        "bookUrl": f"{base_api}/api/legado/book/{book_id}",
+        "bookUrl": book_url,
+        "networkLane": lane,
     }
     if source_id == VIRTUAL_SOURCE_ID:
         for key in (
@@ -419,8 +446,19 @@ def _legado_search_payload(
     }
 
 
-def _progress_key(user_id: str, keyword: str) -> str:
-    return f"{user_id}\n{keyword.strip().casefold()}"
+def _progress_key(user_id: str, keyword: str, *, lane: str = "public") -> str:
+    """Per-user, per-keyword, per-network-lane search pagination state.
+
+    LAN and public book sources must not share page2 continuation / emitted_ids,
+    or dual-import multi-source search fuses progressive batches.
+    """
+    lane_key = "lan" if str(lane or "").strip().lower() == "lan" else "public"
+    return f"{user_id}\n{keyword.strip().casefold()}\n{lane_key}"
+
+
+def _legado_search_mode_for_lane(lane: str) -> str:
+    """Isolate SearchCoordinator sessions by network lane without changing plugins."""
+    return "source_lan" if str(lane or "").strip().lower() == "lan" else "source"
 
 
 def _third_party_snapshot_items(
@@ -1103,6 +1141,8 @@ async def _legado_search_response(
     search_service = _get_legado_search_service()
     source_ids = _third_party_search_source_ids(search_service)
     allowed_source_ids = set(source_ids)
+    lane = reading_network_lane(base_api)
+    search_mode = _legado_search_mode_for_lane(lane)
 
     # Library only on page 1 so later pages can continue with remote-only batches.
     library_items = _collect_library_search_items(
@@ -1123,7 +1163,7 @@ async def _legado_search_response(
             third_party_items=[],
         )
 
-    progress_key = _progress_key(user_id, keyword)
+    progress_key = _progress_key(user_id, keyword, lane=lane)
     page1_wait = _READING_SEARCH_PAGE1_WAIT_MS
     follow_wait = _READING_SEARCH_FOLLOW_WAIT_MS
     if wait_ms > 0:
@@ -1139,7 +1179,7 @@ async def _legado_search_response(
                 keyword=keyword,
                 page=1,
                 source_ids=source_ids,
-                search_mode="source",
+                search_mode=search_mode,
             )
             _remember_legado_search_owner(job.job_id, user_id)
             with _legado_search_progress_lock:
