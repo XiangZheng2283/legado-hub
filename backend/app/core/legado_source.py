@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.18"
-# 2026-07-24 per-user access-code source links (ms). Bump with _READER_RULE_VERSION.
-_READER_RULE_RELEASED_AT_MS = 1_784_950_000_000
+_READER_RULE_VERSION = "0.0.19"
+# 2026-07-24 silent auth header for bound personal links (ms). Bump with _READER_RULE_VERSION.
+_READER_RULE_RELEASED_AT_MS = 1_784_960_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -67,9 +67,11 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 def _login_ui(*, bound_access_code: bool = False) -> str:
     """Login form for Reading. Bound sources still show optional code override."""
     auth_hint = (
-        "本源已绑定个人订阅链接，点「登录」将自动鉴权；也可另填授权码覆盖。"
+        "本源已绑定个人凭证：搜索/阅读时会自动登录，一般无需再点「登录」。"
+        "若仍提示未登录，点「登录状态」检查，或重装管理员发的专属书源链接。"
         if bound_access_code
-        else "请输入管理员发放的个人授权码，或使用专属订阅链接导入书源。"
+        else "请输入管理员发放的个人授权码后点「登录」。"
+        "更推荐导入带 ?code= 的专属书源链接，导入后会自动登录。"
     )
     return json.dumps(
         [
@@ -105,6 +107,29 @@ def _login_ui(*, bound_access_code: bool = False) -> str:
             },
         ],
         ensure_ascii=False,
+    )
+
+
+def _request_header_rule() -> str:
+    """Dynamic headers: silent redeem bound/access code then attach Bearer.
+
+    Reading injects this on each book-source request. Without it, the first
+    search hits 401 and the client shows “点击登录去授权”.
+    """
+    return (
+        "@js:\n"
+        "try {\n"
+        "  eval(String(source.loginUrl));\n"
+        "  legadoHubEnsureAuth(false);\n"
+        "} catch (e) {}\n"
+        "var headers = {\"Accept\": \"application/json\"};\n"
+        "try {\n"
+        "  var raw = source.getLoginHeader();\n"
+        "  var stored = typeof raw === \"string\" ? JSON.parse(raw || \"{}\") : raw;\n"
+        "  var authorization = stored && (stored.Authorization || stored.authorization);\n"
+        "  if (authorization) headers.Authorization = String(authorization);\n"
+        "} catch (e) {}\n"
+        "JSON.stringify(headers);"
     )
 
 
@@ -298,11 +323,18 @@ function legadoHubLogout() {{
 
 
 def _login_check_script() -> str:
+    # Keep session warm / re-redeem after expiry. First-request auth is handled by
+    # header @js (legadoHubEnsureAuth) so Reading does not stop on “点击登录去授权”.
     return """var legadoHubOriginalResponse = result;
 try {
     eval(String(source.loginUrl));
-    legadoHubEnsureAuth(false);
-    legadoHubStatus(false);
+    var body = String(legadoHubOriginalResponse == null ? "" : legadoHubOriginalResponse);
+    var needAuth = /当前未登陆|未登陆|请登陆后使用/i.test(body) || !legadoHubHasLoginHeader();
+    if (needAuth) {
+        legadoHubEnsureAuth(false);
+    } else {
+        legadoHubStatus(false);
+    }
 } catch (e) {}
 legadoHubOriginalResponse;"""
 
@@ -566,9 +598,9 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "本源已绑定个人授权码（专属订阅链接）；点登录可自动鉴权，订阅管理无需再输码。"
+        "本源已绑定个人授权码（专属订阅链接）；请求时静默登录，一般无需再点登录。"
         if bound
-        else "导入公共书源后请用授权码登录；管理员也可发放带 code 的专属订阅链接。"
+        else "导入公共书源后请用授权码登录；管理员也可发放带 code 的专属订阅链接（推荐）。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
@@ -579,7 +611,7 @@ def _build_source(
         "enabled": True,
         "enabledCookieJar": True,
         "enabledExplore": bool(explore_url),
-        "header": "",
+        "header": _request_header_rule(),
         "loginUi": _login_ui(bound_access_code=bound),
         "loginUrl": _login_script(base_api, access_code=access_code),
         "loginCheckJs": _login_check_script(),
