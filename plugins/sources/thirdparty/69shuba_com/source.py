@@ -25,6 +25,32 @@ class Source:
     base_urls = ["https://www.69shuba.com", "https://www.69shuba.cx"]
     headers = {"accept-language": "zh-CN,zh;q=0.9"}
     impersonate = "chrome120"
+
+    # Whole-line ads, including obfuscated watermarks like:
+    # 无错版本在读！6=9+书_吧首发本小说。
+    _AD_LINE_RE = re.compile(
+        r"(?m)^.*(?:"
+        r"新69书吧|69书吧|"
+        r"无错版本在读|"
+        r"首发本小说|"
+        r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧|"
+        r"阅读sto55|爱75奇书屋"
+        r").*$"
+    )
+    _INLINE_AD_RE = re.compile(
+        r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
+    )
+
+    @classmethod
+    def get_ad_patterns(cls) -> list[str]:
+        """Host purify patterns for 69书吧 watermarks (incl. obfuscated)."""
+        return [
+            r"无错版本在读",
+            r"首发本小说",
+            r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
+            r"新?69\s*书\s*吧",
+            r"阅读sto55|爱75奇书屋",
+        ]
     explore_defs = [
         {"groupId": "newhot", "title": "新书热榜", "url": "/newhot_0_1_{page}.htm", "kind": "rank"},
         {"groupId": "recent", "title": "最近更新", "url": "/newhot_0_2_{page}.htm", "kind": "new"},
@@ -409,7 +435,8 @@ class Source:
             lines = [line.strip() for line in text.splitlines() if line.strip()]
             content = "\n\n".join(lines)
         content = re.sub(r"\(本章完\)|\ue5e5|loadAdv\(\d+,\d+\);", "", content)
-        content = re.sub(r"(?m)^.*(?:新69书吧|69书吧|阅读sto55|爱75奇书屋).*$", "", content)
+        content = self._AD_LINE_RE.sub("", content)
+        content = self._INLINE_AD_RE.sub("", content)
         content = re.sub(r"\n{3,}", "\n\n", content)
         return content.strip()
 

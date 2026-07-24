@@ -55,6 +55,12 @@ tags:
   - proxy
   - cloudflare
   - impersonate
+adPatterns:
+  - "无错版本在读"
+  - "首发本小说"
+  - "6\\s*[=＝]\\s*9\\s*[+＋]?\\s*书[_＿\\s]*吧"
+  - "新?69\\s*书\\s*吧"
+  - "阅读sto55|爱75奇书屋"
 domainProfiles:
   - id: primary
     baseUrl: https://www.69shuba.com

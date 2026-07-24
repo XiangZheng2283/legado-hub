@@ -14,6 +14,30 @@ class Source:
     name = "69书屋"
     contract_version = "1.0"
     last_modified = "2026-06-10"
+
+    _AD_LINE_RE = re.compile(
+        r"(?m)^.*(?:"
+        r"69书吧|69书屋|"
+        r"无错版本在读|"
+        r"首发本小说|"
+        r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧|"
+        r"最新网址|返回目录|加入书签|推荐阅读|新书推荐|"
+        r"请稍后重新尝试|报错|下载APP|无广告、完整阅读"
+        r").*$"
+    )
+    _INLINE_AD_RE = re.compile(
+        r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
+    )
+
+    @classmethod
+    def get_ad_patterns(cls) -> list[str]:
+        return [
+            r"无错版本在读",
+            r"首发本小说",
+            r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
+            r"新?69\s*书\s*[吧屋]",
+            r"最新网址|返回目录|加入书签|推荐阅读|新书推荐",
+        ]
     base_url = "https://www.69hsw.com"
     headers = {"accept-language": "zh-CN,zh;q=0.9"}
     explore_defs = [
@@ -298,9 +322,9 @@ class Source:
             text = soup.get_text("\n", strip=True)
             lines = [" ".join(line.split()) for line in text.splitlines() if line.strip()]
             content = "\n\n".join(lines)
-        content = re.sub(r"(?m)^.*(?:69书吧|最新网址|返回目录|加入书签|推荐阅读|新书推荐).*$", "", content)
+        content = self._AD_LINE_RE.sub("", content)
+        content = self._INLINE_AD_RE.sub("", content)
         content = re.sub(r"章节内容缺失或章节不存在.*", "", content)
-        content = re.sub(r"(?m)^.*(?:请稍后重新尝试|报错|下载APP|无广告、完整阅读).*$", "", content)
         content = re.sub(r"\n{3,}", "\n\n", content)
         return content.strip()
 

@@ -29,6 +29,12 @@ tags:
   - html
   - no-login
   - captcha-search
+adPatterns:
+  - "无错版本在读"
+  - "首发本小说"
+  - "6\\s*[=＝]\\s*9\\s*[+＋]?\\s*书[_＿\\s]*吧"
+  - "新?69\\s*书\\s*[吧屋]"
+  - "最新网址|返回目录|加入书签|推荐阅读|新书推荐"
 domainProfiles:
   - id: primary
     baseUrl: https://www.69hsw.com

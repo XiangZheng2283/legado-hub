@@ -162,10 +162,16 @@ class AggregateProcessor:
         return patterns
 
     def _ad_patterns_for_source(self, source_id: str | None) -> list[str]:
-        """Return plugin-specific ad patterns, falling back to global defaults."""
-        if source_id and source_id in self._source_ad_patterns:
-            return self._source_ad_patterns[source_id]
-        return []
+        """Return plugin-specific patterns merged with global defaults (deduped)."""
+        combined: list[str] = []
+        seen: set[str] = set()
+        plugin_patterns = self._source_ad_patterns.get(source_id or "") or []
+        for pat in list(plugin_patterns) + self._global_ad_patterns():
+            if not pat or pat in seen:
+                continue
+            seen.add(pat)
+            combined.append(pat)
+        return combined
 
     def _compile_ad_patterns(self, patterns: list[str]) -> re.Pattern[str]:
         """Compile a list of regex patterns into a single multiline pattern."""
@@ -174,6 +180,15 @@ class AggregateProcessor:
             return re.compile(r"(?!.*)", re.MULTILINE)
         escaped = [f"(?:{p})" for p in patterns]
         return re.compile(r"(?im)^.*(?:" + "|".join(escaped) + r").*$")
+
+    # Inline watermarks that may be glued to prose without a line break.
+    _INLINE_AD_RES: tuple[re.Pattern[str], ...] = (
+        re.compile(
+            r"无错版本在读[！!]?\s*6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"
+        ),
+        re.compile(r"无错版本在读[！!]?"),
+        re.compile(r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧\s*首发本小说[。．.]?"),
+    )
 
     def _global_ad_patterns(self) -> list[str]:
         """Global fallback ad patterns used when no plugin-specific patterns exist."""
@@ -187,14 +202,26 @@ class AggregateProcessor:
             r"一秒记住.*\.com|一秒记住.*\.net",
             r"亲,.*收藏|加入书签",
             r"www\.|\.com|\.net|\.org",
+            # 69 书吧类混淆水印：无错版本在读！6=9+书_吧首发本小说。
+            r"无错版本在读",
+            r"首发本小说",
+            r"6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧",
+            r"新?69\s*书\s*吧",
+            r"阅读sto55|爱75奇书屋",
         ]
+
+    def _strip_inline_ads(self, text: str) -> str:
+        """Remove known inline watermarks that are not whole-line only."""
+        for pattern in self._INLINE_AD_RES:
+            text = pattern.sub("", text)
+        return text
 
     def _purify_content(self, content: str, source_id: str | None = None) -> str:
         """Unified content purification with plugin-specific ad patterns.
 
         Steps:
         1. Basic cleanup: normalize line endings, strip trailing whitespace, compress blank lines.
-        2. Ad/watermark removal: remove plugin-specific ad lines (or global fallback), duplicate title lines.
+        2. Ad/watermark removal: remove plugin+global ad lines, inline 69-style watermarks, duplicate titles.
         3. Integrity check: if cleaned content is too short or shrunk >50%, fall back to basic cleanup only.
         """
         if not content:
@@ -209,12 +236,12 @@ class AggregateProcessor:
         basic_text = text.strip()
 
         # Step 2: Ad/watermark removal.
-        plugin_patterns = self._ad_patterns_for_source(source_id)
-        if plugin_patterns:
-            ad_re = self._compile_ad_patterns(plugin_patterns)
-        else:
-            ad_re = self._compile_ad_patterns(self._global_ad_patterns())
-        text = ad_re.sub("", basic_text)
+        # Inline first: whole-line patterns use ^.*….*$ and would wipe a long
+        # paragraph that only embeds a short watermark (then integrity reverts).
+        text = self._strip_inline_ads(basic_text)
+        ad_re = self._compile_ad_patterns(self._ad_patterns_for_source(source_id))
+        text = ad_re.sub("", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
 
         # Remove duplicate chapter-title lines.
         seen_titles: set[str] = set()
