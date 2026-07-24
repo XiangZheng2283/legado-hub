@@ -263,9 +263,7 @@ Set-Location ../backend
 
 ## 友情链接
 
-- [LuckyIsland](https://github.com/thisxiaoyuQAQ/LuckyIsland) — Windows 灵动岛式桌面胶囊
-- [LINUX DO](https://linux.do/) — 社区论坛
-- [LINUX DO Credit](https://credit.linux.do/) — 积分乐园
+- [LINUX DO](https://linux.do/)
 
 ---
 
