@@ -24,9 +24,9 @@ from app.core.public_security import (
 # 1) _READER_RULE_VERSION  — shown in name/comment/jsLib
 # 2) _READER_RULE_RELEASED_AT_MS — must be >= previous release and preferably
 #    wall-clock "now" so lastUpdateTime actually advances past AppConfig mtime
-_READER_RULE_VERSION = "0.0.23"
-# 2026-07-24 per-request token via self-contained header redeem (ms).
-_READER_RULE_RELEASED_AT_MS = 1_785_000_000_000
+_READER_RULE_VERSION = "0.0.24"
+# 2026-07-24 unified token auth for search/toc/chapter (ms).
+_READER_RULE_RELEASED_AT_MS = 1_785_010_000_000
 
 # Dual source identity: public vs LAN imports coexist in Reading.
 _PUBLIC_BOOK_SOURCE_URL = "LegadoHub"
@@ -65,13 +65,18 @@ def _reader_rule_last_update_time(config: AppConfig) -> int:
 
 
 def _login_ui(*, bound_access_code: bool = False) -> str:
-    """Login form for Reading (full sheet; auth is normally automatic)."""
+    """Login form for Reading.
+
+    Auth model:
+    - personal link with ?code= → every request auto-redeems/attaches Bearer
+    - plain public source without code → 401 then Reading opens this login sheet
+    """
     auth_hint = (
-        "已绑定个人凭证：搜索/阅读请求会自动带登录态，一般不用点登录。"
-        "异常时再点「登录」刷新，或用「订阅管理」打开网页。"
+        "专属链接已带凭证：搜索/目录/正文会自动登录，一般无需操作。"
+        "异常时可点「登录」刷新，「订阅管理」打开网页。"
         if bound_access_code
-        else "请输入授权码后点「登录」一次；之后请求会自动沿用会话。"
-        "更推荐导入带 code 的专属书源链接（全程自动登录）。"
+        else "当前为公共书源（无个人凭证）。请输入授权码并点「登录」；"
+        "或改用管理员发放的带 code 专属书源链接以全程自动登录。"
     )
     btn = {"layout_flexGrow": 1, "layout_flexBasisPercent": 0.48}
     return json.dumps(
@@ -107,73 +112,101 @@ def _login_ui(*, bound_access_code: bool = False) -> str:
     )
 
 
-def _request_header_rule(base_api: str, *, access_code: str | None = None) -> str:
-    """Per-request Authorization: reuse LoginHeader or silent-redeem access code.
+def _auth_runtime_js(base_api: str, *, access_code: str | None = None) -> str:
+    """Shared JS: resolve Bearer from LoginHeader, else redeem bound/form code.
 
-    Self-contained (does **not** eval ``loginUrl``). The earlier header that
-    eval'd the full login script broke Reading's login sheet. This only:
-    1) reads existing Bearer from source LoginHeader;
-    2) if missing, redeems bound code (or form 授权码) via one POST;
-    3) stores Bearer for later requests;
-    4) always returns JSON headers and never throws out of the script.
+    Used by book-source ``header`` (search/toc/book) and by chapter ``java.ajax``
+    so search / subscribe / chapter share the same token logic.
+    Does not eval ``loginUrl`` (that previously broke Reading login UI).
     """
     base_literal = json.dumps(str(base_api or "").rstrip("/"), ensure_ascii=False)
     access_literal = json.dumps(str(access_code or ""), ensure_ascii=False)
+    return f"""
+function legadoHubReadStoredAuth() {{
+    try {{
+        var raw = source.getLoginHeader();
+        var st = typeof raw === "string" ? JSON.parse(raw || "{{}}") : (raw || {{}});
+        var a = st && (st.Authorization || st.authorization) || "";
+        return String(a || "").trim();
+    }} catch (e) {{
+        return "";
+    }}
+}}
+function legadoHubReadAccessCode() {{
+    var code = {access_literal};
+    if (String(code || "").trim()) return String(code).trim();
+    try {{
+        var info = source.getLoginInfoMap();
+        if (!info) return "";
+        try {{
+            var v = info.get("授权码");
+            if (v !== null && v !== undefined && String(v).trim()) return String(v).trim();
+        }} catch (e1) {{}}
+        try {{
+            if (info["授权码"] && String(info["授权码"]).trim()) return String(info["授权码"]).trim();
+        }} catch (e2) {{}}
+    }} catch (e3) {{}}
+    return "";
+}}
+function legadoHubHasBoundToken() {{
+    return !!String({access_literal} || "").trim();
+}}
+function legadoHubRedeemToAuth() {{
+    var code = legadoHubReadAccessCode();
+    var base = {base_literal};
+    if (!code || !base) return "";
+    try {{
+        var body = JSON.stringify({{accessCode: code}});
+        var opt = {{
+            method: "POST",
+            headers: {{"Accept": "application/json", "Content-Type": "application/json"}},
+            body: body
+        }};
+        var text = String(java.ajax(base + "/api/auth/access/redeem," + JSON.stringify(opt)) || "").trim();
+        if (!text) return "";
+        var payload = JSON.parse(text);
+        if (!payload || !payload.token) return "";
+        var auth = "Bearer " + String(payload.token);
+        try {{ source.putLoginHeader(JSON.stringify({{Authorization: auth}})); }} catch (e4) {{}}
+        return auth;
+    }} catch (e5) {{
+        return "";
+    }}
+}}
+function legadoHubResolveAuth() {{
+    var auth = legadoHubReadStoredAuth();
+    if (auth) return auth;
+    // Only auto-redeem when personal link embeds a code, or user already saved 授权码.
+    return legadoHubRedeemToAuth();
+}}
+function legadoHubAuthHeaders() {{
+    var h = {{"Accept": "application/json"}};
+    try {{
+        var auth = legadoHubResolveAuth();
+        if (auth) h.Authorization = auth;
+    }} catch (e) {{}}
+    return h;
+}}
+function legadoHubAjax(url, method, body) {{
+    var opt = {{
+        method: String(method || "GET").toUpperCase(),
+        headers: legadoHubAuthHeaders()
+    }};
+    if (body !== undefined && body !== null) {{
+        opt.body = typeof body === "string" ? body : JSON.stringify(body);
+        if (!opt.headers["Content-Type"]) opt.headers["Content-Type"] = "application/json";
+    }}
+    return String(java.ajax(String(url || "") + "," + JSON.stringify(opt)) || "");
+}}
+"""
+
+
+def _request_header_rule(base_api: str, *, access_code: str | None = None) -> str:
+    """AnalyzeUrl header for search / book / toc / explore (same token path)."""
     return (
         "@js:\n"
-        "var h = {\"Accept\": \"application/json\"};\n"
-        "try {\n"
-        "  var auth = \"\";\n"
-        "  try {\n"
-        "    var raw = source.getLoginHeader();\n"
-        "    var st = typeof raw === \"string\" ? JSON.parse(raw || \"{}\") : (raw || {});\n"
-        "    auth = st && (st.Authorization || st.authorization) || \"\";\n"
-        "  } catch (e0) { auth = \"\"; }\n"
-        "  if (!String(auth || \"\").trim()) {\n"
-        "    var code = " + access_literal + ";\n"
-        "    if (!String(code || \"\").trim()) {\n"
-        "      try {\n"
-        "        var info = source.getLoginInfoMap();\n"
-        "        if (info) {\n"
-        "          try {\n"
-        "            var v = info.get(\"授权码\");\n"
-        "            if (v !== null && v !== undefined) code = String(v);\n"
-        "          } catch (e1) {}\n"
-        "          if (!String(code || \"\").trim()) {\n"
-        "            try { code = String(info[\"授权码\"] || \"\"); } catch (e2) {}\n"
-        "          }\n"
-        "        }\n"
-        "      } catch (e3) {}\n"
-        "    }\n"
-        "    code = String(code || \"\").trim();\n"
-        "    var base = " + base_literal + ";\n"
-        "    if (code && base) {\n"
-        "      try {\n"
-        "        var body = JSON.stringify({accessCode: code});\n"
-        "        var opt = {\n"
-        "          method: \"POST\",\n"
-        "          headers: {\n"
-        "            \"Accept\": \"application/json\",\n"
-        "            \"Content-Type\": \"application/json\"\n"
-        "          },\n"
-        "          body: body\n"
-        "        };\n"
-        "        var text = String(java.ajax(base + \"/api/auth/access/redeem,\" + JSON.stringify(opt)) || \"\").trim();\n"
-        "        if (text) {\n"
-        "          var payload = JSON.parse(text);\n"
-        "          if (payload && payload.token) {\n"
-        "            auth = \"Bearer \" + String(payload.token);\n"
-        "            try {\n"
-        "              source.putLoginHeader(JSON.stringify({Authorization: auth}));\n"
-        "            } catch (e4) {}\n"
-        "          }\n"
-        "        }\n"
-        "      } catch (e5) {}\n"
-        "    }\n"
-        "  }\n"
-        "  if (String(auth || \"\").trim()) h.Authorization = String(auth);\n"
-        "} catch (e) {}\n"
-        "JSON.stringify(h);"
+        + _auth_runtime_js(base_api, access_code=access_code)
+        + "\nJSON.stringify(legadoHubAuthHeaders());"
     )
 
 
@@ -367,18 +400,20 @@ function legadoHubLogout() {{
 
 
 def _login_check_script() -> str:
-    # After 401, drop stale Bearer so the next request header redeems again.
+    # On 401: clear stale Bearer. Bound code is re-attached on the next header
+    # redeem; unbound sources stay logged-out so Reading opens the login UI.
     return """var legadoHubOriginalResponse = result;
 try {
     eval(String(source.loginUrl));
     var body = String(legadoHubOriginalResponse == null ? "" : legadoHubOriginalResponse);
-    if (/当前未登陆|未登陆|请登陆后使用|Unauthorized/i.test(body)) {
+    var needLogin = /当前未登陆|未登陆|请登陆后使用|Unauthorized/i.test(body);
+    if (needLogin) {
         try { source.removeLoginHeader(); } catch (e0) {}
-        try { legadoHubEnsureAuth(false); } catch (e1) {}
-    } else if (!legadoHubHasLoginHeader()) {
+        if (legadoHubBoundAccessCode()) {
+            try { legadoHubEnsureAuth(false); } catch (e1) {}
+        }
+    } else if (!legadoHubHasLoginHeader() && legadoHubBoundAccessCode()) {
         try { legadoHubEnsureAuth(false); } catch (e2) {}
-    } else {
-        try { legadoHubStatus(false); } catch (e3) {}
     }
 } catch (e) {}
 legadoHubOriginalResponse;"""
@@ -434,6 +469,7 @@ def _reader_js_lib(base_api: str, *, access_code: str | None = None) -> str:
     # LEGADOHUB_RULE_VERSION must change whenever rules change so Reading's
     # imported source body is not "same content, only title renamed".
     # LEGADOHUB_ACCESS_CODE is set only for personalized subscription links.
+    # Auth helpers must live in jsLib so ruleContent java.ajax also carries Bearer.
     return (
         "var LEGADOHUB_RULE_VERSION = "
         + version_literal
@@ -448,6 +484,7 @@ def _reader_js_lib(base_api: str, *, access_code: str | None = None) -> str:
         + "function legadoHubSourceBase() { return "
         + base_literal
         + "; }\n"
+        + _auth_runtime_js(base_api, access_code=access_code)
         + _LEGADO_E_READER_JS
     )
 
@@ -643,9 +680,9 @@ def _build_source(
         else "本条为公网书源（bookSourceUrl=LegadoHub），可与内网书源并存；"
     )
     bind_note = (
-        "本源已绑定个人授权码（专属订阅链接）；每次请求自动附带/刷新登录态。"
+        "专属链接（带 code）：搜索/目录/正文统一自动鉴权。"
         if bound
-        else "导入公共书源后请先用授权码登录一次；推荐改用带 code 的专属订阅链接（全程自动）。"
+        else "公共链接（无 code）：未登录时跳转登录；登录后会话自动沿用。"
     )
     return {
         "bookSourceName": f"{name}({_READER_RULE_VERSION})",
@@ -728,13 +765,21 @@ def _build_source(
             "updateTime": "$.updateTime",
         },
         "ruleContent": {
+            # Must use legadoHubAjax (jsLib) so chapter fetch carries the same
+            # Bearer as search/toc. Plain java.ajax(contentUrl) skipped source header.
             "content": '@js:\n'
             'var payload = String(result || "");\n'
             'var contentUrl = "";\n'
             'try {\n'
             '  contentUrl = String(java.hexDecodeToString(payload) || "").trim();\n'
             '  try { contentUrl = legadoHubRewriteApiUrl(contentUrl); } catch (e0) {}\n'
-            '  if (/^https?:\\/\\//i.test(contentUrl)) payload = String(java.ajax(contentUrl) || "");\n'
+            '  if (/^https?:\\/\\//i.test(contentUrl)) {\n'
+            '    try {\n'
+            '      payload = String(legadoHubAjax(contentUrl) || "");\n'
+            '    } catch (eAjax) {\n'
+            '      payload = String(java.ajax(contentUrl) || "");\n'
+            '    }\n'
+            '  }\n'
             '} catch (e) {}\n'
             'var text = payload;\n'
             'var chapterPayload = null;\n'
