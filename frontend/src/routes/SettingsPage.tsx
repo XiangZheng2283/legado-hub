@@ -371,9 +371,9 @@ export function SettingsPage() {
         <TabsContent value="reading" className={tabPanelClass}>
           <SettingsCard
             title="公网访问白名单"
-            description="仅登记后的公网 origin 可通过 CF/反代访问并生成书源。留空则只允许局域网 Host。书源地址仍按本次实际访问生成。"
+            description="仅登记后的公网 origin 可通过域名/反代访问并生成书源。优先级：此处设置 > 环境变量 LEGADOHUB_PUBLIC_BASE_URL > 仅局域网。留空且无环境变量时只允许局域网 Host。"
           >
-            <SettingRow title="允许的公网地址" description="例如 https://book.example.com:2087，不要带路径。">
+            <SettingRow title="允许的公网地址" description="例如 https://book.example.com:2087，不要带路径。部署时可先用 LEGADOHUB_PUBLIC_BASE_URL 引导，保存后以此处为准。">
               <Input
                 className={settingsInputClass}
                 aria-label="对外访问基址"
@@ -383,7 +383,7 @@ export function SettingsPage() {
               />
             </SettingRow>
             <p className="mt-3 text-xs text-slate-500">
-              用该公网地址打开阅读入口并更新书源后才会写入公网链接；局域网访问仍生成局域网地址。
+              用该公网地址打开阅读入口并更新书源后才会写入公网链接；局域网访问仍生成局域网地址（双源）。改设置立即生效，无需重建容器。
             </p>
           </SettingsCard>
           <SettingsCard title="章节评论入口" description="控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。">

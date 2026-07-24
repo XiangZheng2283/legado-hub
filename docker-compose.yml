@@ -23,6 +23,12 @@ services:
       - PUID=1000 # 运行用户 ID（改成 NAS/宿主实际用户，例如 1000）
       - PGID=1000 # 运行用户组 ID（改成 NAS/宿主实际用户组）
       - LEGADOHUB_CHOWN_DATA=${LEGADOHUB_CHOWN_DATA:-0} # 仅迁移旧数据权限时临时设为 1
+      # 公网部署可选：首次引导阅读公网 origin（与设置「允许的公网地址」对应）
+      # 优先级：控制台设置 > 本变量 > 仅局域网。设置保存后覆盖本变量，无需重建。
+      # - LEGADOHUB_PUBLIC_BASE_URL=https://book.example.com
+      # - LEGADOHUB_ALLOWED_HOSTS=book.example.com
+      # - LEGADOHUB_ALLOWED_ORIGINS=https://book.example.com
+      # - LEGADOHUB_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
     volumes:
       # 数据与配置持久化（必需）
       # 默认相对路径 = compose 文件所在目录；NAS 请改成绝对路径

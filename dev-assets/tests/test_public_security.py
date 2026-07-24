@@ -47,6 +47,11 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     tmp_path,
 ) -> None:
     from app.core.app_config import AppConfig
+    from app.core.public_security import (
+        effective_public_base_url,
+        env_public_base_url,
+        settings_public_base_url,
+    )
 
     _clear_network_config(monkeypatch)
     config_path = tmp_path / "app_config.json"
@@ -72,6 +77,9 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     AppConfig.reset()
     monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
 
+    assert settings_public_base_url() == proxy_origin
+    assert effective_public_base_url() == proxy_origin
+
     allowlisted = TestClient(
         reader_app,
         base_url=proxy_origin,
@@ -81,6 +89,15 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     assert manifest.status_code == 200
     assert manifest.json()[0]["searchUrl"].startswith(f"{proxy_origin}/api/")
 
+    # Allowlisted public Host may be reached by a public IPv4 peer (auth still applies).
+    public_peer_on_public_host = TestClient(
+        reader_app,
+        base_url=proxy_origin,
+        client=("203.0.113.20", 50000),
+    )
+    assert public_peer_on_public_host.get("/health").status_code == 200
+
+    # Spoofing a LAN Host from a public peer remains denied.
     public_ipv4_peer = TestClient(
         reader_app,
         base_url=LAN_READER_ORIGIN,
@@ -94,6 +111,12 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
         client=("2001:db8::20", 50000),
     )
     assert ipv6_proxy.get("/health").status_code == 200
+
+    # Settings override env for effective public origin.
+    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", "https://env-only.example.test")
+    assert env_public_base_url() == "https://env-only.example.test"
+    assert effective_public_base_url() == proxy_origin  # settings wins
+    monkeypatch.delenv("LEGADOHUB_PUBLIC_BASE_URL", raising=False)
 
     admin_security = load_admin_security_config()
     assert admin_security.dynamic_base_url is True
@@ -111,6 +134,50 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
         "/api/missing",
         headers={"Origin": admin_origin},
     ).status_code == 404
+
+
+def test_env_public_base_bootstraps_allowlist_until_settings_override(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """Deploy env opens public Host; settings later overrides without rebuild."""
+    from app.core.app_config import AppConfig
+    from app.core.public_security import (
+        effective_public_base_url,
+        get_public_base_url,
+        reading_public_base_allowlist,
+    )
+
+    _clear_network_config(monkeypatch)
+    env_origin = "https://books.env.example"
+    monkeypatch.setenv("LEGADOHUB_PUBLIC_BASE_URL", env_origin)
+    monkeypatch.setenv("LEGADOHUB_ALLOWED_HOSTS", "books.env.example")
+    monkeypatch.setenv("LEGADOHUB_ALLOWED_ORIGINS", env_origin)
+
+    config_path = tmp_path / "app_config.json"
+    config_path.write_text("{}", encoding="utf-8")
+    AppConfig.reset()
+    monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
+
+    assert effective_public_base_url() == env_origin
+    assert reading_public_base_allowlist() == frozenset({env_origin})
+
+    # Fixed mode from env: URLs use settings>env (settings empty → env).
+    security = load_public_security_config()
+    assert security.dynamic_base_url is False
+    assert get_public_base_url() == env_origin
+
+    cfg = AppConfig(config_path)
+    settings_origin = "https://books.settings.example"
+    cfg.set("readingAccess.publicBaseUrl", settings_origin)
+    cfg.save()
+    AppConfig.reset()
+    monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
+
+    assert effective_public_base_url() == settings_origin
+    assert reading_public_base_allowlist() == frozenset({settings_origin})
+    # Fixed-mode URL generation follows settings override.
+    assert get_public_base_url() == settings_origin
 
 
 def test_default_network_accepts_ipv6_and_rejects_public_ipv4(monkeypatch) -> None:

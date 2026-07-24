@@ -732,7 +732,8 @@ def test_reading_access_public_base_url_is_allowlist_not_forced_base(admin_clien
         }
         AppConfig.get().reload()
         assert reading_public_base_allowlist() == frozenset({"https://book.example.com:2087"})
-        # Offline generation must not force the allowlist origin.
+        # Offline + dynamic process: do not force settings origin into generators.
+        # (Allowlist is for request Host admission / live get_public_base_url.)
         assert not get_public_base_url().startswith("https://book.example.com")
         source = generate_legado_source("http://192.168.1.10:8765")[0]
         assert source["searchUrl"].startswith("http://192.168.1.10:8765/")

@@ -320,6 +320,42 @@ def _dynamic_host_client_allowed(request: Request) -> bool | None:
     return _is_default_allowed_host(normalized)
 
 
+def settings_public_base_url() -> str:
+    """``readingAccess.publicBaseUrl`` from AppConfig, or empty when unset/invalid."""
+    try:
+        from app.core.app_config import AppConfig
+
+        raw = str(AppConfig.get().reading_access.public_base_url or "").strip()
+    except Exception:
+        return ""
+    if not raw:
+        return ""
+    try:
+        return normalize_public_base_url(raw)
+    except RuntimeError:
+        return ""
+
+
+def env_public_base_url() -> str:
+    """Deploy-time bootstrap origin from ``LEGADOHUB_PUBLIC_BASE_URL``."""
+    raw = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip().rstrip("/")
+    if not raw:
+        return ""
+    try:
+        return normalize_public_base_url(raw)
+    except RuntimeError:
+        return ""
+
+
+def effective_public_base_url() -> str:
+    """Configured public reading origin: **settings > env**. Empty = LAN-only public Hosts.
+
+    Used for allowlist and fixed-base override. Does not invent a base from the
+    request Host (that remains ``get_public_base_url`` / dynamic mode).
+    """
+    return settings_public_base_url() or env_public_base_url()
+
+
 def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
     scheme = "https" if security.request_is_https(request) else request.url.scheme.lower()
     if scheme not in {"http", "https"}:
@@ -328,62 +364,71 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
         f"{scheme}://{request.headers.get('host', '').strip()}",
         label="Host",
     )
-    client_allowed = _dynamic_host_client_allowed(request)
-    if client_allowed is False or (
-        client_allowed is None and not _is_default_allowed_host(host)
-    ):
-        raise RuntimeError(
-            "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
-        )
-    # Reader entry: public hostnames (CF/domain) only when allowlisted in settings.
-    # LAN/localhost Hosts keep working without registration. Admin entry skips this.
-    if security.enforce_reading_public_allowlist and not _is_default_allowed_host(host):
+    # LAN / local Hosts: no registration needed, but the peer must still be
+    # local/private (or an unnamed test transport). Public clients cannot spoof
+    # a LAN Host from the Internet.
+    if _is_default_allowed_host(host):
+        client_allowed = _dynamic_host_client_allowed(request)
+        if client_allowed is False:
+            raise RuntimeError(
+                "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
+            )
+        return origin
+
+    # Public Hostnames (domain / public IP Host): must match settings>env
+    # allowlist. Once allowlisted, any client IP may reach the reader entry
+    # (APIs remain behind auth codes). Enables public VPS without a private peer.
+    if security.enforce_reading_public_allowlist:
         allowlist = reading_public_base_allowlist()
         if not allowlist or origin not in allowlist:
             raise RuntimeError("Public Host is not allowlisted")
+        return origin
+
+    client_allowed = _dynamic_host_client_allowed(request)
+    if client_allowed is False or client_allowed is None:
+        raise RuntimeError(
+            "Dynamic Host requires a local/private IPv4 or valid IPv6 client."
+        )
     return origin
 
 
 def reading_public_base_allowlist() -> frozenset[str]:
-    """Operator-registered public reading origins (settings UI). Empty = no public Host."""
-    try:
-        from app.core.app_config import AppConfig
+    """Public origins allowed for reading Host: settings UI > env bootstrap.
 
-        configured = str(AppConfig.get().reading_access.public_base_url or "").strip()
-    except Exception:
-        return frozenset()
+    Empty means only LAN/local Hosts are accepted under dynamic mode.
+    """
+    configured = effective_public_base_url()
     if not configured:
         return frozenset()
-    try:
-        return frozenset({normalize_public_base_url(configured)})
-    except RuntimeError:
-        # Stale/invalid stored values do not open the public gate.
-        return frozenset()
+    return frozenset({configured})
 
 
 def get_public_base_url(request: Request | None = None) -> str:
     """Resolve the reading base for this request (or offline default).
 
-    Priority for live requests:
-    1. Fixed env ``LEGADOHUB_PUBLIC_BASE_URL`` when set (non-dynamic mode)
-    2. Request Host + trusted ``X-Forwarded-Proto`` (dynamic mode), subject to
-       public-host allowlist from settings
-
-    Settings ``readingAccess.publicBaseUrl`` is a whitelist for public Hosts,
-    not a force-rewrite of every generated source.
+    Priority:
+    1. Dynamic mode: request Host (+ trusted ``X-Forwarded-Proto``), subject to
+       public-host allowlist (settings ``publicBaseUrl`` > env).
+    2. Fixed mode (env ``LEGADOHUB_PUBLIC_BASE_URL`` at process start): return
+       **settings > env** so UI can override the deploy variable without rebuild.
+    3. Offline/script: fixed settings>env when present, else process default base.
+       Does not invent a public origin solely from allowlist when unset.
     """
     security = (
         getattr(request.app.state, "public_security", None)
         if request is not None
         else None
     ) or load_public_security_config()
+    configured = effective_public_base_url()
     if request is not None:
         if security.dynamic_base_url:
             return _request_origin(request, security)
-        return security.public_base_url
+        # Fixed TrustedHost deploy: settings override env-loaded base.
+        return configured or security.public_base_url
     if not security.dynamic_base_url:
-        return security.public_base_url
-    # Offline/script path: never invent a public origin from the allowlist alone.
+        return configured or security.public_base_url
+    # Offline + dynamic: do not force settings/env into offline generators unless
+    # a fixed env base was baked into security at process start (already handled).
     return security.public_base_url
 
 
