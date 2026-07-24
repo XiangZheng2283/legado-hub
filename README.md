@@ -253,12 +253,6 @@ Set-Location ../backend
 
 问题反馈与功能建议请提交至 [GitHub Issues](https://github.com/XziXmn/legado-hub/issues)。
 
-提交 PR 前请：
-1. 阅读 [AGENTS.md](AGENTS.md) 及相关架构文档，确保改动落在正确边界内
-2. 保持单一职责：一个 PR 解决一个明确问题
-3. 运行 `verify.ps1` 并在 PR 描述中附上结果
-4. 不要提交运行时数据（`data/`、`config/app_config.json`、Cookie、官方插件等）
-
 ---
 
 ## 友情链接
