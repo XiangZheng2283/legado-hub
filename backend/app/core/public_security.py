@@ -320,40 +320,78 @@ def _dynamic_host_client_allowed(request: Request) -> bool | None:
     return _is_default_allowed_host(normalized)
 
 
-def settings_public_base_url() -> str:
-    """``readingAccess.publicBaseUrl`` from AppConfig, or empty when unset/invalid."""
+def parse_public_base_urls(raw: str) -> list[str]:
+    """Parse one or more public origins (comma / semicolon / whitespace separated).
+
+    Each entry must be a full origin (``https://host`` or ``https://host:port``).
+    Order is preserved; duplicates after normalization are dropped.
+    """
+    text = str(raw or "").strip()
+    if not text:
+        return []
+    parts = re.split(r"[\s,;]+", text)
+    out: list[str] = []
+    seen: set[str] = set()
+    for part in parts:
+        item = str(part or "").strip().rstrip("/")
+        if not item:
+            continue
+        try:
+            normalized = normalize_public_base_url(item)
+        except RuntimeError:
+            continue
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        out.append(normalized)
+    return out
+
+
+def settings_public_base_urls() -> list[str]:
+    """``readingAccess.publicBaseUrl`` as ordered list (settings may list many ports)."""
     try:
         from app.core.app_config import AppConfig
 
         raw = str(AppConfig.get().reading_access.public_base_url or "").strip()
     except Exception:
-        return ""
-    if not raw:
-        return ""
-    try:
-        return normalize_public_base_url(raw)
-    except RuntimeError:
-        return ""
+        return []
+    return parse_public_base_urls(raw)
+
+
+def settings_public_base_url() -> str:
+    """Primary public origin from settings (first listed), or empty."""
+    urls = settings_public_base_urls()
+    return urls[0] if urls else ""
+
+
+def env_public_base_urls() -> list[str]:
+    """Deploy-time bootstrap origins from ``LEGADOHUB_PUBLIC_BASE_URL``."""
+    raw = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip()
+    return parse_public_base_urls(raw)
 
 
 def env_public_base_url() -> str:
-    """Deploy-time bootstrap origin from ``LEGADOHUB_PUBLIC_BASE_URL``."""
-    raw = os.getenv("LEGADOHUB_PUBLIC_BASE_URL", "").strip().rstrip("/")
-    if not raw:
-        return ""
-    try:
-        return normalize_public_base_url(raw)
-    except RuntimeError:
-        return ""
+    """Primary deploy-time bootstrap origin (first listed)."""
+    urls = env_public_base_urls()
+    return urls[0] if urls else ""
+
+
+def effective_public_base_urls() -> list[str]:
+    """Configured public origins: **settings list > env list**. Empty = LAN-only."""
+    settings = settings_public_base_urls()
+    if settings:
+        return settings
+    return env_public_base_urls()
 
 
 def effective_public_base_url() -> str:
-    """Configured public reading origin: **settings > env**. Empty = LAN-only public Hosts.
+    """Primary configured public origin: **settings > env**. Empty = LAN-only public Hosts.
 
-    Used for allowlist and fixed-base override. Does not invent a base from the
-    request Host (that remains ``get_public_base_url`` / dynamic mode).
+    Used for preferred issued links. Full allowlist is
+    ``effective_public_base_urls()`` / ``reading_public_base_allowlist()``.
     """
-    return settings_public_base_url() or env_public_base_url()
+    urls = effective_public_base_urls()
+    return urls[0] if urls else ""
 
 
 def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
@@ -395,12 +433,10 @@ def _request_origin(request: Request, security: PublicSecurityConfig) -> str:
 def reading_public_base_allowlist() -> frozenset[str]:
     """Public origins allowed for reading Host: settings UI > env bootstrap.
 
+    Supports multiple origins (different ports / reverse-proxy vs direct).
     Empty means only LAN/local Hosts are accepted under dynamic mode.
     """
-    configured = effective_public_base_url()
-    if not configured:
-        return frozenset()
-    return frozenset({configured})
+    return frozenset(effective_public_base_urls())
 
 
 def get_public_base_url(request: Request | None = None) -> str:

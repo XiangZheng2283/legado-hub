@@ -87,7 +87,9 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
     )
     manifest = allowlisted.get("/api/subscribe/legado/source")
     assert manifest.status_code == 200
-    assert manifest.json()[0]["searchUrl"].startswith(f"{proxy_origin}/api/")
+    search_url = manifest.json()[0]["searchUrl"]
+    assert proxy_origin in search_url
+    assert "/api/subscribe/legado/search" in search_url
 
     # Allowlisted public Host may be reached by a public IPv4 peer (auth still applies).
     public_peer_on_public_host = TestClient(
@@ -96,6 +98,30 @@ def test_dynamic_host_accepts_lan_proxy_and_ipv6_but_rejects_public_ipv4_peer(
         client=("203.0.113.20", 50000),
     )
     assert public_peer_on_public_host.get("/health").status_code == 200
+
+    # Multiple public origins (different ports) are all allowlisted.
+    second_origin = "https://books.example.test:2087"
+    cfg.set(
+        "readingAccess.publicBaseUrl",
+        f"{proxy_origin}\n{second_origin}",
+    )
+    cfg.save()
+    AppConfig.reset()
+    monkeypatch.setattr(AppConfig, "get", classmethod(lambda cls: AppConfig(config_path)))
+    from app.core.public_security import (
+        effective_public_base_urls,
+        reading_public_base_allowlist,
+    )
+
+    assert settings_public_base_url() == proxy_origin
+    assert effective_public_base_urls() == [proxy_origin, second_origin]
+    assert reading_public_base_allowlist() == frozenset({proxy_origin, second_origin})
+    via_second = TestClient(
+        reader_app,
+        base_url=second_origin,
+        client=("203.0.113.20", 50000),
+    )
+    assert via_second.get("/api/subscribe/legado/source").status_code == 200
 
     # Spoofing a LAN Host from a public peer remains denied.
     public_ipv4_peer = TestClient(
