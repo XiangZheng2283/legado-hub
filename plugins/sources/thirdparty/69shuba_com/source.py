@@ -20,7 +20,7 @@ class Source:
     id = "69shuba_com"
     name = "69书吧"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-24"
     base_url = "https://www.69shuba.com"
     base_urls = ["https://www.69shuba.com", "https://www.69shuba.cx"]
     headers = {"accept-language": "zh-CN,zh;q=0.9"}

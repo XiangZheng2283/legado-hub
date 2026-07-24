@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 69hsw_com
 name: 69书屋
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 enabled: true
 domains:

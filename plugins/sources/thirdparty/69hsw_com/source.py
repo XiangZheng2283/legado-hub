@@ -13,7 +13,7 @@ class Source:
     id = "69hsw_com"
     name = "69书屋"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-24"
 
     _AD_LINE_RE = re.compile(
         r"(?m)^.*(?:"
