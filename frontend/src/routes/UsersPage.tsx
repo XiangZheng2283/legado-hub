@@ -45,6 +45,18 @@ function formatDate(value?: string) {
   }
 }
 
+/** Prefer public/default source; show LAN only when it differs. */
+function issuedSourceLinks(issued: IssuedAccessCode) {
+  const primary =
+    issued.sourceUrl ||
+    issued.publicSourceUrl ||
+    issued.lanSourceUrl ||
+    ""
+  const lan = issued.lanSourceUrl || ""
+  const showLan = !!lan && lan !== primary && lan !== (issued.publicSourceUrl || "")
+  return { primary, lan: showLan ? lan : "" }
+}
+
 export function UsersPage() {
   const queryClient = useQueryClient()
   const { user: currentUser } = useAuth()
@@ -200,7 +212,7 @@ export function UsersPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">用户管理</h1>
-          <p className="mt-1 text-sm text-slate-500">普通用户使用个人授权码 / 专属订阅链接；重新生成后旧链接立即失效。管理员使用密码。</p>
+          <p className="mt-1 text-sm text-slate-500">普通用户发专属书源链接即可；重新生成后旧链接失效。管理员使用密码。</p>
         </div>
         <Button onClick={openCreateDialog}><Plus className="mr-2 h-4 w-4" />新建用户</Button>
       </div>
@@ -330,77 +342,66 @@ export function UsersPage() {
       </Dialog>
 
       <Dialog open={!!issuedAccessCode} onOpenChange={(open) => { if (!open) closeIssuedDialog() }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>个人订阅凭证</DialogTitle>
+            <DialogTitle>发给用户</DialogTitle>
             <DialogDescription>
-              {issuedAccessCode?.username}：授权码与专属链接仅此显示一次。用户导入书源链接后无需再输码；重新生成后旧链接立即失效。
+              {issuedAccessCode?.username || "用户"} · 只显示一次，复制书源链接即可在 Reading 导入
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <div className="mb-1 text-xs font-medium text-slate-500">授权码</div>
-              <div className="flex min-w-0 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
-                <code className="min-w-0 flex-1 break-all text-sm text-slate-800">{issuedAccessCode?.accessCode}</code>
-                <Button type="button" variant="outline" size="icon" title="复制授权码" aria-label="复制授权码" onClick={() => { void copyText("code", issuedAccessCode?.accessCode) }}>
-                  {copiedKey === "code" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-            {(issuedAccessCode?.sourceUrl || issuedAccessCode?.publicSourceUrl || issuedAccessCode?.lanSourceUrl) && (
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-slate-500">专属书源链接（Reading 导入）</div>
-                {([
-                  ["source", "默认", issuedAccessCode.sourceUrl],
-                  ["publicSource", "公网", issuedAccessCode.publicSourceUrl],
-                  ["lanSource", "内网", issuedAccessCode.lanSourceUrl],
-                ] as const).filter(([, , url]) => !!url).map(([key, label, url]) => (
-                  <div key={key} className="flex min-w-0 items-start gap-2 rounded-md border border-slate-200 bg-white p-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11px] text-slate-400">{label}</div>
-                      <code className="break-all text-xs text-slate-700">{url}</code>
+          {issuedAccessCode && (() => {
+            const { primary, lan } = issuedSourceLinks(issuedAccessCode)
+            return (
+              <div className="space-y-4">
+                {primary ? (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-slate-800">书源链接</div>
+                    <div className="flex min-w-0 items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+                      <code className="min-w-0 flex-1 break-all text-xs leading-relaxed text-slate-800">{primary}</code>
+                      <Button type="button" size="sm" onClick={() => { void copyText("source", primary) }}>
+                        {copiedKey === "source" ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
+                        {copiedKey === "source" ? "已复制" : "复制"}
+                      </Button>
                     </div>
-                    <Button type="button" variant="outline" size="icon" title={`复制${label}书源链接`} aria-label={`复制${label}书源链接`} onClick={() => { void copyText(key, url) }}>
-                      {copiedKey === key ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                    {lan ? (
+                      <div className="space-y-1">
+                        <div className="text-xs text-slate-500">内网（可选）</div>
+                        <div className="flex min-w-0 items-start gap-2 rounded-md border border-slate-100 bg-white p-2">
+                          <code className="min-w-0 flex-1 break-all text-[11px] text-slate-600">{lan}</code>
+                          <Button type="button" variant="outline" size="icon" title="复制内网书源" aria-label="复制内网书源" onClick={() => { void copyText("lanSource", lan) }}>
+                            {copiedKey === "lanSource" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <Alert>
+                    <AlertDescription>
+                      尚未生成书源链接。请先在「设置 → 阅读 → 允许的公网地址」登记地址后重新生成，或先复制下方授权码。
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2 border-t border-slate-100 pt-3">
+                  <div className="text-xs text-slate-500">授权码（备用）</div>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <code className="min-w-0 flex-1 break-all rounded bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600">{issuedAccessCode.accessCode}</code>
+                    <Button type="button" variant="ghost" size="icon" title="复制授权码" aria-label="复制授权码" onClick={() => { void copyText("code", issuedAccessCode.accessCode) }}>
+                      {copiedKey === "code" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
-                ))}
+                </div>
+
+                {copyError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{copyError}</AlertDescription>
+                  </Alert>
+                )}
               </div>
-            )}
-            {(issuedAccessCode?.subscriptionUrl || issuedAccessCode?.publicSubscriptionUrl || issuedAccessCode?.lanSubscriptionUrl) && (
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-slate-500">专属订阅页链接（浏览器打开即登录）</div>
-                {([
-                  ["sub", "默认", issuedAccessCode.subscriptionUrl],
-                  ["publicSub", "公网", issuedAccessCode.publicSubscriptionUrl],
-                  ["lanSub", "内网", issuedAccessCode.lanSubscriptionUrl],
-                ] as const).filter(([, , url]) => !!url).map(([key, label, url]) => (
-                  <div key={key} className="flex min-w-0 items-start gap-2 rounded-md border border-slate-200 bg-white p-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11px] text-slate-400">{label}</div>
-                      <code className="break-all text-xs text-slate-700">{url}</code>
-                    </div>
-                    <Button type="button" variant="outline" size="icon" title={`复制${label}订阅链接`} aria-label={`复制${label}订阅链接`} onClick={() => { void copyText(key, url) }}>
-                      {copiedKey === key ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {!issuedAccessCode?.sourceUrl && !issuedAccessCode?.publicSourceUrl && !issuedAccessCode?.lanSourceUrl && (
-              <Alert>
-                <AlertDescription>
-                  未配置公网地址时，可先把授权码发给用户，或在「设置 → 阅读 → 允许的公网地址」登记 origin 后重新生成链接。
-                </AlertDescription>
-              </Alert>
-            )}
-            {copyError && (
-              <Alert variant="destructive">
-                <AlertDescription>{copyError}</AlertDescription>
-              </Alert>
-            )}
-          </div>
-          <div className="flex justify-end"><Button onClick={closeIssuedDialog}>关闭</Button></div>
+            )
+          })()}
+          <div className="flex justify-end"><Button onClick={closeIssuedDialog}>完成</Button></div>
         </DialogContent>
       </Dialog>
     </div>
