@@ -439,8 +439,20 @@ export function SettingsPage() {
             <SettingRow title="默认 User-Agent" description="向第三方书源发起 HTTP 请求时使用的标识。">
               <Input className={settingsInputClass} value={sp.default_user_agent || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, default_user_agent: e.target.value } })} />
             </SettingRow>
+            <SettingRow title="启用网络代理" description="允许标记为强制代理的书源使用下方代理地址。">
+              <div className="flex items-center justify-end gap-2">
+                <Switch checked={sp.proxy?.enabled || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), enabled: c } } })} />
+                <span className="text-sm text-slate-600">启用</span>
+              </div>
+            </SettingRow>
             <SettingRow title="代理 URL (Proxy)" description="配置 HTTP/SOCKS 代理用于访问受限书源。">
               <Input className={settingsInputClass} value={sp.proxy?.url || ""} onChange={(e) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), url: e.target.value } } })} />
+            </SettingRow>
+            <SettingRow title="直连失败后自动代理" description="普通书源遇到 403、429、连接失败或超时时，再通过代理重试。">
+              <div className="flex items-center justify-end gap-2">
+                <Switch checked={sp.proxy?.allowAutoRetry || false} onCheckedChange={(c) => setLocal({ sourcePool: { ...sp, proxy: { ...(sp.proxy || {}), allowAutoRetry: c } } })} />
+                <span className="text-sm text-slate-600">启用</span>
+              </div>
             </SettingRow>
             <SettingRow title="官方源参与普通搜索" description="是否在常规聚合搜索中包含官方书源。">
               <div className="flex items-center justify-end gap-2">

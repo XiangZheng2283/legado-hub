@@ -71,6 +71,18 @@ function chapterStatusColor(status: string) {
 
 const readableChapterStatuses = new Set(["readable", "supplemented", "proofread_complete", "fallback"])
 const previewChapterStatuses = new Set(["fetched", "preview", "suspect"])
+const maintenanceActionLabels: Record<string, string> = {
+  "check-update": "检查更新",
+  "refresh-sources": "刷新源映射",
+  repair: "重新计算状态",
+  rebuild: "重建书籍",
+}
+const maintenanceActionSuccessMessages: Record<string, string> = {
+  "check-update": "检查更新已完成，页面数据已更新。",
+  "refresh-sources": "源映射已刷新，页面数据已更新。",
+  repair: "书籍状态已重新计算，页面数据已更新。",
+  rebuild: "书籍已重新进入处理队列，页面数据已更新。",
+}
 
 function canReadChapter(chapter: LibraryChapterListItem) {
   if (!chapter.readChapterId) return false
@@ -99,12 +111,14 @@ export function LibraryBookDetailPage() {
   const [processingSettingsOpen, setProcessingSettingsOpen] = useState(false)
   const [updateIntervalMinutes, setUpdateIntervalMinutes] = useState("60")
   const [backlogChapterLimit, setBacklogChapterLimit] = useState("25")
+  const [actionNotice, setActionNotice] = useState<{ pending: boolean; text: string } | null>(null)
 
   const { data: book, isLoading, error: bookError, refetch: refetchBook } = useQuery<LibraryBookDetail | null>({
     queryKey: ["library", "book", bookId, "summary"],
     queryFn: () => isAdmin ? api.libraryBookSummary(bookId!) : api.subscribe.book(bookId!),
     enabled: !!bookId,
     refetchInterval: 5000,
+    refetchOnWindowFocus: "always",
   })
   const { data: chaptersData, isFetching: chaptersFetching, error: chaptersError, refetch: refetchChapters } = useQuery({
     queryKey: ["library", "book", bookId, "chapters", { status: chapterStatusFilter, keyword: chapterKeyword, page: chapterPage }],
@@ -116,18 +130,21 @@ export function LibraryBookDetailPage() {
     },
     enabled: !!bookId,
     refetchInterval: 5000,
+    refetchOnWindowFocus: "always",
   })
 
-  const refreshQueries = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ["library", "book", bookId] })
-    void queryClient.invalidateQueries({ queryKey: ["library", isAdmin ? "admin" : "mine"], refetchType: "none" })
+  const refreshQueries = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["library", "book", bookId] }),
+      queryClient.invalidateQueries({ queryKey: ["library", isAdmin ? "admin" : "mine"] }),
+    ])
   }, [bookId, isAdmin, queryClient])
   const liveRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const refreshFromLiveRecord = useCallback(() => {
     if (document.visibilityState === "hidden" || liveRefreshTimerRef.current) return
     liveRefreshTimerRef.current = setTimeout(() => {
       liveRefreshTimerRef.current = null
-      refreshQueries()
+      void refreshQueries()
     }, 1000)
   }, [refreshQueries])
   useEffect(() => () => {
@@ -135,17 +152,22 @@ export function LibraryBookDetailPage() {
   }, [bookId])
   const actionMutation = useMutation({
     mutationFn: (action: string) => executeLibraryBookMaintenanceAction(bookId!, action),
-    onSuccess: refreshQueries,
+    onMutate: (action) => setActionNotice({ pending: true, text: `${maintenanceActionLabels[action] || "维护操作"}正在执行…` }),
+    onSuccess: async (_result, action) => {
+      await refreshQueries()
+      setActionNotice({ pending: false, text: maintenanceActionSuccessMessages[action] || "维护操作已完成，页面数据已更新。" })
+    },
+    onError: () => setActionNotice(null),
   })
   const chapterProcessMutation = useMutation({
     mutationFn: (chapterId: string) => api.processLibraryBookChapter(bookId!, chapterId),
     onSuccess: refreshQueries,
   })
   const deleteMutation = useMutation({
-    mutationFn: () => api.deleteLibraryBook(bookId!),
+    mutationFn: () => isAdmin ? api.deleteLibraryBook(bookId!) : api.subscribe.removeSubscription(bookId!),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["library", "book", bookId] })
-      void queryClient.invalidateQueries({ queryKey: ["library"], refetchType: "none" })
+      void queryClient.invalidateQueries({ queryKey: ["library"] })
       navigate("/console/library")
     },
   })
@@ -154,7 +176,7 @@ export function LibraryBookDetailPage() {
       api.subscribe.updateSubscription(bookId!, payload),
     onSuccess: () => {
       setSettingsOpen(false)
-      refreshQueries()
+      void refreshQueries()
     },
   })
   const processingSettingsMutation = useMutation({
@@ -162,7 +184,7 @@ export function LibraryBookDetailPage() {
       api.updateLibraryBookSettings(bookId!, payload),
     onSuccess: () => {
       setProcessingSettingsOpen(false)
-      refreshQueries()
+      void refreshQueries()
     },
   })
 
@@ -266,6 +288,15 @@ export function LibraryBookDetailPage() {
         </Alert>
       )}
 
+      {actionNotice && (
+        <Alert aria-live="polite" className={actionNotice.pending ? "border-blue-200 bg-blue-50 text-blue-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}>
+          <AlertDescription className="flex items-center gap-2">
+            {actionNotice.pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <span>{actionNotice.text}</span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Hero */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row gap-8 relative">
         <div className="relative w-32 h-48 md:w-40 md:h-60 bg-slate-200 rounded-lg overflow-hidden shrink-0 shadow-md">
@@ -313,6 +344,15 @@ export function LibraryBookDetailPage() {
                 )}
                 <Button variant="ghost" size="icon" onClick={openSubscriptionSettings} disabled={maintenanceBusy} title="订阅设置" aria-label="订阅设置">
                   <Settings2 className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                  disabled={maintenanceBusy}
+                  onClick={() => { if (confirm("确定要移除这本书的订阅吗？共享书籍和其他用户的订阅不会受影响。")) deleteMutation.mutate() }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> 移除订阅
                 </Button>
               </div>
             )}
@@ -457,7 +497,10 @@ export function LibraryBookDetailPage() {
                   <div className="font-semibold text-emerald-700">源映射{book.sourceMapRefresh?.completed ? "健康" : book.sourceMapRefresh?.missingCriticalSource ? "缺关键源" : "未完成"}</div>
                   {book.sourceMapRefresh?.lastVerifiedAt && <div className="text-xs text-emerald-600 mt-0.5">上次刷新: {formatDate(book.sourceMapRefresh.lastVerifiedAt)}</div>}
                 </div>
-                <Button size="sm" variant="outline" className="bg-white" onClick={() => actionMutation.mutate("refresh-sources")} disabled={maintenanceBusy}><RefreshCw className="h-3 w-3 mr-2" /> 刷新</Button>
+                <Button size="sm" variant="outline" className="bg-white" onClick={() => actionMutation.mutate("refresh-sources")} disabled={maintenanceBusy}>
+                  {actionMutation.isPending && actionMutation.variables === "refresh-sources" ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-2" />}
+                  刷新
+                </Button>
               </div>
               {book.primarySourceName && (
                 <div className="space-y-2">

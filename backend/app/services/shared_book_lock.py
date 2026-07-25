@@ -119,6 +119,9 @@ class SharedBookLockService:
             if payload.get("workerId") != lease.worker_id:
                 lease.stop_requested = True
                 return False
+            if payload.get("stopRequested"):
+                lease.stop_requested = True
+                return False
             if self._is_expired(payload, now=now):
                 lease.stop_requested = True
                 return False
@@ -129,6 +132,19 @@ class SharedBookLockService:
             self._atomic_write_json(lease.lock_path, renewed_payload)
             lease.acquired_at = float(renewed_payload.get("acquiredAt", now) or now)
             lease.expires_at = float(renewed_payload["expiresAt"])
+            return True
+
+    def request_stop(self, *, aggregate_book_id: str) -> bool:
+        """Ask the current owner to stop at its next lease renewal."""
+        runtime_dir = self.storage.lock_runtime_dir(aggregate_book_id)
+        lock_path = runtime_dir / "shared_book.lock.json"
+        with self._guard_lock(runtime_dir):
+            payload = self._read_lock_payload(lock_path)
+            if payload is None or self._is_expired(payload, now=self.time_provider()):
+                return False
+            payload["stopRequested"] = True
+            payload["stopRequestedAt"] = self.time_provider()
+            self._atomic_write_json(lock_path, payload)
             return True
 
     def release(self, lease: SharedBookLease) -> None:

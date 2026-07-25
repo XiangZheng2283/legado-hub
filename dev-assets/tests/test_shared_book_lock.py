@@ -103,6 +103,20 @@ def test_shared_book_lock_renew_succeeds(tmp_path: Path):
     assert payload["expiresAt"] == pytest.approx(116.0)
 
 
+def test_shared_book_lock_stop_request_is_visible_to_owner(tmp_path: Path):
+    clock = FakeClock(100.0)
+    owner = _make_service(tmp_path, clock, random_factory=lambda: "owner")
+    admin = _make_service(tmp_path, clock, random_factory=lambda: "admin", pid=5678)
+    lease = owner.acquire(aggregate_book_id="book-1")
+    assert lease is not None
+
+    assert admin.request_stop(aggregate_book_id="book-1") is True
+    assert lease.renew() is False
+    assert lease.stop_requested is True
+    lease.release()
+    assert admin.acquire(aggregate_book_id="book-1") is not None
+
+
 def test_shared_book_lock_expired_lock_can_be_taken(tmp_path: Path):
     clock = FakeClock(100.0)
     first_service = _make_service(tmp_path, clock, random_factory=lambda: "first")

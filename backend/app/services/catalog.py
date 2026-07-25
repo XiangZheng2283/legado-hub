@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from app.config import HOST, PORT
 from app.core.app_config import AppConfig
@@ -106,6 +106,18 @@ class Catalog:
         except (TypeError, ValueError):
             return default
         return parsed if parsed > 0 else default
+
+    async def _call_plugin(
+        self,
+        plugin: Any,
+        operation: Callable[[], Awaitable[Any]],
+        *,
+        timeout: float,
+    ) -> Any:
+        call = getattr(self.scheduler, "_call_plugin", None)
+        if callable(call):
+            return await call(plugin, operation, timeout=timeout)
+        return await asyncio.wait_for(operation(), timeout=timeout)
 
     def _book_api_url(self, book_id: str) -> str:
         return f"{self.base_api}/api/legado/book/{book_id}"
@@ -342,8 +354,9 @@ class Catalog:
             source_timeout = self.scheduler.search_timeout_for_plugin(plugin)
             t0 = time.perf_counter()
             try:
-                raw_items = await asyncio.wait_for(
-                    plugin.source.search(ctx, keyword, page),
+                raw_items = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.search(ctx, keyword, page),
                     timeout=source_timeout,
                 )
                 latency_ms = int((time.perf_counter() - t0) * 1000)
@@ -959,7 +972,11 @@ class Catalog:
                 if "search" not in plugin.capabilities:
                     result["error"] = "插件不支持搜索"
                 else:
-                    items = await asyncio.wait_for(plugin.source.search(ctx, keyword, page), timeout=search_timeout)
+                    items = await self._call_plugin(
+                        plugin,
+                        lambda: plugin.source.search(ctx, keyword, page),
+                        timeout=search_timeout,
+                    )
                     latency_ms = int((time.perf_counter() - t0) * 1000)
                     result["pass"] = True
                     result["itemsCount"] = len(items or [])
@@ -971,7 +988,11 @@ class Catalog:
                     result["error"] = "插件不支持详情"
                 else:
                     book_url = plugin.metadata.base_urls[0] if plugin.metadata.base_urls else ""
-                    detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=source_timeout)
+                    detail = await self._call_plugin(
+                        plugin,
+                        lambda: plugin.source.detail(ctx, book_url),
+                        timeout=source_timeout,
+                    )
                     latency_ms = int((time.perf_counter() - t0) * 1000)
                     result["pass"] = True
                     result["data"] = dict(detail) if hasattr(detail, "items") else detail
@@ -983,10 +1004,18 @@ class Catalog:
                 else:
                     book_url = plugin.metadata.base_urls[0] if plugin.metadata.base_urls else ""
                     if "detail" in plugin.capabilities:
-                        detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=source_timeout)
+                        detail = await self._call_plugin(
+                            plugin,
+                            lambda: plugin.source.detail(ctx, book_url),
+                            timeout=source_timeout,
+                        )
                         if hasattr(detail, "get"):
                             book_url = detail.get("tocUrl", book_url)
-                    chapters = await asyncio.wait_for(plugin.source.toc(ctx, book_url), timeout=source_timeout)
+                    chapters = await self._call_plugin(
+                        plugin,
+                        lambda: plugin.source.toc(ctx, book_url),
+                        timeout=source_timeout,
+                    )
                     latency_ms = int((time.perf_counter() - t0) * 1000)
                     result["pass"] = True
                     result["chaptersCount"] = len(chapters or [])
@@ -998,15 +1027,27 @@ class Catalog:
                 else:
                     book_url = plugin.metadata.base_urls[0] if plugin.metadata.base_urls else ""
                     if "detail" in plugin.capabilities:
-                        detail = await asyncio.wait_for(plugin.source.detail(ctx, book_url), timeout=source_timeout)
+                        detail = await self._call_plugin(
+                            plugin,
+                            lambda: plugin.source.detail(ctx, book_url),
+                            timeout=source_timeout,
+                        )
                         if hasattr(detail, "get"):
                             book_url = detail.get("tocUrl", book_url)
                     if "toc" in plugin.capabilities:
-                        chapters = await asyncio.wait_for(plugin.source.toc(ctx, book_url), timeout=source_timeout)
+                        chapters = await self._call_plugin(
+                            plugin,
+                            lambda: plugin.source.toc(ctx, book_url),
+                            timeout=source_timeout,
+                        )
                         if chapters:
                             first_ch = chapters[0]
                             ch_url = first_ch.get("chapterUrl", "") if hasattr(first_ch, "get") else getattr(first_ch, "chapter_url", "")
-                            content = await asyncio.wait_for(plugin.source.chapter(ctx, ch_url), timeout=source_timeout)
+                            content = await self._call_plugin(
+                                plugin,
+                                lambda: plugin.source.chapter(ctx, ch_url),
+                                timeout=source_timeout,
+                            )
                             latency_ms = int((time.perf_counter() - t0) * 1000)
                             result["pass"] = True
                             content_text = content.get("content", "") if hasattr(content, "get") else getattr(content, "content", "")

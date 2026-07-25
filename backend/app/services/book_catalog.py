@@ -106,9 +106,8 @@ class BookCatalog:
                 fallback_trace.append({"sourceId": sid, "status": "skipped", "error": "plugin not found or no chapter capability"})
                 continue
 
-            ctx = self.scheduler._make_ctx(sid)
             try:
-                content = await plugin.source.chapter(ctx, chapter_url)
+                content = await self.scheduler.chapter(sid, chapter_url)
                 content_text = ""
                 if isinstance(content, dict):
                     content_text = content.get("content", "")
@@ -130,8 +129,6 @@ class BookCatalog:
                     fallback_trace.append({"sourceId": sid, "status": "failed", "error": "empty content"})
             except Exception as e:
                 fallback_trace.append({"sourceId": sid, "status": "exception", "error": str(e)})
-            finally:
-                await ctx._fetcher.close()
 
         return {
             **primary,

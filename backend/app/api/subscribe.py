@@ -779,6 +779,8 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
             )
     except SubscriptionLimitError as exc:
         raise _limit_exception(exc) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     book = created["book"]
     safe_book = _safe_user_book(book)
     provisioning = library_books_service.provisioning_summary(
@@ -1035,6 +1037,18 @@ async def patch_subscription(request: Request, aggregate_book_id: str, payload: 
         "provisioning": provisioning,
         "processingWakeRequested": wake_requested,
     }
+
+
+@router.delete("/books/{aggregate_book_id}/subscription")
+@public_router.delete("/books/{aggregate_book_id}/subscription")
+def delete_subscription(request: Request, aggregate_book_id: str):
+    user = auth_service.require_user(request)
+    _reject_legado_query_anomalies(request, set())
+    aggregate_book_id = _validated_aggregate_book_id(aggregate_book_id)
+    try:
+        return user_subscriptions_service.remove(user.user_id, aggregate_book_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="订阅不存在") from exc
 
 
 @router.get("/chapters/{chapter_id}")

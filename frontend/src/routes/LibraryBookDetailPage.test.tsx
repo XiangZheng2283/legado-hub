@@ -47,6 +47,7 @@ vi.mock("@/lib/api", () => ({
       book: vi.fn(),
       chapters: vi.fn(),
       updateSubscription: vi.fn(),
+      removeSubscription: vi.fn(),
       chapter: vi.fn(),
     },
   },
@@ -117,6 +118,11 @@ describe("LibraryBookDetailPage processing settings", () => {
       summary: { totalReviews: 0, chapterEndCount: 0 },
     })
     ;(api.deleteLibraryBook as any).mockResolvedValue({ deleted: true })
+    ;(api.subscribe.removeSubscription as any).mockResolvedValue({ aggregateBookId: "book-1", deleted: true })
+    ;(api.checkLibraryBookUpdate as any).mockResolvedValue({ ok: true })
+    ;(api.refreshLibraryBookSources as any).mockResolvedValue({ ok: true })
+    ;(api.repairLibraryBook as any).mockResolvedValue({ ok: true })
+    ;(api.rebuildLibraryBook as any).mockResolvedValue({ ok: true })
   })
 
   it("lets administrators update the shared processing cadence", async () => {
@@ -242,7 +248,7 @@ describe("LibraryBookDetailPage processing settings", () => {
 
       expect(invalidateQueries).toHaveBeenCalledTimes(2)
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library", "book", "book-1"] })
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library", "admin"], refetchType: "none" })
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library", "admin"] })
     } finally {
       vi.useRealTimers()
     }
@@ -393,6 +399,30 @@ describe("LibraryBookDetailPage processing settings", () => {
     expect(api.rebuildLibraryBook).not.toHaveBeenCalled()
   })
 
+  it("shows clear feedback after refreshing the source map", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole("button", { name: "更多维护操作" }))
+    await user.click(screen.getByRole("button", { name: "刷新源映射" }))
+
+    await waitFor(() => expect(api.refreshLibraryBookSources).toHaveBeenCalledWith("book-1", { force: true }))
+    expect(await screen.findByText("源映射已刷新，页面数据已更新。")).toBeInTheDocument()
+  })
+
+  it("lets an ordinary user remove their own subscription", async () => {
+    authState.role = "user"
+    const user = userEvent.setup()
+    const confirmRemove = vi.spyOn(window, "confirm").mockReturnValue(true)
+    renderPage()
+
+    await user.click(await screen.findByRole("button", { name: "移除订阅" }))
+
+    await waitFor(() => expect(api.subscribe.removeSubscription).toHaveBeenCalledWith("book-1"))
+    expect(api.deleteLibraryBook).not.toHaveBeenCalled()
+    confirmRemove.mockRestore()
+  })
+
   it("clears detail state and invalidates the library after deletion", async () => {
     const user = userEvent.setup()
     const confirmDelete = vi.spyOn(window, "confirm").mockReturnValue(true)
@@ -406,7 +436,7 @@ describe("LibraryBookDetailPage processing settings", () => {
     await waitFor(() => {
       expect(api.deleteLibraryBook).toHaveBeenCalledWith("book-1")
       expect(removeQueries).toHaveBeenCalledWith({ queryKey: ["library", "book", "book-1"] })
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library"], refetchType: "none" })
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library"] })
     })
     confirmDelete.mockRestore()
   })

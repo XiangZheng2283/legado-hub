@@ -7,6 +7,7 @@ import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -289,6 +290,54 @@ def _make_chapters(count: int, prefix: str = "official_src") -> tuple[list[dict[
         chapters.append({"chapterId": ch_id, "title": f"第{i}章", "index": i})
         contents[ch_id] = f"第{i}章正文" + "这是一个很长的正文段落，" * 50
     return chapters, contents
+
+
+def test_auto_proxy_retry_passes_configured_url_to_plugin_fetcher():
+    from app.source_plugins.scheduler import PluginScheduler
+
+    scheduler = PluginScheduler.__new__(PluginScheduler)
+    scheduler.config = {
+        "proxy": {
+            "enabled": True,
+            "url": "http://proxy.example:7890",
+            "allowAutoRetry": True,
+        }
+    }
+    plugin = SimpleNamespace(metadata=SimpleNamespace(proxy={"mode": "auto", "required": False}))
+
+    fetcher = scheduler._make_fetcher(plugin)
+
+    assert fetcher.proxy_url == "http://proxy.example:7890"
+    assert fetcher.proxy_mode == "auto"
+
+
+@pytest.mark.asyncio
+async def test_official_plugin_calls_share_one_serial_queue():
+    from app.source_plugins.scheduler import PluginScheduler
+
+    scheduler = PluginScheduler.__new__(PluginScheduler)
+    scheduler._official_source_queue = asyncio.Semaphore(1)
+    plugin = SimpleNamespace(
+        metadata=SimpleNamespace(is_official_source=lambda: True),
+    )
+    active = 0
+    max_active = 0
+
+    async def operation(value: int) -> int:
+        nonlocal active, max_active
+        active += 1
+        max_active = max(max_active, active)
+        await asyncio.sleep(0.03)
+        active -= 1
+        return value
+
+    results = await asyncio.gather(*[
+        scheduler._call_plugin(plugin, lambda value=value: operation(value), timeout=0.05)
+        for value in range(3)
+    ])
+
+    assert results == [0, 1, 2]
+    assert max_active == 1
 
 
 @pytest.mark.asyncio
@@ -830,6 +879,98 @@ async def test_empty_toc_treated_as_fetch_failure(tmp_path, monkeypatch):
     storage = SharedBookStorage(root=db_path.parent / "library")
     chapter_index = json.loads(storage.chapter_index_path(book_name="测试书", author="作者").read_text(encoding="utf-8"))
     assert len(chapter_index["chapters"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_empty_toc_preserves_plugin_error(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    book_id = "book:empty_toc_error"
+    chapters, contents = _make_chapters(2)
+    _insert_book(db_path, book_id)
+
+    class EmptyTocWithErrorCatalog(FakeCatalog):
+        async def toc(self, book_id: str) -> dict[str, Any]:
+            return {
+                "chapters": [],
+                "debug": {"error": {"code": "PLUGIN_RUNTIME_ERROR", "message": "HTTP 403"}},
+            }
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(
+        "app.services.book_catalog.BookCatalog",
+        lambda: EmptyTocWithErrorCatalog(chapters, contents),
+    )
+    result = await processor.run_book_task(book_id)
+
+    assert result["error"] == "PLUGIN_RUNTIME_ERROR: HTTP 403"
+    with sqlite3.connect(db_path) as conn:
+        last_error = conn.execute(
+            "SELECT last_error FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()[0]
+    assert last_error == "PLUGIN_RUNTIME_ERROR: HTTP 403"
+
+
+@pytest.mark.asyncio
+async def test_rebuild_toc_preflight_failure_preserves_existing_rows(tmp_path, monkeypatch):
+    from fastapi import HTTPException
+    from types import SimpleNamespace
+
+    import app.config as config_module
+    from app.api import console as console_api
+
+    db_path = _setup_db(tmp_path)
+    book_id = "book:rebuild_preflight"
+    chapters, _ = _make_chapters(1)
+    _insert_book(db_path, book_id)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_chapter_tasks
+            (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status, processed_content)
+            VALUES (?, ?, ?, 1, '第1章', 'processed', '已有正文')
+            """,
+            (chapters[0]["chapterId"], book_id, chapters[0]["chapterId"]),
+        )
+        conn.execute(
+            """
+            UPDATE aggregate_book_tasks
+            SET total_chapters = 1, processed_chapters = 1, visible_processed_chapters = 1,
+                search_visibility_status = 'visible'
+            WHERE aggregate_book_id = ?
+            """,
+            (book_id,),
+        )
+        conn.commit()
+
+    class InvalidCatalog:
+        async def toc(self, primary_book_id: str) -> dict[str, Any]:
+            return {"chapters": [], "debug": {"error": "HTTP 403"}}
+
+    monkeypatch.setattr(config_module, "DB_PATH", db_path)
+    monkeypatch.setattr(console_api, "BookCatalog", InvalidCatalog)
+    monkeypatch.setattr(
+        console_api.auth_service,
+        "require_admin",
+        lambda request: SimpleNamespace(user_id="admin", role="admin"),
+    )
+
+    with pytest.raises(HTTPException) as caught:
+        await console_api.rebuild_library_book(None, book_id, {})
+
+    assert caught.value.status_code == 409
+    assert "已保留现有数据" in str(caught.value.detail)
+    with sqlite3.connect(db_path) as conn:
+        task = conn.execute(
+            "SELECT total_chapters, processed_chapters, search_visibility_status FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()
+        chapter_count = conn.execute(
+            "SELECT COUNT(*) FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()[0]
+    assert task == (1, 1, "visible")
+    assert chapter_count == 1
 
 
 @pytest.mark.asyncio

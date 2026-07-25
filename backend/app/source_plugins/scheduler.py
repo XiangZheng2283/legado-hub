@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from app.core.app_config import AppConfig
 from app.services.cookie_store import CookieStore
@@ -41,6 +41,7 @@ class PluginScheduler:
         self._plugins: dict[str, LoadedPlugin] = {}
         self.config = self._default_config() if config is None else config
         self._cookie_store = CookieStore()
+        self._official_source_queue = asyncio.Semaphore(1)
         self._load_plugins()
 
     def _default_config(self) -> dict:
@@ -116,8 +117,7 @@ class PluginScheduler:
         - Direct by default.
         - ``never`` => direct.
         - ``always`` => proxy.
-        - ``auto`` => proxy only when the source explicitly requires it and the
-          host config allows automatic proxy retry.
+        - ``auto`` => direct first, then proxy for configured retryable failures.
         """
         proxy_cfg = self.config.get("proxy", {})
         if not proxy_cfg.get("enabled"):
@@ -128,7 +128,7 @@ class PluginScheduler:
             return ""
         if proxy_mode == "always":
             return proxy_cfg.get("url", "")
-        if proxy_mode == "auto" and proxy_meta.get("required") and proxy_cfg.get("allowAutoRetry"):
+        if proxy_mode == "auto" and proxy_cfg.get("allowAutoRetry"):
             return proxy_cfg.get("url", "")
         return ""
 
@@ -197,6 +197,24 @@ class PluginScheduler:
             return float(self.config.get("browser_search_timeout_seconds", 60.0))
         return float(self.config.get("source_timeout_seconds", 20.0))
 
+    async def _call_plugin(
+        self,
+        plugin: LoadedPlugin,
+        operation: Callable[[], Awaitable[Any]],
+        *,
+        timeout: float | None,
+    ) -> Any:
+        """Run official-source traffic serially; timeout starts after queue admission."""
+        async def run() -> Any:
+            if timeout is None:
+                return await operation()
+            return await asyncio.wait_for(operation(), timeout=timeout)
+
+        if plugin.metadata.is_official_source():
+            async with self._official_source_queue:
+                return await run()
+        return await run()
+
     async def search_one(self, plugin_id: str, keyword: str, page: int = 1) -> dict:
         """Search a single plugin and return normalized items/errors.
 
@@ -208,8 +226,9 @@ class PluginScheduler:
         ctx = self._make_ctx(plugin_id)
         t0 = time.perf_counter()
         try:
-            raw_items = await asyncio.wait_for(
-                plugin.source.search(ctx, keyword, page),
+            raw_items = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.search(ctx, keyword, page),
                 timeout=self.search_timeout_for_plugin(plugin),
             )
             latency_ms = int((time.perf_counter() - t0) * 1000)
@@ -293,8 +312,9 @@ class PluginScheduler:
             source_timeout = self.search_timeout_for_plugin(plugin)
             t0 = time.perf_counter()
             try:
-                raw_items = await asyncio.wait_for(
-                    plugin.source.search(ctx, keyword, page),
+                raw_items = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.search(ctx, keyword, page),
                     timeout=source_timeout,
                 )
                 latency_ms = int((time.perf_counter() - t0) * 1000)
@@ -428,8 +448,9 @@ class PluginScheduler:
             return {"implemented": True, "data": None, "debug": {"error": f"plugin not found or no detail capability: {source_id}"}}
         ctx = self._make_ctx(source_id)
         try:
-            raw = await asyncio.wait_for(
-                plugin.source.detail(ctx, book_url),
+            raw = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.detail(ctx, book_url),
                 timeout=self.timeout_for_plugin(plugin),
             )
             if isinstance(raw, dict):
@@ -449,8 +470,9 @@ class PluginScheduler:
             return {"implemented": True, "bookId": "", "chapters": [], "debug": {"error": f"plugin not found or no toc capability: {source_id}"}}
         ctx = self._make_ctx(source_id)
         try:
-            raw_items = await asyncio.wait_for(
-                plugin.source.toc(ctx, toc_url),
+            raw_items = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.toc(ctx, toc_url),
                 timeout=self.timeout_for_plugin(plugin),
             )
             chapters = []
@@ -481,8 +503,9 @@ class PluginScheduler:
             return {"implemented": True, "chapterId": "", "title": "", "content": "", "debug": {"error": f"plugin not found or no chapter capability: {source_id}"}}
         ctx = self._make_ctx(source_id)
         try:
-            raw = await asyncio.wait_for(
-                plugin.source.chapter(ctx, chapter_url),
+            raw = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.chapter(ctx, chapter_url),
                 timeout=self.timeout_for_plugin(plugin),
             )
             if isinstance(raw, dict):
@@ -522,8 +545,9 @@ class PluginScheduler:
             }
         ctx = self._make_ctx(source_id)
         try:
-            raw = await asyncio.wait_for(
-                plugin.source.chapter_reviews(ctx, chapter_url),
+            raw = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.chapter_reviews(ctx, chapter_url),
                 timeout=self.timeout_for_plugin(plugin),
             )
             if not isinstance(raw, dict):
@@ -574,8 +598,9 @@ class PluginScheduler:
             }
         ctx = self._make_ctx(source_id)
         try:
-            raw = await asyncio.wait_for(
-                method(ctx, chapter_url, *args, **kwargs),
+            raw = await self._call_plugin(
+                plugin,
+                lambda: method(ctx, chapter_url, *args, **kwargs),
                 timeout=self.timeout_for_plugin(plugin),
             )
             return raw if isinstance(raw, dict) else {}
@@ -708,7 +733,11 @@ class PluginScheduler:
             ctx = self._make_ctx(plugin.metadata.id)
             timeout = self.timeout_for_plugin(plugin)
             try:
-                raw_groups = await asyncio.wait_for(plugin.source.explore_groups(ctx), timeout=timeout)
+                raw_groups = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.explore_groups(ctx),
+                    timeout=timeout,
+                )
                 for group in raw_groups or []:
                     if not isinstance(group, dict):
                         continue
@@ -768,8 +797,9 @@ class PluginScheduler:
         ctx = self._make_ctx(source_id)
         start_time = time.perf_counter()
         try:
-            raw_items = await asyncio.wait_for(
-                plugin.source.explore(ctx, group_id, page),
+            raw_items = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.explore(ctx, group_id, page),
                 timeout=self.timeout_for_plugin(plugin),
             )
             items = []

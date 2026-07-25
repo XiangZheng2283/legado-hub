@@ -19,6 +19,7 @@ vi.mock("@/lib/api", () => ({
     subscribe: {
       myLibrary: vi.fn(),
       updateSubscription: vi.fn(),
+      removeSubscription: vi.fn(),
     },
     libraryBooks: vi.fn(),
     pauseLibraryBook: vi.fn(),
@@ -59,6 +60,7 @@ describe("LibraryPage user controls", () => {
       }],
     })
     ;(api.subscribe.updateSubscription as any).mockResolvedValue({ subscription: { status: "paused" } })
+    ;(api.subscribe.removeSubscription as any).mockResolvedValue({ aggregateBookId: "book-1", deleted: true })
   })
 
   it("keeps preview chapters out of personal coverage and pauses only the current user's subscription", async () => {
@@ -103,6 +105,19 @@ describe("LibraryPage user controls", () => {
     expect(await screen.findByText("80%")).toBeInTheDocument()
     expect(screen.getByText("全文 80 · 预览 20")).toBeInTheDocument()
     expect(screen.queryByText("已同步 · 追更中")).not.toBeInTheDocument()
+  })
+
+  it("lets an ordinary user remove only their subscription", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole("button", { name: "打开《用户订阅书》操作菜单" }))
+    await user.click(screen.getByRole("menuitem", { name: "移除订阅" }))
+    await user.click(screen.getByRole("button", { name: "确认移除" }))
+
+    await waitFor(() => expect(api.subscribe.removeSubscription).toHaveBeenCalledWith("book-1"))
+    expect(api.deleteLibraryBook).not.toHaveBeenCalled()
+    expect(await screen.findByText("订阅已移除。")).toBeInTheDocument()
   })
 
   it("refetches the library query from the error state", async () => {

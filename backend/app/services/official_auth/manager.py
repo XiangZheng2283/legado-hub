@@ -318,7 +318,11 @@ class OfficialAuthManager:
                     for name, value in cookies.items():
                         ctx._fetcher.set_cookie(domain, name, value)
 
-            result = await plugin.source.auth_status(ctx)
+            result = await scheduler._call_plugin(
+                plugin,
+                lambda: plugin.source.auth_status(ctx),
+                timeout=None,
+            )
             account_name = PublicCookieTools._explicit_account_name(result)
             authenticated = bool(result.get("authenticated")) and bool(account_name)
             auth_status = result.get("authStatus", "")

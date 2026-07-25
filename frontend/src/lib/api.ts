@@ -415,6 +415,8 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
+    removeSubscription: (bookId: string): Promise<any> =>
+      fetchApiJson(`/subscribe/books/${bookId}/subscription`, { method: "DELETE" }),
     chapter: (chapterId: string): Promise<any> =>
       fetchApiJson(`/subscribe/chapters/${encodeURIComponent(chapterId)}`),
   },

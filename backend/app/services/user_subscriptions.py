@@ -353,6 +353,48 @@ class UserSubscriptionsService:
             conn.commit()
         return self._row_to_dict(after) or {}
 
+    def remove(self, user_id: str, aggregate_book_id: str) -> dict[str, Any]:
+        """Remove one user's subscription without deleting the shared book."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            before_row = conn.execute(
+                """
+                SELECT user_id, aggregate_book_id, status, start_chapter_index,
+                       auto_archive_on_complete, created_at, updated_at
+                FROM user_book_subscriptions
+                WHERE user_id = ? AND aggregate_book_id = ?
+                """,
+                (user_id, aggregate_book_id),
+            ).fetchone()
+            before = self._row_to_dict(before_row)
+            if not before:
+                raise KeyError(aggregate_book_id)
+            conn.execute(
+                "DELETE FROM user_book_subscriptions WHERE user_id = ? AND aggregate_book_id = ?",
+                (user_id, aggregate_book_id),
+            )
+            conn.execute(
+                """
+                INSERT INTO aggregate_operation_logs (
+                    aggregate_book_id, actor_user_id, actor_role, operation_type,
+                    before_json, after_json, created_at
+                ) VALUES (?, ?, 'user', 'subscription.delete', ?, '{}', ?)
+                """,
+                (aggregate_book_id, user_id, json.dumps(before, ensure_ascii=False), now),
+            )
+            audit_service.record(
+                action="subscription.delete",
+                actor_user_id=user_id,
+                actor_role="user",
+                target_type="subscription",
+                target_id=f"{user_id}:{aggregate_book_id}",
+                summary={"previousStatus": before.get("status")},
+                conn=conn,
+            )
+            conn.commit()
+        return {"aggregateBookId": aggregate_book_id, "deleted": True}
+
     def list_books(self, user_id: str, library_service: Any, *, keyword: str = "") -> list[dict[str, Any]]:
         params: list[Any] = [user_id]
         keyword_clause = ""

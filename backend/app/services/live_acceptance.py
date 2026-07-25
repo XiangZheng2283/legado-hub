@@ -6,7 +6,7 @@ import asyncio
 import hashlib
 import re
 import time
-from typing import Any
+from typing import Any, Awaitable, Callable
 from urllib.parse import urlparse
 
 from app.services.live_check_repository import LiveCheckRepository
@@ -187,6 +187,18 @@ class LiveAcceptanceService:
         self.scheduler = scheduler or get_plugin_scheduler()
         self.repository = repository or LiveCheckRepository()
 
+    async def _call_plugin(
+        self,
+        plugin: Any,
+        operation: Callable[[], Awaitable[Any]],
+        *,
+        timeout: float,
+    ) -> Any:
+        call = getattr(self.scheduler, "_call_plugin", None)
+        if callable(call):
+            return await call(plugin, operation, timeout=timeout)
+        return await asyncio.wait_for(operation(), timeout=timeout)
+
     async def run_plugin_live_check(
         self,
         plugin_id: str,
@@ -223,7 +235,11 @@ class LiveAcceptanceService:
             effective_keyword = keyword
             if "explore" in plugin.capabilities:
                 try:
-                    explore_groups = await asyncio.wait_for(plugin.source.explore_groups(ctx), timeout=timeout)
+                    explore_groups = await self._call_plugin(
+                        plugin,
+                        lambda: plugin.source.explore_groups(ctx),
+                        timeout=timeout,
+                    )
                     explore_groups = [item for item in explore_groups or [] if isinstance(item, dict)]
                     if not explore_groups:
                         diagnostics.append(self._diag(plugin_id, "explore_groups", "explore_groups_empty", "发现/排行榜分组为空"))
@@ -235,7 +251,11 @@ class LiveAcceptanceService:
                         return self.repository.record(result) if persist else result
                     group = explore_groups[min(max(candidate_index, 0), len(explore_groups) - 1)]
                     group_id = group.get("groupId", "")
-                    explore_items = await asyncio.wait_for(plugin.source.explore(ctx, group_id, 1), timeout=timeout)
+                    explore_items = await self._call_plugin(
+                        plugin,
+                        lambda: plugin.source.explore(ctx, group_id, 1),
+                        timeout=timeout,
+                    )
                     explore_items = [item for item in explore_items or [] if isinstance(item, dict)]
                     for item in explore_items:
                         item.setdefault("sourceId", plugin_id)
@@ -277,8 +297,9 @@ class LiveAcceptanceService:
                         extra=self._bypass_extra_for_exception(exc),
                     ))
 
-            search_items = await asyncio.wait_for(
-                plugin.source.search(ctx, effective_keyword, 1),
+            search_items = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.search(ctx, effective_keyword, 1),
                 timeout=timeout,
             )
             search_items = [item for item in search_items or [] if isinstance(item, dict)]
@@ -368,8 +389,9 @@ class LiveAcceptanceService:
     ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
         detail: dict[str, Any] = {}
         if "detail" in plugin.capabilities:
-            detail = await asyncio.wait_for(
-                plugin.source.detail(ctx, candidate.get("bookUrl", "")),
+            detail = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.detail(ctx, candidate.get("bookUrl", "")),
                 timeout=timeout,
             )
             if not isinstance(detail, dict):
@@ -377,12 +399,20 @@ class LiveAcceptanceService:
         toc_url = detail.get("tocUrl") or candidate.get("tocUrl") or candidate.get("bookUrl", "")
         if not toc_url:
             return detail, [], {}
-        toc_items = await asyncio.wait_for(plugin.source.toc(ctx, toc_url), timeout=timeout)
+        toc_items = await self._call_plugin(
+            plugin,
+            lambda: plugin.source.toc(ctx, toc_url),
+            timeout=timeout,
+        )
         toc_items = [item for item in toc_items or [] if isinstance(item, dict)]
         if not toc_items:
             return detail, toc_items, {}
         chapter_item = toc_items[min(max(chapter_index, 0), len(toc_items) - 1)]
-        chapter = await asyncio.wait_for(plugin.source.chapter(ctx, chapter_item.get("chapterUrl", "")), timeout=timeout)
+        chapter = await self._call_plugin(
+            plugin,
+            lambda: plugin.source.chapter(ctx, chapter_item.get("chapterUrl", "")),
+            timeout=timeout,
+        )
         if not isinstance(chapter, dict):
             chapter = {}
         return detail, toc_items, chapter
@@ -425,19 +455,25 @@ class LiveAcceptanceService:
         reviews: dict[str, Any] = {"paragraphs": {}, "chapterEnd": [], "chapterEndHot": [], "authorReviews": [], "hotParagraphReviews": [], "summary": {}}
         try:
             if "detail" in plugin.capabilities:
-                detail = await asyncio.wait_for(
-                    plugin.source.detail(ctx, candidate.get("bookUrl", "")),
+                detail = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.detail(ctx, candidate.get("bookUrl", "")),
                     timeout=timeout,
                 )
                 if not isinstance(detail, dict):
                     detail = {}
             toc_url = detail.get("tocUrl") or candidate.get("tocUrl") or candidate.get("bookUrl", "")
-            toc_items = await asyncio.wait_for(plugin.source.toc(ctx, toc_url), timeout=timeout)
+            toc_items = await self._call_plugin(
+                plugin,
+                lambda: plugin.source.toc(ctx, toc_url),
+                timeout=timeout,
+            )
             toc_items = [item for item in toc_items or [] if isinstance(item, dict)]
             if toc_items:
                 chapter_item = toc_items[min(max(chapter_index, 0), len(toc_items) - 1)]
-                chapter = await asyncio.wait_for(
-                    plugin.source.chapter(ctx, chapter_item.get("chapterUrl", "")),
+                chapter = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.chapter(ctx, chapter_item.get("chapterUrl", "")),
                     timeout=timeout,
                 )
                 if not isinstance(chapter, dict):
@@ -446,8 +482,9 @@ class LiveAcceptanceService:
                     try:
                         review_source_url = chapter.get("chapterUrl") or chapter_item.get("chapterUrl", "")
                         if review_source_url:
-                            fetched_reviews = await asyncio.wait_for(
-                                plugin.source.chapter_reviews(ctx, review_source_url),
+                            fetched_reviews = await self._call_plugin(
+                                plugin,
+                                lambda: plugin.source.chapter_reviews(ctx, review_source_url),
                                 timeout=timeout,
                             )
                             if isinstance(fetched_reviews, dict):
@@ -559,8 +596,9 @@ class LiveAcceptanceService:
                     diagnostics.append(self._diag(plugin_id, "cache", "toc_cache_hit", "书评请求命中目录缓存"))
 
             if not detail and "detail" in plugin.capabilities:
-                detail = await asyncio.wait_for(
-                    plugin.source.detail(ctx, book_url),
+                detail = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.detail(ctx, book_url),
                     timeout=effective_timeout,
                 )
                 if not isinstance(detail, dict):
@@ -568,8 +606,9 @@ class LiveAcceptanceService:
 
             if not toc_items and "toc" in plugin.capabilities:
                 toc_url = detail.get("tocUrl") or book_url
-                toc_items = await asyncio.wait_for(
-                    plugin.source.toc(ctx, toc_url),
+                toc_items = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.toc(ctx, toc_url),
                     timeout=effective_timeout,
                 )
                 toc_items = [dict(item) for item in toc_items or [] if isinstance(item, dict)]
@@ -602,8 +641,9 @@ class LiveAcceptanceService:
                 }
 
             if chapter_url:
-                fetched_reviews = await asyncio.wait_for(
-                    plugin.source.chapter_reviews(ctx, chapter_url),
+                fetched_reviews = await self._call_plugin(
+                    plugin,
+                    lambda: plugin.source.chapter_reviews(ctx, chapter_url),
                     timeout=effective_timeout,
                 )
                 if isinstance(fetched_reviews, dict):

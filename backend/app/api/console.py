@@ -49,6 +49,7 @@ logger = logging.getLogger(__name__)
 
 console_router = APIRouter(prefix="/api/console")
 _CONSOLE_STARTED_AT = time.monotonic()
+_DELETE_LEASE_WAIT_SECONDS = 12.0
 
 
 def console_route(method: str, path: str, *, access: str = "admin", **kwargs):
@@ -1005,7 +1006,11 @@ async def list_official_sources(request: Request):
         if "auth" in plugin.capabilities:
             ctx = _plugin_scheduler._make_ctx(plugin.metadata.id)
             try:
-                result = _normalize_auth_identity(await plugin.source.auth_status(ctx))
+                result = _normalize_auth_identity(await _plugin_scheduler._call_plugin(
+                    plugin,
+                    lambda: plugin.source.auth_status(ctx),
+                    timeout=None,
+                ))
                 auth_status = {
                     **auth_status,
                     **result,
@@ -1199,7 +1204,11 @@ async def get_plugin_auth(plugin_id: str, request: Request):
         }
     ctx = _plugin_scheduler._make_ctx(plugin_id)
     try:
-        result = _normalize_auth_identity(await plugin.source.auth_status(ctx))
+        result = _normalize_auth_identity(await _plugin_scheduler._call_plugin(
+            plugin,
+            lambda: plugin.source.auth_status(ctx),
+            timeout=None,
+        ))
         result.setdefault("mode", auth_meta.get("mode", "optional"))
         if not result.get("authenticated") and has_cookies:
             result.setdefault("requiredActions", ["check_auth_status"])
@@ -1231,7 +1240,11 @@ async def prepare_plugin_login(plugin_id: str, request: Request):
     if hasattr(plugin.source, "prepare_login") and callable(getattr(plugin.source, "prepare_login")):
         ctx = _plugin_scheduler._make_ctx(plugin_id)
         try:
-            return await plugin.source.prepare_login(ctx)
+            return await _plugin_scheduler._call_plugin(
+                plugin,
+                lambda: plugin.source.prepare_login(ctx),
+                timeout=None,
+            )
         finally:
             await ctx._fetcher.close()
     auth = plugin.metadata.auth
@@ -2494,7 +2507,13 @@ def _aggregate_book_delete_snapshot(conn, book_id: str, book: dict) -> dict:
     }
 
 
-def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_role: str = "admin") -> dict:
+def _delete_aggregate_book_impl(
+    book_id: str,
+    *,
+    actor_user_id: str = "",
+    actor_role: str = "admin",
+    lease_wait_seconds: float = _DELETE_LEASE_WAIT_SECONDS,
+) -> dict:
     import sqlite3
     from app.config import DB_PATH
     from app.storage.db import initialize_database
@@ -2506,6 +2525,21 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
 
     lock_service = SharedBookLockService(storage=library_books_service.shared_book_storage)
     lease = lock_service.acquire(aggregate_book_id=book_id)
+    if lease is None:
+        with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
+            conn.execute("PRAGMA busy_timeout=5000")
+            conn.execute(
+                "UPDATE aggregate_book_tasks SET status = 'archived', updated_at = datetime('now') "
+                "WHERE aggregate_book_id = ?",
+                (book_id,),
+            )
+            conn.commit()
+        lock_service.request_stop(aggregate_book_id=book_id)
+        deadline = time.monotonic() + max(0.0, float(lease_wait_seconds))
+        while lease is None and time.monotonic() < deadline:
+            time.sleep(0.05)
+            lease = lock_service.acquire(aggregate_book_id=book_id)
+
     if lease is None:
         with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
             before = _aggregate_book_delete_snapshot(conn, book_id, book)
@@ -2533,7 +2567,7 @@ def _delete_aggregate_book_impl(book_id: str, *, actor_user_id: str = "", actor_
             status_code=409,
             detail={
                 "code": "aggregate_book_busy",
-                "message": "共享书正在处理，暂时不能删除",
+                "message": "已停止后续处理，当前任务仍在退出，请稍后重试删除",
                 "retryable": True,
             },
         )
@@ -2886,7 +2920,8 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
     with sqlite3.connect(DB_PATH) as conn:
         row = conn.execute(
             """
-            SELECT aggregate_payload_json, settings_json, current_policy_version, start_chapter_index
+            SELECT aggregate_payload_json, settings_json, current_policy_version, start_chapter_index,
+                   primary_book_id
             FROM aggregate_book_tasks
             WHERE aggregate_book_id = ?
             """,
@@ -2895,7 +2930,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         if not row:
             raise HTTPException(status_code=404, detail="书籍不存在")
 
-        aggregate_payload_json, settings_json, current_policy_version, current_start_index = row
+        aggregate_payload_json, settings_json, current_policy_version, current_start_index, primary_book_id = row
         settings = _aggregate_book_settings(settings_json or "")
         new_start_index = max(1, int(payload.get("startChapterIndex", current_start_index or 1) or 1))
         settings["startChapterIndex"] = new_start_index
@@ -2906,6 +2941,21 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         if "primarySourceMode" in payload:
             settings["primarySourceMode"] = str(payload["primarySourceMode"] or "official")
         _apply_book_source_priority_settings(settings, payload)
+
+        try:
+            aggregate_payload = json.loads(aggregate_payload_json or "{}")
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise HTTPException(status_code=409, detail=f"聚合配置损坏，已保留现有数据：{exc}") from exc
+        primary_book_id = str(primary_book_id or aggregate_payload.get("primaryBookId") or "").strip()
+        if not primary_book_id:
+            raise HTTPException(status_code=409, detail="缺少主书源，已保留现有数据")
+        try:
+            preflight_toc = await BookCatalog().toc(primary_book_id)
+            toc_error = AggregateProcessor._toc_fetch_error_message(preflight_toc)
+        except Exception as exc:
+            toc_error = str(exc)
+        if toc_error:
+            raise HTTPException(status_code=409, detail=f"目录获取失败，已保留现有数据：{toc_error}")
 
         conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
         conn.execute(
@@ -2966,7 +3016,6 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
     if legacy_dir.exists():
         shutil.rmtree(legacy_dir, ignore_errors=True)
 
-    aggregate_payload = json.loads(aggregate_payload_json or "{}")
     processor = AggregateProcessor()
     processor.enqueue_book(book_id, aggregate_payload)
     bootstrap = await processor.bootstrap_book_until_visible(book_id)

@@ -879,6 +879,8 @@ class LibraryBooksService:
         )
         primary_source_id = primary_book_id.split(":", 1)[0] if ":" in primary_book_id else ""
         if not primary_book_id or not primary_source_id:
+            if settings.get("sourcePriority"):
+                raise ValueError("配置的主源当前不可用，请重新搜索或调整主源优先级")
             raise ValueError("failed to resolve primary source")
         primary_source = self._primary_source_payload(payload, primary_book_id)
         display = self._display_item_for_group(group)

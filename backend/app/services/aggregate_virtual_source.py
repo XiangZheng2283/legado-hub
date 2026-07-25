@@ -210,8 +210,9 @@ def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any
 
     Selection order:
     1. If *source_priority* is provided, find the first source whose sourceId
-       appears in the priority list (respecting list order).
-    2. Otherwise, fall back to official-first + highest-score logic.
+       appears in the priority list (respecting list order). A missing preferred
+       source is unavailable rather than permission to switch protocols.
+    2. Without a configured priority, use official-first + highest-score logic.
     """
     sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
     valid_sources = [s for s in sources if isinstance(s, dict) and s.get("bookId")]
@@ -224,8 +225,9 @@ def primary_book_id_from_payload(payload: dict[str, Any], plugins: dict[str, Any
             for source in valid_sources:
                 if source.get("sourceId") == preferred_id:
                     return source["bookId"]
+        return ""
 
-    # Path 2: official-first + score-based fallback.
+    # Path 2: automatic official-first + score-based selection.
     if plugins is None:
         try:
             plugins = PluginLoader().load_all()

@@ -828,9 +828,10 @@ class AggregateProcessor:
                 toc = await catalog.toc(primary_book_id)
             except Exception as toc_exc:
                 return self._handle_toc_fetch_failure(aggregate_book_id, toc_exc, next_check)
-            if not isinstance(toc, dict) or not isinstance(toc.get("chapters"), list) or not toc["chapters"]:
+            toc_error = self._toc_fetch_error_message(toc)
+            if toc_error:
                 return self._handle_toc_fetch_failure(
-                    aggregate_book_id, ValueError("empty or invalid TOC"), next_check
+                    aggregate_book_id, ValueError(toc_error), next_check
                 )
             chapters = [dict(item) for item in toc.get("chapters", []) if isinstance(item, dict)]
             self.register_toc(aggregate_book_id, payload, chapters)
@@ -950,6 +951,19 @@ class AggregateProcessor:
                 conn.commit()
             self._activate_backfill_if_ready(aggregate_book_id)
             self._refresh_shared_book_state(aggregate_book_id)
+
+    @staticmethod
+    def _toc_fetch_error_message(toc: Any) -> str:
+        """Return the plugin error when a TOC response has no usable chapters."""
+        if isinstance(toc, dict) and isinstance(toc.get("chapters"), list) and toc["chapters"]:
+            return ""
+        debug = toc.get("debug") if isinstance(toc, dict) else None
+        error = debug.get("error") if isinstance(debug, dict) else None
+        if isinstance(error, dict):
+            code = str(error.get("code", "") or "").strip()
+            message = str(error.get("message", "") or error.get("error", "") or "").strip()
+            return ": ".join(part for part in (code, message) if part) or "empty or invalid TOC"
+        return str(error or "").strip() or "empty or invalid TOC"
 
     def _handle_toc_fetch_failure(self, aggregate_book_id: str, exc: Exception, next_check: str) -> dict:
         """Record a TOC fetch failure without touching shared files or book status.

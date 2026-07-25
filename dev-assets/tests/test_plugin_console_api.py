@@ -1584,7 +1584,10 @@ def test_delete_library_book_cascades_active_subscriptions(monkeypatch, tmp_path
         ).fetchone() == ("delete",)
 
 
-def test_delete_library_book_rejects_active_lease(monkeypatch, tmp_path):
+def test_delete_library_book_stops_active_lease_then_deletes(monkeypatch, tmp_path):
+    import threading
+    import time
+
     import app.api.console as console_api
     import app.config as app_config
     from app.services.library_books import LibraryBooksService
@@ -1609,16 +1612,21 @@ def test_delete_library_book_rejects_active_lease(monkeypatch, tmp_path):
             """
         )
         conn.commit()
-    lease = SharedBookLockService(storage=storage).acquire(aggregate_book_id="book-delete")
+    lease = SharedBookLockService(storage=storage, ttl_seconds=0.3).acquire(aggregate_book_id="book-delete")
     assert lease is not None
 
-    try:
-        with pytest.raises(HTTPException) as captured:
-            console_api._delete_aggregate_book_impl("book-delete")
-        assert captured.value.status_code == 409
-        assert captured.value.detail["code"] == "aggregate_book_busy"
-    finally:
+    def owner_loop():
+        while lease.renew():
+            time.sleep(0.02)
         lease.release()
+
+    owner = threading.Thread(target=owner_loop)
+    owner.start()
+    result = console_api._delete_aggregate_book_impl("book-delete", lease_wait_seconds=1.0)
+    owner.join(timeout=1.0)
+
+    assert result == {"bookId": "book-delete", "deleted": True}
+    assert not owner.is_alive()
 
 
 def test_library_book_chapter_progress_route_sanitizes_trace_by_default(monkeypatch):

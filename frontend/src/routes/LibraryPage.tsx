@@ -86,24 +86,34 @@ export function LibraryPage() {
 
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null)
+  const [actionNotice, setActionNotice] = useState<{ pending: boolean; text: string } | null>(null)
 
   const { data, isLoading, error: libraryError, refetch: refetchLibrary } = useQuery({
     queryKey: ["library", isAdmin ? "admin" : "mine"],
     queryFn: () => isAdmin ? api.libraryBooks() : api.subscribe.myLibrary(),
     refetchInterval: 5000,
+    refetchOnWindowFocus: "always",
   })
 
   const actionMutation = useMutation({
     mutationFn: ({ bookId, action }: { bookId: string; action: string }) => executeLibraryBookAction(bookId, action, isAdmin),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["library"] }) },
+    onMutate: ({ action }) => setActionNotice({ pending: true, text: action === "rebuild" ? "正在重新处理书籍…" : "正在更新订阅状态…" }),
+    onSuccess: async (_result, { action }) => {
+      await queryClient.invalidateQueries({ queryKey: ["library"] })
+      setActionNotice({ pending: false, text: action === "rebuild" ? "书籍已重新进入处理队列。" : "订阅状态已更新。" })
+    },
+    onError: () => setActionNotice(null),
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (bookId: string) => api.deleteLibraryBook(bookId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["library"] })
+    mutationFn: (bookId: string) => isAdmin ? api.deleteLibraryBook(bookId) : api.subscribe.removeSubscription(bookId),
+    onMutate: () => setActionNotice({ pending: true, text: isAdmin ? "正在删除共享书籍…" : "正在移除订阅…" }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["library"] })
       setDeleteBookId(null)
+      setActionNotice({ pending: false, text: isAdmin ? "共享书籍已删除。" : "订阅已移除。" })
     },
+    onError: () => setActionNotice(null),
   })
 
   const books: LibraryBook[] = useMemo(() => {
@@ -157,6 +167,15 @@ export function LibraryPage() {
                 重试
               </Button>
             )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {actionNotice && (
+        <Alert aria-live="polite" className={actionNotice.pending ? "border-blue-200 bg-blue-50 text-blue-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}>
+          <AlertDescription className="flex items-center gap-2">
+            {actionNotice.pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <span>{actionNotice.text}</span>
           </AlertDescription>
         </Alert>
       )}
@@ -253,14 +272,10 @@ export function LibraryPage() {
                             <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "archive" })}>
                               <Archive className="h-3 w-3 mr-2" /> 归档
                             </DropdownMenuItem>
-                            {isAdmin && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem disabled={libraryBusy} className="text-rose-600 focus:text-rose-600" onSelect={() => setDeleteBookId(book.aggregateBookId)}>
-                                  <Trash2 className="h-3 w-3 mr-2" /> 删除
-                                </DropdownMenuItem>
-                              </>
-                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem disabled={libraryBusy} className="text-rose-600 focus:text-rose-600" onSelect={() => setDeleteBookId(book.aggregateBookId)}>
+                              <Trash2 className="h-3 w-3 mr-2" /> {isAdmin ? "删除" : "移除订阅"}
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -346,16 +361,18 @@ export function LibraryPage() {
       <Dialog open={!!deleteBookId} onOpenChange={(open) => { if (!open) setDeleteBookId(null) }}>
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle>删除书籍</DialogTitle>
+            <DialogTitle>{isAdmin ? "删除书籍" : "移除订阅"}</DialogTitle>
             <DialogDescription>
-              确定要将《{bookToDelete?.displayName}》从书库中删除吗？此操作不可逆，将同时移除所有用户对此书的订阅及相关章节数据。
+              {isAdmin
+                ? `确定要将《${bookToDelete?.displayName || ""}》从书库中删除吗？此操作不可逆，将同时移除所有用户对此书的订阅及相关章节数据。`
+                : `确定要移除《${bookToDelete?.displayName || ""}》的订阅吗？共享书籍和其他用户的订阅不会受影响。`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteBookId(null)}>取消</Button>
             <Button variant="destructive" onClick={() => bookToDelete && deleteMutation.mutate(bookToDelete.aggregateBookId)} disabled={libraryBusy}>
               {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              确认删除
+              {isAdmin ? "确认删除" : "确认移除"}
             </Button>
           </DialogFooter>
         </DialogContent>

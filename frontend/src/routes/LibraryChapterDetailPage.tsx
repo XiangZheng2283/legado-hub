@@ -178,6 +178,8 @@ export function LibraryChapterDetailPage() {
     queryKey: ["library", "book", bookId, "summary"],
     queryFn: () => api.libraryBookSummary(bookId!),
     enabled: !!bookId,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: "always",
   })
 
   const progressQuery = useQuery({
@@ -185,6 +187,7 @@ export function LibraryChapterDetailPage() {
     queryFn: () => api.libraryBookChapterProgress(bookId!, chapterId!),
     enabled: !!bookId && !!chapterId,
     refetchInterval: 5000,
+    refetchOnWindowFocus: "always",
   })
 
   const chapter = progressQuery.data as ChapterProgressDetail | undefined

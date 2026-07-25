@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.services.aggregate_virtual_source import primary_book_id_from_payload
 from app.services.library_books import LibraryBooksService
 from app.services.live_acceptance import group_candidates
 from app.services.subscription_search import (
@@ -69,6 +70,26 @@ def test_qidian_app_and_web_results_share_one_stable_candidate() -> None:
         "qidian_com_app",
         "qidian_com_web",
     }
+
+
+def test_manual_primary_source_priority_never_falls_back_to_another_source() -> None:
+    payload = {
+        "sources": [
+            {"sourceId": "qidian_com_web", "bookId": "qidian_com_web:book", "score": 100},
+        ]
+    }
+
+    assert primary_book_id_from_payload(
+        payload,
+        source_priority=["qidian_com_app"],
+    ) == ""
+    payload["sources"].append(
+        {"sourceId": "qidian_com_app", "bookId": "qidian_com_app:book", "score": 50}
+    )
+    assert primary_book_id_from_payload(
+        payload,
+        source_priority=["qidian_com_app"],
+    ) == "qidian_com_app:book"
 
 
 def test_qidian_results_with_different_work_ids_remain_separate() -> None:
@@ -187,6 +208,37 @@ def test_two_users_keep_independent_subscription_settings(tmp_path: Path) -> Non
             ).fetchall()
         ]
     assert audit_actions == ["subscription.create", "subscription.update"]
+
+
+def test_remove_subscription_keeps_shared_book_and_other_users(tmp_path: Path) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    auth = UserAuthService(db)
+    user_a = auth.create_user("reader-a", "password-a")
+    user_b = auth.create_user("reader-b", "password-b")
+    _insert_book(db)
+    subscriptions = UserSubscriptionsService(db)
+    subscriptions.ensure(user_a["userId"], "book-1")
+    subscriptions.ensure(user_b["userId"], "book-1")
+
+    result = subscriptions.remove(user_a["userId"], "book-1")
+
+    assert result == {"aggregateBookId": "book-1", "deleted": True}
+    assert subscriptions.get(user_a["userId"], "book-1") is None
+    assert subscriptions.get(user_b["userId"], "book-1") is not None
+    with sqlite3.connect(db) as conn:
+        assert conn.execute(
+            "SELECT 1 FROM aggregate_book_tasks WHERE aggregate_book_id = 'book-1'"
+        ).fetchone() == (1,)
+        assert conn.execute(
+            "SELECT operation_type FROM aggregate_operation_logs "
+            "WHERE actor_user_id = ? ORDER BY created_at DESC LIMIT 1",
+            (user_a["userId"],),
+        ).fetchone() == ("subscription.delete",)
+        assert conn.execute(
+            "SELECT action FROM audit_events WHERE actor_user_id = ? ORDER BY occurred_at DESC LIMIT 1",
+            (user_a["userId"],),
+        ).fetchone() == ("subscription.delete",)
 
 
 def test_deleting_access_user_removes_private_state_and_keeps_shared_book(tmp_path: Path) -> None:
