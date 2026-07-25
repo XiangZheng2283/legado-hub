@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation } from "react-router-dom"
+import { Outlet, NavLink, useLocation } from "react-router"
 import {
   AlertCircle, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Users, Library, ShieldAlert, Server,
 } from "lucide-react"

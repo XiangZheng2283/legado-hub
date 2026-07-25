@@ -37,25 +37,39 @@ class SourcePingService:
     """Ping source websites to check reachability, respecting per-source proxy settings."""
 
     PING_TIMEOUT_SECONDS = 10.0
+    PING_ATTEMPT_TIMEOUT_SECONDS = 3.0
     MAX_CONCURRENCY = 5
 
     def __init__(self, scheduler: PluginScheduler | None = None, repo: Any | None = None):
         self.scheduler = scheduler or get_plugin_scheduler()
         self.repo = repo or _RuntimeHealthRepo()
 
-    def _resolve_ping_url(self, plugin) -> str | None:
-        """Resolve the URL to ping for a plugin."""
-        # Prefer base_urls, then domains
-        urls = []
-        if hasattr(plugin, "metadata"):
-            meta = plugin.metadata
-            urls.extend(meta.base_urls or [])
-            urls.extend([f"https://{d}" for d in (meta.domains or [])])
-            urls.extend([f"http://{d}" for d in (meta.domains or [])])
-        for url in urls:
-            if url:
-                return url
-        return None
+    def _resolve_ping_urls(self, plugin) -> list[str]:
+        """Resolve all declared website URLs in preferred order."""
+        if not hasattr(plugin, "metadata"):
+            return []
+
+        meta = plugin.metadata
+        urls = list(getattr(meta, "base_urls", []) or [])
+        for profile in getattr(meta, "domain_profiles", []) or []:
+            if not isinstance(profile, dict):
+                continue
+            urls.append(profile.get("baseUrl", ""))
+            profile_urls = profile.get("baseUrls", [])
+            if isinstance(profile_urls, list):
+                urls.extend(profile_urls)
+        domains = getattr(meta, "domains", []) or []
+        urls.extend(f"https://{domain}" for domain in domains)
+        urls.extend(f"http://{domain}" for domain in domains)
+
+        resolved: list[str] = []
+        seen: set[str] = set()
+        for value in urls:
+            url = str(value or "").strip().rstrip("/")
+            if url and url not in seen:
+                seen.add(url)
+                resolved.append(url)
+        return resolved
 
     def _should_use_proxy(self, plugin) -> tuple[bool, str]:
         """Tightened proxy policy: direct by default, proxy only when explicit."""
@@ -83,50 +97,64 @@ class SourcePingService:
         if not plugin:
             return {"pluginId": plugin_id, "status": "not_found", "latencyMs": 0, "error": "Plugin not loaded"}
 
-        url = self._resolve_ping_url(plugin)
-        if not url:
+        urls = self._resolve_ping_urls(plugin)
+        if not urls:
             self.repo.record_ping(plugin_id, "unknown", 0, error="No ping URL resolved")
             return {"pluginId": plugin_id, "status": "unknown", "latencyMs": 0, "error": "No ping URL resolved"}
 
         use_proxy, proxy_url = self._should_use_proxy(plugin)
         start = time.perf_counter()
 
+        attempted_url = urls[0]
+        errors: list[str] = []
         try:
             mounts = None
             if use_proxy and proxy_url:
                 mounts = {"all://": httpx.AsyncHTTPTransport(proxy=proxy_url)}
 
-            async with httpx.AsyncClient(
-                timeout=httpx.Timeout(self.PING_TIMEOUT_SECONDS),
-                mounts=mounts,
-                headers={"User-Agent": get_default_user_agent()},
-                follow_redirects=True,
-            ) as client:
-                resp = await client.head(url)
-                latency_ms = int((time.perf_counter() - start) * 1000)
+            async with asyncio.timeout(self.PING_TIMEOUT_SECONDS):
+                async with httpx.AsyncClient(
+                    timeout=httpx.Timeout(self.PING_ATTEMPT_TIMEOUT_SECONDS),
+                    mounts=mounts,
+                    headers={"User-Agent": get_default_user_agent()},
+                    follow_redirects=True,
+                ) as client:
+                    for url in urls:
+                        attempted_url = url
+                        attempt_start = time.perf_counter()
+                        try:
+                            response = await client.head(url)
+                            if response.status_code in {404, 410}:
+                                response = await client.get(url)
+                        except httpx.TimeoutException:
+                            errors.append(f"{url}: Timeout")
+                            continue
+                        except Exception as exc:
+                            errors.append(f"{url}: {exc}")
+                            continue
 
-                # Some sites block HEAD; fallback to GET
-                if resp.status_code >= 400:
-                    resp = await client.get(url, timeout=httpx.Timeout(self.PING_TIMEOUT_SECONDS))
-                    latency_ms = int((time.perf_counter() - start) * 1000)
+                        latency_ms = int((time.perf_counter() - attempt_start) * 1000)
+                        if response.status_code in {404, 410}:
+                            errors.append(f"{url}: HTTP {response.status_code}")
+                            continue
 
-                # Any HTTP response means the server is reachable.
-                # 404/410 are the only exceptions where the domain itself may be gone.
-                if resp.status_code in {404, 410}:
-                    self.repo.record_ping(plugin_id, "unreachable", latency_ms, error=f"HTTP {resp.status_code}", url=url, proxy_used=use_proxy)
-                    return {"pluginId": plugin_id, "status": "unreachable", "latencyMs": latency_ms, "url": url, "error": f"HTTP {resp.status_code}", "proxyUsed": use_proxy}
+                        self.repo.record_ping(plugin_id, "reachable", latency_ms, url=url, proxy_used=use_proxy)
+                        return {"pluginId": plugin_id, "status": "reachable", "latencyMs": latency_ms, "url": url, "proxyUsed": use_proxy}
 
-                self.repo.record_ping(plugin_id, "reachable", latency_ms, url=url, proxy_used=use_proxy)
-                return {"pluginId": plugin_id, "status": "reachable", "latencyMs": latency_ms, "url": url, "proxyUsed": use_proxy}
-
-        except httpx.TimeoutException:
+        except (TimeoutError, httpx.TimeoutException):
             latency_ms = int((time.perf_counter() - start) * 1000)
-            self.repo.record_ping(plugin_id, "unreachable", latency_ms, error="Timeout", url=url, proxy_used=use_proxy)
-            return {"pluginId": plugin_id, "status": "unreachable", "latencyMs": latency_ms, "url": url, "error": "Timeout", "proxyUsed": use_proxy}
+            error = f"{attempted_url}: Timeout"
+            self.repo.record_ping(plugin_id, "unreachable", latency_ms, error=error, url=attempted_url, proxy_used=use_proxy)
+            return {"pluginId": plugin_id, "status": "unreachable", "latencyMs": latency_ms, "url": attempted_url, "error": error, "proxyUsed": use_proxy}
         except Exception as exc:
             latency_ms = int((time.perf_counter() - start) * 1000)
-            self.repo.record_ping(plugin_id, "unreachable", latency_ms, error=str(exc), url=url, proxy_used=use_proxy)
-            return {"pluginId": plugin_id, "status": "unreachable", "latencyMs": latency_ms, "url": url, "error": str(exc), "proxyUsed": use_proxy}
+            self.repo.record_ping(plugin_id, "unreachable", latency_ms, error=str(exc), url=attempted_url, proxy_used=use_proxy)
+            return {"pluginId": plugin_id, "status": "unreachable", "latencyMs": latency_ms, "url": attempted_url, "error": str(exc), "proxyUsed": use_proxy}
+
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        error = errors[-1] if errors else "All declared URLs failed"
+        self.repo.record_ping(plugin_id, "unreachable", latency_ms, error=error, url=attempted_url, proxy_used=use_proxy)
+        return {"pluginId": plugin_id, "status": "unreachable", "latencyMs": latency_ms, "url": attempted_url, "error": error, "proxyUsed": use_proxy}
 
     async def ping_all(self, plugin_ids: list[str] | None = None) -> list[dict[str, Any]]:
         """Ping all enabled sources (or specified subset) concurrently."""

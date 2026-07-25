@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router"
 import { Activity, BookMarked, Database, Search, ShieldCheck, AlertCircle, BookOpen, ShieldAlert, RefreshCw } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"

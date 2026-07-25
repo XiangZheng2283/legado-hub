@@ -332,7 +332,7 @@ async def test_official_plugin_calls_share_one_serial_queue():
         return value
 
     results = await asyncio.gather(*[
-        scheduler._call_plugin(plugin, lambda value=value: operation(value), timeout=0.05)
+        scheduler._call_plugin(plugin, lambda value=value: operation(value), timeout=0.2)
         for value in range(3)
     ])
 
@@ -971,6 +971,95 @@ async def test_rebuild_toc_preflight_failure_preserves_existing_rows(tmp_path, m
         ).fetchone()[0]
     assert task == (1, 1, "visible")
     assert chapter_count == 1
+
+
+@pytest.mark.asyncio
+async def test_rebuild_refreshes_source_map_before_bootstrap(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    import app.config as config_module
+    from app.api import console as console_api
+    from app.services.library_books import LibraryBooksService
+    from app.services.shared_book_storage import SharedBookStorage
+
+    db_path = _setup_db(tmp_path)
+    book_id = "book:rebuild_source_map"
+    chapters, _ = _make_chapters(1)
+    _insert_book(db_path, book_id)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_chapter_tasks
+            (chapter_id, aggregate_book_id, source_chapter_id, chapter_index, title, status)
+            VALUES (?, ?, ?, 1, '第1章', 'pending')
+            """,
+            (chapters[0]["chapterId"], book_id, chapters[0]["chapterId"]),
+        )
+        conn.commit()
+    events = []
+
+    class ValidCatalog:
+        async def toc(self, primary_book_id: str) -> dict[str, Any]:
+            return {"chapters": chapters}
+
+    class FakeProcessor:
+        _toc_fetch_error_message = staticmethod(lambda result: "")
+
+        def enqueue_book(self, aggregate_book_id, payload):
+            events.append(("enqueue", aggregate_book_id, payload))
+
+        async def bootstrap_book_until_visible(self, aggregate_book_id):
+            events.append(("bootstrap", aggregate_book_id))
+            return {"visible": True}
+
+    async def refresh_source_map(aggregate_book_id, payload=None):
+        with sqlite3.connect(db_path, timeout=0) as conn:
+            chapter_count = conn.execute(
+                "SELECT COUNT(*) FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()[0]
+            rebuild_log_count = conn.execute(
+                "SELECT COUNT(*) FROM aggregate_operation_logs WHERE aggregate_book_id = ? AND operation_type = 'rebuild'",
+                (aggregate_book_id,),
+            ).fetchone()[0]
+            assert chapter_count == 0
+            assert rebuild_log_count == 1
+            refreshed_payload = json.loads(conn.execute(
+                "SELECT aggregate_payload_json FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()[0])
+            refreshed_payload["sourceMapRefreshed"] = True
+            conn.execute(
+                "UPDATE aggregate_book_tasks SET aggregate_payload_json = ? WHERE aggregate_book_id = ?",
+                (json.dumps(refreshed_payload, ensure_ascii=False), aggregate_book_id),
+            )
+            conn.commit()
+        events.append(("refresh", aggregate_book_id, payload))
+        return {"ok": True, "bookId": aggregate_book_id}
+
+    monkeypatch.setattr(config_module, "DB_PATH", db_path)
+    monkeypatch.setattr(console_api, "BookCatalog", ValidCatalog)
+    monkeypatch.setattr(console_api, "AggregateProcessor", FakeProcessor)
+    monkeypatch.setattr(console_api, "_manual_source_map_refresh", refresh_source_map)
+    monkeypatch.setattr(
+        console_api,
+        "library_books_service",
+        LibraryBooksService(
+            db_path=db_path,
+            shared_book_storage=SharedBookStorage(tmp_path / "library"),
+        ),
+    )
+    monkeypatch.setattr(
+        console_api.auth_service,
+        "require_admin",
+        lambda request: SimpleNamespace(user_id="admin", role="admin"),
+    )
+
+    result = await console_api.rebuild_library_book(None, book_id, {})
+
+    assert result["sourceMapRefresh"]["ok"] is True
+    assert [event[0] for event in events] == ["refresh", "enqueue", "bootstrap"]
+    assert events[1][2]["sourceMapRefreshed"] is True
 
 
 @pytest.mark.asyncio

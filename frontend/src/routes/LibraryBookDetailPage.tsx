@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft, RefreshCw, Trash2, Code2, Link, Terminal, MoreVertical, Crown, Search, Loader2, ChevronLeft, ChevronRight, Settings2, Play, Pause, Archive,

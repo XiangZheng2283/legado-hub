@@ -2995,6 +2995,16 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         )
         conn.commit()
 
+    try:
+        source_map_refresh = await _manual_source_map_refresh(book_id, {"force": True})
+    except Exception as exc:
+        logger.warning("Failed to refresh source map before rebuilding %s", book_id, exc_info=True)
+        source_map_refresh = {"ok": False, "bookId": book_id, "error": str(exc)}
+
+    refreshed_payload = library_books_service.load_payload(book_id)
+    if refreshed_payload:
+        aggregate_payload = refreshed_payload
+
     # Clear stale shared chapter files so the bootstrap starts from a clean slate,
     # while keeping metadata (sourceMap, identity) intact.
     book = library_books_service.get_book(book_id)
@@ -3019,7 +3029,12 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
     processor = AggregateProcessor()
     processor.enqueue_book(book_id, aggregate_payload)
     bootstrap = await processor.bootstrap_book_until_visible(book_id)
-    return {"bookId": book_id, "rebuilt": True, "bootstrap": bootstrap}
+    return {
+        "bookId": book_id,
+        "rebuilt": True,
+        "sourceMapRefresh": source_map_refresh,
+        "bootstrap": bootstrap,
+    }
 
 
 @console_route("post", "/library-books/{book_id}/source-map/refresh")

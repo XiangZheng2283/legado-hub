@@ -189,7 +189,7 @@ async def test_source_map_refresh_writes_sanitized_metadata_and_private_refs(tmp
                     "bookUrl": "https://third.example/book/9",
                     "tocUrl": "https://third.example/book/9/toc",
                     "name": "测试小说",
-                    "author": "作者甲",
+                    "author": "作者：作者甲",
                     "score": 155,
                     "lastChapter": "第101章",
                     "chapterCount": 101,

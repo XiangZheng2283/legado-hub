@@ -474,6 +474,61 @@ def test_runtime_plugin_checks_expose_ping_only(monkeypatch):
     assert client.post("/api/console/verification/run", json={}).status_code == 404
 
 
+def test_source_ping_tries_declared_fallback_urls(monkeypatch):
+    from app.services.source_ping import SourcePingService
+
+    plugin = SimpleNamespace(
+        metadata=SimpleNamespace(
+            base_urls=["https://dead.example"],
+            domain_profiles=[{"baseUrl": "https://mirror.example"}],
+            domains=["example.org"],
+            proxy={},
+        )
+    )
+    scheduler = SimpleNamespace(
+        _plugins={"source": plugin},
+        config={"proxy": {"enabled": False}},
+    )
+    recorded = []
+    repo = SimpleNamespace(record_ping=lambda *args, **kwargs: recorded.append((args, kwargs)))
+    requested = []
+
+    class FakeResponse:
+        def __init__(self, status_code):
+            self.status_code = status_code
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def head(self, url):
+            requested.append(url)
+            if url == "https://dead.example":
+                raise httpx.ConnectError("offline")
+            return FakeResponse(200)
+
+        async def get(self, url):
+            raise AssertionError(f"unexpected GET: {url}")
+
+    import httpx
+    import app.services.source_ping as source_ping
+
+    monkeypatch.setattr(source_ping.httpx, "AsyncClient", FakeClient)
+
+    result = asyncio.run(SourcePingService(scheduler=scheduler, repo=repo).ping_one("source"))
+
+    assert requested == ["https://dead.example", "https://mirror.example"]
+    assert result["status"] == "reachable"
+    assert result["url"] == "https://mirror.example"
+    assert recorded[-1][0][1] == "reachable"
+
+
 def test_plugin_auth(admin_client):
     list_res = admin_client.get("/api/console/plugins")
     items = list_res.json().get("items", [])

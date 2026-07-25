@@ -23,6 +23,7 @@ def normalize_text(value: str) -> str:
 
 def normalize_author_key(value: str) -> str:
     author = normalize_text(value)
+    author = re.sub(r"^(?:作者|作\s*者|author)[:：]?", "", author, flags=re.IGNORECASE)
     if author in {"", "佚名", "未知", "未知作者", "匿名", "作者", "不详"}:
         return ""
     return author

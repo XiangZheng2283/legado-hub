@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Search, MoreVertical, Play, Pause, Archive, RefreshCw, Trash2, Loader2 } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router"
 import { RotateCw, Power, SlidersHorizontal, KeyRound } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { Button } from "@/components/ui/button"

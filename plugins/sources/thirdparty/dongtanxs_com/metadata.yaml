@@ -7,7 +7,7 @@ type: source
 domains:
   - dongtanxs.com
 baseUrls:
-  - https://www.dongtanxs.com
+  - http://www.dongtanxs.com
 capabilities:
   - search
   - detail

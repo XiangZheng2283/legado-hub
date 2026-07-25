@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 import { SearchIcon, Loader2, ArrowRight, Activity } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"

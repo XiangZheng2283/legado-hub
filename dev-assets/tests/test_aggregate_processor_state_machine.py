@@ -901,7 +901,7 @@ def test_stage2_reads_all_candidates_and_keeps_priority_with_consensus(tmp_path,
     candidate_a_content = ("【A站】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
                            "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
     candidate_b_content = ("【B站】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                           "他知道这一切才刚刚开始，未来路还很长。这是不该被命中的后续正文。" * 10)
+                           "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
     fetched_candidate_ids: list[str] = []
 
     class MultiSourceCatalog(_FakeCatalog):
@@ -958,6 +958,21 @@ def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
 
     assert selected and selected["source_id"] == "normal_a"
     assert next(item for item in consensus if item["sourceId"] == "scrambled")["supportCount"] == 0
+
+
+def test_candidate_consensus_rejects_similarity_below_ninety_percent(tmp_path, monkeypatch):
+    import app.services.aggregate_alignment as alignment
+
+    processor = AggregateProcessor(db_path=tmp_path / "test.db")
+    monkeypatch.setattr(alignment, "cross_source_content_similarity", lambda left, right: 0.85)
+
+    selected, consensus = processor._select_consistent_candidate([
+        {"source_id": "candidate_a", "content": "正文甲", "alignment_json": {}},
+        {"source_id": "candidate_b", "content": "正文乙", "alignment_json": {}},
+    ])
+
+    assert selected is None
+    assert all(item["supportCount"] == 0 for item in consensus)
 
 
 def test_stage2_keeps_preview_when_only_one_candidate_is_valid(tmp_path, monkeypatch):
