@@ -1713,6 +1713,63 @@ def test_library_book_chapter_progress_route_sanitizes_trace_by_default(monkeypa
     assert "sourceChapterUrl" not in data["traceSummary"]
 
 
+def test_library_book_chapter_progress_matches_frontend_contract(monkeypatch, tmp_path):
+    import app.api.console as console_api
+    import app.services.library_books as library_books_module
+    from app.services.library_books import LibraryBooksService
+    from app.services.shared_book_storage import SharedBookStorage
+    from app.storage.db import initialize_database
+
+    db_path = tmp_path / "app.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    service = LibraryBooksService(db_path=db_path, shared_book_storage=storage)
+    initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_tasks (
+                aggregate_book_id, canonical_name, canonical_author, name, author,
+                status, created_at, updated_at
+            ) VALUES ('book-progress', 'book', 'author', '测试小说', '作者甲',
+                      'active', datetime('now'), datetime('now'))
+            """
+        )
+        conn.commit()
+
+    chapter_path = storage.chapter_markdown_path(
+        book_name="测试小说",
+        author="作者甲",
+        chapter_index=1,
+        title="第一章",
+    )
+    storage.write_chapter_file(
+        path=chapter_path,
+        title="第一章",
+        body="这是完整正文。",
+        trace_payload={
+            "chapterStatus": "readable",
+            "previewOnly": False,
+            "sourceWordCount": 321,
+            "selectedSource": "sudugu_org",
+        },
+    )
+    storage.atomic_write_json(
+        storage.chapter_index_path(book_name="测试小说", author="作者甲"),
+        {"chapters": [{"index": 1, "title": "第一章", "file": str(chapter_path.relative_to(chapter_path.parents[1]))}]},
+    )
+    monkeypatch.setattr(library_books_module, "library_books_service", service)
+
+    payload = console_api._load_library_book_chapter_progress("book-progress", "1")
+
+    assert payload["found"] is True
+    assert payload["chapterId"] == "1"
+    assert payload["title"] == "第一章"
+    assert payload["status"] == "readable"
+    assert payload["contentLength"] == len("这是完整正文。")
+    assert payload["sourceWordCount"] == 321
+    assert payload["traceSummary"]["selectedSource"] == "sudugu_org"
+
+
 def test_console_sanitize_trace_summary_keeps_stage3_verdict_fields():
     from app.api.console import _sanitize_trace_summary
 

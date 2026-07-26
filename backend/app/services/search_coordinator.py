@@ -1360,49 +1360,52 @@ class SearchCoordinator:
             self.scheduler.search_one(source_id, keyword, page)
         )
 
+        def cache_fallback() -> dict | None:
+            cache_items = self._query_source_cache(keyword, source_id)
+            if not cache_items:
+                return None
+            for item in cache_items:
+                item.setdefault("sourceId", source_id)
+                item.setdefault("sourceName", src_info.get("bookSourceName", ""))
+                item["displayType"] = "source"
+                item["freshness"] = "cached"
+                self._score_search_item(item, keyword)
+            return {"source": src_info, "items": cache_items, "_cache_fallback": True}
+
         # Phase 1: wait up to soft timeout.
         try:
             result = await asyncio.wait_for(asyncio.shield(task), timeout=soft)
             result["source"] = src_info
+            if not result.get("items"):
+                return cache_fallback() or result
             return result
         except asyncio.TimeoutError:
             pass  # soft timeout, continue — task is NOT cancelled
         except Exception as exc:
-            return self._error_result(src_info, exc)
+            return cache_fallback() or self._error_result(src_info, exc)
 
         # Soft timeout reached: try cache fallback.
-        cache_items = self._query_source_cache(keyword, source_id)
-        if cache_items:
-            for ci in cache_items:
-                ci.setdefault("sourceId", source_id)
-                ci.setdefault("sourceName", src_info.get("bookSourceName", ""))
-                ci["displayType"] = "source"
-                ci["freshness"] = "cached"
-                self._score_search_item(ci, keyword)
+        cached_result = cache_fallback()
 
         # Phase 2: wait remaining time for the SAME task.
         remaining = max(0, hard - soft)
         if remaining <= 0:
             task.cancel()
-            if cache_items:
-                return {"source": src_info, "items": cache_items, "_cache_fallback": True}
-            return self._timeout_result(src_info, hard)
+            return cached_result or self._timeout_result(src_info, hard)
 
         try:
             result = await asyncio.wait_for(asyncio.shield(task), timeout=remaining)
             # Real result arrived: override cache fallback.
             result["source"] = src_info
+            if not result.get("items"):
+                return cached_result or result
             return result
         except asyncio.TimeoutError:
             task.cancel()
-            if cache_items:
-                return {"source": src_info, "items": cache_items, "_cache_fallback": True}
-            return self._timeout_result(src_info, hard)
+            return cached_result or self._timeout_result(src_info, hard)
         except Exception as exc:
             task.cancel()
-            if cache_items:
-                return {"source": src_info, "items": cache_items, "_cache_fallback": True}
-            return self._error_result(src_info, exc)
+            return cached_result or self._error_result(src_info, exc)
 
     def _timeout_result(self, src_info: dict, timeout: float) -> dict:
         source_id = src_info.get("sourceId", "")

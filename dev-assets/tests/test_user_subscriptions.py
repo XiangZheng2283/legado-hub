@@ -773,6 +773,31 @@ async def test_completed_subscription_search_survives_service_restart(
     assert reloaded.find_card_group_for_user(job.job_id, candidate_id, "other-user") is None
 
 
+@pytest.mark.asyncio
+async def test_subscription_search_keeps_scheduler_on_current_event_loop(
+    tmp_path: Path,
+) -> None:
+    expected_loop = asyncio.get_running_loop()
+
+    class LoopBoundScheduler:
+        async def search_one(self, source_id: str, keyword: str, page: int):
+            assert asyncio.get_running_loop() is expected_loop
+            return {"items": [], "error": None}
+
+    service = SubscriptionSearchService(
+        scheduler=LoopBoundScheduler(),
+        library_service=_SearchCardLibrary(),
+        subscription_service=_NoSubscriptions(),
+        db_path=tmp_path / "app.db",
+    )
+
+    result = await service._search_one_for_subscription(
+        "official", "同事件循环", 1, official=True
+    )
+
+    assert result == {"items": [], "error": None}
+
+
 def test_running_subscription_search_becomes_interrupted_after_restart(
     tmp_path: Path,
 ) -> None:

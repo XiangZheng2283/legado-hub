@@ -229,6 +229,16 @@ def _fixture_map(plugin_dir: Path, spec: dict, capabilities: list[str] | None = 
         if not fixture_path.exists():
             raise FileNotFoundError(f"missing smoke fixture file: {fixture_path}")
         url_to_text[url] = fixture_path.read_text(encoding="utf-8")
+    extra_fixtures = spec.get("extraFixtures") or []
+    if not isinstance(extra_fixtures, list):
+        raise ValueError("extraFixtures must be a list")
+    for fixture in extra_fixtures:
+        if not isinstance(fixture, dict) or not fixture.get("url") or not fixture.get("file"):
+            raise ValueError("extraFixtures entries must include url and file")
+        fixture_path = _smoke_dir(plugin_dir) / "fixtures" / str(fixture["file"])
+        if not fixture_path.exists():
+            raise FileNotFoundError(f"missing smoke fixture file: {fixture_path}")
+        url_to_text[str(fixture["url"])] = fixture_path.read_text(encoding="utf-8")
     return url_to_text
 
 
@@ -386,7 +396,7 @@ async def main() -> None:
 
     parser = argparse.ArgumentParser(description="Smoke test a LegadoHub source plugin")
     parser.add_argument("plugin_dir", help="Path to plugin directory")
-    parser.add_argument("--keyword", default="凡人修仙传", help="Search keyword")
+    parser.add_argument("--keyword", default=None, help="Search keyword (defaults to smoke.yaml)")
     args = parser.parse_args()
 
     plugin_dir = Path(args.plugin_dir)
@@ -414,6 +424,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
 

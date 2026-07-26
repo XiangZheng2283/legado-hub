@@ -13,7 +13,7 @@ class Source:
     name = "书海阁小说网"
     contract_version = "1.0"
     last_modified = "2026-06-10"
-    base_url = "https://m.shuhaige.tw"
+    base_url = "https://www.shuhaige.net"
     explore_url = "https://m.shuhaige.net"
     headers = {}
     explore_defs = [
@@ -75,11 +75,12 @@ class Source:
 
     async def search(self, ctx, keyword: str, page: int):
         items = []
-        # Try multiple search endpoints and selectors for robustness
+        # Primary domain is www.shuhaige.net; keep mobile fallbacks for resilience.
         attempts = [
-            (self.base_url, f"{self.base_url}/search.html", "GET", {"keyword": keyword}, self.headers, ".bookinfo a, .list-item a, a[href*=\"/book/\"]"),
+            ("https://www.shuhaige.net", "https://www.shuhaige.net/search.html", "POST", {"searchkey": keyword, "searchtype": "all"}, {}, "#sitembox > dl"),
+            ("https://www.shuhaige.net", "https://www.shuhaige.net/search.html", "GET", {"keyword": keyword}, {}, "#sitembox > dl"),
             ("https://m.shuhaige.net", "https://m.shuhaige.net/search.html", "POST", {"searchkey": keyword}, self.headers, "#sitembox > dl, .bookinfo a"),
-            ("https://www.shuhaige.net", "https://www.shuhaige.net/search.html", "POST", {"searchkey": keyword, "searchtype": "all"}, {}, "#sitembox > dl, .bookinfo a"),
+            (self.base_url, f"{self.base_url}/search.html", "GET", {"keyword": keyword}, self.headers, ".bookinfo a, .list-item a, a[href*=\"/book/\"]"),
         ]
         for base_for_join, url, method, data, hdrs, selector in attempts:
             try:
@@ -112,21 +113,33 @@ class Source:
     def _parse_search_rows(self, ctx, html: str, base_for_join: str, selector: str):
         rows = ctx.select(html, selector)
         items = []
+        seen: set[str] = set()
         for row in rows:
             name_node = ctx.select(row, "dd > h3 > a")
             if name_node:
                 name = name_node[0].text_content().strip()
                 href = name_node[0].get("href", "")
-                author = ctx.text(row, "dd:nth-child(3) > span:nth-child(1)")
-                latest = ctx.text(row, "dd:nth-child(5) > a")
+                author = ""
+                latest = ""
+                for dd in ctx.select(row, "dd"):
+                    text = dd.text_content()
+                    if "作者" in text:
+                        span = dd.find("span")
+                        if span is not None:
+                            author = span.text_content().strip()
+                    if "最新" in text or "更新" in text:
+                        a = dd.find("a")
+                        if a is not None:
+                            latest = a.text_content().strip()
             else:
                 name = row.get("title", "") or row.text_content().strip()
                 href = row.get("href", "")
                 author = ""
                 latest = ""
             book_url = urljoin(base_for_join, href)
-            if not name:
+            if not name or book_url in seen:
                 continue
+            seen.add(book_url)
             items.append({
                 "sourceId": self.id,
                 "name": name,

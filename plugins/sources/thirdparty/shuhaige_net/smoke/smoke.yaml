@@ -4,13 +4,13 @@ fixtures:
     url: https://www.shuhaige.net/search.html
     file: search.html
   detail:
-    url: https://www.shuhaige.net/book/1/
+    url: https://www.shuhaige.net/117632/
     file: detail_toc.html
   toc:
-    url: https://www.shuhaige.net/book/1/
+    url: https://www.shuhaige.net/117632/
     file: detail_toc.html
   chapter:
-    url: https://www.shuhaige.net/book/1/1.html
+    url: https://www.shuhaige.net/117632/537331.html
     file: chapter.html
 expect:
   search:
@@ -21,8 +21,8 @@ expect:
     author: 忘语
     hasTocUrl: true
   toc:
-    minChapters: 1
+    minChapters: 2400
     firstTitleContains: 第
   chapter:
-    minContentLength: 150
+    minContentLength: 1500
     titleContains: 第

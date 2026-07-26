@@ -283,6 +283,8 @@ expect:
 
 Fixture 文件放在插件目录下的 `tests/fixtures/` 中。`fixtures.*.url` 中的 URL 必须与插件解析器请求的 URL 完全匹配。Fixture 运行器用 fixture 请求替换网络请求，但插件仍只调用 `ctx.access.http.fetch_text`、`ctx.access.http.fetch_json` 或 `ctx.access.http.fetch_bytes`。
 
+目录或正文需要继续请求分页时，可在顶层增加 `extraFixtures` 列表。每项同样包含 `url` 和 `file`，用于映射标准四阶段之外的后续页面；它不增加新的 smoke 阶段。
+
 Smoke 结果格式：
 
 ```python
@@ -629,9 +631,9 @@ await ctx.request_manual_login(login_url, cookie_domains, message="")
 
 ### 浏览器挑战绕过
 
-Cloudflare 和类似的浏览器挑战被视为需要绕过的源失败。当 `ctx.access.http.fetch_text/json/bytes` 或插件代码抛出 `CLOUDFLARE_REQUIRED` / `BROWSER_REQUIRED` 时，调度器会记录一个规范化的失败，并附带 `extra.bypassRequired = true`，然后在当前请求中跳过该书源。
+当 `ctx.access.http.fetch_text/json/bytes` 明确识别并抛出 `CLOUDFLARE_REQUIRED` 时，宿主会用现有 Access Bridge 启动一次浏览器会话。浏览器按插件、域名和代理身份复用稳定 profile，并与 HTTP 使用相同 UA 和代理出口；Cookie 注入当前插件上下文后，原 HTTP 请求只重试一次。若浏览器不可用、挑战仍存在或重试仍失败，调度器记录规范化失败并在当前请求中跳过该书源。
 
-运行时不再创建浏览器挑战会话、验证页面、Reading 回调 URL 或 Cookie 往返 API。插件可以声明 `browser.mode: required` 并可以抛出结构化错误，但它不得拥有浏览器进程控制、重试调度、并发、超时、代理、缓存或 cookie 持久化策略。
+运行时不创建面向用户的验证页面、Reading 回调 URL 或 Cookie 往返 API。`BROWSER_REQUIRED`、验证码和持续挑战不会无限重试。插件可以声明 `browser.mode: required` 并可以抛出结构化错误，但它不得拥有浏览器进程控制、重试调度、并发、超时、代理、缓存或 cookie 持久化策略。浏览器 Cookie 始终可用于当前请求；只有插件声明 `auth.cookieDomains` 时才写入宿主 CookieStore。
 
 浏览器模拟仍然是后端拥有的能力，用于可维护的绕过策略、stealth HTTP、搜索引擎代理和受控渲染。它不是面向用户的手动验证环境。
 

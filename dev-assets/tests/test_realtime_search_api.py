@@ -408,6 +408,48 @@ def test_search_job_candidates_endpoint():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "live_result",
+    [
+        {"items": [], "error": None, "latencyMs": 3, "proxyUsed": False},
+        {
+            "items": [],
+            "error": {"sourceId": "fixture_cached", "code": "PLUGIN_RUNTIME_ERROR", "message": "network error"},
+            "latencyMs": 3,
+            "proxyUsed": False,
+        },
+    ],
+)
+async def test_search_one_uses_cache_for_fast_empty_or_error(monkeypatch, live_result):
+    service = SearchJobService()
+    coordinator = service._coordinator
+
+    class FakeScheduler:
+        _plugins = {}
+
+        async def search_one(self, source_id, keyword, page):
+            return dict(live_result)
+
+    coordinator.scheduler = FakeScheduler()
+    monkeypatch.setattr(
+        coordinator,
+        "_query_source_cache",
+        lambda keyword, source_id: [{"name": "剑宗外门", "bookUrl": "https://cached.example/book/1"}],
+    )
+
+    result = await coordinator._search_one(
+        {"sourceId": "fixture_cached", "bookSourceName": "缓存源"},
+        "剑宗外门",
+        1,
+        timeout=1,
+    )
+
+    assert result["_cache_fallback"] is True
+    assert result["items"][0]["freshness"] == "cached"
+    assert result["items"][0]["sourceId"] == "fixture_cached"
+
+
+@pytest.mark.asyncio
 async def test_search_job_marks_browser_required_as_bypass_error(monkeypatch):
     service = SearchJobService()
 

@@ -608,9 +608,11 @@ def _load_library_book_chapter_progress(book_id: str, chapter_id: str) -> dict:
     chapter_path = storage.shared_book_dir(book_name=book_name, author=author) / file_name if file_name else None
 
     trace: dict[str, Any] | None = None
+    markdown = ""
     if chapter_path and chapter_path.exists():
         try:
-            trace = storage.parse_trace_block(chapter_path.read_text(encoding="utf-8"))
+            markdown = chapter_path.read_text(encoding="utf-8")
+            trace = storage.parse_trace_block(markdown)
         except Exception:
             trace = None
 
@@ -628,6 +630,30 @@ def _load_library_book_chapter_progress(book_id: str, chapter_id: str) -> dict:
         chapter_title=chapter_title,
         chapter_trace=trace,
         logs=logs,
+    )
+    trace_summary = {
+        **(trace or {}),
+        "stage": payload.get("stage", ""),
+        "currentStep": payload.get("currentStep", ""),
+        "nextStep": payload.get("nextStep", ""),
+        "currentChapterIndex": payload.get("currentChapterIndex"),
+        "currentChapterTitle": payload.get("currentChapterTitle", ""),
+        "nextChapterIndex": payload.get("nextChapterIndex"),
+        "nextChapterTitle": payload.get("nextChapterTitle", ""),
+    }
+    body = markdown.partition(f"<!-- {TRACE_BEGIN}")[0]
+    content_length = len(body.replace(f"# {chapter_title}", "", 1).strip()) if body else 0
+    payload.update(
+        {
+            "found": True,
+            "chapterId": chapter_id,
+            "title": chapter_title,
+            "status": payload.get("chapterStatus", "pending"),
+            "previewOnly": bool((trace or {}).get("previewOnly", False)),
+            "contentLength": content_length,
+            "sourceWordCount": int((trace or {}).get("sourceWordCount", 0) or 0),
+            "traceSummary": trace_summary,
+        }
     )
     return _sanitize_chapter_progress_payload(payload)
 
@@ -2921,7 +2947,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         row = conn.execute(
             """
             SELECT aggregate_payload_json, settings_json, current_policy_version, start_chapter_index,
-                   primary_book_id
+                   primary_book_id, primary_source_id
             FROM aggregate_book_tasks
             WHERE aggregate_book_id = ?
             """,
@@ -2930,7 +2956,14 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         if not row:
             raise HTTPException(status_code=404, detail="书籍不存在")
 
-        aggregate_payload_json, settings_json, current_policy_version, current_start_index, primary_book_id = row
+        (
+            aggregate_payload_json,
+            settings_json,
+            current_policy_version,
+            current_start_index,
+            primary_book_id,
+            primary_source_id,
+        ) = row
         settings = _aggregate_book_settings(settings_json or "")
         new_start_index = max(1, int(payload.get("startChapterIndex", current_start_index or 1) or 1))
         settings["startChapterIndex"] = new_start_index
@@ -2949,6 +2982,9 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         primary_book_id = str(primary_book_id or aggregate_payload.get("primaryBookId") or "").strip()
         if not primary_book_id:
             raise HTTPException(status_code=409, detail="缺少主书源，已保留现有数据")
+        primary_source_id = str(
+            primary_source_id or aggregate_payload.get("primarySourceId") or primary_book_id.split(":", 1)[0]
+        ).strip()
         try:
             preflight_toc = await BookCatalog().toc(primary_book_id)
             toc_error = AggregateProcessor._toc_fetch_error_message(preflight_toc)
@@ -2957,7 +2993,22 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         if toc_error:
             raise HTTPException(status_code=409, detail=f"目录获取失败，已保留现有数据：{toc_error}")
 
+        sources = aggregate_payload.get("sources") if isinstance(aggregate_payload.get("sources"), list) else []
+        aggregate_payload["sources"] = [
+            dict(source)
+            for source in sources
+            if isinstance(source, dict)
+            and (
+                str(source.get("sourceId", "") or "") == str(primary_source_id or "")
+                or library_books_service._is_official(str(source.get("sourceId", "") or ""))
+            )
+        ]
         conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
+        conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (book_id,))
+        conn.execute(
+            "DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ? AND role = 'candidate'",
+            (book_id,),
+        )
         conn.execute(
             """
             UPDATE aggregate_book_tasks
@@ -2965,13 +3016,16 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
                 total_chapters = 0, processed_chapters = 0, visible_processed_chapters = 0, failed_chapters = 0,
                 search_visibility_status = 'hidden', status = 'active', archived_at = NULL,
                 settings_json = ?, current_policy_version = ?, auto_archive_on_complete = 0,
-                last_processed_at = NULL, updated_at = ?
+                aggregate_payload_json = ?, error_count = 0, last_error = '',
+                next_check_time = ?, last_processed_at = NULL, updated_at = ?
             WHERE aggregate_book_id = ?
             """,
             (
                 new_start_index,
                 json.dumps(settings, ensure_ascii=False),
                 int(current_policy_version or 1) + 1,
+                json.dumps(aggregate_payload, ensure_ascii=False),
+                now,
                 now,
                 book_id,
             ),
@@ -2995,6 +3049,24 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         )
         conn.commit()
 
+    book = library_books_service.get_book(book_id)
+    if book:
+        storage = library_books_service.shared_book_storage
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        if book_name:
+            metadata = library_books_service.load_shared_metadata(book_id)
+            if metadata:
+                metadata.pop("sourceMap", None)
+                metadata.pop("sourceMapSummary", None)
+                storage.atomic_write_json(
+                    storage.metadata_path(book_name=book_name, author=author),
+                    metadata,
+                )
+            source_refs_path = storage.source_refs_path(book_name=book_name, author=author)
+            if source_refs_path.exists():
+                source_refs_path.unlink()
+
     try:
         source_map_refresh = await _manual_source_map_refresh(book_id, {"force": True})
     except Exception as exc:
@@ -3005,13 +3077,8 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
     if refreshed_payload:
         aggregate_payload = refreshed_payload
 
-    # Clear stale shared chapter files so the bootstrap starts from a clean slate,
-    # while keeping metadata (sourceMap, identity) intact.
-    book = library_books_service.get_book(book_id)
+    # Clear stale chapter files; identity metadata and user subscriptions stay intact.
     if book:
-        storage = library_books_service.shared_book_storage
-        book_name = str(book.get("name", "") or "").strip()
-        author = str(book.get("author", "") or "").strip()
         if book_name:
             shared_dir = storage.shared_book_dir(book_name=book_name, author=author)
             chapters_dir = shared_dir / "chapters"

@@ -47,7 +47,7 @@ class SharedBookSourceMapService:
         storage: SharedBookStorage | None = None,
         catalog: _CatalogLike | None = None,
         chapter_count_concurrency: int = 4,
-        refresh_ttl_hours: int = 24,
+        refresh_ttl_hours: int = 6,
         now_provider: Callable[[], datetime] | None = None,
     ):
         self.library_books = library_books or LibraryBooksService()
@@ -55,7 +55,7 @@ class SharedBookSourceMapService:
         self.storage = storage or self.library_books.shared_book_storage
         self._catalog = catalog
         self.chapter_count_concurrency = max(1, int(chapter_count_concurrency or 1))
-        self.refresh_ttl = timedelta(hours=max(1, int(refresh_ttl_hours or 24)))
+        self.refresh_ttl = timedelta(hours=max(1, int(refresh_ttl_hours or 6)))
         self._now_provider = now_provider or _utc_now
 
     def _now(self) -> datetime:
@@ -77,13 +77,15 @@ class SharedBookSourceMapService:
         health_status = str(health.get("status", "") or "").strip()
         if bool(health.get("missingCriticalSource")):
             return True, "missing_critical_source"
-        if health_status and health_status != "healthy":
+        if health_status and health_status not in {"healthy", "stale"}:
             return True, "unhealthy_status"
         verified_at = _parse_dt(health.get("lastVerifiedAt"))
         if verified_at is None:
             return True, "missing_last_verified_at"
         if self._now() - verified_at >= self.refresh_ttl:
             return True, "ttl_expired"
+        if health_status == "stale":
+            return False, "stale_waiting_ttl"
         return False, "fresh"
 
     async def refresh_for_book(
@@ -124,11 +126,20 @@ class SharedBookSourceMapService:
         )
 
         existing_sources = resolved_payload.get("sources") if isinstance(resolved_payload.get("sources"), list) else []
+        primary_source_id = str(resolved_payload.get("primarySourceId", "") or "").strip()
         merged_sources = self._merge_sources(
             existing_sources,
             third_party_sources,
-            primary_source_id=str(resolved_payload.get("primarySourceId", "") or "").strip(),
+            primary_source_id=primary_source_id,
         )
+        stale_source_ids = {
+            str(item.get("sourceId", "") or "").strip()
+            for item in merged_sources
+            if isinstance(item, dict)
+            and not third_party_sources
+            and str(item.get("sourceId", "") or "").strip() != primary_source_id
+            and not self.library_books._is_official(str(item.get("sourceId", "") or ""))
+        }
         await self._fill_missing_chapter_counts(merged_sources)
         verified_at = self._now().isoformat()
         missing_critical_source = not any(
@@ -137,7 +148,13 @@ class SharedBookSourceMapService:
             for item in merged_sources
             if isinstance(item, dict)
         )
-        status = "missing_critical_source" if missing_critical_source else "healthy"
+        status = (
+            "missing_critical_source"
+            if missing_critical_source
+            else "stale"
+            if stale_source_ids
+            else "healthy"
+        )
 
         metadata = self.library_books.load_shared_metadata(aggregate_book_id)
         if not metadata:
@@ -165,6 +182,7 @@ class SharedBookSourceMapService:
             payload=resolved_payload,
             merged_sources=merged_sources,
             verified_at=verified_at,
+            stale_source_ids=stale_source_ids,
         )
 
         metadata_path = self.storage.metadata_path(book_name=book_name, author=author)
@@ -233,7 +251,7 @@ class SharedBookSourceMapService:
         existing_sources: list[dict[str, Any]],
         discovered_sources: list[dict[str, Any]],
         *,
-        primary_source_id: str = "",
+        primary_source_id: str,
     ) -> list[dict[str, Any]]:
         merged: list[dict[str, Any]] = []
         seen: set[tuple[str, str]] = set()
@@ -244,9 +262,11 @@ class SharedBookSourceMapService:
             book_id = str(source.get("bookId", "") or "").strip()
             if not source_id or not book_id:
                 continue
-            if source_id == primary_source_id or self.library_books._is_official(source_id):
-                seen.add((source_id, book_id))
-                merged.append(dict(source))
+            is_official = source_id == primary_source_id or self.library_books._is_official(source_id)
+            if discovered_sources and not is_official:
+                continue
+            seen.add((source_id, book_id))
+            merged.append(dict(source))
         for source in discovered_sources:
             source_id = str(source.get("sourceId", "") or "").strip()
             book_id = str(source.get("bookId", "") or "").strip()
@@ -357,6 +377,7 @@ class SharedBookSourceMapService:
         payload: dict[str, Any],
         merged_sources: list[dict[str, Any]],
         verified_at: str,
+        stale_source_ids: set[str],
     ) -> dict[str, Any]:
         primary_source_id = str(payload.get("primarySourceId", "") or "").strip()
         primary_book_id = str(payload.get("primaryBookId", "") or "").strip()
@@ -380,7 +401,11 @@ class SharedBookSourceMapService:
                     "lastChapter": item.get("lastChapter", "") or "",
                     "chapterCount": int(item.get("chapterCount", 0) or 0),
                     "lastVerifiedAt": verified_at,
-                    "status": "healthy",
+                    "status": (
+                        "stale"
+                        if str(item.get("sourceId", "") or "").strip() in stale_source_ids
+                        else "healthy"
+                    ),
                     "priority": int(item.get("score", 0) or 0),
                 }
                 for item in merged_sources

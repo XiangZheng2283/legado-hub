@@ -985,7 +985,18 @@ async def test_rebuild_refreshes_source_map_before_bootstrap(tmp_path, monkeypat
     db_path = _setup_db(tmp_path)
     book_id = "book:rebuild_source_map"
     chapters, _ = _make_chapters(1)
-    _insert_book(db_path, book_id)
+    aggregate_payload = {
+        "name": "测试书",
+        "author": "作者",
+        "primarySourceId": "official_src",
+        "primarySourceName": "官方源",
+        "primaryBookId": f"official_src:{book_id}",
+        "sources": [
+            {"bookId": f"official_src:{book_id}", "sourceId": "official_src", "sourceName": "官方源"},
+            {"bookId": "candidate_src:old", "sourceId": "candidate_src", "sourceName": "旧候补源"},
+        ],
+    }
+    _insert_book(db_path, book_id, aggregate_payload=aggregate_payload)
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
@@ -995,8 +1006,45 @@ async def test_rebuild_refreshes_source_map_before_bootstrap(tmp_path, monkeypat
             """,
             (chapters[0]["chapterId"], book_id, chapters[0]["chapterId"]),
         )
+        conn.execute(
+            """
+            INSERT INTO aggregate_book_sources
+            (aggregate_book_id, source_id, source_book_id, source_name, role)
+            VALUES (?, 'candidate_src', 'candidate_src:old', '旧候补源', 'candidate')
+            """,
+            (book_id,),
+        )
+        conn.execute(
+            """
+            INSERT INTO aggregate_source_snapshots
+            (aggregate_book_id, chapter_index, source_id, clean_content, content_hash)
+            VALUES (?, 1, 'candidate_src', '旧正文', 'old-hash')
+            """,
+            (book_id,),
+        )
+        conn.execute(
+            """
+            INSERT INTO user_book_subscriptions
+            (user_id, aggregate_book_id, status, start_chapter_index, auto_archive_on_complete)
+            VALUES ('reader-1', ?, 'active', 1, 1)
+            """,
+            (book_id,),
+        )
+        conn.execute(
+            "UPDATE aggregate_book_tasks SET primary_source_id = '' WHERE aggregate_book_id = ?",
+            (book_id,),
+        )
         conn.commit()
     events = []
+    storage = SharedBookStorage(tmp_path / "library")
+    library_service = LibraryBooksService(db_path=db_path, shared_book_storage=storage)
+    metadata_path = storage.metadata_path(book_name="测试书", author="作者")
+    storage.atomic_write_json(
+        metadata_path,
+        {"name": "测试书", "sourceMap": {"health": {"status": "healthy"}}, "sourceMapSummary": []},
+    )
+    source_refs_path = storage.source_refs_path(book_name="测试书", author="作者")
+    storage.atomic_write_json(source_refs_path, {"sourceMapRefs": [{"sourceId": "candidate_src"}]})
 
     class ValidCatalog:
         async def toc(self, primary_book_id: str) -> dict[str, Any]:
@@ -1022,12 +1070,33 @@ async def test_rebuild_refreshes_source_map_before_bootstrap(tmp_path, monkeypat
                 "SELECT COUNT(*) FROM aggregate_operation_logs WHERE aggregate_book_id = ? AND operation_type = 'rebuild'",
                 (aggregate_book_id,),
             ).fetchone()[0]
+            snapshot_count = conn.execute(
+                "SELECT COUNT(*) FROM aggregate_source_snapshots WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()[0]
+            candidate_count = conn.execute(
+                "SELECT COUNT(*) FROM aggregate_book_sources WHERE aggregate_book_id = ? AND role = 'candidate'",
+                (aggregate_book_id,),
+            ).fetchone()[0]
             assert chapter_count == 0
             assert rebuild_log_count == 1
+            assert snapshot_count == 0
+            assert candidate_count == 0
             refreshed_payload = json.loads(conn.execute(
                 "SELECT aggregate_payload_json FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
                 (aggregate_book_id,),
             ).fetchone()[0])
+            assert [item["sourceId"] for item in refreshed_payload["sources"]] == ["official_src"]
+            assert conn.execute(
+                "SELECT COUNT(*) FROM user_book_subscriptions WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()[0] == 1
+            assert conn.execute(
+                "SELECT next_check_time IS NOT NULL FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()[0] == 1
+            assert not source_refs_path.exists()
+            assert "sourceMap" not in json.loads(metadata_path.read_text(encoding="utf-8"))
             refreshed_payload["sourceMapRefreshed"] = True
             conn.execute(
                 "UPDATE aggregate_book_tasks SET aggregate_payload_json = ? WHERE aggregate_book_id = ?",
@@ -1044,10 +1113,7 @@ async def test_rebuild_refreshes_source_map_before_bootstrap(tmp_path, monkeypat
     monkeypatch.setattr(
         console_api,
         "library_books_service",
-        LibraryBooksService(
-            db_path=db_path,
-            shared_book_storage=SharedBookStorage(tmp_path / "library"),
-        ),
+        library_service,
     )
     monkeypatch.setattr(
         console_api.auth_service,
@@ -1442,7 +1508,7 @@ async def test_candidate_toc_order_mismatch_matches_by_title(tmp_path, monkeypat
     monkeypatch.setattr(
         processor,
         "_select_consistent_candidate",
-        lambda candidates: (candidates[0] if candidates else None, []),
+        lambda candidates, **_: (candidates[0] if candidates else None, []),
     )
 
     candidate_book_id = "third_party_src:https://third.example/book"
@@ -1589,7 +1655,7 @@ async def test_candidate_source_cache_invalidates_when_payload_sources_change(tm
     }
 
     second = await processor._ensure_candidate_sources_for_book(book_id, changed_payload)
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert any(src["sourceId"] == "manual_src" for src in second["sources"])
     assert second["sources"][-1]["bookId"] == "manual_src:https://manual.example/book"
 
@@ -1658,5 +1724,5 @@ async def test_source_map_refresh_replaces_candidate_cache_payload(tmp_path, mon
     LibraryBooksService(db_path=db_path).save_payload_sources(book_id, refreshed_payload["sources"])
     second = await processor._ensure_candidate_sources_for_book(book_id, refreshed_payload)
 
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert any(src["bookId"] == "third_party_src:https://third.example/book-b" for src in second["sources"])

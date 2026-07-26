@@ -1,0 +1,31 @@
+contractVersion: "1.0"
+id: uuread_tw
+name: UU阅读
+author: Yunwei
+version: 0.1.0
+type: source
+domains:
+  - www.uuread.tw
+  - uuread.tw
+baseUrls:
+  - http://www.uuread.tw
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - traditional-chinese
+sourceSeed:
+  type: live
+  upstreamId: uuread_tw
+  upstreamFile: ""
+  upstreamCommit: ""

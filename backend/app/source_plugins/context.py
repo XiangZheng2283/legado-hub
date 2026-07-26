@@ -87,8 +87,7 @@ class CookieJar:
         self._persist()
 
     def set_browser_cookies(self, cookies: list[dict[str, Any]]) -> None:
-        if not self._guard():
-            return
+        """Apply browser cookies to this request; persist only when declared."""
         for item in cookies:
             if not isinstance(item, dict):
                 continue
@@ -99,7 +98,8 @@ class CookieJar:
                 continue
             self._known_domains.add(domain)
             self._fetcher.set_cookie(domain, name, value)
-        self._persist()
+        if self._guard():
+            self._persist()
 
     def clear(self, domain: str | None = None) -> None:
         if not self._guard():
@@ -378,6 +378,5 @@ class PluginContext:
             "instructions": message or "在打开的浏览器中完成登录，然后回到后台点击检测登录状态。",
             "cookieDomains": cookie_domains,
         }
-
 
 

@@ -10,7 +10,8 @@
 现场补充：
 
 - 正文章节里存在 `qsbs.bb(...)` base64 注入，正文解析器已做站内解码。
-- 搜索失败时保留 trace，并会在返回结果前做同源详情补字段。
+- 源站搜索受 Cloudflare 保护，搜索通过 Source Access Bridge 的 Bing/Google provider 发现书籍 URL。
+- 搜索命中后仍由本插件读取源站详情，并尽力补全作者、封面、简介和最新章节。
 
 ## Fixture Smoke
 

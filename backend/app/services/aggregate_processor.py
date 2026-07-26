@@ -61,6 +61,7 @@ from app.services.shared_book_storage import SharedBookStorage
 from app.services.library_books import library_books_service
 
 DEFAULT_WORKFLOW = DEFAULT_CONTENT_WORKFLOW
+CROSS_SOURCE_INITIAL_COMPARE_COUNT = 3
 
 TRACE_BLOCK_RE = re.compile(
     r"(?:\n|^)(?:<!--\s*)?LEGADOHUB_TRACE_BEGIN\s*(?:```yaml\s*)?\n.*?\n(?:\s*```\s*)?LEGADOHUB_TRACE_END(?:\s*-->)?\s*$",
@@ -1024,7 +1025,8 @@ class AggregateProcessor:
 
         sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
         normalized_sources = [dict(source) for source in sources if isinstance(source, dict)]
-        if self._has_candidate_source(normalized_sources):
+        candidate_count = self._candidate_source_count(normalized_sources)
+        if candidate_count >= max_candidates:
             self._candidate_source_cache[aggregate_book_id] = (
                 time.monotonic(),
                 payload_signature,
@@ -1046,7 +1048,7 @@ class AggregateProcessor:
             keyword=keyword,
             author=author,
             existing_sources=normalized_sources,
-            max_candidates=max_candidates,
+            max_candidates=max_candidates - candidate_count,
             max_sources=max_discovery_sources,
         )
         if not discovered:
@@ -1094,14 +1096,15 @@ class AggregateProcessor:
         raw = json.dumps(payload_key, ensure_ascii=False, sort_keys=True)
         return hashlib.sha1(raw.encode("utf-8")).hexdigest()
 
-    def _has_candidate_source(self, sources: list[dict[str, Any]]) -> bool:
+    def _candidate_source_count(self, sources: list[dict[str, Any]]) -> int:
+        source_ids: set[str] = set()
         for source in sources:
             source_id = str(source.get("sourceId", "") or "")
             if not source_id:
                 continue
             if not self._is_official_source(source_id):
-                return True
-        return False
+                source_ids.add(source_id)
+        return len(source_ids)
 
     async def _discover_third_party_candidates(
         self,
@@ -1139,6 +1142,7 @@ class AggregateProcessor:
             (str(source.get("sourceId", "") or ""), str(source.get("bookId", "") or ""))
             for source in existing_sources
         }
+        existing_source_ids = {source_id for source_id, _ in existing_keys if source_id}
         target_name = normalize_text(keyword)
         target_author = normalize_author_key(author)
         found: list[dict[str, Any]] = []
@@ -1165,7 +1169,7 @@ class AggregateProcessor:
                     source_id = raw.get("sourceId", "") or plugin.metadata.id
                     raw_book_url = raw.get("rawBookUrl") or raw.get("bookUrl", "")
                     book_id = raw.get("bookId") or (encode_book_id(source_id, raw_book_url) if raw_book_url else "")
-                    if not source_id or not book_id or (source_id, book_id) in existing_keys:
+                    if not source_id or not book_id or source_id in existing_source_ids:
                         continue
                     candidates.append(
                         {
@@ -1188,9 +1192,10 @@ class AggregateProcessor:
         for candidates in results:
             for candidate in candidates:
                 key = (candidate["sourceId"], candidate["bookId"])
-                if key in existing_keys:
+                if key in existing_keys or candidate["sourceId"] in existing_source_ids:
                     continue
                 existing_keys.add(key)
+                existing_source_ids.add(candidate["sourceId"])
                 found.append(candidate)
                 if len(found) >= max_candidates:
                     return found
@@ -2177,11 +2182,17 @@ class AggregateProcessor:
 
         attempted_source_ids: list[str] = []
         accepted_candidates: list[dict[str, Any]] = []
+        selected_candidate: dict[str, Any] | None = None
+        consensus: list[dict[str, Any]] = []
+        consensus_mode = ""
+        expansion_started = False
 
         for cand in candidates:
             cand_source_id = cand.get("sourceId", "")
             cand_book_id = cand.get("bookId", "")
             if not cand_source_id or not cand_book_id:
+                continue
+            if cand_source_id in attempted_source_ids:
                 continue
             attempted_source_ids.append(cand_source_id)
             source_lag_info = self._candidate_source_lag_info(cand, target_title)
@@ -2483,6 +2494,32 @@ class AggregateProcessor:
                             "contentLength": len(cand_content or ""),
                         },
                     )
+                    if len(accepted_candidates) >= CROSS_SOURCE_INITIAL_COMPARE_COUNT:
+                        current_selection, current_consensus = self._select_consistent_candidate(
+                            accepted_candidates
+                        )
+                        if len(accepted_candidates) == CROSS_SOURCE_INITIAL_COMPARE_COUNT:
+                            stable = self._has_stable_candidate_consensus(
+                                current_consensus,
+                                candidate_count=len(accepted_candidates),
+                                require_unanimous=True,
+                            )
+                            if not stable:
+                                expansion_started = True
+                        else:
+                            stable = self._has_stable_candidate_consensus(
+                                current_consensus,
+                                candidate_count=len(accepted_candidates),
+                                require_unanimous=False,
+                            )
+                        if current_selection and stable:
+                            selected_candidate = current_selection
+                            consensus = current_consensus
+                            consensus_mode = (
+                                "expanded"
+                                if expansion_started
+                                else "three_source"
+                            )
                     break
                 except Exception as exc:
                     self._log_chapter_step(
@@ -2497,44 +2534,52 @@ class AggregateProcessor:
                             "sourceId": cand_source_id,
                         },
                     )
-                    if official_preview:
-                        continue
-                    cand_content = self._load_source_snapshot_content(
-                        aggregate_book_id=aggregate_book_id,
-                        chapter_index=target_index or 0,
-                        source_id=cand_source_id,
-                    )
-                    if cand_content:
-                        self._log_chapter_step(
-                            aggregate_book_id=aggregate_book_id,
-                            chapter_index=target_index,
-                            title=target_title,
-                            event="candidate_snapshot_accepted",
-                            stage="stage2",
-                            payload={
-                                "step": "候选章节拉取失败，使用本地快照",
-                                "sourceId": cand_source_id,
-                                "contentLength": len(cand_content),
-                            },
-                        )
-                        return {
-                            "content": cand_content,
-                            "source_id": cand_source_id,
-                            "alignment_json": build_source_alignment_json(
-                                selected_content_source="candidate",
-                                candidate_content_length=len(cand_content),
-                                alignment_passed=False,
-                                alignment_reason="snapshot_fallback_without_preview_alignment",
-                                candidate_source_id=cand_source_id,
-                                primary_source_id=primary_source_id,
-                            ),
-                        }
                     continue
 
-        selected_candidate, consensus = self._select_consistent_candidate(accepted_candidates)
+            if selected_candidate:
+                break
+
+        if not selected_candidate:
+            selected_candidate, consensus = self._select_consistent_candidate(
+                accepted_candidates,
+                allow_degraded=len(accepted_candidates) in (1, 2),
+            )
+            if len(accepted_candidates) == 1 and selected_candidate:
+                consensus_mode = "single_source_degraded"
+            elif len(accepted_candidates) == 2 and selected_candidate:
+                consensus_mode = "two_source_degraded"
+            elif len(accepted_candidates) >= CROSS_SOURCE_INITIAL_COMPARE_COUNT:
+                stable = self._has_stable_candidate_consensus(
+                    consensus,
+                    candidate_count=len(accepted_candidates),
+                    require_unanimous=not expansion_started,
+                )
+                if stable:
+                    consensus_mode = "expanded" if expansion_started else "three_source"
+                else:
+                    selected_candidate = None
         if selected_candidate:
             alignment_json = dict(selected_candidate["alignment_json"])
             alignment_json["crossSourceConsensus"] = consensus
+            alignment_json.update({
+                "crossSourceConsensusMode": consensus_mode,
+                "crossSourceRequestedCount": CROSS_SOURCE_INITIAL_COMPARE_COUNT,
+                "crossSourceAcceptedCount": len(accepted_candidates),
+                "crossSourceAttemptedCount": len(attempted_source_ids),
+                "crossSourceExpanded": expansion_started,
+                "majorityDeletionAllowed": len(accepted_candidates) >= 3,
+            })
+            from app.services.aggregate_line_consensus import purify_by_line_consensus
+
+            selected_content, line_consensus = purify_by_line_consensus(
+                selected_candidate["content"],
+                accepted_candidates,
+                selected_source_id=selected_candidate["source_id"],
+                chapter_title=target_title,
+                ad_patterns=self._ad_patterns_for_source(selected_candidate["source_id"]),
+            )
+            selected_candidate["content"] = selected_content
+            alignment_json["lineConsensus"] = line_consensus
             selected_candidate["alignment_json"] = alignment_json
             self._log_chapter_step(
                 aggregate_book_id=aggregate_book_id,
@@ -2543,9 +2588,14 @@ class AggregateProcessor:
                 event="candidate_accepted",
                 stage="stage2",
                 payload={
-                    "step": "候选章节通过交叉比对",
+                    "step": (
+                        "候选章节按可用源降级选用"
+                        if consensus_mode.endswith("_degraded")
+                        else "候选章节通过交叉比对"
+                    ),
                     "sourceId": selected_candidate["source_id"],
                     "contentLength": len(selected_candidate["content"] or ""),
+                    "consensusMode": consensus_mode,
                     "consensus": consensus,
                 },
             )
@@ -2558,7 +2608,7 @@ class AggregateProcessor:
                 event="candidate_consensus_failed",
                 stage="stage2",
                 payload={
-                    "step": "候选正文缺少交叉比对支持，拒绝发布",
+                    "step": "候选正文未形成稳定多数，拒绝发布",
                     "sourceIds": [item["source_id"] for item in accepted_candidates],
                     "consensus": consensus,
                 },
@@ -2592,8 +2642,10 @@ class AggregateProcessor:
     def _select_consistent_candidate(
         self,
         candidates: list[dict[str, Any]],
+        *,
+        allow_degraded: bool = False,
     ) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
-        """Select the earliest candidate supported by another ordered body."""
+        """Select the best supported candidate, optionally degrading to priority order."""
         from app.services.aggregate_alignment import (
             CROSS_SOURCE_CONTENT_SIMILARITY_THRESHOLD,
             cross_source_content_similarity,
@@ -2622,9 +2674,32 @@ class AggregateProcessor:
             if scores:
                 ranked.append((len(scores), sum(scores) / len(scores), index, candidate))
         if not ranked:
+            if allow_degraded and len(candidates) in (1, 2):
+                return candidates[0], consensus
             return None, consensus
         ranked.sort(key=lambda item: (-item[0], -item[1], item[2]))
         return ranked[0][3], consensus
+
+    @staticmethod
+    def _has_stable_candidate_consensus(
+        consensus: list[dict[str, Any]],
+        *,
+        candidate_count: int,
+        require_unanimous: bool,
+    ) -> bool:
+        """Require three-source unanimity first, then a strict majority after expansion."""
+        if candidate_count < CROSS_SOURCE_INITIAL_COMPARE_COUNT:
+            return False
+        if require_unanimous:
+            return len(consensus) == candidate_count and all(
+                int(item.get("supportCount", 0) or 0) == candidate_count - 1
+                for item in consensus
+            )
+        return any(
+            (int(item.get("supportCount", 0) or 0) + 1) >= CROSS_SOURCE_INITIAL_COMPARE_COUNT
+            and (int(item.get("supportCount", 0) or 0) + 1) * 2 > candidate_count
+            for item in consensus
+        )
 
     def _match_candidate_toc_entries(
         self,

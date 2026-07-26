@@ -430,10 +430,32 @@ async def test_scheduler_uses_book_source_map_refresh_trigger_when_book_needs_re
 
 
 @pytest.mark.asyncio
-async def test_source_map_refresh_persists_new_payload_sources_for_following_stage2_reads(tmp_path: Path):
+async def test_source_map_refresh_replaces_stale_third_party_sources(tmp_path: Path):
     db_path = tmp_path / "library.db"
     storage = SharedBookStorage(tmp_path / "library")
-    payload = _insert_book(db_path)
+    payload = _insert_book(
+        db_path,
+        payload_sources=[
+            {
+                "bookId": "official-src:book-1",
+                "sourceId": "official-src",
+                "sourceName": "官方源",
+                "bookUrl": "https://official.example/book/1",
+            },
+            {
+                "bookId": "third-src:book-old",
+                "sourceId": "third-src",
+                "sourceName": "旧第三方源",
+                "bookUrl": "https://third.example/book/old",
+            },
+            {
+                "bookId": "mirror-src:book-keep",
+                "sourceId": "mirror-src",
+                "sourceName": "暂未返回的历史源",
+                "bookUrl": "https://mirror.example/book/keep",
+            },
+        ],
+    )
 
     metadata_path = storage.metadata_path(book_name="测试小说", author="作者甲")
     storage.atomic_write_json(
@@ -488,3 +510,53 @@ async def test_source_map_refresh_persists_new_payload_sources_for_following_sta
     refreshed_payload = LibraryBooksService(db_path=db_path, shared_book_storage=storage).load_payload("book-1")
     assert [item["sourceId"] for item in refreshed_payload["sources"]] == ["official-src", "third-src"]
     assert refreshed_payload["sources"][1]["bookId"] == "third-src:book-10"
+
+
+@pytest.mark.asyncio
+async def test_source_map_refresh_keeps_old_sources_as_stale_when_search_is_empty(tmp_path: Path):
+    db_path = tmp_path / "library.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    payload = _insert_book(
+        db_path,
+        payload_sources=[
+            {
+                "bookId": "official-src:book-1",
+                "sourceId": "official-src",
+                "sourceName": "官方源",
+                "bookUrl": "https://official.example/book/1",
+            },
+            {
+                "bookId": "mirror-src:book-old",
+                "sourceId": "mirror-src",
+                "sourceName": "历史候补源",
+                "bookUrl": "https://mirror.example/book/old",
+            },
+        ],
+    )
+
+    from app.services.shared_book_source_map import SharedBookSourceMapService
+
+    service = SharedBookSourceMapService(
+        library_books=LibraryBooksService(db_path=db_path, shared_book_storage=storage),
+        search_coordinator=FakeSearchCoordinator(),
+        storage=storage,
+    )
+
+    result = await service.refresh_for_book("book-1", payload=payload, force=True)
+
+    assert service.refresh_ttl == timedelta(hours=6)
+    assert result["health"]["status"] == "stale"
+    assert service.should_refresh("book-1", payload=payload) == (False, "stale_waiting_ttl")
+    refreshed_payload = LibraryBooksService(
+        db_path=db_path,
+        shared_book_storage=storage,
+    ).load_payload("book-1")
+    assert [item["sourceId"] for item in refreshed_payload["sources"]] == [
+        "official-src",
+        "mirror-src",
+    ]
+    source_refs = json.loads(
+        storage.source_refs_path(book_name="测试小说", author="作者甲").read_text(encoding="utf-8")
+    )
+    statuses = {item["sourceId"]: item["status"] for item in source_refs["sourceMapRefs"]}
+    assert statuses == {"official-src": "healthy", "mirror-src": "stale"}

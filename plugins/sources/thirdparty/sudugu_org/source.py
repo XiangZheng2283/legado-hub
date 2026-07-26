@@ -14,7 +14,7 @@ class Source:
     id = "sudugu_org"
     name = "速读谷"
     contract_version = "1.0"
-    last_modified = "2026-07-24"
+    last_modified = "2026-07-25"
     base_url = "https://www.sudugu.org"
 
     async def search(self, ctx, keyword: str, page: int):
@@ -157,9 +157,11 @@ class Source:
     async def chapter(self, ctx, chapter_url: str):
         parts = []
         current_url = chapter_url
+        visited_urls = set()
         title = ""
         original_stem = self._chapter_stem(chapter_url)
         while current_url and len(parts) < 10:
+            visited_urls.add(current_url)
             html = await ctx.access.http.fetch_text(current_url)
             if not title:
                 title = ctx.text(html, ".submenu > h1") or ctx.text(html, "h1")
@@ -167,12 +169,20 @@ class Source:
             content = self._clean_chapter_content(content_html)
             if content:
                 parts.append(content)
-            next_href = ctx.attr(html, ".prenext > span:nth-child(3) > a", "href")
-            if not next_href or next_href == "javascript:void(0);":
+            next_url = ""
+            for anchor in ctx.select(html, ".prenext a"):
+                href = str(anchor.get("href", "") or "").strip()
+                candidate_url = urljoin(current_url, href)
+                if (
+                    not href
+                    or href == "javascript:void(0);"
+                    or candidate_url in visited_urls
+                    or self._chapter_stem(candidate_url) != original_stem
+                ):
+                    continue
+                next_url = candidate_url
                 break
-            if self._chapter_stem(next_href) != original_stem:
-                break
-            current_url = urljoin(chapter_url, next_href)
+            current_url = next_url
         title = re.sub(r"[（(][\d/]+[）)]", "", title or "").strip()
         full_content = "\n\n".join(parts)
         return {

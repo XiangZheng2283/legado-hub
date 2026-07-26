@@ -2,13 +2,14 @@ contractVersion: "1.0"
 id: shuhaige_net
 name: 书海阁小说网
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
-  - m.shuhaige.tw
+  - www.shuhaige.net
   - shuhaige.net
+  - img.shuhaige.net
 baseUrls:
-  - https://m.shuhaige.tw
+  - https://www.shuhaige.net
 capabilities:
   - search
   - detail
@@ -27,19 +28,6 @@ tags:
   - html
   - no-login
   - so-novel-seed
-domainProfiles:
-  - id: mirror_tw
-    baseUrl: https://m.shuhaige.tw
-    domains:
-      - m.shuhaige.tw
-    role: mobile
-    fallback: true
-  - id: mobile_net
-    baseUrl: https://m.shuhaige.net
-    domains:
-      - m.shuhaige.net
-    role: mobile
-    fallback: true
 sourceSeed:
   type: so-novel
   upstreamId: www_shuhaige_net

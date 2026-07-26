@@ -90,6 +90,17 @@ def validate_plugin(plugin_dir: Path) -> list[str]:
                 fixture_file = smoke_dir / "fixtures" / str(fixture.get("file", ""))
                 if not fixture_file.exists():
                     errors.append(f"smoke fixture file missing: {fixture_file.relative_to(plugin_dir)}")
+            extra_fixtures = spec.get("extraFixtures") or []
+            if not isinstance(extra_fixtures, list):
+                errors.append("extraFixtures must be a list")
+            else:
+                for index, fixture in enumerate(extra_fixtures):
+                    if not isinstance(fixture, dict) or not fixture.get("url") or not fixture.get("file"):
+                        errors.append(f"extraFixtures[{index}] must include url and file")
+                        continue
+                    fixture_file = smoke_dir / "fixtures" / str(fixture["file"])
+                    if not fixture_file.exists():
+                        errors.append(f"smoke fixture file missing: {fixture_file.relative_to(plugin_dir)}")
     except Exception as exc:
         errors.append(f"invalid smoke.yaml: {exc}")
 

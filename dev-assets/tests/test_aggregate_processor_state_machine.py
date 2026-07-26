@@ -8,10 +8,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
 from app.services.aggregate_processor import AggregateProcessor
+from app.services.aggregate_line_consensus import purify_by_line_consensus
 from app.services.aggregate_settings import PROCESSING_PLACEHOLDER
 from app.services.catalog import Catalog
 from app.services.novel_file_cache import NovelFileCache
@@ -23,6 +25,15 @@ from app.services.aggregate_virtual_source import make_aggregate_chapter_url
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture(autouse=True)
+def _disable_real_candidate_discovery(monkeypatch):
+    scheduler = SimpleNamespace(_enabled_plugins=lambda: [])
+    monkeypatch.setattr(
+        "app.source_plugins.scheduler.get_plugin_scheduler",
+        lambda: scheduler,
+    )
 
 
 def _setup_db(tmp_path, *, ai_enabled=True, purify="conservative", ai_provider=None):
@@ -883,8 +894,8 @@ def test_candidate_toc_search_uses_index_window(tmp_path, monkeypatch):
     assert not any(f"{i}.html" in url for url in decoded_urls for i in [1, 2, 8, 9, 10, 20])
 
 
-def test_stage2_reads_all_candidates_and_keeps_priority_with_consensus(tmp_path, monkeypatch):
-    """Stage 2 should compare every valid candidate before selecting a consensus."""
+def test_stage2_stops_after_three_valid_sources_reach_unanimous_consensus(tmp_path, monkeypatch):
+    """Stage 2 should not fetch a fourth source after three validated bodies agree."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_first_source"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -893,15 +904,23 @@ def test_stage2_reads_all_candidates_and_keeps_priority_with_consensus(tmp_path,
             {"bookId": "official_src:1", "sourceId": "official_src", "score": 100, "bookUrl": "https://official.example/book/1"},
             {"bookId": "candidate_a:1", "sourceId": "candidate_a", "score": 95, "bookUrl": "https://candidate-a.example/book/1"},
             {"bookId": "candidate_b:1", "sourceId": "candidate_b", "score": 80, "bookUrl": "https://candidate-b.example/book/1"},
+            {"bookId": "candidate_c:1", "sourceId": "candidate_c", "score": 70, "bookUrl": "https://candidate-c.example/book/1"},
+            {"bookId": "candidate_d:1", "sourceId": "candidate_d", "score": 60, "bookUrl": "https://candidate-d.example/book/1"},
+            {"bookId": "candidate_e:1", "sourceId": "candidate_e", "score": 50, "bookUrl": "https://candidate-e.example/book/1"},
         ],
     })
     ch_id = _insert_chapter(db_path, book_id, index=1)
 
     preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    candidate_a_content = ("【A站】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                           "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
-    candidate_b_content = ("【B站】少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
-                           "他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10)
+    shared_content = (
+        "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
+        "\n\n他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10
+    )
+    selected_content = shared_content.replace(
+        "他知道这一切才刚刚开始",
+        "GOOGLE搜索TWKAN\n\n他知道这一切才刚刚开始",
+        1,
+    )
     fetched_candidate_ids: list[str] = []
 
     class MultiSourceCatalog(_FakeCatalog):
@@ -916,13 +935,19 @@ def test_stage2_reads_all_candidates_and_keeps_priority_with_consensus(tmp_path,
                 return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
             fetched_candidate_ids.append(chapter_id)
             if chapter_id.startswith("candidate_a"):
-                return {"content": candidate_a_content, "title": "第1章"}
-            if chapter_id.startswith("candidate_b"):
-                return {"content": candidate_b_content, "title": "第1章"}
+                return {"content": selected_content, "title": "第1章"}
+            if chapter_id.startswith(("candidate_b", "candidate_c")):
+                return {"content": shared_content, "title": "第1章"}
+            if chapter_id.startswith(("candidate_d", "candidate_e")):
+                raise AssertionError("extra candidate should not be fetched")
             return await super().chapter(chapter_id)
 
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    monkeypatch.setattr(
+        "app.services.aggregate_alignment.cross_source_content_similarity",
+        lambda left, right: 0.95,
+    )
 
     asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
 
@@ -933,6 +958,158 @@ def test_stage2_reads_all_candidates_and_keeps_priority_with_consensus(tmp_path,
     assert row["fallbackSourceId"] == "candidate_a"
     assert any(chapter_id.startswith("candidate_a") for chapter_id in fetched_candidate_ids)
     assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
+    assert any(chapter_id.startswith("candidate_c") for chapter_id in fetched_candidate_ids)
+    assert not any(chapter_id.startswith("candidate_d") for chapter_id in fetched_candidate_ids)
+    assert not any(chapter_id.startswith("candidate_e") for chapter_id in fetched_candidate_ids)
+    assert row["alignment"]["crossSourceConsensusMode"] == "three_source"
+    assert row["alignment"]["crossSourceAcceptedCount"] == 3
+    assert row["alignment"]["crossSourceExpanded"] is False
+    assert row["alignment"]["majorityDeletionAllowed"] is True
+    assert row["alignment"]["lineConsensus"]["removedCount"] == 1
+    assert "GOOGLE搜索TWKAN" not in row["content"]
+
+
+def test_stage2_expands_after_initial_three_sources_disagree(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:stage2_expand_sources"
+    sources = [
+        {"bookId": "official_src:1", "sourceId": "official_src", "score": 100},
+        *[
+            {"bookId": f"candidate_{name}:1", "sourceId": f"candidate_{name}", "score": score}
+            for name, score in zip(("a", "b", "c", "d", "e"), (95, 90, 85, 80, 75))
+        ],
+    ]
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书", "author": "作者", "sources": sources,
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=1)
+    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
+    majority = preview + "后续正文沿着山路展开，众人继续向前。" * 30
+    divergent = preview + "另一条完全不同的叙事线从城中展开。" * 30
+    fetched_candidate_ids: list[str] = []
+
+    class ExpandingCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            return {"chapters": [{
+                "chapterId": encode_chapter_id(source_id, f"https://{source_id}.example/ch1.html"),
+                "title": "第1章",
+                "index": 1,
+            }]}
+
+        async def chapter(self, chapter_id: str) -> dict:
+            if chapter_id.startswith("official_src"):
+                return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
+            fetched_candidate_ids.append(chapter_id)
+            if chapter_id.startswith(("candidate_a", "candidate_b", "candidate_d")):
+                return {"content": majority, "title": "第1章"}
+            if chapter_id.startswith("candidate_c"):
+                return {"content": divergent, "title": "第1章"}
+            if chapter_id.startswith("candidate_e"):
+                raise AssertionError("fifth candidate should not be fetched after a 3/4 majority")
+            return await super().chapter(chapter_id)
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    asyncio.run(processor._process_chapter(ExpandingCatalog(), _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["fallbackSourceId"] == "candidate_a"
+    assert any(chapter_id.startswith("candidate_d") for chapter_id in fetched_candidate_ids)
+    assert not any(chapter_id.startswith("candidate_e") for chapter_id in fetched_candidate_ids)
+    assert row["alignment"]["crossSourceConsensusMode"] == "expanded"
+    assert row["alignment"]["crossSourceAcceptedCount"] == 4
+    assert row["alignment"]["crossSourceExpanded"] is True
+
+
+def test_stage2_keeps_preview_when_expanded_sources_end_in_tie(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:stage2_expanded_tie"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书",
+        "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100},
+            *[
+                {"bookId": f"candidate_{name}:1", "sourceId": f"candidate_{name}", "score": score}
+                for name, score in zip(("a", "b", "c", "d"), (95, 90, 85, 80))
+            ],
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=1)
+    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
+    branch_a = preview + "众人沿着山路继续向前，直到晨光照亮群峰。" * 30
+    branch_b = preview + "城中骤然响起钟声，另一队人转身奔向北门。" * 30
+
+    class TiedCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            return {"chapters": [{
+                "chapterId": encode_chapter_id(source_id, f"https://{source_id}.example/ch1.html"),
+                "title": "第1章",
+                "index": 1,
+            }]}
+
+        async def chapter(self, chapter_id: str) -> dict:
+            if chapter_id.startswith("official_src"):
+                return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
+            if chapter_id.startswith(("candidate_a", "candidate_b")):
+                return {"content": branch_a, "title": "第1章"}
+            if chapter_id.startswith(("candidate_c", "candidate_d")):
+                return {"content": branch_b, "title": "第1章"}
+            return await super().chapter(chapter_id)
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    asyncio.run(processor._process_chapter(TiedCatalog(), _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["previewOnly"] is True
+    assert row["fallbackSourceId"] == "official_src"
+    assert row["alignment"]["candidateSourceId"] == ""
+    assert row["content"] == preview
+
+
+def test_stage2_does_not_publish_unvalidated_snapshot_after_fetch_error(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:stage2_snapshot_bypass"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书",
+        "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100},
+            {"bookId": "candidate_src:1", "sourceId": "candidate_src", "score": 90},
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=1)
+    snapshot = "这份快照没有经过本次单源校验，因此不能直接发布。" * 30
+
+    class FailingCatalog(_FakeCatalog):
+        async def chapter(self, chapter_id: str) -> dict:
+            if chapter_id.startswith("official_src"):
+                return {"content": "", "title": "第1章"}
+            raise RuntimeError("candidate fetch failed")
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="candidate_src",
+        source_book_id="candidate_src:1",
+        source_chapter_id="candidate_src:ch1",
+        title="第1章",
+        clean_content=snapshot,
+        classification="unknown",
+    )
+
+    asyncio.run(processor._process_chapter(FailingCatalog(), _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["content"] == ""
+    assert row["fallbackSourceId"] != "candidate_src"
 
 
 def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
@@ -960,7 +1137,135 @@ def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
     assert next(item for item in consensus if item["sourceId"] == "scrambled")["supportCount"] == 0
 
 
-def test_candidate_consensus_rejects_similarity_below_ninety_percent(tmp_path, monkeypatch):
+def test_line_consensus_removes_only_deterministic_minority_lines():
+    selected = """第325章 好消息
+
+第一段真实正文。
+
+GOOGLE搜索TWKAN
+
+“加，多放点葱花。”
+
+(本章完)"""
+    peers = [
+        {"source_id": "selected", "content": selected},
+        {"source_id": "peer_a", "content": "第一段真实正文。\n\n“加，多放点葱花。”\n\n(本章完)"},
+        {"source_id": "peer_b", "content": "第一段真实正文。\n\n“加，多放点葱花。”"},
+        {"source_id": "peer_c", "content": "第一段真实正文。\n\n“加，多放点葱。”"},
+    ]
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        peers,
+        selected_source_id="selected",
+        chapter_title="第325章 好消息",
+    )
+
+    assert "第325章 好消息" not in cleaned
+    assert "GOOGLE搜索TWKAN" not in cleaned
+    assert "多放点葱花" in cleaned
+    assert "(本章完)" in cleaned
+    assert audit["sourceCount"] == 4
+    assert audit["majorityCount"] == 3
+    assert audit["removedCount"] == 2
+    assert audit["suspiciousCount"] >= 1
+
+
+def test_line_consensus_aligns_split_and_merged_paragraphs():
+    selected = "第一段正文内容。\n\n第二段正文内容。\n\n第三段正文内容。"
+    peers = [
+        {"source_id": "selected", "content": selected},
+        {"source_id": "merged", "content": "第一段正文内容。第二段正文内容。\n\n第三段正文内容。"},
+        {"source_id": "split", "content": selected},
+        {
+            "source_id": "window_shift",
+            "content": "噪声甲\n\n噪声乙\n\n噪声丙\n\n" + selected,
+        },
+    ]
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        peers,
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["removedCount"] == 0
+    assert audit["suspiciousCount"] == 0
+
+
+def test_line_consensus_normalizes_traditional_unicode_space_and_punctuation():
+    selected = "網際網路　連線正常！\n\n第二段正文。"
+    peers = [
+        {"source_id": "selected", "content": selected},
+        {"source_id": "simplified", "content": "网际网路连线正常\n\n第二段正文"},
+        {"source_id": "traditional", "content": "網際網路 連線正常。\n\n第二段正文。"},
+    ]
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        peers,
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["removedCount"] == 0
+    assert audit["suspiciousCount"] == 0
+
+
+@pytest.mark.parametrize("watermark", [
+    "记住首发网站域名𝕥𝕨𝕜𝕒𝕟.𝕔𝕠𝕞",
+    "本书由𝕥𝕨𝕜𝕒𝕟.𝕔𝕠𝕞全网首发",
+    "Wωω ▪TTκan ▪co",
+    "wωw ⊙тt kān ⊙￠o",
+    "Wωω☢ ttKan☢ CO",
+    "☢т tκa n ☢co",
+    "щшш ●ttka n ●￠ ○",
+    "WWW¤ttKan¤c o",
+    "</ins>",
+    "</div>",
+])
+def test_line_consensus_removes_obfuscated_ttkan_watermarks(watermark):
+    selected = f"第一段真实正文。\n\n{watermark}\n\n第二段真实正文。"
+    peer = "第一段真实正文。\n\n第二段真实正文。"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer},
+            {"source_id": "peer_b", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert watermark not in cleaned
+    assert audit["removedCount"] == 1
+    assert audit["suspiciousCount"] == 0
+
+
+def test_line_consensus_does_not_delete_with_only_two_sources():
+    selected = "第一段真实正文。\n\nGOOGLE搜索TWKAN\n\n第二段真实正文。"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer", "content": "第一段真实正文。\n\n第二段真实正文。"},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["applied"] is False
+    assert audit["reason"] == "insufficient_sources"
+
+
+def test_candidate_consensus_can_degrade_to_two_sources_below_ninety_percent(tmp_path, monkeypatch):
     import app.services.aggregate_alignment as alignment
 
     processor = AggregateProcessor(db_path=tmp_path / "test.db")
@@ -969,14 +1274,61 @@ def test_candidate_consensus_rejects_similarity_below_ninety_percent(tmp_path, m
     selected, consensus = processor._select_consistent_candidate([
         {"source_id": "candidate_a", "content": "正文甲", "alignment_json": {}},
         {"source_id": "candidate_b", "content": "正文乙", "alignment_json": {}},
-    ])
+    ], allow_degraded=True)
 
-    assert selected is None
+    assert selected and selected["source_id"] == "candidate_a"
     assert all(item["supportCount"] == 0 for item in consensus)
 
 
-def test_stage2_keeps_preview_when_only_one_candidate_is_valid(tmp_path, monkeypatch):
-    """A lone supplement cannot establish that its sentence order is trustworthy."""
+def test_stage2_marks_two_valid_sources_as_degraded(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:stage2_two_source_degraded"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书",
+        "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "score": 100},
+            {"bookId": "candidate_a:1", "sourceId": "candidate_a", "score": 95},
+            {"bookId": "candidate_b:1", "sourceId": "candidate_b", "score": 85},
+        ],
+    })
+    ch_id = _insert_chapter(db_path, book_id, index=1)
+    preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
+    candidate_content = preview + "后续正文内容扩充了很多。" * 30
+
+    class TwoSourceCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            source_id = book_id.split(":")[0]
+            return {"chapters": [{
+                "chapterId": encode_chapter_id(source_id, f"https://{source_id}.example/ch1.html"),
+                "title": "第1章",
+                "index": 1,
+            }]}
+
+        async def chapter(self, chapter_id: str) -> dict:
+            if chapter_id.startswith("official_src"):
+                return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
+            if chapter_id.startswith(("candidate_a", "candidate_b")):
+                return {"content": candidate_content, "title": "第1章"}
+            return await super().chapter(chapter_id)
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    monkeypatch.setattr(processor, "_discover_third_party_candidates", AsyncMock(return_value=[]))
+
+    asyncio.run(processor._process_chapter(TwoSourceCatalog(), _chapter_dict(ch_id, book_id)))
+
+    row = _get_chapter_row(db_path, ch_id)
+    assert row["fallbackSourceId"] == "candidate_a"
+    assert row["alignment"]["crossSourceConsensusMode"] == "two_source_degraded"
+    assert row["alignment"]["crossSourceAcceptedCount"] == 2
+    assert row["alignment"]["majorityDeletionAllowed"] is False
+    assert row["alignment"]["lineConsensus"]["applied"] is False
+    assert row["alignment"]["lineConsensus"]["reason"] == "insufficient_sources"
+
+
+def test_stage2_uses_one_valid_candidate_as_explicit_degraded_fallback(tmp_path, monkeypatch):
+    """A lone fully validated supplement is usable but cannot enable majority deletion."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_second_source"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -1013,20 +1365,27 @@ def test_stage2_keeps_preview_when_only_one_candidate_is_valid(tmp_path, monkeyp
 
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    monkeypatch.setattr(processor, "_discover_third_party_candidates", AsyncMock(return_value=[]))
 
     asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
 
     row = _get_chapter_row(db_path, ch_id)
     assert row["status"] == "fallback"
     assert row["content"] != ""
-    assert row["alignment"]["candidateSourceId"] == ""
-    assert row["previewOnly"] is True
+    assert row["alignment"]["candidateSourceId"] == "candidate_b"
+    assert row["alignment"]["crossSourceConsensusMode"] == "single_source_degraded"
+    assert row["alignment"]["crossSourceAcceptedCount"] == 1
+    assert row["alignment"]["majorityDeletionAllowed"] is False
+    assert row["alignment"]["lineConsensus"]["applied"] is False
+    assert row["alignment"]["lineConsensus"]["reason"] == "insufficient_sources"
+    assert row["previewOnly"] is False
+    assert row["fallbackSourceId"] == "candidate_b"
     assert any(chapter_id.startswith("candidate_a") for chapter_id in fetched_candidate_ids)
     assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
 
 
-def test_stage2_keeps_preview_for_solitary_nearby_title_match(tmp_path, monkeypatch):
-    """A nearby-title match still needs an independent content confirmation."""
+def test_stage2_uses_solitary_nearby_title_match_after_preview_alignment(tmp_path, monkeypatch):
+    """A nearby-title match may degrade to one source after preview-head validation."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_nearby_index_drift"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -1069,10 +1428,12 @@ def test_stage2_keeps_preview_for_solitary_nearby_title_match(tmp_path, monkeypa
 
     row = _get_chapter_row(db_path, ch_id)
     assert row["status"] == "fallback"
-    assert row["alignment"]["candidateSourceId"] == ""
-    assert row["previewOnly"] is True
-    assert row["fallbackSourceId"] == "official_src"
-    assert row["content"] == preview
+    assert row["alignment"]["candidateSourceId"] == "candidate_src"
+    assert row["alignment"]["crossSourceConsensusMode"] == "single_source_degraded"
+    assert row["alignment"]["majorityDeletionAllowed"] is False
+    assert row["previewOnly"] is False
+    assert row["fallbackSourceId"] == "candidate_src"
+    assert preview in row["content"]
 
 
 def test_stage2_rejects_candidate_that_is_not_longer_than_official_preview(tmp_path, monkeypatch):

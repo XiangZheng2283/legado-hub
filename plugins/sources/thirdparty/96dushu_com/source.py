@@ -19,67 +19,41 @@ class Source:
     base_url = "https://www.96dushu.com"
 
     async def search(self, ctx, keyword: str, page: int):
+        if page > 1:
+            return []
+        hits = await ctx.access.search_provider(
+            keyword,
+            target_domain="www.96dushu.com",
+            url_patterns=[r"/book/\d+/"],
+            provider_order=["bing_html", "google_html"],
+            query_site_path="/book",
+            timeout=15,
+            proxy=False,
+        )
         items = []
-        search_error = None
-        try:
-            html = await ctx.access.http.fetch_text(
-                f"{self.base_url}/modules/article/search.php",
-                method="POST",
-                data={"searchkey": keyword},
-            )
-            results = ctx.select(html, "#nr > dl")
-            for dl in results:
-                name_a = ctx.select(dl, "dd:nth-child(2) > h3 > a")
-                if not name_a:
-                    continue
-                name = ctx.clean_text(name_a[0].text_content())
-                href = name_a[0].get("href", "")
-                author = ctx.clean_text(ctx.text(dl, "dd:nth-child(3) > span:nth-child(1)"))
-                cat = ctx.clean_text(ctx.text(dl, "dt > span"))
-                latest = ctx.clean_text(ctx.text(dl, "dd:nth-child(5) > a"))
-                status = ctx.clean_text(ctx.text(dl, "dd:nth-child(3) > span:nth-child(2)"))
-                update_time = ctx.clean_text(ctx.text(dl, "dd:nth-child(2) > h3 > span"))
-                items.append({
-                    "sourceId": self.id,
-                    "name": name,
-                    "author": author,
-                    "bookUrl": urljoin(self.base_url, href),
-                    "kind": f"{cat}/{status}",
-                    "lastChapter": latest,
-                    "updateTime": update_time,
-                })
-        except Exception as exc:
-            search_error = exc
-            ctx.trace("search_error", url=f"{self.base_url}/modules/article/search.php", message=str(exc))
-        if not items:
-            items = await self._search_from_explore(ctx, keyword)
-        if items:
-            return await enrich_search_items_from_detail(self, ctx, items)
-        if search_error is not None:
-            raise search_error
-        return []
-
-    async def _search_from_explore(self, ctx, keyword: str) -> list[dict]:
-        items = []
-        try:
-            html = await ctx.access.http.fetch_text(f"{self.base_url}/topallvisit/1.html")
-            links = ctx.select(html, "#nr > dl dd:nth-child(2) > h3 > a")
-            seen = set()
-            for a in links:
-                href = a.get("href", "")
-                name = ctx.clean_text(a.text_content())
-                if not href or not name or name in seen:
-                    continue
-                if keyword.lower() in name.lower():
-                    seen.add(name)
-                    items.append({
-                        "sourceId": self.id,
-                        "name": name,
-                        "bookUrl": urljoin(self.base_url, href),
-                    })
-        except Exception as exc:
-            ctx.trace("search_explore_fallback_error", url=f"{self.base_url}/topallvisit/1.html", message=str(exc))
-        return items
+        seen_urls: set[str] = set()
+        for hit in hits:
+            book_url = hit.url
+            if not book_url or book_url in seen_urls:
+                continue
+            seen_urls.add(book_url)
+            items.append({
+                "sourceId": self.id,
+                "name": re.split(r"[-_|,，:：]", hit.title or "", maxsplit=1)[0].strip() or keyword,
+                "author": "",
+                "bookUrl": book_url,
+                "coverUrl": "",
+                "intro": (hit.snippet or "").strip(),
+                "kind": "",
+                "lastChapter": "",
+                "extra": {
+                    "searchProvider": "source_access_bridge",
+                    "provider": hit.provider,
+                    "matchedPattern": hit.matched_pattern,
+                    "searchUrl": hit.url,
+                },
+            })
+        return await enrich_search_items_from_detail(self, ctx, items)
 
     async def detail(self, ctx, book_url: str):
         html = await ctx.access.http.fetch_text(book_url)

@@ -1,0 +1,28 @@
+keyword: 青山
+fixtures:
+  search:
+    url: https://sto9.com/search
+    file: search.html
+  detail:
+    url: https://sto9.com/book/682.html
+    file: detail.html
+  toc:
+    url: https://sto9.com/ajax_novels/chapterlist/682.html
+    file: toc.html
+  chapter:
+    url: https://sto9.com/txt/682/90094.html
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 青山
+  detail:
+    name: 青山
+    author: 会说话的肘子
+    hasTocUrl: true
+  toc:
+    minChapters: 700
+    firstTitleContains: 第1章
+  chapter:
+    minContentLength: 1000
+    titleContains: 第1章

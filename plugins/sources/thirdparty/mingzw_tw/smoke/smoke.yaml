@@ -1,0 +1,28 @@
+keyword: 金榜题名时
+fixtures:
+  search:
+    url: https://tw.mingzw.net/mzwlist/%E9%87%91%E6%A6%9C%E9%A1%8C%E5%90%8D%E6%99%82.html
+    file: search.html
+  detail:
+    url: https://tw.mingzw.net/mzwbook/47453.html
+    file: detail.html
+  toc:
+    url: https://tw.mingzw.net/mzwchapter/47453.html
+    file: toc.html
+  chapter:
+    url: https://tw.mingzw.net/mzwread/47453_15612627.html
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 金榜题名时，才发现妻子是三圣母
+  detail:
+    name: 金榜题名时，才发现妻子是三圣母
+    author: 在下常空军
+    hasTocUrl: true
+  toc:
+    minChapters: 200
+    firstTitleContains: 第一章
+  chapter:
+    minContentLength: 500
+    titleContains: 第一章

@@ -6,16 +6,32 @@ All network access goes through one of the explicit sub-facades:
 - ``ctx.access.browser``  → Playwright-backed browser rendering
 - ``ctx.access.search_provider`` → search-provider (DDGS / Bing / Google)
 
-No automatic fallback between layers.
+The only host-level fallback is a single browser session refresh after an
+explicit Cloudflare challenge, followed by one retry of the original HTTP call.
 """
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
 import json
-from typing import Any
+from typing import Any, Awaitable, Callable
+from urllib.parse import urlparse
 
 from app.services.access_bridge.models import AccessFetchRequest
+from app.services.access_bridge.profiles import make_profile_id
 from app.services.access_bridge.search_provider import DEFAULT_HEADERS, search_site
+from app.source_plugins.errors import CloudflareRequired
+
+
+_CF_REFRESH_LOCKS: dict[int, asyncio.Lock] = {}
+
+
+def _cf_refresh_lock() -> asyncio.Lock:
+    """Return one refresh lock per event loop."""
+    loop_id = id(asyncio.get_running_loop())
+    # ponytail: one lock serializes all CF refreshes per loop; split by domain if this becomes a bottleneck.
+    return _CF_REFRESH_LOCKS.setdefault(loop_id, asyncio.Lock())
 
 
 class _HttpAccessBridge:
@@ -23,6 +39,40 @@ class _HttpAccessBridge:
 
     def __init__(self, ctx: Any):
         self._ctx = ctx
+
+    async def _with_cf_session(
+        self,
+        url: str,
+        headers: dict | None,
+        operation: Callable[[], Awaitable[Any]],
+    ) -> Any:
+        """Refresh a CF browser session once, then retry the HTTP request."""
+        try:
+            return await operation()
+        except CloudflareRequired as original_error:
+            async with _cf_refresh_lock():
+                try:
+                    return await operation()
+                except CloudflareRequired:
+                    pass
+                try:
+                    result = await self._ctx.access.browser.fetch(
+                        url,
+                        headers=headers,
+                        stage="cloudflare_refresh",
+                        wait_ms=5000,
+                    )
+                except Exception:
+                    raise original_error
+                challenge = result.challenge
+                detected = (
+                    bool(challenge.get("detected"))
+                    if isinstance(challenge, dict)
+                    else bool(getattr(challenge, "detected", False))
+                )
+                if result.error or detected:
+                    raise original_error
+            return await operation()
 
     async def fetch_text(
         self,
@@ -37,17 +87,20 @@ class _HttpAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> str:
-        text = await self._ctx._fetcher.fetch_text(
-            url,
-            method=method,
-            params=params,
-            data=data,
-            json=json,
-            headers=headers,
-            timeout=timeout,
-            impersonate=impersonate,
-            proxy=proxy,
-        )
+        async def request() -> str:
+            return await self._ctx._fetcher.fetch_text(
+                url,
+                method=method,
+                params=params,
+                data=data,
+                json=json,
+                headers=headers,
+                timeout=timeout,
+                impersonate=impersonate,
+                proxy=proxy,
+            )
+
+        text = await self._with_cf_session(url, headers, request)
         self._ctx.cookies._persist()
         self._ctx.trace("access_http", url=url, message=f"{method} {len(text)} chars")
         return text
@@ -65,17 +118,20 @@ class _HttpAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> Any:
-        data_out = await self._ctx._fetcher.fetch_json(
-            url,
-            method=method,
-            params=params,
-            data=data,
-            json=json,
-            headers=headers,
-            timeout=timeout,
-            impersonate=impersonate,
-            proxy=proxy,
-        )
+        async def request() -> Any:
+            return await self._ctx._fetcher.fetch_json(
+                url,
+                method=method,
+                params=params,
+                data=data,
+                json=json,
+                headers=headers,
+                timeout=timeout,
+                impersonate=impersonate,
+                proxy=proxy,
+            )
+
+        data_out = await self._with_cf_session(url, headers, request)
         self._ctx.cookies._persist()
         self._ctx.trace("access_http_json", url=url, message=f"{method} json")
         return data_out
@@ -93,17 +149,20 @@ class _HttpAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> bytes:
-        bs = await self._ctx._fetcher.fetch_bytes(
-            url,
-            method=method,
-            params=params,
-            data=data,
-            json=json,
-            headers=headers,
-            timeout=timeout,
-            impersonate=impersonate,
-            proxy=proxy,
-        )
+        async def request() -> bytes:
+            return await self._ctx._fetcher.fetch_bytes(
+                url,
+                method=method,
+                params=params,
+                data=data,
+                json=json,
+                headers=headers,
+                timeout=timeout,
+                impersonate=impersonate,
+                proxy=proxy,
+            )
+
+        bs = await self._with_cf_session(url, headers, request)
         self._ctx.cookies._persist()
         self._ctx.trace("access_http_bytes", url=url, message=f"{method} {len(bs)} bytes")
         return bs
@@ -233,6 +292,17 @@ class _BrowserAccessBridge:
                 use_proxy = False
         if use_proxy and not proxy_url:
             proxy_url = self._ctx.proxy_url
+        if not profile_id:
+            domain_profile = urlparse(url).hostname or "default"
+            proxy_identity = proxy_profile or "direct"
+            if use_proxy and proxy_url and not proxy_profile:
+                digest = hashlib.sha256(proxy_url.encode("utf-8")).hexdigest()[:8]
+                proxy_identity = f"proxy-{digest}"
+            profile_id = make_profile_id(
+                self._ctx.plugin_id,
+                domain_profile,
+                proxy_identity,
+            )
 
         request = AccessFetchRequest(
             plugin_id=self._ctx.plugin_id,

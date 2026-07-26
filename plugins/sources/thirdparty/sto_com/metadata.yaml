@@ -1,0 +1,30 @@
+contractVersion: "1.0"
+id: sto_com
+name: 思兔阅读
+author: Yunwei
+version: 0.1.0
+type: source
+domains:
+  - sto9.com
+baseUrls:
+  - https://sto9.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - traditional-chinese
+sourceSeed:
+  type: live
+  upstreamId: sto_com
+  upstreamFile: ""
+  upstreamCommit: ""

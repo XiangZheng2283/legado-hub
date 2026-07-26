@@ -70,6 +70,10 @@ GLOBAL_AD_PATTERNS: list[str] = [
     r"正确内.?容在",
     r"[%％]\s*六九\s*[%％]",
     r"[书書][''′]?\s*吧\s*(?:读|看)",
+    r"记住首发网站域名",
+    r"本书由.{0,40}全网首发",
+    r"[TtＴｔТт](?:\s*[TtＴｔТт])?\s*[KkＫｋΚκ]\s*[AaＡａĀā]?\s*[NnＮｎ]",
+    r"^\s*</?(?:ins|div)>\s*$",
     # Residuals: bare 6=9+ / 6.9 (line containing this fragment is dropped)
     rf"{_SIX_NINE}\s*[+＋]",
 ]

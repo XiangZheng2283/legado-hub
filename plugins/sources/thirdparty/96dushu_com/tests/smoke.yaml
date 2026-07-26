@@ -1,7 +1,7 @@
 keyword: 凡人修仙传
 fixtures:
   search:
-    url: https://www.96dushu.com/topallvisit/1.html
+    url: https://www.bing.com/search?q=site%3Awww.96dushu.com%2Fbook+%E5%87%A1%E4%BA%BA%E4%BF%AE%E4%BB%99%E4%BC%A0
     file: search.html
   detail:
     url: https://www.96dushu.com/book/12345/

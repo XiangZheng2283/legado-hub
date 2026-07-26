@@ -320,6 +320,8 @@ expect:
 
 Fixture files live under `tests/fixtures/` inside the plugin directory. URLs in `fixtures.*.url` must match the URLs requested by the plugin parser exactly. The fixture runner replaces network fetch with fixture fetch, but the plugin still calls only `ctx.access.http.fetch_text`, `ctx.access.http.fetch_json`, or `ctx.access.http.fetch_bytes`.
 
+When a catalog or chapter needs follow-up page requests, add a top-level `extraFixtures` list. Each entry has the same `url` and `file` fields and maps pages beyond the four standard stages without adding a new smoke stage.
+
 Smoke result shape:
 
 ```python
@@ -728,17 +730,21 @@ The plugin contract supports them through:
 
 ### Browser Challenge Bypass
 
-Cloudflare and similar browser challenges are treated as bypass-required source
-failures. When `ctx.access.http.fetch_text/json/bytes` or plugin code raises
-`CLOUDFLARE_REQUIRED` / `BROWSER_REQUIRED`, the scheduler records a normalized
-failure with `extra.bypassRequired = true` and skips that source for the current
-request.
+When `ctx.access.http.fetch_text/json/bytes` explicitly identifies and raises
+`CLOUDFLARE_REQUIRED`, the host starts one browser session through the existing
+Access Bridge. The browser reuses a stable profile keyed by plugin, domain, and
+proxy identity and uses the same UA and proxy path as HTTP. After its cookies
+are injected into the current plugin context, the original HTTP request is
+retried once. If the browser is unavailable, the challenge remains, or the
+retry fails, the scheduler records the normalized failure and skips that source.
 
-Runtime no longer creates browser challenge sessions, verification pages,
-Reading callback URLs, or Cookie round-trip APIs. A plugin may declare
-`browser.mode: required` and may raise the structured error, but it must not own
-browser process control, retry scheduling, concurrency, timeout, proxy, cache, or
-cookie persistence policy.
+Runtime does not create user-facing verification pages, Reading callback URLs,
+or Cookie round-trip APIs. `BROWSER_REQUIRED`, captchas, and persistent
+challenges are not retried indefinitely. A plugin may declare `browser.mode:
+required` and may raise the structured error, but it must not own browser
+process control, retry scheduling, concurrency, timeout, proxy, cache, or cookie
+persistence policy. Browser cookies are always available to the current request
+and are written to the host CookieStore only when `auth.cookieDomains` is declared.
 
 Browser simulation remains a backend-owned capability for maintainable bypass
 strategies, stealth HTTP, search-provider access, and controlled rendering. It

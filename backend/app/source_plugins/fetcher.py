@@ -158,7 +158,7 @@ class Fetcher:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> bytes:
-        _, resp = await self._fetch_raw(url, method, params, data, json, headers, timeout, impersonate, proxy)
+        _, resp = await self._fetch(url, method, params, data, json, headers, timeout, impersonate, proxy)
         return resp.content
 
     async def fetch_many(

@@ -1,0 +1,28 @@
+keyword: 凡人修仙传
+fixtures:
+  search:
+    url: "https://www.shumilou.top/search/"
+    file: search.html
+  detail:
+    url: "https://www.shumilou.top/lou/153054/"
+    file: detail.html
+  toc:
+    url: "https://www.shumilou.top/lou/153054/"
+    file: toc.html
+  chapter:
+    url: "https://www.shumilou.top/shu/153054/37129319.html"
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 小小凡人修仙传
+  detail:
+    name: 小小凡人修仙传
+    author: 至尊小宝
+    hasTocUrl: true
+  toc:
+    minChapters: 30
+    firstTitleContains: 第
+  chapter:
+    minContentLength: 200
+    titleContains: 第

@@ -425,12 +425,9 @@ class SubscriptionSearchService:
         await asyncio.gather(*(search_plugin(plugin) for plugin in plugins))
 
     async def _search_one_for_subscription(self, source_id: str, keyword: str, page: int, *, official: bool) -> dict[str, Any]:
-        return await asyncio.to_thread(self._search_one_blocking, source_id, keyword, page)
-
-    def _search_one_blocking(self, source_id: str, keyword: str, page: int) -> dict[str, Any]:
-        # ponytail: isolate plugin code from FastAPI's event loop; move to a
-        # process worker only if source threads become a measured bottleneck.
-        return asyncio.run(self.scheduler.search_one(source_id, keyword, page))
+        # PluginScheduler owns asyncio semaphores, so all calls must stay on the
+        # event loop where the scheduler is used.
+        return await self.scheduler.search_one(source_id, keyword, page)
 
     def _split_plugins(self) -> tuple[list[Any], list[Any]]:
         plugins = [

@@ -1,0 +1,31 @@
+contractVersion: "1.0"
+id: mingzw_tw
+name: 明智屋
+author: Yunwei
+version: 0.1.0
+type: source
+domains:
+  - tw.mingzw.net
+  - mingzw.net
+baseUrls:
+  - https://tw.mingzw.net
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+tags:
+  - html
+  - no-login
+  - traditional-chinese
+sourceSeed:
+  type: live
+  upstreamId: mingzw_tw
+  upstreamFile: ""
+  upstreamCommit: ""

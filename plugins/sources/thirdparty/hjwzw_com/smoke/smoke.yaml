@@ -1,0 +1,28 @@
+keyword: 剑宗外门
+fixtures:
+  search:
+    url: https://tw.hjwzw.com/List/%E5%8A%8D%E5%AE%97%E5%A4%96%E9%96%80
+    file: search.html
+  detail:
+    url: https://tw.hjwzw.com/Book/50252
+    file: detail.html
+  toc:
+    url: https://tw.hjwzw.com/Book/Chapter/50252
+    file: toc.html
+  chapter:
+    url: https://tw.hjwzw.com/Book/Read/50252,24695734
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 剑宗外门
+  detail:
+    name: 剑宗外门
+    author: 其声喵喵然
+    hasTocUrl: true
+  toc:
+    minChapters: 400
+    firstTitleContains: 第1章
+  chapter:
+    minContentLength: 500
+    titleContains: 第1章

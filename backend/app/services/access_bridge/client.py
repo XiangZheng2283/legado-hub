@@ -8,10 +8,12 @@ changing the source-plugin context contract.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from typing import Any
 
+from app.config import get_default_user_agent
 from app.services.access_bridge.config import AccessBridgeConfig
 from app.services.access_bridge.dom import normalize_network_entries, snapshot_from_html
 from app.services.access_bridge.models import AccessFetchRequest, AccessFetchResult
@@ -82,9 +84,18 @@ class PlaywrightAdapterBase:
             network_events: list[dict[str, Any]] = []
             try:
                 storage_state = self._read_storage_state(request)
+                user_agent = next(
+                    (
+                        value
+                        for key, value in request.headers.items()
+                        if key.lower() == "user-agent" and value
+                    ),
+                    get_default_user_agent(),
+                )
                 context_kwargs: dict[str, Any] = {
                     "storage_state": storage_state,
                     "extra_http_headers": request.headers or None,
+                    "user_agent": user_agent,
                 }
                 if request.use_proxy and request.proxy_url:
                     context_kwargs["proxy"] = {"server": request.proxy_url}
@@ -99,7 +110,7 @@ class PlaywrightAdapterBase:
                     network_events,
                 )
                 if request.wait_ms > 0:
-                    await page.wait_for_timeout(request.wait_ms)
+                    await asyncio.sleep(request.wait_ms / 1000)
                 html = await page.content()
                 title = await page.title()
                 cookies = await context.cookies()
@@ -302,7 +313,5 @@ class BrowserlessPlaywrightAdapter(LocalChromiumPlaywrightAdapter):
         if "/playwright" in endpoint:
             return await playwright.chromium.connect(endpoint, timeout=self.config.connect_timeout_ms)
         return await playwright.chromium.connect_over_cdp(endpoint, timeout=self.config.connect_timeout_ms)
-
-
 
 
