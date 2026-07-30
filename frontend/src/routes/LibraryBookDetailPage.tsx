@@ -7,7 +7,7 @@ import {
 import { api, apiErrorMessage, type ProvisioningSummary } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { executeLibraryBookMaintenanceAction } from "@/lib/library-actions"
-import { LogStream } from "@/components/shared/LogStream"
+import { LogStream, type LogRecord } from "@/components/shared/LogStream"
 import { PagedChapterReader } from "@/components/reading/PagedChapterReader"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 
 interface SourceMapSummaryItem {
   sourceId: string; sourceName: string; score: number; chapterCount: number; lastChapter: string
@@ -28,6 +27,15 @@ interface BookStateSummary {
   status?: string; searchVisibilityStatus?: string; chapterCount?: number; processedChapterCount?: number
   readableChapterCount?: number; previewChapterCount?: number; suspectChapterCount?: number
   failedChapterCount?: number; lastUpdateCheckAt?: string
+}
+interface SourceSnapshotProgressItem {
+  sourceId: string; sourceName: string; status: string; totalChapters: number
+  matchedChapters: number; fetchedChapters: number; failedChapters: number; percent: number; updatedAt?: string
+}
+interface SourceSnapshotProgress {
+  status: string; sourceCount: number; completedSourceCount: number; runningSourceCount: number
+  failedSourceCount: number; totalChapters: number; fetchedChapters: number; failedChapters: number
+  percent: number; sources: SourceSnapshotProgressItem[]
 }
 interface LibraryBookDetail {
   found?: boolean; aggregateBookId: string; displayName: string; displayAuthor: string
@@ -42,6 +50,7 @@ interface LibraryBookDetail {
   subscription?: { status: "active" | "paused" | "archived"; startChapterIndex: number; autoArchiveOnComplete: boolean }
   personalProgress?: { rangeStartIndex: number; rangeEndIndex: number; fullCount: number; previewCount: number; failedCount: number; pendingCount: number; continuousReadableThroughIndex: number; coverageRatio: number }
   provisioning?: ProvisioningSummary
+  sourceSnapshotProgress?: SourceSnapshotProgress | null
 }
 interface LibraryChapterListItem {
   chapterId: string; chapterIndex: number; title: string; status: string; sourceId?: string; error?: string; isVip?: boolean; previewOnly?: boolean; sourceWordCount?: number; contentLength?: number; hasContent?: boolean; readChapterId?: string
@@ -67,6 +76,20 @@ function chapterStatusColor(status: string) {
   if (["fetched", "preview"].includes(status)) return "text-orange-500"
   if (["suspect", "failed", "error"].includes(status)) return "text-rose-600"
   return "text-slate-400"
+}
+
+function snapshotStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    loading_toc: "加载目录中", running: "下载中", complete: "已完成", partial: "按需抓取", error: "失败", pending: "未开始",
+  }
+  return labels[status] || "未开始"
+}
+
+function snapshotProgressMeta(source: SourceSnapshotProgressItem) {
+  const percent = Math.max(0, Math.min(100, source.percent || 0))
+  const color = source.status === "error" ? "#f43f5e" : source.status === "complete" ? "#10b981" : "#3b82f6"
+  const label = `${source.sourceName}抓取进度：${snapshotStatusLabel(source.status)}，已保存 ${source.fetchedChapters}/${source.totalChapters} 章`
+  return { percent, color, label }
 }
 
 const readableChapterStatuses = new Set(["readable", "supplemented", "proofread_complete", "fallback"])
@@ -107,11 +130,11 @@ export function LibraryBookDetailPage() {
   const [openAdminMenu, setOpenAdminMenu] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [startChapterIndex, setStartChapterIndex] = useState("1")
-  const [autoArchiveOnComplete, setAutoArchiveOnComplete] = useState(true)
   const [processingSettingsOpen, setProcessingSettingsOpen] = useState(false)
   const [updateIntervalMinutes, setUpdateIntervalMinutes] = useState("60")
   const [backlogChapterLimit, setBacklogChapterLimit] = useState("25")
   const [actionNotice, setActionNotice] = useState<{ pending: boolean; text: string } | null>(null)
+  const [liveProgress, setLiveProgress] = useState<{ bookId: string; step: string } | null>(null)
 
   const { data: book, isLoading, error: bookError, refetch: refetchBook } = useQuery<LibraryBookDetail | null>({
     queryKey: ["library", "book", bookId, "summary"],
@@ -140,13 +163,20 @@ export function LibraryBookDetailPage() {
     ])
   }, [bookId, isAdmin, queryClient])
   const liveRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const refreshFromLiveRecord = useCallback(() => {
+  const refreshFromLiveRecord = useCallback((record: LogRecord) => {
+    const step = typeof record.payload?.step === "string" ? record.payload.step.trim() : ""
+    if (step) {
+      setLiveProgress({
+        bookId: bookId || "",
+        step: record.chapterIndex ? `第 ${record.chapterIndex} 章 · ${step}` : step,
+      })
+    }
     if (document.visibilityState === "hidden" || liveRefreshTimerRef.current) return
     liveRefreshTimerRef.current = setTimeout(() => {
       liveRefreshTimerRef.current = null
       void refreshQueries()
     }, 1000)
-  }, [refreshQueries])
+  }, [bookId, refreshQueries])
   useEffect(() => () => {
     if (liveRefreshTimerRef.current) clearTimeout(liveRefreshTimerRef.current)
   }, [bookId])
@@ -229,8 +259,9 @@ export function LibraryBookDetailPage() {
   const pendingCount = isAdmin
     ? Math.max(0, scopeTotal - processedCount - failedCount)
     : Math.max(0, personal?.pendingCount ?? 0)
+  const resolvedCount = Math.max(0, Math.min(processedCount, scopeTotal))
   const progress = scopeTotal > 0
-    ? Math.round((Math.max(0, Math.min(readable, scopeTotal)) / scopeTotal) * 100)
+    ? Math.round((resolvedCount / scopeTotal) * 100)
     : 0
   const currentChaptersResolved = scopeTotal > 0 && pendingCount === 0 && failedCount === 0
   const trackingMessage = book.bookStatus !== "completed" && currentChaptersResolved
@@ -242,6 +273,10 @@ export function LibraryBookDetailPage() {
   const psm = processStatusMap(displayStatus)
   const sourceMap = book.sourceMapSummary || []
   const provisioning = book.provisioning
+  const snapshotProgress = book.sourceSnapshotProgress
+  const snapshotBySource = new Map((snapshotProgress?.sources || []).map((source) => [source.sourceId, source]))
+  const progressStep = (liveProgress && liveProgress.bookId === bookId ? liveProgress.step : "")
+    || (pendingCount > 0 ? (displayStatus === "paused" ? "处理已暂停" : "等待处理任务") : trackingMessage || "当前章节处理完成")
 
   const handleChapterClick = (c: LibraryChapterListItem) => {
     if (!canReadChapter(c)) return
@@ -251,7 +286,6 @@ export function LibraryBookDetailPage() {
 
   const openSubscriptionSettings = () => {
     setStartChapterIndex(String(subscription?.startChapterIndex ?? 1))
-    setAutoArchiveOnComplete(subscription?.autoArchiveOnComplete ?? true)
     setSettingsOpen(true)
   }
   const openProcessingSettings = () => {
@@ -385,27 +419,24 @@ export function LibraryBookDetailPage() {
 
           <div className="mt-auto pt-6">
             <div className="mb-2 flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <span className="font-medium text-slate-700">当前章节全文覆盖</span>
-              <span className="text-slate-500">{readable} / {scopeTotal} 章 ({progress}%)</span>
+              <span className="flex min-w-0 items-center gap-2 font-medium text-slate-700" aria-live="polite">
+                {displayStatus === "active" && pendingCount > 0 && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-blue-500" />}
+                <span className="truncate" title={progressStep}>{progressStep}</span>
+              </span>
+              <span className="shrink-0 text-slate-500">{resolvedCount} / {scopeTotal} 章 ({progress}%)</span>
             </div>
             <Progress
               value={progress}
               role="progressbar"
-              aria-label="当前章节全文覆盖"
+              aria-label="章节处理进度"
               aria-valuenow={progress}
               aria-valuemin={0}
               aria-valuemax={100}
               className="h-2 bg-slate-100"
               indicatorClassName="bg-emerald-500"
             />
-            <div className="mt-2 flex flex-col gap-1.5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-2 text-xs text-slate-500">
               <span>全文 {readable} · 预览 {previewCount} · 待处理 {pendingCount} · 失败 {failedCount}</span>
-              {trackingMessage && (
-                <span className="flex items-center gap-1.5 font-medium text-emerald-700" aria-live="polite">
-                  {book.bookStatus !== "completed" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                  {trackingMessage}
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -426,7 +457,6 @@ export function LibraryBookDetailPage() {
                   <div className="text-slate-500">订阅起始章节</div><div className="text-slate-900 text-right">第 {book.startChapterIndex || 1} 章</div>
                   <div className="text-slate-500">订阅快照总章节</div><div className="text-slate-900 text-right">{book.totalChaptersAtSubscribe || book.totalChapters}</div>
                   <div className="text-slate-500">当前策略版本</div><div className="text-slate-900 text-right">{book.currentPolicyVersion || 1}</div>
-                  <div className="text-slate-500">自动归档</div><div className="text-slate-900 text-right">{book.autoArchiveOnComplete ? "开启" : "关闭"}</div>
                 </div>
               </div>
               <div className="space-y-2">
@@ -467,7 +497,6 @@ export function LibraryBookDetailPage() {
                   <div className="grid grid-cols-2 gap-y-2">
                     <div className="text-slate-500">订阅状态</div><div className="text-right text-slate-900">{psm.label}</div>
                     <div className="text-slate-500">起始章节</div><div className="text-right text-slate-900">第 {subscription?.startChapterIndex ?? 1} 章</div>
-                    <div className="text-slate-500">自动归档</div><div className="text-right text-slate-900">{subscription?.autoArchiveOnComplete ? "开启" : "关闭"}</div>
                     <div className="text-slate-500">连续可读至</div><div className="text-right text-slate-900">第 {personal?.continuousReadableThroughIndex ?? 0} 章</div>
                   </div>
                 </div>
@@ -526,14 +555,35 @@ export function LibraryBookDetailPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {sourceMap.map((s) => (
-                          <TableRow key={s.sourceId}>
-                            <TableCell className="py-2 text-xs">{s.sourceName || s.sourceId}</TableCell>
+                        {sourceMap.map((s) => {
+                          const sourceSnapshot = snapshotBySource.get(s.sourceId)
+                          const progress = sourceSnapshot ? snapshotProgressMeta(sourceSnapshot) : null
+                          return <TableRow
+                            key={s.sourceId}
+                            title={progress?.label}
+                            style={progress ? {
+                              backgroundImage: `linear-gradient(to right, ${progress.color} ${progress.percent}%, transparent ${progress.percent}%)`,
+                              backgroundPosition: "left bottom",
+                              backgroundRepeat: "no-repeat",
+                              backgroundSize: "100% 2px",
+                            } : undefined}
+                          >
+                            <TableCell className="py-2 text-xs">
+                              {s.sourceName || s.sourceId}
+                              {progress && <span
+                                className="sr-only"
+                                role="progressbar"
+                                aria-label={progress.label}
+                                aria-valuenow={progress.percent}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                              />}
+                            </TableCell>
                             <TableCell className="py-2 text-xs">{s.score}</TableCell>
                             <TableCell className="py-2 text-xs">{s.lastChapter || "-"}</TableCell>
                             <TableCell className="py-2 text-xs">{s.chapterCount > 0 ? `${s.chapterCount}章` : "未知"}</TableCell>
                           </TableRow>
-                        ))}
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -714,18 +764,10 @@ export function LibraryBookDetailPage() {
                 onChange={(event) => setStartChapterIndex(event.target.value)}
               />
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="detail-auto-archive" className="leading-5">完结且处理完成后自动归档</Label>
-              <Switch
-                id="detail-auto-archive"
-                checked={autoArchiveOnComplete}
-                onCheckedChange={setAutoArchiveOnComplete}
-              />
-            </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSettingsOpen(false)}>取消</Button>
               <Button
-                onClick={() => subscriptionMutation.mutate({ startChapterIndex: Math.max(1, Number(startChapterIndex) || 1), autoArchiveOnComplete })}
+                onClick={() => subscriptionMutation.mutate({ startChapterIndex: Math.max(1, Number(startChapterIndex) || 1) })}
                 disabled={subscriptionMutation.isPending}
               >
                 {subscriptionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

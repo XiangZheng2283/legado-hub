@@ -341,6 +341,39 @@ async def test_official_plugin_calls_share_one_serial_queue():
 
 
 @pytest.mark.asyncio
+async def test_browser_plugin_calls_share_one_serial_queue():
+    from app.source_plugins.scheduler import PluginScheduler
+
+    scheduler = PluginScheduler.__new__(PluginScheduler)
+    scheduler._official_source_queue = asyncio.Semaphore(1)
+    scheduler._browser_source_queue = asyncio.Semaphore(1)
+    plugin = SimpleNamespace(
+        metadata=SimpleNamespace(
+            is_official_source=lambda: False,
+            browser={"mode": "required"},
+        ),
+    )
+    active = 0
+    max_active = 0
+
+    async def operation(value: int) -> int:
+        nonlocal active, max_active
+        active += 1
+        max_active = max(max_active, active)
+        await asyncio.sleep(0.03)
+        active -= 1
+        return value
+
+    results = await asyncio.gather(*[
+        scheduler._call_plugin(plugin, lambda value=value: operation(value), timeout=0.2)
+        for value in range(3)
+    ])
+
+    assert results == [0, 1, 2]
+    assert max_active == 1
+
+
+@pytest.mark.asyncio
 async def test_bootstrap_writes_shared_files_until_visible(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path)
     book_id = "book:bootstrap_visible"
@@ -383,6 +416,30 @@ async def test_bootstrap_writes_shared_files_until_visible(tmp_path, monkeypatch
         assert trace["previewOnly"] is False
         assert trace["officialWordCount"] == 100
         assert trace["chapterStatus"] in {"readable", "supplemented"}
+
+
+@pytest.mark.asyncio
+async def test_book_task_tolerates_missing_optional_detail(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    book_id = "book:missing_detail"
+    chapters, contents = _make_chapters(1)
+    _insert_book(db_path, book_id)
+
+    class MissingDetailCatalog(FakeCatalog):
+        async def book_detail(self, book_id: str) -> None:
+            return None
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    monkeypatch.setattr(
+        "app.services.book_catalog.BookCatalog",
+        lambda: MissingDetailCatalog(chapters, contents),
+    )
+
+    result = await processor.run_book_task(book_id)
+
+    assert result["success"] is True
+    assert result["processedChapters"] == 1
 
 
 @pytest.mark.asyncio
@@ -494,7 +551,7 @@ async def test_backlog_run_schedules_quick_followup(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_completed_book_does_not_auto_archive_shared_task(tmp_path, monkeypatch):
+async def test_completed_book_auto_archives_shared_task(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path)
     book_id = "book:completed_archive"
     chapters, contents = _make_chapters(2)
@@ -510,8 +567,8 @@ async def test_completed_book_does_not_auto_archive_shared_task(tmp_path, monkey
     await processor.bootstrap_book_until_visible(book_id)
 
     book_row = _book_row(db_path, book_id)
-    assert book_row["status"] == "active"
-    assert book_row["archivedAt"] is None
+    assert book_row["status"] == "archived"
+    assert book_row["archivedAt"] is not None
 
 
 @pytest.mark.asyncio
@@ -685,16 +742,16 @@ async def test_preview_fallback_retries_when_official_releases_full_text(tmp_pat
     assert rows[0]["previewOnly"] is True
     assert rows[0]["previewRetryCount"] == 1
     assert rows[0]["nextRetryTime"] is not None
+    assert datetime.fromisoformat(rows[0]["nextRetryTime"]) <= datetime.now(timezone.utc)
+    with sqlite3.connect(db_path) as conn:
+        next_check_time = conn.execute(
+            "SELECT next_check_time FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+            (book_id,),
+        ).fetchone()[0]
+    assert datetime.fromisoformat(next_check_time) <= datetime.now(timezone.utc)
 
     # Official source now releases the full text.
     contents[chapters[0]["chapterId"]] = f"第1章正文" + "这是一个很长的正文段落，" * 50
-
-    with sqlite3.connect(db_path) as conn:
-        conn.execute(
-            "UPDATE aggregate_chapter_tasks SET next_retry_time = ? WHERE chapter_id = ?",
-            ((datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(), rows[0]["chapterId"]),
-        )
-        conn.commit()
 
     result = await processor.run_book_task(book_id)
     assert result["success"] is True
@@ -728,10 +785,11 @@ async def test_preview_retry_respects_max_retries(tmp_path, monkeypatch):
     monkeypatch.setattr(processor, "_ensure_candidate_sources_for_book", _fake_ensure)
     monkeypatch.setattr(
         "app.services.book_catalog.BookCatalog",
-        lambda: FakeCatalog(chapters, contents),
+        lambda: FakeCatalog(chapters, contents, book_status="completed"),
     )
 
     await processor.bootstrap_book_until_visible(book_id)
+    assert _book_row(db_path, book_id)["status"] == "active"
     chapter_id = _chapter_rows(db_path, book_id)[0]["chapterId"]
 
     for _ in range(3):
@@ -748,6 +806,7 @@ async def test_preview_retry_respects_max_retries(tmp_path, monkeypatch):
     assert rows[0]["previewOnly"] is True
     assert rows[0]["previewRetryCount"] == 4
     assert rows[0]["nextRetryTime"] is None
+    assert _book_row(db_path, book_id)["status"] == "archived"
 
     # One more run should not re-select the exhausted preview fallback.
     with sqlite3.connect(db_path) as conn:
@@ -956,7 +1015,7 @@ async def test_rebuild_toc_preflight_failure_preserves_existing_rows(tmp_path, m
     )
 
     with pytest.raises(HTTPException) as caught:
-        await console_api.rebuild_library_book(None, book_id, {})
+        await console_api.rebuild_library_book(None, book_id, {"refetchSources": True})
 
     assert caught.value.status_code == 409
     assert "已保留现有数据" in str(caught.value.detail)
@@ -1121,7 +1180,7 @@ async def test_rebuild_refreshes_source_map_before_bootstrap(tmp_path, monkeypat
         lambda request: SimpleNamespace(user_id="admin", role="admin"),
     )
 
-    result = await console_api.rebuild_library_book(None, book_id, {})
+    result = await console_api.rebuild_library_book(None, book_id, {"refetchSources": True})
 
     assert result["sourceMapRefresh"]["ok"] is True
     assert [event[0] for event in events] == ["refresh", "enqueue", "bootstrap"]

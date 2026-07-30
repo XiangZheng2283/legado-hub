@@ -15,6 +15,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 2
+  minIntervalMs: 600
 auth:
   mode: none
   cookieDomains: []

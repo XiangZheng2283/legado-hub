@@ -198,8 +198,10 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen: set[str] = set()
+        seen_pages: set[str] = set()
         page_url = toc_url
-        for _ in range(120):
+        while page_url and page_url not in seen_pages:
+            seen_pages.add(page_url)
             html = await ctx.access.http.fetch_text(page_url, headers=self.headers)
             links = self._catalog_links(ctx, html)
             if not links:

@@ -18,7 +18,8 @@ import json
 from typing import Any, Awaitable, Callable
 from urllib.parse import urlparse
 
-from app.services.access_bridge.models import AccessFetchRequest
+from app.services.access_bridge.models import AccessFetchRequest, SearchProviderHit
+from app.services.access_bridge.config import default_browser_user_agent
 from app.services.access_bridge.profiles import make_profile_id
 from app.services.access_bridge.search_provider import DEFAULT_HEADERS, search_site
 from app.source_plugins.errors import CloudflareRequired
@@ -55,6 +56,11 @@ class _HttpAccessBridge:
                     return await operation()
                 except CloudflareRequired:
                     pass
+                for key in list(headers or {}):
+                    if key.lower() == "user-agent":
+                        headers.pop(key)
+                if headers is not None:
+                    headers["User-Agent"] = default_browser_user_agent()
                 try:
                     result = await self._ctx.access.browser.fetch(
                         url,
@@ -87,20 +93,25 @@ class _HttpAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> str:
+        effective_headers = dict(headers or {})
+
         async def request() -> str:
+            retry_impersonate = impersonate
+            if not retry_impersonate and effective_headers.get("User-Agent") == default_browser_user_agent():
+                retry_impersonate = "chrome131"
             return await self._ctx._fetcher.fetch_text(
                 url,
                 method=method,
                 params=params,
                 data=data,
                 json=json,
-                headers=headers,
+                headers=effective_headers,
                 timeout=timeout,
-                impersonate=impersonate,
+                impersonate=retry_impersonate,
                 proxy=proxy,
             )
 
-        text = await self._with_cf_session(url, headers, request)
+        text = await self._with_cf_session(url, effective_headers, request)
         self._ctx.cookies._persist()
         self._ctx.trace("access_http", url=url, message=f"{method} {len(text)} chars")
         return text
@@ -118,20 +129,25 @@ class _HttpAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> Any:
+        effective_headers = dict(headers or {})
+
         async def request() -> Any:
+            retry_impersonate = impersonate
+            if not retry_impersonate and effective_headers.get("User-Agent") == default_browser_user_agent():
+                retry_impersonate = "chrome131"
             return await self._ctx._fetcher.fetch_json(
                 url,
                 method=method,
                 params=params,
                 data=data,
                 json=json,
-                headers=headers,
+                headers=effective_headers,
                 timeout=timeout,
-                impersonate=impersonate,
+                impersonate=retry_impersonate,
                 proxy=proxy,
             )
 
-        data_out = await self._with_cf_session(url, headers, request)
+        data_out = await self._with_cf_session(url, effective_headers, request)
         self._ctx.cookies._persist()
         self._ctx.trace("access_http_json", url=url, message=f"{method} json")
         return data_out
@@ -149,20 +165,25 @@ class _HttpAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> bytes:
+        effective_headers = dict(headers or {})
+
         async def request() -> bytes:
+            retry_impersonate = impersonate
+            if not retry_impersonate and effective_headers.get("User-Agent") == default_browser_user_agent():
+                retry_impersonate = "chrome131"
             return await self._ctx._fetcher.fetch_bytes(
                 url,
                 method=method,
                 params=params,
                 data=data,
                 json=json,
-                headers=headers,
+                headers=effective_headers,
                 timeout=timeout,
-                impersonate=impersonate,
+                impersonate=retry_impersonate,
                 proxy=proxy,
             )
 
-        bs = await self._with_cf_session(url, headers, request)
+        bs = await self._with_cf_session(url, effective_headers, request)
         self._ctx.cookies._persist()
         self._ctx.trace("access_http_bytes", url=url, message=f"{method} {len(bs)} bytes")
         return bs
@@ -401,10 +422,16 @@ class SourceAccessBridge:
         proxy: bool | None = None,
         limit: int = 10,
     ):
-        # Derive default from plugin proxy.mode; caller may still override
+        fetcher = getattr(self._ctx, "_fetcher", None)
+        if getattr(fetcher, "fixture_mode", False):
+            fixture_hits = getattr(fetcher, "search_provider_hits", None)
+            if fixture_hits is not None:
+                return [SearchProviderHit(**item) for item in fixture_hits]
+            provider_order = [item for item in provider_order if item != "duckduckgo_ddgs"]
+        # Let Fetcher apply the plugin's complete proxy policy. Passing False
+        # here would suppress auto-mode's direct-then-proxy retry.
         if proxy is None:
-            mode = self._ctx.proxy_mode
-            proxy = mode == "always"
+            proxy = True
 
         async def _fetch_provider_page(provider_url: str) -> str:
             return await self._ctx.access.http.fetch_text(

@@ -3,7 +3,7 @@
 import re
 from urllib.parse import quote_plus, urljoin
 
-from app.source_plugins.errors import FetchNetworkError, PluginTimeout
+from app.source_plugins.errors import FetchNetworkError
 from app.source_plugins.search_enrichment import enrich_search_items_from_detail
 
 
@@ -11,7 +11,7 @@ class Source:
     id = "69shuba_tw"
     name = "69書吧繁體"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-27"
     base_url = "https://69shuba.tw"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
     explore_defs = [
@@ -31,25 +31,18 @@ class Source:
         """
         target_url = urljoin(self.base_url, url)
         headers = {**self.headers, **kwargs.pop("headers", {})}
-        wait_ms = kwargs.pop("wait_ms", 5000)
-        timeout = kwargs.pop("timeout", 25)
-        last_error = None
-        for attempt in range(2):
-            try:
-                html = await ctx.access.browser.fetch_text(
-                    target_url,
-                    headers=headers,
-                    wait_ms=max(3000, wait_ms - attempt * 500),
-                    timeout=timeout,
-                    **kwargs,
-                )
-                if not html.strip():
-                    raise FetchNetworkError("browser fetch returned empty document", url=target_url)
-                return html
-            except (PluginTimeout, FetchNetworkError) as exc:
-                last_error = exc
-                ctx.trace("browser_fetch_retry", url=target_url, message=f"attempt {attempt + 1} failed: {exc}")
-        raise last_error
+        wait_ms = kwargs.pop("wait_ms", 2500)
+        timeout = kwargs.pop("timeout", 10)
+        html = await ctx.access.browser.fetch_text(
+            target_url,
+            headers=headers,
+            wait_ms=wait_ms,
+            timeout=timeout,
+            **kwargs,
+        )
+        if not html.strip():
+            raise FetchNetworkError("browser fetch returned empty document", url=target_url)
+        return html
 
     async def explore_groups(self, ctx):
         return [
@@ -95,17 +88,16 @@ class Source:
                 timeout=25,
             )
         except Exception:
-            return await self._search_from_explore(ctx, keyword)
+            return []
         try:
             items = self._parse_search(ctx, html)
         except Exception:
-            return await self._search_from_explore(ctx, keyword)
+            return []
         exact = [item for item in items if keyword and keyword in item.get("name", "")]
         result = exact or items
         if result:
             return await enrich_search_items_from_detail(self, ctx, result, timeout=35.0)
-        items = await self._search_from_explore(ctx, keyword)
-        return await enrich_search_items_from_detail(self, ctx, items, timeout=35.0)
+        return []
 
     def _parse_home_section(self, ctx, html: str, group_id: str, group_title: str):
         sections = ctx.select(html, ".s_m")
@@ -254,8 +246,10 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen: set[str] = set()
+        seen_pages: set[str] = set()
         page_url = toc_url
-        for _ in range(50):
+        while page_url and page_url not in seen_pages:
+            seen_pages.add(page_url)
             html = await self._fetch(ctx, page_url, headers={"referer": self._book_url_from_toc_url(page_url)})
             page_chapters = self._parse_toc_page(ctx, html, page_url, seen)
             if not page_chapters:
@@ -305,6 +299,7 @@ class Source:
     async def chapter(self, ctx, chapter_url: str):
         html = await self._fetch(ctx, chapter_url)
         title = ctx.text(html, "#nr_title") or ctx.text(html, "h1")
+        title = re.sub(r"\s*[（(]\s*\d+\s*/\s*\d+\s*[）)]\s*$", "", title).strip()
         paragraphs = []
         for p in ctx.select(html, "#nr1 > p"):
             text = ctx.clean_text(p.text_content())

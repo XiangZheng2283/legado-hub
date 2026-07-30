@@ -93,8 +93,10 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen = set()
+        seen_pages = set()
         page_url = toc_url
-        for _ in range(200):
+        while page_url and page_url not in seen_pages:
+            seen_pages.add(page_url)
             html = await ctx.access.http.fetch_text(page_url)
             links = ctx.select(html, "#content_1 > a")
             new_count = 0

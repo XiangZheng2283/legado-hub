@@ -116,7 +116,7 @@ class Source:
         seen_chapters: set[str] = set()
         seen_pages: set[str] = set()
         page_url = urljoin(self.base_url, toc_url)
-        while page_url and page_url not in seen_pages and len(seen_pages) < 100:
+        while page_url and page_url not in seen_pages:
             seen_pages.add(page_url)
             html = await self._fetch(ctx, page_url)
             for link in ctx.select(html, 'a[rel="chapter"]'):

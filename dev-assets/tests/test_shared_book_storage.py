@@ -332,6 +332,23 @@ def test_library_books_source_map_summary_reads_shared_metadata_only():
     assert "tocUrl" not in json.dumps(summary, ensure_ascii=False)
 
 
+def test_library_books_source_map_summary_excludes_official_sources(monkeypatch):
+    service = LibraryBooksService(db_path=":memory:")
+    monkeypatch.setattr(service, "_is_official", lambda source_id: source_id.startswith("official-"))
+
+    summary = service.build_source_map_summary(
+        {
+            "sourceMapSummary": [
+                {"sourceId": "official-app", "sourceName": "官方 App"},
+                {"sourceId": "official-web", "sourceName": "官方 Web"},
+                {"sourceId": "third-party", "sourceName": "第三方源"},
+            ]
+        }
+    )
+
+    assert [item["sourceId"] for item in summary] == ["third-party"]
+
+
 def test_shared_book_storage_parse_trace_block_success():
     storage = SharedBookStorage()
     markdown = """# 第一章
@@ -444,6 +461,9 @@ def test_shared_book_storage_rebuild_book_state_from_files_counts_statuses():
         "latestChapterIndex": 6,
         "latestChapterTitle": "第六章",
         "lastUpdateCheckAt": "2026-06-26T12:00:00+08:00",
+        "sourceSnapshotSourceCount": 0,
+        "sourceSnapshotChapterCount": 0,
+        "sourceSnapshotFailedCount": 0,
     }
 
 
@@ -528,6 +548,9 @@ def test_shared_book_storage_detects_and_repairs_book_state_drift():
         "latestChapterIndex": 2,
         "latestChapterTitle": "第二章",
         "lastUpdateCheckAt": "2026-06-26T12:00:00+08:00",
+        "sourceSnapshotSourceCount": 0,
+        "sourceSnapshotChapterCount": 0,
+        "sourceSnapshotFailedCount": 0,
     }
 
 
@@ -692,6 +715,9 @@ def test_library_books_book_state_summary_reads_shared_metadata_only():
         "latestChapterIndex": 3,
         "latestChapterTitle": "第三章",
         "lastUpdateCheckAt": "2026-06-26T12:30:00+08:00",
+        "sourceSnapshotSourceCount": 0,
+        "sourceSnapshotChapterCount": 0,
+        "sourceSnapshotFailedCount": 0,
     }
 
 

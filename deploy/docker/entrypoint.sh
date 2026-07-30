@@ -1,11 +1,13 @@
 #!/bin/sh
 set -eu
 
-seed=/opt/legadohub/plugins/thirdparty
-target=/app/plugins/sources/thirdparty
+thirdparty_seed=/opt/legadohub/plugins/thirdparty
+thirdparty_target=/app/plugins/sources/thirdparty
+official_seed=/opt/legadohub/plugins/official
+official_target=/app/plugins/sources/official
 runtime_directories="/app/backend/data /app/backend/config /app/backend/generated /app/backend/runtime"
 # 体量小的挂载：启动时 chown -R（可接受）
-small_trees="/app/backend/config /app/backend/generated /app/backend/runtime ${target}"
+small_trees="/app/backend/config /app/backend/generated /app/backend/runtime ${thirdparty_target} ${official_target}"
 
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
@@ -87,14 +89,24 @@ apply_runtime_ownership() {
     chown_path /home/legadohub 1
 }
 
-seed_thirdparty_plugins() {
+seed_plugin_directory() {
+    seed=$1
+    target=$2
     ensure_dir "$target"
-    if [ -z "$(find "$target" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]; then
-        cp -a "$seed"/. "$target"/
+    for source in "$seed"/*; do
+        [ -d "$source" ] || continue
+        name=$(basename "$source")
+        [ -e "$target/$name" ] && continue
+        cp -R "$source" "$target/$name"
         if is_root; then
-            chown -R "${PUID}:${PGID}" "$target" 2>/dev/null || true
+            chown -R "${PUID}:${PGID}" "$target/$name" 2>/dev/null || true
         fi
-    fi
+    done
+}
+
+seed_plugin_sources() {
+    seed_plugin_directory "$thirdparty_seed" "$thirdparty_target"
+    seed_plugin_directory "$official_seed" "$official_target"
 }
 
 as_app_user() {
@@ -160,18 +172,18 @@ if [ "${1:-}" = "--initialize-runtime" ]; then
     for directory in "$@"; do
         chown_path "$directory" 0
     done
-    seed_thirdparty_plugins
+    seed_plugin_sources
     exit 0
 fi
 
 if is_root; then
     apply_runtime_ownership
-    seed_thirdparty_plugins
+    seed_plugin_sources
     verify_writable
     run_as_app_user "$@"
 fi
 
 # 非 root 启动（本地调试）：不改权，仅检查可写
-seed_thirdparty_plugins
+seed_plugin_sources
 verify_writable
 run_as_app_user "$@"

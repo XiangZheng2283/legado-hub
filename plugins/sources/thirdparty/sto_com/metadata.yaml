@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: sto_com
 name: 思兔阅读
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - sto9.com
@@ -14,6 +14,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 2
+  minIntervalMs: 700
 auth:
   mode: none
   cookieDomains: []

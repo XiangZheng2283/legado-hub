@@ -308,7 +308,7 @@ def test_deleting_access_user_removes_private_state_and_keeps_shared_book(tmp_pa
         ).fetchone() == ("user.delete",)
 
 
-def test_completed_book_archives_only_opted_in_users_and_records_audit(tmp_path: Path) -> None:
+def test_completed_book_archives_all_user_activity_and_records_audit(tmp_path: Path) -> None:
     db = tmp_path / "app.db"
     initialize_database(db)
     auth = UserAuthService(db)
@@ -321,9 +321,9 @@ def test_completed_book_archives_only_opted_in_users_and_records_audit(tmp_path:
 
     archived_count = subscriptions.archive_completed_for_book("book-1")
 
-    assert archived_count == 1
+    assert archived_count == 2
     assert subscriptions.get(user_a["userId"], "book-1")["status"] == "archived"
-    assert subscriptions.get(user_b["userId"], "book-1")["status"] == "active"
+    assert subscriptions.get(user_b["userId"], "book-1")["status"] == "archived"
     with sqlite3.connect(db) as conn:
         assert conn.execute(
             "SELECT status FROM aggregate_book_tasks WHERE aggregate_book_id = 'book-1'"
@@ -362,6 +362,24 @@ def test_resubscribe_is_idempotent_and_restores_archived_relation(tmp_path: Path
     assert second["startChapterIndex"] == 5
     assert restored_created is False
     assert restored["status"] == "active"
+
+
+def test_archived_shared_book_keeps_subscription_activity_archived(tmp_path: Path) -> None:
+    db = tmp_path / "app.db"
+    initialize_database(db)
+    user = UserAuthService(db).create_user("reader", "password")
+    _insert_book(db)
+    with sqlite3.connect(db) as conn:
+        conn.execute("UPDATE aggregate_book_tasks SET status = 'archived' WHERE aggregate_book_id = 'book-1'")
+        conn.commit()
+
+    subscriptions = UserSubscriptionsService(db)
+    subscription, created = subscriptions.ensure(user["userId"], "book-1")
+
+    assert created is True
+    assert subscription["status"] == "archived"
+    with pytest.raises(ValueError, match="cannot resume"):
+        subscriptions.update(user["userId"], "book-1", {"status": "active"})
 
 
 def test_concurrent_ensure_cannot_exceed_user_subscription_limit(tmp_path: Path, monkeypatch) -> None:

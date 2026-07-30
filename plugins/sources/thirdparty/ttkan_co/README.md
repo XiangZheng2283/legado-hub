@@ -8,11 +8,11 @@
 
 ## Fixture Smoke
 
-Replace `tests/fixtures/*.html` with captured search/detail/toc/chapter pages, then run:
+Fixture validation uses captured pages under `smoke/fixtures/`:
 
 ```powershell
 cd backend
-python scripts/validate_source_plugin.py --plugin ../plugins/sources/ttkan_co
+python scripts/validate_source_plugin.py --plugin ../plugins/sources/thirdparty/ttkan_co
 ```
 
 Detail output should fill Reading-compatible fields whenever the page exposes

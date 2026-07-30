@@ -1,0 +1,47 @@
+contractVersion: "1.0"
+id: czbooks_net
+name: 小说狂人
+author: Yunwei
+version: 0.1.0
+priority: 40
+type: source
+domains:
+  - czbooks.net
+baseUrls:
+  - https://czbooks.net
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+  reason: ""
+accessStrategy:
+  search: stealth_http
+  detail: stealth_http
+  toc: stealth_http
+  chapter: stealth_http
+tags:
+  - html
+  - no-login
+  - traditional-chinese
+  - cloudflare
+  - rate_limit
+sourceSeed:
+  type: live
+  upstreamId: czbooks_net
+  upstreamFile: ""
+  upstreamCommit: ""

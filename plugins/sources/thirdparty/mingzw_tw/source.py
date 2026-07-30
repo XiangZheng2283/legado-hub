@@ -16,7 +16,7 @@ class Source:
     id = "mingzw_tw"
     name = "明智屋"
     contract_version = "1.0"
-    last_modified = "2026-07-25"
+    last_modified = "2026-07-27"
     base_url = "https://tw.mingzw.net"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
 
@@ -30,6 +30,10 @@ class Source:
     def _s(self, ctx, value: str) -> str:
         """Convert user-facing Traditional Chinese text to Simplified Chinese."""
         return ctx.to_simplified(ctx.clean_text(value or ""))
+
+    def _body(self, ctx, value: str) -> str:
+        """Convert chapter content without collapsing its paragraph boundaries."""
+        return ctx.to_simplified(value or "").strip()
 
     async def search(self, ctx, keyword: str, page: int) -> list[dict]:
         """Search the title index and enrich the first sparse results."""
@@ -164,7 +168,7 @@ class Source:
             "sourceId": self.id,
             "title": self._s(ctx, title_raw),
             "chapterUrl": chapter_url,
-            "content": self._s(ctx, content),
+            "content": self._body(ctx, content),
             "format": "text",
             "authRequired": False,
             "isPaid": False,

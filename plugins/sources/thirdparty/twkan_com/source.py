@@ -14,7 +14,7 @@ class Source:
     id = "twkan_com"
     name = "台灣小說網"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-27"
     base_url = "https://twkan.com"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
     impersonate = "chrome120"
@@ -85,19 +85,17 @@ class Source:
             except (BrowserRequired, CloudflareRequired):
                 return await enrich_search_items_from_detail(self, ctx, await self._fallback_after_challenge(ctx, keyword, search_keyword))
             except Exception:
-                items = await self._search_from_explore(ctx, keyword)
-                if items:
-                    return await enrich_search_items_from_detail(self, ctx, items)
-                return await enrich_search_items_from_detail(self, ctx, await self._search_provider_search(ctx, keyword))
+                return await enrich_search_items_from_detail(
+                    self,
+                    ctx,
+                    await self._search_provider_search(ctx, keyword, search_keyword),
+                )
         if self._looks_like_challenge(html):
             return await enrich_search_items_from_detail(self, ctx, await self._fallback_after_challenge(ctx, keyword, search_keyword))
         items = self._items_from_search_html(ctx, html, keyword)
         if items:
             return await enrich_search_items_from_detail(self, ctx, items)
-        items = await self._search_from_explore(ctx, keyword)
-        if items:
-            return await enrich_search_items_from_detail(self, ctx, items)
-        items = await self._search_provider_search(ctx, keyword)
+        items = await self._search_provider_search(ctx, keyword, search_keyword)
         return await enrich_search_items_from_detail(self, ctx, items)
 
     async def _browser_search_html(self, ctx, search_keyword: str) -> str:
@@ -111,6 +109,9 @@ class Source:
                 wait_ms=3000,
                 timeout_ms=45000,
             )
+            if self._looks_like_challenge(html):
+                ctx.trace("browser_search_challenge", url=f"{self.base_url}/search")
+                return ""
             return html or ""
         except Exception as exc:
             ctx.trace("browser_search_error", url=f"{self.base_url}/search", message=str(exc))
@@ -125,10 +126,13 @@ class Source:
             items = self._items_from_search_html(ctx, html, keyword)
             if items:
                 return items
-        items = await self._search_from_explore(ctx, keyword)
+        items = await self._search_provider_search(ctx, keyword, search_keyword)
         if items:
             return items
-        return await self._search_provider_search(ctx, keyword)
+        raise CloudflareRequired(
+            "twkan browser response is still a Cloudflare challenge",
+            url=f"{self.base_url}/search",
+        )
 
     def _items_from_search_html(self, ctx, html: str, keyword: str):
         items = self._parse_book_list(ctx, html, "search", "搜索")
@@ -142,17 +146,16 @@ class Source:
             return [detail_item]
         return []
 
-    async def _search_provider_search(self, ctx, keyword: str):
-        provider_order = ["duckduckgo_ddgs", "bing_html", "google_html"]
+    async def _search_provider_search(self, ctx, keyword: str, search_keyword: str):
+        provider_order = ["bing_html", "google_html"]
         try:
             hits = await ctx.access.search_provider(
-                keyword,
+                search_keyword,
                 target_domain="twkan.com",
                 url_patterns=[r"/book/\d+\.html", r"/book/\d+", r"/txt/\d+/\d+"],
                 provider_order=provider_order,
                 query_site_path="/book",
                 timeout=15,
-                proxy=False,
             )
         except AccessBridgeUnavailable:
             raise
@@ -239,18 +242,6 @@ class Source:
             "lastChapter": self._s(ctx, latest),
             "updateTime": update_time,
         }
-
-    async def _search_from_explore(self, ctx, keyword: str):
-        matched = []
-        for group in self.explore_defs[:4]:
-            try:
-                items = await self.explore(ctx, group["groupId"], 1)
-            except Exception:
-                continue
-            matched.extend(item for item in items if keyword and keyword in item.get("name", ""))
-            if matched:
-                break
-        return matched
 
     def _parse_book_list(self, ctx, html: str, group_id: str, group_title: str):
         rows = ctx.select(html, "#article_list_content li") or ctx.select(html, ".newbox li")

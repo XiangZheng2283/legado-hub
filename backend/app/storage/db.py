@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -422,8 +422,12 @@ CREATE TABLE IF NOT EXISTS aggregate_source_snapshots (
     source_book_id TEXT DEFAULT '',
     source_chapter_id TEXT DEFAULT '',
     title TEXT DEFAULT '',
+    source_chapter_url TEXT DEFAULT '',
+    raw_content TEXT DEFAULT '',
     clean_content TEXT NOT NULL,
     content_hash TEXT NOT NULL,
+    word_count INTEGER DEFAULT 0,
+    purify_audit_json TEXT DEFAULT '[]',
     classification TEXT DEFAULT '',
     fetched_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now')),
@@ -432,6 +436,27 @@ CREATE TABLE IF NOT EXISTS aggregate_source_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_aggregate_source_snapshots_book
     ON aggregate_source_snapshots (aggregate_book_id, chapter_index);
+
+CREATE TABLE IF NOT EXISTS aggregate_source_snapshot_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aggregate_book_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    source_book_id TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending',
+    toc_hash TEXT DEFAULT '',
+    total_chapters INTEGER DEFAULT 0,
+    matched_chapters INTEGER DEFAULT 0,
+    fetched_chapters INTEGER DEFAULT 0,
+    failed_chapters INTEGER DEFAULT 0,
+    last_error TEXT DEFAULT '',
+    started_at TEXT DEFAULT '',
+    completed_at TEXT DEFAULT '',
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(aggregate_book_id, source_id, source_book_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_aggregate_source_snapshot_runs_book
+    ON aggregate_source_snapshot_runs (aggregate_book_id, status);
 """
 
 
@@ -499,6 +524,19 @@ def _ensure_shared_library_schema(conn: sqlite3.Connection) -> None:
         }
         for name, sql_type in chapter_columns.items():
             _ensure_column(conn, "aggregate_chapter_tasks", name, sql_type)
+
+    if "aggregate_source_snapshots" in {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }:
+        snapshot_columns = {
+            "source_chapter_url": "TEXT DEFAULT ''",
+            "raw_content": "TEXT DEFAULT ''",
+            "word_count": "INTEGER DEFAULT 0",
+            "purify_audit_json": "TEXT DEFAULT '[]'",
+        }
+        for name, sql_type in snapshot_columns.items():
+            _ensure_column(conn, "aggregate_source_snapshots", name, sql_type)
 
     conn.execute(
         """
@@ -606,6 +644,17 @@ def _migrate_v12_to_v13(conn: sqlite3.Connection) -> None:
     conn.execute("DELETE FROM user_sessions")
 
 
+def _migrate_v13_to_v14(conn: sqlite3.Connection) -> None:
+    """Keep legacy clean snapshots readable while v14 starts retaining raw input."""
+    conn.execute(
+        """
+        UPDATE aggregate_source_snapshots
+        SET raw_content = clean_content
+        WHERE COALESCE(raw_content, '') = '' AND COALESCE(clean_content, '') <> ''
+        """
+    )
+
+
 def initialize_database(db_path: Path | None = None) -> str:
     path = db_path or DB_PATH
     ensure_data_dir()
@@ -627,6 +676,8 @@ def initialize_database(db_path: Path | None = None) -> str:
             _backfill_shared_book_creators(conn)
         if current_version < 13:
             _migrate_v12_to_v13(conn)
+        if current_version < 14:
+            _migrate_v13_to_v14(conn)
         conn.execute(
             "INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)",
             ("version", str(SCHEMA_VERSION)),

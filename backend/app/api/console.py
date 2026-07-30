@@ -395,6 +395,7 @@ def _load_shared_library_book_summary(book_id: str, *, admin_view: bool = False)
         },
         "sourceMapSummary": source_summary,
         "sourceMapRefresh": library_books_service.source_map_refresh_state(book_id),
+        "sourceSnapshotProgress": library_books_service.source_snapshot_progress(book_id),
         "freeChapterEndIndex": int(shared_metadata.get("freeChapterEndIndex", 0) or 0),
     }
     if admin_view:
@@ -833,6 +834,7 @@ def _library_processing_event_message(record: dict[str, Any]) -> str:
         "candidate_selected": "候选源补全成功",
         "candidate_all_failed": "所有候选源都未补全",
         "candidate_none": "没有可用候选源",
+        "initial_preview_recheck_scheduled": "正在安排预览章节复查",
         "preview_fallback": "写入官方预览内容",
         "ai_proofread_start": "正在校对正文",
         "ai_proofread_complete": "AI 校对完成",
@@ -841,6 +843,12 @@ def _library_processing_event_message(record: dict[str, Any]) -> str:
         "chapter_write_start": "正在写入处理结果",
         "chapter_write": "章节写入完成",
         "chapter_error": "章节处理失败",
+        "source_snapshot_start": "开始下载第三方源",
+        "source_snapshot_toc_complete": "第三方源目录加载完成",
+        "source_snapshot_progress": "正在下载第三方章节",
+        "source_snapshot_complete": "第三方源下载完成",
+        "source_snapshot_error": "第三方源下载失败",
+        "job_timeout": "订阅任务超时，等待重试",
     }
     return labels.get(str(record.get("event", "") or ""), str(record.get("event", "") or ""))
 
@@ -2699,7 +2707,17 @@ def _update_aggregate_book_status(book_id: str, status: str, *, actor_user_id: s
             conn=conn,
         )
         conn.commit()
-    return {"bookId": book_id, "status": status, "updated": cursor.rowcount > 0}
+    archived_subscriptions = 0
+    if status == "archived" and cursor.rowcount > 0:
+        from app.services.user_subscriptions import UserSubscriptionsService
+
+        archived_subscriptions = UserSubscriptionsService(DB_PATH).archive_completed_for_book(book_id)
+    return {
+        "bookId": book_id,
+        "status": status,
+        "updated": cursor.rowcount > 0,
+        "archivedSubscriptions": archived_subscriptions,
+    }
 
 
 def delete_aggregate_book(request: Request, book_id: str):
@@ -2942,6 +2960,19 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
 
     initialize_database(DB_PATH)
     payload = payload or {}
+    if not bool(payload.get("refetchSources", False)):
+        rebuilt = AggregateProcessor().rebuild_book_from_snapshots(book_id)
+        if not rebuilt.get("rebuilt"):
+            raise HTTPException(status_code=404, detail="书籍不存在")
+        audit_service.record(
+            action="shared_book.rebuild",
+            actor_user_id=admin.user_id,
+            actor_role=admin.role,
+            target_type="shared_book",
+            target_id=book_id,
+            summary={"mode": "local_snapshot", "rewrittenChapters": rebuilt.get("rewrittenChapters", 0)},
+        )
+        return {"bookId": book_id, "rebuilt": True, "mode": "local_snapshot", "result": rebuilt}
     now = _now()
     with sqlite3.connect(DB_PATH) as conn:
         row = conn.execute(
@@ -3005,6 +3036,7 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         ]
         conn.execute("DELETE FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?", (book_id,))
         conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (book_id,))
+        conn.execute("DELETE FROM aggregate_source_snapshot_runs WHERE aggregate_book_id = ?", (book_id,))
         conn.execute(
             "DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ? AND role = 'candidate'",
             (book_id,),
@@ -3082,9 +3114,12 @@ async def rebuild_library_book(request: Request, book_id: str, payload: dict | N
         if book_name:
             shared_dir = storage.shared_book_dir(book_name=book_name, author=author)
             chapters_dir = shared_dir / "chapters"
+            sources_dir = shared_dir / "sources"
             chapter_index_path = shared_dir / "chapter_index.json"
             if chapters_dir.exists():
                 shutil.rmtree(chapters_dir, ignore_errors=True)
+            if sources_dir.exists():
+                shutil.rmtree(sources_dir, ignore_errors=True)
             if chapter_index_path.exists():
                 chapter_index_path.unlink()
 

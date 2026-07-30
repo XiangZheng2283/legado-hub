@@ -98,7 +98,38 @@ class Source:
             items = self._items_from_search_html(ctx, html, keyword)
             if items:
                 return items
-        return await self._search_from_explore(ctx, keyword)
+        items = await self._search_provider_search(ctx, keyword)
+        return items or await self._search_from_explore(ctx, keyword)
+
+    async def _search_provider_search(self, ctx, keyword: str):
+        try:
+            hits = await ctx.access.search_provider(
+                ctx.to_traditional(keyword),
+                target_domain="101kks.com",
+                url_patterns=[r"/book/\d+\.html", r"/book/\d+"],
+                provider_order=["duckduckgo_ddgs", "bing_html", "google_html"],
+                query_site_path="/book",
+                timeout=15,
+            )
+        except Exception as exc:
+            ctx.trace("search_provider_error", message=str(exc), data={"targetDomain": "101kks.com"})
+            return []
+        items = []
+        for hit in hits:
+            name = re.split(r"[-_|,，:：]", hit.title or "", maxsplit=1)[0].strip()
+            items.append({
+                "sourceId": self.id,
+                "name": self._s(ctx, name) or keyword,
+                "author": "",
+                "bookUrl": hit.url,
+                "intro": self._s(ctx, hit.snippet or ""),
+                "extra": {
+                    "searchProvider": "source_access_bridge",
+                    "provider": hit.provider,
+                    "matchedPattern": hit.matched_pattern,
+                },
+            })
+        return items
 
     def _detail_page_search_item(self, ctx, html: str) -> dict | None:
         name = ctx.attr(html, 'meta[property="og:novel:book_name"]', "content") or ctx.attr(html, 'meta[property="og:title"]', "content")
@@ -147,13 +178,23 @@ class Source:
             except (BrowserRequired, CloudflareRequired):
                 return await enrich_search_items_from_detail(self, ctx, await self._fallback_after_challenge(ctx, keyword, search_keyword))
             except Exception:
-                return await enrich_search_items_from_detail(self, ctx, await self._search_from_explore(ctx, keyword))
+                items = await self._search_provider_search(ctx, keyword)
+                return await enrich_search_items_from_detail(
+                    self,
+                    ctx,
+                    items or await self._search_from_explore(ctx, keyword),
+                )
         if self._looks_like_challenge(html):
             return await enrich_search_items_from_detail(self, ctx, await self._fallback_after_challenge(ctx, keyword, search_keyword))
         items = self._items_from_search_html(ctx, html, keyword)
         if items:
             return await enrich_search_items_from_detail(self, ctx, items)
-        return await enrich_search_items_from_detail(self, ctx, await self._search_from_explore(ctx, keyword))
+        items = await self._search_provider_search(ctx, keyword)
+        return await enrich_search_items_from_detail(
+            self,
+            ctx,
+            items or await self._search_from_explore(ctx, keyword),
+        )
 
     def _items_from_search_html(self, ctx, html: str, keyword: str):
         items = self._parse_book_list(ctx, html, "search", "搜索")

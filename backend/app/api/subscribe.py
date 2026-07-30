@@ -875,6 +875,7 @@ def get_library_book(request: Request, aggregate_book_id: str):
         "found": True,
         "book": _safe_user_book(detail.get("book")),
         "bookState": dict(detail.get("bookState") or {}),
+        "sourceSnapshotProgress": detail.get("sourceSnapshotProgress"),
     }
     detail["subscription"] = subscription
     if subscription:

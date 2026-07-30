@@ -68,8 +68,8 @@ class SearchConfig:
     source_timeout_seconds: float = 8.0
     overall_timeout_seconds: float = 120.0
     fast_source_timeout_seconds: float = 5.0
-    browser_source_timeout_seconds: float = 30.0
-    browser_search_timeout_seconds: float = 30.0
+    browser_source_timeout_seconds: float = 150.0
+    browser_search_timeout_seconds: float = 60.0
     first_result_timeout_seconds: float = 5.0
     score_filter: int = 100
     cache_ttl_seconds: int = 600
@@ -93,8 +93,8 @@ class SearchConfig:
             source_timeout_seconds=float(data.get("sourceTimeoutSeconds", 8.0)),
             overall_timeout_seconds=float(data.get("overallTimeoutSeconds", 120.0)),
             fast_source_timeout_seconds=float(data.get("fastSourceTimeoutSeconds", 5.0)),
-            browser_source_timeout_seconds=float(data.get("browserSourceTimeoutSeconds", 30.0)),
-            browser_search_timeout_seconds=float(data.get("browserSearchTimeoutSeconds", 30.0)),
+            browser_source_timeout_seconds=float(data.get("browserSourceTimeoutSeconds", 150.0)),
+            browser_search_timeout_seconds=float(data.get("browserSearchTimeoutSeconds", 60.0)),
             first_result_timeout_seconds=float(data.get("firstResultTimeoutSeconds", 5.0)),
             score_filter=int(data.get("scoreFilter", 100)),
             cache_ttl_seconds=int(data.get("cacheTtlSeconds", 600)),

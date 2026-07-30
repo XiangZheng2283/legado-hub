@@ -8,14 +8,14 @@ import { executeLibraryBookMaintenanceAction } from "@/lib/library-actions"
 import { LibraryBookDetailPage } from "./LibraryBookDetailPage"
 
 const authState = vi.hoisted(() => ({ role: "admin" as "admin" | "user" }))
-const logStreamState = vi.hoisted(() => ({ onRecord: undefined as undefined | (() => void) }))
+const logStreamState = vi.hoisted(() => ({ onRecord: undefined as undefined | ((record: { chapterIndex?: number; payload?: Record<string, unknown> }) => void) }))
 
 vi.mock("@/lib/auth", () => ({
   useAuth: () => ({ user: { userId: "user-1", username: "tester", role: authState.role } }),
 }))
 
 vi.mock("@/components/shared/LogStream", () => ({
-  LogStream: ({ onRecord }: { onRecord?: () => void }) => {
+  LogStream: ({ onRecord }: { onRecord?: (record: { chapterIndex?: number; payload?: Record<string, unknown> }) => void }) => {
     logStreamState.onRecord = onRecord
     return <div>日志流</div>
   },
@@ -154,11 +154,11 @@ describe("LibraryBookDetailPage processing settings", () => {
     expect(screen.queryByRole("button", { name: "处理设置" })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "订阅设置" })).toBeInTheDocument()
     expect(screen.getByText("等待首章")).toBeInTheDocument()
-    expect(screen.getByRole("progressbar", { name: "当前章节全文覆盖" })).toHaveAttribute("aria-valuenow", "20")
+    expect(screen.getByRole("progressbar", { name: "章节处理进度" })).toHaveAttribute("aria-valuenow", "20")
     expect(screen.getByText("全文 2 · 预览 0 · 待处理 8 · 失败 0")).toBeInTheDocument()
   })
 
-  it("excludes preview chapters from full-text coverage and keeps ongoing tracking explicit", async () => {
+  it("counts preview chapters as processed while keeping content types explicit", async () => {
     ;(api.libraryBookSummary as any).mockResolvedValueOnce({
       ...adminBook,
       totalChapters: 8,
@@ -175,10 +175,82 @@ describe("LibraryBookDetailPage processing settings", () => {
     renderPage()
 
     await screen.findByText("测试书籍")
-    expect(screen.getByText("8 / 10 章 (80%)")).toBeInTheDocument()
-    expect(screen.getByRole("progressbar", { name: "当前章节全文覆盖" })).toHaveAttribute("aria-valuenow", "80")
+    expect(screen.getByText("10 / 10 章 (100%)")).toBeInTheDocument()
+    expect(screen.getByRole("progressbar", { name: "章节处理进度" })).toHaveAttribute("aria-valuenow", "100")
     expect(screen.getByText("全文 8 · 预览 2 · 待处理 0 · 失败 0")).toBeInTheDocument()
     expect(screen.getByText("当前章节已同步 · 持续追更")).toBeInTheDocument()
+  })
+
+  it("shows third-party source progress inside the candidate list", async () => {
+    ;(api.libraryBookSummary as any).mockResolvedValueOnce({
+      ...adminBook,
+      sourceMapSummary: [
+        { sourceId: "source-a", sourceName: "书源甲", score: 100, chapterCount: 10, lastChapter: "第10章" },
+        { sourceId: "source-b", sourceName: "书源乙", score: 90, chapterCount: 10, lastChapter: "第10章" },
+      ],
+      sourceSnapshotProgress: {
+        status: "running",
+        sourceCount: 2,
+        completedSourceCount: 1,
+        runningSourceCount: 1,
+        failedSourceCount: 0,
+        totalChapters: 20,
+        fetchedChapters: 14,
+        failedChapters: 0,
+        percent: 70,
+        sources: [
+          { sourceId: "source-a", sourceName: "书源甲", status: "complete", totalChapters: 10, matchedChapters: 10, fetchedChapters: 10, failedChapters: 0, percent: 100 },
+          { sourceId: "source-b", sourceName: "书源乙", status: "running", totalChapters: 10, matchedChapters: 4, fetchedChapters: 4, failedChapters: 0, percent: 40 },
+        ],
+      },
+    })
+    renderPage()
+
+    const sources = await screen.findByTestId("candidate-sources-table-boundary")
+    expect(within(sources).queryByRole("columnheader", { name: "抓取" })).not.toBeInTheDocument()
+    const sourceProgress = within(sources).getByRole("progressbar", { name: /书源乙抓取进度：下载中/ })
+    expect(sourceProgress).toHaveAttribute("aria-valuenow", "40")
+    expect(sourceProgress.closest("tr")).toHaveStyle({ backgroundSize: "100% 2px" })
+    expect(screen.queryByRole("heading", { name: "第三方源预下载" })).not.toBeInTheDocument()
+    expect(screen.getByRole("progressbar", { name: "章节处理进度" })).toHaveAttribute("aria-valuenow", "20")
+  })
+
+  it("shows the latest processing step from the live book log", async () => {
+    renderPage()
+    await screen.findByText("测试书籍")
+
+    act(() => logStreamState.onRecord?.({
+      chapterIndex: 7,
+      payload: { step: "正在拉取官方源" },
+    }))
+
+    expect(screen.getByText("第 7 章 · 正在拉取官方源")).toBeInTheDocument()
+  })
+
+  it("labels source catalog loading without showing stale chapter progress", async () => {
+    ;(api.libraryBookSummary as any).mockResolvedValueOnce({
+      ...adminBook,
+      sourceMapSummary: [
+        { sourceId: "source-a", sourceName: "书源甲", score: 100, chapterCount: 1700, lastChapter: "第1700章" },
+      ],
+      sourceSnapshotProgress: {
+        status: "running",
+        sourceCount: 1,
+        completedSourceCount: 0,
+        runningSourceCount: 1,
+        failedSourceCount: 0,
+        totalChapters: 1700,
+        fetchedChapters: 600,
+        failedChapters: 0,
+        percent: 0,
+        sources: [
+          { sourceId: "source-a", sourceName: "书源甲", status: "loading_toc", totalChapters: 1700, matchedChapters: 0, fetchedChapters: 600, failedChapters: 0, percent: 0 },
+        ],
+      },
+    })
+    renderPage()
+
+    expect(await screen.findByRole("progressbar", { name: /书源甲抓取进度：加载目录中/ })).toHaveAttribute("aria-valuenow", "0")
   })
 
   it("shows candidate chapter counts without a misleading status column", async () => {
@@ -238,9 +310,9 @@ describe("LibraryBookDetailPage processing settings", () => {
     vi.useFakeTimers()
     try {
       act(() => {
-        logStreamState.onRecord?.()
-        logStreamState.onRecord?.()
-        logStreamState.onRecord?.()
+        logStreamState.onRecord?.({ payload: {} })
+        logStreamState.onRecord?.({ payload: {} })
+        logStreamState.onRecord?.({ payload: {} })
       })
       expect(invalidateQueries).not.toHaveBeenCalled()
 

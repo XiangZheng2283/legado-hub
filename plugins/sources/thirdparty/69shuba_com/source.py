@@ -226,13 +226,20 @@ class Source:
         # Enrich top results with detail for better field completeness
         if items:
             await self._enrich_search_items(ctx, items[:3])
-        return items
+        keyword_text = ctx.clean_text(keyword)
+        return [
+            item for item in items[:3]
+            if item.get("extra", {}).get("detailVerified")
+            and keyword_text in ctx.clean_text(item.get("name", ""))
+        ]
 
     async def _enrich_search_items(self, ctx, items: list[dict]):
-        import asyncio
         for item in items:
             try:
-                detail = await asyncio.wait_for(self.detail(ctx, item["bookUrl"]), timeout=3.0)
+                detail = await self.detail(ctx, item["bookUrl"])
+                if detail and detail.get("name"):
+                    item["name"] = detail["name"]
+                    item["extra"]["detailVerified"] = True
                 if detail and detail.get("author"):
                     item["author"] = detail["author"]
                 if detail and detail.get("coverUrl"):

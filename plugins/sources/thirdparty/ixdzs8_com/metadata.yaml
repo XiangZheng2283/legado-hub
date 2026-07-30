@@ -1,0 +1,47 @@
+contractVersion: "1.0"
+id: ixdzs8_com
+name: 爱下电子书
+author: Yunwei
+version: 0.1.0
+priority: 20
+type: source
+domains:
+  - ixdzs8.com
+baseUrls:
+  - https://ixdzs8.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
+auth:
+  mode: none
+  cookieDomains:
+    - ixdzs8.com
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: optional
+  reason: js_challenge
+accessStrategy:
+  search: http
+  detail: http
+  toc: api
+  chapter: headless_browser
+tags:
+  - html
+  - json-api
+  - no-login
+  - browser-fallback
+sourceSeed:
+  type: live
+  upstreamId: ixdzs8_com
+  upstreamFile: ""
+  upstreamCommit: ""

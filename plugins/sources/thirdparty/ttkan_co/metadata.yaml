@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: ttkan_co
 name: 天天看书网
 author: Yunwei
-version: 0.1.0
+version: 0.1.2
 type: source
 domains:
   - ttkan.co
@@ -21,14 +21,16 @@ auth:
 content:
   access: free
 enabled: true
+rateLimit:
+  perHostConcurrency: 2
+  minIntervalMs: 600
 proxy:
-  mode: auto
-  required: false
+  mode: always
+  required: true
 tags:
   - html
   - no-login
   - amp
-enabled: true
 sourceSeed:
   type: manual
   upstreamId: ttkan.co

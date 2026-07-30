@@ -11,7 +11,7 @@ class Source:
     id = "ttkan_co"
     name = "天天看书网"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-27"
     base_url = "https://www.ttkan.co"
 
     def _s(self, ctx, value: str) -> str:
@@ -205,7 +205,7 @@ class Source:
         html = await ctx.access.http.fetch_text(chapter_url)
         title = ctx.text(html, "h1")
         content = ctx.html(html, ".content")
-        content = self._clean_chapter_content(content)
+        content = self._clean_chapter_content(content, title)
         # 清洗站点广告与导航
         content = re.sub(r'<center>\s*<div class="mobadsq"></div>\s*</center>', "", content)
         content = re.sub(r'<div class="mobadsq"></div>', "", content)
@@ -221,7 +221,7 @@ class Source:
             "isPaid": False,
         }
 
-    def _clean_chapter_content(self, html: str) -> str:
+    def _clean_chapter_content(self, html: str, title: str = "") -> str:
         soup = BeautifulSoup(html or "", "html.parser")
         for tag in soup.find_all(["script", "style", "nav", "header", "footer", "iframe", "ins", "center"]):
             tag.decompose()
@@ -237,14 +237,17 @@ class Source:
             if text:
                 paragraphs.append(text)
         if paragraphs:
-            return "\n\n".join(paragraphs)
-        text = soup.get_text("\n", strip=True)
-        lines = []
-        for line in text.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            if any(kw in line for kw in ["天天看小說", "天天看书", "返回目錄", "返回目录", "本章完", "廣告", "广告"]):
-                continue
-            lines.append(line)
+            lines = paragraphs
+        else:
+            text = soup.get_text("\n", strip=True)
+            lines = []
+            for line in text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                if any(kw in line for kw in ["天天看小說", "天天看书", "返回目錄", "返回目录", "本章完", "廣告", "广告"]):
+                    continue
+                lines.append(line)
+        if lines and re.sub(r"\s+", "", lines[0]) == re.sub(r"\s+", "", title):
+            lines.pop(0)
         return "\n\n".join(lines)

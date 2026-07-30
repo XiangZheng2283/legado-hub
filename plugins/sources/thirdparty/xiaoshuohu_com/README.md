@@ -9,14 +9,16 @@
 
 现场补充：
 
-- 站内搜索不稳定，当前正式方案改为 `search_provider` 搜索引擎兜底，再回到源站详情/目录/正文链路。
+- 站内搜索不稳定，先使用 `search_provider`，未命中时再从首页精确匹配当前展示书籍。
+- 书籍地址采用实际的 `/<分类ID>/<书籍ID>/` 结构，不使用不存在的 `/book/<id>/`。
 - 该源正文广告清洗规则比普通镜像更重，后续 live 审查时应重点看正文污染。
+- 搜索提供器遵循宿主代理策略，不再强制绕过已配置代理。
 
 ## Fixture Smoke
 
-Fixtures cover `detail`, `toc`, and `chapter` under `tests/fixtures/`.
+Fixtures cover `detail`, `toc`, and `chapter` under `smoke/fixtures/`.
 
 ```powershell
 cd backend
-python scripts/validate_source_plugin.py --plugin ../plugins/sources/xiaoshuohu_com
+python scripts/validate_source_plugin.py --plugin ../plugins/sources/thirdparty/xiaoshuohu_com
 ```

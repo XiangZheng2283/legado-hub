@@ -289,7 +289,16 @@ class Fetcher:
         # Update cookies from response
         self._update_cookies(resp)
 
-        text = resp.text
+        # httpx defaults to UTF-8 when a legacy Chinese site omits charset.
+        # Prefer the page declaration, then fall back to GB18030/GBK.
+        text = self._decode_response_text(resp)
+        if looks_like_cloudflare_challenge(text):
+            raise CloudflareRequired(
+                "Cloudflare verification required",
+                url=str(resp.url),
+                status_code=resp.status_code,
+                body_sample=text[:1000],
+            )
         self._traces.append({
             "url": str(resp.url),
             "status": resp.status_code,
@@ -364,6 +373,13 @@ class Fetcher:
             raise FetchHttp5xx(f"HTTP {resp.status_code}")
 
         text = self._decode_response_text(resp)
+        if looks_like_cloudflare_challenge(text):
+            raise CloudflareRequired(
+                "Cloudflare verification required",
+                url=str(resp.url),
+                status_code=resp.status_code,
+                body_sample=text[:1000],
+            )
         wrapped = SimpleNamespace(
             status_code=resp.status_code,
             url=str(resp.url),
@@ -394,6 +410,10 @@ class Fetcher:
                 content_type = ""
             match = re.search(r"charset=([A-Za-z0-9._-]+)", content_type, re.I)
             charset = match.group(1) if match else ""
+        # ISO-8859-1 is a common server-side default rather than a real page
+        # declaration. It always decodes and would hide the GBK fallback.
+        if charset.lower() in {"ascii", "iso-8859-1", "latin-1", "latin1"}:
+            charset = ""
         for encoding in [charset, "utf-8", "gb18030", "gbk"]:
             if not encoding:
                 continue

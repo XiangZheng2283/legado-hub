@@ -9,6 +9,9 @@ from typing import Any
 
 import yaml
 
+from app.services.access_bridge.client import AccessBridgeClient
+from app.services.access_bridge.config import AccessBridgeConfig
+from app.services.access_bridge.models import AccessFetchRequest, AccessFetchResult
 from app.source_plugins.context import PluginContext
 from app.source_plugins.models import LoadedPlugin
 from app.source_plugins.errors import normalize_failure
@@ -150,8 +153,15 @@ async def run_smoke(
 class FixtureFetcher:
     """Fetcher-compatible object backed by plugin smoke fixture files."""
 
-    def __init__(self, url_to_text: dict[str, str]):
+    fixture_mode = True
+
+    def __init__(
+        self,
+        url_to_text: dict[str, str],
+        search_provider_hits: list[dict[str, Any]] | None = None,
+    ):
         self._url_to_text = url_to_text
+        self.search_provider_hits = search_provider_hits
         self._traces: list[dict] = []
         self._cookies: dict[str, dict[str, str]] = {}
 
@@ -192,6 +202,26 @@ class FixtureFetcher:
 
     async def close(self) -> None:
         return None
+
+
+class _FixtureBrowserAdapter:
+    """Serve browser fixture requests from the same URL map as HTTP fixtures."""
+
+    def __init__(self, fetcher: FixtureFetcher):
+        self._fetcher = fetcher
+
+    async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
+        html = await self._fetcher.fetch_text(
+            request.url,
+            method=request.method,
+            data=request.data,
+        )
+        return AccessFetchResult(
+            ok=True,
+            final_url=request.url,
+            html=html,
+            profile_id=request.profile_id,
+        )
 
 
 def load_smoke_spec(plugin_dir: Path) -> dict:
@@ -268,6 +298,50 @@ def _error(plugin_id: str, stage: str, code: str, message: str) -> dict:
     return normalize_failure(source_id=plugin_id, stage=stage, code=code, message=message)
 
 
+def _toc_contract_errors(plugin_id: str, chapters: list[Any], expect: dict[str, Any]) -> list[dict]:
+    """Validate optional full-catalog expectations against parsed chapters."""
+    errors: list[dict] = []
+    expected_count = expect.get("expectedCount")
+    if expected_count is not None and len(chapters) != expected_count:
+        errors.append(_error(
+            plugin_id,
+            "toc",
+            "SMOKE_CONTRACT_ERROR",
+            f"expected exactly {expected_count} chapters, got {len(chapters)}",
+        ))
+
+    last_title_contains = expect.get("lastTitleContains")
+    last_title = _dict_value(chapters[-1], "title", "title") if chapters else ""
+    if last_title_contains and last_title_contains not in (last_title or ""):
+        errors.append(_error(
+            plugin_id,
+            "toc",
+            "SMOKE_CONTRACT_ERROR",
+            f"last chapter title must contain {last_title_contains}",
+        ))
+
+    if expect.get("requireUniqueChapterUrls"):
+        urls = [_dict_value(item, "chapterUrl", "chapter_url") or "" for item in chapters]
+        if not all(urls) or len(set(urls)) != len(urls):
+            errors.append(_error(
+                plugin_id,
+                "toc",
+                "SMOKE_CONTRACT_ERROR",
+                "chapter URLs must be non-empty and unique",
+            ))
+
+    if expect.get("requireSequentialIndexes"):
+        indexes = [_dict_value(item, "index", "index") for item in chapters]
+        if indexes != list(range(1, len(chapters) + 1)):
+            errors.append(_error(
+                plugin_id,
+                "toc",
+                "SMOKE_CONTRACT_ERROR",
+                "chapter indexes must be continuous and start at 1",
+            ))
+    return errors
+
+
 async def run_fixture_smoke(
     plugin: LoadedPlugin,
     plugin_dir: Path,
@@ -286,14 +360,22 @@ async def run_fixture_smoke(
     }
 
     try:
-        fetcher = FixtureFetcher(_fixture_map(plugin_dir, spec, plugin.capabilities))
+        fetcher = FixtureFetcher(
+            _fixture_map(plugin_dir, spec, plugin.capabilities),
+            search_provider_hits=spec.get("searchProviderHits"),
+        )
     except Exception as exc:
         result["errors"].append(_error(plugin.metadata.id, "setup", "SMOKE_FIXTURE_MISSING", str(exc)))
         return result
 
+    access_bridge = AccessBridgeClient(
+        config=AccessBridgeConfig(provider="chromium"),
+        adapter=_FixtureBrowserAdapter(fetcher),
+    )
     ctx = PluginContext(
         fetcher=fetcher,
         plugin_id=plugin.metadata.id,
+        access_bridge=access_bridge,
         cookie_allowed=plugin.metadata.declares_cookies,
     )
     smoke_keyword = keyword or spec.get("keyword", "凡人修仙传")
@@ -365,11 +447,24 @@ async def run_fixture_smoke(
         result["errors"].append(_error(plugin.metadata.id, "toc", "PARSE_EMPTY", f"expected at least {min_chapters} chapters"))
     if first_title_contains and chapters and first_title_contains not in (_dict_value(chapters[0], "title", "title") or ""):
         result["errors"].append(_error(plugin.metadata.id, "toc", "SMOKE_CONTRACT_ERROR", f"first chapter title must contain {first_title_contains}"))
+    toc_expect = _expect(spec, "toc", {})
+    if isinstance(toc_expect, dict):
+        result["errors"].extend(_toc_contract_errors(plugin.metadata.id, chapters, toc_expect))
     if not chapters:
         result["diagnostics"] = ctx.get_traces() + fetcher.get_traces()
         return result
 
-    chapter_url = _dict_value(chapters[0], "chapterUrl", "chapter_url") or ""
+    sample_index = int(_expect(spec, "chapter.sampleIndex", 1))
+    if sample_index < 1 or sample_index > len(chapters):
+        result["errors"].append(_error(
+            plugin.metadata.id,
+            "chapter",
+            "SMOKE_CONTRACT_ERROR",
+            f"chapter sampleIndex out of range: {sample_index}",
+        ))
+        result["diagnostics"] = ctx.get_traces() + fetcher.get_traces()
+        return result
+    chapter_url = _dict_value(chapters[sample_index - 1], "chapterUrl", "chapter_url") or ""
     content, stage_data, err = await run_stage("chapter", plugin.source.chapter, ctx, chapter_url)
     content_text = _dict_value(content, "content", "content") or ""
     stage_data["contentLength"] = len(content_text)
@@ -424,4 +519,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

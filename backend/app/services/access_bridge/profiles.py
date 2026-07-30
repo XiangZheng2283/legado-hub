@@ -59,6 +59,9 @@ class BrowserProfileStore:
     def storage_state_path_by_id(self, profile_id: str) -> Path:
         return self.directory_by_id(profile_id) / "storage_state.json"
 
+    def user_agent_path_by_id(self, profile_id: str) -> Path:
+        return self.directory_by_id(profile_id) / "user_agent.txt"
+
     def read_storage_state(self, ref: BrowserProfileRef) -> dict[str, Any] | None:
         path = self.storage_state_path(ref)
         if not path.exists():
@@ -93,6 +96,17 @@ class BrowserProfileStore:
         path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
         return path
 
+    def read_user_agent_by_id(self, profile_id: str) -> str:
+        path = self.user_agent_path_by_id(profile_id)
+        try:
+            return path.read_text(encoding="utf-8").strip()
+        except OSError:
+            return ""
+
+    def write_user_agent_by_id(self, profile_id: str, user_agent: str) -> None:
+        directory = self.directory_by_id(profile_id)
+        directory.mkdir(parents=True, exist_ok=True)
+        self.user_agent_path_by_id(profile_id).write_text(user_agent, encoding="utf-8")
 
 
 

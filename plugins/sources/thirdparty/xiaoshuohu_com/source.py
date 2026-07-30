@@ -23,11 +23,10 @@ class Source:
         hits = await ctx.access.search_provider(
             keyword,
             target_domain="www.xiaoshuohu.com",
-            url_patterns=[r"/book/\d+/"],
+            url_patterns=[r"/\d+/\d+/?$"],
             provider_order=["bing_html", "google_html"],
-            query_site_path="/book",
+            query_site_path="/",
             timeout=15,
-            proxy=False,
         )
         items = []
         seen_urls: set[str] = set()
@@ -52,6 +51,26 @@ class Source:
                     "searchUrl": hit.url,
                 },
             })
+        if not items:
+            html = await ctx.access.http.fetch_text(self.base_url + "/")
+            for anchor in ctx.select(html, "a[href]"):
+                name = ctx.clean_text(anchor.text_content())
+                href = anchor.get("href", "")
+                book_url = urljoin(self.base_url, href)
+                if name != keyword or not re.search(r"/\d+/\d+/?$", book_url):
+                    continue
+                items.append({
+                    "sourceId": self.id,
+                    "name": name,
+                    "author": "",
+                    "bookUrl": book_url,
+                    "coverUrl": "",
+                    "intro": "",
+                    "kind": "",
+                    "lastChapter": "",
+                    "extra": {"searchProvider": "homepage"},
+                })
+                break
         return await enrich_search_items_from_detail(self, ctx, items)
 
     async def detail(self, ctx, book_url: str):

@@ -137,6 +137,12 @@ async def lifespan(app: FastAPI):
             await lexicon_task
         except asyncio.CancelledError:
             pass
+        try:
+            from app.source_plugins.scheduler import shutdown_plugin_scheduler
+
+            await shutdown_plugin_scheduler()
+        except Exception:
+            logger.warning("Failed to close source access bridge", exc_info=True)
 
 
 @asynccontextmanager

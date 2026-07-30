@@ -142,8 +142,13 @@ expect:
     author: 忘语
     hasTocUrl: true
   toc:
+    complete: true
+    expectedCount: 1
     minChapters: 1
     firstTitleContains: 第
+    lastTitleContains: 第
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
   chapter:
     minContentLength: 20
     titleContains: 第

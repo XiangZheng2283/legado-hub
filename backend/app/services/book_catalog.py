@@ -80,6 +80,12 @@ class BookCatalog:
         catalog = Catalog(repo=self.repo, cache=self.cache)
         return await catalog.chapter(chapter_id)
 
+    async def chapter_reviews(self, chapter_id: str) -> dict:
+        from app.services.catalog import Catalog
+
+        catalog = Catalog(repo=self.repo, cache=self.cache)
+        return await catalog.chapter_reviews(chapter_id)
+
     async def chapter_with_fallback(
         self,
         chapter_id: str,

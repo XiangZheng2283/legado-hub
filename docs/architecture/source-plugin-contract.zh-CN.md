@@ -52,13 +52,16 @@ plugins/sources/<plugin_id>/
   source.py
   README.md
   requirements.txt       # 可选；私有项目，按需安装
-  tests/
+  smoke/
     smoke.yaml
-  skills/
-    SKILL.md             # 可选的插件特定适配笔记
+    fixtures/
+      search.html
+      detail.html
+      toc.html
+      chapter.html
 ```
 
-第一阶段允许按需安装依赖。新增的后端依赖记录在 `backend/requirements.txt`，前端依赖记录在 `frontend/package.json`，插件本地依赖可放在 `plugins/sources/<plugin_id>/requirements.txt`。
+`smoke/` 是正式布局。运行时仍兼容历史 `tests/smoke.yaml`，但新插件和发生解析变更的旧插件不得继续使用旧布局。新增的后端依赖记录在 `backend/requirements.txt`；只有无法由宿主共享的插件依赖才放入插件自身的 `requirements.txt`。
 
 ## metadata.yaml
 
@@ -165,8 +168,15 @@ sourceSeed:
   upstreamCommit: ""
 ```
 
-`author` 是控制台展示的插件维护者署名，不是 `search()` 或 `detail()`
-返回的书籍作者。
+`author` 是控制台展示的插件维护者署名，不是 `search()` 或 `detail()` 返回的书籍作者。仓库内随镜像发布的第三方插件统一写 `Yunwei`。
+
+正式插件的 metadata 还必须满足：
+
+- 每个键只允许出现一次；重复的 `enabled`、`proxy` 等键必须由校验器拒绝，不能依赖 YAML 的后写覆盖。
+- `enabled`、`rateLimit.perHostConcurrency`、`rateLimit.minIntervalMs`、`proxy.mode`、`proxy.required` 必须明确声明。
+- `rateLimit` 必须来自有记录的逐级探测；未探测时使用保守值 `1 / 1200ms`，不得凭感觉提高。
+- 使用繁体查询或输出时声明 `language: zh-TW` 或 `traditional-chinese` 标签，并实现输入转繁、输出转简。
+- 访问策略、域名、解析规则、编码策略或正文净化发生行为变化时必须升级 `version`；只改 README 不升级。
 
 `enabled`：加载后默认是否启用。控制台可以按书源单独开关。
 
@@ -248,7 +258,7 @@ async def after_login(self, ctx) -> dict:
 
 ## Smoke Fixture 协议
 
-每个插件应提供 `tests/smoke.yaml`。常规测试和控制台 smoke 运行默认使用本地 fixture 文件；实时网络检查必须显式选择加入。
+每个正式插件必须提供 `smoke/smoke.yaml`。常规测试和控制台 smoke 运行默认使用本地 fixture 文件；实时网络检查必须显式选择加入。
 
 ```yaml
 keyword: 凡人修仙传
@@ -274,16 +284,40 @@ expect:
     author: 忘语
     hasTocUrl: true
   toc:
+    complete: true
+    expectedCount: 438
     minChapters: 1
     firstTitleContains: 第
+    lastTitleContains: 后记
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
   chapter:
     minContentLength: 20
     titleContains: 第
 ```
 
-Fixture 文件放在插件目录下的 `tests/fixtures/` 中。`fixtures.*.url` 中的 URL 必须与插件解析器请求的 URL 完全匹配。Fixture 运行器用 fixture 请求替换网络请求，但插件仍只调用 `ctx.access.http.fetch_text`、`ctx.access.http.fetch_json` 或 `ctx.access.http.fetch_bytes`。
+Fixture 文件放在插件目录下的 `smoke/fixtures/` 中。`fixtures.*.url` 中的 URL 必须与插件解析器请求的 URL 完全匹配。Fixture 运行器会替换 HTTP、stealth、browser 与搜索提供器背后的宿主访问门面，但插件代码仍只能调用 `ctx.access.*`。
+
+仅依赖结构化搜索提供器的插件可在顶层保存 `searchProviderHits`，字段与宿主 `SearchProviderHit` 一致。该列表必须来自一次真实搜索提供器响应，并在插件 README 记录抓取时间；fixture 模式不会调用外部搜索引擎。
+
+若目录首项是公告、引子或其他合法短章，可在 `expect.chapter.sampleIndex` 指定从 1 开始的正文抽样序号；默认值为 1。该字段只改变正文抽样，不得用于绕过目录首尾和完整数量校验。
 
 目录或正文需要继续请求分页时，可在顶层增加 `extraFixtures` 列表。每项同样包含 `url` 和 `file`，用于映射标准四阶段之外的后续页面；它不增加新的 smoke 阶段。
+
+### 完整目录校验（正式第三方书源必需）
+
+`toc()` 的“能返回章节”不等于“返回完整目录”。正式第三方书源的 fixture smoke 必须在
+`expect.toc` 声明 `complete: true`，并同时提供：
+
+- `expectedCount`：当前 fixture 中完整目录的精确章节数；不能只写下限。
+- `firstTitleContains` 与 `lastTitleContains`：首章、尾章锚点，防止只取到开头或最新预览区。
+- `requireUniqueChapterUrls: true`：重复章节 URL 直接失败。
+- `requireSequentialIndexes: true`：返回序号必须从 1 连续递增。
+
+分页/AJAX/加载更多目录必须将**所有实际访问的目录页**加入 `extraFixtures`。只保存第一页的
+fixture 不得标记为 `complete`。旧插件在下一次维护时必须迁移到此规则；新插件和目录逻辑变更
+必须立即采用。实时验收还要将 `detail.lastChapter` 与 `toc()` 尾章对照；若站点自身落后官方源，
+应标记为候补源滞后，不能伪称为插件解析完整。
 
 Smoke 结果格式：
 
@@ -676,6 +710,79 @@ HTTP 200 响应仍然可能是挑战页面。插件在将解析失败视为空�
 5. `chapter`
 6. 使用发现的书籍名进行 `search`
 7. 从搜索候选重复 `detail -> toc -> chapter`
+
+## 正式第三方插件准入与维护门禁
+
+正式放入 `plugins/sources/thirdparty/` 的插件必须同时通过静态、fixture 和真实站点三类验收。任意一类未执行时只能标记为“未评估”，不能写成“可用”或“通过”。
+
+### 1. 静态契约
+
+- 目录名、`metadata.id`、`Source.id` 完全一致。
+- 作者为 `Yunwei`，版本、域名、能力、访问策略、代理、浏览器和限流声明无重复键。
+- `source.py` 不得直接使用 `requests/httpx/aiohttp/urllib.request`，不得创建线程、任务、信号量或 `asyncio.gather()`。
+- 插件不得实现重试、并发、全局超时、代理切换、缓存或后台任务；同族域名选择和目录/正文分页不属于重试。
+- 每一个 capability 都有对应的 async 方法；未声明的实验方法不构成正式能力。
+
+### 2. 搜索与详情
+
+- 使用站点真实存在的书名和作者作为基线，不使用 `book/12345` 或人工拼出的假地址。
+- 搜索至少验证精确书名、简繁输入和无结果三种情况；搜索失败不得伪造候选。
+- 同名书不以“搜索第一条”作为正确性证据，必须同时核对作者或稳定书籍 ID。
+- `detail()` 至少返回 `name`、`author`、`bookUrl`、`tocUrl`；站点公开的封面、简介、分类、状态、字数、更新时间和最新章节不得无故丢失。
+- `author` 只返回作者名，不保留“作者：”；`kind` 不塞入作者、字数或更新时间。
+- `detail.lastChapter` 必须与完整目录尾项对照。站点自身更新较慢可以记录为“站点滞后”，但解析器漏掉尾章属于失败。
+
+### 3. 完整目录
+
+- 目录必须按阅读顺序返回，URL 非空且唯一，`index` 从 1 连续递增。
+- 必须探测静态页之外的 AJAX/API、全部章节、移动端目录、分页和加载更多端点。
+- 不得写死 50/100/200 页后静默返回。分页使用“已访问页面去重 + 无下一页/无新增章节终止”，最终安全预算由宿主目录超时负责。
+- 不能只用首章和尾章预览块冒充完整目录；目录 fixture 必须保存解析器实际访问的所有分页/AJAX 响应。
+- 真实验收记录精确章节数、首章、尾章和校验时间。后续章节数变化不自动代表插件失败，应重新抓取并更新 fixture 基线。
+
+### 4. 正文与编码
+
+- 至少抽查首部、约 50%、尾部各一章；首项可能是公告或短序章时，再抽查一个普通正文章。
+- 每章必须校验标题、段落、有效长度、乱码、挑战页、登录页、导航、推荐、上一章/下一章串入和分页完整性。
+- HTTP 响应统一由宿主按响应头、HTML meta、UTF-8、GB18030/GBK 顺序解码。插件只有协议明确返回二进制或特殊编码时才调用 `fetch_bytes + ctx.decode_text`。
+- `�`、高比例控制字符、明显 mojibake、Cloudflare/Aegis 页面和“内容不存在”不得作为正文返回。
+- 正文分页同样以已访问 URL 和同章 URL/ID 为边界，不依赖固定页数；不得把“下一章”拼进当前章。
+- 站点水印的确定性清理可以放在插件；跨源比对和全局净化属于宿主。不得用过宽正则删除无法证明是广告的正文句子。
+
+### 5. 繁简、代理与浏览器
+
+- 繁体站搜索前调用 `ctx.to_traditional()`；所有面向用户的返回文本调用 `ctx.to_simplified()`，URL 和 ID 不转换。
+- `proxy.mode: always` 只有在直连失败、代理稳定通过的实测证据下使用；`auto` 不等于自动走代理。
+- 403、挑战页或 TLS 指纹拦截应先判断 `stealth` 是否足够；只有确需执行 JavaScript/挑战会话时才声明 browser。
+- 浏览器是最后一级访问层。插件不得自行启动浏览器、保存挑战 token 或循环刷新 Cookie。
+- 搜索提供器只负责发现真实站内 URL，详情、目录和正文仍必须回到目标站点读取；搜索提供器无结果不是伪造结果的理由。
+
+### 6. 并发和稳定性探测
+
+- 对同一本书分别以并发 1、2、3 逐级抽取不少于 20 章，记录成功率、P95 延迟、403/429/超时和内容完整性。
+- 某级出现限流、空正文或错误率明显上升时，使用上一级稳定值；无法完成探测时保守声明 `1 / 1200ms`。
+- 插件 metadata 只声明结果，运行时调度器负责执行；插件代码不得再套信号量或 sleep。
+- 代理和直连分别探测。只在代理改善稳定性且未返回无关页面时声明代理路径。
+
+### 7. Fixture 和真实验收
+
+阶段门禁顺序：
+
+1. `python backend/scripts/validate_source_plugin.py --plugin plugins/sources/thirdparty/<id>`
+2. `python -m app.source_plugins.smoke ../plugins/sources/thirdparty/<id>`（从 `backend/` 运行）
+3. 使用插件自己的 smoke 关键词执行真实 `search -> detail -> toc -> chapter`。
+4. 对搜索受限的站点，使用已确认的真实 `bookUrl/tocUrl` 单独验证读取链路，并把“搜索失败”和“读取失败”分别记录。
+5. 记录章节数、正文样本位置、访问层、是否走代理/浏览器、校验时间和未评估项。
+
+Fixture 通过只证明解析器对保存样本仍工作，不证明目标站今天可访问；真实站点通过也不能替代 fixture 回归。两者都必须保留。
+
+### 8. 版本、归档与交付
+
+- 修复解析、字段、编码、分页、域名、代理、浏览器或限流声明后升级插件版本，并更新插件 README 的真实状态。
+- 只有 DNS/域名长期失效、目标内容消失或在受控 browser/stealth/代理路径下仍无法稳定读取，且已有日期与错误证据时，才可归档。
+- 站点更新慢、暂时 403、单一网络环境失败或旧书库映射残留，不足以判定插件不可用。
+- 归档插件从正式目录移除，并在归档清单记录原因、最后可用域名、最后校验时间和替代源；不得只把 `enabled` 改为 false 后继续随镜像发布。
+- 修改完成后集中运行全部 26 个正式插件的结构校验、fixture smoke、相关定向测试和 `git diff --check`；正式提交前再运行 `verify.ps1`。
 
 ## 兼容性策略
 

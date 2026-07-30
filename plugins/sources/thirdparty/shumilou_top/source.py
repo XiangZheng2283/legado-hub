@@ -125,7 +125,7 @@ class Source:
         seen: set[str] = set()
         seen_pages: set[str] = set()
         page_url = toc_url
-        while page_url and page_url not in seen_pages and len(seen_pages) < 50:
+        while page_url and page_url not in seen_pages:
             seen_pages.add(page_url)
             try:
                 html = await self._fetch(ctx, page_url)

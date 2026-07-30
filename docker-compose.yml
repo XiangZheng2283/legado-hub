@@ -40,29 +40,29 @@ services:
       - './config:/app/backend/config' # 应用配置、插件 Cookie
       - './generated:/app/backend/generated' # 生成的聚合书源
       - './runtime:/app/backend/runtime' # 插件运行状态
-      - './plugins/sources/thirdparty:/app/plugins/sources/thirdparty' # 第三方插件（空目录首次从镜像种子填充）
-      - './plugins/sources/official:/app/plugins/sources/official:ro' # 官方插件（只读，需自行放入）
+      - './plugins/sources/thirdparty:/app/plugins/sources/thirdparty' # 第三方插件覆盖层（镜像只补齐缺失 ID）
+      - './plugins/sources/official:/app/plugins/sources/official' # 官方插件覆盖层（镜像内置起点 Web）
       # 示例：飞牛 / 绿联等
       # - '/vol1/1000/appdata/legado-hub/data:/app/backend/data'
       # - '/vol1/1000/appdata/legado-hub/config:/app/backend/config'
       # - '/vol1/1000/appdata/legado-hub/generated:/app/backend/generated'
       # - '/vol1/1000/appdata/legado-hub/runtime:/app/backend/runtime'
       # - '/vol1/1000/appdata/legado-hub/plugins/thirdparty:/app/plugins/sources/thirdparty'
-      # - '/vol1/1000/appdata/legado-hub/plugins/official:/app/plugins/sources/official:ro'
+      # - '/vol1/1000/appdata/legado-hub/plugins/official:/app/plugins/sources/official'
       # 示例：群晖
       # - '/volume1/docker/legado-hub/data:/app/backend/data'
       # - '/volume1/docker/legado-hub/config:/app/backend/config'
       # - '/volume1/docker/legado-hub/generated:/app/backend/generated'
       # - '/volume1/docker/legado-hub/runtime:/app/backend/runtime'
       # - '/volume1/docker/legado-hub/plugins/thirdparty:/app/plugins/sources/thirdparty'
-      # - '/volume1/docker/legado-hub/plugins/official:/app/plugins/sources/official:ro'
+      # - '/volume1/docker/legado-hub/plugins/official:/app/plugins/sources/official'
       # 示例：普通 Linux
       # - '/opt/legado-hub/data:/app/backend/data'
       # - '/opt/legado-hub/config:/app/backend/config'
       # - '/opt/legado-hub/generated:/app/backend/generated'
       # - '/opt/legado-hub/runtime:/app/backend/runtime'
       # - '/opt/legado-hub/plugins/thirdparty:/app/plugins/sources/thirdparty'
-      # - '/opt/legado-hub/plugins/official:/app/plugins/sources/official:ro'
+      # - '/opt/legado-hub/plugins/official:/app/plugins/sources/official'
     logging:
       driver: json-file
       options:

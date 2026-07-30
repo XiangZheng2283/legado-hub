@@ -2,24 +2,27 @@ contractVersion: "1.0"
 id: 0xs_net
 name: 零点小说
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - 0xs.net
 baseUrls:
-  - https://www.0xs.net
+  - https://m.0xs.net
 capabilities:
   - search
   - detail
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1000
 proxy:
   mode: auto
   required: false
 browser:
-  mode: none
-  reason: ""
+  mode: optional
+  reason: 移动站首次返回 403 时仅用于建立会话，后续详情、目录和正文继续走 HTTP
 auth:
   mode: none
   cookieDomains: []

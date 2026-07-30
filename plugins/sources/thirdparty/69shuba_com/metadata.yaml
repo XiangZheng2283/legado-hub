@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 69shuba_com
 name: 69书吧
 author: Yunwei
-version: 0.1.3
+version: 0.1.5
 type: source
 enabled: true
 domains:
@@ -39,6 +39,12 @@ accessStrategy:
   detail: stealth_http
   toc: stealth_http
   chapter: stealth_http
+browser:
+  mode: optional
+  reason: cloudflare_session_refresh
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
 searchProvider:
   providerOrder:
     - duckduckgo_ddgs
@@ -85,4 +91,3 @@ sourceSeed:
   upstreamId: 69shuba_com
   upstreamFile: by-site/legado/69shuba.com.json
   upstreamCommit: ""
-

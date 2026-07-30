@@ -21,8 +21,13 @@ expect:
     author: 风月
     hasTocUrl: true
   toc:
+    complete: true
+    expectedCount: 863
     minChapters: 800
     firstTitleContains: 第2章
+    lastTitleContains: 第853章
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
   chapter:
     minContentLength: 500
     titleContains: 第2章

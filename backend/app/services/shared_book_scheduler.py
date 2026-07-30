@@ -7,6 +7,7 @@ import logging
 from collections import deque
 from typing import Any, Callable
 
+from app.core.app_config import AppConfig
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.shared_book_job_types import SharedBookJobType
 from app.services.shared_book_lock import SharedBookLockError, SharedBookLockService
@@ -57,6 +58,13 @@ class SharedBookScheduler:
         self._manual_pending_entries: set[tuple[str, str]] = set()
         self._initial_source_map_pending_books: set[str] = set()
         self._book_contexts: dict[str, BookContext] = {}
+
+    def _job_timeout_seconds(self) -> float:
+        try:
+            value = float(AppConfig.get().search.aggregate_overall_timeout_seconds)
+        except Exception:
+            value = 180.0
+        return max(30.0, value)
 
     async def startup_recovery_scan(self) -> dict[str, Any]:
         """Run one startup recovery pass before the periodic loop begins."""
@@ -483,21 +491,28 @@ class SharedBookScheduler:
         renewal_task = asyncio.create_task(
             self._renew_lease_until_stopped(lease, renewal_stop, owner_task=owner_task)
         )
+        job_timeout = self._job_timeout_seconds()
         self._log(
             book_name=book_name,
             author=author,
             event="job_start",
             book_id=aggregate_book_id,
-            payload={"trigger": trigger},
+            payload={"trigger": trigger, "timeoutSeconds": job_timeout},
         )
         try:
             if trigger == SharedBookJobType.BOOK_SOURCE_MAP_REFRESH.value:
                 force_refresh = aggregate_book_id in self._initial_source_map_pending_books
-                result = await self.source_map_service.refresh_for_book(
-                    aggregate_book_id,
-                    payload=payload,
-                    force=force_refresh,
+                result = await asyncio.wait_for(
+                    self.source_map_service.refresh_for_book(
+                        aggregate_book_id,
+                        payload=payload,
+                        force=force_refresh,
+                    ),
+                    timeout=job_timeout,
                 )
+                invalidate_toc = getattr(self.processor, "invalidate_candidate_toc_cache", None)
+                if callable(invalidate_toc):
+                    invalidate_toc(aggregate_book_id)
                 self._log(
                     book_name=book_name,
                     author=author,
@@ -535,10 +550,15 @@ class SharedBookScheduler:
                     limit_resolver = getattr(self.processor, "backlog_chapter_limit", None)
                     if callable(limit_resolver):
                         chapter_limit = int(limit_resolver(aggregate_book_id))
+                else:
+                    invalidate_toc = getattr(self.processor, "invalidate_candidate_toc_cache", None)
+                    if callable(invalidate_toc):
+                        invalidate_toc(aggregate_book_id)
             if chapter_limit:
-                result = await self.processor.run_book_task(aggregate_book_id, chapter_limit=chapter_limit)
+                operation = self.processor.run_book_task(aggregate_book_id, chapter_limit=chapter_limit)
             else:
-                result = await self.processor.run_book_task(aggregate_book_id)
+                operation = self.processor.run_book_task(aggregate_book_id)
+            result = await operation
             if trigger == SharedBookJobType.STARTUP_RECOVERY_SCAN.value and not result.get("skipped", False):
                 self._startup_recovery_processed_books.add(aggregate_book_id)
             self._log(
@@ -555,6 +575,19 @@ class SharedBookScheduler:
                 "skipped": False,
                 "result": result,
             }
+        except asyncio.TimeoutError as exc:
+            message = str(exc).strip() or f"订阅任务超过 {job_timeout:g} 秒，已中断并等待重试"
+            mark_interrupted = getattr(self.processor, "mark_running_snapshots_interrupted", None)
+            if callable(mark_interrupted):
+                mark_interrupted(aggregate_book_id, "job_timeout")
+            self._log(
+                book_name=book_name,
+                author=author,
+                event="job_timeout",
+                book_id=aggregate_book_id,
+                payload={"trigger": trigger, "step": message, "timeoutSeconds": job_timeout},
+            )
+            raise TimeoutError(message) from exc
         except asyncio.CancelledError as exc:
             if bool(getattr(lease, "stop_requested", False)):
                 self._log(

@@ -1,62 +1,37 @@
 # Book Source Craft
 
-这组文档是给“准备适配书源插件的人”看的。
+这里是 LegadoHub 第三方书源插件的开发入口。权威契约只有一份：
 
-目标很简单：
+- [书源插件协议](../../architecture/source-plugin-contract.zh-CN.md)
 
-**帮你快速弄清楚，一个 LegadoHub 插件最少应该怎么组织、怎么写、怎么验证。**
+本文只说明执行顺序，不重复定义接口。
 
-这里更偏实操，不是专题研究资料库。
+## 开发流程
 
-## 推荐阅读顺序
+1. 阅读协议，确认宿主与插件边界。
+2. 从 [插件模板](references/source-plugin-template.zh-CN.md) 建立 `metadata.yaml`、`source.py`、`README.md` 和 `smoke/`。
+3. 用真实书名、作者和真实 URL 验证 `search -> detail -> toc -> chapter`，先确认站点 API/AJAX/分页，再写选择器。
+4. 保存完整 fixture；分页目录必须保存所有被访问的页面，并声明精确章节数、首尾章节、URL 唯一和连续 index。
+5. 抽查首部、中部、尾部正文，检查乱码、分页、串章、挑战页和水印；繁体站同时验证输入转繁和输出转简。
+6. 逐级探测并发和请求间隔，失败时再分别验证 stealth、代理和 browser，最后把实测结果写入 metadata。
+7. 阶段结束后集中运行结构校验、fixture smoke 和真实链路；正式提交前运行仓库完整门禁。
 
-### 1. 先看模板
+## 必读参考
 
-- [书源插件模板（中文）](/C:/Home/Workspace/UGit/legado-hub/docs/skills/book-source-craft/references/source-plugin-template.zh-CN.md)
+- [插件模板](references/source-plugin-template.zh-CN.md)：目录骨架和最小实现。
+- [真实站点适配流程](references/plugin-source-workflow.md)：抓取、解析和定位问题的顺序。
+- [聚合源模式](references/aggregate-source-pattern.md)：仅用于理解宿主聚合边界，插件不得自行聚合。
+- [公开书源参考](references/public-source-references.md)：用于发现站点规律，不作为可用性证据。
+- [正式化检查](references/stage-2-plugin-production.md)：历史补充材料；与协议冲突时以协议为准。
 
-适合：
+## 完成定义
 
-- 第一次写插件
-- 想先知道目录骨架怎么搭
-- 想直接拿一个起步模板
+一个插件只有在以下结果都明确时才算完成：
 
-### 2. 再看流程
+- 静态契约通过。
+- 完整 fixture smoke 通过。
+- 真实搜索与真实读取链路通过，或分别标记具体未评估/环境受阻项。
+- 详情字段、完整目录、三处正文、编码、繁简、代理/browser 和限流均有证据。
+- 版本与 README 已更新。
 
-- `references/plugin-source-workflow.md`
-
-适合：
-
-- 已经知道骨架长什么样
-- 想看真实站点适配时的推进顺序
-
-### 3. 最后看扩展参考
-
-- `references/aggregate-source-pattern.md`
-- `references/public-source-references.md`
-- `references/stage-2-plugin-production.md`
-
-适合：
-
-- 想做聚合源
-- 想参考公开书源模式
-- 想把插件做得更稳定
-
-## 这里保留什么
-
-保留：
-
-- 模板
-- 方法
-- 目录约定
-- 验证思路
-
-不保留：
-
-- 某个站点的逆向过程
-- 一次性抓包记录
-- 临时分析结论
-- 大量与运行无关的背景材料
-
-一句话：
-
-**这是“怎么写插件”的帮助文档，不是“怎么研究某个站”的档案馆。**
+站点更新慢不等于插件失败；搜索失败也不等于详情、目录和正文全部失败。报告必须把这些情况分开。

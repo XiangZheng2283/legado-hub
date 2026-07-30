@@ -1,0 +1,40 @@
+keyword: 凡人修仙传
+fixtures:
+  search:
+    url: http://23.225.143.226/ar.php
+    file: search.html
+  detail:
+    url: http://23.225.143.226/ldks/34241/
+    file: detail.html
+  toc:
+    url: http://23.225.143.226/ldks/34241/
+    file: toc.html
+  chapter:
+    url: http://23.225.143.226/ldks/34241/15167941.html
+    file: chapter.html
+extraFixtures:
+  - url: http://23.225.143.226/ldks/26931/
+    file: extra1.html
+  - url: http://23.225.143.226/ldks/34241/index_2.html
+    file: extra2.html
+  - url: http://23.225.143.226/ldks/34241/15167941_2.html
+    file: extra3.html
+expect:
+  search:
+    minResults: 1
+    firstName: 凡人修仙传
+  detail:
+    name: 凡人修仙传
+    author: 天地我心
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 33
+    minChapters: 33
+    firstTitleContains: 第一章
+    lastTitleContains: 手段凌利
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 200
+    titleContains: 第一章

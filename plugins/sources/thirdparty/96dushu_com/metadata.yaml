@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 96dushu_com
 name: 96读书
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 domains:
   - 96dushu.com
@@ -14,6 +14,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 900
 proxy:
   mode: auto
   required: false

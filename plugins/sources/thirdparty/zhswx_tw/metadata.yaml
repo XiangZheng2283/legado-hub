@@ -3,6 +3,7 @@ id: zhswx_tw
 name: 宙斯小说网
 author: Yunwei
 version: 0.1.0
+priority: 40
 type: source
 domains:
   - tw.zhswx.com
@@ -14,6 +15,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 2
+  minIntervalMs: 700
 auth:
   mode: none
   cookieDomains: []
@@ -22,7 +26,6 @@ content:
 proxy:
   mode: auto
   required: false
-enabled: true
 tags:
   - html
   - no-login

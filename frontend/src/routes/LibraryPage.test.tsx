@@ -120,6 +120,33 @@ describe("LibraryPage user controls", () => {
     expect(await screen.findByText("订阅已移除。")).toBeInTheDocument()
   })
 
+  it("moves archived subscriptions to the completed tab without activity controls", async () => {
+    const user = userEvent.setup()
+    ;(api.subscribe.myLibrary as any).mockResolvedValue({
+      items: [{
+        aggregateBookId: "book-completed",
+        displayName: "完结归档书",
+        displayAuthor: "作者",
+        totalChapters: 10,
+        processedChapters: 10,
+        visibleProcessedChapters: 10,
+        status: "archived",
+        bookStatus: "completed",
+        subscription: { status: "archived", startChapterIndex: 1, autoArchiveOnComplete: true },
+        personalProgress: { fullCount: 10, previewCount: 0, failedCount: 0, pendingCount: 0, coverageRatio: 1 },
+      }],
+    })
+    renderPage()
+
+    expect(await screen.findByText("你还没有进行中的订阅")).toBeInTheDocument()
+    await user.click(screen.getByRole("tab", { name: /已完结/ }))
+    expect(await screen.findByText("完结归档书")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "打开《完结归档书》操作菜单" }))
+    expect(screen.queryByRole("menuitem", { name: "继续" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "暂停" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "归档" })).not.toBeInTheDocument()
+  })
+
   it("refetches the library query from the error state", async () => {
     const user = userEvent.setup()
     ;(api.subscribe.myLibrary as any)
@@ -131,7 +158,7 @@ describe("LibraryPage user controls", () => {
     await user.click(screen.getByRole("button", { name: "重试" }))
 
     await waitFor(() => expect(api.subscribe.myLibrary).toHaveBeenCalledTimes(2))
-    expect(await screen.findByText("你还没有订阅的书籍")).toBeInTheDocument()
+    expect(await screen.findByText("你还没有进行中的订阅")).toBeInTheDocument()
   })
 
   it("refreshes library progress while the page remains open", async () => {

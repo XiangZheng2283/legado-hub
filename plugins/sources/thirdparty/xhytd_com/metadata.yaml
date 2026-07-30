@@ -2,18 +2,21 @@ contractVersion: "1.0"
 id: xhytd_com
 name: 黄易天地
 author: Yunwei
-version: 0.1.0
+version: 0.2.0
 type: source
 domains:
   - xhytd.com
 baseUrls:
-  - https://www.xhytd.com
+  - http://wap.xhytd.com
 capabilities:
   - search
   - detail
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
 proxy:
   mode: auto
   required: false
@@ -29,14 +32,3 @@ tags:
   - html
   - no-login
   - cloudflare
-  - search_provider
-accessStrategy:
-  search: search_provider
-searchProvider:
-  providerOrder:
-    - bing_html
-    - google_html
-  targetDomain: www.xhytd.com
-  querySitePath: /book
-  urlPatterns:
-    - /book/\d+/

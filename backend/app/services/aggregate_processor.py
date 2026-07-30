@@ -8,15 +8,16 @@ import json
 import logging
 import re
 import sqlite3
-import hashlib
 import time
 from collections import deque
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
+from app.core.app_config import AppConfig
 from app.source_plugins.id_codec import decode_chapter_id, encode_book_id, encode_chapter_id
 from app.services.aggregate_virtual_source import (
     VIRTUAL_SOURCE_ID,
@@ -32,6 +33,9 @@ from app.services.aggregate_settings import (
     CHAPTER_PARALLELISM_LIMIT,
     DEFAULT_CONTENT_WORKFLOW,
     PER_SOURCE_CONCURRENCY,
+    PER_BOOK_SOURCE_CONCURRENCY,
+    INITIAL_PREFETCH_GRACE_SECONDS,
+    INITIAL_PREFETCH_CHAPTER_LIMIT,
     PREVIEW_RETRY_DELAYS_MINUTES,
     PROCESSING_PLACEHOLDER,
     RETRY_DELAYS_MINUTES,
@@ -62,6 +66,7 @@ from app.services.library_books import library_books_service
 
 DEFAULT_WORKFLOW = DEFAULT_CONTENT_WORKFLOW
 CROSS_SOURCE_INITIAL_COMPARE_COUNT = 3
+CROSS_SOURCE_MAX_COMPARE_COUNT = 8
 
 TRACE_BLOCK_RE = re.compile(
     r"(?:\n|^)(?:<!--\s*)?LEGADOHUB_TRACE_BEGIN\s*(?:```yaml\s*)?\n.*?\n(?:\s*```\s*)?LEGADOHUB_TRACE_END(?:\s*-->)?\s*$",
@@ -115,12 +120,28 @@ class AggregateProcessor:
         self._ai_circuit_breakers: dict[str, dict[str, Any]] = {}
         self._ai_window_events: dict[str, deque[dict[str, Any]]] = {}
         self._process_logger_cache: SharedBookProcessLogger | None = None
-        self._source_sems: dict[str, asyncio.Semaphore] = {}
+        self._source_sems: dict[tuple[str, str], asyncio.Semaphore] = {}
+        self._browser_source_sem = asyncio.Semaphore(1)
         self._ai_sem = asyncio.Semaphore(self._ai_concurrency_limit())
         self._toc_is_vip_cache: dict[str, dict[int, bool]] = {}
         self._free_chapter_end_index_cache: dict[str, int] = {}
         self._source_ad_patterns: dict[str, list[str]] = self._load_source_ad_patterns()
+        self._browser_source_ids = self._load_browser_source_ids()
         self._lexicon_scanner: Any | None = self._load_lexicon_scanner()
+
+    def _load_browser_source_ids(self) -> set[str]:
+        try:
+            from app.source_plugins.scheduler import get_plugin_scheduler
+
+            return {
+                plugin_id
+                for plugin_id, plugin in get_plugin_scheduler()._plugins.items()
+                if (getattr(plugin.metadata, "browser", {}) or {}).get("mode")
+                in {"required", "optional"}
+            }
+        except Exception:
+            logger.debug("Failed to load browser source metadata", exc_info=True)
+            return set()
 
     def _load_lexicon_scanner(self) -> Any | None:
         """Load the sensitive-word lexicon scanner for local masked-word recovery."""
@@ -242,15 +263,36 @@ class AggregateProcessor:
             val = 2
         return max(1, val)
 
-    async def _get_source_sem(self, source_id: str) -> asyncio.Semaphore:
-        if source_id not in self._source_sems:
-            self._source_sems[source_id] = asyncio.Semaphore(PER_SOURCE_CONCURRENCY)
-        return self._source_sems[source_id]
+    async def _get_source_sem(
+        self,
+        source_id: str,
+        aggregate_book_id: str = "",
+    ) -> asyncio.Semaphore:
+        key = (str(aggregate_book_id or "*"), str(source_id or ""))
+        if key not in self._source_sems:
+            self._source_sems[key] = asyncio.Semaphore(
+                min(PER_SOURCE_CONCURRENCY, PER_BOOK_SOURCE_CONCURRENCY)
+            )
+        return self._source_sems[key]
+
+    @asynccontextmanager
+    async def _source_slot(self, *, aggregate_book_id: str, source_id: str):
+        source_sem = await self._get_source_sem(source_id, aggregate_book_id)
+        if source_id in self._browser_source_ids:
+            async with self._browser_source_sem:
+                async with source_sem:
+                    yield
+            return
+        async with source_sem:
+            yield
 
     def _library_books(self):
         from app.services.library_books import LibraryBooksService
 
-        return LibraryBooksService(db_path=self.db_path)
+        return LibraryBooksService(
+            db_path=self.db_path,
+            shared_book_storage=self._shared_book_storage(),
+        )
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -753,19 +795,6 @@ class AggregateProcessor:
         subscription intake does not stop merely because the book became
         searchable.
         """
-        # 阻塞式候选源发现：初始化阶段等待所有候选源搜索完成后再进入章节处理
-        payload = self._load_aggregate_payload(aggregate_book_id)
-        if payload:
-            try:
-                await asyncio.wait_for(
-                    self._ensure_candidate_sources_for_book(aggregate_book_id, payload),
-                    timeout=60.0,
-                )
-            except asyncio.TimeoutError:
-                logger.warning("candidate source discovery timed out for %s", aggregate_book_id)
-            except Exception:
-                logger.debug("candidate source discovery failed for %s", aggregate_book_id, exc_info=True)
-
         bootstrap_window = max(50, self.backlog_chapter_limit(aggregate_book_id), WINDOW_CHAPTER_LIMIT)
         initial_pending = max(1, self._pending_chapter_count(aggregate_book_id))
         planned_rounds = max(int(max_rounds or 0), (initial_pending + bootstrap_window - 1) // bootstrap_window + 2)
@@ -788,7 +817,165 @@ class AggregateProcessor:
             "result": last_result,
         }
 
+    def rebuild_book_from_snapshots(self, aggregate_book_id: str) -> dict[str, Any]:
+        """Reapply current regex purification to local snapshots without network access."""
+        payload = self._load_aggregate_payload(aggregate_book_id)
+        if not payload:
+            return {"bookId": aggregate_book_id, "rebuilt": False, "error": "book_not_found"}
+        with self._conn() as conn:
+            book_row = conn.execute(
+                "SELECT primary_source_id FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                (aggregate_book_id,),
+            ).fetchone()
+            snapshots = conn.execute(
+                """
+                SELECT chapter_index, source_id, source_book_id, source_chapter_id, source_chapter_url,
+                       title, raw_content, classification
+                FROM aggregate_source_snapshots
+                WHERE aggregate_book_id = ?
+                ORDER BY chapter_index ASC, source_id ASC
+                """,
+                (aggregate_book_id,),
+            ).fetchall()
+            chapters = conn.execute(
+                """
+                SELECT chapter_id, chapter_index, title, status, source_word_count,
+                       primary_source_chapter_url, preview_only, source_alignment_json
+                FROM aggregate_chapter_tasks
+                WHERE aggregate_book_id = ?
+                ORDER BY chapter_index ASC
+                """,
+                (aggregate_book_id,),
+            ).fetchall()
+        primary_source_id = str(
+            payload.get("primarySourceId", "") or (book_row[0] if book_row else "") or ""
+        )
+        snapshot_classifications = {
+            (int(snapshot[0] or 0), str(snapshot[1] or "")): str(snapshot[7] or "")
+            for snapshot in snapshots
+        }
+
+        for snapshot in snapshots:
+            self._save_source_snapshot(
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=int(snapshot[0] or 0),
+                source_id=str(snapshot[1] or ""),
+                source_book_id=str(snapshot[2] or ""),
+                source_chapter_id=str(snapshot[3] or ""),
+                source_chapter_url=str(snapshot[4] or ""),
+                title=str(snapshot[5] or ""),
+                raw_content=str(snapshot[6] or ""),
+                classification=str(snapshot[7] or "rebuild"),
+            )
+
+        rewritten = 0
+        skipped = 0
+        for chapter in chapters:
+            chapter_id = str(chapter[0] or "")
+            chapter_index = int(chapter[1] or 0)
+            title = str(chapter[2] or "")
+            source_word_count = int(chapter[4] or 0)
+            official_content = self._load_source_snapshot_content(
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=chapter_index,
+                source_id=primary_source_id,
+            )
+            official_classification = snapshot_classifications.get(
+                (chapter_index, primary_source_id), ""
+            )
+            try:
+                alignment = json.loads(chapter[7] or "{}")
+            except (TypeError, ValueError):
+                alignment = {}
+            selected_source_id = primary_source_id
+            preview_only = bool(chapter[6])
+            status = "processed"
+            content = ""
+
+            # An official full body remains authoritative. Every other case
+            # must re-evaluate third-party snapshots against the local anchor.
+            if (
+                official_content
+                and not preview_only
+                and (
+                    official_classification == "full"
+                    or alignment.get("selectedContentSource") == "official"
+                )
+            ):
+                content = official_content
+            else:
+                candidate = self._try_snapshot_candidate_content(
+                    chapter={
+                        "aggregateBookId": aggregate_book_id,
+                        "chapterIndex": chapter_index,
+                        "title": title,
+                    },
+                    payload=payload,
+                    primary_source_id=primary_source_id,
+                    official_word_count=source_word_count,
+                )
+                if candidate and candidate.get("content"):
+                    content = str(candidate["content"])
+                    selected_source_id = str(candidate.get("source_id", "") or primary_source_id)
+                    alignment = dict(candidate.get("alignment_json") or {})
+                    status = "fallback"
+                    preview_only = False
+                elif official_content:
+                    # A local official body without a qualifying replacement is
+                    # safe to expose only as its existing preview fallback.
+                    content = official_content
+                    status = "fallback"
+                    preview_only = True
+                else:
+                    skipped += 1
+                    continue
+            self._write_chapter_result(
+                chapter_id=chapter_id,
+                aggregate_book_id=aggregate_book_id,
+                title=title,
+                chapter_index=chapter_index,
+                status=status,
+                content=content,
+                alignment_json=alignment,
+                fallback_source_id=selected_source_id,
+                source_word_count=source_word_count,
+                primary_source_chapter_url=str(chapter[5] or ""),
+                preview_only=preview_only,
+            )
+            rewritten += 1
+        self._refresh_shared_book_state(aggregate_book_id)
+        return {
+            "bookId": aggregate_book_id,
+            "rebuilt": True,
+            "networkAccessed": False,
+            "snapshotCount": len(snapshots),
+            "rewrittenChapters": rewritten,
+            "skippedChapters": skipped,
+        }
+
+    def _job_timeout_seconds(self) -> float:
+        try:
+            value = float(AppConfig.get().search.aggregate_overall_timeout_seconds)
+        except Exception:
+            value = 180.0
+        return max(30.0, value)
+
     async def run_book_task(self, aggregate_book_id: str, chapter_limit: int = WINDOW_CHAPTER_LIMIT) -> dict:
+        batch_multiplier = max(
+            1,
+            (max(1, int(chapter_limit)) + WINDOW_CHAPTER_LIMIT - 1) // WINDOW_CHAPTER_LIMIT,
+        )
+        timeout = self._job_timeout_seconds() * batch_multiplier
+        try:
+            return await asyncio.wait_for(
+                self._run_book_task(aggregate_book_id, chapter_limit=chapter_limit),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError as exc:
+            self.mark_running_snapshots_interrupted(aggregate_book_id, "job_timeout")
+            raise TimeoutError(f"订阅任务超过 {timeout:g} 秒，已中断并等待重试") from exc
+
+    async def _run_book_task(self, aggregate_book_id: str, chapter_limit: int = WINDOW_CHAPTER_LIMIT) -> dict:
         from app.services.book_catalog import BookCatalog
 
         backlog_state = self.stage3_backlog_state(aggregate_book_id)
@@ -823,7 +1010,6 @@ class AggregateProcessor:
 
         try:
             catalog = BookCatalog()
-            self._clear_toc_cache()
             try:
                 detail = await catalog.book_detail(primary_book_id)
                 toc = await catalog.toc(primary_book_id)
@@ -834,11 +1020,25 @@ class AggregateProcessor:
                 return self._handle_toc_fetch_failure(
                     aggregate_book_id, ValueError(toc_error), next_check
                 )
+            detail = detail if isinstance(detail, dict) else {}
             chapters = [dict(item) for item in toc.get("chapters", []) if isinstance(item, dict)]
             self.register_toc(aggregate_book_id, payload, chapters)
+            payload = await self._ensure_candidate_sources_for_book(
+                aggregate_book_id,
+                payload,
+            )
+            chapters_to_process = self._chapters_for_processing(
+                aggregate_book_id, limit=chapter_limit
+            )
+            snapshot_result = await self._run_initial_candidate_prefetch(
+                catalog=catalog,
+                aggregate_book_id=aggregate_book_id,
+                payload=payload,
+                official_chapters=chapters,
+                chapters_to_process=chapters_to_process,
+            )
 
             chapter_results = []
-            chapters_to_process = self._chapters_for_processing(aggregate_book_id, limit=chapter_limit)
             if chapters_to_process:
                 chapter_sem = asyncio.Semaphore(self._chapter_concurrency_limit())
 
@@ -869,6 +1069,25 @@ class AggregateProcessor:
             detail_data = detail.get("data") or {}
             book_status = self._normalize_book_status(detail_data)
             pending_after_run = self._pending_chapter_count(aggregate_book_id)
+            preview_recheck_count = 0
+            if pending_after_run == 0:
+                preview_recheck_count = self._schedule_initial_preview_recheck(
+                    aggregate_book_id,
+                    now,
+                )
+                if preview_recheck_count > 0:
+                    next_check = now
+                    self._log_chapter_step(
+                        aggregate_book_id=aggregate_book_id,
+                        chapter_index=None,
+                        title="",
+                        event="initial_preview_recheck_scheduled",
+                        stage="stage2",
+                        payload={
+                            "step": "首次章节处理完成，正在安排预览章节复查",
+                            "chapterCount": preview_recheck_count,
+                        },
+                    )
             if pending_after_run > 0 and len(chapter_results) >= max(1, int(chapter_limit)):
                 next_check = (
                     datetime.now(timezone.utc)
@@ -934,8 +1153,10 @@ class AggregateProcessor:
                 "bookId": aggregate_book_id,
                 "success": True,
                 "chapterCount": len(chapters),
+                "snapshot": snapshot_result,
                 "processedChapters": len(chapter_results),
                 "pendingChapters": pending_after_run,
+                "previewRecheckChapters": preview_recheck_count,
                 "nextCheckTime": next_check,
             }
         except Exception as exc:
@@ -998,8 +1219,8 @@ class AggregateProcessor:
         aggregate_book_id: str,
         payload: dict[str, Any],
         *,
-        max_candidates: int = 5,
-        max_discovery_sources: int = 12,
+        max_candidates: int = 0,
+        max_discovery_sources: int = 0,
     ) -> dict[str, Any]:
         """Discover third-party candidate sources for an official-only aggregate book.
 
@@ -1019,6 +1240,14 @@ class AggregateProcessor:
             if (
                 cached_signature == payload_signature
                 and time.monotonic() - cached_at < CANDIDATE_SOURCE_CACHE_TTL_SECONDS
+                and (
+                    max_candidates <= 0
+                    or self._candidate_source_count(
+                        cached_payload.get("sources", [])
+                        if isinstance(cached_payload, dict)
+                        else []
+                    ) >= max_candidates
+                )
             ):
                 return cached_payload
             self._candidate_source_cache.pop(aggregate_book_id, None)
@@ -1026,7 +1255,11 @@ class AggregateProcessor:
         sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
         normalized_sources = [dict(source) for source in sources if isinstance(source, dict)]
         candidate_count = self._candidate_source_count(normalized_sources)
-        if candidate_count >= max_candidates:
+        configured_limit = int(
+            self._book_workflow_settings(aggregate_book_id).get("sourceCandidateLimit", max_candidates) or 0
+        )
+        candidate_limit = max_candidates if max_candidates > 0 else configured_limit
+        if candidate_limit > 0 and candidate_count >= candidate_limit:
             self._candidate_source_cache[aggregate_book_id] = (
                 time.monotonic(),
                 payload_signature,
@@ -1048,7 +1281,7 @@ class AggregateProcessor:
             keyword=keyword,
             author=author,
             existing_sources=normalized_sources,
-            max_candidates=max_candidates - candidate_count,
+            max_candidates=max(0, candidate_limit - candidate_count) if candidate_limit > 0 else 0,
             max_sources=max_discovery_sources,
         )
         if not discovered:
@@ -1128,6 +1361,8 @@ class AggregateProcessor:
             for plugin in scheduler._enabled_plugins()
             if "search" in getattr(plugin, "capabilities", [])
             and not plugin.metadata.is_official_source()
+            and (getattr(plugin.metadata, "browser", {}) or {}).get("mode")
+            not in {"required", "optional"}
         ]
         if not plugins:
             return []
@@ -1136,7 +1371,8 @@ class AggregateProcessor:
             plugins = scheduler._search_priority_plugins(plugins)
         except Exception:
             pass
-        plugins = plugins[:max(1, int(max_sources or 12))]
+        if max_sources > 0:
+            plugins = plugins[:max_sources]
 
         existing_keys = {
             (str(source.get("sourceId", "") or ""), str(source.get("bookId", "") or ""))
@@ -1188,17 +1424,24 @@ class AggregateProcessor:
                     )
                 return candidates
 
-        results = await asyncio.gather(*(search_plugin(plugin) for plugin in plugins))
-        for candidates in results:
-            for candidate in candidates:
-                key = (candidate["sourceId"], candidate["bookId"])
-                if key in existing_keys or candidate["sourceId"] in existing_source_ids:
-                    continue
-                existing_keys.add(key)
-                existing_source_ids.add(candidate["sourceId"])
-                found.append(candidate)
-                if len(found) >= max_candidates:
-                    return found
+        tasks = [asyncio.create_task(search_plugin(plugin)) for plugin in plugins]
+        try:
+            for task in asyncio.as_completed(tasks):
+                candidates = await task
+                for candidate in candidates:
+                    key = (candidate["sourceId"], candidate["bookId"])
+                    if key in existing_keys or candidate["sourceId"] in existing_source_ids:
+                        continue
+                    existing_keys.add(key)
+                    existing_source_ids.add(candidate["sourceId"])
+                    found.append(candidate)
+                    if max_candidates > 0 and len(found) >= max_candidates:
+                        return found
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
         return found
 
     def _merge_payload_sources(
@@ -1267,6 +1510,550 @@ class AggregateProcessor:
                     ),
                 )
             conn.commit()
+
+    async def _snapshot_candidate_sources(
+        self,
+        *,
+        catalog: Any,
+        aggregate_book_id: str,
+        payload: dict[str, Any],
+        official_chapters: list[dict[str, Any]],
+        historical_complete: bool = True,
+    ) -> dict[str, Any]:
+        """Capture every known third-party chapter before official content is read.
+
+        The run table makes each source independently resumable. Successful
+        snapshots are immutable until an explicit re-fetch path is introduced.
+        """
+        primary_source_id = str(payload.get("primarySourceId", "") or "")
+        candidates = [
+            item
+            for item in (payload.get("sources") or [])
+            if isinstance(item, dict)
+            and str(item.get("sourceId", "") or "")
+            and str(item.get("sourceId", "") or "") != primary_source_id
+            and not self._is_official_source(str(item.get("sourceId", "") or ""))
+        ]
+        if not candidates:
+            return {"sourceCount": 0, "captured": 0, "failed": 0}
+
+        results = await asyncio.gather(
+            *[
+                self._snapshot_one_candidate_source(
+                    catalog=catalog,
+                    aggregate_book_id=aggregate_book_id,
+                    source=item,
+                    official_chapters=official_chapters,
+                    historical_complete=historical_complete,
+                )
+                for item in candidates
+            ],
+            return_exceptions=True,
+        )
+        captured = 0
+        failed = 0
+        source_results: list[dict[str, Any]] = []
+        for item, result in zip(candidates, results):
+            if isinstance(result, Exception):
+                failed += 1
+                source_results.append({
+                    "sourceId": str(item.get("sourceId", "") or ""),
+                    "success": False,
+                    "error": str(result),
+                })
+                continue
+            source_results.append(result)
+            captured += int(result.get("captured", 0) or 0)
+            failed += int(result.get("failed", 0) or 0)
+        return {
+            "sourceCount": len(candidates),
+            "captured": captured,
+            "failed": failed,
+            "sources": source_results,
+        }
+
+    async def _run_initial_candidate_prefetch(
+        self,
+        *,
+        catalog: Any,
+        aggregate_book_id: str,
+        payload: dict[str, Any],
+        official_chapters: list[dict[str, Any]],
+        chapters_to_process: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Give initial third-party snapshots a bounded head start."""
+        result = {"mode": "on_demand", "sourceCount": 0, "captured": 0, "failed": 0}
+        if self._published_chapter_count(aggregate_book_id) > 0 or not chapters_to_process:
+            return result
+
+        state = self._library_books().source_map_refresh_state(aggregate_book_id)
+        if not state.get("completed"):
+            return result
+        try:
+            verified_at = datetime.fromisoformat(
+                str(state.get("lastVerifiedAt", "")).replace("Z", "+00:00")
+            )
+            if verified_at.tzinfo is None:
+                verified_at = verified_at.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            return result
+        remaining = INITIAL_PREFETCH_GRACE_SECONDS - (
+            self._now_dt() - verified_at.astimezone(timezone.utc)
+        ).total_seconds()
+        if remaining <= 0:
+            return result
+
+        pending_indexes = [
+            int(item.get("chapterIndex", 0) or 0)
+            for item in chapters_to_process
+            if int(item.get("chapterIndex", 0) or 0) > 0
+        ]
+        if not pending_indexes:
+            return result
+        first_index = min(pending_indexes)
+        targets = [
+            item
+            for item in official_chapters
+            if int(item.get("index", 0) or 0) >= first_index
+        ][:INITIAL_PREFETCH_CHAPTER_LIMIT]
+        if not targets:
+            return result
+
+        try:
+            prefetched = await asyncio.wait_for(
+                self._snapshot_candidate_sources(
+                    catalog=catalog,
+                    aggregate_book_id=aggregate_book_id,
+                    payload=payload,
+                    official_chapters=targets,
+                    historical_complete=False,
+                ),
+                timeout=remaining,
+            )
+        except asyncio.TimeoutError:
+            self.mark_running_snapshots_interrupted(
+                aggregate_book_id, "prefetch_grace_expired"
+            )
+            return {**result, "mode": "initial_prefetch_timeout"}
+        return {**prefetched, "mode": "initial_prefetch"}
+
+    async def _snapshot_one_candidate_source(
+        self,
+        *,
+        catalog: Any,
+        aggregate_book_id: str,
+        source: dict[str, Any],
+        official_chapters: list[dict[str, Any]],
+        historical_complete: bool = True,
+    ) -> dict[str, Any]:
+        source_id = str(source.get("sourceId", "") or "").strip()
+        source_book_id = str(source.get("bookId", "") or "").strip()
+        source_name = str(source.get("sourceName", "") or source_id).strip()
+        if not source_id or not source_book_id:
+            return {"sourceId": source_id, "success": False, "captured": 0, "failed": 1, "error": "missing_source_book"}
+
+        historical_complete = historical_complete or self._snapshot_run_is_complete(
+            aggregate_book_id=aggregate_book_id,
+            source_id=source_id,
+            source_book_id=source_book_id,
+        )
+        started_at = self._now()
+        self._upsert_snapshot_run(
+            aggregate_book_id=aggregate_book_id,
+            source_id=source_id,
+            source_book_id=source_book_id,
+            status="loading_toc",
+            fetched_chapters=self._source_snapshot_count(aggregate_book_id, source_id),
+            started_at=started_at,
+        )
+        self._log_chapter_step(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=None,
+            title="",
+            event="source_snapshot_start",
+            stage="source_snapshot",
+            payload={
+                "step": f"开始下载第三方源：{source_name}",
+                "sourceId": source_id,
+                "sourceName": source_name,
+            },
+        )
+        try:
+            toc = await self._cached_toc(
+                catalog,
+                source_book_id,
+                aggregate_book_id=aggregate_book_id,
+                source_id=source_id,
+            )
+            source_chapters = [item for item in toc.get("chapters", []) if isinstance(item, dict)]
+            if not source_chapters:
+                raise ValueError("empty or invalid candidate TOC")
+        except Exception as exc:
+            self._upsert_snapshot_run(
+                aggregate_book_id=aggregate_book_id,
+                source_id=source_id,
+                source_book_id=source_book_id,
+                status="error",
+                last_error=str(exc),
+                completed_at=self._now(),
+            )
+            self._log_chapter_step(
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=None,
+                title="",
+                event="source_snapshot_error",
+                stage="source_snapshot",
+                error_message=str(exc),
+                payload={
+                    "step": f"第三方源下载失败：{source_name}",
+                    "sourceId": source_id,
+                    "sourceName": source_name,
+                },
+            )
+            return {"sourceId": source_id, "success": False, "captured": 0, "failed": 1, "error": str(exc)}
+
+        toc_hash = hashlib.sha256(
+            json.dumps(source_chapters, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+        target_chapters = (
+            official_chapters[:INITIAL_PREFETCH_CHAPTER_LIMIT]
+            if not historical_complete
+            else official_chapters
+        )
+        matched = 0
+        captured = 0
+        failed = 0
+        total_targets = len(target_chapters)
+        fetched_total = self._source_snapshot_count(aggregate_book_id, source_id)
+        self._upsert_snapshot_run(
+            aggregate_book_id=aggregate_book_id,
+            source_id=source_id,
+            source_book_id=source_book_id,
+            status="running",
+            toc_hash=toc_hash,
+            total_chapters=len(source_chapters),
+            fetched_chapters=fetched_total,
+        )
+        self._log_chapter_step(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=None,
+            title="",
+            event="source_snapshot_toc_complete",
+            stage="source_snapshot",
+            payload={
+                "step": f"第三方源目录加载完成：{source_name}，共 {len(source_chapters)} 章",
+                "sourceId": source_id,
+                "sourceName": source_name,
+                "total": len(source_chapters),
+            },
+        )
+
+        def report_progress(processed: int, chapter_index: int, title: str) -> None:
+            nonlocal fetched_total
+            if processed % 10 != 0 and processed != total_targets:
+                return
+            fetched_total = self._source_snapshot_count(aggregate_book_id, source_id)
+            percent = round(processed * 100 / total_targets) if total_targets else 100
+            self._upsert_snapshot_run(
+                aggregate_book_id=aggregate_book_id,
+                source_id=source_id,
+                source_book_id=source_book_id,
+                status="running",
+                toc_hash=toc_hash,
+                total_chapters=len(source_chapters),
+                matched_chapters=matched,
+                fetched_chapters=fetched_total,
+                failed_chapters=failed,
+                last_error="" if failed == 0 else "chapter_snapshot_failed",
+            )
+            self._log_chapter_step(
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=chapter_index,
+                title=title,
+                event="source_snapshot_progress",
+                stage="source_snapshot",
+                payload={
+                    "step": f"正在下载第三方源：{source_name}（{processed}/{total_targets}）",
+                    "sourceId": source_id,
+                    "sourceName": source_name,
+                    "processed": processed,
+                    "total": total_targets,
+                    "matched": matched,
+                    "fetched": fetched_total,
+                    "failed": failed,
+                    "percent": percent,
+                },
+            )
+
+        for processed, official in enumerate(target_chapters, start=1):
+            chapter_index = int(official.get("index", 0) or 0)
+            title = str(official.get("title", "") or "")
+            candidate = self._match_snapshot_candidate_chapter(
+                source_chapters=source_chapters,
+                chapter_index=chapter_index,
+                title=title,
+            )
+            if candidate is None:
+                report_progress(processed, chapter_index, title)
+                continue
+            matched += 1
+            if self._source_snapshot_exists(aggregate_book_id, chapter_index, source_id):
+                report_progress(processed, chapter_index, title)
+                continue
+            candidate_chapter_id = str(candidate.get("chapterId", "") or "")
+            if not candidate_chapter_id and candidate.get("chapterUrl"):
+                candidate_chapter_id = encode_chapter_id(source_id, str(candidate["chapterUrl"]))
+            if not candidate_chapter_id:
+                failed += 1
+                report_progress(processed, chapter_index, title)
+                continue
+            try:
+                async with self._source_slot(
+                    aggregate_book_id=aggregate_book_id,
+                    source_id=source_id,
+                ):
+                    if self._source_snapshot_exists(aggregate_book_id, chapter_index, source_id):
+                        report_progress(processed, chapter_index, title)
+                        continue
+                    result = await catalog.chapter(candidate_chapter_id)
+                raw_content = str(result.get("content", "") or "")
+                if not raw_content.strip():
+                    raise ValueError("empty candidate chapter content")
+                self._save_source_snapshot(
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_index=chapter_index,
+                    source_id=source_id,
+                    source_book_id=source_book_id,
+                    source_chapter_id=candidate_chapter_id,
+                    source_chapter_url=self._extract_source_chapter_url(result, candidate_chapter_id),
+                    title=str(candidate.get("title", "") or title),
+                    raw_content=raw_content,
+                    classification="captured",
+                )
+                captured += 1
+            except Exception as exc:
+                failed += 1
+                self._log_chapter_step(
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_index=chapter_index,
+                    title=title,
+                    event="candidate_snapshot_error",
+                    stage="stage1",
+                    error_message=str(exc),
+                    payload={"step": "候补源快照抓取失败", "sourceId": source_id},
+                )
+            report_progress(processed, chapter_index, title)
+
+        status = "complete" if historical_complete and failed == 0 else "partial"
+        fetched_total = self._source_snapshot_count(aggregate_book_id, source_id)
+        self._upsert_snapshot_run(
+            aggregate_book_id=aggregate_book_id,
+            source_id=source_id,
+            source_book_id=source_book_id,
+            status=status,
+            toc_hash=toc_hash,
+            total_chapters=len(source_chapters),
+            matched_chapters=matched,
+            fetched_chapters=fetched_total,
+            failed_chapters=failed,
+            last_error="" if failed == 0 else "chapter_snapshot_failed",
+            completed_at=self._now() if status == "complete" else "",
+        )
+        self._write_source_snapshot_manifest(
+            aggregate_book_id=aggregate_book_id,
+            source_id=source_id,
+            source_book_id=source_book_id,
+            status=status,
+            toc_hash=toc_hash,
+            total_chapters=len(source_chapters),
+            matched_chapters=matched,
+            fetched_chapters=fetched_total,
+            failed_chapters=failed,
+        )
+        self._log_chapter_step(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=None,
+            title="",
+            event="source_snapshot_complete" if failed == 0 else "source_snapshot_error",
+            stage="source_snapshot",
+            payload={
+                "step": (
+                    f"第三方源下载完成：{source_name}，已保存 {fetched_total} 章"
+                    if failed == 0
+                    else f"第三方源下载结束：{source_name}，失败 {failed} 章"
+                ),
+                "sourceId": source_id,
+                "sourceName": source_name,
+                "total": len(source_chapters),
+                "matched": matched,
+                "fetched": fetched_total,
+                "failed": failed,
+                "percent": 100,
+                "status": status,
+            },
+        )
+        return {"sourceId": source_id, "success": failed == 0, "captured": captured, "failed": failed, "matched": matched}
+
+    def _match_snapshot_candidate_chapter(
+        self,
+        *,
+        source_chapters: list[dict[str, Any]],
+        chapter_index: int,
+        title: str,
+    ) -> dict[str, Any] | None:
+        from app.services.aggregate_alignment import chapter_title_similarity
+
+        nearby = [
+            item for item in source_chapters
+            if abs(int(item.get("index", 0) or 0) - chapter_index) <= 2
+        ]
+        scored = [
+            (chapter_title_similarity(title, str(item.get("title", "") or "")), item)
+            for item in nearby
+        ]
+        scored = [item for item in scored if item[0] >= 0.75]
+        if not scored:
+            return None
+        scored.sort(key=lambda item: (-item[0], abs(int(item[1].get("index", 0) or 0) - chapter_index)))
+        return scored[0][1]
+
+    def _source_snapshot_exists(self, aggregate_book_id: str, chapter_index: int, source_id: str) -> bool:
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT 1 FROM aggregate_source_snapshots
+                   WHERE aggregate_book_id = ? AND chapter_index = ? AND source_id = ?""",
+                (aggregate_book_id, chapter_index, source_id),
+            ).fetchone()
+        return row is not None
+
+    def _source_snapshot_count(self, aggregate_book_id: str, source_id: str) -> int:
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT COUNT(*) FROM aggregate_source_snapshots
+                   WHERE aggregate_book_id = ? AND source_id = ?""",
+                (aggregate_book_id, source_id),
+            ).fetchone()
+        return int(row[0] or 0) if row else 0
+
+    def _snapshot_run_is_complete(
+        self,
+        *,
+        aggregate_book_id: str,
+        source_id: str,
+        source_book_id: str,
+    ) -> bool:
+        with self._conn() as conn:
+            row = conn.execute(
+                """
+                SELECT status FROM aggregate_source_snapshot_runs
+                WHERE aggregate_book_id = ? AND source_id = ? AND source_book_id = ?
+                """,
+                (aggregate_book_id, source_id, source_book_id),
+            ).fetchone()
+        return bool(row and row[0] == "complete")
+
+    def mark_running_snapshots_interrupted(self, aggregate_book_id: str, reason: str) -> None:
+        """Close live snapshot rows when the owning book job is interrupted."""
+        now = self._now()
+        with self._conn() as conn:
+            conn.execute(
+                """
+                UPDATE aggregate_source_snapshot_runs
+                SET status = 'partial', last_error = ?, completed_at = ?, updated_at = ?
+                WHERE aggregate_book_id = ? AND status IN ('running', 'loading_toc')
+                """,
+                (str(reason or "job_interrupted"), now, now, aggregate_book_id),
+            )
+            conn.commit()
+
+    def _published_chapter_count(self, aggregate_book_id: str) -> int:
+        with self._conn() as conn:
+            row = conn.execute(
+                """
+                SELECT COUNT(*) FROM aggregate_chapter_tasks
+                WHERE aggregate_book_id = ? AND status IN ('processed', 'fallback')
+                """,
+                (aggregate_book_id,),
+            ).fetchone()
+        return int(row[0] or 0) if row else 0
+
+    def _upsert_snapshot_run(
+        self,
+        *,
+        aggregate_book_id: str,
+        source_id: str,
+        source_book_id: str,
+        status: str,
+        toc_hash: str = "",
+        total_chapters: int = 0,
+        matched_chapters: int = 0,
+        fetched_chapters: int = 0,
+        failed_chapters: int = 0,
+        last_error: str = "",
+        started_at: str = "",
+        completed_at: str = "",
+    ) -> None:
+        now = self._now()
+        with self._conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO aggregate_source_snapshot_runs
+                (aggregate_book_id, source_id, source_book_id, status, toc_hash, total_chapters,
+                 matched_chapters, fetched_chapters, failed_chapters, last_error, started_at, completed_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(aggregate_book_id, source_id, source_book_id) DO UPDATE SET
+                    status = excluded.status,
+                    toc_hash = CASE WHEN excluded.toc_hash <> '' THEN excluded.toc_hash ELSE aggregate_source_snapshot_runs.toc_hash END,
+                    total_chapters = CASE WHEN excluded.total_chapters > 0 THEN excluded.total_chapters ELSE aggregate_source_snapshot_runs.total_chapters END,
+                    matched_chapters = CASE WHEN excluded.matched_chapters > 0 THEN excluded.matched_chapters ELSE aggregate_source_snapshot_runs.matched_chapters END,
+                    fetched_chapters = CASE WHEN excluded.fetched_chapters > 0 THEN excluded.fetched_chapters ELSE aggregate_source_snapshot_runs.fetched_chapters END,
+                    failed_chapters = excluded.failed_chapters,
+                    last_error = excluded.last_error,
+                    started_at = CASE WHEN excluded.started_at <> '' THEN excluded.started_at ELSE aggregate_source_snapshot_runs.started_at END,
+                    completed_at = excluded.completed_at,
+                    updated_at = excluded.updated_at
+                """,
+                (aggregate_book_id, source_id, source_book_id, status, toc_hash, total_chapters, matched_chapters,
+                 fetched_chapters, failed_chapters, last_error, started_at, completed_at, now),
+            )
+            conn.commit()
+
+    def _write_source_snapshot_manifest(
+        self,
+        *,
+        aggregate_book_id: str,
+        source_id: str,
+        source_book_id: str,
+        status: str,
+        toc_hash: str,
+        total_chapters: int,
+        matched_chapters: int,
+        fetched_chapters: int,
+        failed_chapters: int,
+    ) -> None:
+        book_name, book_author = self._shared_book_identity(aggregate_book_id)
+        if not book_name:
+            return
+        self._shared_book_storage().atomic_write_json(
+            self._shared_book_storage().source_snapshot_manifest_path(
+                book_name=book_name,
+                author=book_author,
+                source_id=source_id,
+            ),
+            {
+                "schemaVersion": 1,
+                "aggregateBookId": aggregate_book_id,
+                "sourceId": source_id,
+                "sourceBookId": source_book_id,
+                "status": status,
+                "tocHash": toc_hash,
+                "totalChapters": total_chapters,
+                "matchedChapters": matched_chapters,
+                "fetchedChapters": fetched_chapters,
+                "failedChapters": failed_chapters,
+                "updatedAt": self._now(),
+            },
+        )
 
     def _positive_int(self, value: Any, default: int) -> int:
         try:
@@ -1449,6 +2236,8 @@ class AggregateProcessor:
         payload: dict,
         primary_source_id: str,
         aggregate_book_id: str = "",
+        *,
+        include_expansion: bool = False,
     ) -> list[dict]:
         from app.services.shared_book_source_map import SharedBookSourceMapService
 
@@ -1458,6 +2247,13 @@ class AggregateProcessor:
             payload=payload,
             primary_source_id=primary_source_id,
         )
+        # Candidate sources are always third-party content mirrors.  A second
+        # official plugin may be present in an older source map, but must not
+        # be used as a cross-source fallback for the primary official source.
+        candidates = [
+            item for item in candidates
+            if not self._is_official_source(str(item.get("sourceId", "") or ""))
+        ]
         settings = self._book_workflow_settings(aggregate_book_id)
         priority = [str(x) for x in settings.get("candidateSourcePriority", []) or []]
         if priority:
@@ -1470,12 +2266,29 @@ class AggregateProcessor:
                 )
             )
         else:
-            candidates.sort(key=lambda s: -int(s.get("priority", s.get("score", 0)) or 0))
+            # Browser sources remain available as a last resort, but must not
+            # occupy the batch queue before ordinary HTTP candidates.
+            candidates.sort(
+                key=lambda s: (
+                    str(s.get("sourceId", "") or "") in self._browser_source_ids,
+                    -int(s.get("priority", s.get("score", 0)) or 0),
+                )
+            )
         try:
             limit = int(settings.get("sourceCandidateLimit", 0) or 0)
         except (TypeError, ValueError):
             limit = 0
-        return candidates[:limit] if limit > 0 else candidates
+        if limit > 0:
+            return candidates[:limit]
+        # Start with three mirrors.  A chapter that cannot form a three-source
+        # consensus may inspect the remaining mapped HTTP mirrors, but never
+        # performs an unbounded crawl.
+        max_count = (
+            CROSS_SOURCE_MAX_COMPARE_COUNT
+            if include_expansion
+            else CROSS_SOURCE_INITIAL_COMPARE_COUNT
+        )
+        return candidates[:max_count]
 
     def _get_ai_service(self, aggregate_book_id: str = ""):
         if not self.ai_aggregate_enabled(aggregate_book_id):
@@ -1536,15 +2349,39 @@ class AggregateProcessor:
 
         return self._ai_service
 
-    async def _cached_toc(self, catalog, book_id: str) -> dict:
+    async def _cached_toc(
+        self,
+        catalog,
+        book_id: str,
+        *,
+        aggregate_book_id: str = "",
+        source_id: str = "",
+        on_fetch_start: Any = None,
+    ) -> dict:
         if book_id in self._toc_cache:
             return self._toc_cache[book_id]
-        toc = await catalog.toc(book_id)
+        if aggregate_book_id and source_id:
+            async with self._source_slot(
+                aggregate_book_id=aggregate_book_id,
+                source_id=source_id,
+            ):
+                if book_id in self._toc_cache:
+                    return self._toc_cache[book_id]
+                if callable(on_fetch_start):
+                    on_fetch_start()
+                toc = await catalog.toc(book_id)
+        else:
+            if callable(on_fetch_start):
+                on_fetch_start()
+            toc = await catalog.toc(book_id)
         self._toc_cache[book_id] = toc
         return toc
 
-    def _clear_toc_cache(self) -> None:
-        self._toc_cache.clear()
+    def invalidate_candidate_toc_cache(self, aggregate_book_id: str) -> None:
+        payload = self._load_aggregate_payload(aggregate_book_id)
+        for source in payload.get("sources", []):
+            if isinstance(source, dict):
+                self._toc_cache.pop(str(source.get("bookId", "") or ""), None)
 
     def _safe_log_text(self, value: Any, *, max_length: int = 300) -> str:
         text = str(value or "")
@@ -1682,8 +2519,10 @@ class AggregateProcessor:
                 stage="stage1",
                 payload={"step": "正在拉取官方源", "sourceId": primary_source_id},
             )
-            source_sem = await self._get_source_sem(primary_source_id)
-            async with source_sem:
+            async with self._source_slot(
+                aggregate_book_id=aggregate_book_id,
+                source_id=primary_source_id,
+            ):
                 result = await catalog.chapter(source_chapter_id)
             content = result.get("content", "")
             source_word_count = self._extract_source_word_count(result)
@@ -1702,17 +2541,7 @@ class AggregateProcessor:
                     "fromSnapshot": False,
                 },
             )
-            if content:
-                self._save_source_snapshot(
-                    aggregate_book_id=aggregate_book_id,
-                    chapter_index=chapter_index or 0,
-                    source_id=primary_source_id,
-                    source_book_id=self._source_book_id_from_payload(payload, primary_source_id),
-                    source_chapter_id=source_chapter_id,
-                    title=title,
-                    clean_content=content,
-                    classification="unknown",
-                )
+            fetched_content = content
             if not content:
                 content = self._load_source_snapshot_content(
                     aggregate_book_id=aggregate_book_id,
@@ -1747,6 +2576,18 @@ class AggregateProcessor:
                 is_paid=self._extract_is_paid(result),
                 is_vip=chapter_is_vip,
             )
+            if fetched_content:
+                self._save_source_snapshot(
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_index=chapter_index or 0,
+                    source_id=primary_source_id,
+                    source_book_id=self._source_book_id_from_payload(payload, primary_source_id),
+                    source_chapter_id=source_chapter_id,
+                    title=title,
+                    raw_content=fetched_content,
+                    source_chapter_url=primary_source_chapter_url,
+                    classification=str(classification.get("classification", "unknown") or "unknown"),
+                )
             self._log_chapter_step(
                 aggregate_book_id=aggregate_book_id,
                 chapter_index=chapter_index,
@@ -1826,6 +2667,7 @@ class AggregateProcessor:
                             fallback_source_id=candidate_result["source_id"],
                             source_word_count=source_word_count,
                             primary_source_chapter_url=primary_source_chapter_url,
+                            cross_source_selected=True,
                         )
                     # 候选源全失败 → 有短内容标记 suspect，无内容标记 error
                     if content:
@@ -1952,6 +2794,7 @@ class AggregateProcessor:
                         fallback_source_id=candidate_result["source_id"],
                         source_word_count=source_word_count,
                         primary_source_chapter_url=primary_source_chapter_url,
+                        cross_source_selected=True,
                     )
 
                 # Step 3: 全部候选源失败，预览已保存
@@ -2020,6 +2863,7 @@ class AggregateProcessor:
                     fallback_source_id=candidate_result["source_id"],
                     source_word_count=source_word_count,
                     primary_source_chapter_url=primary_source_chapter_url,
+                    cross_source_selected=True,
                 )
             if candidate_result and candidate_result.get("all_sources_failed"):
                 raise ValueError("empty supplement content from all current sources")
@@ -2034,8 +2878,9 @@ class AggregateProcessor:
         fallback_source_id: str = "",
         source_word_count: int = 0,
         primary_source_chapter_url: str = "",
+        cross_source_selected: bool = False,
     ) -> dict:
-        """Path 1: Content is full. Purify → write result. (AI 已抽离)"""
+        """Path 1: Content is full. Normalize → write result. (AI 已抽离)"""
         from app.services.aggregate_alignment import build_source_alignment_json
 
         chapter_id = chapter["chapterId"]
@@ -2043,8 +2888,17 @@ class AggregateProcessor:
         title = chapter.get("title", "")
         chapter_index = chapter.get("chapterIndex")
 
-        # 纯代码净化 + 敏感词恢复
-        if self.purify_enabled(aggregate_book_id):
+        # Cross-source selection is the watermark defense: do not subsequently
+        # delete prose by a phrase rule after that evidence-based choice.
+        if cross_source_selected:
+            selected_content = self._normalize_content_light(content)
+            lexicon_result = {
+                "hasMaskedWords": False,
+                "maskedWordCount": 0,
+                "maskedWordCandidates": [],
+                "lexiconRestored": False,
+            }
+        elif self.purify_enabled(aggregate_book_id):
             selected_content, lexicon_result = self._purify_content_with_lexicon(
                 content, source_id=primary_source_id
             )
@@ -2146,6 +3000,7 @@ class AggregateProcessor:
         primary_source_id: str,
         *,
         official_word_count: int = 0,
+        snapshot_only: bool = False,
     ) -> dict | None:
         """Try to get full content from candidate sources.
 
@@ -2161,10 +3016,19 @@ class AggregateProcessor:
             classify_source_content,
         )
 
+        if snapshot_only:
+            return self._try_snapshot_candidate_content(
+                chapter=chapter,
+                payload=payload,
+                primary_source_id=primary_source_id,
+                official_word_count=official_word_count,
+            )
+
         candidates = self._candidate_sources_from_payload(
             payload,
             primary_source_id,
             chapter.get("aggregateBookId", ""),
+            include_expansion=True,
         )
         target_index = chapter.get("chapterIndex", 1)
         target_title = chapter.get("title", "")
@@ -2180,12 +3044,26 @@ class AggregateProcessor:
         except (TypeError, ValueError):
             official_word_count = 0
 
+        snapshot_candidate = self._try_snapshot_candidate_content(
+            chapter=chapter,
+            payload=payload,
+            primary_source_id=primary_source_id,
+            official_word_count=official_word_count,
+        )
+        if snapshot_candidate and snapshot_candidate.get("content"):
+            return snapshot_candidate
+
         attempted_source_ids: list[str] = []
         accepted_candidates: list[dict[str, Any]] = []
         selected_candidate: dict[str, Any] | None = None
         consensus: list[dict[str, Any]] = []
         consensus_mode = ""
         expansion_started = False
+        browser_is_default_fallback = not bool(
+            self._book_workflow_settings(aggregate_book_id).get(
+                "candidateSourcePriority", []
+            )
+        )
 
         for cand in candidates:
             cand_source_id = cand.get("sourceId", "")
@@ -2193,6 +3071,14 @@ class AggregateProcessor:
             if not cand_source_id or not cand_book_id:
                 continue
             if cand_source_id in attempted_source_ids:
+                continue
+            if (
+                cand_source_id in self._browser_source_ids
+                and accepted_candidates
+                and browser_is_default_fallback
+            ):
+                # A validated HTTP candidate can use the documented degraded
+                # consensus. Do not serialize a whole batch behind Browser.
                 continue
             attempted_source_ids.append(cand_source_id)
             source_lag_info = self._candidate_source_lag_info(cand, target_title)
@@ -2210,32 +3096,45 @@ class AggregateProcessor:
                     },
                 )
                 continue
-            self._log_chapter_step(
-                aggregate_book_id=aggregate_book_id,
-                chapter_index=target_index,
-                title=target_title,
-                event="candidate_toc_start",
-                stage="stage2",
-                payload={
-                    "step": "正在加载候选源目录",
-                    "sourceId": cand_source_id,
-                },
-            )
-            try:
-                cand_toc = await self._cached_toc(catalog, cand_book_id)
-                cand_chapters = [c for c in cand_toc.get("chapters", []) if isinstance(c, dict)]
+            toc_fetched = False
+
+            def log_toc_fetch_start() -> None:
+                nonlocal toc_fetched
+                toc_fetched = True
                 self._log_chapter_step(
                     aggregate_book_id=aggregate_book_id,
                     chapter_index=target_index,
                     title=target_title,
-                    event="candidate_toc_complete",
+                    event="candidate_toc_start",
                     stage="stage2",
                     payload={
-                        "step": "候选源目录加载完成",
+                        "step": "正在加载候选源目录",
                         "sourceId": cand_source_id,
-                        "chapterCount": len(cand_chapters),
                     },
                 )
+
+            try:
+                cand_toc = await self._cached_toc(
+                    catalog,
+                    cand_book_id,
+                    aggregate_book_id=aggregate_book_id,
+                    source_id=cand_source_id,
+                    on_fetch_start=log_toc_fetch_start,
+                )
+                cand_chapters = [c for c in cand_toc.get("chapters", []) if isinstance(c, dict)]
+                if toc_fetched:
+                    self._log_chapter_step(
+                        aggregate_book_id=aggregate_book_id,
+                        chapter_index=target_index,
+                        title=target_title,
+                        event="candidate_toc_complete",
+                        stage="stage2",
+                        payload={
+                            "step": "候选源目录加载完成",
+                            "sourceId": cand_source_id,
+                            "chapterCount": len(cand_chapters),
+                        },
+                    )
             except Exception as exc:
                 self._log_chapter_step(
                     aggregate_book_id=aggregate_book_id,
@@ -2308,25 +3207,60 @@ class AggregateProcessor:
                     continue
 
                 try:
-                    self._log_chapter_step(
+                    cand_content = self._load_source_snapshot_content(
                         aggregate_book_id=aggregate_book_id,
-                        chapter_index=target_index,
-                        title=target_title,
-                        event="candidate_fetch_start",
-                        stage="stage2",
-                        payload={
-                            "step": "正在拉取候选章节",
-                            "sourceId": cand_source_id,
-                            "candidateTitle": matched_ch.get("title", "") or "",
-                        },
+                        chapter_index=target_index or 0,
+                        source_id=cand_source_id,
                     )
-                    cand_result = await catalog.chapter(cand_chapter_id)
-                    cand_content = cand_result.get("content", "")
+                    cand_result: dict[str, Any] = {}
+                    fetched_from_network = False
+                    if cand_content and (official_preview or official_word_count > 0):
+                        self._log_chapter_step(
+                            aggregate_book_id=aggregate_book_id,
+                            chapter_index=target_index,
+                            title=target_title,
+                            event="candidate_snapshot_used",
+                            stage="stage2",
+                            payload={
+                                "step": "使用已保存的候选章节",
+                                "sourceId": cand_source_id,
+                                "contentLength": len(cand_content),
+                            },
+                        )
+                    else:
+                        self._log_chapter_step(
+                            aggregate_book_id=aggregate_book_id,
+                            chapter_index=target_index,
+                            title=target_title,
+                            event="candidate_fetch_start",
+                            stage="stage2",
+                            payload={
+                                "step": "正在拉取候选章节",
+                                "sourceId": cand_source_id,
+                                "candidateTitle": matched_ch.get("title", "") or "",
+                            },
+                        )
+                        async with self._source_slot(
+                            aggregate_book_id=aggregate_book_id,
+                            source_id=cand_source_id,
+                        ):
+                            cand_content = self._load_source_snapshot_content(
+                                aggregate_book_id=aggregate_book_id,
+                                chapter_index=target_index or 0,
+                                source_id=cand_source_id,
+                            )
+                            if cand_content:
+                                if not (official_preview or official_word_count > 0):
+                                    continue
+                            else:
+                                cand_result = await catalog.chapter(cand_chapter_id)
+                                cand_content = cand_result.get("content", "")
+                                fetched_from_network = True
                     is_official = self._is_official_source(cand_source_id)
                     candidate_word_count = self._extract_source_word_count(cand_result)
                     candidate_preview_only = self._extract_preview_only(cand_result)
                     candidate_is_paid = self._extract_is_paid(cand_result)
-                    if cand_content:
+                    if cand_content and fetched_from_network:
                         self._save_source_snapshot(
                             aggregate_book_id=aggregate_book_id,
                             chapter_index=target_index or 0,
@@ -2334,28 +3268,20 @@ class AggregateProcessor:
                             source_book_id=cand.get("bookId", ""),
                             source_chapter_id=cand_chapter_id,
                             title=matched_ch.get("title", "") or target_title,
-                            clean_content=cand_content,
+                            raw_content=cand_content,
+                            source_chapter_url=self._extract_source_chapter_url(cand_result, cand_chapter_id),
                             classification="unknown",
                         )
-                    if not cand_content:
-                        cand_content = self._load_source_snapshot_content(
+                        self._upsert_snapshot_run(
                             aggregate_book_id=aggregate_book_id,
-                            chapter_index=target_index or 0,
                             source_id=cand_source_id,
+                            source_book_id=str(cand.get("bookId", "") or ""),
+                            status="partial",
+                            total_chapters=len(cand_chapters),
+                            fetched_chapters=self._source_snapshot_count(aggregate_book_id, cand_source_id),
+                            failed_chapters=0,
+                            last_error="",
                         )
-                        if cand_content:
-                            self._log_chapter_step(
-                                aggregate_book_id=aggregate_book_id,
-                                chapter_index=target_index,
-                                title=target_title,
-                                event="candidate_snapshot_used",
-                                stage="stage2",
-                                payload={
-                                    "step": "候选章节为空，使用本地快照",
-                                    "sourceId": cand_source_id,
-                                    "contentLength": len(cand_content or ""),
-                                },
-                            )
                     # Prefer official baseline so short third-party bodies cannot
                     # pass as "full" merely because the mirror omits wordCount.
                     gate_word_count = (
@@ -2545,9 +3471,9 @@ class AggregateProcessor:
                 allow_degraded=len(accepted_candidates) in (1, 2),
             )
             if len(accepted_candidates) == 1 and selected_candidate:
-                consensus_mode = "single_source_degraded"
+                consensus_mode = "single_source"
             elif len(accepted_candidates) == 2 and selected_candidate:
-                consensus_mode = "two_source_degraded"
+                consensus_mode = "two_source"
             elif len(accepted_candidates) >= CROSS_SOURCE_INITIAL_COMPARE_COUNT:
                 stable = self._has_stable_candidate_consensus(
                     consensus,
@@ -2569,16 +3495,37 @@ class AggregateProcessor:
                 "crossSourceExpanded": expansion_started,
                 "majorityDeletionAllowed": len(accepted_candidates) >= 3,
             })
-            from app.services.aggregate_line_consensus import purify_by_line_consensus
+            from app.services.aggregate_line_consensus import diagnose_line_consensus
 
-            selected_content, line_consensus = purify_by_line_consensus(
+            selected_consensus = next(
+                (
+                    item for item in consensus
+                    if item.get("sourceId") == selected_candidate["source_id"]
+                ),
+                {},
+            )
+            supporting_source_ids = set(
+                selected_consensus.get("supportingSourceIds", [])
+            )
+            # Both sources have already passed the official preview and word-count
+            # gates. A degraded pair may disagree globally because each source has
+            # different insertions, yet still provides safe local anchor evidence.
+            consensus_candidates = (
+                accepted_candidates
+                if consensus_mode == "two_source"
+                else [
+                    candidate
+                    for candidate in accepted_candidates
+                    if candidate["source_id"] == selected_candidate["source_id"]
+                    or candidate["source_id"] in supporting_source_ids
+                ]
+            )
+            line_consensus = diagnose_line_consensus(
                 selected_candidate["content"],
-                accepted_candidates,
+                consensus_candidates,
                 selected_source_id=selected_candidate["source_id"],
                 chapter_title=target_title,
-                ad_patterns=self._ad_patterns_for_source(selected_candidate["source_id"]),
             )
-            selected_candidate["content"] = selected_content
             alignment_json["lineConsensus"] = line_consensus
             selected_candidate["alignment_json"] = alignment_json
             self._log_chapter_step(
@@ -2590,7 +3537,7 @@ class AggregateProcessor:
                 payload={
                     "step": (
                         "候选章节按可用源降级选用"
-                        if consensus_mode.endswith("_degraded")
+                        if consensus_mode in {"single_source", "two_source"}
                         else "候选章节通过交叉比对"
                     ),
                     "sourceId": selected_candidate["source_id"],
@@ -2639,6 +3586,138 @@ class AggregateProcessor:
         )
         return None
 
+    def _try_snapshot_candidate_content(
+        self,
+        *,
+        chapter: dict[str, Any],
+        payload: dict[str, Any],
+        primary_source_id: str,
+        official_word_count: int,
+    ) -> dict[str, Any] | None:
+        """Select a publishable candidate exclusively from previously captured snapshots."""
+        from app.services.aggregate_alignment import (
+            align_candidate_chapter,
+            build_source_alignment_json,
+            classify_source_content,
+        )
+        from app.services.aggregate_line_consensus import diagnose_line_consensus
+
+        aggregate_book_id = str(chapter.get("aggregateBookId", "") or "")
+        chapter_index = int(chapter.get("chapterIndex", 0) or 0)
+        target_title = str(chapter.get("title", "") or "")
+        candidate_sources = self._candidate_sources_from_payload(
+            payload,
+            primary_source_id,
+            aggregate_book_id,
+            include_expansion=True,
+        )
+        allowed_source_ids = {
+            str(item.get("sourceId", "") or "")
+            for item in candidate_sources
+            if str(item.get("sourceId", "") or "")
+        }
+        if not aggregate_book_id or not chapter_index or not allowed_source_ids:
+            return None
+        placeholders = ",".join("?" for _ in allowed_source_ids)
+        with self._conn() as conn:
+            rows = conn.execute(
+                f"""
+                SELECT source_id, title, clean_content
+                FROM aggregate_source_snapshots
+                WHERE aggregate_book_id = ? AND chapter_index = ?
+                  AND source_id IN ({placeholders})
+                ORDER BY source_id ASC
+                """,
+                (aggregate_book_id, chapter_index, *sorted(allowed_source_ids)),
+            ).fetchall()
+        official_preview = self._load_source_snapshot_content(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+            source_id=primary_source_id,
+        )
+        if not official_preview and not official_word_count:
+            # A stored third-party body is not self-authenticating. Without an
+            # official body or word-count anchor it remains a snapshot only.
+            return {"all_sources_failed": bool(rows), "attempted_source_ids": sorted(allowed_source_ids)}
+        accepted: list[dict[str, Any]] = []
+        for source_id, candidate_title, content in rows:
+            candidate_content = str(content or "")
+            classification = classify_source_content(
+                candidate_content,
+                source_id=str(source_id or ""),
+                source_word_count=int(official_word_count or 0),
+            )
+            if classification.get("classification") != "full":
+                continue
+            if official_preview and len(candidate_content) <= len(official_preview):
+                continue
+            if official_word_count:
+                word_gate = self._validate_word_count(
+                    candidate_content,
+                    official_word_count,
+                    enforce=True,
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_index=chapter_index,
+                    source_id=str(source_id or ""),
+                )
+                if not word_gate.get("passed"):
+                    continue
+            aligned = (
+                align_candidate_chapter(
+                    official_preview=official_preview,
+                    candidate_title=str(candidate_title or target_title),
+                    candidate_content=candidate_content,
+                    expected_title=target_title,
+                )
+                if official_preview
+                else {"alignmentPassed": True, "alignmentReason": "no_official_preview"}
+            )
+            if not aligned.get("alignmentPassed"):
+                continue
+            accepted.append({
+                "source_id": str(source_id or ""),
+                "content": candidate_content,
+                "alignment_json": build_source_alignment_json(
+                    selected_content_source="candidate",
+                    official_content_length=len(official_preview),
+                    candidate_content_length=len(candidate_content),
+                    title_similarity=float(aligned.get("titleSimilarity", 0.0) or 0.0),
+                    preview_similarity=float(aligned.get("previewSimilarity", 0.0) or 0.0),
+                    head_preview_similarity=float(aligned.get("headPreviewSimilarity", 0.0) or 0.0),
+                    alignment_passed=True,
+                    alignment_reason=str(aligned.get("alignmentReason", "") or ""),
+                    candidate_source_id=str(source_id or ""),
+                    primary_source_id=primary_source_id,
+                ),
+            })
+        selected, consensus = self._select_consistent_candidate(
+            accepted,
+            allow_degraded=len(accepted) in (1, 2),
+        )
+        if selected is None:
+            return {"all_sources_failed": bool(rows), "attempted_source_ids": sorted(allowed_source_ids)} if rows else None
+
+        alignment_json = dict(selected["alignment_json"])
+        alignment_json["crossSourceConsensus"] = consensus
+        alignment_json["crossSourceConsensusMode"] = (
+            "single_source" if len(accepted) == 1 else "two_source" if len(accepted) == 2 else "multi_source"
+        )
+        alignment_json.update({
+            "crossSourceRequestedCount": CROSS_SOURCE_INITIAL_COMPARE_COUNT,
+            "crossSourceAcceptedCount": len(accepted),
+            "crossSourceAttemptedCount": len(allowed_source_ids),
+            "crossSourceExpanded": len(allowed_source_ids) > CROSS_SOURCE_INITIAL_COMPARE_COUNT,
+            "majorityDeletionAllowed": False,
+        })
+        alignment_json["lineConsensus"] = diagnose_line_consensus(
+            selected["content"],
+            accepted,
+            selected_source_id=selected["source_id"],
+            chapter_title=target_title,
+        )
+        selected["alignment_json"] = alignment_json
+        return selected
+
     def _select_consistent_candidate(
         self,
         candidates: list[dict[str, Any]],
@@ -2652,7 +3731,9 @@ class AggregateProcessor:
         )
 
         consensus: list[dict[str, Any]] = []
-        ranked: list[tuple[int, float, int, dict[str, Any]]] = []
+        from app.services.aggregate_line_consensus import direct_consensus_gap_count
+
+        ranked: list[tuple[int, int, float, int, dict[str, Any]]] = []
         for index, candidate in enumerate(candidates):
             scores: list[float] = []
             peers: list[str] = []
@@ -2672,13 +3753,25 @@ class AggregateProcessor:
                 "averageSimilarity": round(sum(scores) / len(scores), 4) if scores else 0.0,
             })
             if scores:
-                ranked.append((len(scores), sum(scores) / len(scores), index, candidate))
+                direct_gap_count = direct_consensus_gap_count(
+                    str(candidate.get("content", "") or ""),
+                    candidates,
+                    selected_source_id=str(candidate.get("source_id", "") or ""),
+                )
+                consensus[-1]["directConsensusGapCount"] = direct_gap_count
+                ranked.append((
+                    len(scores),
+                    direct_gap_count,
+                    sum(scores) / len(scores),
+                    index,
+                    candidate,
+                ))
         if not ranked:
             if allow_degraded and len(candidates) in (1, 2):
                 return candidates[0], consensus
             return None, consensus
-        ranked.sort(key=lambda item: (-item[0], -item[1], item[2]))
-        return ranked[0][3], consensus
+        ranked.sort(key=lambda item: (-item[0], item[1], -item[2], item[3]))
+        return ranked[0][4], consensus
 
     @staticmethod
     def _has_stable_candidate_consensus(
@@ -2912,6 +4005,10 @@ class AggregateProcessor:
         trace_hash = hashlib.sha256(
             json.dumps(trace_meta, ensure_ascii=False, sort_keys=True).encode("utf-8")
         ).hexdigest()
+        snapshot_refs = self._source_snapshot_refs(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=int(chapter_index or 0),
+        )
         with self._conn() as conn:
             conn.execute(
                 """UPDATE aggregate_chapter_tasks
@@ -2919,6 +4016,7 @@ class AggregateProcessor:
                        placeholder = 0,
                        error = '', last_error_code = '', retry_count = 0, next_retry_time = NULL,
                        trace_hash = ?, policy_snapshot_json = ?, policy_version = COALESCE(policy_version, 1),
+                       source_snapshot_refs_json = ?,
                        source_alignment_json = ?, fallback_source_id = ?,
                        ai_model = '', deviation_score = 0, ai_self_score = 0,
                        ai_prompt_tokens = 0, ai_completion_tokens = 0,
@@ -2929,6 +4027,7 @@ class AggregateProcessor:
                 (status, len(content), now,
                  trace_hash,
                  json.dumps(trace_meta, ensure_ascii=False),
+                 json.dumps(snapshot_refs, ensure_ascii=False),
                  json.dumps(alignment_json, ensure_ascii=False),
                  fallback_source_id,
                  int(source_word_count or 0), primary_source_chapter_url or "", 1 if preview_only else 0,
@@ -2974,6 +4073,31 @@ class AggregateProcessor:
             fallback_source_id=fallback_source_id,
             preview_only=preview_only,
         )
+
+    def _source_snapshot_refs(self, *, aggregate_book_id: str, chapter_index: int) -> list[dict[str, Any]]:
+        if not aggregate_book_id or chapter_index <= 0:
+            return []
+        with self._conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT source_id, source_book_id, source_chapter_id, content_hash, classification, fetched_at
+                FROM aggregate_source_snapshots
+                WHERE aggregate_book_id = ? AND chapter_index = ?
+                ORDER BY source_id ASC
+                """,
+                (aggregate_book_id, chapter_index),
+            ).fetchall()
+        return [
+            {
+                "sourceId": row[0],
+                "sourceBookId": row[1],
+                "sourceChapterId": row[2],
+                "contentHash": row[3],
+                "classification": row[4],
+                "fetchedAt": row[5],
+            }
+            for row in rows
+        ]
 
     def _log_chapter_result(
         self,
@@ -3482,6 +4606,20 @@ class AggregateProcessor:
             1 for s, _, m in chapter_stats
             if s in {"processed", "fallback"} and bool(m)
         )
+        snapshot_stats = conn.execute(
+            """
+            SELECT COUNT(*), COUNT(DISTINCT source_id)
+            FROM aggregate_source_snapshots
+            WHERE aggregate_book_id = ?
+            """,
+            (aggregate_book_id,),
+        ).fetchone()
+        snapshot_failed = conn.execute(
+            """SELECT COALESCE(SUM(failed_chapters), 0)
+               FROM aggregate_source_snapshot_runs
+               WHERE aggregate_book_id = ?""",
+            (aggregate_book_id,),
+        ).fetchone()
         latest_index = 0
         latest_title = ""
         if chapter_stats:
@@ -3522,6 +4660,9 @@ class AggregateProcessor:
                 "proofreadCompleteCount": proofread_count,
                 "suspectChapterCount": 0,
                 "failedChapterCount": failed_count,
+                "sourceSnapshotChapterCount": int((snapshot_stats or [0])[0] or 0),
+                "sourceSnapshotSourceCount": int((snapshot_stats or [0, 0])[1] or 0),
+                "sourceSnapshotFailedCount": int((snapshot_failed or [0])[0] or 0),
                 "latestChapterIndex": latest_index,
                 "latestChapterTitle": latest_title,
                 "lastUpdateCheckAt": (row[12] if row else "") or "",
@@ -3746,13 +4887,25 @@ class AggregateProcessor:
         source_book_id: str,
         source_chapter_id: str,
         title: str,
-        clean_content: str,
-        classification: str,
+        raw_content: str = "",
+        classification: str = "unknown",
+        source_chapter_url: str = "",
+        clean_content: str = "",
     ) -> None:
-        if not aggregate_book_id or not chapter_index or not source_id or not clean_content:
+        raw_content = raw_content or clean_content
+        if not aggregate_book_id or not chapter_index or not source_id or not raw_content:
             return
-        if self._looks_like_garbled_text(clean_content):
+        if self._looks_like_garbled_text(raw_content):
             raise ValueError("garbled source snapshot content")
+        from app.services.content_purify import purify_content_with_audit
+
+        clean_content, purify_audit = purify_content_with_audit(
+            raw_content,
+            ad_patterns=self._ad_patterns_for_source(source_id),
+            chapter_title=title,
+        )
+        if self._looks_like_garbled_text(clean_content):
+            raise ValueError("garbled purified source snapshot content")
         content_hash = hashlib.sha256(clean_content.encode("utf-8")).hexdigest()
         now = self._now()
         with self._conn() as conn:
@@ -3760,14 +4913,19 @@ class AggregateProcessor:
                 """
                 INSERT INTO aggregate_source_snapshots
                 (aggregate_book_id, chapter_index, source_id, source_book_id, source_chapter_id, title,
-                 clean_content, content_hash, classification, fetched_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 source_chapter_url, raw_content, clean_content, content_hash, word_count,
+                 purify_audit_json, classification, fetched_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(aggregate_book_id, chapter_index, source_id) DO UPDATE SET
                     source_book_id = excluded.source_book_id,
                     source_chapter_id = excluded.source_chapter_id,
                     title = excluded.title,
+                    source_chapter_url = excluded.source_chapter_url,
+                    raw_content = excluded.raw_content,
                     clean_content = excluded.clean_content,
                     content_hash = excluded.content_hash,
+                    word_count = excluded.word_count,
+                    purify_audit_json = excluded.purify_audit_json,
                     classification = excluded.classification,
                     fetched_at = excluded.fetched_at,
                     updated_at = excluded.updated_at
@@ -3779,14 +4937,80 @@ class AggregateProcessor:
                     source_book_id,
                     source_chapter_id,
                     title,
+                    source_chapter_url,
+                    raw_content,
                     clean_content,
                     content_hash,
+                    len(clean_content),
+                    json.dumps(purify_audit, ensure_ascii=False),
                     classification,
                     now,
                     now,
                 ),
             )
             conn.commit()
+        self._write_source_snapshot_file(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+            source_id=source_id,
+            source_book_id=source_book_id,
+            source_chapter_id=source_chapter_id,
+            source_chapter_url=source_chapter_url,
+            title=title,
+            raw_content=raw_content,
+            clean_content=clean_content,
+            content_hash=content_hash,
+            purify_audit=purify_audit,
+            classification=classification,
+            fetched_at=now,
+        )
+
+    def _write_source_snapshot_file(
+        self,
+        *,
+        aggregate_book_id: str,
+        chapter_index: int,
+        source_id: str,
+        source_book_id: str,
+        source_chapter_id: str,
+        source_chapter_url: str,
+        title: str,
+        raw_content: str,
+        clean_content: str,
+        content_hash: str,
+        purify_audit: list[dict[str, object]],
+        classification: str,
+        fetched_at: str,
+    ) -> None:
+        book_name, book_author = self._shared_book_identity(aggregate_book_id)
+        if not book_name:
+            return
+        storage = self._shared_book_storage()
+        storage.atomic_write_json(
+            storage.source_snapshot_path(
+                book_name=book_name,
+                author=book_author,
+                source_id=source_id,
+                chapter_index=chapter_index,
+            ),
+            {
+                "schemaVersion": 1,
+                "aggregateBookId": aggregate_book_id,
+                "chapterIndex": chapter_index,
+                "title": title,
+                "sourceId": source_id,
+                "sourceBookId": source_book_id,
+                "sourceChapterId": source_chapter_id,
+                "sourceChapterUrl": source_chapter_url,
+                "fetchedAt": fetched_at,
+                "rawContent": raw_content,
+                "content": clean_content,
+                "contentHash": content_hash,
+                "wordCount": len(clean_content),
+                "purifyAudit": purify_audit,
+                "classification": classification,
+            },
+        )
 
     def _load_source_snapshot_content(self, *, aggregate_book_id: str, chapter_index: int, source_id: str) -> str:
         if not aggregate_book_id or not chapter_index or not source_id:
@@ -4014,13 +5238,14 @@ class AggregateProcessor:
                 reviews = await catalog.chapter_reviews(review_chapter_id)
                 if isinstance(reviews, dict):
                     chapter_review_cache.set(review_chapter_id, reviews)
-            except Exception:
+            except Exception as exc:
                 self._log_chapter_step(
                     aggregate_book_id=aggregate_book_id,
                     chapter_index=chapter_index,
                     title=str(chapter.get("title", "") or ""),
                     event="author_say_fetch_failed",
                     stage="stage1",
+                    error_message=str(exc),
                     payload={"step": "作家说拉取失败，跳过正文去重", "chapterId": review_chapter_id},
                 )
                 return {"content": original, "stripped": False, "removedChars": 0}
@@ -4269,6 +5494,23 @@ class AggregateProcessor:
                 (new_count, now, chapter_id),
             )
 
+    def _schedule_initial_preview_recheck(self, aggregate_book_id: str, now: str) -> int:
+        """Make the first preview retry due once the initial backlog is empty."""
+        with self._conn() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE aggregate_chapter_tasks
+                SET next_retry_time = ?, updated_at = ?
+                WHERE aggregate_book_id = ?
+                  AND status = 'fallback'
+                  AND preview_only = 1
+                  AND COALESCE(preview_retry_count, 0) = 1
+                """,
+                (now, now, aggregate_book_id),
+            )
+            conn.commit()
+            return max(0, int(cursor.rowcount or 0))
+
     def _refresh_shared_book_state(self, aggregate_book_id: str) -> None:
         should_archive_subscriptions = False
         with self._conn() as conn:
@@ -4299,20 +5541,39 @@ class AggregateProcessor:
                 ).fetchone()[0]
                 or 0
             )
+            preview_retry_count = int(
+                conn.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM aggregate_chapter_tasks
+                    WHERE aggregate_book_id = ?
+                      AND status = 'fallback'
+                      AND preview_only = 1
+                      AND next_retry_time IS NOT NULL
+                    """,
+                    (aggregate_book_id,),
+                ).fetchone()[0]
+                or 0
+            )
             required = max(0, total_chapters - start_index + 1)
             configured_threshold = self._library_books().discovery_min_readable_chapters()
             threshold = min(configured_threshold, required) if required > 0 else 0
             search_visibility = "visible" if visible_count >= threshold and threshold > 0 else "hidden"
             next_status = current_status
             if current_status not in {"paused", "archived"}:
-                next_status = "active"
-            should_archive_subscriptions = unfinished_count == 0 and book_status == "completed"
+                next_status = (
+                    "archived"
+                    if unfinished_count == 0 and preview_retry_count == 0 and book_status == "completed"
+                    else "active"
+                )
+            should_archive_subscriptions = next_status == "archived"
             conn.execute(
                 """
                 UPDATE aggregate_book_tasks
                 SET visible_processed_chapters = ?,
                     search_visibility_status = ?,
                     status = ?,
+                    next_check_time = CASE WHEN ? = 'archived' THEN NULL ELSE next_check_time END,
                     archived_at = CASE
                         WHEN ? = 'archived' AND archived_at IS NULL THEN ?
                         WHEN ? != 'archived' THEN archived_at
@@ -4324,6 +5585,7 @@ class AggregateProcessor:
                 (
                     visible_count,
                     search_visibility,
+                    next_status,
                     next_status,
                     next_status,
                     self._now(),

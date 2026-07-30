@@ -218,6 +218,8 @@ class LibraryBooksService:
         for item in items:
             if not isinstance(item, dict):
                 continue
+            if self._is_official(str(item.get("sourceId", "") or "")):
+                continue
             summary.append(
                 {
                     "sourceId": item.get("sourceId", "") or "",
@@ -261,6 +263,93 @@ class LibraryBooksService:
             "missingCriticalSource": bool(health.get("missingCriticalSource")),
         }
 
+    def source_snapshot_progress(self, aggregate_book_id: str) -> dict[str, Any] | None:
+        """Return URL-free third-party snapshot progress for detail pages."""
+        payload = self.load_payload(aggregate_book_id)
+        source_names = {
+            str(item.get("sourceId", "") or ""): str(item.get("sourceName", "") or item.get("sourceId", "") or "")
+            for item in payload.get("sources", [])
+            if isinstance(item, dict) and item.get("sourceId")
+        }
+        with self._conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT source_id, status, total_chapters, matched_chapters,
+                       fetched_chapters, failed_chapters, updated_at
+                FROM aggregate_source_snapshot_runs
+                WHERE aggregate_book_id = ?
+                ORDER BY updated_at DESC, source_id ASC
+                """,
+                (aggregate_book_id,),
+            ).fetchall()
+        if not rows:
+            return None
+
+        sources = []
+        seen_source_ids: set[str] = set()
+        for row in rows:
+            source_id = str(row[0] or "")
+            if source_id in seen_source_ids:
+                continue
+            seen_source_ids.add(source_id)
+            status = str(row[1] or "pending")
+            total = max(0, int(row[2] or 0))
+            fetched = max(0, int(row[4] or 0))
+            percent = (
+                100
+                if status == "complete"
+                else 0
+                if status == "loading_toc"
+                else min(99, round(fetched * 100 / total))
+                if total
+                else 0
+            )
+            sources.append({
+                "sourceId": source_id,
+                "sourceName": source_names.get(source_id) or source_id,
+                "status": status,
+                "totalChapters": total,
+                "matchedChapters": max(0, int(row[3] or 0)),
+                "fetchedChapters": fetched,
+                "failedChapters": max(0, int(row[5] or 0)),
+                "percent": percent,
+                "updatedAt": str(row[6] or ""),
+            })
+
+        running = sum(item["status"] in {"running", "loading_toc"} for item in sources)
+        completed = sum(item["status"] == "complete" for item in sources)
+        failed = sum(item["status"] == "error" or item["failedChapters"] > 0 for item in sources)
+        total_chapters = sum(item["totalChapters"] for item in sources)
+        fetched_chapters = sum(item["fetchedChapters"] for item in sources)
+        completed_units = sum(
+            item["totalChapters"] if item["status"] == "complete" else min(item["fetchedChapters"], item["totalChapters"])
+            for item in sources
+        )
+        if running:
+            status = "running"
+        elif failed:
+            status = "error"
+        elif completed == len(sources):
+            status = "complete"
+        else:
+            status = "partial"
+        return {
+            "status": status,
+            "sourceCount": len(sources),
+            "completedSourceCount": completed,
+            "runningSourceCount": running,
+            "failedSourceCount": failed,
+            "totalChapters": total_chapters,
+            "fetchedChapters": fetched_chapters,
+            "failedChapters": sum(item["failedChapters"] for item in sources),
+            "percent": (
+                min(100, round(completed_units * 100 / total_chapters))
+                if total_chapters
+                else 100 if completed == len(sources) else 0
+            ),
+            "sources": sources,
+        }
+
     def get_shared_book_detail(self, aggregate_book_id: str) -> dict[str, Any]:
         """Return the shared-file truth view for a single library book.
 
@@ -289,6 +378,7 @@ class LibraryBooksService:
                 },
             },
             "sourceMapRefresh": self.source_map_refresh_state(aggregate_book_id),
+            "sourceSnapshotProgress": self.source_snapshot_progress(aggregate_book_id),
         }
 
     def _safe_shared_chapter_path(self, book_dir: Path, file_name: str) -> Path | None:

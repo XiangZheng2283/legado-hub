@@ -14,9 +14,9 @@
 
 ## Fixture Smoke
 
-Fixtures cover `search`, `detail`, `toc`, and `chapter` under `tests/fixtures/`.
+Fixtures cover `search`, `detail`, `toc`, and `chapter` under `smoke/fixtures/`.
 
 ```powershell
 cd backend
-python scripts/validate_source_plugin.py --plugin ../plugins/sources/quanben5_com
+python scripts/validate_source_plugin.py --plugin ../plugins/sources/thirdparty/quanben5_com
 ```

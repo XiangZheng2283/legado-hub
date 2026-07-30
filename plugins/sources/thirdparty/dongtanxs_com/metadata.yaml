@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: dongtanxs_com
 name: 东滩小说
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - dongtanxs.com
@@ -14,6 +14,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 2
+  minIntervalMs: 600
 proxy:
   mode: auto
   required: false

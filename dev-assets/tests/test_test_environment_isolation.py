@@ -112,6 +112,7 @@ def test_lexicon_updater_uses_target_filesystem_for_temp_directory(
 def test_docker_plugin_delivery_contract() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     dockerignore = (repo_root / ".dockerignore").read_text(encoding="utf-8").splitlines()
+    gitignore = (repo_root / ".gitignore").read_text(encoding="utf-8").splitlines()
     dockerfile = (repo_root / "Dockerfile").read_text(encoding="utf-8")
     entrypoint = (repo_root / "deploy/docker/entrypoint.sh").read_text(encoding="utf-8")
     readme = (repo_root / "README.md").read_text(encoding="utf-8")
@@ -128,11 +129,16 @@ def test_docker_plugin_delivery_contract() -> None:
     assert compose["services"]["legadohub"]["image"] == "xzixmn/legado-hub:latest"
     assert "pull_policy" not in compose["services"]["legadohub"]
     assert "depends_on" not in compose["services"]["legadohub"]
-    assert "plugins/sources/official" in dockerignore
+    assert "plugins/sources/official/*" in dockerignore
+    assert "!plugins/sources/official/qidian_com_web/**" in dockerignore
+    assert "plugins/sources/official/*" in gitignore
+    assert "!plugins/sources/official/qidian_com_web/**" in gitignore
+    assert (repo_root / "plugins/sources/official/qidian_com_web/source.py").is_file()
     assert "plugins/sources/thirdparty" not in dockerignore
     assert "backend/runtime" in dockerignore
     assert all(path in dockerignore for path in ("data", "config", "generated", "runtime"))
     assert "plugins/sources/thirdparty/ /opt/legadohub/plugins/thirdparty/" in dockerfile
+    assert "plugins/sources/official/qidian_com_web/ /opt/legadohub/plugins/official/qidian_com_web/" in dockerfile
     assert "ENTRYPOINT [\"legadohub-entrypoint\"]" in dockerfile
     assert "USER root" in dockerfile
     assert "USER legadohub" not in dockerfile
@@ -140,7 +146,11 @@ def test_docker_plugin_delivery_contract() -> None:
     assert "COPY --chown=legadohub:legadohub plugins/ /app/plugins/" not in dockerfile
     assert "/opt/legadohub/plugins/thirdparty" in entrypoint
     assert "/app/plugins/sources/thirdparty" in entrypoint
-    assert "cp -a" in entrypoint
+    assert "/opt/legadohub/plugins/official" in entrypoint
+    assert "/app/plugins/sources/official" in entrypoint
+    assert 'cp -R "$source" "$target/$name"' in entrypoint
+    assert "cp -a" not in entrypoint
+    assert "[ -e \"$target/$name\" ] && continue" in entrypoint
     assert "gosu" in entrypoint
     assert "PUID" in entrypoint
     assert "PGID" in entrypoint
@@ -221,10 +231,7 @@ def test_docker_plugin_delivery_contract() -> None:
     plain_readme = readme.replace("**", "")
     assert "不要用 `docker compose restart` 加载新环境变量。" in plain_readme
     assert "exec gosu" in entrypoint
-    assert any(
-        volume.endswith(":/app/plugins/sources/official:ro")
-        for volume in volumes
-    )
+    assert "./plugins/sources/official:/app/plugins/sources/official" in volumes
     assert list(plugin_mount["services"]) == ["legadohub"]
     assert any(
         volume.endswith(":/app/plugins/sources/thirdparty")

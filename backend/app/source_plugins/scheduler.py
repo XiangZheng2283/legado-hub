@@ -31,6 +31,27 @@ from app.source_plugins.id_codec import encode_book_id, encode_chapter_id
 import threading
 
 
+class _PluginRateLimiter:
+    """Host-owned limiter for a plugin's declared operational envelope."""
+
+    def __init__(self, *, concurrency: int, min_interval_ms: int):
+        self._semaphore = asyncio.Semaphore(concurrency)
+        self._interval_lock = asyncio.Lock()
+        self._min_interval_seconds = min_interval_ms / 1000.0
+        self._next_start_at = 0.0
+
+    async def run(self, operation: Callable[[], Awaitable[Any]]) -> Any:
+        async with self._semaphore:
+            if self._min_interval_seconds:
+                async with self._interval_lock:
+                    now = time.monotonic()
+                    wait_seconds = max(0.0, self._next_start_at - now)
+                    if wait_seconds:
+                        await asyncio.sleep(wait_seconds)
+                    self._next_start_at = time.monotonic() + self._min_interval_seconds
+            return await operation()
+
+
 class PluginScheduler:
     def __init__(
         self,
@@ -42,6 +63,10 @@ class PluginScheduler:
         self.config = self._default_config() if config is None else config
         self._cookie_store = CookieStore()
         self._official_source_queue = asyncio.Semaphore(1)
+        self._browser_source_queue = asyncio.Semaphore(
+            self._positive_int(self.config.get("browser_source_concurrency"), 1)
+        )
+        self._plugin_rate_limiters: dict[str, _PluginRateLimiter] = {}
         self._load_plugins()
 
     def _default_config(self) -> dict:
@@ -54,8 +79,10 @@ class PluginScheduler:
             },
             "max_concurrency": cfg.search.global_source_concurrency,
             "source_timeout_seconds": cfg.search.source_timeout_seconds,
+            "source_hard_timeout_seconds": cfg.search.source_hard_timeout_seconds,
             "overall_search_timeout_seconds": cfg.search.overall_timeout_seconds,
             "source_batch_size": 20,
+            "browser_source_concurrency": cfg.search.browser_source_concurrency,
             "browser_source_timeout_seconds": cfg.search.browser_source_timeout_seconds,
             "browser_search_timeout_seconds": cfg.search.browser_search_timeout_seconds,
             "default_user_agent": cfg.search.default_user_agent,
@@ -77,6 +104,12 @@ class PluginScheduler:
 
     def reload(self) -> None:
         self._load_plugins()
+
+    async def close(self) -> None:
+        bridge = getattr(self, "_access_bridge", None)
+        if bridge is not None:
+            await bridge.close()
+            self._access_bridge = None
 
     def refresh_config(self) -> None:
         """Rebuild runtime config from the canonical AppConfig file."""
@@ -185,6 +218,33 @@ class PluginScheduler:
             return default
         return parsed if parsed > 0 else default
 
+    def _rate_limiter_for(self, plugin: LoadedPlugin) -> _PluginRateLimiter | None:
+        raw_value = getattr(plugin.metadata, "rate_limit", {})
+        raw = raw_value if isinstance(raw_value, dict) else {}
+        concurrency = self._positive_int(raw.get("perHostConcurrency"), 0)
+        try:
+            min_interval_ms = max(0, int(raw.get("minIntervalMs", 0) or 0))
+        except (TypeError, ValueError):
+            min_interval_ms = 0
+        if not concurrency:
+            return None
+        limiters = getattr(self, "_plugin_rate_limiters", None)
+        if limiters is None:
+            limiters = self._plugin_rate_limiters = {}
+        plugin_id = str(getattr(plugin.metadata, "id", "") or "")
+        if not plugin_id:
+            return None
+        limiter = limiters.get(plugin_id)
+        if limiter is None:
+            # ponytail: per-plugin cap is conservative for plugins with fallback domains;
+            # split by request host only if lifecycle operations expose that host centrally.
+            limiter = _PluginRateLimiter(
+                concurrency=concurrency,
+                min_interval_ms=min_interval_ms,
+            )
+            limiters[plugin_id] = limiter
+        return limiter
+
     def timeout_for_plugin(self, plugin: LoadedPlugin | None = None) -> float:
         if plugin and (plugin.metadata.browser or {}).get("mode") in {"required", "optional"}:
             return float(self.config.get("browser_source_timeout_seconds", 120.0))
@@ -197,6 +257,13 @@ class PluginScheduler:
             return float(self.config.get("browser_search_timeout_seconds", 60.0))
         return float(self.config.get("source_timeout_seconds", 20.0))
 
+    def toc_timeout_for_plugin(self, plugin: LoadedPlugin | None = None) -> float:
+        """Allow multi-page catalogs to use the configured hard source limit."""
+        return max(
+            self.timeout_for_plugin(plugin),
+            float(self.config.get("source_hard_timeout_seconds", 25.0)),
+        )
+
     async def _call_plugin(
         self,
         plugin: LoadedPlugin,
@@ -204,16 +271,27 @@ class PluginScheduler:
         *,
         timeout: float | None,
     ) -> Any:
-        """Run official-source traffic serially; timeout starts after queue admission."""
+        """Queue official and browser traffic before applying the operation timeout."""
         async def run() -> Any:
             if timeout is None:
                 return await operation()
             return await asyncio.wait_for(operation(), timeout=timeout)
 
+        limiter = self._rate_limiter_for(plugin)
+
+        async def run_limited() -> Any:
+            if limiter is None:
+                return await run()
+            return await limiter.run(run)
+
         if plugin.metadata.is_official_source():
             async with self._official_source_queue:
-                return await run()
-        return await run()
+                return await run_limited()
+        browser_mode = (getattr(plugin.metadata, "browser", {}) or {}).get("mode")
+        if browser_mode in {"required", "optional"}:
+            async with self._browser_source_queue:
+                return await run_limited()
+        return await run_limited()
 
     async def search_one(self, plugin_id: str, keyword: str, page: int = 1) -> dict:
         """Search a single plugin and return normalized items/errors.
@@ -473,7 +551,7 @@ class PluginScheduler:
             raw_items = await self._call_plugin(
                 plugin,
                 lambda: plugin.source.toc(ctx, toc_url),
-                timeout=self.timeout_for_plugin(plugin),
+                timeout=self.toc_timeout_for_plugin(plugin),
             )
             chapters = []
             for item in raw_items or []:
@@ -922,3 +1000,11 @@ def get_plugin_scheduler(config: dict | None = None, reload: bool = False) -> "P
         elif config is not None:
             _scheduler_instance.config = config
         return _scheduler_instance
+
+
+async def shutdown_plugin_scheduler() -> None:
+    """Release runtime-owned plugin resources during application shutdown."""
+    with _scheduler_lock:
+        scheduler = _scheduler_instance
+    if scheduler is not None:
+        await scheduler.close()

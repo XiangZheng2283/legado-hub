@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: quanben5_com
 name: 全本小说网
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - quanben5.com
@@ -14,9 +14,12 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 900
 proxy:
-  mode: always
-  required: true
+  mode: auto
+  required: false
 browser:
   mode: none
   reason: ""

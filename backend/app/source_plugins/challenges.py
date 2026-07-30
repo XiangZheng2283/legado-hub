@@ -5,7 +5,8 @@ from __future__ import annotations
 
 CLOUDFLARE_MARKERS = (
     "Just a moment...",
-    "Cloudflare",
+    "cloudflare/challenge-platform",
+    "cdn-cgi/challenge-platform",
     "cf_chl_",
     "cf-turnstile",
     "onloadTurnstileCallback",
@@ -25,8 +26,8 @@ def _sample(html: str, limit: int = 4000) -> str:
 
 def looks_like_cloudflare_challenge(html: str) -> bool:
     """Return true when a response looks like Cloudflare/Turnstile verification."""
-    sample = _sample(html)
-    return any(marker in sample for marker in CLOUDFLARE_MARKERS)
+    sample = _sample(html).casefold()
+    return any(marker.casefold() in sample for marker in CLOUDFLARE_MARKERS)
 
 
 def looks_like_browser_challenge(html: str) -> bool:
@@ -38,7 +39,5 @@ def looks_like_browser_challenge(html: str) -> bool:
 def looks_like_any_challenge(html: str) -> bool:
     """Return true when a response requires browser/manual verification."""
     return looks_like_cloudflare_challenge(html) or looks_like_browser_challenge(html)
-
-
 
 

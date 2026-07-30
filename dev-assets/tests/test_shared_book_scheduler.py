@@ -21,6 +21,7 @@ class FakeProcessor:
         self.list_due_books_calls = 0
         self._books: dict[str, dict[str, str]] = {}
         self.pending_counts: dict[str, int] = {}
+        self.invalidated_toc_books: list[str] = []
 
     def list_due_books(self, limit: int = 10) -> list[dict[str, object]]:
         self.list_due_books_calls += 1
@@ -48,6 +49,9 @@ class FakeProcessor:
 
     def backlog_chapter_limit(self, aggregate_book_id: str) -> int:
         return 25
+
+    def invalidate_candidate_toc_cache(self, aggregate_book_id: str) -> None:
+        self.invalidated_toc_books.append(aggregate_book_id)
 
 
 class FakeLockService:
@@ -322,6 +326,7 @@ async def test_initial_subscription_runs_source_map_refresh_before_bootstrap():
         "book_bootstrap",
     ]
     assert processor.bootstrap_calls == ["book-subscribe"]
+    assert processor.invalidated_toc_books == ["book-subscribe"]
     assert periodic_result["deferredBootstrapBooks"] == 0
 
 
@@ -590,6 +595,73 @@ async def test_lease_renewal_failure_cancels_active_book_processing():
 
 
 @pytest.mark.asyncio
+async def test_processor_timeout_releases_lock_and_closes_snapshot_progress(monkeypatch):
+    class BlockingProcessor(FakeProcessor):
+        def __init__(self):
+            super().__init__()
+            self.cancelled = False
+            self.interrupted: list[tuple[str, str]] = []
+
+        async def run_book_task(
+            self,
+            aggregate_book_id: str,
+            chapter_limit: int | None = None,
+        ) -> dict[str, object]:
+            raise TimeoutError("订阅任务超过 180 秒，已中断并等待重试")
+
+        def mark_running_snapshots_interrupted(self, aggregate_book_id: str, reason: str) -> None:
+            self.interrupted.append((aggregate_book_id, reason))
+
+    processor = BlockingProcessor()
+    processor._books["book-timeout"] = {
+        "aggregateBookId": "book-timeout",
+        "name": "超时测试",
+        "author": "作者甲",
+    }
+    lock_service = FakeLockService()
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=lock_service,
+        recovery_scanner=lambda: [],
+    )
+    with pytest.raises(TimeoutError, match="已中断并等待重试"):
+        await scheduler._process_book("book-timeout", trigger="book_update_check")
+
+    assert processor.cancelled is False
+    assert processor.interrupted == [("book-timeout", "job_timeout")]
+    assert lock_service.active == set()
+
+
+@pytest.mark.asyncio
+async def test_bootstrap_uses_processor_round_timeouts_instead_of_outer_job_timeout(monkeypatch):
+    class SlowBootstrapProcessor(FakeProcessor):
+        async def bootstrap_book_until_visible(
+            self,
+            aggregate_book_id: str,
+            max_rounds: int = 20,
+        ) -> dict[str, object]:
+            await asyncio.sleep(0.02)
+            return {"bookId": aggregate_book_id, "success": True, "visible": True}
+
+    processor = SlowBootstrapProcessor()
+    processor._books["book-bootstrap"] = {
+        "aggregateBookId": "book-bootstrap",
+        "name": "启动测试",
+        "author": "作者甲",
+    }
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+    )
+    monkeypatch.setattr(scheduler, "_job_timeout_seconds", lambda: 0.01)
+
+    result = await scheduler._process_book("book-bootstrap", trigger="book_bootstrap")
+
+    assert result["success"] is True
+
+
+@pytest.mark.asyncio
 async def test_update_check_uses_backlog_window_when_pending_chapters_exist():
     processor = FakeProcessor()
     processor._books["book-backlog"] = {"aggregateBookId": "book-backlog", "name": "积压书", "author": "作者甲"}
@@ -605,6 +677,24 @@ async def test_update_check_uses_backlog_window_when_pending_chapters_exist():
     assert result["success"] is True
     assert processor.run_calls == ["book-backlog"]
     assert processor.run_call_limits == [25]
+    assert processor.invalidated_toc_books == []
+
+
+@pytest.mark.asyncio
+async def test_update_check_refreshes_candidate_toc_without_backlog():
+    processor = FakeProcessor()
+    processor._books["book-current"] = {"aggregateBookId": "book-current", "name": "追更书", "author": "作者甲"}
+    scheduler = SharedBookScheduler(
+        processor=processor,
+        lock_service=FakeLockService(),
+        recovery_scanner=lambda: [],
+    )
+
+    result = await scheduler._process_book("book-current", trigger="book_update_check")
+
+    assert result["success"] is True
+    assert processor.run_call_limits == [None]
+    assert processor.invalidated_toc_books == ["book-current"]
 
 
 @pytest.mark.asyncio

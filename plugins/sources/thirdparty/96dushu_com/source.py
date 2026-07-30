@@ -28,7 +28,6 @@ class Source:
             provider_order=["bing_html", "google_html"],
             query_site_path="/book",
             timeout=15,
-            proxy=False,
         )
         items = []
         seen_urls: set[str] = set()

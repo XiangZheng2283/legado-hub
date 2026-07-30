@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: tianxibook_com
 name: 新天禧小说
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - tianxibook.com
@@ -15,6 +15,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1000
 proxy:
   mode: auto
   required: false

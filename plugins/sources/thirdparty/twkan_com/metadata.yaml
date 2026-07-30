@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: twkan_com
 name: 台灣小說網
 author: Yunwei
-version: 0.1.1
+version: 0.1.5
 type: source
 domains:
   - twkan.com
@@ -20,18 +20,26 @@ auth:
 content:
   access: free
 proxy:
-  mode: always
-  required: true
+  mode: auto
+  required: false
 browser:
   mode: optional
   reason: cloudflare_challenge
+accessStrategy:
+  search: stealth_http
+  detail: stealth_http
+  toc: stealth_http
+  chapter: stealth_http
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1000
 tags:
   - html
   - ajax-api
   - no-login
   - proxy
   - impersonate
-  - browser-bypass
+  - browser-fallback
 domainProfiles:
   - id: primary
     baseUrl: https://twkan.com
@@ -41,7 +49,6 @@ domainProfiles:
     fallback: true
 searchProvider:
   providerOrder:
-    - duckduckgo_ddgs
     - bing_html
     - google_html
   targetDomain: twkan.com
@@ -50,8 +57,3 @@ searchProvider:
     - /book/\d+\.html
     - /book/\d+
     - /txt/\d+/\d+
-sourceSeed:
-  type: so-novel
-  upstreamId: cn_ttkan_co
-  upstreamFile: by-site/so-novel/cn.ttkan.co.json
-  upstreamCommit: ""

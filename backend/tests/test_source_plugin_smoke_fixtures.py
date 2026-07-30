@@ -1,6 +1,16 @@
 from pathlib import Path
 
-from app.source_plugins.smoke import _fixture_map
+import pytest
+
+from app.source_plugins.context import PluginContext
+from app.source_plugins.smoke import (
+    FixtureFetcher,
+    _FixtureBrowserAdapter,
+    _toc_contract_errors,
+    _fixture_map,
+)
+from app.services.access_bridge.client import AccessBridgeClient
+from app.services.access_bridge.config import AccessBridgeConfig
 
 
 def test_fixture_map_loads_extra_pages(tmp_path: Path) -> None:
@@ -23,3 +33,39 @@ def test_fixture_map_loads_extra_pages(tmp_path: Path) -> None:
     fixture_map = _fixture_map(tmp_path, spec)
 
     assert fixture_map["https://example.test/chapter_2"] == "chapter-2.html"
+
+
+def test_complete_toc_contract_rejects_partial_or_duplicated_catalog() -> None:
+    chapters = [
+        {"index": 1, "title": "第1章", "chapterUrl": "https://example.test/1"},
+        {"index": 2, "title": "第2章", "chapterUrl": "https://example.test/1"},
+    ]
+
+    errors = _toc_contract_errors(
+        "example",
+        chapters,
+        {
+            "expectedCount": 3,
+            "lastTitleContains": "第3章",
+            "requireUniqueChapterUrls": True,
+            "requireSequentialIndexes": True,
+        },
+    )
+
+    messages = [error["message"] for error in errors]
+    assert "expected exactly 3 chapters, got 2" in messages
+    assert "last chapter title must contain 第3章" in messages
+    assert "chapter URLs must be non-empty and unique" in messages
+
+
+@pytest.mark.asyncio
+async def test_fixture_browser_uses_the_same_saved_page_map() -> None:
+    url = "https://example.test/browser"
+    fetcher = FixtureFetcher({url: "<html><body>fixture browser</body></html>"})
+    bridge = AccessBridgeClient(
+        config=AccessBridgeConfig(provider="chromium"),
+        adapter=_FixtureBrowserAdapter(fetcher),
+    )
+    ctx = PluginContext(fetcher=fetcher, plugin_id="example", access_bridge=bridge)
+
+    assert "fixture browser" in await ctx.access.browser.fetch_text(url)

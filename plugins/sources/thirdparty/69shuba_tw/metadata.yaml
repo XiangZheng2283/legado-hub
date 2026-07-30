@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 69shuba_tw
 name: 69書吧繁體
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 enabled: true
 language: zh-TW
@@ -26,6 +26,14 @@ proxy:
 browser:
   mode: required
   reason: aegis_browser_context
+accessStrategy:
+  search: headless_browser
+  detail: headless_browser
+  toc: headless_browser
+  chapter: headless_browser
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
 tags:
   - html
   - no-login

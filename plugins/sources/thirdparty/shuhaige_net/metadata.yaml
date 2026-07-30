@@ -24,6 +24,9 @@ proxy:
   mode: auto
   required: false
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
 tags:
   - html
   - no-login

@@ -22,6 +22,7 @@ from app.services.shared_book_storage import SharedBookStorage
 from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
 from app.storage.db import initialize_database
 from app.services.aggregate_virtual_source import make_aggregate_chapter_url
+from app.services.library_books import LibraryBooksService
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -113,6 +114,49 @@ def test_read_chapter_content_skips_garbled_local_file(tmp_path):
 
     assert processor._read_chapter_content_from_file(str(normal)) == "这是正常中文正文。"
     assert processor._read_chapter_content_from_file(str(garbled)) == ""
+
+
+def test_processor_library_service_uses_its_shared_storage_root(tmp_path):
+    processor = AggregateProcessor(db_path=tmp_path / "data" / "app.db")
+
+    assert processor._library_books().shared_book_storage.root == tmp_path / "data" / "library"
+
+
+@pytest.mark.asyncio
+async def test_book_catalog_forwards_chapter_reviews(monkeypatch):
+    from app.services.book_catalog import BookCatalog
+
+    expected = {"authorReviews": [{"content": "作家说"}]}
+
+    async def fake_chapter_reviews(_catalog, chapter_id: str, user_agent: str = ""):
+        assert chapter_id == "official:chapter"
+        return expected
+
+    monkeypatch.setattr(Catalog, "chapter_reviews", fake_chapter_reviews)
+    catalog = object.__new__(BookCatalog)
+    catalog.repo = None
+    catalog.cache = None
+
+    assert await catalog.chapter_reviews("official:chapter") == expected
+
+
+@pytest.mark.asyncio
+async def test_aggregate_reading_keeps_cross_source_selected_prose(monkeypatch):
+    import app.api.legado as legado_api
+
+    content = "他打开百度搜索，查询起点评论。"
+    strip_author_say = AsyncMock(return_value=content)
+    monkeypatch.setattr(legado_api, "_strip_author_say_from_chapter_content", strip_author_say)
+
+    result = await legado_api._apply_reading_content_gates(
+        chapter_id="legadohub_ai_aggregate:test",
+        content=content,
+        source_id="legadohub_ai_aggregate",
+        apply_purify=False,
+    )
+
+    assert result == content
+    assert strip_author_say.await_args.kwargs["content"] == content
 
 
 def test_garbled_content_is_not_persisted_or_reused(tmp_path):
@@ -258,6 +302,89 @@ def test_candidate_sources_respect_source_candidate_limit(tmp_path, monkeypatch)
     assert [item["sourceId"] for item in candidates] == ["s1", "s2"]
 
 
+def test_candidate_sources_default_to_three_sources(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    monkeypatch.setattr(processor, "_book_workflow_settings", lambda _book_id: {})
+
+    class FakeSourceMapService:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def load_current_source_map_refs(self, *args, **kwargs):
+            return [
+                {"sourceId": f"s{index}", "bookId": f"s{index}:b", "score": 100 - index}
+                for index in range(1, 5)
+            ]
+
+    monkeypatch.setattr(
+        "app.services.shared_book_source_map.SharedBookSourceMapService",
+        FakeSourceMapService,
+    )
+
+    candidates = processor._candidate_sources_from_payload({}, "official", "book-1")
+
+    assert [item["sourceId"] for item in candidates] == ["s1", "s2", "s3"]
+
+
+def test_candidate_sources_expand_to_eight_only_for_consensus_retry(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    monkeypatch.setattr(processor, "_book_workflow_settings", lambda _book_id: {})
+
+    class FakeSourceMapService:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def load_current_source_map_refs(self, *args, **kwargs):
+            return [
+                {"sourceId": f"s{index}", "bookId": f"s{index}:b", "score": 100 - index}
+                for index in range(1, 10)
+            ]
+
+    monkeypatch.setattr(
+        "app.services.shared_book_source_map.SharedBookSourceMapService",
+        FakeSourceMapService,
+    )
+
+    candidates = processor._candidate_sources_from_payload(
+        {}, "official", "book-1", include_expansion=True
+    )
+
+    assert [item["sourceId"] for item in candidates] == [f"s{index}" for index in range(1, 9)]
+
+
+def test_candidate_sources_exclude_all_official_plugins(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    monkeypatch.setattr(processor, "_book_workflow_settings", lambda _book_id: {})
+    monkeypatch.setattr(
+        processor,
+        "_is_official_source",
+        lambda source_id: source_id in {"qidian_com_app", "qidian_com_web"},
+    )
+
+    class FakeSourceMapService:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def load_current_source_map_refs(self, *args, **kwargs):
+            return [
+                {"sourceId": "qidian_com_web", "bookId": "web:b", "score": 100},
+                {"sourceId": "mirror_a", "bookId": "a:b", "score": 90},
+                {"sourceId": "mirror_b", "bookId": "b:b", "score": 80},
+            ]
+
+    monkeypatch.setattr(
+        "app.services.shared_book_source_map.SharedBookSourceMapService",
+        FakeSourceMapService,
+    )
+
+    candidates = processor._candidate_sources_from_payload({}, "qidian_com_app", "book-1")
+
+    assert [item["sourceId"] for item in candidates] == ["mirror_a", "mirror_b"]
+
+
 def test_candidate_sources_respect_candidate_source_priority(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path)
     processor = AggregateProcessor(db_path=db_path)
@@ -289,6 +416,32 @@ def test_candidate_sources_respect_candidate_source_priority(tmp_path, monkeypat
     candidates = processor._candidate_sources_from_payload({}, "official", "book-1")
 
     assert [item["sourceId"] for item in candidates] == ["s3", "s1"]
+
+
+def test_candidate_sources_try_browser_sources_after_http_sources(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path=db_path)
+    processor._browser_source_ids = {"slow_browser"}
+    monkeypatch.setattr(processor, "_book_workflow_settings", lambda _book_id: {})
+
+    class FakeSourceMapService:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def load_current_source_map_refs(self, *args, **kwargs):
+            return [
+                {"sourceId": "slow_browser", "bookId": "browser:b", "score": 100},
+                {"sourceId": "http_source", "bookId": "http:b", "score": 90},
+            ]
+
+    monkeypatch.setattr(
+        "app.services.shared_book_source_map.SharedBookSourceMapService",
+        FakeSourceMapService,
+    )
+
+    candidates = processor._candidate_sources_from_payload({}, "official", "book-1")
+
+    assert [item["sourceId"] for item in candidates] == ["http_source", "slow_browser"]
 
 
 class _FakeCatalog:
@@ -415,7 +568,7 @@ def _get_chapter_row(db_path, ch_id):
             pass
     return {"status": row[0], "content": content, "alignment": alignment,
             "fallbackSourceId": row[3] or "", "lastErrorCode": row[4] or "",
-            "previewOnly": bool(row[5])}
+            "previewOnly": bool(row[5]), "contentFilePath": row[1] or ""}
 
 
 def _get_policy_snapshot(db_path, ch_id):
@@ -461,6 +614,8 @@ def test_ensure_candidate_sources_discovers_and_persists_third_party_matches(tmp
 
     plugin = SimpleNamespace(metadata=Metadata(), capabilities=["search"])
 
+    discovery_limits: list[int] = []
+
     class Scheduler:
         config = {"max_concurrency": 2}
 
@@ -502,9 +657,17 @@ def test_ensure_candidate_sources_discovers_and_persists_third_party_matches(tmp
 
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    original_discover = processor._discover_third_party_candidates
+
+    async def _capture_discovery_limit(**kwargs):
+        discovery_limits.append(kwargs["max_candidates"])
+        return await original_discover(**kwargs)
+
+    monkeypatch.setattr(processor, "_discover_third_party_candidates", _capture_discovery_limit)
     updated = asyncio.run(processor._ensure_candidate_sources_for_book(book_id, payload))
 
     assert [src["sourceId"] for src in updated["sources"]] == ["official_src", "candidate_src"]
+    assert discovery_limits == [0]
     candidate = updated["sources"][1]
     assert candidate["bookId"].startswith("candidate_src:")
     assert candidate["bookUrl"] == "https://candidate.example/book/1"
@@ -529,6 +692,48 @@ def test_ensure_candidate_sources_discovers_and_persists_third_party_matches(tmp
     assert source_row[4] == "第十章"
     persisted = json.loads(payload_row[0])
     assert [src["sourceId"] for src in persisted["sources"]] == ["official_src", "candidate_src"]
+
+
+def test_candidate_discovery_skips_browser_sources(tmp_path, monkeypatch):
+    processor = AggregateProcessor(tmp_path / "test.db")
+
+    class Metadata:
+        def __init__(self, source_id, browser):
+            self.id = source_id
+            self.name = source_id
+            self.priority = 50
+            self.browser = browser
+
+        def is_official_source(self):
+            return False
+
+    browser = SimpleNamespace(metadata=Metadata("browser_source", {"mode": "required"}), capabilities=["search"])
+    http = SimpleNamespace(metadata=Metadata("http_source", {}), capabilities=["search"])
+
+    class Scheduler:
+        config = {"max_concurrency": 2}
+
+        def _enabled_plugins(self):
+            return [browser, http]
+
+        def _search_priority_plugins(self, plugins):
+            return plugins
+
+        async def search_one(self, source_id, keyword, page):
+            assert source_id == "http_source"
+            return {"items": [], "error": None}
+
+    monkeypatch.setattr("app.source_plugins.scheduler.get_plugin_scheduler", lambda: Scheduler())
+
+    discovered = asyncio.run(processor._discover_third_party_candidates(
+        keyword="测试书",
+        author="作者",
+        existing_sources=[],
+        max_candidates=1,
+        max_sources=8,
+    ))
+
+    assert discovered == []
 
 
 def test_processing_enabled_does_not_use_process_aggregate_on_read_for_background_subscription(tmp_path):
@@ -743,13 +948,17 @@ def test_toc_cache_avoids_repeated_calls(tmp_path):
     assert call_count == 2  # book_a once, book_b once
 
 
-def test_toc_cache_cleared_between_books(tmp_path):
-    """_clear_toc_cache should empty the cache."""
+def test_candidate_toc_cache_is_invalidated_for_scheduled_refresh(tmp_path):
     db_path = _setup_db(tmp_path, ai_enabled=False)
+    _insert_book(db_path, "book")
     processor = AggregateProcessor(db_path)
-    processor._toc_cache["x"] = {"chapters": []}
-    processor._clear_toc_cache()
-    assert len(processor._toc_cache) == 0
+    processor._toc_cache["candidate_src:book"] = {"chapters": []}
+    processor._toc_cache["another-book"] = {"chapters": []}
+
+    processor.invalidate_candidate_toc_cache("book")
+
+    assert "candidate_src:book" not in processor._toc_cache
+    assert "another-book" in processor._toc_cache
 
 
 # ── previous chapter context ─────────────────────────────────────────────────
@@ -883,11 +1092,15 @@ def test_candidate_toc_search_uses_index_window(tmp_path, monkeypatch):
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
 
-    result = asyncio.run(processor._process_chapter(catalog, _chapter_dict(ch_id, book_id, index=5)))
+    result = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=catalog,
+        aggregate_book_id=book_id,
+        source={"sourceId": "candidate_src", "bookId": "candidate_src:1"},
+        official_chapters=[{"index": 5, "title": "第5章"}],
+    ))
 
-    row = _get_chapter_row(db_path, ch_id)
     decoded_urls = [decode_chapter_id(cid)[1] for cid in fetched_chapter_ids]
-    assert row["status"] == "fallback"
+    assert result["captured"] == 1
     # Only window chapters 3..7 should be fetched (target index 5 -> 3,4,5,6,7).
     assert len(fetched_chapter_ids) <= 5, f"Expected <=5 fetches, got {len(fetched_chapter_ids)}: {fetched_chapter_ids}"
     assert any("5.html" in url for url in decoded_urls)
@@ -915,7 +1128,7 @@ def test_stage2_stops_after_three_valid_sources_reach_unanimous_consensus(tmp_pa
     shared_content = (
         "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。"
         "\n\n他知道这一切才刚刚开始，未来路还很长。后续正文内容扩充了很多。" * 10
-    )
+    ) + "\n\n他打开百度搜索，查询起点评论。"
     selected_content = shared_content.replace(
         "他知道这一切才刚刚开始",
         "GOOGLE搜索TWKAN\n\n他知道这一切才刚刚开始",
@@ -949,24 +1162,27 @@ def test_stage2_stops_after_three_valid_sources_reach_unanimous_consensus(tmp_pa
         lambda left, right: 0.95,
     )
 
-    asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id, chapter_index=1, source_id="official_src",
+        source_book_id="official_src:1", source_chapter_id="official_src:ch1",
+        title="第1章", raw_content=preview, classification="preview",
+    )
+    candidate = asyncio.run(processor._try_candidate_content(
+        MultiSourceCatalog(), _chapter_dict(ch_id, book_id),
+        processor._load_aggregate_payload(book_id), "official_src",
+    ))
 
-    row = _get_chapter_row(db_path, ch_id)
-    assert row["status"] == "fallback"
-    assert row["content"] != ""
-    assert row["alignment"]["candidateSourceId"] == "candidate_a"
-    assert row["fallbackSourceId"] == "candidate_a"
+    assert candidate is not None
+    assert candidate["source_id"] == "candidate_b"
     assert any(chapter_id.startswith("candidate_a") for chapter_id in fetched_candidate_ids)
     assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
     assert any(chapter_id.startswith("candidate_c") for chapter_id in fetched_candidate_ids)
     assert not any(chapter_id.startswith("candidate_d") for chapter_id in fetched_candidate_ids)
     assert not any(chapter_id.startswith("candidate_e") for chapter_id in fetched_candidate_ids)
-    assert row["alignment"]["crossSourceConsensusMode"] == "three_source"
-    assert row["alignment"]["crossSourceAcceptedCount"] == 3
-    assert row["alignment"]["crossSourceExpanded"] is False
-    assert row["alignment"]["majorityDeletionAllowed"] is True
-    assert row["alignment"]["lineConsensus"]["removedCount"] == 1
-    assert "GOOGLE搜索TWKAN" not in row["content"]
+    assert candidate["alignment_json"]["crossSourceConsensusMode"] == "three_source"
+    assert candidate["alignment_json"]["crossSourceAcceptedCount"] == 3
+    assert candidate["alignment_json"]["crossSourceExpanded"] is False
+    assert candidate["alignment_json"]["lineConsensus"]["removedCount"] == 0
 
 
 def test_stage2_expands_after_initial_three_sources_disagree(tmp_path, monkeypatch):
@@ -1012,15 +1228,23 @@ def test_stage2_expands_after_initial_three_sources_disagree(tmp_path, monkeypat
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
 
-    asyncio.run(processor._process_chapter(ExpandingCatalog(), _chapter_dict(ch_id, book_id)))
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id, chapter_index=1, source_id="official_src",
+        source_book_id="official_src:1", source_chapter_id="official_src:ch1",
+        title="第1章", raw_content=preview, classification="preview",
+    )
+    candidate = asyncio.run(processor._try_candidate_content(
+        ExpandingCatalog(), _chapter_dict(ch_id, book_id),
+        processor._load_aggregate_payload(book_id), "official_src",
+    ))
 
-    row = _get_chapter_row(db_path, ch_id)
-    assert row["fallbackSourceId"] == "candidate_a"
+    assert candidate is not None
+    assert candidate["source_id"] == "candidate_a"
     assert any(chapter_id.startswith("candidate_d") for chapter_id in fetched_candidate_ids)
     assert not any(chapter_id.startswith("candidate_e") for chapter_id in fetched_candidate_ids)
-    assert row["alignment"]["crossSourceConsensusMode"] == "expanded"
-    assert row["alignment"]["crossSourceAcceptedCount"] == 4
-    assert row["alignment"]["crossSourceExpanded"] is True
+    assert candidate["alignment_json"]["crossSourceConsensusMode"] == "expanded"
+    assert candidate["alignment_json"]["crossSourceAcceptedCount"] == 4
+    assert candidate["alignment_json"]["crossSourceExpanded"] is True
 
 
 def test_stage2_keeps_preview_when_expanded_sources_end_in_tie(tmp_path, monkeypatch):
@@ -1112,6 +1336,526 @@ def test_stage2_does_not_publish_unvalidated_snapshot_after_fetch_error(tmp_path
     assert row["fallbackSourceId"] != "candidate_src"
 
 
+def test_candidate_snapshot_retains_raw_clean_audit_and_resume_state(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:snapshot_audit"
+    _insert_book(db_path, book_id)
+
+    class CountingCatalog(_FakeCatalog):
+        calls = 0
+
+        async def chapter(self, chapter_id: str) -> dict:
+            type(self).calls += 1
+            return {
+                "content": "第1章\n\n" + ("这是可保留的正文内容。" * 20) + "\n\n请收藏本站。",
+                "title": "第1章",
+            }
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    catalog = CountingCatalog()
+    source = {"sourceId": "candidate_src", "bookId": "candidate_src:1"}
+    official_chapters = [{"index": 1, "title": "第1章"}]
+
+    first = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=catalog,
+        aggregate_book_id=book_id,
+        source=source,
+        official_chapters=official_chapters,
+    ))
+    second = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=catalog,
+        aggregate_book_id=book_id,
+        source=source,
+        official_chapters=official_chapters,
+    ))
+
+    assert first == {"sourceId": "candidate_src", "success": True, "captured": 1, "failed": 0, "matched": 1}
+    assert second["captured"] == 0
+    assert CountingCatalog.calls == 1
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            """SELECT raw_content, clean_content, purify_audit_json
+               FROM aggregate_source_snapshots
+               WHERE aggregate_book_id = ? AND chapter_index = 1 AND source_id = 'candidate_src'""",
+            (book_id,),
+        ).fetchone()
+        run = conn.execute(
+            """SELECT status, fetched_chapters, failed_chapters
+               FROM aggregate_source_snapshot_runs
+               WHERE aggregate_book_id = ? AND source_id = 'candidate_src'""",
+            (book_id,),
+        ).fetchone()
+    assert row is not None
+    assert "请收藏本站" in row[0]
+    assert "第1章" not in row[1]
+    assert "请收藏本站" not in row[1]
+    assert json.loads(row[2])
+    assert run == ("complete", 1, 0)
+    snapshot_file = tmp_path / "library" / "测试书_作者" / "sources" / "candidate_src" / "chapters" / "000001.json"
+    assert json.loads(snapshot_file.read_text(encoding="utf-8"))["rawContent"] == row[0]
+
+
+def test_candidate_snapshot_reports_live_progress_and_sanitized_summary(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:snapshot_progress"
+    _insert_book(db_path, book_id, aggregate_payload={
+        "name": "测试书",
+        "author": "作者",
+        "sources": [
+            {"bookId": "official_src:1", "sourceId": "official_src", "sourceName": "官方源"},
+            {"bookId": "candidate_src:1", "sourceId": "candidate_src", "sourceName": "候补书源"},
+        ],
+    })
+
+    class ProgressCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            return {"chapters": [
+                {"chapterId": f"candidate_src:ch{i}", "title": f"第{i}章", "index": i}
+                for i in range(1, 13)
+            ]}
+
+        async def chapter(self, chapter_id: str) -> dict:
+            return {"content": f"{chapter_id} 正文内容。" * 20, "title": chapter_id}
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    events: list[str] = []
+    original_log = processor._log_chapter_step
+
+    def capture_log(**kwargs):
+        events.append(str(kwargs.get("event", "")))
+        original_log(**kwargs)
+
+    monkeypatch.setattr(processor, "_log_chapter_step", capture_log)
+    result = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=ProgressCatalog(),
+        aggregate_book_id=book_id,
+        source={"sourceId": "candidate_src", "sourceName": "候补书源", "bookId": "candidate_src:1"},
+        official_chapters=[{"index": i, "title": f"第{i}章"} for i in range(1, 13)],
+    ))
+
+    assert result["captured"] == 12
+    assert "source_snapshot_start" in events
+    assert "source_snapshot_toc_complete" in events
+    assert events.count("source_snapshot_progress") == 2
+    assert events[-1] == "source_snapshot_complete"
+
+    summary = LibraryBooksService(db_path).source_snapshot_progress(book_id)
+    assert summary is not None
+    assert summary["status"] == "complete"
+    assert summary["percent"] == 100
+    assert summary["sources"][0]["sourceName"] == "候补书源"
+    assert summary["sources"][0]["fetchedChapters"] == 12
+    assert "sourceBookId" not in summary["sources"][0]
+    assert not any("Url" in key for key in summary["sources"][0])
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """UPDATE aggregate_source_snapshot_runs
+               SET status = 'error', failed_chapters = 1
+               WHERE aggregate_book_id = ? AND source_id = 'candidate_src'""",
+            (book_id,),
+        )
+        conn.commit()
+    ended_with_error = LibraryBooksService(db_path).source_snapshot_progress(book_id)
+    assert ended_with_error is not None
+    assert ended_with_error["status"] == "error"
+    assert ended_with_error["percent"] == 100
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO aggregate_source_snapshot_runs
+               (aggregate_book_id, source_id, source_book_id, status,
+                total_chapters, fetched_chapters, updated_at)
+               VALUES (?, 'candidate_src', 'candidate_src:obsolete', 'partial',
+                       100, 1, '2000-01-01T00:00:00+00:00')""",
+            (book_id,),
+        )
+        conn.commit()
+    latest_only = LibraryBooksService(db_path).source_snapshot_progress(book_id)
+    assert latest_only is not None
+    assert latest_only["sourceCount"] == 1
+    assert latest_only["sources"][0]["totalChapters"] == 12
+
+
+def test_snapshot_progress_reports_partial_completion_ratio(tmp_path):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:partial_snapshot_progress"
+    _insert_book(db_path, book_id)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO aggregate_source_snapshot_runs
+               (aggregate_book_id, source_id, source_book_id, status,
+                total_chapters, fetched_chapters, updated_at)
+               VALUES (?, 'candidate_src', 'candidate_src:1', 'partial',
+                       10, 2, datetime('now'))""",
+            (book_id,),
+        )
+        conn.commit()
+
+    progress = LibraryBooksService(db_path).source_snapshot_progress(book_id)
+
+    assert progress is not None
+    assert progress["status"] == "partial"
+    assert progress["percent"] == 20
+
+
+def test_run_book_task_timeout_closes_running_snapshots(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:task_timeout"
+    _insert_book(db_path, book_id)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO aggregate_source_snapshot_runs
+               (aggregate_book_id, source_id, source_book_id, status, updated_at)
+               VALUES (?, 'candidate_src', 'candidate_src:1', 'running', datetime('now'))""",
+            (book_id,),
+        )
+        conn.commit()
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_job_timeout_seconds", lambda: 0.01)
+
+    async def block_forever(*args, **kwargs):
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr(processor, "_run_book_task", block_forever)
+    with pytest.raises(TimeoutError, match="已中断并等待重试"):
+        asyncio.run(processor.run_book_task(book_id))
+
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            """SELECT status, last_error FROM aggregate_source_snapshot_runs
+               WHERE aggregate_book_id = ? AND source_id = 'candidate_src'""",
+            (book_id,),
+        ).fetchone()
+    assert row == ("partial", "job_timeout")
+
+
+@pytest.mark.asyncio
+async def test_run_book_task_scales_timeout_with_chapter_batch(tmp_path, monkeypatch):
+    processor = AggregateProcessor(_setup_db(tmp_path, ai_enabled=False))
+    monkeypatch.setattr(processor, "_job_timeout_seconds", lambda: 0.05)
+
+    async def finish_within_scaled_budget(*_args, **_kwargs):
+        await asyncio.sleep(0.06)
+        return {"success": True}
+
+    monkeypatch.setattr(processor, "_run_book_task", finish_within_scaled_budget)
+
+    assert await processor.run_book_task("book", chapter_limit=10) == {"success": True}
+
+
+@pytest.mark.asyncio
+async def test_source_slots_serialize_one_source_but_parallelize_different_sources(tmp_path):
+    processor = AggregateProcessor(tmp_path / "test.db")
+
+    async def peak_for(work: list[tuple[str, str]]) -> int:
+        active = 0
+        peak = 0
+
+        async def run(book_id: str, source_id: str) -> None:
+            nonlocal active, peak
+            async with processor._source_slot(
+                aggregate_book_id=book_id,
+                source_id=source_id,
+            ):
+                active += 1
+                peak = max(peak, active)
+                await asyncio.sleep(0.01)
+                active -= 1
+
+        await asyncio.gather(*(run(book_id, source_id) for book_id, source_id in work))
+        return peak
+
+    assert await peak_for([("book", "source_a"), ("book", "source_a")]) == 1
+    assert await peak_for([("book", "source_a"), ("book", "source_b")]) == 2
+
+    processor._browser_source_ids = {"browser_a", "browser_b"}
+    assert await peak_for([("book_a", "browser_a"), ("book_b", "browser_b")]) == 1
+
+
+@pytest.mark.asyncio
+async def test_initial_prefetch_is_bounded_and_timeout_does_not_block_processing(tmp_path, monkeypatch):
+    import app.services.aggregate_processor as processor_module
+
+    processor = AggregateProcessor(tmp_path / "test.db")
+    monkeypatch.setattr(processor, "_published_chapter_count", lambda _book_id: 0)
+    monkeypatch.setattr(
+        processor,
+        "_library_books",
+        lambda: SimpleNamespace(
+            source_map_refresh_state=lambda _book_id: {
+                "completed": True,
+                "lastVerifiedAt": datetime.now().astimezone().isoformat(),
+            }
+        ),
+    )
+    captured: dict[str, Any] = {}
+
+    async def capture_prefetch(**kwargs):
+        captured.update(kwargs)
+        return {"sourceCount": 2, "captured": 40, "failed": 0}
+
+    monkeypatch.setattr(processor, "_snapshot_candidate_sources", capture_prefetch)
+    result = await processor._run_initial_candidate_prefetch(
+        catalog=object(),
+        aggregate_book_id="book",
+        payload={},
+        official_chapters=[{"index": index, "title": f"第{index}章"} for index in range(1, 31)],
+        chapters_to_process=[{"chapterIndex": 3}],
+    )
+
+    assert result["mode"] == "initial_prefetch"
+    assert [item["index"] for item in captured["official_chapters"]] == list(range(3, 23))
+    assert captured["historical_complete"] is False
+
+    interrupted: list[tuple[str, str]] = []
+
+    async def block_prefetch(**_kwargs):
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr(processor_module, "INITIAL_PREFETCH_GRACE_SECONDS", 0.01)
+    monkeypatch.setattr(processor, "_snapshot_candidate_sources", block_prefetch)
+    monkeypatch.setattr(
+        processor,
+        "mark_running_snapshots_interrupted",
+        lambda book_id, reason: interrupted.append((book_id, reason)),
+    )
+    timed_out = await processor._run_initial_candidate_prefetch(
+        catalog=object(),
+        aggregate_book_id="book",
+        payload={},
+        official_chapters=[{"index": 1, "title": "第1章"}],
+        chapters_to_process=[{"chapterIndex": 1}],
+    )
+
+    assert timed_out["mode"] == "initial_prefetch_timeout"
+    assert interrupted == [("book", "prefetch_grace_expired")]
+
+
+def test_snapshot_progress_distinguishes_toc_loading_from_chapter_download(tmp_path):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:toc_loading"
+    _insert_book(db_path, book_id)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO aggregate_source_snapshot_runs
+               (aggregate_book_id, source_id, source_book_id, status,
+                total_chapters, fetched_chapters, started_at, updated_at)
+               VALUES (?, 'candidate_src', 'candidate_src:1', 'loading_toc',
+                       1700, 600, datetime('now'), datetime('now'))""",
+            (book_id,),
+        )
+        conn.commit()
+
+    progress = LibraryBooksService(db_path).source_snapshot_progress(book_id)
+
+    assert progress is not None
+    assert progress["status"] == "running"
+    assert progress["runningSourceCount"] == 1
+    assert progress["sources"][0]["status"] == "loading_toc"
+    assert progress["sources"][0]["percent"] == 0
+
+
+def test_partial_snapshot_run_defers_history_without_downgrading_completed_source(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:snapshot_incremental"
+    _insert_book(db_path, book_id)
+
+    class TwoChapterCatalog(_FakeCatalog):
+        async def toc(self, book_id: str) -> dict:
+            return {"chapters": [
+                {"chapterId": "candidate_src:ch1", "title": "第1章", "index": 1},
+                {"chapterId": "candidate_src:ch2", "title": "第2章", "index": 2},
+            ]}
+
+        async def chapter(self, chapter_id: str) -> dict:
+            return {"content": f"{chapter_id} 正文内容。" * 20, "title": chapter_id}
+
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    source = {"sourceId": "candidate_src", "bookId": "candidate_src:1"}
+    catalog = TwoChapterCatalog()
+
+    partial = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=catalog,
+        aggregate_book_id=book_id,
+        source=source,
+        official_chapters=[{"index": 2, "title": "第2章"}],
+        historical_complete=False,
+    ))
+    with sqlite3.connect(db_path) as conn:
+        partial_status = conn.execute(
+            """
+            SELECT status, fetched_chapters FROM aggregate_source_snapshot_runs
+            WHERE aggregate_book_id = ? AND source_id = 'candidate_src'
+            """,
+            (book_id,),
+        ).fetchone()
+    complete = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=catalog,
+        aggregate_book_id=book_id,
+        source=source,
+        official_chapters=[{"index": 1, "title": "第1章"}, {"index": 2, "title": "第2章"}],
+    ))
+    incremental = asyncio.run(processor._snapshot_one_candidate_source(
+        catalog=catalog,
+        aggregate_book_id=book_id,
+        source=source,
+        official_chapters=[{"index": 2, "title": "第2章"}],
+        historical_complete=False,
+    ))
+
+    assert partial["success"] is True
+    assert partial_status == ("partial", 1)
+    assert complete["success"] is True
+    assert incremental["success"] is True
+    with sqlite3.connect(db_path) as conn:
+        status = conn.execute(
+            """
+            SELECT status, fetched_chapters FROM aggregate_source_snapshot_runs
+            WHERE aggregate_book_id = ? AND source_id = 'candidate_src'
+            """,
+            (book_id,),
+        ).fetchone()
+    assert status == ("complete", 2)
+
+
+def test_local_rebuild_uses_snapshots_without_catalog_access(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:local_rebuild"
+    _insert_book(db_path, book_id)
+    chapter_id = _insert_chapter(db_path, book_id)
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    raw = "第1章\n\n" + ("这是保存在本地快照中的正文。" * 15) + "\n\n请收藏本站。"
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="official_src",
+        source_book_id="official_src:1",
+        source_chapter_id="official_src:ch1",
+        title="第1章",
+        raw_content=raw,
+        classification="full",
+    )
+    processor._write_chapter_result(
+        chapter_id=chapter_id,
+        aggregate_book_id=book_id,
+        title="第1章",
+        chapter_index=1,
+        status="processed",
+        content=processor._load_source_snapshot_content(
+            aggregate_book_id=book_id,
+            chapter_index=1,
+            source_id="official_src",
+        ),
+        alignment_json={"selectedContentSource": "official", "primarySourceId": "official_src"},
+        fallback_source_id="official_src",
+    )
+
+    result = processor.rebuild_book_from_snapshots(book_id)
+
+    assert result["networkAccessed"] is False
+    assert result["rewrittenChapters"] == 1
+    row = _get_chapter_row(db_path, chapter_id)
+    assert row["content"] and "请收藏本站" not in row["content"]
+
+
+def test_local_rebuild_reselects_candidate_from_local_snapshots(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:local_rebuild_candidate"
+    _insert_book(db_path, book_id)
+    chapter_id = _insert_chapter(db_path, book_id, status="fallback")
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="official_src",
+        source_book_id="official_src:1",
+        source_chapter_id="official_src:ch1",
+        title="第1章",
+        raw_content="官方预览正文。",
+        classification="preview",
+    )
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="candidate_src",
+        source_book_id="candidate_src:1",
+        source_chapter_id="candidate_src:ch1",
+        title="第1章",
+        raw_content="候补源完整正文。" * 30,
+        classification="captured",
+    )
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            UPDATE aggregate_chapter_tasks
+            SET preview_only = 1, source_alignment_json = ?, source_word_count = 100
+            WHERE chapter_id = ?
+            """,
+            (json.dumps({"selectedContentSource": "preview_fallback"}), chapter_id),
+        )
+        conn.commit()
+
+    calls = []
+
+    def select_from_snapshots(**kwargs):
+        calls.append(kwargs)
+        return {
+            "source_id": "candidate_src",
+            "content": processor._load_source_snapshot_content(
+                aggregate_book_id=book_id, chapter_index=1, source_id="candidate_src"
+            ),
+            "alignment_json": {
+                "selectedContentSource": "candidate",
+                "primarySourceId": "official_src",
+                "candidateSourceId": "candidate_src",
+                "alignmentPassed": True,
+            },
+        }
+
+    monkeypatch.setattr(processor, "_try_snapshot_candidate_content", select_from_snapshots)
+
+    result = processor.rebuild_book_from_snapshots(book_id)
+
+    assert result["networkAccessed"] is False
+    assert calls and calls[0]["official_word_count"] == 100
+    row = _get_chapter_row(db_path, chapter_id)
+    assert row["status"] == "fallback"
+    assert row["previewOnly"] is False
+    assert row["fallbackSourceId"] == "candidate_src"
+    assert "候补源完整正文" in row["content"]
+
+
+def test_official_snapshot_records_content_classification(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:official_snapshot_classification"
+    _insert_book(db_path, book_id)
+    chapter_id = _insert_chapter(db_path, book_id)
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+
+    asyncio.run(processor._process_chapter(
+        _FakeCatalog(official_content="官方免费正文。" * 40),
+        _chapter_dict(chapter_id, book_id),
+    ))
+
+    with sqlite3.connect(db_path) as conn:
+        classification = conn.execute(
+            """
+            SELECT classification FROM aggregate_source_snapshots
+            WHERE aggregate_book_id = ? AND chapter_index = 1 AND source_id = 'official_src'
+            """,
+            (book_id,),
+        ).fetchone()
+    assert classification == ("full",)
+
+
 def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
     processor = AggregateProcessor(db_path=tmp_path / "test.db")
     opening = "冬日阴云，寒风阵阵。季觉站在寥落破败的厂区前面，鼓起勇气发问。"
@@ -1137,7 +1881,28 @@ def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
     assert next(item for item in consensus if item["sourceId"] == "scrambled")["supportCount"] == 0
 
 
-def test_line_consensus_removes_only_deterministic_minority_lines():
+def test_candidate_consensus_prefers_fewer_direct_paragraph_gaps(tmp_path, monkeypatch):
+    import app.services.aggregate_alignment as alignment
+
+    clean = "第一段这是足够长的正文内容。\n\n第二段这是足够长的正文内容。"
+    inserted = "第一段这是足够长的正文内容。\n\n未知来源插入的内容。\n\n第二段这是足够长的正文内容。"
+
+    def similarity(left, right):
+        return 0.99 if inserted in (left, right) else 0.95
+
+    monkeypatch.setattr(alignment, "cross_source_content_similarity", similarity)
+    selected, consensus = AggregateProcessor(db_path=tmp_path / "test.db")._select_consistent_candidate([
+        {"source_id": "inserted", "content": inserted, "alignment_json": {}},
+        {"source_id": "clean_a", "content": clean, "alignment_json": {}},
+        {"source_id": "clean_b", "content": clean, "alignment_json": {}},
+    ])
+
+    assert selected and selected["source_id"] == "clean_a"
+    gaps = {item["sourceId"]: item["directConsensusGapCount"] for item in consensus}
+    assert gaps["inserted"] > gaps["clean_a"]
+
+
+def test_line_consensus_removes_anchor_bounded_source_unique_content():
     selected = """第325章 好消息
 
 第一段真实正文。
@@ -1167,8 +1932,111 @@ GOOGLE搜索TWKAN
     assert "(本章完)" in cleaned
     assert audit["sourceCount"] == 4
     assert audit["majorityCount"] == 3
+    assert audit["removalPolicy"] == "duplicate_title_and_anchor_bounded_unique"
     assert audit["removedCount"] == 2
-    assert audit["suspiciousCount"] >= 1
+    assert audit["suspiciousCount"] == 1
+    assert {
+        item["reason"] for item in audit["removedLines"]
+    } == {"duplicate_title", "anchor_bounded_source_unique"}
+
+
+def test_line_consensus_removes_different_two_source_watermarks():
+    paragraphs = [f"第{i}段正文内容足够长，确保段落对齐稳定。" for i in range(1, 13)]
+    selected = "\n\n".join([*paragraphs[:6], "甲站未知插入标记", *paragraphs[6:]])
+    peer = "\n\n".join([*paragraphs[:6], "乙站完全不同的插入标记", *paragraphs[6:]])
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert "甲站未知插入标记" not in cleaned
+    assert cleaned == "\n\n".join(paragraphs)
+    assert audit["sourceCount"] == 2
+    assert audit["removedLines"] == [{
+        "paragraphIndex": 6,
+        "supportCount": 1,
+        "reason": "anchor_bounded_source_unique",
+        "sample": "甲站未知插入标记",
+        "content": "甲站未知插入标记",
+    }]
+
+
+def test_line_consensus_preserves_span_merged_unknown_content():
+    selected = "第一段这是足够长的正文内容。\n\n6=9+\n\n第二段这是足够长的正文内容。"
+    peer = "第一段这是足够长的正文内容。\n\n第二段这是足够长的正文内容。"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer},
+            {"source_id": "peer_b", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert "6=9+" in cleaned
+    assert "第二段这是足够长的正文内容。" in cleaned
+    assert audit["removedLines"] == []
+
+
+def test_line_consensus_preserves_unverified_minority_prose():
+    selected = "第一段真实正文。\n\n仅此来源存在的叙事补充。\n\n第二段真实正文。"
+    peer = "第一段真实正文。\n\n第二段真实正文。"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer},
+            {"source_id": "peer_b", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["removedCount"] == 0
+    assert audit["suspiciousLines"] == [{
+        "paragraphIndex": 1,
+        "supportCount": 1,
+        "reason": "minority_difference_preserved",
+        "sample": "仅此来源存在的叙事补充。",
+    }]
+
+
+def test_line_consensus_preserves_all_unverified_content_for_audit():
+    watermarks = [
+        f"无错版本在读！6=9+书吧首发本小说。{index:02d}-{'x' * 120}"
+        for index in range(25)
+    ]
+    shared_paragraph = "Verified shared body paragraph. " * 300
+    selected = "\n\n".join([shared_paragraph, shared_paragraph, *watermarks])
+    peer = f"{shared_paragraph}\n\n{shared_paragraph}"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer},
+            {"source_id": "peer_b", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert all(watermark in cleaned for watermark in watermarks)
+    assert audit["removedCount"] == 0
+    assert audit["suspiciousCount"] == len(watermarks)
+    assert audit["removedLines"] == []
+    assert len(audit["suspiciousLines"]) == 20
 
 
 def test_line_consensus_aligns_split_and_merged_paragraphs():
@@ -1215,6 +2083,42 @@ def test_line_consensus_normalizes_traditional_unicode_space_and_punctuation():
     assert audit["suspiciousCount"] == 0
 
 
+def test_line_consensus_keeps_near_identical_mirror_wording():
+    selected = "前一段正文内容。\n\n除了西河区边缘的一家开在旧厂房的新型网际网路公司。\n\n后一段正文内容。"
+    peer = "前一段正文内容。\n\n除了西河区边缘的一家开在旧厂房的新型互联网公司。\n\n后一段正文内容。"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["removedCount"] == 0
+
+
+def test_line_consensus_keeps_short_synonym_mirror_wording():
+    selected = "前一段正文内容。\n\n然后，又甩上了一个链接。\n\n后一段正文内容。"
+    peer = "前一段正文内容。\n\n然后，又甩上了一个连结。\n\n后一段正文内容。"
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["removedCount"] == 0
+
+
 @pytest.mark.parametrize("watermark", [
     "记住首发网站域名𝕥𝕨𝕜𝕒𝕟.𝕔𝕠𝕞",
     "本书由𝕥𝕨𝕜𝕒𝕟.𝕔𝕠𝕞全网首发",
@@ -1227,7 +2131,7 @@ def test_line_consensus_normalizes_traditional_unicode_space_and_punctuation():
     "</ins>",
     "</div>",
 ])
-def test_line_consensus_removes_obfuscated_ttkan_watermarks(watermark):
+def test_line_consensus_preserves_unknown_obfuscated_content(watermark):
     selected = f"第一段真实正文。\n\n{watermark}\n\n第二段真实正文。"
     peer = "第一段真实正文。\n\n第二段真实正文。"
 
@@ -1242,12 +2146,12 @@ def test_line_consensus_removes_obfuscated_ttkan_watermarks(watermark):
         chapter_title="第一章",
     )
 
-    assert watermark not in cleaned
-    assert audit["removedCount"] == 1
-    assert audit["suspiciousCount"] == 0
+    assert watermark in cleaned
+    assert audit["removedCount"] == 0
+    assert audit["suspiciousCount"] == 1
 
 
-def test_line_consensus_does_not_delete_with_only_two_sources():
+def test_line_consensus_keeps_two_source_difference_without_enough_anchors():
     selected = "第一段真实正文。\n\nGOOGLE搜索TWKAN\n\n第二段真实正文。"
 
     cleaned, audit = purify_by_line_consensus(
@@ -1261,8 +2165,8 @@ def test_line_consensus_does_not_delete_with_only_two_sources():
     )
 
     assert cleaned == selected
-    assert audit["applied"] is False
-    assert audit["reason"] == "insufficient_sources"
+    assert audit["applied"] is True
+    assert audit["removedCount"] == 0
 
 
 def test_candidate_consensus_can_degrade_to_two_sources_below_ninety_percent(tmp_path, monkeypatch):
@@ -1281,6 +2185,8 @@ def test_candidate_consensus_can_degrade_to_two_sources_below_ninety_percent(tmp
 
 
 def test_stage2_marks_two_valid_sources_as_degraded(tmp_path, monkeypatch):
+    import app.services.aggregate_alignment as alignment
+
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_two_source_degraded"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -1290,11 +2196,27 @@ def test_stage2_marks_two_valid_sources_as_degraded(tmp_path, monkeypatch):
             {"bookId": "official_src:1", "sourceId": "official_src", "score": 100},
             {"bookId": "candidate_a:1", "sourceId": "candidate_a", "score": 95},
             {"bookId": "candidate_b:1", "sourceId": "candidate_b", "score": 85},
+            {"bookId": "slow_browser:1", "sourceId": "slow_browser", "score": 80},
         ],
     })
     ch_id = _insert_chapter(db_path, book_id, index=1)
     preview = "少年站在山巅，望着远方的云海，心中涌起一股莫名的悸动。他知道这一切才刚刚开始，未来路还很长。"
-    candidate_content = preview + "后续正文内容扩充了很多。" * 30
+    body_paragraphs = [
+        f"第{index}段后续正文内容扩充了很多，确保段落锚点稳定。"
+        for index in range(1, 13)
+    ]
+    candidate_a_content = "\n\n".join([
+        preview,
+        *body_paragraphs[:6],
+        "甲站未知插入标记",
+        *body_paragraphs[6:],
+    ])
+    candidate_b_content = "\n\n".join([
+        preview,
+        *body_paragraphs[:6],
+        "乙站完全不同的插入标记",
+        *body_paragraphs[6:],
+    ])
 
     class TwoSourceCatalog(_FakeCatalog):
         async def toc(self, book_id: str) -> dict:
@@ -1308,23 +2230,41 @@ def test_stage2_marks_two_valid_sources_as_degraded(tmp_path, monkeypatch):
         async def chapter(self, chapter_id: str) -> dict:
             if chapter_id.startswith("official_src"):
                 return {"content": preview, "title": "第1章", "extra": {"previewOnly": True}}
-            if chapter_id.startswith(("candidate_a", "candidate_b")):
-                return {"content": candidate_content, "title": "第1章"}
+            if chapter_id.startswith("candidate_a"):
+                return {"content": candidate_a_content, "title": "第1章"}
+            if chapter_id.startswith("candidate_b"):
+                return {"content": candidate_b_content, "title": "第1章"}
+            if chapter_id.startswith("slow_browser"):
+                raise AssertionError("two HTTP candidates must avoid Browser fallback")
             return await super().chapter(chapter_id)
 
     processor = AggregateProcessor(db_path)
+    processor._browser_source_ids = {"slow_browser"}
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
     monkeypatch.setattr(processor, "_discover_third_party_candidates", AsyncMock(return_value=[]))
+    monkeypatch.setattr(alignment, "cross_source_content_similarity", lambda left, right: 0.85)
+    for source_id, content in (("candidate_a", candidate_a_content), ("candidate_b", candidate_b_content)):
+        processor._save_source_snapshot(
+            aggregate_book_id=book_id,
+            chapter_index=1,
+            source_id=source_id,
+            source_book_id=f"{source_id}:1",
+            source_chapter_id=f"{source_id}:ch1",
+            title="第1章",
+            raw_content=content,
+            classification="captured",
+        )
 
     asyncio.run(processor._process_chapter(TwoSourceCatalog(), _chapter_dict(ch_id, book_id)))
 
     row = _get_chapter_row(db_path, ch_id)
     assert row["fallbackSourceId"] == "candidate_a"
-    assert row["alignment"]["crossSourceConsensusMode"] == "two_source_degraded"
+    assert row["alignment"]["crossSourceConsensusMode"] == "two_source"
     assert row["alignment"]["crossSourceAcceptedCount"] == 2
     assert row["alignment"]["majorityDeletionAllowed"] is False
-    assert row["alignment"]["lineConsensus"]["applied"] is False
-    assert row["alignment"]["lineConsensus"]["reason"] == "insufficient_sources"
+    assert row["alignment"]["lineConsensus"]["sourceCount"] == 2
+    assert row["alignment"]["lineConsensus"]["removedCount"] == 0
+    assert "甲站未知插入标记" in row["content"]
 
 
 def test_stage2_uses_one_valid_candidate_as_explicit_degraded_fallback(tmp_path, monkeypatch):
@@ -1337,6 +2277,7 @@ def test_stage2_uses_one_valid_candidate_as_explicit_degraded_fallback(tmp_path,
             {"bookId": "official_src:1", "sourceId": "official_src", "score": 100, "bookUrl": "https://official.example/book/1"},
             {"bookId": "candidate_a:1", "sourceId": "candidate_a", "score": 95, "bookUrl": "https://candidate-a.example/book/1"},
             {"bookId": "candidate_b:1", "sourceId": "candidate_b", "score": 85, "bookUrl": "https://candidate-b.example/book/1"},
+            {"bookId": "slow_browser:1", "sourceId": "slow_browser", "score": 80, "bookUrl": "https://browser.example/book/1"},
         ],
     })
     ch_id = _insert_chapter(db_path, book_id, index=1)
@@ -1361,11 +2302,24 @@ def test_stage2_uses_one_valid_candidate_as_explicit_degraded_fallback(tmp_path,
                 return {"content": "", "title": "第1章"}
             if chapter_id.startswith("candidate_b"):
                 return {"content": candidate_b_content, "title": "第1章"}
+            if chapter_id.startswith("slow_browser"):
+                raise AssertionError("validated HTTP candidate must avoid Browser fallback")
             return await super().chapter(chapter_id)
 
     processor = AggregateProcessor(db_path)
+    processor._browser_source_ids = {"slow_browser"}
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
     monkeypatch.setattr(processor, "_discover_third_party_candidates", AsyncMock(return_value=[]))
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="candidate_b",
+        source_book_id="candidate_b:1",
+        source_chapter_id="candidate_b:ch1",
+        title="第1章",
+        raw_content=candidate_b_content,
+        classification="captured",
+    )
 
     asyncio.run(processor._process_chapter(MultiSourceCatalog(), _chapter_dict(ch_id, book_id)))
 
@@ -1373,19 +2327,18 @@ def test_stage2_uses_one_valid_candidate_as_explicit_degraded_fallback(tmp_path,
     assert row["status"] == "fallback"
     assert row["content"] != ""
     assert row["alignment"]["candidateSourceId"] == "candidate_b"
-    assert row["alignment"]["crossSourceConsensusMode"] == "single_source_degraded"
+    assert row["alignment"]["crossSourceConsensusMode"] == "single_source"
     assert row["alignment"]["crossSourceAcceptedCount"] == 1
     assert row["alignment"]["majorityDeletionAllowed"] is False
     assert row["alignment"]["lineConsensus"]["applied"] is False
     assert row["alignment"]["lineConsensus"]["reason"] == "insufficient_sources"
     assert row["previewOnly"] is False
     assert row["fallbackSourceId"] == "candidate_b"
-    assert any(chapter_id.startswith("candidate_a") for chapter_id in fetched_candidate_ids)
-    assert any(chapter_id.startswith("candidate_b") for chapter_id in fetched_candidate_ids)
+    assert fetched_candidate_ids == []
 
 
-def test_stage2_uses_solitary_nearby_title_match_after_preview_alignment(tmp_path, monkeypatch):
-    """A nearby-title match may degrade to one source after preview-head validation."""
+def test_stage2_uses_precaptured_candidate_after_preview_alignment(tmp_path, monkeypatch):
+    """Publishing reads the local candidate snapshot after preview-head validation."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:stage2_nearby_index_drift"
     _insert_book(db_path, book_id, aggregate_payload={
@@ -1423,13 +2376,23 @@ def test_stage2_uses_solitary_nearby_title_match_after_preview_alignment(tmp_pat
 
     processor = AggregateProcessor(db_path)
     monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="candidate_src",
+        source_book_id="candidate_src:1",
+        source_chapter_id=encode_chapter_id("candidate_src", "https://candidate.example/right.html"),
+        title="第1章",
+        raw_content=matched_candidate,
+        classification="captured",
+    )
 
     asyncio.run(processor._process_chapter(DriftCatalog(official_content=preview, official_extra={"previewOnly": True}), _chapter_dict(ch_id, book_id)))
 
     row = _get_chapter_row(db_path, ch_id)
     assert row["status"] == "fallback"
     assert row["alignment"]["candidateSourceId"] == "candidate_src"
-    assert row["alignment"]["crossSourceConsensusMode"] == "single_source_degraded"
+    assert row["alignment"]["crossSourceConsensusMode"] == "single_source"
     assert row["alignment"]["majorityDeletionAllowed"] is False
     assert row["previewOnly"] is False
     assert row["fallbackSourceId"] == "candidate_src"

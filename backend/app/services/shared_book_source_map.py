@@ -117,7 +117,10 @@ class SharedBookSourceMapService:
         items = await self.search_coordinator.search_source_map_candidates(
             book_name,
             source_ids=third_party_source_ids,
-            limit=len(third_party_source_ids) or None,
+            # ``limit`` truncates the flattened result list, not the number
+            # of sources. Keep every selected source's result here, then
+            # deduplicate to its best matching book below.
+            limit=None,
         )
         third_party_sources = self._select_matching_sources(
             items,
@@ -227,8 +230,15 @@ class SharedBookSourceMapService:
                 match_score += 1000
             if author_key and item_author == author_key:
                 match_score += 250
+            source_book_id = str(item.get("bookId", "") or "").strip()
+            try:
+                decoded_source_id, decoded_book_url = decode_book_id(source_book_id)
+            except Exception:
+                decoded_source_id, decoded_book_url = "", ""
+            if decoded_source_id != source_id or not decoded_book_url:
+                source_book_id = encode_book_id(source_id, raw_book_url)
             normalized = {
-                "bookId": item.get("bookId", "") or f"{source_id}:{raw_book_url}",
+                "bookId": source_book_id,
                 "sourceId": source_id,
                 "sourceName": item.get("sourceName", "") or source_id,
                 "bookUrl": raw_book_url,
@@ -433,7 +443,12 @@ class SharedBookSourceMapService:
                     source_refs = json.loads(path.read_text(encoding="utf-8"))
                 except Exception:
                     source_refs = {}
-                items = source_refs.get("sourceMapRefs") if isinstance(source_refs, dict) else []
+                items = (
+                    source_refs.get("sourceMapRefs")
+                    if isinstance(source_refs, dict)
+                    and str(source_refs.get("bookId", "") or "") == aggregate_book_id
+                    else []
+                )
                 if isinstance(items, list):
                     refs = [item for item in items if isinstance(item, dict)]
 

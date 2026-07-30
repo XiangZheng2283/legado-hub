@@ -9,7 +9,8 @@ from app.main import app
 from app.storage.db import initialize_database
 from app.services.search_jobs import SearchJobService
 from app.source_plugins.errors import BrowserRequired
-from app.source_plugins.models import PluginMetadata
+from app.source_plugins.models import LoadedPlugin, PluginMetadata
+from app.source_plugins.scheduler import PluginScheduler
 from app.core.app_config import AppConfig
 import app.core.app_config as app_config_module
 
@@ -1081,3 +1082,50 @@ def test_fetch_search_job_candidate_reviews_endpoint(monkeypatch):
     assert data["jobId"] == job.job_id
     assert data["candidateId"] == "abc123"
     assert data["result"]["reviews"]["chapterEnd"][0]["content"] == "异步章评"
+
+
+@pytest.mark.asyncio
+async def test_scheduler_enforces_declared_plugin_rate_limit():
+    metadata = PluginMetadata.from_dict({
+        "contractVersion": "1.0",
+        "id": "rate_limited_source",
+        "name": "限流测试源",
+        "version": "1.0.0",
+        "type": "source",
+        "domains": ["example.test"],
+        "baseUrls": ["https://example.test"],
+        "capabilities": ["chapter"],
+        "auth": {"mode": "none"},
+        "content": {"access": "free"},
+        "tags": [],
+        "rateLimit": {"perHostConcurrency": 2, "minIntervalMs": 20},
+    })
+    plugin = LoadedPlugin(metadata=metadata, module=None, source=object(), capabilities=["chapter"])
+
+    class Loader:
+        def load_all(self):
+            return {metadata.id: plugin}
+
+    scheduler = PluginScheduler(loader=Loader(), config={"browser_source_concurrency": 1})
+    active = 0
+    max_active = 0
+    started: list[float] = []
+    lock = asyncio.Lock()
+
+    async def operation():
+        nonlocal active, max_active
+        async with lock:
+            active += 1
+            max_active = max(max_active, active)
+            started.append(asyncio.get_running_loop().time())
+        await asyncio.sleep(0.06)
+        async with lock:
+            active -= 1
+
+    await asyncio.gather(*[
+        scheduler._call_plugin(plugin, operation, timeout=1.0)
+        for _ in range(4)
+    ])
+
+    assert max_active == 2
+    assert min(b - a for a, b in zip(started, started[1:])) >= 0.015

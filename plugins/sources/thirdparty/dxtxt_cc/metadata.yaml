@@ -1,0 +1,44 @@
+contractVersion: "1.0"
+id: dxtxt_cc
+name: 独行小说
+author: Yunwei
+version: 0.1.0
+priority: 40
+type: source
+domains:
+  - www.dxtxt.cc
+baseUrls:
+  - http://www.dxtxt.cc
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+accessStrategy:
+  search: http
+  detail: http
+  toc: http
+  chapter: http
+tags:
+  - html
+  - no-login
+  - simplified-chinese
+sourceSeed:
+  type: live
+  upstreamId: dxtxt_cc
+  upstreamFile: ""
+  upstreamCommit: ""

@@ -1,0 +1,33 @@
+keyword: 斗破苍穹
+fixtures:
+  search:
+    url: https://ixdzs8.com/bsearch
+    file: search.html
+  detail:
+    url: https://ixdzs8.com/read/38804/
+    file: detail.html
+  toc:
+    url: https://ixdzs8.com/novel/clist/
+    file: toc.json
+  chapter:
+    url: https://ixdzs8.com/read/38804/p1.html
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 斗破苍穹
+  detail:
+    name: 斗破苍穹
+    author: 天蚕土豆
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 1663
+    minChapters: 1663
+    firstTitleContains: 第1章
+    lastTitleContains: 角色传记
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 200
+    titleContains: 第1章

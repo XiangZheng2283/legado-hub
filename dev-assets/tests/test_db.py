@@ -38,6 +38,7 @@ def test_initialize_database(tmp_path: Path) -> None:
         "aggregate_book_sources",
         "aggregate_operation_logs",
         "aggregate_source_snapshots",
+        "aggregate_source_snapshot_runs",
         "aggregate_ai_usage",
         "user_sessions",
         "users",
@@ -50,10 +51,12 @@ def test_initialize_database(tmp_path: Path) -> None:
         assert "ai_self_score" in columns
         columns = {row[1] for row in conn.execute("PRAGMA table_info(aggregate_ai_usage)")}
         assert "ai_self_score" in columns
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(aggregate_source_snapshots)")}
+        assert {"raw_content", "source_chapter_url", "word_count", "purify_audit_json"}.issubset(columns)
         version = conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
         ).fetchone()
-        assert version == ("13",)
+        assert version == ("14",)
 
         foreign_keys = conn.execute(
             "PRAGMA foreign_key_list(user_book_subscriptions)"
@@ -187,10 +190,35 @@ def test_v13_upgrade_preserves_users_and_invalidates_raw_sessions(tmp_path: Path
     with sqlite3.connect(db_path) as conn:
         assert conn.execute("SELECT username FROM users WHERE user_id = 'u1'").fetchone() == ("reader",)
         assert conn.execute("SELECT user_id FROM user_sessions WHERE session_id = 's1'").fetchone() is None
-        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("13",)
+        assert conn.execute("SELECT value FROM schema_meta WHERE key = 'version'").fetchone() == ("14",)
         assert conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'user_book_subscriptions'"
         ).fetchone() == (1,)
+
+
+def test_v14_upgrade_backfills_raw_source_snapshot_content(tmp_path: Path) -> None:
+    db_path = tmp_path / "v14.db"
+    initialize_database(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_source_snapshots (
+                aggregate_book_id, chapter_index, source_id, clean_content, content_hash
+            ) VALUES ('b1', 1, 'source_a', 'legacy cleaned body', 'hash')
+            """
+        )
+        conn.execute("UPDATE schema_meta SET value = '13' WHERE key = 'version'")
+        conn.commit()
+
+    initialize_database(db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute(
+            "SELECT raw_content FROM aggregate_source_snapshots WHERE aggregate_book_id = 'b1'"
+        ).fetchone() == ("legacy cleaned body",)
+        assert conn.execute(
+            "SELECT value FROM schema_meta WHERE key = 'version'"
+        ).fetchone() == ("14",)
 
 
 def test_v10_upgrade_adds_subscription_search_jobs_without_touching_users(
@@ -217,7 +245,7 @@ def test_v10_upgrade_adds_subscription_search_jobs_without_touching_users(
         ).fetchone() == (1,)
         assert conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
-        ).fetchone() == ("13",)
+        ).fetchone() == ("14",)
 
 
 def test_v11_upgrade_backfills_shared_book_creator_from_create_log(tmp_path: Path) -> None:
@@ -252,7 +280,7 @@ def test_v11_upgrade_backfills_shared_book_creator_from_create_log(tmp_path: Pat
         assert creators == {"b1": "u1", "b2": "u2", "b3": ""}
         assert conn.execute(
             "SELECT value FROM schema_meta WHERE key = 'version'"
-        ).fetchone() == ("13",)
+        ).fetchone() == ("14",)
 
 
 def test_subscription_constraints_and_cascade(tmp_path: Path) -> None:

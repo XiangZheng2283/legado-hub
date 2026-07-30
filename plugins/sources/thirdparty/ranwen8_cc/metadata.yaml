@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: ranwen8_cc
 name: 燃文小说网
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - ranwen8.cc
@@ -14,6 +14,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
 proxy:
   mode: auto
   required: false

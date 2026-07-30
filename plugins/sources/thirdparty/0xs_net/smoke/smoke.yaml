@@ -1,23 +1,23 @@
-keyword: 凡人修仙传
+keyword: 青山
 fixtures:
   search:
-    url: https://www.0xs.net/topallvisit/1.html
+    url: https://m.0xs.net/search
     file: search.html
   detail:
-    url: https://www.0xs.net/book/12345/
+    url: https://m.0xs.net/txt_1/84515
     file: detail.html
   toc:
-    url: https://www.0xs.net/book/12345/
+    url: https://m.0xs.net/la_1/84515
     file: toc.html
   chapter:
-    url: https://www.0xs.net/book/12345/1.html
+    url: https://m.0xs.net/txt_1/84515/3
     file: chapter.html
 expect:
   search:
     minResults: 1
-    firstName: 凡人修仙传
+    firstName: 青山
   detail:
-    name: 凡人修仙传
+    name: 青山
     hasTocUrl: true
   toc:
     minChapters: 1

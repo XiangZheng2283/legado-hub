@@ -1,99 +1,82 @@
-"""Xhytd (黄易天地) source plugin.
-
-Cloudflare protection, JS anti-scrape; search uses provider fallback.
-"""
+"""Xhytd (黄易天地) mobile source plugin."""
 
 import re
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
-from app.source_plugins.search_enrichment import enrich_search_items_from_detail
 
 
 class Source:
     id = "xhytd_com"
     name = "黄易天地"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
-    base_url = "https://www.xhytd.com"
+    last_modified = "2026-07-28"
+    base_url = "http://wap.xhytd.com"
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+        ),
+    }
+
+    async def _fetch(self, ctx, url: str, **kwargs) -> str:
+        headers = {**self.headers, **kwargs.pop("headers", {})}
+        return await ctx.access.http.fetch_text(url, headers=headers, **kwargs)
 
     async def search(self, ctx, keyword: str, page: int):
-        if page > 1:
-            return []
-        hits = await ctx.access.search_provider(
-            keyword,
-            target_domain="www.xhytd.com",
-            url_patterns=[r"/book/\d+/"],
-            provider_order=["bing_html", "google_html"],
-            query_site_path="/book",
-            timeout=15,
-            proxy=False,
+        html = await self._fetch(
+            ctx,
+            f"{self.base_url}/SearchBook.php",
+            params={"keyword": keyword, "page": max(1, page)},
         )
         items = []
         seen_urls: set[str] = set()
-        for hit in hits:
-            book_url = hit.url
-            if not book_url or book_url in seen_urls:
+        for box in ctx.select(html, ".hot_sale"):
+            anchor = next(
+                (
+                    item for item in ctx.select(box, 'a[href]')
+                    if re.fullmatch(r"/\d+/\d+/", item.get("href", ""))
+                ),
+                None,
+            )
+            if anchor is None:
+                continue
+            href = anchor.get("href", "")
+            book_url = urljoin(self.base_url, href)
+            name = ctx.text(anchor, ".title")
+            if not name or book_url in seen_urls:
                 continue
             seen_urls.add(book_url)
             items.append({
                 "sourceId": self.id,
-                "name": re.split(r"[-_|,，:：]", hit.title or "", maxsplit=1)[0].strip() or keyword,
-                "author": "",
+                "name": name,
+                "author": re.sub(r"^作者[：:]?", "", ctx.text(anchor, ".author")).strip(),
                 "bookUrl": book_url,
                 "coverUrl": "",
-                "intro": (hit.snippet or "").strip(),
+                "intro": "",
                 "kind": "",
-                "lastChapter": "",
-                "extra": {
-                    "searchProvider": "source_access_bridge",
-                    "provider": hit.provider,
-                    "matchedPattern": hit.matched_pattern,
-                    "searchUrl": hit.url,
-                },
+                "lastChapter": ctx.text(box, 'a[href$=".html"]'),
             })
-        return await enrich_search_items_from_detail(self, ctx, items)
-
-    async def _search_from_explore(self, ctx, keyword: str) -> list[dict]:
-        items = []
-        try:
-            html = await ctx.access.http.fetch_text(f"{self.base_url}/topallvisit/1.html")
-            links = ctx.select(html, ".result_list > ul > li .s2 > a")
-            seen = set()
-            for a in links:
-                href = a.get("href", "")
-                name = ctx.clean_text(a.text_content())
-                if not href or not name or name in seen:
-                    continue
-                if keyword.lower() in name.lower():
-                    seen.add(name)
-                    items.append({
-                        "sourceId": self.id,
-                        "name": name,
-                        "bookUrl": urljoin(self.base_url, href),
-                    })
-        except Exception:
-            pass
         return items
 
     async def detail(self, ctx, book_url: str):
-        html = await ctx.access.http.fetch_text(book_url)
-        name = ctx.text(html, ".title > h1") or ctx.text(html, "h1") or ""
-        author = ctx.text(html, ".small > span:nth-child(1)")
-        intro = ctx.text(html, ".intro") or ""
-        cover = ctx.attr(html, ".img_in > img", "src")
-        latest = ctx.text(html, ".new_tips > a")
-        status = ctx.text(html, ".small > span:nth-child(3)")
+        html = await self._fetch(ctx, book_url)
+        name = ctx.text(html, "header .title")
+        author = re.sub(r"^作者[：:]?", "", ctx.text(html, "#book_detail .author")).strip()
+        cover = ctx.attr(html, "#thumb img", "src")
+        detail_lines = [ctx.clean_text(node.text_content()) for node in ctx.select(html, "#book_detail li")]
+        status = next((line for line in detail_lines if line.startswith("状态")), "")
+        latest = ctx.text(html, "#chapterlist a")
         return {
             "sourceId": self.id,
             "name": name,
             "author": author,
             "bookUrl": book_url,
             "coverUrl": urljoin(book_url, cover) if cover else "",
-            "intro": intro,
+            "intro": "",
             "lastChapter": latest,
             "kind": status,
-            "tocUrl": book_url,
+            "tocUrl": urljoin(book_url, "all.html"),
             "authRequired": False,
             "extra": {},
         }
@@ -101,12 +84,16 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen = set()
-        html = await ctx.access.http.fetch_text(toc_url)
-        links = ctx.select(html, "#list > dl > dd > a")
+        html = await self._fetch(ctx, toc_url)
+        book_match = re.search(r"/(\d+)/(\d+)/", toc_url)
+        if not book_match:
+            return []
+        chapter_pattern = re.compile(rf"/{book_match.group(1)}/{book_match.group(2)}/\d+\.html")
+        links = ctx.select(html, "#chapterlist a[href]")
         for a in links:
             href = a.get("href", "")
             title = ctx.clean_text(a.text_content())
-            if not href or not title or href in seen:
+            if not chapter_pattern.fullmatch(href) or not title or href in seen:
                 continue
             seen.add(href)
             chapters.append({
@@ -129,19 +116,19 @@ class Source:
         soup = BeautifulSoup(html or "", "html.parser")
         for tag in soup.find_all(["script", "style", "nav", "header", "footer", "iframe", "ins", "center"]):
             tag.decompose()
-        for div in soup.find_all("div"):
-            text = div.get_text(strip=True)
-            if len(text) < 80 and any(kw in text for kw in ["广告", "声明", "本章结束", "返回目录", "加入书签", "推荐", "最新网址", "章节内容缺失", "章节不存在", "黄易天地", "xhytd"]):
-                div.decompose()
+        noise = [
+            "广告", "声明", "本章结束", "返回目录", "加入书签", "推荐",
+            "最新网址", "章节内容缺失", "章节不存在", "章节错误",
+            "黄易天地", "xhytd",
+        ]
+        for tag in soup.find_all(["div", "p"]):
+            if tag.get("id") == "chaptercontent":
+                continue
+            text = tag.get_text(strip=True)
+            if len(text) < 160 and any(keyword in text for keyword in noise):
+                tag.decompose()
         for br in soup.find_all("br"):
             br.replace_with("\n")
-        paragraphs = []
-        for p in soup.find_all("p"):
-            text = p.get_text(" ", strip=True)
-            if text:
-                paragraphs.append(text)
-        if paragraphs:
-            return "\n\n".join(paragraphs)
         text = soup.get_text("\n", strip=True)
         lines = [line.strip() for line in text.splitlines() if line.strip()]
         return "\n\n".join(lines)
@@ -152,14 +139,21 @@ class Source:
         title = ""
         original_stem = self._chapter_stem(chapter_url)
         while current_url and len(parts) < 10:
-            html = await ctx.access.http.fetch_text(current_url)
+            html = await self._fetch(ctx, current_url, headers={"Referer": chapter_url})
             if not title:
-                title = ctx.text(html, ".title > h1") or ctx.text(html, "h1")
-            content_html = ctx.html(html, "#content") or ctx.html(html, ".content")
+                title = ctx.text(html, "header .title") or ctx.text(html, ".title")
+                title = title.split("  ", 1)[0].strip()
+            content_html = ctx.html(html, "#chaptercontent")
             content = self._clean_chapter_content(content_html)
             if content:
                 parts.append(content)
-            next_href = ctx.attr(html, ".bottem2 > a:nth-child(3)", "href")
+            next_href = next(
+                (
+                    anchor.get("href", "") for anchor in ctx.select(html, 'a[href]')
+                    if "下一页" in ctx.clean_text(anchor.text_content())
+                ),
+                "",
+            )
             if not next_href or next_href == "javascript:void(0);":
                 break
             if self._chapter_stem(next_href) != original_stem:

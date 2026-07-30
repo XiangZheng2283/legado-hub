@@ -107,6 +107,15 @@ class PluginMetadata:
                 errors.append(f"invalid accessStrategy stage: {stage}")
             if mode not in valid_strategy:
                 errors.append(f"invalid accessStrategy.{stage}: {mode}")
+        if not isinstance(self.rate_limit, dict):
+            errors.append("rateLimit must be a mapping")
+        else:
+            for field_name, minimum in (("perHostConcurrency", 1), ("minIntervalMs", 0)):
+                if field_name not in self.rate_limit:
+                    continue
+                value = self.rate_limit[field_name]
+                if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+                    errors.append(f"rateLimit.{field_name} must be an integer >= {minimum}")
         if not isinstance(self.ad_patterns, list):
             errors.append("adPatterns must be a list")
         else:
@@ -307,6 +316,3 @@ class PluginFailure:
             "proxyUsed": self.proxy_used,
             "extra": self.extra,
         }
-
-
-

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
-interface LogRecord {
+export interface LogRecord {
   ts: string
   event: string
   bookId?: string

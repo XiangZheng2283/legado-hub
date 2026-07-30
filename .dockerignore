@@ -12,7 +12,11 @@ frontend/dist
 frontend/node_modules
 frontend/visual-diff
 docs/archive
-plugins/sources/official
+plugins/sources/official/*
+!plugins/sources/official/qidian_com_web/
+!plugins/sources/official/qidian_com_web/**
+plugins/sources/official/qidian_com_web/**/__pycache__/
+plugins/sources/official/qidian_com_web/**/*.py[cod]
 plugins/**/Cookie.json
 logs
 *.log

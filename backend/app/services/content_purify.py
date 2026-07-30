@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
+from difflib import SequenceMatcher
 from typing import Iterable
 
 logger = logging.getLogger(__name__)
@@ -108,7 +109,12 @@ def strip_inline_ads(text: str) -> str:
     return text
 
 
-def purify_content(content: str, *, ad_patterns: list[str] | None = None) -> str:
+def purify_content(
+    content: str,
+    *,
+    ad_patterns: list[str] | None = None,
+    chapter_title: str = "",
+) -> str:
     """Strip ads/watermarks and normalize whitespace.
 
     Steps:
@@ -132,21 +138,61 @@ def purify_content(content: str, *, ad_patterns: list[str] | None = None) -> str
     text = compile_ad_patterns(patterns).sub("", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
 
-    seen_titles: set[str] = set()
-    kept_lines: list[str] = []
-    for line in text.splitlines():
-        stripped = line.strip()
-        title_key = stripped.lstrip("#").strip()
-        if CHAPTER_TITLE_RE.match(stripped) and title_key in seen_titles:
-            continue
-        seen_titles.add(title_key)
-        kept_lines.append(line)
-    text = "\n".join(kept_lines)
+    if chapter_title:
+        normalized_title = re.sub(r"\s+", "", chapter_title.lstrip("#").strip())
+        lines = text.splitlines()
+        for index, line in enumerate(lines[:3]):
+            normalized_line = re.sub(r"\s+", "", line.lstrip("#").strip())
+            if normalized_title and normalized_line == normalized_title:
+                lines.pop(index)
+                break
+        text = "\n".join(lines)
+    else:
+        seen_titles: set[str] = set()
+        kept_lines: list[str] = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            title_key = stripped.lstrip("#").strip()
+            if CHAPTER_TITLE_RE.match(stripped) and title_key in seen_titles:
+                continue
+            seen_titles.add(title_key)
+            kept_lines.append(line)
+        text = "\n".join(kept_lines)
 
     cleaned_length = len(text)
     if cleaned_length < 50 or (original_length > 100 and cleaned_length < original_length * 0.5):
         return basic_text
     return text.strip()
+
+
+def purify_content_with_audit(
+    content: str,
+    *,
+    ad_patterns: list[str] | None = None,
+    chapter_title: str = "",
+) -> tuple[str, list[dict[str, object]]]:
+    """Apply the existing regex cleaner and retain a bounded, replayable diff."""
+    cleaned = purify_content(
+        content,
+        ad_patterns=ad_patterns,
+        chapter_title=chapter_title,
+    )
+    if cleaned == content:
+        return cleaned, []
+
+    audit: list[dict[str, object]] = []
+    for opcode, start, end, _replacement_start, _replacement_end in SequenceMatcher(
+        None, content, cleaned, autojunk=False
+    ).get_opcodes():
+        if opcode not in {"delete", "replace"} or start == end:
+            continue
+        audit.append({
+            "rule": "content_purify",
+            "ruleVersion": "v1",
+            "position": start,
+            "removedText": content[start:end],
+        })
+    return cleaned, audit
 
 
 def load_plugin_ad_patterns(source_id: str | None = None) -> list[str]:

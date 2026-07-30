@@ -177,11 +177,13 @@ class UserSubscriptionsService:
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as conn:
             conn.execute("BEGIN IMMEDIATE")
-            if not conn.execute(
-                "SELECT 1 FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+            book_row = conn.execute(
+                "SELECT status FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
                 (aggregate_book_id,),
-            ).fetchone():
+            ).fetchone()
+            if not book_row:
                 raise KeyError(aggregate_book_id)
+            target_status = "archived" if str(book_row[0] or "") == "archived" else "active"
             before_row = conn.execute(
                 """
                 SELECT user_id, aggregate_book_id, status, start_chapter_index,
@@ -194,27 +196,27 @@ class UserSubscriptionsService:
             before = self._row_to_dict(before_row)
             if (
                 before
-                and before["status"] == "active"
+                and before["status"] == target_status
                 and before["startChapterIndex"] == start_index
                 and before["autoArchiveOnComplete"] == bool(auto_archive_on_complete)
             ):
                 conn.commit()
                 return before, False
-            if not before or before["status"] == "archived":
+            if target_status == "active" and (not before or before["status"] == "archived"):
                 self._check_capacity(conn, user_id, creates_shared_book=False)
             conn.execute(
                 """
                 INSERT INTO user_book_subscriptions (
                     user_id, aggregate_book_id, status, start_chapter_index,
                     auto_archive_on_complete, created_at, updated_at
-                ) VALUES (?, ?, 'active', ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(user_id, aggregate_book_id) DO UPDATE SET
-                    status = 'active',
+                    status = excluded.status,
                     start_chapter_index = excluded.start_chapter_index,
                     auto_archive_on_complete = excluded.auto_archive_on_complete,
                     updated_at = excluded.updated_at
                 """,
-                (user_id, aggregate_book_id, start_index, int(auto_archive_on_complete), now, now),
+                (user_id, aggregate_book_id, target_status, start_index, int(auto_archive_on_complete), now, now),
             )
             after = conn.execute(
                 """
@@ -290,6 +292,13 @@ class UserSubscriptionsService:
             status = str(changes.get("status", before["status"]) or "").strip().lower()
             if status not in SUBSCRIPTION_STATUSES:
                 raise ValueError("invalid subscription status")
+            if status in {"active", "paused"}:
+                book_status = conn.execute(
+                    "SELECT status FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                    (aggregate_book_id,),
+                ).fetchone()
+                if book_status and str(book_status[0] or "") == "archived":
+                    raise ValueError("completed shared book cannot resume subscription activity")
             start_index = max(1, int(changes.get("startChapterIndex", before["startChapterIndex"]) or 1))
             auto_archive = bool(changes.get("autoArchiveOnComplete", before["autoArchiveOnComplete"]))
             if (
@@ -445,8 +454,7 @@ class UserSubscriptionsService:
                 SELECT user_id, aggregate_book_id, status, start_chapter_index,
                        auto_archive_on_complete, created_at, updated_at
                 FROM user_book_subscriptions
-                WHERE aggregate_book_id = ? AND status = 'active'
-                  AND auto_archive_on_complete = 1
+                WHERE aggregate_book_id = ? AND status IN ('active', 'paused')
                 """,
                 (aggregate_book_id,),
             ).fetchall()
@@ -454,8 +462,7 @@ class UserSubscriptionsService:
                 """
                 UPDATE user_book_subscriptions
                 SET status = 'archived', updated_at = ?
-                WHERE aggregate_book_id = ? AND status = 'active'
-                  AND auto_archive_on_complete = 1
+                WHERE aggregate_book_id = ? AND status IN ('active', 'paused')
                 """,
                 (now, aggregate_book_id),
             )

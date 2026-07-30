@@ -183,8 +183,23 @@ async def duckduckgo_library_search(
                 from duckduckgo_search import DDGS
             except ImportError as exc:
                 raise RuntimeError("ddgs is not installed") from exc
-        with DDGS() as ddgs:
-            return list(ddgs.text(query, region="wt-wt", safesearch="off", max_results=max_results))
+        last_error: Exception | None = None
+        for _attempt in range(3):
+            try:
+                with DDGS(timeout=12) as ddgs:
+                    rows = list(ddgs.text(
+                        query,
+                        region="wt-wt",
+                        safesearch="off",
+                        max_results=max_results,
+                    ))
+                if rows:
+                    return rows
+            except Exception as exc:
+                last_error = exc
+        if last_error is not None:
+            raise last_error
+        return []
 
     return await asyncio.to_thread(_run)
 
@@ -295,7 +310,6 @@ def _target_url_regex(target_domain: str, pattern: str) -> str:
     domain = re.escape(target_domain)
     clean_pattern = pattern.lstrip("^")
     return rf"https?://{domain}{clean_pattern}"
-
 
 
 

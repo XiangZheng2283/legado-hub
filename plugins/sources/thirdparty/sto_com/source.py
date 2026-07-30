@@ -16,13 +16,17 @@ class Source:
     id = "sto_com"
     name = "思兔阅读"
     contract_version = "1.0"
-    last_modified = "2026-07-25"
+    last_modified = "2026-07-27"
     base_url = "https://sto9.com"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
 
     def _s(self, ctx, value: str) -> str:
         """Normalize user-facing Traditional Chinese text."""
         return ctx.to_simplified(ctx.clean_text(value or ""))
+
+    def _body(self, ctx, value: str) -> str:
+        """Convert chapter content without collapsing its paragraph boundaries."""
+        return ctx.to_simplified(value or "").strip()
 
     async def _fetch(self, ctx, url: str, **kwargs) -> str:
         """Fetch a site page through the host-owned HTTP bridge."""
@@ -151,7 +155,7 @@ class Source:
             "sourceId": self.id,
             "title": self._s(ctx, title),
             "chapterUrl": chapter_url,
-            "content": self._s(ctx, content),
+            "content": self._body(ctx, content),
             "format": "text",
             "authRequired": False,
             "isPaid": False,
@@ -171,5 +175,5 @@ class Source:
         lines = [line for line in lines if line]
         if lines and ctx.clean_text(lines[0]) == ctx.clean_text(title):
             lines.pop(0)
-        noise = ("获取最新章节更新，请访问", "獲取最新章節更新，請訪問")
+        noise = ("获取最新章节更新，请访问", "獲取最新章節更新，請訪問", "(本章完)", "（还有更新耶）", "（還有更新耶）")
         return "\n\n".join(line for line in lines if not any(marker in line for marker in noise)).strip()

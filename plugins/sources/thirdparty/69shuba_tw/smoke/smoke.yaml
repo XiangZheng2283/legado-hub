@@ -1,0 +1,51 @@
+keyword: 天命之上
+fixtures:
+  search:
+    url: "https://69shuba.tw/search/?searchkey=%E5%A4%A9%E5%91%BD%E4%B9%8B%E4%B8%8A"
+    file: search.html
+  detail:
+    url: "https://69shuba.tw/book/347017/"
+    file: detail.html
+  toc:
+    url: "https://69shuba.tw/indexlist/347017/"
+    file: toc-page-1.html
+  chapter:
+    url: "https://69shuba.tw/read/347017/2017970"
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 天命之上
+  detail:
+    name: 天命之上
+    author: 风月
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 865
+    minChapters: 800
+    firstTitleContains: 第1章
+    lastTitleContains: 第853章
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    sampleIndex: 4
+    minContentLength: 1000
+    titleContains: 第4章
+extraFixtures:
+  - url: "https://69shuba.tw/indexlist/347017/2/"
+    file: toc-page-2.html
+  - url: "https://69shuba.tw/indexlist/347017/3/"
+    file: toc-page-3.html
+  - url: "https://69shuba.tw/indexlist/347017/4/"
+    file: toc-page-4.html
+  - url: "https://69shuba.tw/indexlist/347017/5/"
+    file: toc-page-5.html
+  - url: "https://69shuba.tw/indexlist/347017/6/"
+    file: toc-page-6.html
+  - url: "https://69shuba.tw/indexlist/347017/7/"
+    file: toc-page-7.html
+  - url: "https://69shuba.tw/indexlist/347017/8/"
+    file: toc-page-8.html
+  - url: "https://69shuba.tw/indexlist/347017/9/"
+    file: toc-page-9.html

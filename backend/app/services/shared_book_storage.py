@@ -71,6 +71,35 @@ class SharedBookStorage:
     def chapters_dir(self, *, book_name: str, author: str) -> Path:
         return self.shared_book_dir(book_name=book_name, author=author) / "chapters"
 
+    def source_snapshots_dir(self, *, book_name: str, author: str, source_id: str) -> Path:
+        return (
+            self.shared_book_dir(book_name=book_name, author=author)
+            / "sources"
+            / _safe_segment(source_id or "unknown-source", max_length=96)
+            / "chapters"
+        )
+
+    def source_snapshot_path(
+        self,
+        *,
+        book_name: str,
+        author: str,
+        source_id: str,
+        chapter_index: int,
+    ) -> Path:
+        return self.source_snapshots_dir(
+            book_name=book_name,
+            author=author,
+            source_id=source_id,
+        ) / f"{chapter_index:06d}.json"
+
+    def source_snapshot_manifest_path(self, *, book_name: str, author: str, source_id: str) -> Path:
+        return self.source_snapshots_dir(
+            book_name=book_name,
+            author=author,
+            source_id=source_id,
+        ).parent / "manifest.json"
+
     def chapter_markdown_path(self, *, book_name: str, author: str, chapter_index: int, title: str) -> Path:
         return self.chapters_dir(book_name=book_name, author=author) / _chapter_file_name(chapter_index, title)
 
@@ -269,6 +298,9 @@ class SharedBookStorage:
             "proofreadCompleteCount": int(state.get("proofreadCompleteCount", 0) or 0),
             "suspectChapterCount": int(state.get("suspectChapterCount", 0) or 0),
             "failedChapterCount": int(state.get("failedChapterCount", 0) or 0),
+            "sourceSnapshotChapterCount": int(state.get("sourceSnapshotChapterCount", 0) or 0),
+            "sourceSnapshotSourceCount": int(state.get("sourceSnapshotSourceCount", 0) or 0),
+            "sourceSnapshotFailedCount": int(state.get("sourceSnapshotFailedCount", 0) or 0),
             "latestChapterIndex": int(state.get("latestChapterIndex", 0) or 0),
             "latestChapterTitle": state.get("latestChapterTitle", "") or "",
             "lastUpdateCheckAt": state.get("lastUpdateCheckAt", "") or "",

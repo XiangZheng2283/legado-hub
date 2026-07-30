@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: xiaoshuohu_com
 name: 小说虎
 author: Yunwei
-version: 0.1.0
+version: 0.1.2
 type: source
 domains:
   - xiaoshuohu.com
@@ -14,6 +14,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1000
 proxy:
   mode: auto
   required: false
@@ -37,6 +40,6 @@ searchProvider:
     - bing_html
     - google_html
   targetDomain: www.xiaoshuohu.com
-  querySitePath: /book
+  querySitePath: /
   urlPatterns:
-    - /book/\d+/
+    - /\d+/\d+/?$

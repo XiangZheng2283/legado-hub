@@ -403,7 +403,7 @@ class LiveAcceptanceService:
         toc_items = await self._call_plugin(
             plugin,
             lambda: plugin.source.toc(ctx, toc_url),
-            timeout=timeout,
+            timeout=self._toc_timeout_for_plugin(plugin, timeout),
         )
         toc_items = [item for item in toc_items or [] if isinstance(item, dict)]
         if not toc_items:
@@ -467,7 +467,7 @@ class LiveAcceptanceService:
             toc_items = await self._call_plugin(
                 plugin,
                 lambda: plugin.source.toc(ctx, toc_url),
-                timeout=timeout,
+                timeout=self._toc_timeout_for_plugin(plugin, timeout),
             )
             toc_items = [item for item in toc_items or [] if isinstance(item, dict)]
             if toc_items:
@@ -610,7 +610,7 @@ class LiveAcceptanceService:
                 toc_items = await self._call_plugin(
                     plugin,
                     lambda: plugin.source.toc(ctx, toc_url),
-                    timeout=effective_timeout,
+                    timeout=self._toc_timeout_for_plugin(plugin, effective_timeout),
                 )
                 toc_items = [dict(item) for item in toc_items or [] if isinstance(item, dict)]
 
@@ -876,6 +876,12 @@ class LiveAcceptanceService:
         if callable(timeout_getter):
             return float(timeout_getter(plugin))
         return float(getattr(self.scheduler, "config", {}).get("source_timeout_seconds", 8.0))
+
+    def _toc_timeout_for_plugin(self, plugin, fallback: float) -> float:
+        timeout_getter = getattr(self.scheduler, "toc_timeout_for_plugin", None)
+        if callable(timeout_getter):
+            return float(timeout_getter(plugin))
+        return fallback
 
     def _diag(self, plugin_id: str, stage: str, code: str, message: str, extra: dict | None = None) -> dict[str, Any]:
         return {"sourceId": plugin_id, "stage": stage, "code": code, "message": message, "extra": extra or {}}

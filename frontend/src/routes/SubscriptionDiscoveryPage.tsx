@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 
 interface SearchCard {
   candidateId: string
@@ -59,11 +58,9 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
   const [showLogs, setShowLogs] = useState(false)
   const [selectedCard, setSelectedCard] = useState<SearchCard | null>(null)
   const [startChapterIndex, setStartChapterIndex] = useState("1")
-  const [autoArchiveOnComplete, setAutoArchiveOnComplete] = useState(true)
 
   const openSubscriptionDialog = (card: SearchCard) => {
     setStartChapterIndex("1")
-    setAutoArchiveOnComplete(true)
     setSelectedCard(card)
   }
 
@@ -87,7 +84,6 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
     mutationFn: async (card: SearchCard) => {
       const data = await api.subscribe.subscribeCard(jobId!, card.candidateId, {
         startChapterIndex: Math.max(1, Number(startChapterIndex) || 1),
-        autoArchiveOnComplete,
       })
       const bookId = data.aggregateBookId || data.book?.aggregateBookId
       if (!bookId) throw new Error("订阅响应缺少书籍 ID，请刷新后确认订阅状态。")
@@ -330,14 +326,6 @@ export function SubscriptionDiscoveryPage({ mode = "user" }: SubscriptionDiscove
                 step={1}
                 value={startChapterIndex}
                 onChange={(event) => setStartChapterIndex(event.target.value)}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="auto-archive-on-complete" className="leading-5">完结且处理完成后自动归档</Label>
-              <Switch
-                id="auto-archive-on-complete"
-                checked={autoArchiveOnComplete}
-                onCheckedChange={setAutoArchiveOnComplete}
               />
             </div>
           </div>

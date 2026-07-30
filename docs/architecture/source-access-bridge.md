@@ -27,6 +27,12 @@ LegadoHub owns the browser lifecycle and keeps business state in the backend:
 - challenge diagnostics
 - source capability routing decisions
 
+The runtime keeps one Playwright browser process per application event loop and
+a bounded pool of browser task slots. Each task still creates a fresh browser
+context and page, so cookies and storage remain isolated by the existing
+profile identity. The process is closed when the application stops; it is not a
+challenge-token cache or a shared client browser session.
+
 LegadoHub does not use a browser extension as the primary runtime path because
 the project must work in Docker deployments and inside local reading clients.
 
@@ -41,6 +47,7 @@ LEGADOHUB_BROWSER_PROVIDER
 LEGADOHUB_BROWSER_ENABLED
 LEGADOHUB_BROWSER_PUBLIC_BASE_URL
 LEGADOHUB_BROWSER_PROFILE_ROOT
+LEGADOHUB_BROWSER_POOL_SIZE
 LEGADOHUB_BROWSER_CONNECT_TIMEOUT_MS
 LEGADOHUB_BROWSER_ACTION_TIMEOUT_MS
 ```
@@ -51,6 +58,7 @@ Defaults:
 provider: chromium
 enabled: true
 profileRoot: backend/data/browser_profiles
+poolSize: 2
 connectTimeoutMs: 5000
 actionTimeoutMs: 90000
 ```
@@ -154,4 +162,3 @@ Browser simulation remains a backend capability for maintainable bypass
 strategies, rendering, search-provider access, and future controlled fetch
 flows. It must not expose verification pages, callback sessions, or Cookie
 round-trips to Reading/Legado clients.
-

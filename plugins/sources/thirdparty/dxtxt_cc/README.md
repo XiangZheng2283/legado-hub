@@ -1,0 +1,42 @@
+# 独行小说 (dxtxt_cc)
+
+- 站点：`http://www.dxtxt.cc`（页面标题「独行txt小说站」）
+- 类型：简体中文 HTML 站，无登录、无 Cloudflare 挑战
+- 访问层：四段全部 `ctx.access.http`
+
+## 链路
+
+| 阶段 | 请求 | 说明 |
+|---|---|---|
+| 搜索 | `GET /` 取 `_token`，再 `POST /search` | 表单字段 `_token` + `keyword` + `searchtype=articlename` |
+| 详情 | `GET /noveltxt/{slug}.html` | OpenGraph 元数据齐全；`tocUrl` 就是详情页自身 |
+| 目录 | 同详情页 `ul#chapterList` | 正序完整目录；上方另有倒序「最新章节」预览列表 |
+| 正文 | `GET /noveltxt/{slug}/{chapter_id}.html` | `#TextContent`；**同章分页必须合并**，否则只有一半 |
+
+## 解析注意（这站有三个坑）
+
+1. **搜索要 CSRF token**：`_token` 藏在每个页面 header 的搜索表单里，
+   插件先 `GET /` 取 token 再 POST，不带 token 会拿不到结果。
+2. **正文默认被截断**：单页 `#TextContent` 只有 600-700 中文字符，
+   句子在中途断开。真实后续内容在 `{chapter}_2.html`、`_3.html`。
+   用 legado 的移动端 UA 请求时，页面还会多出一行
+   「如果看到的内容不完整，请退出#阅#读#模#式，或者请使用其它#浏#览#器」，
+   证实这是站点主动截断。
+3. **分页终点不可信**：`下一页` 按钮没有 `href`（由混淆脚本注入），
+   而且**最后一页仍然显示「下一页」**，`_3.html` 返回的正文与 `_2.html` 完全相同。
+   因此插件按 `{stem}_N.html` 递增抓取，遇到与上一页内容相同就停，上限 12 页。
+
+搜索结果页不提供作者，作者由插件调用自身 `detail()` 补全。
+
+## 实网取证（2026-07-27）
+
+- 搜索：`POST http://www.dxtxt.cc/search`，关键词「凡人作弊修仙」-> 1 条精确结果
+- 详情：`http://www.dxtxt.cc/noveltxt/fanrenzuobixiuxian.html`，凡人作弊修仙 / 方尤 / 武侠仙侠 / 连载中
+- 目录：同上 URL，**794 章**，首章「第一章:李修」
+- 正文：`.../5398754.html` + `_2.html` 合并后 **2313 字符**（单页只有 703 中文字符）
+
+## 已知限制
+
+- 站点没有收录《凡人修仙传》原作，smoke 关键词使用站内实际存在的「凡人作弊修仙」。
+- 每章要多打 1-2 次请求（分页 + 一次重复页探测），比普通站慢。
+- 未验证镜像域，`metadata.baseUrls` 只写实测通过的 `http://www.dxtxt.cc`。

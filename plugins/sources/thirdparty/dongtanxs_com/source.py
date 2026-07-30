@@ -33,6 +33,7 @@ class Source:
                 name = ctx.clean_text(name_a[0].text_content())
                 href = name_a[0].get("href", "")
                 author = ctx.clean_text(ctx.text(div, "div.author"))
+                author = re.sub(r"^作者[：:]\s*", "", author)
                 cat = ctx.clean_text(ctx.text(div, "div.cat"))
                 latest = ctx.clean_text(ctx.text(div, "div.update > a"))
                 items.append({
@@ -80,6 +81,7 @@ class Source:
         html = await ctx.access.http.fetch_text(book_url)
         name = ctx.text(html, ".title > h1") or ctx.text(html, "h1") or ""
         author = ctx.text(html, ".small > span:nth-child(1)")
+        author = re.sub(r"^作者[：:]\s*", "", author)
         intro = ctx.text(html, ".intro") or ""
         cover = ctx.attr(html, ".img_in > img", "src")
         latest = ctx.text(html, ".new_tips > a")

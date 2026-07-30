@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,10 @@ function processStatusLabel(status: string) {
   }
 }
 
+function isArchivedBook(book: LibraryBook, isAdmin: boolean) {
+  return (isAdmin ? book.status : book.subscription?.status) === "archived"
+}
+
 export function LibraryPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -85,6 +90,7 @@ export function LibraryPage() {
   const isAdmin = entrypoint !== "public" && user?.role === "admin"
 
   const [searchQuery, setSearchQuery] = useState("")
+  const [libraryView, setLibraryView] = useState<"active" | "completed">("active")
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null)
   const [actionNotice, setActionNotice] = useState<{ pending: boolean; text: string } | null>(null)
 
@@ -118,13 +124,19 @@ export function LibraryPage() {
 
   const books: LibraryBook[] = useMemo(() => {
     const items = (data as { items?: LibraryBook[] } | undefined)?.items || []
-    if (!searchQuery) return items
-    return items.filter(
+    const scoped = items.filter((book) => libraryView === "completed"
+      ? isArchivedBook(book, isAdmin)
+      : !isArchivedBook(book, isAdmin))
+    if (!searchQuery) return scoped
+    return scoped.filter(
       (b) =>
         b.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (b.displayAuthor || "").toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [data, searchQuery])
+  }, [data, isAdmin, libraryView, searchQuery])
+  const allBooks = (data as { items?: LibraryBook[] } | undefined)?.items || []
+  const completedCount = allBooks.filter((book) => isArchivedBook(book, isAdmin)).length
+  const activeCount = allBooks.length - completedCount
 
   const bookToDelete = books.find((b) => b.aggregateBookId === deleteBookId)
   const mutationError = actionMutation.error || deleteMutation.error
@@ -138,6 +150,15 @@ export function LibraryPage() {
           <p className="mt-1 text-sm text-slate-500">{isAdmin ? `共 ${books.length} 本书籍` : "个人订阅、章节覆盖与处理状态"}</p>
         </div>
       </div>
+
+      <Tabs value={libraryView} onValueChange={(value) => setLibraryView(value as "active" | "completed")}>
+        <div className="flex justify-center">
+          <TabsList aria-label="书库分类" className="h-auto w-auto gap-1 rounded-xl bg-slate-100 p-1.5 text-slate-500">
+            <TabsTrigger value="active" className="gap-2 px-4">进行中 <span className="text-xs text-slate-400">{activeCount}</span></TabsTrigger>
+            <TabsTrigger value="completed" className="gap-2 px-4">已完结 <span className="text-xs text-slate-400">{completedCount}</span></TabsTrigger>
+          </TabsList>
+        </div>
+      </Tabs>
 
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="w-full relative group shadow-sm hover:shadow transition-shadow duration-300 rounded-full bg-white border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10 flex-1">
@@ -260,7 +281,7 @@ export function LibraryPage() {
                                 <RefreshCw className="h-3 w-3 mr-2" /> 重新处理
                               </DropdownMenuItem>
                             )}
-                            {displayStatus === "paused" || displayStatus === "archived" ? (
+                            {displayStatus !== "archived" && (displayStatus === "paused" ? (
                               <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "resume" })}>
                                 <Play className="h-3 w-3 mr-2" /> 继续
                               </DropdownMenuItem>
@@ -268,10 +289,12 @@ export function LibraryPage() {
                               <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "pause" })}>
                                 <Pause className="h-3 w-3 mr-2" /> 暂停
                               </DropdownMenuItem>
+                            ))}
+                            {displayStatus !== "archived" && (
+                              <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "archive" })}>
+                                <Archive className="h-3 w-3 mr-2" /> 归档
+                              </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem disabled={libraryBusy} onSelect={() => actionMutation.mutate({ bookId: book.aggregateBookId, action: "archive" })}>
-                              <Archive className="h-3 w-3 mr-2" /> 归档
-                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem disabled={libraryBusy} className="text-rose-600 focus:text-rose-600" onSelect={() => setDeleteBookId(book.aggregateBookId)}>
                               <Trash2 className="h-3 w-3 mr-2" /> {isAdmin ? "删除" : "移除订阅"}
@@ -351,7 +374,7 @@ export function LibraryPage() {
             <p className="text-slate-500">当前范围没有匹配书籍</p>
           ) : (
             <>
-              <p className="text-slate-500 mb-4">{isAdmin ? "暂无书籍" : "你还没有订阅的书籍"}</p>
+              <p className="text-slate-500 mb-4">{libraryView === "completed" ? "暂无已完结书籍" : isAdmin ? "暂无进行中的书籍" : "你还没有进行中的订阅"}</p>
               <Button onClick={() => navigate("/console/subscription")}>去发现新书</Button>
             </>
           )}

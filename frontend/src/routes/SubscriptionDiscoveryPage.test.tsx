@@ -64,7 +64,7 @@ describe("SubscriptionDiscoveryPage", () => {
     })
   })
 
-  it("subscribes an existing shared book with user-selected settings", async () => {
+  it("subscribes an existing shared book from the selected start chapter", async () => {
     const user = userEvent.setup()
     const { queryClient } = renderPage()
     const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries")
@@ -79,13 +79,12 @@ describe("SubscriptionDiscoveryPage", () => {
     const startInput = screen.getByLabelText("从第几章开始订阅")
     await user.clear(startInput)
     await user.type(startInput, "5")
-    await user.click(screen.getByRole("switch", { name: "完结且处理完成后自动归档" }))
     await user.click(screen.getByRole("button", { name: "确认订阅" }))
 
     await waitFor(() => expect(api.subscribe.subscribeCard).toHaveBeenCalledWith(
       "job-1",
       "candidate-1",
-      { startChapterIndex: 5, autoArchiveOnComplete: false },
+      { startChapterIndex: 5 },
     ))
     await waitFor(() => expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library"] }))
   })

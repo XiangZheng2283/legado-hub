@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: mingzw_tw
 name: 明智屋
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - tw.mingzw.net
@@ -15,6 +15,9 @@ capabilities:
   - toc
   - chapter
 enabled: true
+rateLimit:
+  perHostConcurrency: 2
+  minIntervalMs: 700
 auth:
   mode: none
   cookieDomains: []

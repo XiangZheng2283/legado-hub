@@ -24,11 +24,40 @@ FORBIDDEN_SOURCE_STRINGS = [
     "httpx.",
     "threading",
     "asyncio.create_task",
+    "asyncio.Semaphore",
+    "asyncio.gather",
     "engine-jvm",
     "app.legado_engine",
     "app.engine",
     "demo_",
 ]
+
+
+class _UniqueKeyLoader(yaml.SafeLoader):
+    pass
+
+
+def _construct_unique_mapping(loader: _UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False) -> dict:
+    mapping: dict[Any, Any] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise ValueError(f"duplicate YAML key: {key}")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_unique_mapping,
+)
+
+
+def _load_metadata(path: Path) -> dict[str, Any]:
+    data = yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader) or {}
+    if not isinstance(data, dict):
+        raise ValueError("metadata.yaml must be a mapping")
+    return data
 
 
 def validate_plugin(plugin_dir: Path) -> list[str]:
@@ -43,9 +72,10 @@ def validate_plugin(plugin_dir: Path) -> list[str]:
     if errors:
         return errors
 
-    metadata_data = yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
-    if not isinstance(metadata_data, dict):
-        errors.append("metadata.yaml must be a mapping")
+    try:
+        metadata_data = _load_metadata(metadata_path)
+    except (ValueError, yaml.YAMLError) as exc:
+        errors.append(str(exc))
         return errors
     metadata = PluginMetadata.from_dict(metadata_data)
     errors.extend(metadata.validate())
@@ -90,6 +120,20 @@ def validate_plugin(plugin_dir: Path) -> list[str]:
                 fixture_file = smoke_dir / "fixtures" / str(fixture.get("file", ""))
                 if not fixture_file.exists():
                     errors.append(f"smoke fixture file missing: {fixture_file.relative_to(plugin_dir)}")
+            toc_expect = ((spec.get("expect") or {}).get("toc") or {})
+            if not isinstance(toc_expect, dict):
+                errors.append("expect.toc must be a mapping")
+            elif toc_expect.get("complete"):
+                expected_count = toc_expect.get("expectedCount")
+                if not isinstance(expected_count, int) or expected_count <= 0:
+                    errors.append("complete toc smoke requires a positive integer expect.toc.expectedCount")
+                for field in ("expectedCount", "firstTitleContains", "lastTitleContains"):
+                    if not toc_expect.get(field):
+                        errors.append(f"complete toc smoke requires expect.toc.{field}")
+                if toc_expect.get("requireUniqueChapterUrls") is not True:
+                    errors.append("complete toc smoke requires expect.toc.requireUniqueChapterUrls: true")
+                if toc_expect.get("requireSequentialIndexes") is not True:
+                    errors.append("complete toc smoke requires expect.toc.requireSequentialIndexes: true")
             extra_fixtures = spec.get("extraFixtures") or []
             if not isinstance(extra_fixtures, list):
                 errors.append("extraFixtures must be a list")

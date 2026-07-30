@@ -41,7 +41,11 @@ docs/archive/**/data/upstreams/
 bilibili-Design-System/
 untitled/
 plugins/sources/*/__pycache__/
-plugins/sources/official/
+plugins/sources/official/*
+!plugins/sources/official/qidian_com_web/
+!plugins/sources/official/qidian_com_web/**
+plugins/sources/official/qidian_com_web/**/__pycache__/
+plugins/sources/official/qidian_com_web/**/*.py[cod]
 plugins/sources/**/Cookie.json
 docs/archive/**/data/sources/raw/by-site/legado/sub-yiove_collections.json
 dev-assets/

@@ -121,7 +121,7 @@ docker compose exec -T legadohub \
 ### 5. 初始配置
 
 1. 打开 `http://服务器IP:8766`，用 `admin` 登录；
-2. 安装插件：第三方已随镜像附带；官方插件放入 `plugins/sources/official/` 后重启；
+2. 书源：镜像内置全部第三方源和起点 Web 源。`plugins/sources/thirdparty/`、`plugins/sources/official/` 都是覆盖层：缺失的插件 ID 会由镜像补齐；宿主已有同 ID 目录优先，可放入新增书源或新版后重启容器；
 3. （公网用户）在 **设置 → 阅读 → 公网书源地址** 填上对外 origin，例如 `https://book.example.com:2087`；不填的话，发给用户的链接就只有局域网地址；
 4. **用户管理 → 新建用户**，弹窗里**复制书源链接**发给读者（只显示一次）。
 
@@ -161,7 +161,7 @@ docker run -d \
   -v "$PWD/generated:/app/backend/generated" \
   -v "$PWD/runtime:/app/backend/runtime" \
   -v "$PWD/plugins/sources/thirdparty:/app/plugins/sources/thirdparty" \
-  -v "$PWD/plugins/sources/official:/app/plugins/sources/official:ro" \
+  -v "$PWD/plugins/sources/official:/app/plugins/sources/official" \
   xzixmn/legado-hub:latest
 ```
 

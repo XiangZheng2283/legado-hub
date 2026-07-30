@@ -298,13 +298,18 @@ async def _apply_reading_content_gates(
     content: str,
     source_id: str | None = None,
     catalog: Catalog | None = None,
+    apply_purify: bool = True,
 ) -> str:
-    """Reading delivery gates: ad purify first, then 作家说 strip.
+    """Reading delivery gates: optional ad purify, then 作家说 strip.
 
-    Order matches write-time processing (purify → author-say). Purify is sync
-    and local; author-say may fetch cached reviews.
+    Direct source reads use purify → author-say. Already-selected aggregate
+    chapters skip phrase-based purify and only apply the author-say boundary.
     """
-    cleaned = _purify_chapter_content_for_reading(content, source_id=source_id)
+    cleaned = (
+        _purify_chapter_content_for_reading(content, source_id=source_id)
+        if apply_purify
+        else content
+    )
     return await _strip_author_say_from_chapter_content(
         chapter_id=chapter_id,
         content=cleaned,
@@ -403,6 +408,7 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
                 content=str(shared.get("content", "") or ""),
                 source_id=source_id,
                 catalog=catalog,
+                apply_purify=False,
             )
             shared = {**shared, "content": content}
             return _public_chapter_response(shared, chapter_id=chapter_id)

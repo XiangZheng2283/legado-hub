@@ -33,6 +33,7 @@ class Source:
                 name = ctx.clean_text(name_a[0].text_content())
                 href = name_a[0].get("href", "")
                 author = ctx.clean_text(ctx.text(div, "p:nth-child(3)"))
+                author = re.sub(r"^作者[：:]\s*", "", author)
                 latest = ctx.clean_text(ctx.text(div, "ul > li:nth-child(1) > a"))
                 update_time = ctx.clean_text(ctx.text(div, "ul > li:nth-child(1) > i"))
                 items.append({
@@ -80,6 +81,7 @@ class Source:
         html = await ctx.access.http.fetch_text(book_url)
         name = ctx.text(html, ".item > div > h1 > a") or ctx.text(html, "h1") or ""
         author = ctx.text(html, ".item > div > p:nth-of-type(3) > a")
+        author = re.sub(r"^作者[：:]\s*", "", author)
         intro = ctx.text(html, ".des") or ""
         cover = ctx.attr(html, ".item > a > img", "src")
         latest = ctx.text(html, ".item > div > ul > li:nth-child(1) > a")
@@ -99,8 +101,10 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen = set()
+        seen_pages = set()
         page_url = toc_url
-        for _ in range(200):
+        while page_url and page_url not in seen_pages:
+            seen_pages.add(page_url)
             html = await ctx.access.http.fetch_text(page_url)
             links = ctx.select(html, "#list > ul > li > a")
             new_count = 0

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <meta name="applicable-device" content="pc,mobile" />
+    <title>我的-小说搜索-零点看书</title>
+    <meta name="keywords" content="小说,小说网,免费小说,零点看书" />
+    <meta name="description" content="相关书籍作品展示。" />
+</head>
+
+<body>
+
+<link rel="stylesheet" href="/static/css/sweet-alert.css" />
+<link rel="stylesheet" href="/static/css/style.css"/>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/sweet-alert.min.js"></script>
+<script src="/static/js/novel.js"></script>
+<script src="/js/23txticom.js"></script>
+
+  <div class="topbar">
+    <div class="topbar-con">
+      <div class="topbar-sethome">
+        <a href="javascript:winSetHP();">将本站设为首页</a>
+      </div>
+      <div class="topbar-addfavorite">
+        <a href="javascript:winAddFav()">收藏零点看书</a>
+      </div>
+      <div class="topbar-right">
+         <script>PCLogin()</script>
+      </div>
+    </div>
+  </div>
+
+  <div class="header">
+    <h1 class="logo"><a href="/">零点看书</a></h1>
+    <form action="/ar.php" class="search-form" id="form">
+        <input class="input-text input-key" id="keyWord" name="keyWord" type="text" maxlength="30"
+            placeholder="可搜书名和作者，请您少字也别输错字。" />
+        <input type="submit" class="btn-tosearch" value="搜索" title="搜索"/>
+    </form>
+    <div class="m-user" style="color:#fff">
+       <script>MLogin()</script>
+    </div>
+  </div>
+
+  <ul class="nav">
+    <li><a href="/">首页</a></li>
+    <li><a rel="nofollow" href="/user/case.php">永久书架</a></li>
+            <li><a href="/sort/1/1.html">玄幻奇幻</a></li>
+            <li><a href="/sort/2/1.html">武侠仙侠</a></li>
+            <li><a href="/sort/3/1.html">都市言情</a></li>
+            <li><a href="/sort/4/1.html">历史军事</a></li>
+            <li><a href="/sort/5/1.html">网游竞技</a></li>
+            <li><a href="/sort/6/1.html">科幻灵异</a></li>
+            <li><a href="/sort/7/1.html">女生频道</a></li>
+    <li><a href="/ph/">排行榜单</a></li>
+    <li><a href="/collect/">收藏榜单</a></li>
+    <li><a href="/wanbenxiaoshuo/">完本小说</a></li>
+    <li><a rel="nofollow" href="/reader/case.php">阅读记录</a></li>
+  </ul>
+  <ul class="m-nav">
+    <li><a href="/ph/">排行</a></li>
+    <li><a href="/collect/">收藏</a></li>
+    <li><a href="/wanbenxiaoshuo/">完本</a></li>
+    <li><a href="/reader/case.php">阅读记录</a></li>
+    <li><a href="/user/case.php"  rel="nofollow">书架</a></li>
+  </ul>
+
+    <div class="container">
+        <div class="row">
+            <div class="layout layout2 layout-co18">
+                <h2 class="layout-tit">搜素""相关小说</h2>
+
+        <ul class="txt-list txt-list-row5">
+            <li><span class="s1"><b>作品分类</b></span>
+                <span class="s2"><b>作品名称</b></span>
+                <span class="s3"><b>最新章节</b></span>
+                <span class="s4"><b>作者</b></span>
+                <span class="s5"><b>更新时间</b></span>
+            </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/34241/" >凡人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/34241/15167974.html" >手段凌利</a></span>
+                <span class="s4">天地我心</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/26931/" >凡人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/26931/11453367.html" >忘语新书《玄界之门》</a></span>
+                <span class="s4">忘语</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/13752/" >真凡人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/13752/4709403.html" >第 四十 章 血战筑基期</a></span>
+                <span class="s4">急速流星雨</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/20513/" >小小凡人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/20513/8112639.html" >关于小凡人完结和新书</a></span>
+                <span class="s4">至尊小宝</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/16848/" >直播凡人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/16848/6244309.html" >书评</a></span>
+                <span class="s4">呼言道人</span>
+                <span class="s5">07-07</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/101013/" >凡人不可修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/101013/39309425.html" >第五十六章        元瑶和鬼雾</a></span>
+                <span class="s4">韭菜根儿</span>
+                <span class="s5">08-17</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/7425/" >凡人修仙传之仙界传</a>
+                </span>
+                <span class="s3"><a href="/ldks/7425/1441987.html" >第一百零九章 元瑶</a></span>
+                <span class="s4">状态一</span>
+                <span class="s5">03-07</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/90057/" >凡人修仙传：番外</a>
+                </span>
+                <span class="s3"><a href="/ldks/90057/35445983.html" >厉飞雨记</a></span>
+                <span class="s4">忘语</span>
+                <span class="s5">01-31</span>
+                </li>
+                 <li>
+                <span class="s1">[网游动漫]</span>
+                <span class="s2">
+                    <a href="/ldks/27939/" >凡人修仙传之配角传奇</a>
+                </span>
+                <span class="s3"><a href="/ldks/27939/11969062.html" >完结之后的一点话</a></span>
+                <span class="s4">轻语江湖</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/125902/" >凡人修仙之玄骨传</a>
+                </span>
+                <span class="s3"><a href="/ldks/125902/50168163.html" >第588章 化神鬼修与空玄丹士</a></span>
+                <span class="s4">道苟</span>
+                <span class="s5">07-29</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/87299/" >凡人修仙传之科研狗</a>
+                </span>
+                <span class="s3"><a href="/ldks/87299/34896904.html" >11.</a></span>
+                <span class="s4">粽子蘸墨</span>
+                <span class="s5">01-11</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/80813/" >凡人修仙之青岩传</a>
+                </span>
+                <span class="s3"><a href="/ldks/80813/32548691.html" >第12章 激斗与收获</a></span>
+                <span class="s4">凉邶</span>
+                <span class="s5">07-08</span>
+                </li>
+                 <li>
+                <span class="s1">[网游动漫]</span>
+                <span class="s2">
+                    <a href="/ldks/34339/" >凡人修仙传之再续凡缘</a>
+                </span>
+                <span class="s3"><a href="/ldks/34339/15220648.html" >第一百二十二章 感想</a></span>
+                <span class="s4">再续凡缘</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[网游动漫]</span>
+                <span class="s2">
+                    <a href="/ldks/15012/" >凡人同人传</a>
+                </span>
+                <span class="s3"><a href="/ldks/15012/5356097.html" >第一百三十章 范静梅</a></span>
+                <span class="s4">侯小明</span>
+                <span class="s5">01-22</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/77432/" >凡人修仙传：我也有掌天瓶</a>
+                </span>
+                <span class="s3"><a href="/ldks/77432/32795499.html" >完结了！</a></span>
+                <span class="s4">执笔问仙道</span>
+                <span class="s5">07-31</span>
+                </li>
+                 <li>
+                <span class="s1">[玄幻魔法]</span>
+                <span class="s2">
+                    <a href="/ldks/20736/" >凡人修魔传</a>
+                </span>
+                <span class="s3"><a href="/ldks/20736/8232018.html" >正文 正文_第1082章 一切完美落幕（大结局）</a></span>
+                <span class="s4">鬼路过</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/106956/" >凡人武修传</a>
+                </span>
+                <span class="s3"><a href="/ldks/106956/40962219.html" >第三十一章</a></span>
+                <span class="s4">风过蒙德的月光</span>
+                <span class="s5">12-21</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/87154/" >凡人飞仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/87154/35384118.html" >卷三 祭亡灵 第四十九章 黑熊王</a></span>
+                <span class="s4">振翅的蚂蚁</span>
+                <span class="s5">02-23</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/113993/" >凡人仙途传</a>
+                </span>
+                <span class="s3"><a href="/ldks/113993/45030802.html" >第一百零九章   林中激战</a></span>
+                <span class="s4">黄歧</span>
+                <span class="s5">08-17</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/115431/" >凡人炼体传</a>
+                </span>
+                <span class="s3"><a href="/ldks/115431/46963656.html" >第1002章 轮回逆转</a></span>
+                <span class="s4">上铺老狗</span>
+                <span class="s5">01-02</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/64019/" >凡人修仙道</a>
+                </span>
+                <span class="s3"><a href="/ldks/64019/28114247.html" >第二卷 初登仙道 无</a></span>
+                <span class="s4">陈叔子</span>
+                <span class="s5">09-29</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/65461/" >凡人修仙路</a>
+                </span>
+                <span class="s3"><a href="/ldks/65461/28889521.html" >第119章 拍卖会开始</a></span>
+                <span class="s4">南里有木</span>
+                <span class="s5">12-09</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/56970/" >凡人作弊修仙</a>
+                </span>
+                <span class="s3"><a href="/ldks/56970/49222440.html" >第七百七十一章 ：圣祭（上）</a></span>
+                <span class="s4">方尤</span>
+                <span class="s5">06-01</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/83376/" >凡人修仙录</a>
+                </span>
+                <span class="s3"><a href="/ldks/83376/33962208.html" >第二百七十四章 得偿所愿</a></span>
+                <span class="s4">笑看云烟</span>
+                <span class="s5">10-24</span>
+                </li>
+                 <li>
+                <span class="s1">[玄幻小说]</span>
+                <span class="s2">
+                    <a href="/ldks/76999/" >凡人修仙传奇</a>
+                </span>
+                <span class="s3"><a href="/ldks/76999/31656880.html" >第27章   遇袭</a></span>
+                <span class="s4">风之言</span>
+                <span class="s5">05-23</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/43748/" >修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/43748/20088969.html" >第2039章 九天新世界（终章）</a></span>
+                <span class="s4">归隐</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/62867/" >修仙，从凡人修仙开始</a>
+                </span>
+                <span class="s3"><a href="/ldks/62867/28348865.html" >完本感言</a></span>
+                <span class="s4">碧落青空</span>
+                <span class="s5">11-12</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/105893/" >凡人也能修仙</a>
+                </span>
+                <span class="s3"><a href="/ldks/105893/40677474.html" >第20章 符宝</a></span>
+                <span class="s4">一叶知深秋</span>
+                <span class="s5">11-26</span>
+                </li>
+                 <li>
+                <span class="s1">[玄幻奇幻]</span>
+                <span class="s2">
+                    <a href="/ldks/101293/" >凡人修仙漫漫路</a>
+                </span>
+                <span class="s3"><a href="/ldks/101293/39392371.html" >第三十四章  离去</a></span>
+                <span class="s4">我女圆滚滚</span>
+                <span class="s5">08-23</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠仙侠]</span>
+                <span class="s2">
+                    <a href="/ldks/132490/" >凡人修仙：谁说修仙必须灵力</a>
+                </span>
+                <span class="s3"><a href="/ldks/132490/49998888.html" >第一百一十三章 封印解除</a></span>
+                <span class="s4">鱼何难</span>
+                <span class="s5">07-18</span>
+                </li>
+                 <li>
+                <span class="s1">[历史军事]</span>
+                <span class="s2">
+                    <a href="/ldks/122144/" >凡人穿越修仙苟活</a>
+                </span>
+                <span class="s3"><a href="/ldks/122144/47430792.html" >第140章 界主神威破敌阵，节点危局现转机</a></span>
+                <span class="s4">打字狂魔</span>
+                <span class="s5">02-03</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/19900/" >痞子修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/19900/7802872.html" >后记</a></span>
+                <span class="s4">嚣张太子</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/34638/" >奥特曼修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/34638/15377341.html" >新书《氪命英雄》</a></span>
+                <span class="s4">叱咤萝卜</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/18105/" >秀才修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/18105/6895489.html" >更新说明</a></span>
+                <span class="s4">静枫</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/10863/" >懒人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/10863/3236057.html" >　　第三百七十四章天罗殿</a></span>
+                <span class="s4">苦耕</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[玄幻奇幻]</span>
+                <span class="s2">
+                    <a href="/ldks/98573/" >大道修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/98573/38630386.html" >第十五章  到达天道城</a></span>
+                <span class="s4">牛家栓宝</span>
+                <span class="s5">06-23</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/64681/" >小卒修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/64681/37615609.html" >第一百零六章 比武避嫌</a></span>
+                <span class="s4">八条鲸</span>
+                <span class="s5">04-05</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/52172/" >家族修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/52172/25701230.html" >346箭阻元婴</a></span>
+                <span class="s4">修仙小萌新</span>
+                <span class="s5">06-29</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/53718/" >白蛇修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/53718/25211715.html" >完本感言</a></span>
+                <span class="s4">青雨令</span>
+                <span class="s5">03-04</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/19622/" >穷人修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/19622/7667000.html" >完本后想说的话（下）</a></span>
+                <span class="s4">影·魔</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/41933/" >杀戮修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/41933/19131840.html" >第一百六十六章 入口</a></span>
+                <span class="s4">牌鬼</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/45378/" >红楼修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/45378/20886549.html" >第七十二章 黛玉受捧</a></span>
+                <span class="s4">易如意.CS</span>
+                <span class="s5">07-28</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/48584/" >网管修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/48584/22503897.html" >第一百一十三章：明修栈道，暗度陈仓</a></span>
+                <span class="s4">血河老祖</span>
+                <span class="s5">05-22</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/51080/" >末日修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/51080/23859626.html" >第一百九十六章 古殿激战 中</a></span>
+                <span class="s4">蚁噬天</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/11898/" >梦中修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/11898/3748417.html" >第六七五章 星之源力</a></span>
+                <span class="s4">伯昏无人</span>
+                <span class="s5">11-08</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/7317/" >影视修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/7317/1383350.html" >第14章：梅长苏的计谋</a></span>
+                <span class="s4">万度寒冰</span>
+                <span class="s5">05-18</span>
+                </li>
+                 <li>
+                <span class="s1">[玄幻奇幻]</span>
+                <span class="s2">
+                    <a href="/ldks/110009/" >模拟修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/110009/46774635.html" >第一千零七章 直指天枢星</a></span>
+                <span class="s4">乱世TICH</span>
+                <span class="s5">12-20</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/66695/" >天府修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/66695/28819527.html" >第八卷 重拾修炼 忠诚</a></span>
+                <span class="s4">月读者</span>
+                <span class="s5">10-09</span>
+                </li>
+                 <li>
+                <span class="s1">[修真小说]</span>
+                <span class="s2">
+                    <a href="/ldks/80546/" >修仙风云传</a>
+                </span>
+                <span class="s3"><a href="/ldks/80546/32397271.html" >护我鱼岛（免费搞笑章）</a></span>
+                <span class="s4">紫逝水</span>
+                <span class="s5">07-13</span>
+                </li>
+                 <li>
+                <span class="s1">[武侠修真]</span>
+                <span class="s2">
+                    <a href="/ldks/27016/" >暴君修仙传</a>
+                </span>
+                <span class="s3"><a href="/ldks/27016/11492342.html" >第0316章 鬼帝书，千古第一帝</a></span>
+                <span class="s4">八点二十</span>
+                <span class="s5">05-18</span>
+                </li>
+        </ul>
+
+        <ul class="txt-list txt-list-row5">
+
+</ul>
+
+            </div>
+        </div>
+    </div>
+
+
+<div class="footer" id="footer">
+    <div class="pc-footer">
+        <p>本站所有小说为转载作品，所有章节均由网友上传，转载至本站只是为了宣传本书让更多读者欣赏。</p>
+    </div>
+    <div class="m-footer">
+        <a href="/">首页</a>
+        <a href="/user/case.php" rel="nofollow">我的书架</a>
+        <a href="/reader/case.php" rel="nofollow">阅读记录</a>
+        <a href="#">顶部↑</a>
+    </div>
+</div>
+</body>
+<script>tj();</script>
+</html>

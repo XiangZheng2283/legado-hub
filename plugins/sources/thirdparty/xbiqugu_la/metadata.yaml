@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: xbiqugu_la
 name: 香书小说
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 domains:
   - xbiqugu.com
@@ -23,6 +23,9 @@ proxy:
   mode: auto
   required: false
 enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1200
 tags:
   - html
   - no-login

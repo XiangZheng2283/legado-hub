@@ -1,0 +1,40 @@
+keyword: 凡人作弊修仙
+fixtures:
+  search:
+    url: "http://www.dxtxt.cc/search"
+    file: search.html
+  detail:
+    url: "http://www.dxtxt.cc/noveltxt/fanrenzuobixiuxian.html"
+    file: detail.html
+  toc:
+    url: "http://www.dxtxt.cc/noveltxt/fanrenzuobixiuxian.html"
+    file: detail.html
+  chapter:
+    url: "http://www.dxtxt.cc/noveltxt/fanrenzuobixiuxian/5398754.html"
+    file: chapter.html
+extraFixtures:
+  - url: "http://www.dxtxt.cc/"
+    file: extra1.html
+  - url: "http://www.dxtxt.cc/noveltxt/fanrenzuobixiuxian/5398754_2.html"
+    file: extra2.html
+  - url: "http://www.dxtxt.cc/noveltxt/fanrenzuobixiuxian/5398754_3.html"
+    file: extra3.html
+expect:
+  search:
+    minResults: 1
+    firstName: 凡人作弊修仙
+  detail:
+    name: 凡人作弊修仙
+    author: 方尤
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 794
+    minChapters: 700
+    firstTitleContains: 第一章
+    lastTitleContains: 收徒
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 2000
+    titleContains: 第一章

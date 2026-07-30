@@ -264,7 +264,15 @@ def find_existing_book(conn: sqlite3.Connection, source_id: str, book_url: str) 
     return {"aggregateBookId": row[0], "name": row[1], "status": row[2]}
 
 
-def delete_aggregate_book(conn: sqlite3.Connection, aggregate_book_id: str) -> None:
+def delete_aggregate_book(conn: sqlite3.Connection, aggregate_book_id: str) -> list[dict[str, object]]:
+    subscription_rows = conn.execute(
+        """
+        SELECT user_id, status, start_chapter_index, auto_archive_on_complete
+        FROM user_book_subscriptions
+        WHERE aggregate_book_id = ?
+        """,
+        (aggregate_book_id,),
+    ).fetchall()
     content_rows = conn.execute(
         """
         SELECT content_file_path
@@ -280,6 +288,7 @@ def delete_aggregate_book(conn: sqlite3.Connection, aggregate_book_id: str) -> N
                 path.unlink()
         except OSError:
             pass
+    conn.execute("DELETE FROM user_book_subscriptions WHERE aggregate_book_id = ?", (aggregate_book_id,))
     conn.execute("DELETE FROM aggregate_source_snapshots WHERE aggregate_book_id = ?", (aggregate_book_id,))
     conn.execute("DELETE FROM aggregate_operation_logs WHERE aggregate_book_id = ?", (aggregate_book_id,))
     conn.execute("DELETE FROM aggregate_book_sources WHERE aggregate_book_id = ?", (aggregate_book_id,))
@@ -287,6 +296,15 @@ def delete_aggregate_book(conn: sqlite3.Connection, aggregate_book_id: str) -> N
     conn.execute("DELETE FROM aggregate_book_tasks WHERE aggregate_book_id = ?", (aggregate_book_id,))
     conn.execute("DELETE FROM book_records WHERE book_id = ?", (aggregate_book_id,))
     conn.commit()
+    return [
+        {
+            "userId": row[0],
+            "status": row[1],
+            "startChapterIndex": int(row[2] or 1),
+            "autoArchiveOnComplete": bool(row[3]),
+        }
+        for row in subscription_rows
+    ]
 
 
 def resolve_actor_user_id(db_path: Path, username: str) -> tuple[str, dict[str, str]]:
@@ -408,13 +426,14 @@ async def main() -> int:
     ai_service = None if args.real_ai else NoOpAggregateAIService()
     existing: dict | None = None
     deleted_existing: dict | None = None
+    deleted_subscriptions: list[dict[str, object]] = []
     baseline_counts: dict[str, int] = {}
     with sqlite3.connect(db_path) as conn:
         baseline_counts = db_counters(conn)
         existing = find_existing_book(conn, args.source_id, args.book_url)
         if existing and args.reset_existing:
             deleted_existing = dict(existing)
-            delete_aggregate_book(conn, existing["aggregateBookId"])
+            deleted_subscriptions = delete_aggregate_book(conn, existing["aggregateBookId"])
             existing = None
         elif existing and args.cleanup_existing_only:
             deleted_existing = dict(existing)
@@ -504,6 +523,19 @@ async def main() -> int:
 
     book = created["book"]
     payload = created["payload"]
+    for previous in deleted_subscriptions:
+        subscriptions.ensure(
+            str(previous["userId"]),
+            book["aggregateBookId"],
+            start_chapter_index=int(previous["startChapterIndex"]),
+            auto_archive_on_complete=bool(previous["autoArchiveOnComplete"]),
+        )[0]
+        if str(previous.get("status") or "") != "active":
+            subscriptions.update(
+                str(previous["userId"]),
+                book["aggregateBookId"],
+                {"status": str(previous["status"])},
+            )
     subscription, subscription_created = subscriptions.ensure(
         added_by_user_id,
         book["aggregateBookId"],

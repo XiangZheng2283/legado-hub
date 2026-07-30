@@ -178,8 +178,10 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen: set[str] = set()
+        seen_pages: set[str] = set()
         page_url = toc_url
-        for _ in range(200):
+        while page_url and page_url not in seen_pages:
+            seen_pages.add(page_url)
             try:
                 html = await ctx.access.http.fetch_text(page_url)
             except Exception:
