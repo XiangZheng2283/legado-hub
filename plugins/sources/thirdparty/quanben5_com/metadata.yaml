@@ -15,7 +15,7 @@ capabilities:
   - chapter
 enabled: true
 rateLimit:
-  perHostConcurrency: 1
+  perHostConcurrency: 3
   minIntervalMs: 900
 proxy:
   mode: auto

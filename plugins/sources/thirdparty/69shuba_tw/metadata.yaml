@@ -32,7 +32,7 @@ accessStrategy:
   toc: headless_browser
   chapter: headless_browser
 rateLimit:
-  perHostConcurrency: 1
+  perHostConcurrency: 3
   minIntervalMs: 1200
 tags:
   - html

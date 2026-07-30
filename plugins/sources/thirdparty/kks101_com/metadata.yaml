@@ -50,7 +50,7 @@ tags:
   - search-provider
 enabled: true
 rateLimit:
-  perHostConcurrency: 1
+  perHostConcurrency: 3
   minIntervalMs: 1200
 sourceSeed:
   type: manual

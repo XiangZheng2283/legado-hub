@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from app.source_plugins.context import PluginContext
+from app.source_plugins.loader import PluginLoader
 from app.source_plugins.smoke import (
     FixtureFetcher,
     _FixtureBrowserAdapter,
@@ -69,3 +70,21 @@ async def test_fixture_browser_uses_the_same_saved_page_map() -> None:
     ctx = PluginContext(fetcher=fetcher, plugin_id="example", access_bridge=bridge)
 
     assert "fixture browser" in await ctx.access.browser.fetch_text(url)
+
+
+def test_novel_ip_chapter_fixture_preserves_paragraphs() -> None:
+    plugin_dir = (
+        Path(__file__).resolve().parents[2]
+        / "plugins"
+        / "sources"
+        / "thirdparty"
+        / "novel_ip_23_225_143_226"
+    )
+    plugin = PluginLoader(plugins_dir=plugin_dir).load_all()[plugin_dir.name]
+    html = (plugin_dir / "smoke" / "fixtures" / "chapter.html").read_text(encoding="utf-8")
+    ctx = PluginContext(fetcher=FixtureFetcher({}), plugin_id=plugin_dir.name)
+
+    content = plugin.source._chapter_content(ctx, html, "第一章")
+
+    assert content.count("\n\n") >= 20
+    assert "龙蛇大陆" in content

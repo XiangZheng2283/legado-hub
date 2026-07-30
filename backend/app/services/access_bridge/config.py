@@ -43,7 +43,7 @@ class AccessBridgeConfig:
     browserless_token: str = ""
     public_base_url: str = ""
     profile_root: Path = DATA_DIR / "browser_profiles"
-    pool_size: int = 2
+    pool_size: int = 3
     connect_timeout_ms: int = 5000
     action_timeout_ms: int = 90000
     disable_sandbox: bool = False
@@ -71,7 +71,7 @@ class AccessBridgeConfig:
             browserless_token=read_secret("LEGADOHUB_BROWSERLESS_TOKEN").strip(),
             public_base_url=os.getenv("LEGADOHUB_BROWSER_PUBLIC_BASE_URL", "").strip().rstrip("/"),
             profile_root=Path(profile_root) if profile_root else DATA_DIR / "browser_profiles",
-            pool_size=_positive_int_env("LEGADOHUB_BROWSER_POOL_SIZE", 2),
+            pool_size=_positive_int_env("LEGADOHUB_BROWSER_POOL_SIZE", 3),
             connect_timeout_ms=_positive_int_env(
                 "LEGADOHUB_BROWSER_CONNECT_TIMEOUT_MS",
                 cls.default_connect_timeout_ms,

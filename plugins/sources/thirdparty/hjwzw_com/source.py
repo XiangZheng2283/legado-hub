@@ -16,7 +16,7 @@ class Source:
     id = "hjwzw_com"
     name = "黄金屋中文"
     contract_version = "1.0"
-    last_modified = "2026-07-25"
+    last_modified = "2026-07-30"
     base_url = "https://tw.hjwzw.com"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
 
@@ -160,7 +160,7 @@ class Source:
             "sourceId": self.id,
             "title": self._s(ctx, title_raw),
             "chapterUrl": chapter_url,
-            "content": self._s(ctx, content),
+            "content": ctx.to_simplified(content),
             "format": "text",
             "authRequired": False,
             "isPaid": False,

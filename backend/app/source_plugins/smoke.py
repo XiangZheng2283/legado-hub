@@ -467,7 +467,9 @@ async def run_fixture_smoke(
     chapter_url = _dict_value(chapters[sample_index - 1], "chapterUrl", "chapter_url") or ""
     content, stage_data, err = await run_stage("chapter", plugin.source.chapter, ctx, chapter_url)
     content_text = _dict_value(content, "content", "content") or ""
+    paragraph_count = len([line for line in content_text.splitlines() if line.strip()])
     stage_data["contentLength"] = len(content_text)
+    stage_data["paragraphCount"] = paragraph_count
     result["stages"]["chapter"] = stage_data
     if err:
         result["errors"].append(err)
@@ -475,6 +477,8 @@ async def run_fixture_smoke(
     title_contains = _expect(spec, "chapter.titleContains")
     if len(content_text) < min_content:
         result["errors"].append(_error(plugin.metadata.id, "chapter", "PARSE_EMPTY", f"content too short: {len(content_text)} chars"))
+    if len(content_text) >= 500 and paragraph_count < 2:
+        result["errors"].append(_error(plugin.metadata.id, "chapter", "SMOKE_CONTRACT_ERROR", "long chapter content must preserve paragraph breaks"))
     if title_contains and content and title_contains not in (_dict_value(content, "title", "title") or ""):
         result["errors"].append(_error(plugin.metadata.id, "chapter", "SMOKE_CONTRACT_ERROR", f"chapter title must contain {title_contains}"))
 

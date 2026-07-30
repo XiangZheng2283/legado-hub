@@ -694,7 +694,7 @@ def test_ensure_candidate_sources_discovers_and_persists_third_party_matches(tmp
     assert [src["sourceId"] for src in persisted["sources"]] == ["official_src", "candidate_src"]
 
 
-def test_candidate_discovery_skips_browser_sources(tmp_path, monkeypatch):
+def test_candidate_discovery_includes_browser_sources_without_losing_http_results(tmp_path, monkeypatch):
     processor = AggregateProcessor(tmp_path / "test.db")
 
     class Metadata:
@@ -708,32 +708,48 @@ def test_candidate_discovery_skips_browser_sources(tmp_path, monkeypatch):
             return False
 
     browser = SimpleNamespace(metadata=Metadata("browser_source", {"mode": "required"}), capabilities=["search"])
+    optional = SimpleNamespace(metadata=Metadata("optional_source", {"mode": "optional"}), capabilities=["search"])
     http = SimpleNamespace(metadata=Metadata("http_source", {}), capabilities=["search"])
 
     class Scheduler:
         config = {"max_concurrency": 2}
 
+        def __init__(self):
+            self.calls = []
+
         def _enabled_plugins(self):
-            return [browser, http]
+            return [browser, optional, http]
 
         def _search_priority_plugins(self, plugins):
             return plugins
 
         async def search_one(self, source_id, keyword, page):
-            assert source_id == "http_source"
-            return {"items": [], "error": None}
+            self.calls.append(source_id)
+            if source_id == "browser_source":
+                raise RuntimeError("browser unavailable")
+            return {
+                "items": [{
+                    "sourceId": source_id,
+                    "name": "测试书",
+                    "author": "作者",
+                    "bookUrl": f"https://{source_id}.test/book",
+                }],
+                "error": None,
+            }
 
-    monkeypatch.setattr("app.source_plugins.scheduler.get_plugin_scheduler", lambda: Scheduler())
+    scheduler = Scheduler()
+    monkeypatch.setattr("app.source_plugins.scheduler.get_plugin_scheduler", lambda: scheduler)
 
     discovered = asyncio.run(processor._discover_third_party_candidates(
         keyword="测试书",
         author="作者",
         existing_sources=[],
-        max_candidates=1,
+        max_candidates=0,
         max_sources=8,
     ))
 
-    assert discovered == []
+    assert {item["sourceId"] for item in discovered} == {"http_source", "optional_source"}
+    assert set(scheduler.calls) == {"browser_source", "optional_source", "http_source"}
 
 
 def test_processing_enabled_does_not_use_process_aggregate_on_read_for_background_subscription(tmp_path):
@@ -1572,8 +1588,13 @@ async def test_source_slots_serialize_one_source_but_parallelize_different_sourc
     assert await peak_for([("book", "source_a"), ("book", "source_a")]) == 1
     assert await peak_for([("book", "source_a"), ("book", "source_b")]) == 2
 
-    processor._browser_source_ids = {"browser_a", "browser_b"}
-    assert await peak_for([("book_a", "browser_a"), ("book_b", "browser_b")]) == 1
+    processor._browser_source_ids = {"browser_a", "browser_b", "browser_c", "browser_d"}
+    assert await peak_for([
+        ("book_a", "browser_a"),
+        ("book_b", "browser_b"),
+        ("book_c", "browser_c"),
+        ("book_d", "browser_d"),
+    ]) == 3
 
 
 @pytest.mark.asyncio

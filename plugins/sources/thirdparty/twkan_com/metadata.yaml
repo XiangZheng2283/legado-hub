@@ -31,7 +31,7 @@ accessStrategy:
   toc: stealth_http
   chapter: stealth_http
 rateLimit:
-  perHostConcurrency: 1
+  perHostConcurrency: 3
   minIntervalMs: 1000
 tags:
   - html

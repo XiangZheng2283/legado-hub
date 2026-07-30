@@ -7,3 +7,4 @@
 - 详情：`/book/{id}.html`。
 - 目录：`/chapter/{id}.html` 单页完整目录。
 - 正文：`/read/{id}_{chapterid}.html`。
+- `0.1.1` 修复无显式段落标签页面的正文换行被压平问题。

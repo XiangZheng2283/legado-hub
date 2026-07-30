@@ -6,7 +6,7 @@ version: 0.1.4
 type: source
 enabled: true
 rateLimit:
-  perHostConcurrency: 1
+  perHostConcurrency: 3
   minIntervalMs: 1200
 domains:
   - 69hsw.com

@@ -14,7 +14,7 @@ class Source:
     id = "novel_ip_23_225_143_226"
     name = "零点看书 IP 站"
     contract_version = "1.0"
-    last_modified = "2026-07-29"
+    last_modified = "2026-07-30"
     base_url = "http://23.225.143.226"
 
     async def _fetch(self, ctx, url: str, **kwargs) -> str:
@@ -161,12 +161,15 @@ class Source:
             return ""
         for tag in container.select("script, style, h1"):
             tag.decompose()
-        text = ctx.clean_text(container.get_text("\n", strip=True))
-        text = re.sub(r"\s*\(第\d+/\d+页\)\s*", "\n", text)
-        text = re.sub(r"（本章未完，请点击下一页继续阅读）", "", text)
-        if title and text.startswith(title):
-            text = text[len(title):].lstrip()
-        return text.strip()
+        paragraphs: list[str] = []
+        for raw_line in container.get_text("\n").splitlines():
+            text = re.sub(r"\(第\d+/\d+页\)", "", raw_line)
+            text = text.replace("（本章未完，请点击下一页继续阅读）", "")
+            text = ctx.clean_text(text)
+            if not text or (title and text == title):
+                continue
+            paragraphs.append(text)
+        return "\n\n".join(paragraphs)
 
     async def chapter(self, ctx, chapter_url: str) -> dict:
         chapter_url = self._local_url(chapter_url)

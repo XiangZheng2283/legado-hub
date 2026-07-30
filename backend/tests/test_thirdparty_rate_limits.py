@@ -15,3 +15,14 @@ def test_all_thirdparty_plugins_declare_rate_limits() -> None:
             missing.append(metadata_path.parent.name)
 
     assert missing == []
+
+
+def test_all_thirdparty_plugins_use_global_concurrency_three() -> None:
+    root = Path(__file__).resolve().parents[2] / "plugins" / "sources" / "thirdparty"
+    mismatched = []
+    for metadata_path in sorted(root.glob("*/metadata.yaml")):
+        data = yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
+        if (data.get("rateLimit") or {}).get("perHostConcurrency") != 3:
+            mismatched.append(metadata_path.parent.name)
+
+    assert mismatched == []

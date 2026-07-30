@@ -15,7 +15,7 @@ capabilities:
   - chapter
 enabled: true
 rateLimit:
-  perHostConcurrency: 2
+  perHostConcurrency: 3
   minIntervalMs: 700
 auth:
   mode: none

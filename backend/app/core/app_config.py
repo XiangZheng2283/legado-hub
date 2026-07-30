@@ -64,7 +64,7 @@ class SearchConfig:
     task_concurrency: int = 4
     global_source_concurrency: int = 20
     site_concurrency: int = 3
-    browser_source_concurrency: int = 2
+    browser_source_concurrency: int = 3
     source_timeout_seconds: float = 8.0
     overall_timeout_seconds: float = 120.0
     fast_source_timeout_seconds: float = 5.0
@@ -89,7 +89,7 @@ class SearchConfig:
             task_concurrency=int(data.get("taskConcurrency", 4)),
             global_source_concurrency=int(data.get("globalSourceConcurrency", 20)),
             site_concurrency=int(data.get("siteConcurrency", 3)),
-            browser_source_concurrency=int(data.get("browserSourceConcurrency", 2)),
+            browser_source_concurrency=int(data.get("browserSourceConcurrency", 3)),
             source_timeout_seconds=float(data.get("sourceTimeoutSeconds", 8.0)),
             overall_timeout_seconds=float(data.get("overallTimeoutSeconds", 120.0)),
             fast_source_timeout_seconds=float(data.get("fastSourceTimeoutSeconds", 5.0)),

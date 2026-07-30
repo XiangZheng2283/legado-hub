@@ -15,7 +15,7 @@ class Source:
     id = "uuread_tw"
     name = "UU阅读"
     contract_version = "1.0"
-    last_modified = "2026-07-25"
+    last_modified = "2026-07-30"
     base_url = "http://www.uuread.tw"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
 
@@ -148,7 +148,7 @@ class Source:
             "sourceId": self.id,
             "title": self._s(ctx, title),
             "chapterUrl": chapter_url,
-            "content": self._s(ctx, content),
+            "content": ctx.to_simplified(content),
             "format": "text",
             "authRequired": False,
             "isPaid": False,

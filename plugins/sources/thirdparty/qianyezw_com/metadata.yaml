@@ -1,15 +1,14 @@
 contractVersion: "1.0"
-id: shumilou_top
-name: 书迷楼
-displayName: 书迷楼（top）
+id: qianyezw_com
+name: 新御书屋
 author: Yunwei
-version: 0.1.1
+version: 0.1.0
 type: source
 domains:
-  - www.shumilou.top
-  - shumilou.top
+  - www.qianyezw.com
+  - qianyezw.com
 baseUrls:
-  - https://www.shumilou.top
+  - https://www.qianyezw.com
 capabilities:
   - search
   - detail
@@ -18,7 +17,7 @@ capabilities:
 enabled: true
 rateLimit:
   perHostConcurrency: 3
-  minIntervalMs: 800
+  minIntervalMs: 1000
 auth:
   mode: none
   cookieDomains: []
@@ -32,6 +31,6 @@ tags:
   - no-login
 sourceSeed:
   type: live
-  upstreamId: shumilou_top
+  upstreamId: qianyezw_com
   upstreamFile: ""
   upstreamCommit: ""

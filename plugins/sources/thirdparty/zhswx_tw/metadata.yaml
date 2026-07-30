@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: zhswx_tw
 name: 宙斯小说网
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 priority: 40
 type: source
 domains:
@@ -16,7 +16,7 @@ capabilities:
   - chapter
 enabled: true
 rateLimit:
-  perHostConcurrency: 2
+  perHostConcurrency: 3
   minIntervalMs: 700
 auth:
   mode: none

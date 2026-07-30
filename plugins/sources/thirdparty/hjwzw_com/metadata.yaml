@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: hjwzw_com
 name: 黄金屋中文
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 type: source
 domains:
   - tw.hjwzw.com
@@ -16,7 +16,7 @@ capabilities:
   - chapter
 enabled: true
 rateLimit:
-  perHostConcurrency: 2
+  perHostConcurrency: 3
   minIntervalMs: 600
 auth:
   mode: none

@@ -16,7 +16,7 @@ class Source:
     id = "zhswx_tw"
     name = "宙斯小说网"
     contract_version = "1.0"
-    last_modified = "2026-07-25"
+    last_modified = "2026-07-30"
     base_url = "https://tw.zhswx.com"
 
     def _s(self, ctx, value: str) -> str:
@@ -200,8 +200,11 @@ class Source:
         paragraphs = [self._s(ctx, p.get_text(" ", strip=True)) for p in container.find_all("p")]
         paragraphs = [p for p in paragraphs if p]
         if not paragraphs:
-            text = self._s(ctx, container.get_text("\n", strip=True))
-            paragraphs = [line for line in text.splitlines() if line]
+            paragraphs = [
+                self._s(ctx, line)
+                for line in container.get_text("\n", strip=True).splitlines()
+                if ctx.clean_text(line)
+            ]
         # Drop title line if it appears at the start
         if paragraphs and title and title in paragraphs[0]:
             paragraphs.pop(0)

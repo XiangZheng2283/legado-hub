@@ -62,9 +62,9 @@ class PluginScheduler:
         self._plugins: dict[str, LoadedPlugin] = {}
         self.config = self._default_config() if config is None else config
         self._cookie_store = CookieStore()
-        self._official_source_queue = asyncio.Semaphore(1)
+        self._official_source_queue = asyncio.Semaphore(3)
         self._browser_source_queue = asyncio.Semaphore(
-            self._positive_int(self.config.get("browser_source_concurrency"), 1)
+            self._positive_int(self.config.get("browser_source_concurrency"), 3)
         )
         self._plugin_rate_limiters: dict[str, _PluginRateLimiter] = {}
         self._load_plugins()

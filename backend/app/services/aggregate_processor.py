@@ -121,7 +121,9 @@ class AggregateProcessor:
         self._ai_window_events: dict[str, deque[dict[str, Any]]] = {}
         self._process_logger_cache: SharedBookProcessLogger | None = None
         self._source_sems: dict[tuple[str, str], asyncio.Semaphore] = {}
-        self._browser_source_sem = asyncio.Semaphore(1)
+        self._browser_source_sem = asyncio.Semaphore(
+            max(1, int(AppConfig.get().search.browser_source_concurrency))
+        )
         self._ai_sem = asyncio.Semaphore(self._ai_concurrency_limit())
         self._toc_is_vip_cache: dict[str, dict[int, bool]] = {}
         self._free_chapter_end_index_cache: dict[str, int] = {}
@@ -1361,8 +1363,6 @@ class AggregateProcessor:
             for plugin in scheduler._enabled_plugins()
             if "search" in getattr(plugin, "capabilities", [])
             and not plugin.metadata.is_official_source()
-            and (getattr(plugin.metadata, "browser", {}) or {}).get("mode")
-            not in {"required", "optional"}
         ]
         if not plugins:
             return []
