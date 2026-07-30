@@ -11,8 +11,8 @@ from app.source_plugins.search_enrichment import enrich_search_items_from_detail
 
 
 class Source:
-    id = "novel_ip_23_225_143_226"
-    name = "零点看书 IP 站"
+    id = "lingdiankanshu_com"
+    name = "零点看书"
     contract_version = "1.0"
     last_modified = "2026-07-30"
     base_url = "http://23.225.143.226"

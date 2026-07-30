@@ -129,6 +129,7 @@ class AggregateProcessor:
         self._free_chapter_end_index_cache: dict[str, int] = {}
         self._source_ad_patterns: dict[str, list[str]] = self._load_source_ad_patterns()
         self._browser_source_ids = self._load_browser_source_ids()
+        self._conservative_source_ids = self._load_conservative_source_ids()
         self._lexicon_scanner: Any | None = self._load_lexicon_scanner()
 
     def _load_browser_source_ids(self) -> set[str]:
@@ -143,6 +144,32 @@ class AggregateProcessor:
             }
         except Exception:
             logger.debug("Failed to load browser source metadata", exc_info=True)
+            return set()
+
+    def _load_conservative_source_ids(self) -> set[str]:
+        """Keep official, Browser, and explicitly low-cap sources at one request per book."""
+        try:
+            from app.source_plugins.scheduler import get_plugin_scheduler
+
+            result: set[str] = set()
+            for plugin_id, plugin in get_plugin_scheduler()._plugins.items():
+                browser_mode = (getattr(plugin.metadata, "browser", {}) or {}).get("mode")
+                raw_limit = (getattr(plugin.metadata, "rate_limit", {}) or {}).get(
+                    "perHostConcurrency", 0
+                )
+                try:
+                    global_limit = int(raw_limit)
+                except (TypeError, ValueError):
+                    global_limit = 0
+                if (
+                    plugin.metadata.is_official_source()
+                    or browser_mode in {"required", "optional"}
+                    or global_limit < PER_SOURCE_CONCURRENCY
+                ):
+                    result.add(plugin_id)
+            return result
+        except Exception:
+            logger.debug("Failed to load conservative source metadata", exc_info=True)
             return set()
 
     def _load_lexicon_scanner(self) -> Any | None:
@@ -272,8 +299,13 @@ class AggregateProcessor:
     ) -> asyncio.Semaphore:
         key = (str(aggregate_book_id or "*"), str(source_id or ""))
         if key not in self._source_sems:
+            concurrency = (
+                1
+                if source_id in self._conservative_source_ids
+                else min(PER_SOURCE_CONCURRENCY, PER_BOOK_SOURCE_CONCURRENCY)
+            )
             self._source_sems[key] = asyncio.Semaphore(
-                min(PER_SOURCE_CONCURRENCY, PER_BOOK_SOURCE_CONCURRENCY)
+                concurrency
             )
         return self._source_sems[key]
 

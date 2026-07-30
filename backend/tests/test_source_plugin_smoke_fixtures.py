@@ -72,13 +72,13 @@ async def test_fixture_browser_uses_the_same_saved_page_map() -> None:
     assert "fixture browser" in await ctx.access.browser.fetch_text(url)
 
 
-def test_novel_ip_chapter_fixture_preserves_paragraphs() -> None:
+def test_lingdiankanshu_chapter_fixture_preserves_paragraphs() -> None:
     plugin_dir = (
         Path(__file__).resolve().parents[2]
         / "plugins"
         / "sources"
         / "thirdparty"
-        / "novel_ip_23_225_143_226"
+        / "lingdiankanshu_com"
     )
     plugin = PluginLoader(plugins_dir=plugin_dir).load_all()[plugin_dir.name]
     html = (plugin_dir / "smoke" / "fixtures" / "chapter.html").read_text(encoding="utf-8")

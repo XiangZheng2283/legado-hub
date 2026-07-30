@@ -2,11 +2,18 @@
 
 ## 范围
 
-本表记录首轮完成实网并发校对的 25 个正式插件。后续新增插件的当前限流声明见
-[`source-plugin-catalog.zh-CN.md`](source-plugin-catalog.zh-CN.md)，达到本文末尾的复测门槛后再补入实测表。限流由宿主调度器执行：
+本文记录 34 个正式第三方插件的实网并发校对。插件清单和当前声明另见
+[`source-plugin-catalog.zh-CN.md`](source-plugin-catalog.zh-CN.md)。限流由宿主调度器执行：
 `perHostConcurrency` 限制同一插件的同时生命周期调用，`minIntervalMs` 限制相邻调用的起始间隔。
 
-官方源不在本表中。宿主已通过独立官方单队列将其并发固定为 1，官方插件仍在 QDFCCKK 仓库维护。
+下方历史表中的“限制”保留 2026-07-27 至 2026-07-28 的首轮结果，不代表当前运行配置。当前 beta 运行策略为：
+
+- 普通 HTTP 源：单书单源并发 3、插件全局并发 6。
+- Browser 源、官方源和容量仅验证到 3 或未评估的源：单书单源并发 1、各自全局并发 3。
+- `minIntervalMs` 继续限制请求启动频率；提高并发只增加等待响应时的并行量。
+- 容量探针稳定到 6 或 12 的普通 HTTP 源才使用全局并发 6；探针峰值不直接作为生产值。
+
+官方源不在本表中，官方插件仍在 QDFCCKK 仓库维护。
 已移出正式目录的站点见 [`source-plugin-archive.zh-CN.md`](source-plugin-archive.zh-CN.md)。
 
 ## 可用性结论
@@ -18,8 +25,22 @@
 ## 证据等级
 
 - **实测**：2026-07-27 三本书、每书最多 20 章的低样本审计，随后以 2、3 并发探针确认。
-- **挑战保护**：浏览器、Cloudflare 或强制代理源。保持单并发，不将一次成功当作可提高的依据。
-- **保守基线**：没有可靠容量样本，或近期存在超时、空搜索、网络错误。仅允许单并发；数字不是站点承诺。
+- **挑战保护**：浏览器、Cloudflare 或强制代理源。历史证据只支持单并发，不将一次成功当作可提高的依据。
+- **保守基线**：没有可靠容量样本，或近期存在超时、空搜索、网络错误。历史证据只支持单并发；数字不是站点承诺。
+
+## 2026-07-30 容量复测
+
+本轮对每个普通 HTTP 源按 `1 / 3 / 6 / 12` 逐级进行两轮短时突发，档位间冷却 3 秒；Browser 源受浏览器池约束，只测 `1 / 3`。进入容量测试的章节必须先通过顺序读取且正文不少于 120 字，避免短章节被误判为并发失败。正常运行仍保留 metadata 中的 `minIntervalMs`。
+
+| 结论 | 插件 | 运行配置 |
+| --- | --- | --- |
+| 稳定到 12 | `hjwzw_com`、`lingdiankanshu_com`、`mingzw_tw`、`qianyezw_com`、`quexs_org`、`shumilou_top`、`sto_com`、`uuread_tw`、`xiaoshuohu_com`、`yeban360_com`、`zhswx_tw` | 普通 HTTP：全局 6、单书 3 |
+| 稳定到 6 | `biquge365_net`、`dongtanxs_com`、`quanben5_com`、`ttkan_co` | 普通 HTTP：全局 6、单书 3 |
+| 稳定到 3 | `czbooks_net`、`sudugu_org` | 保守：全局 3、单书 1 |
+| Browser 稳定到 3 | `69shuba_tw`、`ixdzs8_com` | Browser：全局 3、单书 1 |
+| 本环境未评估 | `0xs_net`、`69hsw_com`、`69shuba_com`、`96dushu_com`、`dxtxt_cc`、`kks101_com`、`qiexs_cc`、`ranwen8_cc`、`shuhaige_net`、`shumilou_co`、`suixkan_com`、`tianxibook_com`、`twkan_com`、`xbiqugu_la`、`xhytd_com` | 保持全局 3、单书 1；不推断站点上限 |
+
+关键边界：`dongtanxs_com` 在 12 档出现 HTTP 429；`ttkan_co` 在 12 档第二轮出现 HTTP 503；`czbooks_net` 和 `sudugu_org` 在 6 档失败。`twkan_com` 本轮检测到挑战页。未评估表示没有得到可用于容量测试的合格正文，不等于插件永久不可用。
 
 | 插件 | 限制 | 证据 | 说明 |
 | --- | --- | --- | --- |

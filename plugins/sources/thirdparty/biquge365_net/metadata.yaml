@@ -24,7 +24,7 @@ proxy:
   required: false
 enabled: true
 rateLimit:
-  perHostConcurrency: 3
+  perHostConcurrency: 6
   minIntervalMs: 600
 tags:
   - html

@@ -1,6 +1,6 @@
 contractVersion: "1.0"
-id: novel_ip_23_225_143_226
-name: 零点看书 IP 站
+id: lingdiankanshu_com
+name: 零点看书
 author: Yunwei
 version: 0.1.1
 priority: 20
@@ -16,7 +16,7 @@ capabilities:
   - chapter
 enabled: true
 rateLimit:
-  perHostConcurrency: 3
+  perHostConcurrency: 6
   minIntervalMs: 800
 auth:
   mode: none
@@ -40,6 +40,6 @@ tags:
   - raw-ip
 sourceSeed:
   type: live
-  upstreamId: novel_ip_23_225_143_226
+  upstreamId: lingdiankanshu_com
   upstreamFile: ""
   upstreamCommit: ""

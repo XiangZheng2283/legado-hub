@@ -17,12 +17,30 @@ def test_all_thirdparty_plugins_declare_rate_limits() -> None:
     assert missing == []
 
 
-def test_all_thirdparty_plugins_use_global_concurrency_three() -> None:
+def test_thirdparty_plugins_use_tiered_global_concurrency() -> None:
     root = Path(__file__).resolve().parents[2] / "plugins" / "sources" / "thirdparty"
+    high_capacity = {
+        "biquge365_net",
+        "dongtanxs_com",
+        "hjwzw_com",
+        "mingzw_tw",
+        "lingdiankanshu_com",
+        "qianyezw_com",
+        "quanben5_com",
+        "quexs_org",
+        "shumilou_top",
+        "sto_com",
+        "ttkan_co",
+        "uuread_tw",
+        "xiaoshuohu_com",
+        "yeban360_com",
+        "zhswx_tw",
+    }
     mismatched = []
     for metadata_path in sorted(root.glob("*/metadata.yaml")):
         data = yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
-        if (data.get("rateLimit") or {}).get("perHostConcurrency") != 3:
+        expected = 6 if data.get("id") in high_capacity else 3
+        if (data.get("rateLimit") or {}).get("perHostConcurrency") != expected:
             mismatched.append(metadata_path.parent.name)
 
     assert mismatched == []

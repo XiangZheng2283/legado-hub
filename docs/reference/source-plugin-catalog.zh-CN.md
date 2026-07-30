@@ -19,35 +19,35 @@
 | thirdparty | 69书吧 (`69shuba_com`) | 0.1.5 | zh-CN | optional | always (required) | 3/1200ms |
 | thirdparty | 69書吧繁體 (`69shuba_tw`) | 0.1.1 | zh-TW | required | always (required) | 3/1200ms |
 | thirdparty | 96读书 (`96dushu_com`) | 0.1.2 | zh-CN | none | auto | 3/900ms |
-| thirdparty | 笔趣阁365 (`biquge365_net`) | 0.1.2 | zh-CN | none | auto | 3/600ms |
+| thirdparty | 笔趣阁365 (`biquge365_net`) | 0.1.2 | zh-CN | none | auto | 6/600ms |
 | thirdparty | 小说狂人 (`czbooks_net`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 东滩小说 (`dongtanxs_com`) | 0.1.1 | zh-CN | none | auto | 3/600ms |
+| thirdparty | 东滩小说 (`dongtanxs_com`) | 0.1.1 | zh-CN | none | auto | 6/600ms |
 | thirdparty | 独行小说 (`dxtxt_cc`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 黄金屋中文 (`hjwzw_com`) | 0.1.1 | zh-CN | none | auto | 3/600ms |
+| thirdparty | 黄金屋中文 (`hjwzw_com`) | 0.1.1 | zh-CN | none | auto | 6/600ms |
 | thirdparty | 爱下电子书 (`ixdzs8_com`) | 0.1.0 | zh-CN | optional | auto | 3/1200ms |
 | thirdparty | 101看书网 (`kks101_com`) | 0.1.1 | zh-CN | optional | always (required) | 3/1200ms |
-| thirdparty | 明智屋 (`mingzw_tw`) | 0.1.1 | zh-CN | none | auto | 3/700ms |
-| thirdparty | 零点看书 IP 站 (`novel_ip_23_225_143_226`) | 0.1.1 | zh-CN | none | auto | 3/800ms |
-| thirdparty | 新御书屋 (`qianyezw_com`) | 0.1.0 | zh-CN | none | auto | 3/1000ms |
+| thirdparty | 零点看书 (`lingdiankanshu_com`) | 0.1.1 | zh-CN | none | auto | 6/800ms |
+| thirdparty | 明智屋 (`mingzw_tw`) | 0.1.1 | zh-CN | none | auto | 6/700ms |
+| thirdparty | 新御书屋 (`qianyezw_com`) | 0.1.0 | zh-CN | none | auto | 6/1000ms |
 | thirdparty | 企鹅小说 (`qiexs_cc`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 全本小说网 (`quanben5_com`) | 0.1.1 | zh-CN | none | auto | 3/900ms |
-| thirdparty | 缺小说 (`quexs_org`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
+| thirdparty | 全本小说网 (`quanben5_com`) | 0.1.1 | zh-CN | none | auto | 6/900ms |
+| thirdparty | 缺小说 (`quexs_org`) | 0.1.0 | zh-CN | none | auto | 6/1200ms |
 | thirdparty | 燃文小说网 (`ranwen8_cc`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 书海阁小说网 (`shuhaige_net`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 书迷楼 (`shumilou_co`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 书迷楼 (`shumilou_top`) | 0.1.1 | zh-CN | none | auto | 3/800ms |
-| thirdparty | 思兔阅读 (`sto_com`) | 0.1.1 | zh-CN | none | auto | 3/700ms |
+| thirdparty | 书迷楼 (`shumilou_top`) | 0.1.1 | zh-CN | none | auto | 6/800ms |
+| thirdparty | 思兔阅读 (`sto_com`) | 0.1.1 | zh-CN | none | auto | 6/700ms |
 | thirdparty | 速读谷 (`sudugu_org`) | 0.1.3 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 随心看 (`suixkan_com`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 新天禧小说 (`tianxibook_com`) | 0.1.1 | zh-CN | none | auto | 3/1000ms |
-| thirdparty | 天天看书网 (`ttkan_co`) | 0.1.2 | zh-CN | none | always (required) | 3/600ms |
+| thirdparty | 天天看书网 (`ttkan_co`) | 0.1.2 | zh-CN | none | always (required) | 6/600ms |
 | thirdparty | 台灣小說網 (`twkan_com`) | 0.1.5 | zh-CN | optional | auto | 3/1000ms |
-| thirdparty | UU阅读 (`uuread_tw`) | 0.1.1 | zh-CN | none | auto | 3/900ms |
+| thirdparty | UU阅读 (`uuread_tw`) | 0.1.1 | zh-CN | none | auto | 6/900ms |
 | thirdparty | 香书小说 (`xbiqugu_la`) | 0.1.2 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 黄易天地 (`xhytd_com`) | 0.2.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 小说虎 (`xiaoshuohu_com`) | 0.1.2 | zh-CN | none | auto | 3/1000ms |
-| thirdparty | 夜伴书屋 (`yeban360_com`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 宙斯小说网 (`zhswx_tw`) | 0.1.1 | zh-CN | none | auto | 3/700ms |
+| thirdparty | 小说虎 (`xiaoshuohu_com`) | 0.1.2 | zh-CN | none | auto | 6/1000ms |
+| thirdparty | 夜伴书屋 (`yeban360_com`) | 0.1.0 | zh-CN | none | auto | 6/1200ms |
+| thirdparty | 宙斯小说网 (`zhswx_tw`) | 0.1.1 | zh-CN | none | auto | 6/700ms |
 
 # official
 
@@ -245,7 +245,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `600` ms
+- 限流：每主机并发 `6`；最小间隔 `600` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：
@@ -291,7 +291,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `600` ms
+- 限流：每主机并发 `6`；最小间隔 `600` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -335,7 +335,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `600` ms
+- 限流：每主机并发 `6`；最小间隔 `600` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -386,6 +386,28 @@
 - 来源追溯：`type`=`manual`；`upstreamId`=`101kks.com`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
+## 零点看书 (`lingdiankanshu_com`)
+
+- 目录：`plugins/sources/thirdparty/lingdiankanshu_com`；展示名称：零点看书
+- 实现：[`source.py`](../../plugins/sources/thirdparty/lingdiankanshu_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/lingdiankanshu_com/README.md)
+- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 语言：`zh-CN`；默认启用：`True`；优先级：`20`
+- 主地址：`http://23.225.143.226`
+- 域名：`23.225.143.226`
+- 能力：`search`、`detail`、`toc`、`chapter`
+- 标签：`html`、`no-login`、`raw-ip`
+- 登录：模式 `none`；Cookie 域名：未声明
+- 内容：访问权限 `free`；来源角色 `未声明`
+- 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
+- 浏览器：模式 `none`；原因 `未声明`
+- 代理：模式 `auto`；必需 `False`
+- 限流：每主机并发 `6`；最小间隔 `800` ms
+- 搜索提供器：未声明
+- Access Bridge：未声明
+- 域名配置：未声明
+- 来源追溯：`type`=`live`；`upstreamId`=`lingdiankanshu_com`；`upstreamFile`=空；`upstreamCommit`=空
+- 正文净化规则：`0` 条
+
 ## 明智屋 (`mingzw_tw`)
 
 - 目录：`plugins/sources/thirdparty/mingzw_tw`；展示名称：明智屋
@@ -401,33 +423,11 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `700` ms
+- 限流：每主机并发 `6`；最小间隔 `700` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`live`；`upstreamId`=`mingzw_tw`；`upstreamFile`=空；`upstreamCommit`=空
-- 正文净化规则：`0` 条
-
-## 零点看书 IP 站 (`novel_ip_23_225_143_226`)
-
-- 目录：`plugins/sources/thirdparty/novel_ip_23_225_143_226`；展示名称：零点看书 IP 站
-- 实现：[`source.py`](../../plugins/sources/thirdparty/novel_ip_23_225_143_226/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/novel_ip_23_225_143_226/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
-- 语言：`zh-CN`；默认启用：`True`；优先级：`20`
-- 主地址：`http://23.225.143.226`
-- 域名：`23.225.143.226`
-- 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`、`raw-ip`
-- 登录：模式 `none`；Cookie 域名：未声明
-- 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
-- 浏览器：模式 `none`；原因 `未声明`
-- 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `800` ms
-- 搜索提供器：未声明
-- Access Bridge：未声明
-- 域名配置：未声明
-- 来源追溯：`type`=`live`；`upstreamId`=`novel_ip_23_225_143_226`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
 ## 新御书屋 (`qianyezw_com`)
@@ -445,7 +445,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1000` ms
+- 限流：每主机并发 `6`；最小间隔 `1000` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -489,7 +489,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `900` ms
+- 限流：每主机并发 `6`；最小间隔 `900` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -511,7 +511,7 @@
 - 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1200` ms
+- 限流：每主机并发 `6`；最小间隔 `1200` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -599,7 +599,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `800` ms
+- 限流：每主机并发 `6`；最小间隔 `800` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -621,7 +621,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `700` ms
+- 限流：每主机并发 `6`；最小间隔 `700` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -709,7 +709,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `always`；必需 `True`
-- 限流：每主机并发 `3`；最小间隔 `600` ms
+- 限流：每主机并发 `6`；最小间隔 `600` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -754,7 +754,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `900` ms
+- 限流：每主机并发 `6`；最小间隔 `900` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -825,7 +825,7 @@
 - 访问策略：`search`=`search_provider`
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1000` ms
+- 限流：每主机并发 `6`；最小间隔 `1000` ms
 - 搜索提供器：`providerOrder`=`bing_html`、`google_html`；`targetDomain`=`www.xiaoshuohu.com`；`querySitePath`=`/`；`urlPatterns`=`/\d+/\d+/?$`
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -847,7 +847,7 @@
 - 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1200` ms
+- 限流：每主机并发 `6`；最小间隔 `1200` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明
@@ -869,7 +869,7 @@
 - 访问策略：未声明
 - 浏览器：模式 `none`；原因 `未声明`
 - 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `700` ms
+- 限流：每主机并发 `6`；最小间隔 `700` ms
 - 搜索提供器：未声明
 - Access Bridge：未声明
 - 域名配置：未声明

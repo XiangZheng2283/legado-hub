@@ -1564,7 +1564,7 @@ async def test_run_book_task_scales_timeout_with_chapter_batch(tmp_path, monkeyp
 
 
 @pytest.mark.asyncio
-async def test_source_slots_serialize_one_source_but_parallelize_different_sources(tmp_path):
+async def test_source_slots_apply_per_book_and_conservative_limits(tmp_path):
     processor = AggregateProcessor(tmp_path / "test.db")
 
     async def peak_for(work: list[tuple[str, str]]) -> int:
@@ -1585,10 +1585,14 @@ async def test_source_slots_serialize_one_source_but_parallelize_different_sourc
         await asyncio.gather(*(run(book_id, source_id) for book_id, source_id in work))
         return peak
 
-    assert await peak_for([("book", "source_a"), ("book", "source_a")]) == 1
+    assert await peak_for([("book", "source_a")] * 4) == 3
     assert await peak_for([("book", "source_a"), ("book", "source_b")]) == 2
 
+    processor._conservative_source_ids = {"limited_source"}
+    assert await peak_for([("book", "limited_source")] * 3) == 1
+
     processor._browser_source_ids = {"browser_a", "browser_b", "browser_c", "browser_d"}
+    processor._conservative_source_ids.update(processor._browser_source_ids)
     assert await peak_for([
         ("book_a", "browser_a"),
         ("book_b", "browser_b"),

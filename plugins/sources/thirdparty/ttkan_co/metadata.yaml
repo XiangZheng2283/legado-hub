@@ -22,7 +22,7 @@ content:
   access: free
 enabled: true
 rateLimit:
-  perHostConcurrency: 3
+  perHostConcurrency: 6
   minIntervalMs: 600
 proxy:
   mode: always

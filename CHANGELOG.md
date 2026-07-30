@@ -37,7 +37,7 @@
 
 ### 书源
 
-- 新增 `czbooks_net`、`dxtxt_cc`、`ixdzs8_com`、`novel_ip_23_225_143_226`、`qiexs_cc`、`quexs_org`、`suixkan_com`、`yeban360_com`
+- 新增 `czbooks_net`、`dxtxt_cc`、`ixdzs8_com`、`lingdiankanshu_com`、`qiexs_cc`、`quexs_org`、`suixkan_com`、`yeban360_com`
 - 完整复核正式第三方插件的搜索、详情、目录、正文、编码、分页与限流声明，并补充 fixture smoke
 - 归档并移除失效的 `22biqu_com`；移除仅复用 `xbiqugu.com` 镜像的重复插件 `xbiquzw_net`
 - 起点 Web 官方插件同步自 `QDFCCKK`，App 官方插件仍不进入公开镜像
