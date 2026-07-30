@@ -3243,6 +3243,7 @@ class AggregateProcessor:
                         aggregate_book_id=aggregate_book_id,
                         chapter_index=target_index or 0,
                         source_id=cand_source_id,
+                        expected_title=target_title,
                     )
                     cand_result: dict[str, Any] = {}
                     fetched_from_network = False
@@ -3280,6 +3281,7 @@ class AggregateProcessor:
                                 aggregate_book_id=aggregate_book_id,
                                 chapter_index=target_index or 0,
                                 source_id=cand_source_id,
+                                expected_title=target_title,
                             )
                             if cand_content:
                                 if not (official_preview or official_word_count > 0):
@@ -3833,36 +3835,61 @@ class AggregateProcessor:
         target_index: int,
         target_title: str,
     ) -> list[dict[str, Any]]:
-        from app.services.aggregate_alignment import chapter_title_similarity
-
-        scored: list[tuple[float, dict[str, Any]]] = []
+        title_matches: list[tuple[tuple[int, float, int], dict[str, Any]]] = []
+        index_fallbacks: list[tuple[int, dict[str, Any]]] = []
+        target_ordinal = self._chapter_ordinal_from_title(target_title)
         for ch in cand_chapters:
             if not isinstance(ch, dict):
                 continue
-            score = 0.0
             ch_index = int(ch.get("index") or 0)
-            if ch_index and ch_index == target_index:
-                score += 1.0
-            elif ch_index and target_index and abs(ch_index - target_index) <= 2:
-                # Keep a small nearby-index window alive even when titles drift;
-                # preview/body alignment will be the final judge.
-                score += max(0.1, 0.8 - 0.2 * abs(ch_index - target_index))
             title = str(ch.get("title", "") or "")
-            if target_title and title:
-                title_sim = chapter_title_similarity(target_title, title)
-                score += title_sim
-                if target_title == title:
-                    score += 0.5
-            if score <= 0:
+            rank = self._candidate_title_match_rank(target_title, title)
+            if rank is not None:
+                title_matches.append((rank, ch))
                 continue
-            scored.append((score, ch))
-        scored.sort(
+            candidate_ordinal = self._chapter_ordinal_from_title(title)
+            if (
+                ch_index
+                and target_index
+                and abs(ch_index - target_index) <= 2
+                and (target_ordinal is None or candidate_ordinal is None)
+            ):
+                index_fallbacks.append((abs(ch_index - target_index), ch))
+        title_matches.sort(
             key=lambda item: (
-                -item[0],
+                item[0][0],
+                -item[0][1],
+                item[0][2],
                 abs(int(item[1].get("index") or 0) - int(target_index or 0)),
             )
         )
-        return [item[1] for item in scored[:3]]
+        if title_matches:
+            return [item[1] for item in title_matches[:3]]
+        index_fallbacks.sort(key=lambda item: item[0])
+        return [item[1] for item in index_fallbacks[:3]]
+
+    def _candidate_title_match_rank(
+        self,
+        target_title: str,
+        candidate_title: str,
+    ) -> tuple[int, float, int] | None:
+        from app.services.aggregate_alignment import chapter_title_similarity
+
+        if not target_title or not candidate_title:
+            return None
+        similarity = chapter_title_similarity(target_title, candidate_title)
+        target_ordinal = self._chapter_ordinal_from_title(target_title)
+        candidate_ordinal = self._chapter_ordinal_from_title(candidate_title)
+        if target_ordinal is not None and candidate_ordinal is not None:
+            ordinal_gap = abs(target_ordinal - candidate_ordinal)
+            if similarity >= 0.75 and ordinal_gap <= 5:
+                return (0, similarity, ordinal_gap)
+            if ordinal_gap <= 2:
+                return (1, similarity, ordinal_gap)
+            return None
+        if similarity >= 0.75:
+            return (0, similarity, 0)
+        return None
 
     def _candidate_source_lag_info(
         self,
@@ -5044,20 +5071,40 @@ class AggregateProcessor:
             },
         )
 
-    def _load_source_snapshot_content(self, *, aggregate_book_id: str, chapter_index: int, source_id: str) -> str:
+    def _load_source_snapshot_content(
+        self,
+        *,
+        aggregate_book_id: str,
+        chapter_index: int,
+        source_id: str,
+        expected_title: str = "",
+    ) -> str:
         if not aggregate_book_id or not chapter_index or not source_id:
             return ""
         with self._conn() as conn:
             row = conn.execute(
                 """
-                SELECT clean_content
+                SELECT title, clean_content
                 FROM aggregate_source_snapshots
                 WHERE aggregate_book_id = ? AND chapter_index = ? AND source_id = ?
                 LIMIT 1
                 """,
                 (aggregate_book_id, chapter_index, source_id),
             ).fetchone()
-        content = row[0] if row and row[0] else ""
+        if not row:
+            return ""
+        snapshot_title = str(row[0] or "")
+        content = str(row[1] or "")
+        if expected_title and self._candidate_title_match_rank(expected_title, snapshot_title) is None:
+            logger.info(
+                "Skipped mismatched source snapshot: book=%s chapter=%s source=%s expected=%r actual=%r",
+                aggregate_book_id,
+                chapter_index,
+                source_id,
+                expected_title,
+                snapshot_title,
+            )
+            return ""
         if self._looks_like_garbled_text(content):
             logger.warning(
                 "Skipped garbled source snapshot: book=%s chapter=%s source=%s",

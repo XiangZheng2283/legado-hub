@@ -1601,6 +1601,42 @@ async def test_source_slots_apply_per_book_and_conservative_limits(tmp_path):
     ]) == 3
 
 
+def test_candidate_toc_matching_prefers_title_over_wrong_index(tmp_path):
+    processor = AggregateProcessor(tmp_path / "test.db")
+    matches = processor._match_candidate_toc_entries(
+        cand_chapters=[
+            {"index": 363, "title": "第六百六十九章 工作不够 兼职来凑"},
+            {"index": 350, "title": "第356章 小心没用，白天也滑"},
+            {"index": 362, "title": "第361章 道左相逢"},
+        ],
+        target_index=363,
+        target_title="第三百五十四章 小心没用，白天也滑",
+    )
+
+    assert [item["title"] for item in matches] == ["第356章 小心没用，白天也滑"]
+
+
+def test_candidate_snapshot_rejects_mismatched_saved_title(tmp_path):
+    db_path = _setup_db(tmp_path)
+    processor = AggregateProcessor(db_path)
+    processor._save_source_snapshot(
+        aggregate_book_id="book-1",
+        chapter_index=363,
+        source_id="candidate_src",
+        source_book_id="candidate-book",
+        source_chapter_id="candidate-chapter",
+        title="第六百六十九章 工作不够 兼职来凑",
+        raw_content="错误候选正文。" * 40,
+    )
+
+    assert processor._load_source_snapshot_content(
+        aggregate_book_id="book-1",
+        chapter_index=363,
+        source_id="candidate_src",
+        expected_title="第三百五十四章 小心没用，白天也滑",
+    ) == ""
+
+
 @pytest.mark.asyncio
 async def test_initial_prefetch_is_bounded_and_timeout_does_not_block_processing(tmp_path, monkeypatch):
     import app.services.aggregate_processor as processor_module
