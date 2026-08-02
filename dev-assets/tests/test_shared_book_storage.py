@@ -896,3 +896,95 @@ def test_write_book_bundle_order_keeps_metadata_consistent_after_partial_failure
     assert not metadata_path.exists()
     traces = storage.check_chapter_traces(book_name="测试小说", author="作者甲")
     assert traces["valid"] is True
+
+
+def test_library_integrity_scan_ignores_pending_files_and_detects_missing_runtime_data(tmp_path: Path):
+    db_path = tmp_path / "app.db"
+    storage = SharedBookStorage(tmp_path / "library")
+    service = LibraryBooksService(db_path=db_path, shared_book_storage=storage)
+    book_id = "book-integrity-1"
+    _insert_library_book(
+        db_path,
+        aggregate_book_id=book_id,
+        visible_processed_chapters=1,
+        processed_chapters=1,
+    )
+    payload = {
+        "candidateId": book_id,
+        "name": "测试小说",
+        "author": "作者甲",
+        "primaryBookId": "src-a:book-1",
+        "primarySourceId": "src-a",
+        "sources": [{"sourceId": "src-a", "bookId": "src-a:book-1"}],
+    }
+    with service._conn() as conn:
+        conn.execute(
+            "UPDATE aggregate_book_tasks SET aggregate_payload_json = ?, total_chapters = 2 WHERE aggregate_book_id = ?",
+            (json.dumps(payload, ensure_ascii=False), book_id),
+        )
+        conn.executemany(
+            """
+            INSERT INTO aggregate_chapter_tasks
+            (chapter_id, aggregate_book_id, chapter_index, title, status)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                ("chapter-1", book_id, 1, "第一章", "processed"),
+                ("chapter-2", book_id, 2, "第二章", "pending"),
+            ],
+        )
+        conn.commit()
+
+    chapter_path = storage.chapter_markdown_path(
+        book_name="测试小说",
+        author="作者甲",
+        chapter_index=1,
+        title="第一章",
+    )
+    trace = {"chapterIndex": 1, "chapterTitle": "第一章", "chapterStatus": "readable"}
+    storage.write_book_bundle(
+        metadata_path=storage.metadata_path(book_name="测试小说", author="作者甲"),
+        metadata_payload=storage.build_shared_metadata(payload),
+        chapter_index_path=storage.chapter_index_path(book_name="测试小说", author="作者甲"),
+        chapter_index_payload={
+            "bookId": book_id,
+            "chapters": [
+                {"index": 1, "title": "第一章", "file": f"chapters/{chapter_path.name}", "status": "readable"},
+                {"index": 2, "title": "第二章", "file": None, "status": "pending"},
+            ],
+        },
+        chapter_files=[
+            (
+                chapter_path,
+                storage.render_chapter_markdown(title="第一章", body="正文", trace_payload=trace),
+            )
+        ],
+    )
+
+    healthy = service.scan_integrity(book_ids={book_id})
+    assert healthy["summary"] == {
+        "totalBooks": 1,
+        "healthyBooks": 1,
+        "repairableBooks": 0,
+        "brokenBooks": 0,
+        "issueCount": 0,
+    }
+
+    chapter_path.unlink()
+    with service._conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO aggregate_source_snapshots
+            (aggregate_book_id, chapter_index, source_id, clean_content, content_hash)
+            VALUES (?, 1, 'src-a', '正文', 'hash-1')
+            """,
+            (book_id,),
+        )
+        conn.commit()
+
+    broken = service.scan_integrity(book_ids={book_id})
+    issue_map = {issue["code"]: issue for issue in broken["books"][0]["issues"]}
+    assert broken["books"][0]["status"] == "repairable"
+    assert issue_map["chapter_files_missing"]["samples"] == [1]
+    assert issue_map["source_snapshot_files_missing"]["samples"] == ["src-a:1"]
+    assert 2 not in issue_map["chapter_files_missing"]["samples"]

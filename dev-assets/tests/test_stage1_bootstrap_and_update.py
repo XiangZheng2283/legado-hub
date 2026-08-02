@@ -1720,6 +1720,52 @@ async def test_candidate_source_cache_invalidates_when_payload_sources_change(tm
 
 
 @pytest.mark.asyncio
+async def test_candidate_source_cache_lasts_for_process_lifetime(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path)
+    book_id = "book:candidate_cache_process_lifetime"
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    payload = {
+        "name": "测试书",
+        "author": "作者",
+        "primarySourceId": "official_src",
+        "primaryBookId": f"official_src:{book_id}",
+        "sources": [
+            {
+                "sourceId": "official_src",
+                "sourceName": "官方源",
+                "bookId": f"official_src:{book_id}",
+                "bookUrl": "https://official.example/book",
+                "score": 100,
+            }
+        ],
+    }
+    calls: list[int] = []
+
+    async def _discover(**kwargs):
+        calls.append(1)
+        return [
+            {
+                "sourceId": "third_party_src",
+                "sourceName": "第三方源",
+                "bookId": "third_party_src:https://third.example/book",
+                "bookUrl": "https://third.example/book",
+                "tocUrl": "",
+                "score": 80,
+            }
+        ]
+
+    monkeypatch.setattr(processor, "_discover_third_party_candidates", _discover)
+
+    first = await processor._ensure_candidate_sources_for_book(book_id, payload)
+    monkeypatch.setattr("app.services.aggregate_processor.time.monotonic", lambda: 10_000_000)
+    second = await processor._ensure_candidate_sources_for_book(book_id, first)
+
+    assert len(calls) == 1
+    assert second == first
+
+
+@pytest.mark.asyncio
 async def test_source_map_refresh_replaces_candidate_cache_payload(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path)
     book_id = "book:source_map_refresh_cache"

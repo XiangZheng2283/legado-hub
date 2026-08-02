@@ -1,0 +1,46 @@
+contractVersion: "1.0"
+id: feishubook_com
+name: 飞书小说网
+author: Yunwei
+version: 0.1.0
+priority: 40
+type: source
+domains:
+  - www.myfeishu.com
+  - myfeishu.com
+baseUrls:
+  - https://www.myfeishu.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 300
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+accessStrategy:
+  search: http
+  detail: http
+  toc: http
+  chapter: http
+tags:
+  - html
+  - encrypted-content
+  - no-login
+  - simplified-chinese
+sourceSeed:
+  type: live
+  upstreamId: feishubook_com
+  upstreamFile: ""
+  upstreamCommit: ""

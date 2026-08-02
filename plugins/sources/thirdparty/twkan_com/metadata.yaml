@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: twkan_com
 name: 台灣小說網
 author: Yunwei
-version: 0.1.5
+version: 0.1.8
 type: source
 domains:
   - twkan.com
@@ -49,6 +49,7 @@ domainProfiles:
     fallback: true
 searchProvider:
   providerOrder:
+    - duckduckgo_ddgs
     - bing_html
     - google_html
   targetDomain: twkan.com
@@ -57,3 +58,6 @@ searchProvider:
     - /book/\d+\.html
     - /book/\d+
     - /txt/\d+/\d+
+adPatterns:
+  - 'GOOGLE搜索TWKAN'
+  - '台湾小说网→'

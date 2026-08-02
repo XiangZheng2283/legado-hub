@@ -1,16 +1,16 @@
 keyword: 青山
 fixtures:
   search:
-    url: https://m.0xs.net/search
+    url: https://www.0xs.net/search.html
     file: search.html
   detail:
-    url: https://m.0xs.net/txt_1/84515
+    url: https://www.0xs.net/txt_1/84515.html
     file: detail.html
   toc:
-    url: https://m.0xs.net/la_1/84515
+    url: https://www.0xs.net/la_1/84515.html
     file: toc.html
   chapter:
-    url: https://m.0xs.net/txt_1/84515/3
+    url: https://www.0xs.net/txt_1/84515/3.html
     file: chapter.html
 expect:
   search:

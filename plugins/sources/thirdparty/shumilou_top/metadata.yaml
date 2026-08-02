@@ -3,7 +3,7 @@ id: shumilou_top
 name: 书迷楼
 displayName: 书迷楼（top）
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 domains:
   - www.shumilou.top
@@ -35,3 +35,5 @@ sourceSeed:
   upstreamId: shumilou_top
   upstreamFile: ""
   upstreamCommit: ""
+adPatterns:
+  - '\[?www\.69kanbao\.com\]?'

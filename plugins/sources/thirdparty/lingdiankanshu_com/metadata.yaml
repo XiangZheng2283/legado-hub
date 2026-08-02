@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: lingdiankanshu_com
 name: 零点看书
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 priority: 20
 type: source
 domains:
@@ -43,3 +43,5 @@ sourceSeed:
   upstreamId: lingdiankanshu_com
   upstreamFile: ""
   upstreamCommit: ""
+adPatterns:
+  - '零点看书全文字更新.{0,20}牢记网址'

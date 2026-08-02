@@ -939,6 +939,85 @@ def _manual_library_book_repair(book_id: str, payload: dict | None = None) -> di
     }
 
 
+def _manual_library_integrity_repair(payload: dict | None = None) -> dict:
+    requested = (payload or {}).get("bookIds")
+    book_ids = (
+        {str(book_id).strip() for book_id in requested if str(book_id).strip()}
+        if isinstance(requested, list)
+        else None
+    )
+    before = library_books_service.scan_integrity(book_ids=book_ids)
+    processor = AggregateProcessor()
+    results = []
+    local_rebuild_codes = {
+        "metadata_missing",
+        "metadata_invalid",
+        "chapter_index_missing",
+        "chapter_index_invalid",
+        "chapter_index_count_mismatch",
+        "chapter_files_missing",
+        "chapter_traces_invalid",
+        "chapter_paths_invalid",
+        "source_snapshot_files_missing",
+        "source_snapshot_files_invalid",
+        "source_snapshot_manifests_missing",
+        "source_snapshot_manifests_invalid",
+    }
+    for item in before["books"]:
+        if item["status"] == "healthy" or not item.get("repairable"):
+            continue
+        book_id = str(item["bookId"])
+        book = library_books_service.get_book(book_id) or {}
+        actions: list[str] = []
+        removed_tmp = library_books_service.shared_book_storage.cleanup_tmp_files(
+            book_name=str(book.get("name", "") or ""),
+            author=str(book.get("author", "") or ""),
+        )
+        if removed_tmp:
+            actions.append("cleanup_tmp")
+
+        issue_codes = {str(issue.get("code", "") or "") for issue in item.get("issues", [])}
+        if issue_codes & local_rebuild_codes:
+            rebuilt = processor.rebuild_book_from_snapshots(book_id)
+            if rebuilt.get("rebuilt") and (
+                int(rebuilt.get("snapshotCount", 0) or 0) > 0
+                or int(rebuilt.get("rewrittenChapters", 0) or 0) > 0
+            ):
+                actions.append("rebuild_from_snapshots")
+
+        repaired_metadata = _manual_library_book_repair(book_id)
+        if repaired_metadata.get("ok"):
+            actions.append("rebuild_metadata")
+
+        current = library_books_service.scan_integrity(book_ids={book_id})
+        current_book = current["books"][0] if current["books"] else item
+        queued = False
+        if current_book["status"] != "healthy" and str(book.get("status", "")) not in {"paused", "archived"}:
+            aggregate_payload = library_books_service.load_payload(book_id)
+            if aggregate_payload:
+                queued = bool(processor.enqueue_book(book_id, aggregate_payload).get("queued"))
+                if queued:
+                    actions.append("queue_recovery")
+        results.append(
+            {
+                "bookId": book_id,
+                "actions": actions,
+                "queued": queued,
+                "status": current_book["status"],
+            }
+        )
+
+    after = library_books_service.scan_integrity(book_ids=book_ids)
+    return {
+        "ok": True,
+        "before": before["summary"],
+        "after": after,
+        "repairedBooks": len(results),
+        "queuedBooks": sum(bool(item["queued"]) for item in results),
+        "results": results,
+    }
+
+
 async def _manual_library_book_update_check(book_id: str) -> dict:
     payload = library_books_service.load_payload(book_id)
     if not payload:
@@ -2736,6 +2815,30 @@ def list_library_books(request: Request, keyword: str = ""):
     auth_service.require_admin(request)
     items = library_books_service.list_books(keyword=keyword, include_hidden=True)
     return {"items": items, "total": len(items)}
+
+
+@console_route("get", "/library-integrity")
+def scan_library_integrity_console(request: Request):
+    auth_service.require_admin(request)
+    return library_books_service.scan_integrity()
+
+
+@console_route("post", "/library-integrity/repair")
+def repair_library_integrity_console(request: Request, payload: dict | None = None):
+    admin = auth_service.require_admin(request)
+    result = _manual_library_integrity_repair(payload)
+    audit_service.record(
+        action="shared_book.integrity.repair",
+        actor_user_id=admin.user_id,
+        actor_role=admin.role,
+        target_type="shared_book_library",
+        target_id="global",
+        summary={
+            "repairedBooks": result.get("repairedBooks", 0),
+            "queuedBooks": result.get("queuedBooks", 0),
+        },
+    )
+    return result
 
 
 @console_route("get", "/library-books/{book_id}/summary")

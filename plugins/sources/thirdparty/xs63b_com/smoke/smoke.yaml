@@ -1,0 +1,40 @@
+keyword: 凡人：我有一尊强化炉
+fixtures:
+  search:
+    url: "https://m.xs63e.com/search"
+    file: search.html
+  detail:
+    url: "https://m.xs63e.com/qita/woyouyizunqianghualu/"
+    file: detail.html
+  toc:
+    url: "https://m.xs63e.com/qita/woyouyizunqianghualu/"
+    file: detail.html
+  chapter:
+    url: "https://m.xs63e.com/qita/woyouyizunqianghualu/104560905.html"
+    file: chapter.html
+extraFixtures:
+  - url: "https://m.xs63e.com/"
+    file: extra1.html
+  - url: "https://m.xs63e.com/qita/woyouyizunqianghualu/HlaPYOiJ4hfmrkqLqXxXdneVFA.html"
+    file: extra2.html
+  - url: "https://m.xs63e.com/qita/woyouyizunqianghualu/TwTaNreI5xfmrkqLqXxXdneVFQ.html"
+    file: extra3.html
+expect:
+  search:
+    minResults: 1
+    firstName: 凡人：我有一尊强化炉
+  detail:
+    name: 凡人：我有一尊强化炉
+    author: 二哈奇士
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 33
+    minChapters: 33
+    firstTitleContains: 第1章
+    lastTitleContains: 第33章
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 2500
+    titleContains: 第1章

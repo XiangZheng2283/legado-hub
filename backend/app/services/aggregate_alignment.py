@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import re
+import unicodedata
+from bisect import bisect_left
+from collections import Counter, defaultdict
 from difflib import SequenceMatcher
+from itertools import combinations
 from typing import Any
+
+from app.services.text_convert import to_simplified
 
 
 # ── thresholds (plan §7.4) ───────────────────────────────────────────────────
@@ -22,6 +28,13 @@ RELAXED_PREVIEW_SIMILARITY_THRESHOLD = 0.50
 RELAXED_HEAD_PREVIEW_SIMILARITY_THRESHOLD = 0.50
 CROSS_SOURCE_CONTENT_SIMILARITY_THRESHOLD = 0.90
 CROSS_SOURCE_COMPARE_MAX = 3000
+SENTENCE_MATCH_THRESHOLD = 0.80
+SENTENCE_MATCH_WINDOW = 3
+SENTENCE_MIN_LENGTH = 6
+SENTENCE_ORDER_MIN_MATCHES = 10
+SENTENCE_ORDER_MIN_COVERAGE = 0.65
+SENTENCE_ORDER_CONSISTENT_RATIO = 0.92
+SENTENCE_ORDER_MISMATCH_RATIO = 0.80
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -169,6 +182,223 @@ def cross_source_content_similarity(left: str, right: str) -> float:
         str(left or "")[:CROSS_SOURCE_COMPARE_MAX],
         str(right or "")[:CROSS_SOURCE_COMPARE_MAX],
     )
+
+
+def _sentence_fingerprint(value: str) -> str:
+    simplified = str(to_simplified(unicodedata.normalize("NFKC", value)) or "")
+    return re.sub(r"[\W_]+", "", simplified.casefold())
+
+
+def _sentence_fingerprints(content: str) -> list[str]:
+    """Split content for comparison without changing the stored body."""
+    compact = re.sub(r"\s+", "", str(content or "").replace("\r", "\n"))
+    fragments = re.findall(r".*?(?:[。！？!?；;]+[”’\"'」』】）)]*|$)", compact)
+    sentences: list[str] = []
+    pending = ""
+    for fragment in fragments:
+        if not fragment:
+            continue
+        pending += fragment
+        fingerprint = _sentence_fingerprint(pending)
+        if len(fingerprint) >= SENTENCE_MIN_LENGTH:
+            sentences.append(fingerprint)
+            pending = ""
+    if pending:
+        fingerprint = _sentence_fingerprint(pending)
+        if sentences:
+            sentences[-1] += fingerprint
+        elif len(fingerprint) >= SENTENCE_MIN_LENGTH:
+            sentences.append(fingerprint)
+    return sentences
+
+
+def _sentence_similarity(left: str, right: str) -> float:
+    if not left or not right:
+        return 0.0
+    shorter, longer = sorted((len(left), len(right)))
+    if shorter * 3 < longer * 2:
+        return 0.0
+    return SequenceMatcher(None, left, right, autojunk=False).ratio()
+
+
+def _lis_length(values: list[int]) -> int:
+    tails: list[int] = []
+    for value in values:
+        index = bisect_left(tails, value)
+        if index == len(tails):
+            tails.append(value)
+        else:
+            tails[index] = value
+    return len(tails)
+
+
+def _map_sentence_positions(reference: list[str], peer: list[str]) -> dict[str, Any]:
+    if not reference or not peer:
+        return {
+            "matchedCount": 0,
+            "coverage": 0.0,
+            "orderRatio": 0.0,
+            "misplacedCount": 0,
+            "backwardCount": 0,
+        }
+
+    reference_counts = Counter(reference)
+    peer_counts = Counter(peer)
+    exact_positions: dict[str, list[int]] = defaultdict(list)
+    for index, fingerprint in enumerate(peer):
+        exact_positions[fingerprint].append(index)
+
+    used_peer_indexes: set[int] = set()
+    mapped_positions: list[int] = []
+    for reference_index, fingerprint in enumerate(reference):
+        if reference_counts[fingerprint] > 1 or peer_counts[fingerprint] > 1:
+            continue
+        expected = round(reference_index * (len(peer) - 1) / max(1, len(reference) - 1))
+        match_index: int | None = None
+        if fingerprint in exact_positions:
+            exact_index = exact_positions[fingerprint][0]
+            if exact_index not in used_peer_indexes:
+                match_index = exact_index
+        else:
+            lower = max(0, expected - SENTENCE_MATCH_WINDOW)
+            upper = min(len(peer), expected + SENTENCE_MATCH_WINDOW + 1)
+            search_indexes = [index for index in range(lower, upper) if index not in used_peer_indexes]
+            best_score = 0.0
+            for peer_index in search_indexes:
+                score = _sentence_similarity(fingerprint, peer[peer_index])
+                if score > best_score:
+                    best_score = score
+                    match_index = peer_index
+            if best_score < SENTENCE_MATCH_THRESHOLD:
+                match_index = None
+                for peer_index, peer_fingerprint in enumerate(peer):
+                    if peer_index in used_peer_indexes:
+                        continue
+                    score = _sentence_similarity(fingerprint, peer_fingerprint)
+                    if score > best_score:
+                        best_score = score
+                        match_index = peer_index
+                if best_score < SENTENCE_MATCH_THRESHOLD:
+                    match_index = None
+        if match_index is None:
+            continue
+        used_peer_indexes.add(match_index)
+        mapped_positions.append(match_index)
+
+    matched_count = len(mapped_positions)
+    lis_length = _lis_length(mapped_positions)
+    backward_count = 0
+    highest_seen = -1
+    for position in mapped_positions:
+        if position < highest_seen:
+            backward_count += 1
+        else:
+            highest_seen = position
+    return {
+        "matchedCount": matched_count,
+        "coverage": round(matched_count / max(1, min(len(reference), len(peer))), 4),
+        "orderRatio": round(lis_length / max(1, matched_count), 4),
+        "misplacedCount": matched_count - lis_length,
+        "backwardCount": backward_count,
+    }
+
+
+def _compare_sentence_order(left: list[str], right: list[str]) -> dict[str, Any]:
+    forward = _map_sentence_positions(left, right)
+    reverse = _map_sentence_positions(right, left)
+    matched_count = min(forward["matchedCount"], reverse["matchedCount"])
+    coverage = min(forward["coverage"], reverse["coverage"])
+    order_ratio = min(forward["orderRatio"], reverse["orderRatio"])
+    misplaced_count = max(forward["misplacedCount"], reverse["misplacedCount"])
+    backward_count = max(forward["backwardCount"], reverse["backwardCount"])
+    has_evidence = (
+        matched_count >= SENTENCE_ORDER_MIN_MATCHES
+        and coverage >= SENTENCE_ORDER_MIN_COVERAGE
+    )
+    return {
+        "matchedCount": matched_count,
+        "coverage": round(coverage, 4),
+        "orderRatio": round(order_ratio, 4),
+        "misplacedCount": misplaced_count,
+        "backwardCount": backward_count,
+        "consistent": bool(has_evidence and order_ratio >= SENTENCE_ORDER_CONSISTENT_RATIO),
+        "orderMismatch": bool(
+            has_evidence
+            and order_ratio <= SENTENCE_ORDER_MISMATCH_RATIO
+            and misplaced_count >= 3
+            and backward_count >= 3
+        ),
+    }
+
+
+def analyze_sentence_order_consensus(
+    candidates: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Reject only an outlier that conflicts with two order-consistent references."""
+    sources = [
+        (str(candidate.get("source_id", "") or ""), _sentence_fingerprints(candidate.get("content", "")))
+        for candidate in candidates
+        if str(candidate.get("source_id", "") or "")
+    ]
+    comparisons: dict[frozenset[str], dict[str, Any]] = {}
+    for (left_id, left), (right_id, right) in combinations(sources, 2):
+        comparisons[frozenset((left_id, right_id))] = _compare_sentence_order(left, right)
+
+    consistent_degrees = {source_id: 0 for source_id, _ in sources}
+    for pair, comparison in comparisons.items():
+        if comparison["consistent"]:
+            for source_id in pair:
+                consistent_degrees[source_id] += 1
+
+    audits: dict[str, dict[str, Any]] = {}
+    source_ids = [source_id for source_id, _ in sources]
+    sentence_counts = {source_id: len(sentences) for source_id, sentences in sources}
+    for source_id in source_ids:
+        peer_ids = [peer_id for peer_id in source_ids if peer_id != source_id]
+        reference_ids: list[str] = []
+        if len(source_ids) >= 3:
+            for left_id, right_id in combinations(peer_ids, 2):
+                reference_pair = comparisons[frozenset((left_id, right_id))]
+                left_comparison = comparisons[frozenset((source_id, left_id))]
+                right_comparison = comparisons[frozenset((source_id, right_id))]
+                if (
+                    reference_pair["consistent"]
+                    and left_comparison["orderMismatch"]
+                    and right_comparison["orderMismatch"]
+                    and consistent_degrees[source_id] < consistent_degrees[left_id]
+                    and consistent_degrees[source_id] < consistent_degrees[right_id]
+                ):
+                    reference_ids = [left_id, right_id]
+                    break
+
+        rejected = bool(reference_ids)
+        peer_comparisons = []
+        for peer_id in peer_ids:
+            comparison = comparisons[frozenset((source_id, peer_id))]
+            peer_comparisons.append({
+                "sourceId": peer_id,
+                "matchedCount": comparison["matchedCount"],
+                "coverage": comparison["coverage"],
+                "orderRatio": comparison["orderRatio"],
+                "misplacedCount": comparison["misplacedCount"],
+                "backwardCount": comparison["backwardCount"],
+                "relation": (
+                    "consistent" if comparison["consistent"]
+                    else "order_mismatch" if comparison["orderMismatch"]
+                    else "insufficient_evidence"
+                ),
+            })
+        audits[source_id] = {
+            "status": "rejected_order_mismatch" if rejected else (
+                "order_consistent" if consistent_degrees[source_id] else "insufficient_evidence"
+            ),
+            "rejected": rejected,
+            "sentenceCount": sentence_counts[source_id],
+            "consistentPeerCount": consistent_degrees[source_id],
+            "referenceSourceIds": reference_ids,
+            "comparisons": peer_comparisons,
+        }
+    return audits
 
 
 # ── classification ───────────────────────────────────────────────────────────

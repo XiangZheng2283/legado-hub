@@ -22,3 +22,8 @@ them: `name`, `author`, `bookUrl`, `coverUrl`, `intro`, `kind`, `lastChapter`,
 
 Ordinary mirror/scraper sources must not declare `explore`; ranking and category
 capabilities are reserved for official/licensed sources.
+
+## 2026-07-31 实网复核
+
+- 强制代理会触发 HTTP 429，现改为宿主自动路由；Stealth 遇挑战或限流时仅对 GET 深层页回退共享 Browser profile。
+- 四段实测通过：搜索 19 条、目录 600 章、正文 2955 字符。

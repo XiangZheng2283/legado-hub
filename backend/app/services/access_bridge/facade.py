@@ -19,7 +19,7 @@ from typing import Any, Awaitable, Callable
 from urllib.parse import urlparse
 
 from app.services.access_bridge.models import AccessFetchRequest, SearchProviderHit
-from app.services.access_bridge.config import default_browser_user_agent
+from app.services.access_bridge.config import DEFAULT_BROWSER_IMPERSONATE, default_browser_user_agent
 from app.services.access_bridge.profiles import make_profile_id
 from app.services.access_bridge.search_provider import DEFAULT_HEADERS, search_site
 from app.source_plugins.errors import CloudflareRequired
@@ -97,8 +97,8 @@ class _HttpAccessBridge:
 
         async def request() -> str:
             retry_impersonate = impersonate
-            if not retry_impersonate and effective_headers.get("User-Agent") == default_browser_user_agent():
-                retry_impersonate = "chrome131"
+            if effective_headers.get("User-Agent") == default_browser_user_agent():
+                retry_impersonate = DEFAULT_BROWSER_IMPERSONATE
             return await self._ctx._fetcher.fetch_text(
                 url,
                 method=method,
@@ -133,8 +133,8 @@ class _HttpAccessBridge:
 
         async def request() -> Any:
             retry_impersonate = impersonate
-            if not retry_impersonate and effective_headers.get("User-Agent") == default_browser_user_agent():
-                retry_impersonate = "chrome131"
+            if effective_headers.get("User-Agent") == default_browser_user_agent():
+                retry_impersonate = DEFAULT_BROWSER_IMPERSONATE
             return await self._ctx._fetcher.fetch_json(
                 url,
                 method=method,
@@ -169,8 +169,8 @@ class _HttpAccessBridge:
 
         async def request() -> bytes:
             retry_impersonate = impersonate
-            if not retry_impersonate and effective_headers.get("User-Agent") == default_browser_user_agent():
-                retry_impersonate = "chrome131"
+            if effective_headers.get("User-Agent") == default_browser_user_agent():
+                retry_impersonate = DEFAULT_BROWSER_IMPERSONATE
             return await self._ctx._fetcher.fetch_bytes(
                 url,
                 method=method,
@@ -208,7 +208,7 @@ class _StealthAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> str:
-        merged_headers = {**DEFAULT_HEADERS, **(headers or {})}
+        merged_headers = {**DEFAULT_HEADERS, "User-Agent": default_browser_user_agent(), **(headers or {})}
         return await self._ctx.access.http.fetch_text(
             url,
             method=method,
@@ -217,7 +217,7 @@ class _StealthAccessBridge:
             json=json,
             headers=merged_headers,
             timeout=timeout,
-            impersonate=impersonate or "chrome120",
+            impersonate=impersonate or DEFAULT_BROWSER_IMPERSONATE,
             proxy=proxy,
         )
 
@@ -234,7 +234,7 @@ class _StealthAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> Any:
-        merged_headers = {**DEFAULT_HEADERS, **(headers or {})}
+        merged_headers = {**DEFAULT_HEADERS, "User-Agent": default_browser_user_agent(), **(headers or {})}
         return await self._ctx.access.http.fetch_json(
             url,
             method=method,
@@ -243,7 +243,7 @@ class _StealthAccessBridge:
             json=json,
             headers=merged_headers,
             timeout=timeout,
-            impersonate=impersonate or "chrome120",
+            impersonate=impersonate or DEFAULT_BROWSER_IMPERSONATE,
             proxy=proxy,
         )
 
@@ -260,7 +260,7 @@ class _StealthAccessBridge:
         impersonate: str | None = None,
         proxy: bool = True,
     ) -> bytes:
-        merged_headers = {**DEFAULT_HEADERS, **(headers or {})}
+        merged_headers = {**DEFAULT_HEADERS, "User-Agent": default_browser_user_agent(), **(headers or {})}
         return await self._ctx.access.http.fetch_bytes(
             url,
             method=method,
@@ -269,7 +269,7 @@ class _StealthAccessBridge:
             json=json,
             headers=merged_headers,
             timeout=timeout,
-            impersonate=impersonate or "chrome120",
+            impersonate=impersonate or DEFAULT_BROWSER_IMPERSONATE,
             proxy=proxy,
         )
 

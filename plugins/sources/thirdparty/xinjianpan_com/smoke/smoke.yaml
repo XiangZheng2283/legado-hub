@@ -1,0 +1,82 @@
+keyword: 凡人修仙传
+fixtures:
+  search:
+    url: "https://www.xinjianpan.com/search/?searchkey=%E5%87%A1%E4%BA%BA%E4%BF%AE%E4%BB%99%E4%BC%A0"
+    file: search.html
+  detail:
+    url: "https://www.xinjianpan.com/txt/8ki/"
+    file: detail.html
+  toc:
+    url: "https://www.xinjianpan.com/txt/8ki/list-1.html"
+    file: toc.html
+  chapter:
+    url: "https://www.xinjianpan.com/txt/8ki/vl7.html"
+    file: chapter.html
+extraFixtures:
+  - url: "https://www.xinjianpan.com/txt/8ki/list-2.html"
+    file: extra2.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-3.html"
+    file: extra3.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-4.html"
+    file: extra4.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-5.html"
+    file: extra5.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-6.html"
+    file: extra6.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-7.html"
+    file: extra7.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-8.html"
+    file: extra8.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-9.html"
+    file: extra9.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-10.html"
+    file: extra10.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-11.html"
+    file: extra11.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-12.html"
+    file: extra12.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-13.html"
+    file: extra13.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-14.html"
+    file: extra14.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-15.html"
+    file: extra15.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-16.html"
+    file: extra16.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-17.html"
+    file: extra17.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-18.html"
+    file: extra18.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-19.html"
+    file: extra19.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-20.html"
+    file: extra20.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-21.html"
+    file: extra21.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-22.html"
+    file: extra22.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-23.html"
+    file: extra23.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-24.html"
+    file: extra24.html
+  - url: "https://www.xinjianpan.com/txt/8ki/list-25.html"
+    file: extra25.html
+expect:
+  search:
+    minResults: 1
+    firstName: 凡人修仙传
+  detail:
+    name: 凡人修仙传
+    author: 忘语
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 2456
+    minChapters: 2400
+    firstTitleContains: 第一章
+    lastTitleContains: 凡人外传仙界篇二
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 2000
+    titleContains: 第一章

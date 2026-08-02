@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: hjwzw_com
 name: 黄金屋中文
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 domains:
   - tw.hjwzw.com
@@ -32,3 +32,10 @@ sourceSeed:
   upstreamId: hjwzw_com
   upstreamFile: ""
   upstreamCommit: ""
+adPatterns:
+  - '由中华百科研究会.{0,80}维护运行'
+  - '相关.{0,20}中文百科在线.{0,20}中文词典在线.{0,40}创办'
+  - '供求产品价格招标知识标准信息贴吧证书'
+  - '本文来源.{0,20}小shuo8\.cc'
+  - '本站未签约的小说版权属于作者.{0,260}本条款的最终解释权属于晨曦.{0,20}小shuo8\.cc'
+  - '古籍群[：:]\s*\d+'

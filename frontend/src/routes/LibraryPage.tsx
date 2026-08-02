@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Search, MoreVertical, Play, Pause, Archive, RefreshCw, Trash2, Loader2 } from "lucide-react"
+import { Search, MoreVertical, Play, Pause, Archive, RefreshCw, Trash2, Loader2, ShieldCheck, Wrench } from "lucide-react"
 import { api, apiErrorMessage } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { executeLibraryBookAction } from "@/lib/library-actions"
@@ -62,6 +62,24 @@ interface LibraryBook {
   }
 }
 
+interface LibraryIntegrityReport {
+  summary: {
+    totalBooks: number
+    healthyBooks: number
+    repairableBooks: number
+    brokenBooks: number
+    issueCount: number
+  }
+  books: Array<{
+    bookId: string
+    name: string
+    author: string
+    status: "healthy" | "repairable" | "broken"
+    repairable: boolean
+    issues: Array<{ code: string; message: string; count: number }>
+  }>
+}
+
 function processStatusLabel(status: string) {
   switch (status) {
     case "completed":
@@ -92,6 +110,7 @@ export function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [libraryView, setLibraryView] = useState<"active" | "completed">("active")
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null)
+  const [integrityOpen, setIntegrityOpen] = useState(false)
   const [actionNotice, setActionNotice] = useState<{ pending: boolean; text: string } | null>(null)
 
   const { data, isLoading, error: libraryError, refetch: refetchLibrary } = useQuery({
@@ -122,6 +141,23 @@ export function LibraryPage() {
     onError: () => setActionNotice(null),
   })
 
+  const integrityQuery = useQuery<LibraryIntegrityReport>({
+    queryKey: ["library-integrity"],
+    queryFn: () => api.libraryIntegrity(),
+    enabled: isAdmin && integrityOpen,
+  })
+
+  const integrityRepairMutation = useMutation({
+    mutationFn: () => api.repairLibraryIntegrity(),
+    onSuccess: async () => {
+      await Promise.all([
+        integrityQuery.refetch(),
+        queryClient.invalidateQueries({ queryKey: ["library"] }),
+      ])
+      setActionNotice({ pending: false, text: "完整性修复已执行，未恢复项已重新排队。" })
+    },
+  })
+
   const books: LibraryBook[] = useMemo(() => {
     const items = (data as { items?: LibraryBook[] } | undefined)?.items || []
     const scoped = items.filter((book) => libraryView === "completed"
@@ -144,11 +180,24 @@ export function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+      <div className="relative flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="pr-12 sm:pr-0">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{isAdmin ? "全局书库" : "我的书库"}</h1>
           <p className="mt-1 text-sm text-slate-500">{isAdmin ? `共 ${books.length} 本书籍` : "个人订阅、章节覆盖与处理状态"}</p>
         </div>
+        {isAdmin && (
+          <Button
+            type="button"
+            variant="outline"
+            className="absolute right-0 top-0 h-9 w-9 p-0 sm:static sm:w-auto sm:gap-2 sm:px-4"
+            aria-label="检查书库完整性"
+            title="检查书库完整性"
+            onClick={() => setIntegrityOpen(true)}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">完整性检查</span>
+          </Button>
+        )}
       </div>
 
       <Tabs value={libraryView} onValueChange={(value) => setLibraryView(value as "active" | "completed")}>
@@ -396,6 +445,87 @@ export function LibraryPage() {
             <Button variant="destructive" onClick={() => bookToDelete && deleteMutation.mutate(bookToDelete.aggregateBookId)} disabled={libraryBusy}>
               {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isAdmin ? "确认删除" : "确认移除"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={integrityOpen} onOpenChange={setIntegrityOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-slate-600" />
+              书库完整性
+            </DialogTitle>
+            <DialogDescription>检查数据库、章节文件与来源快照是否一致。</DialogDescription>
+          </DialogHeader>
+
+          {integrityQuery.isLoading ? (
+            <div className="flex h-44 items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            </div>
+          ) : integrityQuery.error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{apiErrorMessage(integrityQuery.error, "完整性检查失败。")}</AlertDescription>
+            </Alert>
+          ) : integrityQuery.data ? (
+            <>
+              <div className="grid grid-cols-3 divide-x border-y border-slate-200 py-3 text-center">
+                <div>
+                  <p className="text-xl font-semibold text-emerald-600">{integrityQuery.data.summary.healthyBooks}</p>
+                  <p className="text-xs text-slate-500">健康</p>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold text-amber-600">{integrityQuery.data.summary.repairableBooks}</p>
+                  <p className="text-xs text-slate-500">可修复</p>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold text-rose-600">{integrityQuery.data.summary.brokenBooks}</p>
+                  <p className="text-xs text-slate-500">严重异常</p>
+                </div>
+              </div>
+
+              <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
+                {integrityQuery.data.books.every((book) => book.status === "healthy") ? (
+                  <p className="py-10 text-center text-sm text-slate-500">未发现完整性问题</p>
+                ) : integrityQuery.data.books.filter((book) => book.status !== "healthy").map((book) => (
+                  <div key={book.bookId} className="border-b border-slate-100 pb-3 last:border-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">{book.name}</p>
+                        <p className="truncate text-xs text-slate-500">{book.author || "未知作者"}</p>
+                      </div>
+                      <Badge className={book.status === "broken"
+                        ? "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-50"
+                        : "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"}
+                      >
+                        {book.status === "broken" ? "需人工处理" : "可修复"}
+                      </Badge>
+                    </div>
+                    <ul className="mt-2 space-y-1 text-xs text-slate-600">
+                      {book.issues.map((issue) => (
+                        <li key={issue.code}>{issue.message}{issue.count > 1 ? `（${issue.count}）` : ""}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {(integrityRepairMutation.error) && (
+            <Alert variant="destructive">
+              <AlertDescription>{apiErrorMessage(integrityRepairMutation.error, "完整性修复失败。")}</AlertDescription>
+            </Alert>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIntegrityOpen(false)}>关闭</Button>
+            <Button
+              onClick={() => integrityRepairMutation.mutate()}
+              disabled={!integrityQuery.data?.summary.repairableBooks || integrityRepairMutation.isPending}
+            >
+              {integrityRepairMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wrench className="mr-2 h-4 w-4" />}
+              修复可恢复项
             </Button>
           </DialogFooter>
         </DialogContent>

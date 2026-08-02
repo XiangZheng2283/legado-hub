@@ -1,0 +1,33 @@
+keyword: 福尔摩斯
+fixtures:
+  search:
+    url: "https://www.myfeishu.com/search/%E7%A6%8F%E5%B0%94%E6%91%A9%E6%96%AF/1"
+    file: search.html
+  detail:
+    url: "https://www.myfeishu.com/book/159532657451078/"
+    file: detail.html
+  toc:
+    url: "https://www.myfeishu.com/book/159532657451078/catalog/"
+    file: toc.html
+  chapter:
+    url: "https://www.myfeishu.com/book/159532657451078/159532675633221.html"
+    file: chapter.html
+expect:
+  search:
+    minResults: 1
+    firstName: 【名柯同人】记·念平成年代的福尔摩斯
+  detail:
+    name: 【名柯同人】记·念平成年代的福尔摩斯
+    author: 几度雨停
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 46
+    minChapters: 40
+    firstTitleContains: 和绯色组三人谈恋爱
+    lastTitleContains: 《秋恋》下
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 1000
+    titleContains: 和绯色组三人谈恋爱

@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 96dushu_com
 name: 96读书
 author: Yunwei
-version: 0.1.2
+version: 0.1.5
 type: source
 domains:
   - 96dushu.com
@@ -21,8 +21,8 @@ proxy:
   mode: auto
   required: false
 browser:
-  mode: none
-  reason: ""
+  mode: optional
+  reason: cloudflare_challenge
 auth:
   mode: none
   cookieDomains: []
@@ -38,6 +38,7 @@ accessStrategy:
   search: search_provider
 searchProvider:
   providerOrder:
+    - duckduckgo_ddgs
     - bing_html
     - google_html
   targetDomain: www.96dushu.com

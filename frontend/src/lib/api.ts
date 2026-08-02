@@ -440,6 +440,12 @@ export const api = {
     const qs = params ? `?${new URLSearchParams(params)}` : ""
     return fetchJson(`/library-books${qs}`).then(normalizeLibraryList)
   },
+  libraryIntegrity: (): Promise<any> => fetchJson("/library-integrity"),
+  repairLibraryIntegrity: (bookIds?: string[]): Promise<any> =>
+    fetchJson("/library-integrity/repair", {
+      method: "POST",
+      body: JSON.stringify(bookIds?.length ? { bookIds } : {}),
+    }),
   libraryBookSummary: (bookId: string): Promise<any> =>
     fetchJson(`/library-books/${bookId}`).then(normalizeLibraryDetail),
   libraryBookSettings: (bookId: string): Promise<LibraryBookSettingsResponse> =>

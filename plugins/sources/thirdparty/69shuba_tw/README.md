@@ -5,10 +5,11 @@
 - Capabilities: `search`, `detail`, `toc`, `chapter`
 - Auth: none
 - Content: free
-- Access: proxy and browser required because the site serves an Aegis verification page to direct requests
+- Access: proxy required; Browser only establishes or refreshes the Aegis session
 
-The plugin uses the host Source Access Bridge for browser rendering. It does
-not own proxy, retry, timeout, or browser lifecycle policy.
+The plugin first reuses the persisted session through Stealth HTTP. When Aegis
+requires verification, the host Source Access Bridge opens Browser once and
+persists the resulting cookies for subsequent HTTP requests.
 
 ## 2026-07-28 现场校对
 

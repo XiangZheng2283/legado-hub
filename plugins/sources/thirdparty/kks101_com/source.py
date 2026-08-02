@@ -16,7 +16,6 @@ class Source:
     last_modified = "2026-06-10"
     base_url = "https://101kks.com"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
-    impersonate = "chrome120"
     explore_defs = [
         {"groupId": "hot", "title": "排行榜", "url": "/novels/hot", "kind": "rank"},
         {"groupId": "full", "title": "完本小說", "url": "/novels/full", "kind": "full"},
@@ -27,15 +26,26 @@ class Source:
     async def _fetch(self, ctx, url: str, **kwargs):
         """Fetch via stealth (curl_cffi).
 
-        The search path falls back to browser access only when stealth hits
-        a browser or Cloudflare challenge.
+        The host handles Cloudflare session refresh. This fallback is only for
+        non-Cloudflare browser challenges.
         """
         headers = {**self.headers, **kwargs.pop("headers", {})}
-        return await ctx.access.stealth.fetch_text(
-            url,
-            headers=headers,
-            **kwargs,
-        )
+        try:
+            return await ctx.access.stealth.fetch_text(url, headers=headers, **kwargs)
+        except BrowserRequired as original_error:
+            method = str(kwargs.get("method") or "GET").upper()
+            if method != "GET" or kwargs.get("params") or kwargs.get("data"):
+                raise
+            html = await ctx.access.browser.fetch_text(
+                url,
+                headers=headers,
+                stage="page_fallback",
+                wait_ms=5000,
+                timeout_ms=45000,
+            )
+            if self._looks_like_challenge(html):
+                raise original_error
+            return html
 
     def _s(self, ctx, value: str) -> str:
         """Convert Traditional Chinese output text to Simplified Chinese."""

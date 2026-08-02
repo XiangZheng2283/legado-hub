@@ -1,0 +1,36 @@
+keyword: 回门
+fixtures:
+  search:
+    url: "https://www.asw227.com/search.php?kw=%E5%9B%9E%E9%97%A8"
+    file: search.html
+  detail:
+    url: "https://www.asw227.com/file.php?hash=41f221668f04abac7cbe410f0a6260ad"
+    file: detail.html
+  toc:
+    url: "https://dm.downshu123.com/down.php/41f221668f04abac7cbe410f0a6260ad.txt"
+    file: download.txt
+  chapter:
+    url: "https://dm.downshu321.shop/read.php?name=%E5%9B%9E%E9%97%A8.txt&file=file%2F41f221668f04abac7cbe410f0a6260ad&encoding=UTF-8&page=1"
+    file: chapter.html
+extraFixtures:
+  - url: "https://dm.downshu321.shop/read.php?name=%E5%9B%9E%E9%97%A8.txt&file=file%2F41f221668f04abac7cbe410f0a6260ad&encoding=UTF-8&page=2"
+    file: page2.html
+expect:
+  search:
+    minResults: 1
+    firstName: 回门
+  detail:
+    name: 回门
+    author: 音速阿伏兔
+    hasTocUrl: true
+  toc:
+    complete: true
+    expectedCount: 55
+    minChapters: 50
+    firstTitleContains: 第 1 章
+    lastTitleContains: 第55章
+    requireUniqueChapterUrls: true
+    requireSequentialIndexes: true
+  chapter:
+    minContentLength: 1000
+    titleContains: 第 1 章

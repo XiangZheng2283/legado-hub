@@ -24,7 +24,6 @@ class Source:
     base_url = "https://www.69shuba.com"
     base_urls = ["https://www.69shuba.com", "https://www.69shuba.cx"]
     headers = {"accept-language": "zh-CN,zh;q=0.9"}
-    impersonate = "chrome120"
 
     # Whole-line ads, including obfuscated watermarks and bare residuals (6=9+ / 6.9ꁘ書吧).
     _AD_LINE_RE = re.compile(
@@ -170,6 +169,7 @@ class Source:
         provider_order = ["duckduckgo_ddgs", "bing_html", "google_html"]
         search_targets = [
             ("www.69shuba.com", "/book"),
+            ("www.69shuba.cx", "/book"),
         ]
         url_patterns = [r"/(?:book|txt)/\d+\.htm", r"/book/\d+"]
         for target_domain, query_site_path in search_targets:
@@ -223,39 +223,15 @@ class Source:
                     "searchUrl": hit.url,
                 },
             })
-        # Enrich top results with detail for better field completeness
-        if items:
-            await self._enrich_search_items(ctx, items[:3])
         keyword_text = ctx.clean_text(keyword)
         return [
             item for item in items[:3]
-            if item.get("extra", {}).get("detailVerified")
-            and keyword_text in ctx.clean_text(item.get("name", ""))
+            if keyword_text in ctx.clean_text(item.get("name", ""))
         ]
 
-    async def _enrich_search_items(self, ctx, items: list[dict]):
-        for item in items:
-            try:
-                detail = await self.detail(ctx, item["bookUrl"])
-                if detail and detail.get("name"):
-                    item["name"] = detail["name"]
-                    item["extra"]["detailVerified"] = True
-                if detail and detail.get("author"):
-                    item["author"] = detail["author"]
-                if detail and detail.get("coverUrl"):
-                    item["coverUrl"] = detail["coverUrl"]
-                if detail and detail.get("lastChapter"):
-                    item["lastChapter"] = detail["lastChapter"]
-                if detail and detail.get("kind"):
-                    item["kind"] = detail["kind"]
-                if detail and detail.get("wordCount"):
-                    item["wordCount"] = detail["wordCount"]
-                if detail and detail.get("updateTime"):
-                    item["updateTime"] = detail["updateTime"]
-            except Exception:
-                pass
-
     def _clean_search_provider_title(self, text: str, keyword: str) -> str:
+        if re.fullmatch(r"(?:https?://)?(?:www\.)?69shuba\.(?:com|cx)(?:/\S*)?", (text or "").strip(), re.IGNORECASE):
+            return keyword
         title = re.sub(r"\s*[-_].*$", "", text or "").strip()
         title = re.sub(r"(无弹窗|最新章节阅读|最新章节列表|最新章节|txt全集下载).*$", "", title).strip(" ，,、-_|")
         return title or keyword

@@ -1,0 +1,50 @@
+contractVersion: "1.0"
+id: aiqu654_com
+name: 爱去小说网
+author: Yunwei
+version: 0.1.0
+priority: 40
+type: source
+domains:
+  - www.aiqu654.com
+  - aiqu654.com
+  - www.aiqu127.com
+  - aiqu127.com
+  - mg.downbook12.com
+baseUrls:
+  - http://www.aiqu654.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 500
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+accessStrategy:
+  search: tls_impersonate
+  detail: tls_impersonate
+  toc: tls_impersonate
+  chapter: tls_impersonate
+tags:
+  - html
+  - txt-download
+  - byte-range
+  - no-login
+  - simplified-chinese
+sourceSeed:
+  type: live
+  upstreamId: aiqu654_com
+  upstreamFile: ""
+  upstreamCommit: ""

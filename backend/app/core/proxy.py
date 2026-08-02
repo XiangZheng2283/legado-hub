@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 class ProxyConfig:
     enabled: bool = False
     url: str = ""
-    retry_on_failure: bool = True
+    allow_auto_retry: bool = False
     failure_status_codes: list[int] = field(default_factory=lambda: [403, 429, 451, 502, 503, 504])
     failure_error_keywords: list[str] = field(
         default_factory=lambda: ["timeout", "connection", "reset", "forbidden", "captcha", "blocked"]
@@ -20,7 +20,9 @@ class ProxyConfig:
         return cls(
             enabled=data.get("enabled", False),
             url=data.get("url", ""),
-            retry_on_failure=data.get("retry_on_failure", True),
+            allow_auto_retry=bool(
+                data.get("allowAutoRetry", data.get("retry_on_failure", False))
+            ),
             failure_status_codes=data.get("failure_status_codes", [403, 429, 451, 502, 503, 504]),
             failure_error_keywords=data.get(
                 "failure_error_keywords",
@@ -42,7 +44,7 @@ class FetchResult:
 
 def should_retry_with_proxy(error: Exception, proxy_config: ProxyConfig) -> bool:
     """Determine whether a failed request should be retried through proxy."""
-    if not proxy_config.enabled or not proxy_config.url or not proxy_config.retry_on_failure:
+    if not proxy_config.enabled or not proxy_config.url or not proxy_config.allow_auto_retry:
         return False
 
     error_text = str(error).lower()
@@ -57,6 +59,5 @@ def decide_proxy_mode(proxy_mode: str, proxy_config: ProxyConfig) -> tuple[bool,
         return True, False
     if proxy_mode == "always":
         return False, proxy_config.enabled and bool(proxy_config.url)
-    return True, proxy_config.enabled and bool(proxy_config.url)
-
+    return True, proxy_config.enabled and bool(proxy_config.url) and proxy_config.allow_auto_retry
 

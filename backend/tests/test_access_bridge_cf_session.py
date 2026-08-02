@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
 
-from app.services.access_bridge.client import LocalChromiumPlaywrightAdapter
+from app.services.access_bridge.client import AccessBridgeClient, LocalChromiumPlaywrightAdapter
+from app.services.access_bridge.config import DEFAULT_BROWSER_IMPERSONATE
 from app.services.access_bridge.models import AccessFetchRequest, AccessFetchResult
 from app.source_plugins.context import PluginContext
 from app.source_plugins.challenges import looks_like_cloudflare_challenge
-from app.source_plugins.errors import CloudflareRequired, FetchNetworkError
+from app.source_plugins.errors import CloudflareRequired, FetchHttp4xx, FetchNetworkError, RateLimited
+from app.source_plugins.loader import PluginLoader
 
 
 def test_cloudflare_detection_is_case_insensitive() -> None:
@@ -43,6 +47,139 @@ def test_browser_profile_ignores_state_from_another_user_agent(tmp_path) -> None
 
     adapter.profile_store.write_user_agent_by_id(request.profile_id, "new-agent")
     assert adapter._read_storage_state(request, "new-agent") == {"cookies": []}
+
+
+@pytest.mark.asyncio
+async def test_browser_challenge_resets_profile_and_retries_once() -> None:
+    class ChallengeThenOkAdapter:
+        def __init__(self) -> None:
+            self.calls = 0
+            self.reset_ids: list[str] = []
+
+        async def fetch(self, request) -> AccessFetchResult:
+            self.calls += 1
+            challenged = self.calls == 1
+            return AccessFetchResult(
+                ok=not challenged,
+                final_url=request.url,
+                html="challenge" if challenged else "ok",
+                challenge={"detected": challenged},
+                profile_id=request.profile_id,
+            )
+
+        def reset_profile(self, profile_id: str) -> None:
+            self.reset_ids.append(profile_id)
+
+    adapter = ChallengeThenOkAdapter()
+    client = AccessBridgeClient(adapter=adapter)
+    request = AccessFetchRequest(
+        plugin_id="example",
+        url="https://example.test/",
+        profile_id="example-profile",
+    )
+
+    result = await client.fetch(request)
+
+    assert result.html == "ok"
+    assert adapter.calls == 2
+    assert adapter.reset_ids == ["example-profile"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("plugin_id", ["96dushu_com", "kks101_com", "twkan_com"])
+async def test_rate_limit_never_falls_back_to_browser(plugin_id: str) -> None:
+    class RateLimitedAccess:
+        async def fetch_text(self, *_args, **_kwargs) -> str:
+            raise RateLimited("HTTP 429")
+
+    class UnexpectedBrowser:
+        calls = 0
+
+        async def fetch_text(self, *_args, **_kwargs) -> str:
+            self.calls += 1
+            return "unexpected"
+
+    plugin_root = Path(__file__).parents[2] / "plugins" / "sources" / "thirdparty" / plugin_id
+    source = PluginLoader(plugin_root).load_all()[plugin_id].source
+    browser = UnexpectedBrowser()
+    ctx = SimpleNamespace(
+        access=SimpleNamespace(
+            http=RateLimitedAccess(),
+            stealth=RateLimitedAccess(),
+            browser=browser,
+        )
+    )
+
+    with pytest.raises(RateLimited):
+        await source._fetch(ctx, "https://example.test/chapter")
+
+    assert browser.calls == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "plugin_id",
+    ["69shuba_com", "96dushu_com", "kks101_com", "twkan_com"],
+)
+async def test_plugin_does_not_duplicate_host_cloudflare_browser_refresh(plugin_id: str) -> None:
+    class CloudflareAccess:
+        async def fetch_text(self, url: str, *_args, **_kwargs) -> str:
+            raise CloudflareRequired("challenge remains after host refresh", url=url)
+
+    class UnexpectedBrowser:
+        calls = 0
+
+        async def fetch_text(self, *_args, **_kwargs) -> str:
+            self.calls += 1
+            return "unexpected"
+
+    plugin_root = Path(__file__).parents[2] / "plugins" / "sources" / "thirdparty" / plugin_id
+    source = PluginLoader(plugin_root).load_all()[plugin_id].source
+    browser = UnexpectedBrowser()
+    ctx = SimpleNamespace(
+        access=SimpleNamespace(
+            http=CloudflareAccess(),
+            stealth=CloudflareAccess(),
+            browser=browser,
+        )
+    )
+
+    with pytest.raises(CloudflareRequired):
+        await source._fetch(ctx, "https://example.test/chapter")
+
+    assert browser.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_69shuba_tw_reuses_browser_session_through_stealth_http() -> None:
+    class SessionAwareStealth:
+        calls = 0
+
+        async def fetch_text(self, url: str, *_args, **_kwargs) -> str:
+            self.calls += 1
+            if self.calls == 1:
+                raise FetchHttp4xx("HTTP 403")
+            return "stealth session"
+
+    class SessionBrowser:
+        calls = 0
+
+        async def fetch_text(self, *_args, **_kwargs) -> str:
+            self.calls += 1
+            return "browser session"
+
+    plugin_root = Path(__file__).parents[2] / "plugins" / "sources" / "thirdparty" / "69shuba_tw"
+    source = PluginLoader(plugin_root).load_all()["69shuba_tw"].source
+    stealth = SessionAwareStealth()
+    browser = SessionBrowser()
+    ctx = SimpleNamespace(
+        access=SimpleNamespace(stealth=stealth, browser=browser),
+    )
+
+    assert await source._fetch(ctx, "/first") == "browser session"
+    assert await source._fetch(ctx, "/second") == "stealth session"
+    assert stealth.calls == 2
+    assert browser.calls == 1
 
 
 class _NavigationInfo:
@@ -314,11 +451,35 @@ async def test_http_cf_challenge_uses_browser_cookie_then_retries_once() -> None
     assert fetcher.calls == 3
     assert browser.request.use_proxy is True
     assert browser.request.profile_id.startswith("cf_source-example_test-")
-    assert "Chrome/131.0.0.0" in browser.request.headers["User-Agent"]
+    assert "Chrome/146.0.0.0" in browser.request.headers["User-Agent"]
     assert fetcher.last_headers == browser.request.headers
-    assert fetcher.last_impersonate == "chrome131"
+    assert fetcher.last_impersonate == DEFAULT_BROWSER_IMPERSONATE
     assert fetcher.cookies_for_domain("example.test")["cf_clearance"] == "clear"
     assert cookie_store.payload == {}
+
+
+@pytest.mark.asyncio
+async def test_stealth_cf_retry_replaces_stale_fingerprint_with_browser_fingerprint() -> None:
+    fetcher = _ChallengeFetcher()
+    browser = _BrowserBridge()
+    ctx = PluginContext(
+        fetcher=fetcher,
+        plugin_id="cf_source",
+        cookie_store=_MemoryCookieStore(),
+        access_bridge=browser,
+        proxy_mode="never",
+        cookie_allowed=False,
+    )
+
+    result = await ctx.access.stealth.fetch_text(
+        "https://example.test/chapter",
+        impersonate="chrome120",
+    )
+
+    assert result == "ok"
+    assert "Chrome/146.0.0.0" in browser.request.headers["User-Agent"]
+    assert fetcher.last_headers == browser.request.headers
+    assert fetcher.last_impersonate == DEFAULT_BROWSER_IMPERSONATE
 
 
 @pytest.mark.asyncio
@@ -329,7 +490,7 @@ async def test_fetch_bytes_retries_with_proxy_after_direct_failure() -> None:
         proxy_config={
             "enabled": True,
             "url": "http://proxy.test:7890",
-            "retry_on_failure": True,
+            "allowAutoRetry": True,
         },
     )
     calls: list[bool] = []
@@ -345,6 +506,49 @@ async def test_fetch_bytes_retries_with_proxy_after_direct_failure() -> None:
 
     assert await fetcher.fetch_bytes("https://example.test/chapter.bin") == b"ok"
     assert calls == [False, True]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("proxy_mode", "allow_auto_retry", "expected_calls"),
+    [
+        ("never", True, [False]),
+        ("auto", False, [False]),
+        ("auto", True, [False, True]),
+        ("always", False, [True]),
+    ],
+)
+async def test_fetcher_honors_proxy_mode_contract(
+    proxy_mode: str,
+    allow_auto_retry: bool,
+    expected_calls: list[bool],
+) -> None:
+    fetcher = Fetcher(
+        proxy_url="http://proxy.test:7890",
+        proxy_mode=proxy_mode,
+        proxy_config={
+            "enabled": True,
+            "url": "http://proxy.test:7890",
+            "allowAutoRetry": allow_auto_retry,
+        },
+    )
+    calls: list[bool] = []
+
+    async def fake_fetch_raw(*_args, proxy: bool = True, **_kwargs):
+        calls.append(proxy)
+        if not proxy:
+            raise FetchNetworkError("connection timeout")
+        response = type("Response", (), {"content": b"ok"})()
+        return "", response
+
+    fetcher._fetch_raw = fake_fetch_raw
+
+    if expected_calls == [False]:
+        with pytest.raises(FetchNetworkError):
+            await fetcher.fetch_bytes("https://example.test/chapter.bin")
+    else:
+        assert await fetcher.fetch_bytes("https://example.test/chapter.bin") == b"ok"
+    assert calls == expected_calls
 
 
 @pytest.mark.asyncio
@@ -365,7 +569,7 @@ async def test_playwright_adapter_reuses_browser_and_isolates_contexts(tmp_path)
     assert len(adapter.browsers) == 1
     assert len(adapter.browsers[0].contexts) == 3
     assert adapter.max_active_loads == 2
-    assert all("Chrome/131.0.0.0" in kwargs["user_agent"] for kwargs in adapter.browsers[0].context_kwargs)
+    assert all("Chrome/146.0.0.0" in kwargs["user_agent"] for kwargs in adapter.browsers[0].context_kwargs)
     assert all(context.closed and context.page.closed for context in adapter.browsers[0].contexts)
 
     await adapter.close()

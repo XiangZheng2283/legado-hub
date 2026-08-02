@@ -31,7 +31,7 @@ from app.services.live_acceptance import (
     qidian_book_identity,
 )
 from app.services.audit import audit_service
-from app.services.shared_book_storage import SharedBookStorage, TRACE_BEGIN
+from app.services.shared_book_storage import CHAPTER_STATUS_PROCESSED, SharedBookStorage, TRACE_BEGIN
 from app.source_plugins.id_codec import (
     decode_book_id,
     decode_chapter_id,
@@ -1157,6 +1157,281 @@ class LibraryBooksService:
                 self._attach_book_state_summary(item)
                 items.append(item)
         return items
+
+    def scan_integrity(self, *, book_ids: set[str] | None = None) -> dict[str, Any]:
+        """Check DB-backed shared books against their file-backed runtime state."""
+        books = self.list_books(include_hidden=True)
+        if book_ids is not None:
+            books = [book for book in books if book.get("aggregateBookId") in book_ids]
+        results = [self._scan_book_integrity(book) for book in books]
+        summary = {
+            "totalBooks": len(results),
+            "healthyBooks": sum(item["status"] == "healthy" for item in results),
+            "repairableBooks": sum(item["status"] == "repairable" for item in results),
+            "brokenBooks": sum(item["status"] == "broken" for item in results),
+            "issueCount": sum(len(item["issues"]) for item in results),
+        }
+        return {
+            "checkedAt": datetime.now().astimezone().isoformat(),
+            "summary": summary,
+            "books": results,
+        }
+
+    def _scan_book_integrity(self, book: dict[str, Any]) -> dict[str, Any]:
+        storage = self.shared_book_storage
+        book_id = str(book.get("aggregateBookId", "") or "")
+        book_name = str(book.get("name", "") or "").strip()
+        author = str(book.get("author", "") or "").strip()
+        book_dir = storage.shared_book_dir(book_name=book_name, author=author)
+        issues: list[dict[str, Any]] = []
+
+        def add_issue(
+            code: str,
+            message: str,
+            *,
+            repairable: bool = True,
+            count: int = 1,
+            samples: list[Any] | None = None,
+        ) -> None:
+            issue: dict[str, Any] = {
+                "code": code,
+                "message": message,
+                "repairable": repairable,
+                "count": max(1, int(count or 1)),
+            }
+            if samples:
+                issue["samples"] = samples[:20]
+            issues.append(issue)
+
+        payload = self.load_payload(book_id)
+        if not payload or not (payload.get("primaryBookId") or payload.get("sources")):
+            add_issue("aggregate_payload_missing", "订阅载荷缺失或损坏", repairable=False)
+
+        if not book_name:
+            add_issue("book_identity_missing", "书籍名称缺失，无法定位共享目录", repairable=False)
+        elif not book_dir.exists():
+            add_issue("book_directory_missing", "共享书籍目录不存在")
+
+        if book_dir.exists():
+            stale_tmp = list(book_dir.rglob("*.tmp"))
+            if stale_tmp:
+                add_issue("stale_tmp_files", "存在未清理的临时文件", count=len(stale_tmp))
+
+        metadata_path = storage.metadata_path(book_name=book_name, author=author)
+        chapter_index_path = storage.chapter_index_path(book_name=book_name, author=author)
+        metadata_payload: dict[str, Any] | None = None
+        chapter_index_payload: dict[str, Any] | None = None
+        if metadata_path.exists():
+            try:
+                metadata_payload = storage._read_json(metadata_path)
+            except (OSError, ValueError, json.JSONDecodeError):
+                add_issue("metadata_invalid", "metadata.json 无法解析")
+        elif book_dir.exists():
+            add_issue("metadata_missing", "metadata.json 不存在")
+
+        if chapter_index_path.exists():
+            try:
+                chapter_index_payload = storage._read_json(chapter_index_path)
+            except (OSError, ValueError, json.JSONDecodeError):
+                add_issue("chapter_index_invalid", "chapter_index.json 无法解析")
+        elif book_dir.exists():
+            add_issue("chapter_index_missing", "chapter_index.json 不存在")
+
+        chapter_traces: dict[int, dict[str, Any]] = {}
+        chapter_entries = (
+            chapter_index_payload.get("chapters", [])
+            if isinstance(chapter_index_payload, dict)
+            else []
+        )
+        if not isinstance(chapter_entries, list):
+            add_issue("chapter_index_invalid", "chapter_index.json 的章节列表无效")
+            chapter_entries = []
+
+        missing_chapters: list[int] = []
+        broken_chapters: list[int] = []
+        invalid_paths: list[int] = []
+        for item in chapter_entries:
+            if not isinstance(item, dict):
+                continue
+            chapter_index = int(item.get("index", 0) or 0)
+            file_name = str(item.get("file", "") or "").strip()
+            status = str(item.get("status", "") or "").strip()
+            if not file_name:
+                if status in CHAPTER_STATUS_PROCESSED:
+                    missing_chapters.append(chapter_index)
+                continue
+            chapter_path = self._safe_shared_chapter_path(book_dir, file_name)
+            if chapter_path is None:
+                invalid_paths.append(chapter_index)
+                continue
+            if not chapter_path.exists():
+                missing_chapters.append(chapter_index)
+                continue
+            try:
+                trace = storage.parse_trace_block(chapter_path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, ValueError):
+                broken_chapters.append(chapter_index)
+                continue
+            if chapter_index > 0:
+                chapter_traces[chapter_index] = trace
+
+        if missing_chapters:
+            add_issue(
+                "chapter_files_missing",
+                "已处理章节的正文文件缺失",
+                count=len(missing_chapters),
+                samples=missing_chapters,
+            )
+        if broken_chapters:
+            add_issue(
+                "chapter_traces_invalid",
+                "章节 trace 损坏或正文编码无效",
+                count=len(broken_chapters),
+                samples=broken_chapters,
+            )
+        if invalid_paths:
+            add_issue(
+                "chapter_paths_invalid",
+                "章节索引包含越界路径",
+                count=len(invalid_paths),
+                samples=invalid_paths,
+            )
+
+        if metadata_payload is not None and chapter_index_payload is not None:
+            if storage.book_state_needs_rebuild(
+                metadata_payload=metadata_payload,
+                chapter_index_payload=chapter_index_payload,
+                chapter_traces=chapter_traces,
+            ):
+                add_issue("book_state_drift", "metadata.json 的章节统计与文件不一致")
+
+        with self._conn() as conn:
+            db_chapter_count = int(
+                conn.execute(
+                    "SELECT COUNT(*) FROM aggregate_chapter_tasks WHERE aggregate_book_id = ?",
+                    (book_id,),
+                ).fetchone()[0]
+                or 0
+            )
+            snapshot_rows = conn.execute(
+                """
+                SELECT chapter_index, source_id, content_hash
+                FROM aggregate_source_snapshots
+                WHERE aggregate_book_id = ?
+                ORDER BY chapter_index, source_id
+                """,
+                (book_id,),
+            ).fetchall()
+            completed_snapshot_sources = conn.execute(
+                """
+                SELECT DISTINCT source_id
+                FROM aggregate_source_snapshot_runs
+                WHERE aggregate_book_id = ? AND status = 'complete'
+                """,
+                (book_id,),
+            ).fetchall()
+
+        if chapter_index_payload is not None and db_chapter_count != len(chapter_entries):
+            add_issue(
+                "chapter_index_count_mismatch",
+                "数据库章节数与 chapter_index.json 不一致",
+                count=abs(db_chapter_count - len(chapter_entries)) or 1,
+            )
+
+        missing_snapshots: list[str] = []
+        invalid_snapshots: list[str] = []
+        for chapter_index, source_id, content_hash in snapshot_rows:
+            snapshot_path = storage.source_snapshot_path(
+                book_name=book_name,
+                author=author,
+                source_id=str(source_id or ""),
+                chapter_index=int(chapter_index or 0),
+            )
+            sample = f"{source_id}:{int(chapter_index or 0)}"
+            if not snapshot_path.exists():
+                missing_snapshots.append(sample)
+                continue
+            try:
+                snapshot_payload = storage._read_json(snapshot_path) or {}
+            except (OSError, ValueError, json.JSONDecodeError):
+                invalid_snapshots.append(sample)
+                continue
+            if (
+                str(snapshot_payload.get("aggregateBookId", "") or "") != book_id
+                or str(snapshot_payload.get("sourceId", "") or "") != str(source_id or "")
+                or int(snapshot_payload.get("chapterIndex", 0) or 0) != int(chapter_index or 0)
+                or str(snapshot_payload.get("contentHash", "") or "") != str(content_hash or "")
+            ):
+                invalid_snapshots.append(sample)
+
+        if missing_snapshots:
+            add_issue(
+                "source_snapshot_files_missing",
+                "数据库快照缺少对应文件",
+                count=len(missing_snapshots),
+                samples=missing_snapshots,
+            )
+        if invalid_snapshots:
+            add_issue(
+                "source_snapshot_files_invalid",
+                "来源快照文件损坏或与数据库不一致",
+                count=len(invalid_snapshots),
+                samples=invalid_snapshots,
+            )
+
+        missing_manifests: list[str] = []
+        invalid_manifests: list[str] = []
+        for row in completed_snapshot_sources:
+            source_id = str(row[0] or "")
+            manifest_path = storage.source_snapshot_manifest_path(
+                book_name=book_name,
+                author=author,
+                source_id=source_id,
+            )
+            if not manifest_path.exists():
+                missing_manifests.append(source_id)
+                continue
+            try:
+                manifest = storage._read_json(manifest_path) or {}
+            except (OSError, ValueError, json.JSONDecodeError):
+                invalid_manifests.append(source_id)
+                continue
+            if (
+                str(manifest.get("aggregateBookId", "") or "") != book_id
+                or str(manifest.get("sourceId", "") or "") != source_id
+            ):
+                invalid_manifests.append(source_id)
+
+        if missing_manifests:
+            add_issue(
+                "source_snapshot_manifests_missing",
+                "已完成来源快照缺少 manifest.json",
+                count=len(missing_manifests),
+                samples=missing_manifests,
+            )
+        if invalid_manifests:
+            add_issue(
+                "source_snapshot_manifests_invalid",
+                "来源快照 manifest.json 损坏或身份不一致",
+                count=len(invalid_manifests),
+                samples=invalid_manifests,
+            )
+
+        if not issues:
+            status = "healthy"
+        elif any(not issue["repairable"] for issue in issues):
+            status = "broken"
+        else:
+            status = "repairable"
+        return {
+            "bookId": book_id,
+            "name": book_name,
+            "author": author,
+            "bookStatus": str(book.get("status", "") or ""),
+            "status": status,
+            "repairable": status == "repairable",
+            "issues": issues,
+        }
 
     def _discovery_readable_chapter_count(self, book: dict[str, Any]) -> int:
         if "visibleProcessedChapters" in book:

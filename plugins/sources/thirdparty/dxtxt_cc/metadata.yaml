@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: dxtxt_cc
 name: 独行小说
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 priority: 40
 type: source
 domains:

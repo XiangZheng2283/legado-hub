@@ -4,7 +4,7 @@ Proxy required, rate-limited, concurrency=1 recommended.
 """
 
 import re
-from urllib.parse import urljoin
+from urllib.parse import urldefrag, urljoin
 
 from bs4 import BeautifulSoup
 from app.source_plugins.search_enrichment import enrich_search_items_from_detail
@@ -14,8 +14,9 @@ class Source:
     id = "sudugu_org"
     name = "速读谷"
     contract_version = "1.0"
-    last_modified = "2026-07-25"
+    last_modified = "2026-07-31"
     base_url = "https://www.sudugu.org"
+    backup_url = "https://www.sudugu.co"
 
     async def search(self, ctx, keyword: str, page: int):
         items = []
@@ -48,12 +49,58 @@ class Source:
             search_error = exc
             ctx.trace("search_error", url=f"{self.base_url}/i/sor.aspx", message=str(exc))
         if not items:
+            items = await self._search_backup(ctx, keyword, page)
+        if not items:
             items = await self._search_from_explore(ctx, keyword)
         if items:
             return await enrich_search_items_from_detail(self, ctx, items)
         if search_error is not None:
             raise search_error
         return []
+
+    async def _search_backup(self, ctx, keyword: str, page: int) -> list[dict]:
+        if page > 1:
+            return []
+        try:
+            html = await ctx.access.http.fetch_text(
+                f"{self.backup_url}/modules/article/search.php",
+                params={"searchkey": keyword},
+            )
+        except Exception as exc:
+            ctx.trace("search_backup_error", url=self.backup_url, message=str(exc))
+            return []
+
+        items = []
+        for box in ctx.select(html, ".bookbox"):
+            anchors = ctx.select(box, ".bookname > a[href]")
+            if not anchors:
+                continue
+            anchor = anchors[0]
+            author = re.sub(r"^作者[：:]\s*", "", ctx.text(box, ".author"))
+            intro = re.sub(r"^简介[：:]\s*", "", ctx.text(box, ".update"))
+            items.append({
+                "sourceId": self.id,
+                "name": ctx.text(box, ".bookname > a"),
+                "author": author,
+                "bookUrl": urldefrag(urljoin(self.backup_url, anchor.get("href", "")))[0],
+                "intro": intro,
+                "lastChapter": ctx.text(box, ".cat > a"),
+            })
+        if items:
+            return items
+
+        anchors = ctx.select(html, ".item h1 > a[href]")
+        if not anchors:
+            return []
+        anchor = anchors[0]
+        author = ctx.text(html, ".itemtxt > p:nth-of-type(2) > a")
+        return [{
+            "sourceId": self.id,
+            "name": ctx.text(html, ".item h1 > a"),
+            "author": re.sub(r"^作者[：:]\s*", "", author),
+            "bookUrl": urldefrag(urljoin(self.backup_url, anchor.get("href", "")))[0],
+            "lastChapter": ctx.text(html, ".itemtxt > ul > li:first-child > a"),
+        }]
 
     async def _search_from_explore(self, ctx, keyword: str) -> list[dict]:
         items = []
@@ -80,7 +127,10 @@ class Source:
     async def detail(self, ctx, book_url: str):
         html = await ctx.access.http.fetch_text(book_url)
         name = ctx.text(html, ".item > div > h1 > a") or ctx.text(html, "h1") or ""
-        author = ctx.text(html, ".item > div > p:nth-of-type(3) > a")
+        author = (
+            ctx.text(html, ".item > div > p:nth-of-type(3) > a")
+            or ctx.text(html, ".item > div > p:nth-of-type(2) > a")
+        )
         author = re.sub(r"^作者[：:]\s*", "", author)
         intro = ctx.text(html, ".des") or ""
         cover = ctx.attr(html, ".item > a > img", "src")
@@ -102,6 +152,7 @@ class Source:
         chapters = []
         seen = set()
         seen_pages = set()
+        last_title = ""
         page_url = toc_url
         while page_url and page_url not in seen_pages:
             seen_pages.add(page_url)
@@ -113,7 +164,10 @@ class Source:
                 title = ctx.clean_text(a.text_content())
                 if not href or not title or href in seen:
                     continue
+                if ".sudugu.co/" in page_url and title == last_title:
+                    continue
                 seen.add(href)
+                last_title = title
                 chapters.append({
                     "sourceId": self.id,
                     "index": len(chapters) + 1,
@@ -187,7 +241,8 @@ class Source:
                 next_url = candidate_url
                 break
             current_url = next_url
-        title = re.sub(r"[（(][\d/]+[）)]", "", title or "").strip()
+        title = (title or "").rsplit(">", 1)[-1].strip()
+        title = re.sub(r"[（(][\d/]+[）)]", "", title).strip()
         full_content = "\n\n".join(parts)
         return {
             "sourceId": self.id,

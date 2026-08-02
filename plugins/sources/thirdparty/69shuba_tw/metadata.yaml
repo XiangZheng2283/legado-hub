@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: 69shuba_tw
 name: 69書吧繁體
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 enabled: true
 language: zh-TW
@@ -17,20 +17,21 @@ capabilities:
   - chapter
 auth:
   mode: none
-  cookieDomains: []
+  cookieDomains:
+    - 69shuba.tw
 content:
   access: free
 proxy:
   mode: always
   required: true
 browser:
-  mode: required
-  reason: aegis_browser_context
+  mode: optional
+  reason: aegis_session_bootstrap
 accessStrategy:
-  search: headless_browser
-  detail: headless_browser
-  toc: headless_browser
-  chapter: headless_browser
+  search: stealth_http
+  detail: stealth_http
+  toc: stealth_http
+  chapter: stealth_http
 rateLimit:
   perHostConcurrency: 3
   minIntervalMs: 1200
@@ -38,7 +39,7 @@ tags:
   - html
   - no-login
   - proxy
-  - browser-fetch
+  - browser-fallback
   - traditional-chinese
 domainProfiles:
   - id: mobile

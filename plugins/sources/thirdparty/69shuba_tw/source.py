@@ -3,7 +3,8 @@
 import re
 from urllib.parse import quote_plus, urljoin
 
-from app.source_plugins.errors import FetchNetworkError
+from app.source_plugins.challenges import looks_like_any_challenge
+from app.source_plugins.errors import BrowserRequired, FetchHttp4xx, FetchNetworkError
 from app.source_plugins.search_enrichment import enrich_search_items_from_detail
 
 
@@ -11,7 +12,7 @@ class Source:
     id = "69shuba_tw"
     name = "69書吧繁體"
     contract_version = "1.0"
-    last_modified = "2026-07-27"
+    last_modified = "2026-08-02"
     base_url = "https://69shuba.tw"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
     explore_defs = [
@@ -23,25 +24,31 @@ class Source:
     ]
 
     async def _fetch(self, ctx, url: str, **kwargs):
-        """Fetch via browser.
-
-        69shuba.tw enforces Cloudflare/Turnstile browser verification.
-        All stealth/http attempts (chrome120/124/safari, with/without proxy)
-        return ``BrowserRequired``. Browser rendering is the only viable path.
-        """
+        """Reuse a browser-established Aegis session through stealth HTTP."""
         target_url = urljoin(self.base_url, url)
         headers = {**self.headers, **kwargs.pop("headers", {})}
         wait_ms = kwargs.pop("wait_ms", 2500)
         timeout = kwargs.pop("timeout", 10)
-        html = await ctx.access.browser.fetch_text(
-            target_url,
-            headers=headers,
-            wait_ms=wait_ms,
-            timeout=timeout,
-            **kwargs,
-        )
+        try:
+            return await ctx.access.stealth.fetch_text(
+                target_url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs,
+            )
+        except (BrowserRequired, FetchHttp4xx) as original_error:
+            html = await ctx.access.browser.fetch_text(
+                target_url,
+                headers=headers,
+                stage="page_fallback",
+                wait_ms=wait_ms,
+                timeout=timeout,
+                **kwargs,
+            )
+            if looks_like_any_challenge(html):
+                raise original_error
         if not html.strip():
-            raise FetchNetworkError("browser fetch returned empty document", url=target_url)
+            raise FetchNetworkError(f"browser fetch returned empty document: {target_url}")
         return html
 
     async def explore_groups(self, ctx):

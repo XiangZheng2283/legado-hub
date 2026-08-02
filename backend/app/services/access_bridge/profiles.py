@@ -108,6 +108,10 @@ class BrowserProfileStore:
         directory.mkdir(parents=True, exist_ok=True)
         self.user_agent_path_by_id(profile_id).write_text(user_agent, encoding="utf-8")
 
+    def clear_by_id(self, profile_id: str) -> None:
+        """Drop a challenged browser state without touching unrelated profiles."""
+        self.storage_state_path_by_id(profile_id).unlink(missing_ok=True)
+        self.user_agent_path_by_id(profile_id).unlink(missing_ok=True)
 
 
 

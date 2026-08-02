@@ -372,6 +372,7 @@ class Fetcher:
         if 500 <= resp.status_code < 600:
             raise FetchHttp5xx(f"HTTP {resp.status_code}")
 
+        self._update_cookies(resp)
         text = self._decode_response_text(resp)
         if looks_like_cloudflare_challenge(text):
             raise CloudflareRequired(

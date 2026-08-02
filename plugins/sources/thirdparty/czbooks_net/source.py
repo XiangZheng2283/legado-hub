@@ -11,7 +11,7 @@ from urllib.parse import quote, urljoin
 
 from bs4 import BeautifulSoup
 
-from app.source_plugins.search_enrichment import enrich_search_items_from_detail
+from app.source_plugins.search_enrichment import DEFAULT_ENRICH_FIELDS, enrich_search_items_from_detail
 
 # This site's chapter body is a flat run of <br /> separated lines. Python's
 # html.parser mis-nests those tags here (every line after the first <br>
@@ -25,10 +25,9 @@ class Source:
     id = "czbooks_net"
     name = "小说狂人"
     contract_version = "1.0"
-    last_modified = "2026-07-27"
+    last_modified = "2026-07-31"
     base_url = "https://czbooks.net"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
-    impersonate = "chrome120"
 
     def _s(self, ctx, value: str) -> str:
         """Normalize user-facing Traditional Chinese text."""
@@ -40,7 +39,6 @@ class Source:
         return await ctx.access.stealth.fetch_text(
             urljoin(self.base_url, url),
             headers=headers,
-            impersonate=self.impersonate,
             **kwargs,
         )
 
@@ -57,7 +55,12 @@ class Source:
         html = await self._fetch(ctx, f"/s/{quote(query)}?q={quote(query)}")
         items = self._parse_search(ctx, html)
         exact = [item for item in items if item.get("name") == keyword]
-        return await enrich_search_items_from_detail(self, ctx, exact or items)
+        return await enrich_search_items_from_detail(
+            self,
+            ctx,
+            exact or items,
+            fields=DEFAULT_ENRICH_FIELDS + ("bookStatus", "chapterCount"),
+        )
 
     def _parse_search(self, ctx, html: str) -> list[dict]:
         """Parse one novel card per search result."""
@@ -73,18 +76,22 @@ class Source:
                 continue
             seen.add(book_url)
             cover_node = card.select_one(".novel-item-thumbnail img[src]")
+            status = self._s(ctx, self._text(card, ".novel-item-state"))
             items.append(
                 {
                     "sourceId": self.id,
                     "name": self._s(ctx, self._text(card, ".novel-item-title")),
                     "author": self._s(ctx, self._text(card, ".novel-item-author a")),
                     "bookUrl": book_url,
+                    "tocUrl": book_url,
                     "coverUrl": (cover_node.get("src", "").strip() if cover_node else ""),
                     "intro": "",
-                    "kind": self._s(ctx, self._text(card, ".novel-item-state")),
+                    "kind": status,
+                    "bookStatus": status,
                     "lastChapter": self._s(ctx, self._text(card, ".novel-item-newest-chapter a")),
                     "wordCount": "",
                     "updateTime": self._text(card, ".novel-item-date"),
+                    "chapterCount": 0,
                     "rank": len(items) + 1,
                 }
             )
@@ -106,6 +113,15 @@ class Source:
         if description is not None:
             for br in description.find_all("br"):
                 br.replace_with("\n")
+        status = self._s(ctx, info.get("连载状态", ""))
+        chapter_links = []
+        seen_chapter_urls: set[str] = set()
+        for link in soup.select("#chapter-list li a[href]"):
+            chapter_url = self._local_url(link.get("href", ""))
+            if not re.search(r"/n/[a-z0-9]+/[a-z0-9]+", chapter_url) or chapter_url in seen_chapter_urls:
+                continue
+            seen_chapter_urls.add(chapter_url)
+            chapter_links.append(link)
         return {
             "sourceId": self.id,
             # The title is rendered as 《书名》.
@@ -115,12 +131,14 @@ class Source:
             "coverUrl": (cover_node.get("src", "").strip() if cover_node else ""),
             "intro": self._s(ctx, description.get_text("\n", strip=True)) if description else "",
             "kind": " / ".join(
-                part for part in [self._s(ctx, info.get("分类", "")), self._s(ctx, info.get("连载状态", ""))] if part
+                part for part in [self._s(ctx, info.get("分类", "")), status] if part
             ),
-            "lastChapter": "",
+            "bookStatus": status,
+            "lastChapter": self._s(ctx, chapter_links[-1].get_text(" ", strip=True)) if chapter_links else "",
             "wordCount": "",
             "updateTime": info.get("更新时间", ""),
             "tocUrl": book_url,
+            "chapterCount": len(chapter_links),
             "authRequired": False,
         }
 

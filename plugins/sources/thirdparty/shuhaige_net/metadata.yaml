@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: shuhaige_net
 name: 书海阁小说网
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 domains:
   - www.shuhaige.net
@@ -36,3 +36,6 @@ sourceSeed:
   upstreamId: www_shuhaige_net
   upstreamFile: bundle/rules/main.json
   upstreamCommit: bfb5fda1d6ea04ad7f30a761640e08ce2e5db0e0
+adPatterns:
+  - '喜欢.{1,160}请大家收藏.{0,30}m\.shuhaige\.net.{1,160}书海阁小说网更新速度全网最快'
+  - '无错的章节将持续在书海阁小说网小说网更新.{0,80}收藏和推荐书海阁小说网'

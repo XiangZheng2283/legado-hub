@@ -17,7 +17,6 @@ class Source:
     last_modified = "2026-07-27"
     base_url = "https://twkan.com"
     headers = {"accept-language": "zh-TW,zh;q=0.9"}
-    impersonate = "chrome120"
     explore_defs = [
         {"groupId": "hot", "title": "排行榜", "url": "/novels/hot", "kind": "rank"},
         {"groupId": "full", "title": "完本小說", "url": "/novels/full", "kind": "full"},
@@ -28,15 +27,26 @@ class Source:
     async def _fetch(self, ctx, url: str, **kwargs):
         """Fetch via stealth (curl_cffi).
 
-        The search path falls back to browser access only when stealth hits
-        a browser or Cloudflare challenge.
+        The host handles Cloudflare session refresh. This fallback is only for
+        non-Cloudflare browser challenges.
         """
         headers = {**self.headers, **kwargs.pop("headers", {})}
-        return await ctx.access.stealth.fetch_text(
-            url,
-            headers=headers,
-            **kwargs,
-        )
+        try:
+            return await ctx.access.stealth.fetch_text(url, headers=headers, **kwargs)
+        except BrowserRequired as original_error:
+            method = str(kwargs.get("method") or "GET").upper()
+            if method != "GET" or kwargs.get("params") or kwargs.get("data"):
+                raise
+            html = await ctx.access.browser.fetch_text(
+                url,
+                headers=headers,
+                stage="page_fallback",
+                wait_ms=5000,
+                timeout_ms=45000,
+            )
+            if self._looks_like_challenge(html):
+                raise original_error
+            return html
 
     def _s(self, ctx, value: str) -> str:
         """Convert Traditional Chinese output text to Simplified Chinese."""
@@ -66,6 +76,12 @@ class Source:
         if page > 1:
             return []
         search_keyword = ctx.to_traditional(keyword)
+        try:
+            provider_items = await self._search_provider_search(ctx, keyword, search_keyword)
+        except AccessBridgeUnavailable:
+            provider_items = []
+        if provider_items:
+            return provider_items
         try:
             html = await self._fetch(
                 ctx,
@@ -147,7 +163,7 @@ class Source:
         return []
 
     async def _search_provider_search(self, ctx, keyword: str, search_keyword: str):
-        provider_order = ["bing_html", "google_html"]
+        provider_order = ["duckduckgo_ddgs", "bing_html", "google_html"]
         try:
             hits = await ctx.access.search_provider(
                 search_keyword,
@@ -190,14 +206,6 @@ class Source:
                     "searchUrl": hit.url,
                 },
             }
-            try:
-                detail = await self.detail(ctx, book_url)
-            except Exception:
-                detail = None
-            if detail:
-                for key in ("name", "author", "coverUrl", "intro", "kind", "lastChapter", "wordCount", "updateTime"):
-                    if detail.get(key):
-                        item[key] = detail[key]
             items.append(item)
         return items
 
@@ -213,6 +221,8 @@ class Source:
     def _clean_search_provider_title(self, ctx, title: str, keyword: str) -> str:
         text = self._s(ctx, title or "")
         keyword_s = ctx.clean_text(keyword)
+        if re.fullmatch(r"(?:https?://)?(?:www\.)?twkan\.com(?:/\S*)?", text.strip(), re.IGNORECASE):
+            return keyword_s
         if keyword_s and keyword_s in text:
             return keyword_s
         text = re.split(r"[-_|,，:：]", text, maxsplit=1)[0]

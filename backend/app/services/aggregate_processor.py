@@ -29,7 +29,6 @@ from app.services.aggregate_settings import (
     AI_RUNTIME_ENABLED,
     BACKLOG_CHAPTER_LIMIT,
     BACKLOG_RECHECK_MINUTES,
-    CANDIDATE_SOURCE_CACHE_TTL_SECONDS,
     CHAPTER_PARALLELISM_LIMIT,
     DEFAULT_CONTENT_WORKFLOW,
     PER_SOURCE_CONCURRENCY,
@@ -116,7 +115,8 @@ class AggregateProcessor:
         self.db_path = Path(db_path or DB_PATH)
         self._ai_service = ai_service
         self._toc_cache: dict[str, dict] = {}
-        self._candidate_source_cache: dict[str, tuple[float, str, dict[str, Any]]] = {}
+        self._candidate_source_cache: dict[str, tuple[str, dict[str, Any]]] = {}
+        self._official_source_flags: dict[str, bool] | None = None
         self._ai_circuit_breakers: dict[str, dict[str, Any]] = {}
         self._ai_window_events: dict[str, deque[dict[str, Any]]] = {}
         self._process_logger_cache: SharedBookProcessLogger | None = None
@@ -853,6 +853,8 @@ class AggregateProcessor:
 
     def rebuild_book_from_snapshots(self, aggregate_book_id: str) -> dict[str, Any]:
         """Reapply current regex purification to local snapshots without network access."""
+        from app.services.aggregate_alignment import build_source_alignment_json
+
         payload = self._load_aggregate_payload(aggregate_book_id)
         if not payload:
             return {"bookId": aggregate_book_id, "rebuilt": False, "error": "book_not_found"}
@@ -903,7 +905,7 @@ class AggregateProcessor:
             )
 
         rewritten = 0
-        skipped = 0
+        invalidated = 0
         for chapter in chapters:
             chapter_id = str(chapter[0] or "")
             chapter_index = int(chapter[1] or 0)
@@ -958,10 +960,24 @@ class AggregateProcessor:
                     # A local official body without a qualifying replacement is
                     # safe to expose only as its existing preview fallback.
                     content = official_content
+                    alignment = build_source_alignment_json(
+                        selected_content_source="preview_fallback",
+                        official_content_length=len(official_content),
+                        alignment_passed=False,
+                        alignment_reason="official_preview_saved",
+                        primary_source_id=primary_source_id,
+                    )
                     status = "fallback"
                     preview_only = True
                 else:
-                    skipped += 1
+                    self._invalidate_rebuild_chapter(
+                        chapter_id=chapter_id,
+                        aggregate_book_id=aggregate_book_id,
+                        chapter_index=chapter_index,
+                        title=title,
+                        primary_source_id=primary_source_id,
+                    )
+                    invalidated += 1
                     continue
             self._write_chapter_result(
                 chapter_id=chapter_id,
@@ -984,8 +1000,79 @@ class AggregateProcessor:
             "networkAccessed": False,
             "snapshotCount": len(snapshots),
             "rewrittenChapters": rewritten,
-            "skippedChapters": skipped,
+            "skippedChapters": invalidated,
+            "invalidatedChapters": invalidated,
         }
+
+    def _invalidate_rebuild_chapter(
+        self,
+        *,
+        chapter_id: str,
+        aggregate_book_id: str,
+        chapter_index: int,
+        title: str,
+        primary_source_id: str,
+    ) -> None:
+        """Withdraw stale published content when no current official anchor exists."""
+        from app.services.aggregate_alignment import build_source_alignment_json
+
+        alignment = build_source_alignment_json(
+            selected_content_source="none",
+            alignment_passed=False,
+            alignment_reason="missing_official_anchor",
+            primary_source_id=primary_source_id,
+        )
+        now = self._now()
+        snapshot_refs = self._source_snapshot_refs(
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+        )
+        with self._conn() as conn:
+            conn.execute(
+                """
+                UPDATE aggregate_chapter_tasks
+                SET status = 'error', content_length = 0, processed_content = '',
+                    content_file_path = '', placeholder = 0, preview_only = 0,
+                    fallback_source_id = '', source_alignment_json = ?,
+                    source_snapshot_refs_json = ?, trace_hash = '',
+                    error = '本地重建未找到可用官方锚点',
+                    last_error_code = 'rebuild_missing_official_anchor',
+                    retry_count = 0, preview_retry_count = 0,
+                    next_retry_time = ?, last_processed_at = ?, updated_at = ?
+                WHERE chapter_id = ?
+                """,
+                (
+                    json.dumps(alignment, ensure_ascii=False),
+                    json.dumps(snapshot_refs, ensure_ascii=False),
+                    now,
+                    now,
+                    now,
+                    chapter_id,
+                ),
+            )
+            metadata_payload = self._build_shared_metadata_payload(
+                conn=conn,
+                aggregate_book_id=aggregate_book_id,
+                book_name=self._aggregate_book_name(conn, aggregate_book_id),
+                book_author=self._aggregate_book_author(conn, aggregate_book_id),
+            )
+            conn.commit()
+
+        storage = self._shared_book_storage()
+        book_name = str(metadata_payload.get("name", "") or "")
+        book_author = str(metadata_payload.get("author", "") or "")
+        storage.update_chapter_index_entry(
+            chapter_index_path=storage.chapter_index_path(book_name=book_name, author=book_author),
+            metadata_path=storage.metadata_path(book_name=book_name, author=book_author),
+            metadata_payload=metadata_payload,
+            entry={
+                "index": chapter_index,
+                "title": title,
+                "file": None,
+                "status": "failed",
+            },
+            chapter_trace={},
+        )
 
     def _job_timeout_seconds(self) -> float:
         try:
@@ -1263,17 +1350,16 @@ class AggregateProcessor:
         subscription stays fast while chapter processing still has fallback
         sources.
 
-        Discovery is cached per book for a short TTL so a single run_book_task pass
-        that processes many preview/empty chapters does not trigger a plugin search
-        for every chapter.
+        Discovery is cached for the current process lifetime so processing many
+        preview/empty chapters does not repeatedly search every source. A changed
+        payload/source map invalidates the cache; restarting the process clears it.
         """
         payload_signature = self._candidate_source_cache_signature(payload)
         cached = self._candidate_source_cache.get(aggregate_book_id)
         if cached is not None:
-            cached_at, cached_signature, cached_payload = cached
+            cached_signature, cached_payload = cached
             if (
                 cached_signature == payload_signature
-                and time.monotonic() - cached_at < CANDIDATE_SOURCE_CACHE_TTL_SECONDS
                 and (
                     max_candidates <= 0
                     or self._candidate_source_count(
@@ -1295,7 +1381,6 @@ class AggregateProcessor:
         candidate_limit = max_candidates if max_candidates > 0 else configured_limit
         if candidate_limit > 0 and candidate_count >= candidate_limit:
             self._candidate_source_cache[aggregate_book_id] = (
-                time.monotonic(),
                 payload_signature,
                 payload,
             )
@@ -1305,7 +1390,6 @@ class AggregateProcessor:
         author = str(payload.get("author", "") or "").strip()
         if not keyword:
             self._candidate_source_cache[aggregate_book_id] = (
-                time.monotonic(),
                 payload_signature,
                 payload,
             )
@@ -1320,7 +1404,6 @@ class AggregateProcessor:
         )
         if not discovered:
             self._candidate_source_cache[aggregate_book_id] = (
-                time.monotonic(),
                 payload_signature,
                 payload,
             )
@@ -1331,7 +1414,6 @@ class AggregateProcessor:
         updated_payload["sources"] = merged_sources
         self._persist_candidate_sources(aggregate_book_id, updated_payload, discovered)
         self._candidate_source_cache[aggregate_book_id] = (
-            time.monotonic(),
             self._candidate_source_cache_signature(updated_payload),
             updated_payload,
         )
@@ -2244,12 +2326,17 @@ class AggregateProcessor:
 
     def _is_official_source(self, source_id: str) -> bool:
         from app.source_plugins.loader import PluginLoader
-        try:
-            plugins = PluginLoader().load_all()
-        except Exception:
-            return False
-        plugin = plugins.get(source_id)
-        return bool(plugin and plugin.metadata.is_official_source())
+
+        if self._official_source_flags is None:
+            try:
+                plugins = PluginLoader().load_all()
+            except Exception:
+                return False
+            self._official_source_flags = {
+                plugin_id: bool(plugin.metadata.is_official_source())
+                for plugin_id, plugin in plugins.items()
+            }
+        return self._official_source_flags.get(source_id, False)
 
     def _book_has_official_source(self, aggregate_book_id: str, payload: dict) -> bool:
         """检查聚合书籍是否有任何官方源（主源或候选源）。"""
@@ -3761,17 +3848,41 @@ class AggregateProcessor:
         """Select the best supported candidate, optionally degrading to priority order."""
         from app.services.aggregate_alignment import (
             CROSS_SOURCE_CONTENT_SIMILARITY_THRESHOLD,
+            analyze_sentence_order_consensus,
             cross_source_content_similarity,
         )
 
         consensus: list[dict[str, Any]] = []
         from app.services.aggregate_line_consensus import direct_consensus_gap_count
 
+        sentence_order_audits = analyze_sentence_order_consensus(candidates)
+        eligible_candidates: list[dict[str, Any]] = []
+        for candidate in candidates:
+            source_id = str(candidate.get("source_id", "") or "")
+            sentence_order = sentence_order_audits.get(source_id, {})
+            alignment_json = dict(candidate.get("alignment_json") or {})
+            alignment_json["sentenceOrder"] = sentence_order
+            candidate["alignment_json"] = alignment_json
+            if not sentence_order.get("rejected"):
+                eligible_candidates.append(candidate)
+
         ranked: list[tuple[int, int, float, int, dict[str, Any]]] = []
         for index, candidate in enumerate(candidates):
+            source_id = str(candidate.get("source_id", "") or "")
+            sentence_order = sentence_order_audits.get(source_id, {})
+            if sentence_order.get("rejected"):
+                consensus.append({
+                    "sourceId": source_id,
+                    "supportingSourceIds": [],
+                    "supportCount": 0,
+                    "averageSimilarity": 0.0,
+                    "sentenceOrderStatus": "rejected_order_mismatch",
+                    "sentenceOrder": sentence_order,
+                })
+                continue
             scores: list[float] = []
             peers: list[str] = []
-            for peer in candidates:
+            for peer in eligible_candidates:
                 if peer is candidate:
                     continue
                 score = cross_source_content_similarity(
@@ -3785,11 +3896,12 @@ class AggregateProcessor:
                 "supportingSourceIds": peers,
                 "supportCount": len(peers),
                 "averageSimilarity": round(sum(scores) / len(scores), 4) if scores else 0.0,
+                "sentenceOrderStatus": sentence_order.get("status", "insufficient_evidence"),
             })
             if scores:
                 direct_gap_count = direct_consensus_gap_count(
                     str(candidate.get("content", "") or ""),
-                    candidates,
+                    eligible_candidates,
                     selected_source_id=str(candidate.get("source_id", "") or ""),
                 )
                 consensus[-1]["directConsensusGapCount"] = direct_gap_count
@@ -3801,8 +3913,8 @@ class AggregateProcessor:
                     candidate,
                 ))
         if not ranked:
-            if allow_degraded and len(candidates) in (1, 2):
-                return candidates[0], consensus
+            if allow_degraded and len(eligible_candidates) in (1, 2):
+                return eligible_candidates[0], consensus
             return None, consensus
         ranked.sort(key=lambda item: (-item[0], item[1], -item[2], item[3]))
         return ranked[0][4], consensus
@@ -3815,17 +3927,22 @@ class AggregateProcessor:
         require_unanimous: bool,
     ) -> bool:
         """Require three-source unanimity first, then a strict majority after expansion."""
-        if candidate_count < CROSS_SOURCE_INITIAL_COMPARE_COUNT:
+        active_consensus = [
+            item for item in consensus
+            if item.get("sentenceOrderStatus") != "rejected_order_mismatch"
+        ]
+        active_count = len(active_consensus)
+        if active_count < 2:
             return False
         if require_unanimous:
-            return len(consensus) == candidate_count and all(
-                int(item.get("supportCount", 0) or 0) == candidate_count - 1
-                for item in consensus
+            return all(
+                int(item.get("supportCount", 0) or 0) == active_count - 1
+                for item in active_consensus
             )
         return any(
             (int(item.get("supportCount", 0) or 0) + 1) >= CROSS_SOURCE_INITIAL_COMPARE_COUNT
-            and (int(item.get("supportCount", 0) or 0) + 1) * 2 > candidate_count
-            for item in consensus
+            and (int(item.get("supportCount", 0) or 0) + 1) * 2 > active_count
+            for item in active_consensus
         )
 
     def _match_candidate_toc_entries(

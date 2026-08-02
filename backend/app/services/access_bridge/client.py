@@ -60,7 +60,16 @@ class AccessBridgeClient:
     async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
         """Fetch a page through the configured Source Access Bridge adapter."""
         if self.adapter is not None:
-            return await self.adapter.fetch(request)
+            result = await self.adapter.fetch(request)
+            challenge = result.challenge if isinstance(result.challenge, dict) else {}
+            reset_profile = getattr(self.adapter, "reset_profile", None)
+            if challenge.get("detected") and request.profile_id and callable(reset_profile):
+                reset_profile(request.profile_id)
+                result = await self.adapter.fetch(request)
+                retry_challenge = result.challenge if isinstance(result.challenge, dict) else {}
+                if retry_challenge.get("detected"):
+                    reset_profile(request.profile_id)
+            return result
         if not self.config.enabled:
             raise AccessBridgeUnavailable("Source Access Bridge is disabled")
         raise AccessBridgeUnavailable(f"Browser provider is not supported: {self.config.provider}")
@@ -91,6 +100,9 @@ class PlaywrightAdapterBase:
         self.profile_store = BrowserProfileStore(config.profile_root)
         self._runtime_lock = threading.Lock()
         self._runtimes: dict[int, _BrowserRuntime] = {}
+
+    def reset_profile(self, profile_id: str) -> None:
+        self.profile_store.clear_by_id(profile_id)
 
     async def fetch(self, request: AccessFetchRequest) -> AccessFetchResult:
         started = time.perf_counter()

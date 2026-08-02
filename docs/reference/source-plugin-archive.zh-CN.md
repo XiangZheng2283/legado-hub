@@ -5,4 +5,9 @@
 | 插件 | 最后域名 | 归档时间 | 证据 | 替代方式 |
 | --- | --- | --- | --- | --- |
 | `22biqu_com` | `22biqu.com` | 2026-07-28 | HTTP 裸域关闭连接；HTTPS TLS 失败；`http://www.22biqu.com/` 已变成 Namecheap 域名停放页，既有书籍 URL 返回 404。 | 由聚合搜索选择其他仍可读取同书的第三方源。 |
-| `xbiquzw_net` | `xbiquzw.net` | 2026-07-30 | 原域长期出现证书不匹配、TLS 握手失败与超时；原插件实际改用 `xbiqugu.com` 镜像，与正式插件 `xbiqugu_la` 重复。 | 直接使用 `xbiqugu_la`，不再以失效域名保留重复插件 ID。 |
+| `xbiquzw_net` | `xbiquzw.net` | 2026-07-30 | 原域长期出现证书不匹配、TLS 握手失败与超时；原插件实际改用 `xbiqugu.com` 镜像，与当时的 `xbiqugu_la` 重复。 | 由聚合搜索选择其他第三方源。 |
+| `69hsw_com` | `69hsw.com` | 2026-07-31 | 已知书籍 URL 在普通 HTTP、Chrome TLS 指纹和 Chromium 下均无法建立稳定读取链路。 | 使用仍可读取同书的 69 系或其他第三方源。 |
+| `ranwen8_cc` | `ranwen8.cc` | 2026-07-31 | `.cc` 持续超时或 TLS 异常；候选 `.co` 裸域返回 444，HTTPS 握手失败。 | 由聚合搜索选择其他第三方源。 |
+| `tianxibook_com` | `tianxibook.com` | 2026-07-31 | 旧域跳转后，新旧域在 HTTP 与 Chromium 路径均持续返回 403；替代搜索入口要求登录。 | 由聚合搜索选择其他第三方源。 |
+| `xhytd_com` | `xhytd.com` | 2026-07-31 | 2026-07-28 移动站曾闭环通过，但随后旧域与备用移动域持续超时；按维护决策移除不稳定插件。 | 由聚合搜索选择其他第三方源。 |
+| `xbiqugu_la` | `xbiqugu.com` / `xbiqugu.la` | 2026-08-02 | `.com` 持续 TLS 握手失败，`.la` 公开地址为空响应，旧 `.net` 入口只重定向回失效 `.la`；排行榜、搜索和正文均无法建立实网链路。 | 由聚合搜索选择其他第三方源；历史 fixture 与采样诊断继续保留。 |

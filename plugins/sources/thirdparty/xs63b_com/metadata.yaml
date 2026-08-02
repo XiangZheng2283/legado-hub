@@ -1,0 +1,47 @@
+contractVersion: "1.0"
+id: xs63b_com
+name: 小说路上
+author: Yunwei
+version: 0.1.0
+priority: 40
+type: source
+domains:
+  - m.xs63e.com
+  - m.xs63b.com
+baseUrls:
+  - https://m.xs63e.com
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 800
+auth:
+  mode: none
+  cookieDomains: []
+content:
+  access: free
+proxy:
+  mode: auto
+  required: false
+browser:
+  mode: none
+  reason: ""
+accessStrategy:
+  search: http
+  detail: http
+  toc: http
+  chapter: http
+tags:
+  - html
+  - no-login
+  - simplified-chinese
+  - paginated-content
+sourceSeed:
+  type: live
+  upstreamId: xs63b_com
+  upstreamFile: ""
+  upstreamCommit: ""

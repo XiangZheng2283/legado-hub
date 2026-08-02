@@ -14,38 +14,38 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | official | 起点中文网(App) (`qidian_com_app`) | 0.2.9 | zh-CN | optional | auto | -/-ms |
 | official | 起点中文网(Web) (`qidian_com_web`) | 0.1.7 | zh-CN | optional | auto | -/-ms |
-| thirdparty | 零点小说 (`0xs_net`) | 0.1.1 | zh-CN | optional | auto | 3/1000ms |
-| thirdparty | 69书屋 (`69hsw_com`) | 0.1.4 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 69书吧 (`69shuba_com`) | 0.1.5 | zh-CN | optional | always (required) | 3/1200ms |
-| thirdparty | 69書吧繁體 (`69shuba_tw`) | 0.1.1 | zh-TW | required | always (required) | 3/1200ms |
-| thirdparty | 96读书 (`96dushu_com`) | 0.1.2 | zh-CN | none | auto | 3/900ms |
+| thirdparty | 零点小说 (`0xs_net`) | 0.2.1 | zh-CN | optional | auto | 3/1000ms |
+| thirdparty | 69书吧 (`69shuba_com`) | 0.1.6 | zh-CN | optional | always (required) | 3/1200ms |
+| thirdparty | 69書吧繁體 (`69shuba_tw`) | 0.1.2 | zh-TW | optional | always (required) | 3/1200ms |
+| thirdparty | 96读书 (`96dushu_com`) | 0.1.5 | zh-CN | optional | auto | 3/900ms |
+| thirdparty | 爱去小说网 (`aiqu654_com`) | 0.1.0 | zh-CN | none | auto | 1/500ms |
+| thirdparty | 爱书网 (`aishu99_com`) | 0.1.0 | zh-CN | none | auto | 1/500ms |
 | thirdparty | 笔趣阁365 (`biquge365_net`) | 0.1.2 | zh-CN | none | auto | 6/600ms |
-| thirdparty | 小说狂人 (`czbooks_net`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
+| thirdparty | 小说狂人 (`czbooks_net`) | 0.1.2 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 东滩小说 (`dongtanxs_com`) | 0.1.1 | zh-CN | none | auto | 6/600ms |
-| thirdparty | 独行小说 (`dxtxt_cc`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 黄金屋中文 (`hjwzw_com`) | 0.1.1 | zh-CN | none | auto | 6/600ms |
-| thirdparty | 爱下电子书 (`ixdzs8_com`) | 0.1.0 | zh-CN | optional | auto | 3/1200ms |
-| thirdparty | 101看书网 (`kks101_com`) | 0.1.1 | zh-CN | optional | always (required) | 3/1200ms |
-| thirdparty | 零点看书 (`lingdiankanshu_com`) | 0.1.1 | zh-CN | none | auto | 6/800ms |
+| thirdparty | 独行小说 (`dxtxt_cc`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
+| thirdparty | 飞书小说网 (`feishubook_com`) | 0.1.0 | zh-CN | none | auto | 1/300ms |
+| thirdparty | 黄金屋中文 (`hjwzw_com`) | 0.1.2 | zh-CN | none | auto | 6/600ms |
+| thirdparty | 爱下电子书 (`ixdzs8_com`) | 0.1.1 | zh-CN | optional | auto | 3/1200ms |
+| thirdparty | 101看书网 (`kks101_com`) | 0.1.2 | zh-CN | optional | auto | 3/1200ms |
+| thirdparty | 零点看书 (`lingdiankanshu_com`) | 0.1.2 | zh-CN | none | auto | 6/800ms |
 | thirdparty | 明智屋 (`mingzw_tw`) | 0.1.1 | zh-CN | none | auto | 6/700ms |
 | thirdparty | 新御书屋 (`qianyezw_com`) | 0.1.0 | zh-CN | none | auto | 6/1000ms |
 | thirdparty | 企鹅小说 (`qiexs_cc`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 全本小说网 (`quanben5_com`) | 0.1.1 | zh-CN | none | auto | 6/900ms |
 | thirdparty | 缺小说 (`quexs_org`) | 0.1.0 | zh-CN | none | auto | 6/1200ms |
-| thirdparty | 燃文小说网 (`ranwen8_cc`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 书海阁小说网 (`shuhaige_net`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
+| thirdparty | 书海阁小说网 (`shuhaige_net`) | 0.1.2 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 书迷楼 (`shumilou_co`) | 0.1.1 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 书迷楼 (`shumilou_top`) | 0.1.1 | zh-CN | none | auto | 6/800ms |
-| thirdparty | 思兔阅读 (`sto_com`) | 0.1.1 | zh-CN | none | auto | 6/700ms |
-| thirdparty | 速读谷 (`sudugu_org`) | 0.1.3 | zh-CN | none | auto | 3/1200ms |
+| thirdparty | 书迷楼 (`shumilou_top`) | 0.1.2 | zh-CN | none | auto | 6/800ms |
+| thirdparty | 思兔阅读 (`sto_com`) | 0.1.2 | zh-CN | none | auto | 6/700ms |
+| thirdparty | 速读谷 (`sudugu_org`) | 0.1.4 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 随心看 (`suixkan_com`) | 0.1.0 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 新天禧小说 (`tianxibook_com`) | 0.1.1 | zh-CN | none | auto | 3/1000ms |
 | thirdparty | 天天看书网 (`ttkan_co`) | 0.1.2 | zh-CN | none | always (required) | 6/600ms |
-| thirdparty | 台灣小說網 (`twkan_com`) | 0.1.5 | zh-CN | optional | auto | 3/1000ms |
+| thirdparty | 台灣小說網 (`twkan_com`) | 0.1.8 | zh-CN | optional | auto | 3/1000ms |
 | thirdparty | UU阅读 (`uuread_tw`) | 0.1.1 | zh-CN | none | auto | 6/900ms |
-| thirdparty | 香书小说 (`xbiqugu_la`) | 0.1.2 | zh-CN | none | auto | 3/1200ms |
-| thirdparty | 黄易天地 (`xhytd_com`) | 0.2.0 | zh-CN | none | auto | 3/1200ms |
 | thirdparty | 小说虎 (`xiaoshuohu_com`) | 0.1.2 | zh-CN | none | auto | 6/1000ms |
+| thirdparty | 新键盘小说网 (`xinjianpan_com`) | 0.1.0 | zh-CN | none | always (required) | 1/800ms |
+| thirdparty | 小说路上 (`xs63b_com`) | 0.1.0 | zh-CN | none | auto | 1/800ms |
 | thirdparty | 夜伴书屋 (`yeban360_com`) | 0.1.0 | zh-CN | none | auto | 6/1200ms |
 | thirdparty | 宙斯小说网 (`zhswx_tw`) | 0.1.1 | zh-CN | none | auto | 6/700ms |
 
@@ -102,16 +102,16 @@
 
 - 目录：`plugins/sources/thirdparty/0xs_net`；展示名称：零点小说
 - 实现：[`source.py`](../../plugins/sources/thirdparty/0xs_net/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/0xs_net/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.2.1`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`https://m.0xs.net`
+- 主地址：`https://www.0xs.net`
 - 域名：`0xs.net`
 - 能力：`search`、`detail`、`toc`、`chapter`
 - 标签：`html`、`no-login`、`rate_limit`
 - 登录：模式 `none`；Cookie 域名：未声明
 - 内容：访问权限 `free`；来源角色 `未声明`
 - 访问策略：未声明
-- 浏览器：模式 `optional`；原因 `移动站首次返回 403 时仅用于建立会话，后续详情、目录和正文继续走 HTTP`
+- 浏览器：模式 `optional`；原因 `桌面站返回 403 或伪 200 错误页时建立会话`
 - 代理：模式 `auto`；必需 `False`
 - 限流：每主机并发 `3`；最小间隔 `1000` ms
 - 搜索提供器：未声明
@@ -120,43 +120,11 @@
 - 来源追溯：未声明
 - 正文净化规则：`0` 条
 
-## 69书屋 (`69hsw_com`)
-
-- 目录：`plugins/sources/thirdparty/69hsw_com`；展示名称：69书屋
-- 实现：[`source.py`](../../plugins/sources/thirdparty/69hsw_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/69hsw_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.4`；作者：`Yunwei`
-- 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`https://www.69hsw.com`
-- 域名：`69hsw.com`
-- 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`、`captcha-search`
-- 登录：模式 `none`；Cookie 域名：未声明
-- 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：未声明
-- 浏览器：模式 `none`；原因 `search_captcha_auto_solved`
-- 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1200` ms
-- 搜索提供器：未声明
-- Access Bridge：未声明
-- 域名配置：
-  - `primary`：`id`=`primary`；`baseUrl`=`https://www.69hsw.com`；`domains`=`www.69hsw.com`、`69hsw.com`；`role`=`desktop`；`fallback`=`True`
-- 来源追溯：`type`=`live-site`；`upstreamId`=`69hsw_com`；`upstreamFile`=`https://www.69hsw.com/`；`upstreamCommit`=空
-- 正文净化规则：`9` 条
-  - `无错版本在读`
-  - `首发本小说`
-  - `6\s*[=＝]\s*9\s*[+＋]?\s*书[_＿\s]*吧`
-  - `6\s*[=＝]\s*9\s*[+＋]`
-  - `新?69\s*书\s*[吧屋]`
-  - `正确内.?容在`
-  - `[%％]\s*六九\s*[%％]`
-  - `书[''′]?\s*吧\s*读`
-  - `最新网址|返回目录|加入书签|推荐阅读|新书推荐`
-
 ## 69书吧 (`69shuba_com`)
 
 - 目录：`plugins/sources/thirdparty/69shuba_com`；展示名称：69书吧
 - 实现：[`source.py`](../../plugins/sources/thirdparty/69shuba_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/69shuba_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.5`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.6`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://www.69shuba.com`、`https://www.69shuba.cx`
 - 域名：`69shuba.com`、`69shuba.cx`
@@ -189,16 +157,16 @@
 
 - 目录：`plugins/sources/thirdparty/69shuba_tw`；展示名称：69書吧繁體
 - 实现：[`source.py`](../../plugins/sources/thirdparty/69shuba_tw/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/69shuba_tw/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-TW`；默认启用：`True`；优先级：`50`
 - 主地址：`https://69shuba.tw`
 - 域名：`69shuba.tw`
 - 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`、`proxy`、`browser-fetch`、`traditional-chinese`
-- 登录：模式 `none`；Cookie 域名：未声明
+- 标签：`html`、`no-login`、`proxy`、`browser-fallback`、`traditional-chinese`
+- 登录：模式 `none`；Cookie 域名：`69shuba.tw`
 - 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：`search`=`headless_browser`；`detail`=`headless_browser`；`toc`=`headless_browser`；`chapter`=`headless_browser`
-- 浏览器：模式 `required`；原因 `aegis_browser_context`
+- 访问策略：`search`=`stealth_http`；`detail`=`stealth_http`；`toc`=`stealth_http`；`chapter`=`stealth_http`
+- 浏览器：模式 `optional`；原因 `aegis_session_bootstrap`
 - 代理：模式 `always`；必需 `True`
 - 限流：每主机并发 `3`；最小间隔 `1200` ms
 - 搜索提供器：未声明
@@ -212,7 +180,7 @@
 
 - 目录：`plugins/sources/thirdparty/96dushu_com`；展示名称：96读书
 - 实现：[`source.py`](../../plugins/sources/thirdparty/96dushu_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/96dushu_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.5`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://www.96dushu.com`
 - 域名：`96dushu.com`
@@ -221,13 +189,57 @@
 - 登录：模式 `none`；Cookie 域名：未声明
 - 内容：访问权限 `free`；来源角色 `未声明`
 - 访问策略：`search`=`search_provider`
-- 浏览器：模式 `none`；原因 `未声明`
+- 浏览器：模式 `optional`；原因 `cloudflare_challenge`
 - 代理：模式 `auto`；必需 `False`
 - 限流：每主机并发 `3`；最小间隔 `900` ms
-- 搜索提供器：`providerOrder`=`bing_html`、`google_html`；`targetDomain`=`www.96dushu.com`；`querySitePath`=`/book`；`urlPatterns`=`/book/\d+/`
+- 搜索提供器：`providerOrder`=`duckduckgo_ddgs`、`bing_html`、`google_html`；`targetDomain`=`www.96dushu.com`；`querySitePath`=`/book`；`urlPatterns`=`/book/\d+/`
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：未声明
+- 正文净化规则：`0` 条
+
+## 爱去小说网 (`aiqu654_com`)
+
+- 目录：`plugins/sources/thirdparty/aiqu654_com`；展示名称：爱去小说网
+- 实现：[`source.py`](../../plugins/sources/thirdparty/aiqu654_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/aiqu654_com/README.md)
+- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 语言：`zh-CN`；默认启用：`True`；优先级：`40`
+- 主地址：`http://www.aiqu654.com`
+- 域名：`www.aiqu654.com`、`aiqu654.com`、`www.aiqu127.com`、`aiqu127.com`、`mg.downbook12.com`
+- 能力：`search`、`detail`、`toc`、`chapter`
+- 标签：`html`、`txt-download`、`byte-range`、`no-login`、`simplified-chinese`
+- 登录：模式 `none`；Cookie 域名：未声明
+- 内容：访问权限 `free`；来源角色 `未声明`
+- 访问策略：`search`=`tls_impersonate`；`detail`=`tls_impersonate`；`toc`=`tls_impersonate`；`chapter`=`tls_impersonate`
+- 浏览器：模式 `none`；原因 `未声明`
+- 代理：模式 `auto`；必需 `False`
+- 限流：每主机并发 `1`；最小间隔 `500` ms
+- 搜索提供器：未声明
+- Access Bridge：未声明
+- 域名配置：未声明
+- 来源追溯：`type`=`live`；`upstreamId`=`aiqu654_com`；`upstreamFile`=空；`upstreamCommit`=空
+- 正文净化规则：`0` 条
+
+## 爱书网 (`aishu99_com`)
+
+- 目录：`plugins/sources/thirdparty/aishu99_com`；展示名称：爱书网
+- 实现：[`source.py`](../../plugins/sources/thirdparty/aishu99_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/aishu99_com/README.md)
+- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 语言：`zh-CN`；默认启用：`True`；优先级：`40`
+- 主地址：`https://www.asw227.com`
+- 域名：`www.asw227.com`、`asw227.com`、`www.aishu99.com`、`aishu99.com`、`dm.downshu123.com`、`dm.downshu321.shop`
+- 能力：`search`、`detail`、`toc`、`chapter`
+- 标签：`html`、`txt-download`、`no-login`、`simplified-chinese`
+- 登录：模式 `none`；Cookie 域名：未声明
+- 内容：访问权限 `free`；来源角色 `未声明`
+- 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
+- 浏览器：模式 `none`；原因 `未声明`
+- 代理：模式 `auto`；必需 `False`
+- 限流：每主机并发 `1`；最小间隔 `500` ms
+- 搜索提供器：未声明
+- Access Bridge：未声明
+- 域名配置：未声明
+- 来源追溯：`type`=`live`；`upstreamId`=`aishu99_com`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
 ## 笔趣阁365 (`biquge365_net`)
@@ -258,7 +270,7 @@
 
 - 目录：`plugins/sources/thirdparty/czbooks_net`；展示名称：小说狂人
 - 实现：[`source.py`](../../plugins/sources/thirdparty/czbooks_net/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/czbooks_net/README.md)
-- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`40`
 - 主地址：`https://czbooks.net`
 - 域名：`czbooks.net`
@@ -274,7 +286,8 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`live`；`upstreamId`=`czbooks_net`；`upstreamFile`=空；`upstreamCommit`=空
-- 正文净化规则：`0` 条
+- 正文净化规则：`1` 条
+  - `哦豁.{0,30}如果觉得52书库不错.{0,120}(?:52shuku\.net|推荐给朋友)`
 
 ## 东滩小说 (`dongtanxs_com`)
 
@@ -302,7 +315,7 @@
 
 - 目录：`plugins/sources/thirdparty/dxtxt_cc`；展示名称：独行小说
 - 实现：[`source.py`](../../plugins/sources/thirdparty/dxtxt_cc/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/dxtxt_cc/README.md)
-- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`40`
 - 主地址：`http://www.dxtxt.cc`
 - 域名：`www.dxtxt.cc`
@@ -320,11 +333,33 @@
 - 来源追溯：`type`=`live`；`upstreamId`=`dxtxt_cc`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
+## 飞书小说网 (`feishubook_com`)
+
+- 目录：`plugins/sources/thirdparty/feishubook_com`；展示名称：飞书小说网
+- 实现：[`source.py`](../../plugins/sources/thirdparty/feishubook_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/feishubook_com/README.md)
+- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 语言：`zh-CN`；默认启用：`True`；优先级：`40`
+- 主地址：`https://www.myfeishu.com`
+- 域名：`www.myfeishu.com`、`myfeishu.com`
+- 能力：`search`、`detail`、`toc`、`chapter`
+- 标签：`html`、`encrypted-content`、`no-login`、`simplified-chinese`
+- 登录：模式 `none`；Cookie 域名：未声明
+- 内容：访问权限 `free`；来源角色 `未声明`
+- 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
+- 浏览器：模式 `none`；原因 `未声明`
+- 代理：模式 `auto`；必需 `False`
+- 限流：每主机并发 `1`；最小间隔 `300` ms
+- 搜索提供器：未声明
+- Access Bridge：未声明
+- 域名配置：未声明
+- 来源追溯：`type`=`live`；`upstreamId`=`feishubook_com`；`upstreamFile`=空；`upstreamCommit`=空
+- 正文净化规则：`0` 条
+
 ## 黄金屋中文 (`hjwzw_com`)
 
 - 目录：`plugins/sources/thirdparty/hjwzw_com`；展示名称：黄金屋中文
 - 实现：[`source.py`](../../plugins/sources/thirdparty/hjwzw_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/hjwzw_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://tw.hjwzw.com`
 - 域名：`tw.hjwzw.com`、`hjwzw.com`
@@ -340,13 +375,19 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`live`；`upstreamId`=`hjwzw_com`；`upstreamFile`=空；`upstreamCommit`=空
-- 正文净化规则：`0` 条
+- 正文净化规则：`6` 条
+  - `由中华百科研究会.{0,80}维护运行`
+  - `相关.{0,20}中文百科在线.{0,20}中文词典在线.{0,40}创办`
+  - `供求产品价格招标知识标准信息贴吧证书`
+  - `本文来源.{0,20}小shuo8\.cc`
+  - `本站未签约的小说版权属于作者.{0,260}本条款的最终解释权属于晨曦.{0,20}小shuo8\.cc`
+  - `古籍群[：:]\s*\d+`
 
 ## 爱下电子书 (`ixdzs8_com`)
 
 - 目录：`plugins/sources/thirdparty/ixdzs8_com`；展示名称：爱下电子书
 - 实现：[`source.py`](../../plugins/sources/thirdparty/ixdzs8_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/ixdzs8_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`20`
 - 主地址：`https://ixdzs8.com`
 - 域名：`ixdzs8.com`
@@ -368,7 +409,7 @@
 
 - 目录：`plugins/sources/thirdparty/kks101_com`；展示名称：101看书网
 - 实现：[`source.py`](../../plugins/sources/thirdparty/kks101_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/kks101_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://101kks.com`
 - 域名：`101kks.com`
@@ -378,7 +419,7 @@
 - 内容：访问权限 `free`；来源角色 `未声明`
 - 访问策略：未声明
 - 浏览器：模式 `optional`；原因 `cloudflare_challenge`
-- 代理：模式 `always`；必需 `True`
+- 代理：模式 `auto`；必需 `False`
 - 限流：每主机并发 `3`；最小间隔 `1200` ms
 - 搜索提供器：`providerOrder`=`duckduckgo_ddgs`、`bing_html`、`google_html`；`targetDomain`=`101kks.com`；`querySitePath`=`/book`；`urlPatterns`=`/book/\d+\.html`、`/book/\d+`
 - Access Bridge：`search`=`providers`=`duckduckgo_ddgs`、`bing_html`、`google_html`
@@ -390,7 +431,7 @@
 
 - 目录：`plugins/sources/thirdparty/lingdiankanshu_com`；展示名称：零点看书
 - 实现：[`source.py`](../../plugins/sources/thirdparty/lingdiankanshu_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/lingdiankanshu_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`20`
 - 主地址：`http://23.225.143.226`
 - 域名：`23.225.143.226`
@@ -406,7 +447,8 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`live`；`upstreamId`=`lingdiankanshu_com`；`upstreamFile`=空；`upstreamCommit`=空
-- 正文净化规则：`0` 条
+- 正文净化规则：`1` 条
+  - `零点看书全文字更新.{0,20}牢记网址`
 
 ## 明智屋 (`mingzw_tw`)
 
@@ -518,33 +560,11 @@
 - 来源追溯：`type`=`live`；`upstreamId`=`quexs_org`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
-## 燃文小说网 (`ranwen8_cc`)
-
-- 目录：`plugins/sources/thirdparty/ranwen8_cc`；展示名称：燃文小说网
-- 实现：[`source.py`](../../plugins/sources/thirdparty/ranwen8_cc/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/ranwen8_cc/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
-- 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`https://www.ranwen8.cc`
-- 域名：`ranwen8.cc`
-- 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`、`base64`
-- 登录：模式 `none`；Cookie 域名：未声明
-- 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：未声明
-- 浏览器：模式 `none`；原因 `未声明`
-- 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1200` ms
-- 搜索提供器：未声明
-- Access Bridge：未声明
-- 域名配置：未声明
-- 来源追溯：未声明
-- 正文净化规则：`0` 条
-
 ## 书海阁小说网 (`shuhaige_net`)
 
 - 目录：`plugins/sources/thirdparty/shuhaige_net`；展示名称：书海阁小说网
 - 实现：[`source.py`](../../plugins/sources/thirdparty/shuhaige_net/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/shuhaige_net/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://www.shuhaige.net`
 - 域名：`www.shuhaige.net`、`shuhaige.net`、`img.shuhaige.net`
@@ -560,7 +580,9 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`so-novel`；`upstreamId`=`www_shuhaige_net`；`upstreamFile`=`bundle/rules/main.json`；`upstreamCommit`=`bfb5fda1d6ea04ad7f30a761640e08ce2e5db0e0`
-- 正文净化规则：`0` 条
+- 正文净化规则：`2` 条
+  - `喜欢.{1,160}请大家收藏.{0,30}m\.shuhaige\.net.{1,160}书海阁小说网更新速度全网最快`
+  - `无错的章节将持续在书海阁小说网小说网更新.{0,80}收藏和推荐书海阁小说网`
 
 ## 书迷楼 (`shumilou_co`)
 
@@ -588,7 +610,7 @@
 
 - 目录：`plugins/sources/thirdparty/shumilou_top`；展示名称：`书迷楼（top）`
 - 实现：[`source.py`](../../plugins/sources/thirdparty/shumilou_top/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/shumilou_top/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://www.shumilou.top`
 - 域名：`www.shumilou.top`、`shumilou.top`
@@ -604,13 +626,14 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`live`；`upstreamId`=`shumilou_top`；`upstreamFile`=空；`upstreamCommit`=空
-- 正文净化规则：`0` 条
+- 正文净化规则：`1` 条
+  - `\[?www\.69kanbao\.com\]?`
 
 ## 思兔阅读 (`sto_com`)
 
 - 目录：`plugins/sources/thirdparty/sto_com`；展示名称：思兔阅读
 - 实现：[`source.py`](../../plugins/sources/thirdparty/sto_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/sto_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://sto9.com`
 - 域名：`sto9.com`
@@ -626,16 +649,17 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：`type`=`live`；`upstreamId`=`sto_com`；`upstreamFile`=空；`upstreamCommit`=空
-- 正文净化规则：`0` 条
+- 正文净化规则：`1` 条
+  - `[sｓ𝘀𝖘𝘴𝚜𝐬].{0,3}[tｔ𝘁𝖙𝘵𝚝𝐭].{0,3}[oｏ𝗼𝖔𝘰𝚘𝐨].{0,3}[9９𝟵𝟿].{0,3}\.?.{0,3}[cｃ𝗰𝖈𝘤𝚌𝐜].{0,3}[oｏ𝗼𝖔𝘰𝚘𝐨].{0,3}[mｍ𝗺𝖒𝘮𝚖𝐦]`
 
 ## 速读谷 (`sudugu_org`)
 
 - 目录：`plugins/sources/thirdparty/sudugu_org`；展示名称：速读谷
 - 实现：[`source.py`](../../plugins/sources/thirdparty/sudugu_org/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/sudugu_org/README.md)
-- 分类：`thirdparty`；版本：`0.1.3`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.4`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`https://www.sudugu.org`
-- 域名：`sudugu.org`
+- 主地址：`https://www.sudugu.org`、`https://www.sudugu.co`
+- 域名：`sudugu.org`、`sudugu.co`
 - 能力：`search`、`detail`、`toc`、`chapter`
 - 标签：`html`、`no-login`、`proxy`、`rate_limit`
 - 登录：模式 `none`；Cookie 域名：未声明
@@ -672,28 +696,6 @@
 - 来源追溯：`type`=`live`；`upstreamId`=`suixkan_com`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
-## 新天禧小说 (`tianxibook_com`)
-
-- 目录：`plugins/sources/thirdparty/tianxibook_com`；展示名称：新天禧小说
-- 实现：[`source.py`](../../plugins/sources/thirdparty/tianxibook_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/tianxibook_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.1`；作者：`Yunwei`
-- 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`https://www.tianxibook.com`
-- 域名：`tianxibook.com`、`sososhu.com`
-- 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`
-- 登录：模式 `none`；Cookie 域名：未声明
-- 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：未声明
-- 浏览器：模式 `none`；原因 `未声明`
-- 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1000` ms
-- 搜索提供器：未声明
-- Access Bridge：未声明
-- 域名配置：未声明
-- 来源追溯：未声明
-- 正文净化规则：`0` 条
-
 ## 天天看书网 (`ttkan_co`)
 
 - 目录：`plugins/sources/thirdparty/ttkan_co`；展示名称：天天看书网
@@ -720,7 +722,7 @@
 
 - 目录：`plugins/sources/thirdparty/twkan_com`；展示名称：台灣小說網
 - 实现：[`source.py`](../../plugins/sources/thirdparty/twkan_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/twkan_com/README.md)
-- 分类：`thirdparty`；版本：`0.1.5`；作者：`Yunwei`
+- 分类：`thirdparty`；版本：`0.1.8`；作者：`Yunwei`
 - 语言：`zh-CN`；默认启用：`True`；优先级：`50`
 - 主地址：`https://twkan.com`
 - 域名：`twkan.com`
@@ -732,12 +734,14 @@
 - 浏览器：模式 `optional`；原因 `cloudflare_challenge`
 - 代理：模式 `auto`；必需 `False`
 - 限流：每主机并发 `3`；最小间隔 `1000` ms
-- 搜索提供器：`providerOrder`=`bing_html`、`google_html`；`targetDomain`=`twkan.com`；`querySitePath`=`/book`；`urlPatterns`=`/book/\d+\.html`、`/book/\d+`、`/txt/\d+/\d+`
+- 搜索提供器：`providerOrder`=`duckduckgo_ddgs`、`bing_html`、`google_html`；`targetDomain`=`twkan.com`；`querySitePath`=`/book`；`urlPatterns`=`/book/\d+\.html`、`/book/\d+`、`/txt/\d+/\d+`
 - Access Bridge：未声明
 - 域名配置：
   - `primary`：`id`=`primary`；`baseUrl`=`https://twkan.com`；`domains`=`twkan.com`；`role`=`desktop`；`fallback`=`True`
 - 来源追溯：未声明
-- 正文净化规则：`0` 条
+- 正文净化规则：`2` 条
+  - `GOOGLE搜索TWKAN`
+  - `台湾小说网→`
 
 ## UU阅读 (`uuread_tw`)
 
@@ -761,55 +765,6 @@
 - 来源追溯：`type`=`live`；`upstreamId`=`uuread_tw`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
-## 香书小说 (`xbiqugu_la`)
-
-- 目录：`plugins/sources/thirdparty/xbiqugu_la`；展示名称：香书小说
-- 实现：[`source.py`](../../plugins/sources/thirdparty/xbiqugu_la/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/xbiqugu_la/README.md)
-- 分类：`thirdparty`；版本：`0.1.2`；作者：`Yunwei`
-- 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`https://www.xbiqugu.com`
-- 域名：`xbiqugu.com`、`xbiqugu.la`
-- 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`、`so-novel-seed`
-- 登录：模式 `none`；Cookie 域名：未声明
-- 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：未声明
-- 浏览器：模式 `none`；原因 `未声明`
-- 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1200` ms
-- 搜索提供器：未声明
-- Access Bridge：未声明
-- 域名配置：
-  - `current`：`id`=`current`；`baseUrl`=`https://www.xbiqugu.com`；`domains`=`www.xbiqugu.com`；`role`=`desktop`；`fallback`=`True`
-  - `legacy`：`id`=`legacy`；`baseUrl`=`http://www.xbiqugu.la`；`domains`=`www.xbiqugu.la`；`role`=`legacy`；`fallback`=`True`
-- 来源追溯：`type`=`so-novel`；`upstreamId`=`www_xbiqugu_la`；`upstreamFile`=`bundle/rules/main.json`；`upstreamCommit`=`bfb5fda1d6ea04ad7f30a761640e08ce2e5db0e0`
-- 正文净化规则：`3` 条
-  - `最新章节地址`
-  - `请收藏.*xbiqugu`
-  - `手机用户请浏览`
-
-## 黄易天地 (`xhytd_com`)
-
-- 目录：`plugins/sources/thirdparty/xhytd_com`；展示名称：黄易天地
-- 实现：[`source.py`](../../plugins/sources/thirdparty/xhytd_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/xhytd_com/README.md)
-- 分类：`thirdparty`；版本：`0.2.0`；作者：`Yunwei`
-- 语言：`zh-CN`；默认启用：`True`；优先级：`50`
-- 主地址：`http://wap.xhytd.com`
-- 域名：`xhytd.com`
-- 能力：`search`、`detail`、`toc`、`chapter`
-- 标签：`html`、`no-login`、`cloudflare`
-- 登录：模式 `none`；Cookie 域名：未声明
-- 内容：访问权限 `free`；来源角色 `未声明`
-- 访问策略：未声明
-- 浏览器：模式 `none`；原因 `未声明`
-- 代理：模式 `auto`；必需 `False`
-- 限流：每主机并发 `3`；最小间隔 `1200` ms
-- 搜索提供器：未声明
-- Access Bridge：未声明
-- 域名配置：未声明
-- 来源追溯：未声明
-- 正文净化规则：`0` 条
-
 ## 小说虎 (`xiaoshuohu_com`)
 
 - 目录：`plugins/sources/thirdparty/xiaoshuohu_com`；展示名称：小说虎
@@ -830,6 +785,50 @@
 - Access Bridge：未声明
 - 域名配置：未声明
 - 来源追溯：未声明
+- 正文净化规则：`0` 条
+
+## 新键盘小说网 (`xinjianpan_com`)
+
+- 目录：`plugins/sources/thirdparty/xinjianpan_com`；展示名称：新键盘小说网
+- 实现：[`source.py`](../../plugins/sources/thirdparty/xinjianpan_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/xinjianpan_com/README.md)
+- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 语言：`zh-CN`；默认启用：`True`；优先级：`40`
+- 主地址：`https://www.xinjianpan.com`
+- 域名：`www.xinjianpan.com`
+- 能力：`search`、`detail`、`toc`、`chapter`
+- 标签：`html`、`no-login`、`simplified-chinese`、`encrypted-content`、`proxy`
+- 登录：模式 `none`；Cookie 域名：未声明
+- 内容：访问权限 `free`；来源角色 `未声明`
+- 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
+- 浏览器：模式 `none`；原因 `未声明`
+- 代理：模式 `always`；必需 `True`
+- 限流：每主机并发 `1`；最小间隔 `800` ms
+- 搜索提供器：未声明
+- Access Bridge：未声明
+- 域名配置：未声明
+- 来源追溯：`type`=`live`；`upstreamId`=`xinjianpan_com`；`upstreamFile`=空；`upstreamCommit`=空
+- 正文净化规则：`0` 条
+
+## 小说路上 (`xs63b_com`)
+
+- 目录：`plugins/sources/thirdparty/xs63b_com`；展示名称：小说路上
+- 实现：[`source.py`](../../plugins/sources/thirdparty/xs63b_com/source.py)；说明：[`README.md`](../../plugins/sources/thirdparty/xs63b_com/README.md)
+- 分类：`thirdparty`；版本：`0.1.0`；作者：`Yunwei`
+- 语言：`zh-CN`；默认启用：`True`；优先级：`40`
+- 主地址：`https://m.xs63e.com`
+- 域名：`m.xs63e.com`、`m.xs63b.com`
+- 能力：`search`、`detail`、`toc`、`chapter`
+- 标签：`html`、`no-login`、`simplified-chinese`、`paginated-content`
+- 登录：模式 `none`；Cookie 域名：未声明
+- 内容：访问权限 `free`；来源角色 `未声明`
+- 访问策略：`search`=`http`；`detail`=`http`；`toc`=`http`；`chapter`=`http`
+- 浏览器：模式 `none`；原因 `未声明`
+- 代理：模式 `auto`；必需 `False`
+- 限流：每主机并发 `1`；最小间隔 `800` ms
+- 搜索提供器：未声明
+- Access Bridge：未声明
+- 域名配置：未声明
+- 来源追溯：`type`=`live`；`upstreamId`=`xs63b_com`；`upstreamFile`=空；`upstreamCommit`=空
 - 正文净化规则：`0` 条
 
 ## 夜伴书屋 (`yeban360_com`)

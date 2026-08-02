@@ -385,13 +385,6 @@ async def test_cancel_search_job_stops_pending_sources(monkeypatch):
     assert "cancelled" in [event["type"] for event in job.events]
 
 
-@pytest.mark.skip(
-    reason=(
-        "catalog.stream_search 使用的 ProxyConfig 与当前 AppConfig.proxy 字段不匹配 "
-        "（allow_auto_retry 参数不存在），属于生产代码非 API 返回字段问题，"
-        "无法仅通过测试文件在当前架构下修复。"
-    )
-)
 def test_search_stream():
     response = client.get("/api/console/search/stream?keyword=test&limit=2")
     assert response.status_code == 200

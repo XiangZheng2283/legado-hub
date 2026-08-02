@@ -928,17 +928,25 @@ def test_is_official_source_returns_true_for_official(tmp_path, monkeypatch):
     """Source marked as official → True."""
     db_path = _setup_db(tmp_path, ai_enabled=False)
     processor = AggregateProcessor(db_path)
+    load_calls = 0
 
     class FakePlugin:
         def __init__(self, official: bool):
             self.metadata = type("M", (), {"is_official_source": lambda self: official})()
 
+    def load_plugins(_self):
+        nonlocal load_calls
+        load_calls += 1
+        return {"qidian_com": FakePlugin(True), "example_com": FakePlugin(False)}
+
     monkeypatch.setattr(
         "app.source_plugins.loader.PluginLoader.load_all",
-        lambda self: {"qidian_com": FakePlugin(True), "example_com": FakePlugin(False)},
+        load_plugins,
     )
     assert processor._is_official_source("qidian_com") is True
     assert processor._is_official_source("example_com") is False
+    assert processor._is_official_source("missing_com") is False
+    assert load_calls == 1
 
 
 # ── TOC cache ────────────────────────────────────────────────────────────────
@@ -1893,6 +1901,99 @@ def test_local_rebuild_reselects_candidate_from_local_snapshots(tmp_path, monkey
     assert "候补源完整正文" in row["content"]
 
 
+def test_local_rebuild_downgrades_stale_candidate_to_official_preview(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:local_rebuild_preview"
+    _insert_book(db_path, book_id)
+    chapter_id = _insert_chapter(db_path, book_id, status="fallback")
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="official_src",
+        source_book_id="official_src:1",
+        source_chapter_id="official_src:ch1",
+        title="第1章",
+        raw_content="官方预览正文。" * 20,
+        classification="preview",
+    )
+    processor._write_chapter_result(
+        chapter_id=chapter_id,
+        aggregate_book_id=book_id,
+        title="第1章",
+        chapter_index=1,
+        status="fallback",
+        content="旧候补全文。" * 60,
+        alignment_json={"selectedContentSource": "candidate", "alignmentPassed": True},
+        fallback_source_id="removed_candidate",
+    )
+
+    result = processor.rebuild_book_from_snapshots(book_id)
+
+    assert result["invalidatedChapters"] == 0
+    row = _get_chapter_row(db_path, chapter_id)
+    assert row["previewOnly"] is True
+    assert row["fallbackSourceId"] == "official_src"
+    assert row["alignment"]["selectedContentSource"] == "preview_fallback"
+    assert row["alignment"]["alignmentReason"] == "official_preview_saved"
+    assert "官方预览正文" in row["content"]
+    assert "旧候补全文" not in row["content"]
+
+
+def test_local_rebuild_withdraws_unanchored_stale_candidate(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:local_rebuild_unanchored"
+    payload = {
+        "name": "测试书",
+        "author": "作者",
+        "primarySourceId": "official_src",
+        "sources": [
+            {"sourceId": "official_src", "bookId": "official_src:1"},
+            {"sourceId": "candidate_src", "bookId": "candidate_src:1"},
+        ],
+    }
+    _insert_book(db_path, book_id, aggregate_payload=payload)
+    chapter_id = _insert_chapter(db_path, book_id, status="fallback")
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    processor._save_source_snapshot(
+        aggregate_book_id=book_id,
+        chapter_index=1,
+        source_id="candidate_src",
+        source_book_id="candidate_src:1",
+        source_chapter_id="candidate_src:ch1",
+        title="第1章",
+        raw_content="没有官方锚点的旧候补全文。" * 40,
+        classification="captured",
+    )
+    processor._write_chapter_result(
+        chapter_id=chapter_id,
+        aggregate_book_id=book_id,
+        title="第1章",
+        chapter_index=1,
+        status="fallback",
+        content="没有官方锚点的旧候补全文。" * 40,
+        alignment_json={"selectedContentSource": "candidate", "alignmentPassed": False},
+        fallback_source_id="candidate_src",
+    )
+
+    result = processor.rebuild_book_from_snapshots(book_id)
+
+    assert result["invalidatedChapters"] == 1
+    row = _get_chapter_row(db_path, chapter_id)
+    assert row["status"] == "error"
+    assert row["contentFilePath"] == ""
+    assert row["fallbackSourceId"] == ""
+    assert row["lastErrorCode"] == "rebuild_missing_official_anchor"
+    assert row["alignment"]["selectedContentSource"] == "none"
+    chapter_index = json.loads(
+        (db_path.parent / "library" / "测试书_作者" / "chapter_index.json").read_text(encoding="utf-8")
+    )
+    assert chapter_index["chapters"][0]["status"] == "failed"
+    assert chapter_index["chapters"][0]["file"] is None
+
+
 def test_official_snapshot_records_content_classification(tmp_path, monkeypatch):
     db_path = _setup_db(tmp_path, ai_enabled=False)
     book_id = "book:official_snapshot_classification"
@@ -1940,6 +2041,143 @@ def test_candidate_consensus_rejects_out_of_order_body(tmp_path):
 
     assert selected and selected["source_id"] == "normal_a"
     assert next(item for item in consensus if item["sourceId"] == "scrambled")["supportCount"] == 0
+
+
+def _sentence_order_bodies():
+    sentences = [
+        f"第{index}道工序完成后，记录员把编号{index}写进当天的生产日志。"
+        for index in range(1, 25)
+    ]
+    ordered = "".join(sentences)
+    disordered = "".join(
+        sentences[:4] + sentences[12:18] + sentences[4:12] + sentences[18:]
+    )
+    return sentences, ordered, disordered
+
+
+def test_sentence_order_consensus_rejects_only_supported_outlier(tmp_path, monkeypatch):
+    import app.services.aggregate_alignment as alignment
+
+    _sentences, ordered, disordered = _sentence_order_bodies()
+    monkeypatch.setattr(alignment, "cross_source_content_similarity", lambda left, right: 0.99)
+    candidates = [
+        {"source_id": "scrambled", "content": disordered, "alignment_json": {}},
+        {"source_id": "normal_a", "content": ordered, "alignment_json": {}},
+        {"source_id": "normal_b", "content": ordered, "alignment_json": {}},
+    ]
+
+    processor = AggregateProcessor(db_path=tmp_path / "test.db")
+    selected, consensus = processor._select_consistent_candidate(candidates)
+
+    assert selected and selected["source_id"] == "normal_a"
+    rejected = next(item for item in consensus if item["sourceId"] == "scrambled")
+    assert rejected["sentenceOrderStatus"] == "rejected_order_mismatch"
+    assert rejected["sentenceOrder"]["referenceSourceIds"] == ["normal_a", "normal_b"]
+    assert candidates[0]["alignment_json"]["sentenceOrder"]["rejected"] is True
+    assert processor._has_stable_candidate_consensus(
+        consensus, candidate_count=3, require_unanimous=True
+    ) is True
+
+
+def test_sentence_order_consensus_does_not_assign_blame_with_two_sources(tmp_path, monkeypatch):
+    import app.services.aggregate_alignment as alignment
+
+    _sentences, ordered, disordered = _sentence_order_bodies()
+    monkeypatch.setattr(alignment, "cross_source_content_similarity", lambda left, right: 0.99)
+    candidates = [
+        {"source_id": "scrambled", "content": disordered, "alignment_json": {}},
+        {"source_id": "normal", "content": ordered, "alignment_json": {}},
+    ]
+
+    _selected, consensus = AggregateProcessor(
+        db_path=tmp_path / "test.db"
+    )._select_consistent_candidate(candidates, allow_degraded=True)
+
+    assert all(item["sentenceOrderStatus"] != "rejected_order_mismatch" for item in consensus)
+    assert all(
+        not candidate["alignment_json"]["sentenceOrder"]["rejected"]
+        for candidate in candidates
+    )
+
+
+def test_sentence_order_consensus_tolerates_insertions_traditional_and_line_wraps(tmp_path):
+    from app.services.text_convert import to_traditional
+
+    sentences, ordered, _disordered = _sentence_order_bodies()
+    inserted = "".join(sentences[:8] + ["本页内容由镜像站点整理后提供。"] + sentences[8:])
+    traditional = str(to_traditional(ordered))
+    wrapped_traditional = "\n".join(
+        traditional[index : index + 17]
+        for index in range(0, len(traditional), 17)
+    )
+    candidates = [
+        {"source_id": "inserted", "content": inserted, "alignment_json": {}},
+        {"source_id": "clean", "content": ordered, "alignment_json": {}},
+        {"source_id": "traditional", "content": wrapped_traditional, "alignment_json": {}},
+    ]
+
+    AggregateProcessor(db_path=tmp_path / "test.db")._select_consistent_candidate(candidates)
+
+    assert all(
+        not candidate["alignment_json"]["sentenceOrder"]["rejected"]
+        for candidate in candidates
+    )
+    assert candidates[0]["alignment_json"]["sentenceOrder"]["status"] == "order_consistent"
+
+
+def test_local_snapshot_rebuild_rejects_sentence_order_outlier(tmp_path, monkeypatch):
+    sentences, ordered, disordered = _sentence_order_bodies()
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    book_id = "book:sentence_order_rebuild"
+    payload = {
+        "name": "测试书",
+        "author": "作者",
+        "primarySourceId": "official_src",
+        "sources": [
+            {"sourceId": "official_src", "bookId": "official_src:1"},
+            {"sourceId": "scrambled", "bookId": "scrambled:1"},
+            {"sourceId": "normal_a", "bookId": "normal_a:1"},
+            {"sourceId": "normal_b", "bookId": "normal_b:1"},
+        ],
+    }
+    _insert_book(db_path, book_id, aggregate_payload=payload)
+    chapter_id = _insert_chapter(db_path, book_id, status="fallback")
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda sid: sid == "official_src")
+    for source_id, content, classification in (
+        ("official_src", "".join(sentences[:4]), "preview"),
+        ("scrambled", disordered, "captured"),
+        ("normal_a", ordered, "captured"),
+        ("normal_b", ordered, "captured"),
+    ):
+        processor._save_source_snapshot(
+            aggregate_book_id=book_id,
+            chapter_index=1,
+            source_id=source_id,
+            source_book_id=f"{source_id}:1",
+            source_chapter_id=f"{source_id}:ch1",
+            title="第1章",
+            raw_content=content,
+            classification=classification,
+        )
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE aggregate_chapter_tasks SET preview_only = 1 WHERE chapter_id = ?",
+            (chapter_id,),
+        )
+        conn.commit()
+
+    result = processor.rebuild_book_from_snapshots(book_id)
+
+    assert result["networkAccessed"] is False
+    row = _get_chapter_row(db_path, chapter_id)
+    assert row["fallbackSourceId"] == "normal_a"
+    rejected = next(
+        item
+        for item in row["alignment"]["crossSourceConsensus"]
+        if item["sourceId"] == "scrambled"
+    )
+    assert rejected["sentenceOrderStatus"] == "rejected_order_mismatch"
 
 
 def test_candidate_consensus_prefers_fewer_direct_paragraph_gaps(tmp_path, monkeypatch):

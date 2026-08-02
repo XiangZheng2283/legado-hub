@@ -8,15 +8,37 @@ import re
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
-from app.source_plugins.search_enrichment import enrich_search_items_from_detail
+from app.source_plugins.challenges import looks_like_browser_challenge, looks_like_cloudflare_challenge
+from app.source_plugins.errors import BrowserRequired
 
 
 class Source:
     id = "96dushu_com"
     name = "96读书"
     contract_version = "1.0"
-    last_modified = "2026-06-10"
+    last_modified = "2026-07-31"
     base_url = "https://www.96dushu.com"
+    headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Referer": "https://www.96dushu.com/",
+        "Upgrade-Insecure-Requests": "1",
+    }
+
+    async def _fetch(self, ctx, url: str) -> str:
+        try:
+            return await ctx.access.stealth.fetch_text(url, headers=self.headers)
+        except BrowserRequired as original_error:
+            html = await ctx.access.browser.fetch_text(
+                url,
+                headers=self.headers,
+                stage="page_fallback",
+                wait_ms=5000,
+                timeout_ms=45000,
+            )
+            if looks_like_cloudflare_challenge(html) or looks_like_browser_challenge(html):
+                raise original_error
+            return html
 
     async def search(self, ctx, keyword: str, page: int):
         if page > 1:
@@ -25,7 +47,7 @@ class Source:
             keyword,
             target_domain="www.96dushu.com",
             url_patterns=[r"/book/\d+/"],
-            provider_order=["bing_html", "google_html"],
+            provider_order=["duckduckgo_ddgs", "bing_html", "google_html"],
             query_site_path="/book",
             timeout=15,
         )
@@ -36,9 +58,10 @@ class Source:
             if not book_url or book_url in seen_urls:
                 continue
             seen_urls.add(book_url)
+            hit_title = ctx.clean_text(hit.title or "")
             items.append({
                 "sourceId": self.id,
-                "name": re.split(r"[-_|,，:：]", hit.title or "", maxsplit=1)[0].strip() or keyword,
+                "name": keyword if keyword and keyword in hit_title else re.split(r"[-_|,，:：]", hit_title, maxsplit=1)[0].strip() or keyword,
                 "author": "",
                 "bookUrl": book_url,
                 "coverUrl": "",
@@ -52,10 +75,10 @@ class Source:
                     "searchUrl": hit.url,
                 },
             })
-        return await enrich_search_items_from_detail(self, ctx, items)
+        return items
 
     async def detail(self, ctx, book_url: str):
-        html = await ctx.access.http.fetch_text(book_url)
+        html = await self._fetch(ctx, book_url)
         name = ctx.text(html, ".novel_info_main > div > h1") or ctx.text(html, "h1") or ""
         author = ctx.text(html, ".novel_info_main > div > p:nth-child(2) > a")
         intro = ctx.text(html, ".intro") or ""
@@ -80,7 +103,7 @@ class Source:
     async def toc(self, ctx, toc_url: str):
         chapters = []
         seen = set()
-        html = await ctx.access.http.fetch_text(toc_url)
+        html = await self._fetch(ctx, toc_url)
         links = ctx.select(html, "#chapterList > li > a")
         for a in links:
             href = a.get("href", "")
@@ -151,7 +174,7 @@ class Source:
         title = ""
         original_stem = self._chapter_stem(chapter_url)
         while current_url and len(parts) < 10:
-            html = await ctx.access.http.fetch_text(current_url)
+            html = await self._fetch(ctx, current_url)
             if not title:
                 title = ctx.text(html, "#mlfy_main_text > h1") or ctx.text(html, "h1")
             content_html = ctx.html(html, "#content") or ctx.html(html, ".content")

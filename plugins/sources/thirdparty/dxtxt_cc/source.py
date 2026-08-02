@@ -10,6 +10,10 @@ from bs4 import BeautifulSoup
 from app.source_plugins.search_enrichment import enrich_search_items_from_detail
 
 MAX_CHAPTER_PAGES = 12
+DXTXT_MARKER_RE = re.compile(
+    r"[（(]\s*[ｄdＤD][ｘxＸX][ｔtＴT][ｘxＸX][ｔtＴT]\s*[)）]"
+    r"\s*[•·・.]?\s*[（(]\s*[ｃcＣC][ｃcＣC]\s*[)）]"
+)
 
 
 class Source:
@@ -18,7 +22,7 @@ class Source:
     id = "dxtxt_cc"
     name = "独行小说"
     contract_version = "1.0"
-    last_modified = "2026-07-27"
+    last_modified = "2026-07-31"
     base_url = "http://www.dxtxt.cc"
 
     async def _fetch(self, ctx, url: str, **kwargs) -> str:
@@ -237,12 +241,65 @@ class Source:
             tag.decompose()
         for br in container.find_all("br"):
             br.replace_with("\n")
-        paragraphs = [ctx.clean_text(p.get_text(" ", strip=True)) for p in container.find_all("p")]
+        paragraphs = [
+            self._strip_injected_watermarks(ctx.clean_text(p.get_text(" ", strip=True)))
+            for p in container.find_all("p")
+        ]
         paragraphs = [p for p in paragraphs if p and not self._is_noise(p)]
         if not paragraphs:
             text = ctx.clean_text(container.get_text("\n", strip=True))
-            paragraphs = [line for line in text.splitlines() if line and not self._is_noise(line)]
+            paragraphs = [
+                cleaned
+                for line in text.splitlines()
+                if (cleaned := self._strip_injected_watermarks(line))
+                and not self._is_noise(cleaned)
+            ]
         return "\n\n".join(paragraphs)
+
+    def _strip_injected_watermarks(self, text: str) -> str:
+        """Remove bounded dxtxt injections without dropping their host sentence."""
+        for _ in range(20):
+            phrase_index = text.find("看最新章节")
+            if phrase_index < 0:
+                break
+            join_index = text.rfind("来", max(0, phrase_index - 140), phrase_index)
+            if join_index < 0:
+                break
+            delimiter_index = join_index + 1
+            while delimiter_index < len(text) and text[delimiter_index].isspace():
+                delimiter_index += 1
+            if delimiter_index >= len(text):
+                break
+            delimiter = text[delimiter_index]
+            start = text.find(delimiter, max(0, join_index - 260), join_index)
+            complete_index = text.find(
+                "完整章节", phrase_index, min(len(text), phrase_index + 100)
+            )
+            if (
+                start < 0
+                or complete_index < 0
+                or text.count(
+                    delimiter,
+                    start,
+                    complete_index + len("完整章节"),
+                )
+                < 3
+            ):
+                break
+            trailing_marker = DXTXT_MARKER_RE.search(
+                text,
+                phrase_index,
+                min(len(text), phrase_index + 180),
+            )
+            end = (
+                trailing_marker.end()
+                if trailing_marker
+                else complete_index + len("完整章节")
+            )
+            if not trailing_marker and end < len(text) and text[end] == delimiter:
+                end += 1
+            text = text[:start] + text[end:]
+        return DXTXT_MARKER_RE.sub("", text).strip()
 
     def _is_noise(self, line: str) -> bool:
         """Drop site navigation and reading-mode warnings."""

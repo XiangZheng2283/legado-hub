@@ -2023,6 +2023,38 @@ def test_library_book_manual_console_routes_exist(monkeypatch):
     assert update_res.json()["action"] == "update-check"
 
 
+def test_library_integrity_console_routes_exist(monkeypatch):
+    import app.api.console as console_api
+
+    monkeypatch.setattr(
+        console_api.auth_service,
+        "require_admin",
+        lambda _request: SimpleNamespace(user_id="admin-1", role="admin"),
+    )
+    monkeypatch.setattr(
+        console_api.library_books_service,
+        "scan_integrity",
+        lambda: {
+            "checkedAt": "2026-08-02T12:00:00+08:00",
+            "summary": {"totalBooks": 1, "healthyBooks": 1, "repairableBooks": 0, "brokenBooks": 0, "issueCount": 0},
+            "books": [],
+        },
+    )
+    monkeypatch.setattr(
+        console_api,
+        "_manual_library_integrity_repair",
+        lambda payload=None: {"ok": True, "repairedBooks": 0, "queuedBooks": 0, "payload": payload or {}},
+    )
+
+    scan_res = client.get("/api/console/library-integrity")
+    repair_res = client.post("/api/console/library-integrity/repair", json={"bookIds": ["book-1"]})
+
+    assert scan_res.status_code == 200
+    assert scan_res.json()["summary"]["healthyBooks"] == 1
+    assert repair_res.status_code == 200
+    assert repair_res.json()["payload"] == {"bookIds": ["book-1"]}
+
+
 @pytest.mark.asyncio
 async def test_manual_library_book_update_check_queues_without_waiting(monkeypatch):
     import app.api.console as console_api

@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: ixdzs8_com
 name: 爱下电子书
 author: Yunwei
-version: 0.1.0
+version: 0.1.1
 priority: 20
 type: source
 domains:

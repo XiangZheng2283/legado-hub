@@ -1,0 +1,637 @@
+﻿<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes"><!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <meta name="keywords" content="耽美-言情小说分享-爱书网aishu999">
+  <meta name="description" content="耽美-言情小说分享-爱书网aishu999">
+  <!-- Mobile support -->
+  <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- 本地资源 -->
+  <link href="assets/libs/font-awesome.min.css" rel="stylesheet">
+  <link href="assets/libs/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/libs/bootstrap-material-design.min.css" rel="stylesheet">
+  <link href="assets/libs/ripples.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="assets/libs/APlayer.min.css">
+    <link href="assets/css/ckplayer.css" rel="stylesheet">
+    <link href="assets/css/style.css?v=2025" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="assets/libs/html5shiv.min.js"></script>
+    <script src="assets/libs/respond.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="assets/libs/jquery.min.js"></script>
+
+  <style>
+    /* 桌面端品牌链接字体 */
+    .navbar-brand {
+      font-size: 18px !important;
+    }
+    /* 移动端：字体增大 + 水平滚动 + 按钮移至右侧 + 左侧边距10px */
+    @media (max-width: 768px) {
+      .navbar-header {
+        position: relative;           /* 为绝对定位按钮提供参照 */
+        overflow-x: auto;             /* 品牌链接区域可横向滚动 */
+        white-space: nowrap;
+        padding-right: 60px;          /* 为右侧按钮预留空间，避免遮挡文字 */
+        padding-left: 10px;           /* 左侧边距10px */
+        display: block;               /* 覆盖原有flex，允许滚动 */
+      }
+      .navbar-header .navbar-brand {
+        float: none;
+        display: inline-block;
+        padding-left: 10px;
+        padding-right: 10px;
+        font-size: 18px !important;
+        white-space: nowrap;
+      }
+      /* 折叠按钮固定在最右侧，距右边缘10px */
+      .navbar-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0;
+        float: none;
+        z-index: 10;
+      }
+      /* HOT 标签样式调整 */
+      .navbar-header .navbar-brand .hot-tag {
+        position: relative;
+        display: inline-block;
+        background: linear-gradient(135deg, #ff4d4d, #cc0000);
+        color: #fff;
+        font-weight: bold;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 15px;
+        margin-left: 6px;
+        margin-top: -2px;
+        line-height: 1.4;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        letter-spacing: 0.5px;
+        vertical-align: middle;
+      }
+    }
+    /* 超小屏手机：适当调整字体和间距 */
+    @media (max-width: 480px) {
+      .navbar-header .navbar-brand {
+        padding-left: 8px;
+        padding-right: 8px;
+        font-size: 17px !important;
+      }
+      .navbar-header .navbar-brand .hot-tag {
+        font-size: 10px;
+        padding: 1px 5px;
+        margin-left: 4px;
+      }
+    }
+    /* 桌面端 HOT 标签样式 */
+    .hot-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+      color: #fff;
+      font-weight: bold;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 15px;
+      margin-left: 6px;
+      line-height: 1.4;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      letter-spacing: 0.5px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">耽美</a>
+          <a class="navbar-brand" href="https://www.asw7777.com/">言情</a>
+		   <a class="navbar-brand" href="https://www.asw7777.com/searchns.php?kw=[%E7%94%B7%E7%94%9F]">男生</a>
+          <a class="navbar-brand" href="/upload.php">上传</a>
+          <a class="navbar-brand" href="https://www.aswtxt.com/">
+            爱书txt网
+           <span style="display: inline-block; background: linear-gradient(135deg, #ff4d4d, #cc0000); color: #fff; font-weight: bold; font-size: 5px; padding: 2px 4px; border-radius: 15px; position:absolute;margin-left:-3px;margin-top:-7px; line-height: 1.5; box-shadow: 0 1px 4px rgba(0,0,0,0.2); letter-spacing: 0.5px;">HOT</span>
+          </a>
+        </div>
+
+        <div class="navbar-collapse collapse navbar-responsive-collapse">
+          <ul class="nav navbar-nav">
+            <li class=""><a href="/">文件列表</a></li>
+            <li class=""><a href="/upload.php"> 上传文件</a></li>
+                        <li class="active"><a href="">文件查看</a></li>
+                        <li class="active"><a href="/sm.htm">问题反馈</a></li>
+            <li class="active"><a href="/gonggao.php?name=%E5%85%AC%E5%91%8A%E4%B8%AD%E5%BF%83&file=gonggao.txt">网站公告</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class=""><a href="/my.php?m=mine"> 我的文件</a></li>
+                      </ul>
+      </div>
+    </div>
+</div>
+
+<style>
+/* ========== 全局样式 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: #f5f7fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.4;
+    color: #1e2a3e;
+    padding: 0;
+}
+.container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 12px;
+}
+/* 模拟 FontAwesome 图标 */
+.fa {
+    display: inline-block;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    margin-right: 6px;
+}
+.fa-picture-o:before { content: "🖼️ "; }
+.fa-music:before { content: "🎵 "; }
+.fa-video-camera:before { content: "🎬 "; }
+.fa-file:before { content: "📄 "; }
+.fa-download:before { content: "⬇️ "; }
+.fa-eye:before { content: "👁️ "; }
+.fa-close:before { content: "✖️ "; }
+.fa-info-circle:before { content: "ℹ️ "; }
+.fa-cog:before { content: "⚙️ "; }
+.fa-qrcode:before { content: "📱 "; }
+.fa-exclamation-circle:before { content: "⚠️ "; }
+/* 按钮样式 - 强制白色文字 */
+.btn, .btn-primary, .btn-info {
+    color: #ffffff !important;
+}
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin: 4px;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary {
+    background: #3FB30E;
+}
+.btn-primary:hover {
+    background: #2e8b07;
+}
+.btn-info {
+    background: #17a2b8;
+}
+.btn-info:hover {
+    background: #138496;
+}
+.btn-raised {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+.btn-lg {
+    padding: 10px 20px;
+    font-size: 16px;
+}
+/* 面板卡片 */
+.panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.panel-primary {
+    border: 1px solid #e2e8f0;
+}
+.panel-heading {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.panel-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+.panel-body {
+    padding: 16px;
+}
+/* 文件详情区域 - 卡片化 */
+.info-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 10px 0;
+}
+.info-item {
+    flex: 1 1 200px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+}
+.info-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 8px;
+}
+.info-value {
+    color: #1e2a3e;
+}
+/* 星级样式 */
+.star-rating {
+    color: #f5b042;
+    letter-spacing: 1px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.star-rating.unknown {
+    color: #94a3b8;
+}
+/* 按钮组 */
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+/* 提示条 */
+.notice-tip {
+    font-size: 13px;
+    color: #e74c3c;
+    text-align: center;
+    margin: 10px 0;
+    font-weight: 500;
+}
+/* 二维码 */
+.qrcode {
+    text-align: center;
+    padding: 10px;
+}
+.qrcode img {
+    max-width: 100%;
+    height: auto;
+}
+/* 举报醒目提示 */
+.report-tip {
+    display: inline-block;
+    background: #ff4757;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 20px;
+    margin-left: 12px;
+    animation: blink 1s infinite;
+    box-shadow: 0 2px 8px rgba(255,71,87,0.4);
+}
+@keyframes blink {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); background: #e84118; }
+    100% { opacity: 1; transform: scale(1); }
+}
+/* 新增：标签嵌入卡片美化 + 移动端紧凑 */
+.tag-embed-wrapper {
+    margin: 8px 0 4px;
+}
+.tag-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+}
+.tag-card iframe {
+    width: 100%;
+    border: none;
+    display: block;
+    background: transparent;
+    min-height: 125px;
+    height: auto;
+}
+/* 响应式 */
+@media (max-width: 640px) {
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    .container {
+        padding: 0 5px !important;
+    }
+    .btn-lg {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    .info-item {
+        flex: 1 1 100%;
+    }
+    .panel-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .tag-embed-wrapper {
+        margin: 4px 0 0;
+    }
+    .tag-card {
+        border-radius: 16px;
+    }
+}
+</style>
+
+<div class="container">
+    <div class="row">
+
+<div class="col-sm-9">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <div style="display: flex; align-items: center;">
+                    <button id="reportButton" style="background: none; border: none; color: #FFFFFF; cursor: pointer;">
+                        <i class="fa fa-close"></i> 举报该文件(高H文)
+                                        </button>
+                </div>
+            </h4>
+            <div class="hide">
+                <button onclick="delete_confirm()" style="background: none; border: none; color: #FFFFFF; cursor: pointer;">
+                    <i class="fa fa-close"></i> 立即删除文件
+                </button>
+            </div>
+        </div>
+        <div class="panel-body" align="center">
+<div>
+        <div class="tag-embed-wrapper">
+            <div class="tag-card">
+                <iframe src="https://dm.aishu456.com/filepl.php?name=%5B%E5%AE%8C%E7%BB%93%2B%E7%95%AA%E5%A4%963%5D%E3%80%8A%E5%9B%9E%E9%97%A8%E3%80%8B%E4%BD%9C%E8%80%85%EF%BC%9A%E9%9F%B3%E9%80%9F%E9%98%BF%E4%BC%8F%E5%85%94.txt&hash=file%2F41f221668f04abac7cbe410f0a6260ad.txt" scrolling="no" frameborder="0" id="tagIframe" onload="resizeIframe(this)"></iframe>
+            </div>
+        </div>
+        <title>[完结+番外3]《回门》作者：音速阿伏兔.txt下载-爱书网-小说上传分享系统</title>
+        <div class="elsetext">
+            <div class="elsetext"><p><span style="FONT-SIZE: 20px; COLOR: #ff0000">[完结+番外3]《回门》作者：音速阿伏兔.txt</span></p></div>
+            <div class="btn-group">
+                <a href="https://dm.downshu123.com/down.php/41f221668f04abac7cbe410f0a6260ad.txt" class="btn btn-primary btn-lg"><i class="fa fa-download"></i>下载(1)首选</a>
+                <a id="myLink3" href="https://dm.downshu321.shop/read.php?name=[完结+番外3]《回门》作者：音速阿伏兔.txt&file=file/41f221668f04abac7cbe410f0a6260ad.txt" class="btn btn-info btn-lg"><i class="fa fa-eye"></i>阅读(1)首选</a>
+                <script>
+        var link = document.getElementById("myLink3");
+        var originalUrl = link.href;
+        var shortenedUrl = originalUrl.slice(0, -4);
+        link.href = shortenedUrl;
+        console.log("Original URL: " + originalUrl);
+        console.log("Shortened URL: " + shortenedUrl);
+        </script>
+            </div>
+            <div class="btn-group">
+                <a href="https://dm.downshu321.com/down.php/41f221668f04abac7cbe410f0a6260ad.txt" class="btn btn-primary btn-lg"><i class="fa fa-download"></i>下载(2)备用</a>
+                <a id="myLink2" href="https://w2.aishu9996.com/read.php?name=[完结+番外3]《回门》作者：音速阿伏兔.txt&file=file/41f221668f04abac7cbe410f0a6260ad.txt" class="btn btn-info btn-lg"><i class="fa fa-eye"></i>阅读(2)备用</a>
+                 <script>
+        var link = document.getElementById("myLink2");
+        var originalUrl = link.href;
+        var shortenedUrl = originalUrl.slice(0, -4);
+        link.href = shortenedUrl;
+        console.log("Original URL: " + originalUrl);
+        console.log("Shortened URL: " + shortenedUrl);
+        </script>
+            </div>
+            <div class="btn-group">
+                <a href="http://w.aishu9996.com/down.php/41f221668f04abac7cbe410f0a6260ad.txt" class="btn btn-primary btn-lg"><i class="fa fa-download"></i>下载(3)备用</a>
+                <a href="https://w.aishu995.com/down.php/41f221668f04abac7cbe410f0a6260ad.txt" class="btn btn-primary btn-lg"><i class="fa fa-download"></i>下载(4)备用</a>
+            </div>
+        </div>        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body" style="padding: 10px;">
+            <ul class="nav nav-tabs" style="margin-bottom: 10px; display: flex; gap: 10px; border-bottom: 1px solid #dee2e6;">
+                <li class="active"><a href="#info" data-toggle="tab"><i class="fa fa-info-circle"></i> 文件详情</a></li>
+                <li class="hide"><a href="#manager" data-toggle="tab"><i class="fa fa-cog"></i> 管理</a></li>
+                <li class="hide">&nbsp;&nbsp;<button onclick="delete_confirm()" style="background: none; border: none; color: #ff0000;"><i class="fa fa-close"></i> 删除文件</button></li>
+            </ul>
+            <div class="info-grid">
+                <div class="info-item"><span class="info-label">点击热度：</span><span class="info-value"><span class="star-rating" title="热度等级：2星">★★☆☆☆</span></span></div>
+                <div class="info-item"><span class="info-label">文件大小：</span><span class="info-value">317.52 KB (325139 字节)</span></div>
+                <div class="info-item"><span class="info-label">上传者IP：</span><span class="info-value">220.197.161.*</span></div>
+                <div class="info-item"><span class="info-label">上传时间：</span><span class="info-value">2026-07-31 13:45:23</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="manager">
+        <div class="row" align="center">
+            <div class="col-md-12">
+                <input type="hidden" id="hash" name="hash" value="41f221668f04abac7cbe410f0a6260ad">
+                <input type="hidden" id="csrf_token" name="csrf_token" value="01092136cf0637abee98245a5e7d5289">
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body" style="padding: 10px;">
+            <h3 class="panel-title"><i class="fa fa-exclamation-circle"></i> 提示</h3>
+        </div>
+        <div class="panel-body">
+            网站所有文件内容均由用户自行上传分享，严禁上传H文，低俗等不良小说，本站严格遵守国家相关法律法规，尊重著作权、版权等第三方权利，如果当前文件侵犯了您的相关权利，请邮件反馈至<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="442a23313d212a302d212a2c252d767c747d7c7c042329252d286a272b29">[email&#160;protected]</a>，我们将及时处理。        </div>
+    </div>
+</div>
+
+<div class="col-sm-3">
+    <div class="panel panel-default hidden-xs">
+        <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-qrcode"></i> 当前页面二维码</h3>
+        </div>
+        <div class="panel-body text-center qrcode">
+            <img alt="二维码" src="https://qr.aishu456.com/api/qrcode.png.php?auth=https%3A%2F%2Fwww.asw227.com%2Ffile.php%3Fhash%3D41f221668f04abac7cbe410f0a6260ad" width="132" height="132" />
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script language="javascript" src="/xtb.js?ver=202573594995588855599105105555"></script>
+<footer class="footer">
+      <div class="container">
+      <p class="text-muted"> <center> Copyright &copy; 2026<br> <a href="/">爱书网txt小说文件分享</a> <!-- Histats.com  START  (aync)-->
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,4930880,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?4930880&101" alt="" border="0"></a></noscript>
+<!-- Histats.com  END  --> <center> </p>
+      </div>
+    </footer>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/material.min.js"></script>
+<script src="/js/ripples.min.js"></script>
+<script>
+  $.material.init();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"30516da37df445319ccdb6c61b90810f","r":1}' crossorigin="anonymous"></script>
+</body>
+</html><script src="/js/layer.js"></script>
+<script src="/js/clipboard.min.js"></script>
+<script>
+// iframe 自适应高度
+function resizeIframe(obj) {
+    try {
+        var height = obj.contentWindow.document.documentElement.scrollHeight;
+        if (height && height > 0) {
+            obj.style.height = (height + 15) + "px";
+        } else {
+            obj.style.height = "120px";
+        }
+    } catch(e) {
+        console.warn("iframe自适应失败", e);
+        obj.style.height = "120px";
+    }
+}
+window.addEventListener("resize", function() {
+    var iframe = document.getElementById("tagIframe");
+    if(iframe && iframe.contentWindow) {
+        try {
+            var height = iframe.contentWindow.document.documentElement.scrollHeight;
+            iframe.style.height = (height + 15) + "px";
+        } catch(e) {}
+    }
+});
+
+function delete_confirm(){
+  var hash = $("#hash").val();
+  var csrf_token = $("#csrf_token").val();
+
+  $.ajax({
+    type : 'POST',
+    url : 'ajax.php?act=deleteFile',
+    data : {hash:hash, csrf_token:csrf_token},
+    dataType : 'json',
+    success : function(data) {
+      if(data.code == 0){
+        layer.msg('删除成功，即将跳转...', {icon:1, time:1}, function(){
+          window.location.href = "./";
+        });
+      }else{
+        layer.msg(data.msg, {icon:2, time:2500});
+      }
+    },
+    error:function(data){
+      layer.msg('无权限，只能删除自己的文件', {icon:2, time:2500});
+      return false;
+    }
+  });
+}
+
+$(document).ready(function(){
+  var clipboard = new Clipboard('.copy-btn');
+  clipboard.on('success', function (e) {
+    layer.msg('复制成功！', {icon: 1});
+  });
+  clipboard.on('error', function (e) {
+    layer.msg('复制失败，请长按链接后手动复制', {icon: 2});
+  });
+
+  // ========== 手机端举报功能 ==========
+  var reportBtn = document.getElementById('reportButton');
+  if (reportBtn) {
+    var newReportBtn = reportBtn.cloneNode(true);
+    reportBtn.parentNode.replaceChild(newReportBtn, reportBtn);
+
+    newReportBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!confirm("举报不良点确定\n分类错及其他点取消！")) {
+        return;
+      }
+
+      var csrfToken = document.getElementById('csrf_token') ? document.getElementById('csrf_token').value : '';
+      if (!csrfToken) {
+        layer.msg('页面已过期，请刷新后重试', {icon: 2, time: 2000});
+        return;
+      }
+
+      var fileHash = '41f221668f04abac7cbe410f0a6260ad';
+      var loadIndex = layer.msg('提交中...', {icon: 16, time: 0, shade: 0.3});
+
+      $.ajax({
+        type: 'POST',
+        url: 'report2.php',
+        data: {
+          hash: fileHash,
+          csrf_token: csrfToken,
+          ajax: 1
+        },
+        dataType: 'json',
+        timeout: 15000,
+        success: function(data) {
+          layer.close(loadIndex);
+          if (data.code === 0) {
+            layer.msg('您的请求已经提交，会尽快审核处理！', {icon: 1, time: 2500});
+            setTimeout(function() {
+              location.reload();
+            }, 2500);
+          } else if (data.code === 1) {
+            layer.msg(data.msg, {icon: 2, time: 2000});
+          } else if (data.code === 2) {
+            layer.msg(data.msg, {icon: 1, time: 2000}, function() {
+              setTimeout(function() {
+                window.location.href = './';
+              }, 500);
+            });
+          } else if (data.code === -2) {
+            layer.msg(data.msg, {icon: 2, time: 2000}, function() {
+              setTimeout(function() {
+                window.location.href = './';
+              }, 500);
+            });
+          } else {
+            layer.msg(data.msg || '举报失败，请稍后重试', {icon: 2, time: 2500});
+          }
+        },
+        error: function(xhr, status, error) {
+          layer.close(loadIndex);
+          console.error('举报错误:', status, error);
+          if (status === 'timeout') {
+            layer.msg('请求超时，请检查网络后重试', {icon: 2, time: 2500});
+          } else if (status === 'parsererror') {
+            layer.msg('服务器返回数据异常，请联系管理员', {icon: 2, time: 2500});
+          } else {
+            layer.msg('网络错误，请稍后重试', {icon: 2, time: 2500});
+          }
+        }
+      });
+    });
+  }
+});
+</script>
+</body>
+</html>

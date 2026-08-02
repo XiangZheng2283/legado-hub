@@ -10,6 +10,9 @@ from pathlib import Path
 from app.config import DATA_DIR, read_secret
 
 
+DEFAULT_BROWSER_IMPERSONATE = "chrome146"
+
+
 def default_browser_user_agent() -> str:
     platform_token = (
         "Windows NT 10.0; Win64; x64"
@@ -18,7 +21,7 @@ def default_browser_user_agent() -> str:
     )
     return (
         f"Mozilla/5.0 ({platform_token}) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+        "(KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
     )
 
 

@@ -2,7 +2,7 @@ contractVersion: "1.0"
 id: kks101_com
 name: 101看书网
 author: Yunwei
-version: 0.1.1
+version: 0.1.2
 type: source
 domains:
   - 101kks.com
@@ -20,8 +20,8 @@ auth:
 content:
   access: free
 proxy:
-  mode: always
-  required: true
+  mode: auto
+  required: false
 browser:
   mode: optional
   reason: cloudflare_challenge

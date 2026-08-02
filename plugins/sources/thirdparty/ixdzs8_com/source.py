@@ -12,7 +12,7 @@ class Source:
     id = "ixdzs8_com"
     name = "爱下电子书"
     contract_version = "1.0"
-    last_modified = "2026-07-29"
+    last_modified = "2026-07-31"
     base_url = "https://ixdzs8.com"
 
     def _url(self, value: str) -> str:
@@ -44,17 +44,24 @@ class Source:
             if not name or not re.search(r"/read/\d+/$", book_url):
                 continue
             image = node.select_one("img[src]")
+            status = self._text(node, ".l-p1 .end, .l-p1 .lz")
+            latest_link = node.select_one(".l-last a[href]")
+            latest_href = latest_link.get("href", "") if latest_link is not None else ""
+            chapter_match = re.search(r"/p(\d+)\.html$", latest_href)
             items.append({
                 "sourceId": self.id,
                 "name": name,
                 "author": self._text(node, ".bauthor"),
                 "bookUrl": book_url,
+                "tocUrl": book_url,
                 "coverUrl": self._url(image.get("src", "")) if image is not None else "",
                 "intro": self._text(node, ".l-p2"),
-                "kind": self._text(node, ".lz"),
+                "kind": status,
+                "bookStatus": status,
                 "lastChapter": self._text(node, ".l-chapter"),
                 "wordCount": self._text(node, ".size"),
                 "updateTime": self._text(node, ".l-time"),
+                "chapterCount": int(chapter_match.group(1)) if chapter_match else 0,
                 "rank": len(items) + 1,
             })
         exact = [item for item in items if item["name"] == keyword]
@@ -65,18 +72,24 @@ class Source:
         soup = BeautifulSoup(await ctx.access.http.fetch_text(book_url), "html.parser")
         category = self._meta(soup, "og:novel:category")
         status = self._meta(soup, "og:novel:status")
+        chapter_match = re.search(r"\d+", self._text(soup, "h2.catalog .sub-text-r"))
+        intro = self._text(soup, "#intro")
+        if not intro:
+            intro = BeautifulSoup(self._meta(soup, "og:description"), "html.parser").get_text(" ", strip=True)
         return {
             "sourceId": self.id,
             "name": self._meta(soup, "og:novel:book_name") or self._text(soup, "h1"),
             "author": self._meta(soup, "og:novel:author") or self._text(soup, "a.bauthor"),
             "bookUrl": book_url,
             "coverUrl": self._meta(soup, "og:image"),
-            "intro": ctx.clean_text(self._meta(soup, "og:description")),
+            "intro": ctx.clean_text(intro),
             "kind": " / ".join(value for value in (category, status) if value),
+            "bookStatus": status,
             "lastChapter": self._meta(soup, "og:novel:latest_chapter_name"),
-            "wordCount": "",
+            "wordCount": self._text(soup, ".nsize"),
             "updateTime": self._meta(soup, "og:novel:update_time"),
             "tocUrl": book_url,
+            "chapterCount": int(chapter_match.group(0)) if chapter_match else 0,
             "authRequired": False,
         }
 
