@@ -17,6 +17,11 @@ LINE_MATCH_WINDOW = 3
 SHORT_PARAGRAPH_LENGTH = 8
 AUDIT_SAMPLE_LIMIT = 20
 MIN_DIRECT_ANCHOR_COVERAGE = 0.75
+MIN_CONSENSUS_SOURCE_COUNT = 3
+MIN_ANCHOR_PEER_COUNT = 2
+MAX_REMOVABLE_BLOCK_PARAGRAPHS = 3
+MAX_REMOVAL_RATIO = 0.02
+
 
 def _paragraphs(content: str) -> list[tuple[int, str]]:
     """Return non-empty paragraphs with their original line indexes."""
@@ -203,15 +208,15 @@ def _anchor_bounded_unique_indexes(
     selected_source_id: str,
     support_counts: list[int],
     chapter_title: str,
-) -> set[int]:
-    """Find source-unique blocks bracketed by direct matching peer paragraphs."""
+) -> dict[int, list[str]]:
+    """Find short source-unique blocks bracketed by two matching peers."""
     reference = [_normalize_paragraph(text) for _, text in selected_paragraphs]
     title_indexes = {
         index
         for index, (_, text) in enumerate(selected_paragraphs)
         if _is_duplicate_title(text, chapter_title, index)
     }
-    removable: set[int] = set()
+    peer_direct_support: dict[str, set[int]] = {}
     for source_id, peer_content in source_bodies.items():
         if source_id == selected_source_id:
             continue
@@ -220,22 +225,33 @@ def _anchor_bounded_unique_indexes(
         comparable_count = max(1, len(reference) - len(title_indexes))
         if len(direct_supported) / comparable_count < MIN_DIRECT_ANCHOR_COVERAGE:
             continue
-        paragraph_index = 0
-        while paragraph_index < len(reference):
-            if support_counts[paragraph_index] > 1:
-                paragraph_index += 1
-                continue
-            block_start = paragraph_index
-            while paragraph_index < len(reference) and support_counts[paragraph_index] == 1:
-                paragraph_index += 1
-            block_end = paragraph_index - 1
-            if (
-                block_start > 0
-                and block_end + 1 < len(reference)
-                and block_start - 1 in direct_supported
-                and block_end + 1 in direct_supported
-            ):
-                removable.update(range(block_start, block_end + 1))
+        peer_direct_support[source_id] = direct_supported
+
+    removable: dict[int, list[str]] = {}
+    paragraph_index = 0
+    while paragraph_index < len(reference):
+        if support_counts[paragraph_index] > 1:
+            paragraph_index += 1
+            continue
+        block_start = paragraph_index
+        while paragraph_index < len(reference) and support_counts[paragraph_index] == 1:
+            paragraph_index += 1
+        block_end = paragraph_index - 1
+        if (
+            block_start == 0
+            or block_end + 1 >= len(reference)
+            or block_end - block_start + 1 > MAX_REMOVABLE_BLOCK_PARAGRAPHS
+        ):
+            continue
+        anchor_source_ids = sorted(
+            source_id
+            for source_id, direct_supported in peer_direct_support.items()
+            if block_start - 1 in direct_supported and block_end + 1 in direct_supported
+        )
+        if len(anchor_source_ids) < MIN_ANCHOR_PEER_COUNT:
+            continue
+        for index in range(block_start, block_end + 1):
+            removable[index] = anchor_source_ids
     return removable
 
 
@@ -246,7 +262,7 @@ def purify_by_line_consensus(
     selected_source_id: str,
     chapter_title: str = "",
 ) -> tuple[str, dict[str, Any]]:
-    """Remove duplicate titles and anchor-bounded source-unique insertions."""
+    """Remove short source-unique insertions proven by two aligned peers."""
     source_bodies: dict[str, str] = {}
     for candidate in candidates:
         source_id = str(candidate.get("source_id", "") or "")
@@ -258,20 +274,25 @@ def purify_by_line_consensus(
     source_count = len(source_bodies)
     majority_count = source_count // 2 + 1
     audit: dict[str, Any] = {
-        "applied": source_count >= 2,
-        "reason": "ok" if source_count >= 2 else "insufficient_sources",
+        "applied": False,
+        "reason": "pending" if source_count >= MIN_CONSENSUS_SOURCE_COUNT else "insufficient_sources",
         "sourceCount": source_count,
         "majorityCount": majority_count,
+        "minimumSourceCount": MIN_CONSENSUS_SOURCE_COUNT,
+        "minimumAnchorPeerCount": MIN_ANCHOR_PEER_COUNT,
         "windowSize": LINE_MATCH_WINDOW,
+        "maxBlockParagraphs": MAX_REMOVABLE_BLOCK_PARAGRAPHS,
+        "maxRemovalRatio": MAX_REMOVAL_RATIO,
         "originalLength": len(selected_content),
         "cleanedLength": len(selected_content),
+        "removalRatio": 0.0,
         "removedCount": 0,
         "suspiciousCount": 0,
-        "removalPolicy": "duplicate_title_and_anchor_bounded_unique",
+        "removalPolicy": "strict_three_source_anchor_bounded_unique",
         "removedLines": [],
         "suspiciousLines": [],
     }
-    if source_count < 2 or not selected_content.strip():
+    if source_count < MIN_CONSENSUS_SOURCE_COUNT or not selected_content.strip():
         return selected_content, audit
 
     selected_paragraphs = _paragraphs(selected_content)
@@ -300,24 +321,24 @@ def purify_by_line_consensus(
         zip(selected_paragraphs, support_counts)
     ):
         reason = ""
-        if _is_duplicate_title(text, chapter_title, paragraph_index):
-            reason = "duplicate_title"
-        elif (
-                paragraph_index in anchor_bounded_unique_indexes
-                and not _has_near_peer_paragraph(
+        if (
+            paragraph_index in anchor_bounded_unique_indexes
+            and not _has_near_peer_paragraph(
                 _normalize_paragraph(text), peer_paragraphs, paragraph_index
-                )
+            )
         ):
             reason = "anchor_bounded_source_unique"
         if reason:
             dropped_line_indexes.add(line_index)
-            removed.append(_audit_line(
+            removal = _audit_line(
                 paragraph_index=paragraph_index,
                 text=text,
                 support_count=direct_support_counts[paragraph_index],
                 reason=reason,
                 include_content=True,
-            ))
+            )
+            removal["anchorSourceIds"] = anchor_bounded_unique_indexes[paragraph_index]
+            removed.append(removal)
         elif support_count < majority_count:
             suspicious.append(_audit_line(
                 paragraph_index=paragraph_index,
@@ -326,11 +347,20 @@ def purify_by_line_consensus(
                 reason="minority_difference_preserved",
             ))
 
-    audit["removedCount"] = len(removed)
     audit["suspiciousCount"] = len(suspicious)
-    audit["removedLines"] = removed
     audit["suspiciousLines"] = suspicious[:AUDIT_SAMPLE_LIMIT]
     if not dropped_line_indexes:
+        audit["reason"] = "no_removable_segments"
+        return selected_content, audit
+
+    original_size = max(1, len(re.sub(r"\s+", "", selected_content)))
+    removed_size = sum(len(re.sub(r"\s+", "", item["content"])) for item in removed)
+    removal_ratio = removed_size / original_size
+    audit["removalRatio"] = round(removal_ratio, 6)
+    if removal_ratio > MAX_REMOVAL_RATIO:
+        audit["reason"] = "removal_ratio_exceeded"
+        audit["proposedRemovedCount"] = len(removed)
+        audit["proposedRemovedLines"] = removed
         return selected_content, audit
 
     lines = selected_content.replace("\r\n", "\n").replace("\r", "\n").splitlines()
@@ -338,17 +368,30 @@ def purify_by_line_consensus(
         line for line_index, line in enumerate(lines) if line_index not in dropped_line_indexes
     )
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    audit["applied"] = True
+    audit["reason"] = "ok"
+    audit["removedCount"] = len(removed)
+    audit["removedLines"] = removed
     audit["cleanedLength"] = len(cleaned)
-    if len(selected_content) > 100 and len(cleaned) < len(selected_content) * 0.5:
-        audit.update({
-            "applied": False,
-            "reason": "integrity_guard",
-            "removedCount": 0,
-            "removedLines": [],
-            "cleanedLength": len(selected_content),
-        })
-        return selected_content, audit
     return cleaned, audit
+
+
+def removed_segments_overlap_content(audit: dict[str, Any], content: str) -> bool:
+    """Return whether a proposed deletion is present in an official body or preview."""
+    normalized_content = _normalize_paragraph(content)
+    for item in audit.get("removedLines", []) or []:
+        segment = _normalize_paragraph(str(item.get("content", "") or ""))
+        if not segment:
+            continue
+        if segment in normalized_content:
+            return True
+        if len(segment) < SHORT_PARAGRAPH_LENGTH or len(segment) > len(normalized_content):
+            continue
+        for start in range(len(normalized_content) - len(segment) + 1):
+            window = normalized_content[start : start + len(segment)]
+            if _paragraph_similarity(segment, window) >= NEAR_PARAGRAPH_PRESERVATION_THRESHOLD:
+                return True
+    return False
 
 
 def diagnose_line_consensus(
@@ -367,6 +410,7 @@ def diagnose_line_consensus(
     )
     findings = [
         *list(audit.get("removedLines", []) or []),
+        *list(audit.get("proposedRemovedLines", []) or []),
         *list(audit.get("suspiciousLines", []) or []),
     ]
     audit["removalPolicy"] = "diagnostic_only"

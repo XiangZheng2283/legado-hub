@@ -3111,6 +3111,136 @@ class AggregateProcessor:
                 "contentLength": len(selected_content),
                 "fallback": bool(fallback_source_id)}
 
+    def _apply_line_consensus_purification(
+        self,
+        *,
+        selected_candidate: dict[str, Any],
+        accepted_candidates: list[dict[str, Any]],
+        consensus: list[dict[str, Any]],
+        official_preview: str,
+        official_word_count: int,
+        primary_source_id: str,
+        chapter_title: str,
+        aggregate_book_id: str = "",
+        chapter_index: int | None = None,
+    ) -> dict[str, Any]:
+        """Apply strict multi-source cleanup and roll it back if official gates regress."""
+        from app.services.aggregate_alignment import align_candidate_chapter
+        from app.services.aggregate_line_consensus import (
+            purify_by_line_consensus,
+            removed_segments_overlap_content,
+        )
+
+        selected_source_id = str(selected_candidate.get("source_id", "") or "")
+        selected_consensus = next(
+            (item for item in consensus if item.get("sourceId") == selected_source_id),
+            {},
+        )
+        supporting_source_ids = set(selected_consensus.get("supportingSourceIds", []) or [])
+        eligible_candidates = [
+            candidate
+            for candidate in accepted_candidates
+            if not bool(
+                ((candidate.get("alignment_json") or {}).get("sentenceOrder") or {}).get("rejected")
+            )
+        ]
+        if len(eligible_candidates) <= 2:
+            comparison_candidates = eligible_candidates
+        else:
+            comparison_candidates = [
+                candidate
+                for candidate in eligible_candidates
+                if candidate.get("source_id") == selected_source_id
+                or candidate.get("source_id") in supporting_source_ids
+            ]
+
+        original_content = str(selected_candidate.get("content", "") or "")
+        cleaned_content, audit = purify_by_line_consensus(
+            original_content,
+            comparison_candidates,
+            selected_source_id=selected_source_id,
+            chapter_title=chapter_title,
+        )
+        alignment_json = dict(selected_candidate.get("alignment_json") or {})
+        alignment_json["majorityDeletionAllowed"] = int(audit.get("sourceCount", 0) or 0) >= 3
+        if cleaned_content == original_content:
+            audit["revalidation"] = {
+                "attempted": False,
+                "passed": True,
+                "reason": "not_required",
+            }
+            alignment_json["lineConsensus"] = audit
+            selected_candidate["alignment_json"] = alignment_json
+            return selected_candidate
+
+        preview_gate = (
+            align_candidate_chapter(
+                official_preview=official_preview,
+                candidate_title=chapter_title,
+                candidate_content=cleaned_content,
+                expected_title=chapter_title,
+            )
+            if official_preview
+            else {"alignmentPassed": True, "alignmentReason": "not_available"}
+        )
+        word_gate = self._validate_word_count(
+            cleaned_content,
+            official_word_count,
+            enforce=True,
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+            source_id=selected_source_id,
+        )
+        original_actual = len(
+            original_content.replace("\n", "").replace(" ", "").replace("\r", "")
+        )
+        cleaned_actual = int(word_gate.get("actual", 0) or 0)
+        word_count_not_worse = not official_word_count or (
+            abs(cleaned_actual - official_word_count)
+            <= abs(original_actual - official_word_count)
+        )
+        official_preview_overlap = removed_segments_overlap_content(audit, official_preview)
+        official_anchor_trusted = self._is_official_source(primary_source_id)
+        revalidation_passed = bool(preview_gate.get("alignmentPassed")) and bool(
+            word_gate.get("passed")
+        ) and word_count_not_worse and not official_preview_overlap and bool(
+            official_anchor_trusted and official_preview and official_word_count
+        )
+        audit["revalidation"] = {
+            "attempted": True,
+            "passed": revalidation_passed,
+            "preview": preview_gate,
+            "wordCount": word_gate,
+            "wordCountDistanceBefore": (
+                abs(original_actual - official_word_count) if official_word_count else None
+            ),
+            "wordCountDistanceAfter": (
+                abs(cleaned_actual - official_word_count) if official_word_count else None
+            ),
+            "wordCountNotWorse": word_count_not_worse,
+            "officialPreviewOverlap": official_preview_overlap,
+            "officialAnchorTrusted": official_anchor_trusted,
+        }
+        if not revalidation_passed:
+            audit.update({
+                "applied": False,
+                "reason": "official_revalidation_failed",
+                "rollback": True,
+                "proposedRemovedCount": audit.get("removedCount", 0),
+                "proposedRemovedLines": audit.get("removedLines", []),
+                "removedCount": 0,
+                "removedLines": [],
+                "cleanedLength": len(original_content),
+            })
+        else:
+            audit["rollback"] = False
+            selected_candidate["content"] = cleaned_content
+            alignment_json["candidateContentLength"] = len(cleaned_content)
+
+        alignment_json["lineConsensus"] = audit
+        selected_candidate["alignment_json"] = alignment_json
+        return selected_candidate
+
     async def _try_candidate_content(
         self,
         catalog,
@@ -3616,39 +3746,18 @@ class AggregateProcessor:
                 "crossSourceExpanded": expansion_started,
                 "majorityDeletionAllowed": len(accepted_candidates) >= 3,
             })
-            from app.services.aggregate_line_consensus import diagnose_line_consensus
-
-            selected_consensus = next(
-                (
-                    item for item in consensus
-                    if item.get("sourceId") == selected_candidate["source_id"]
-                ),
-                {},
-            )
-            supporting_source_ids = set(
-                selected_consensus.get("supportingSourceIds", [])
-            )
-            # Both sources have already passed the official preview and word-count
-            # gates. A degraded pair may disagree globally because each source has
-            # different insertions, yet still provides safe local anchor evidence.
-            consensus_candidates = (
-                accepted_candidates
-                if consensus_mode == "two_source"
-                else [
-                    candidate
-                    for candidate in accepted_candidates
-                    if candidate["source_id"] == selected_candidate["source_id"]
-                    or candidate["source_id"] in supporting_source_ids
-                ]
-            )
-            line_consensus = diagnose_line_consensus(
-                selected_candidate["content"],
-                consensus_candidates,
-                selected_source_id=selected_candidate["source_id"],
-                chapter_title=target_title,
-            )
-            alignment_json["lineConsensus"] = line_consensus
             selected_candidate["alignment_json"] = alignment_json
+            selected_candidate = self._apply_line_consensus_purification(
+                selected_candidate=selected_candidate,
+                accepted_candidates=accepted_candidates,
+                consensus=consensus,
+                official_preview=official_preview,
+                official_word_count=official_word_count,
+                primary_source_id=primary_source_id,
+                chapter_title=target_title,
+                aggregate_book_id=aggregate_book_id,
+                chapter_index=target_index,
+            )
             self._log_chapter_step(
                 aggregate_book_id=aggregate_book_id,
                 chapter_index=target_index,
@@ -3721,8 +3830,6 @@ class AggregateProcessor:
             build_source_alignment_json,
             classify_source_content,
         )
-        from app.services.aggregate_line_consensus import diagnose_line_consensus
-
         aggregate_book_id = str(chapter.get("aggregateBookId", "") or "")
         chapter_index = int(chapter.get("chapterIndex", 0) or 0)
         target_title = str(chapter.get("title", "") or "")
@@ -3830,14 +3937,18 @@ class AggregateProcessor:
             "crossSourceExpanded": len(allowed_source_ids) > CROSS_SOURCE_INITIAL_COMPARE_COUNT,
             "majorityDeletionAllowed": False,
         })
-        alignment_json["lineConsensus"] = diagnose_line_consensus(
-            selected["content"],
-            accepted,
-            selected_source_id=selected["source_id"],
-            chapter_title=target_title,
-        )
         selected["alignment_json"] = alignment_json
-        return selected
+        return self._apply_line_consensus_purification(
+            selected_candidate=selected,
+            accepted_candidates=accepted,
+            consensus=consensus,
+            official_preview=official_preview,
+            official_word_count=int(official_word_count or 0),
+            primary_source_id=primary_source_id,
+            chapter_title=target_title,
+            aggregate_book_id=aggregate_book_id,
+            chapter_index=chapter_index,
+        )
 
     def _select_consistent_candidate(
         self,

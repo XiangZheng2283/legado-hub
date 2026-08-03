@@ -2202,44 +2202,159 @@ def test_candidate_consensus_prefers_fewer_direct_paragraph_gaps(tmp_path, monke
 
 
 def test_line_consensus_removes_anchor_bounded_source_unique_content():
-    selected = """第325章 好消息
-
-第一段真实正文。
-
-GOOGLE搜索TWKAN
-
-“加，多放点葱花。”
-
-(本章完)"""
+    paragraphs = [
+        f"第{index}段真实正文内容足够长，人物继续沿着既定方向行动。"
+        for index in range(1, 31)
+    ]
+    clean = "\n\n".join(paragraphs)
+    selected = "\n\n".join([*paragraphs[:15], "甲站随机混淆插入段", *paragraphs[15:]])
     peers = [
         {"source_id": "selected", "content": selected},
-        {"source_id": "peer_a", "content": "第一段真实正文。\n\n“加，多放点葱花。”\n\n(本章完)"},
-        {"source_id": "peer_b", "content": "第一段真实正文。\n\n“加，多放点葱花。”"},
-        {"source_id": "peer_c", "content": "第一段真实正文。\n\n“加，多放点葱。”"},
+        {"source_id": "peer_a", "content": clean},
+        {"source_id": "peer_b", "content": clean.replace("继续", "繼續")},
     ]
 
     cleaned, audit = purify_by_line_consensus(
         selected,
         peers,
         selected_source_id="selected",
-        chapter_title="第325章 好消息",
+        chapter_title="第325章",
     )
 
-    assert "第325章 好消息" not in cleaned
-    assert "GOOGLE搜索TWKAN" not in cleaned
-    assert "多放点葱花" in cleaned
-    assert "(本章完)" in cleaned
-    assert audit["sourceCount"] == 4
-    assert audit["majorityCount"] == 3
-    assert audit["removalPolicy"] == "duplicate_title_and_anchor_bounded_unique"
-    assert audit["removedCount"] == 2
-    assert audit["suspiciousCount"] == 1
-    assert {
-        item["reason"] for item in audit["removedLines"]
-    } == {"duplicate_title", "anchor_bounded_source_unique"}
+    assert cleaned == clean
+    assert audit["sourceCount"] == 3
+    assert audit["majorityCount"] == 2
+    assert audit["removalPolicy"] == "strict_three_source_anchor_bounded_unique"
+    assert audit["removedCount"] == 1
+    assert audit["removedLines"][0]["content"] == "甲站随机混淆插入段"
+    assert audit["removedLines"][0]["anchorSourceIds"] == ["peer_a", "peer_b"]
+    assert audit["removalRatio"] <= 0.02
 
 
-def test_line_consensus_removes_different_two_source_watermarks():
+def test_processor_line_consensus_revalidates_and_preserves_source_snapshot(tmp_path, monkeypatch):
+    db_path = _setup_db(tmp_path, ai_enabled=False)
+    processor = AggregateProcessor(db_path)
+    monkeypatch.setattr(processor, "_is_official_source", lambda source_id: source_id == "official_src")
+    paragraphs = [
+        f"第{index}段真实正文内容足够长，人物继续沿着既定方向行动。"
+        for index in range(1, 31)
+    ]
+    clean = "\n\n".join(paragraphs)
+    selected = "\n\n".join([*paragraphs[:15], "甲站随机混淆插入段", *paragraphs[15:]])
+    official_preview = "\n\n".join(paragraphs[:3])
+    consensus = [{
+        "sourceId": "selected",
+        "supportingSourceIds": ["peer_a", "peer_b"],
+        "supportCount": 2,
+    }]
+
+    def candidates() -> list[dict[str, Any]]:
+        return [
+            {"source_id": "selected", "content": selected, "alignment_json": {}},
+            {"source_id": "peer_a", "content": clean, "alignment_json": {}},
+            {"source_id": "peer_b", "content": clean, "alignment_json": {}},
+        ]
+
+    processor._save_source_snapshot(
+        aggregate_book_id="book:consensus",
+        chapter_index=1,
+        source_id="selected",
+        source_book_id="selected:book",
+        source_chapter_id="selected:chapter",
+        title="第一章",
+        raw_content=selected,
+        classification="captured",
+    )
+    accepted = candidates()
+    result = processor._apply_line_consensus_purification(
+        selected_candidate=accepted[0],
+        accepted_candidates=accepted,
+        consensus=consensus,
+        official_preview=official_preview,
+        official_word_count=len(clean.replace("\n", "").replace(" ", "")),
+        primary_source_id="official_src",
+        chapter_title="第一章",
+        aggregate_book_id="book:consensus",
+        chapter_index=1,
+    )
+
+    assert result["content"] == clean
+    audit = result["alignment_json"]["lineConsensus"]
+    assert audit["applied"] is True
+    assert audit["revalidation"]["passed"] is True
+    with sqlite3.connect(db_path) as conn:
+        raw_content, clean_content = conn.execute(
+            """SELECT raw_content, clean_content FROM aggregate_source_snapshots
+               WHERE aggregate_book_id = ? AND chapter_index = ? AND source_id = ?""",
+            ("book:consensus", 1, "selected"),
+        ).fetchone()
+    assert "甲站随机混淆插入段" in raw_content
+    assert "甲站随机混淆插入段" in clean_content
+
+    accepted = candidates()
+    rollback = processor._apply_line_consensus_purification(
+        selected_candidate=accepted[0],
+        accepted_candidates=accepted,
+        consensus=consensus,
+        official_preview=official_preview,
+        official_word_count=len(selected.replace("\n", "").replace(" ", "")),
+        primary_source_id="official_src",
+        chapter_title="第一章",
+        aggregate_book_id="book:consensus",
+        chapter_index=1,
+    )
+    rollback_audit = rollback["alignment_json"]["lineConsensus"]
+    assert rollback["content"] == selected
+    assert rollback_audit["applied"] is False
+    assert rollback_audit["rollback"] is True
+    assert rollback_audit["reason"] == "official_revalidation_failed"
+    assert rollback_audit["proposedRemovedLines"][0]["content"] == "甲站随机混淆插入段"
+
+    preview_selected = "\n\n".join([
+        paragraphs[0],
+        "甲站随机混淆插入段",
+        *paragraphs[1:],
+    ])
+    preview_candidates = [
+        {"source_id": "selected", "content": preview_selected, "alignment_json": {}},
+        {"source_id": "peer_a", "content": clean, "alignment_json": {}},
+        {"source_id": "peer_b", "content": clean, "alignment_json": {}},
+    ]
+    overlap = processor._apply_line_consensus_purification(
+        selected_candidate=preview_candidates[0],
+        accepted_candidates=preview_candidates,
+        consensus=consensus,
+        official_preview="\n\n".join(preview_selected.split("\n\n")[:4]),
+        official_word_count=len(clean.replace("\n", "").replace(" ", "")),
+        primary_source_id="official_src",
+        chapter_title="第一章",
+        aggregate_book_id="book:consensus",
+        chapter_index=1,
+    )
+    overlap_audit = overlap["alignment_json"]["lineConsensus"]
+    assert overlap["content"] == preview_selected
+    assert overlap_audit["rollback"] is True
+    assert overlap_audit["revalidation"]["officialPreviewOverlap"] is True
+
+    accepted = candidates()
+    untrusted = processor._apply_line_consensus_purification(
+        selected_candidate=accepted[0],
+        accepted_candidates=accepted,
+        consensus=consensus,
+        official_preview=official_preview,
+        official_word_count=len(clean.replace("\n", "").replace(" ", "")),
+        primary_source_id="peer_a",
+        chapter_title="第一章",
+        aggregate_book_id="book:consensus",
+        chapter_index=1,
+    )
+    untrusted_audit = untrusted["alignment_json"]["lineConsensus"]
+    assert untrusted["content"] == selected
+    assert untrusted_audit["rollback"] is True
+    assert untrusted_audit["revalidation"]["officialAnchorTrusted"] is False
+
+
+def test_line_consensus_preserves_different_two_source_watermarks():
     paragraphs = [f"第{i}段正文内容足够长，确保段落对齐稳定。" for i in range(1, 13)]
     selected = "\n\n".join([*paragraphs[:6], "甲站未知插入标记", *paragraphs[6:]])
     peer = "\n\n".join([*paragraphs[:6], "乙站完全不同的插入标记", *paragraphs[6:]])
@@ -2254,16 +2369,55 @@ def test_line_consensus_removes_different_two_source_watermarks():
         chapter_title="第一章",
     )
 
-    assert "甲站未知插入标记" not in cleaned
-    assert cleaned == "\n\n".join(paragraphs)
+    assert cleaned == selected
     assert audit["sourceCount"] == 2
-    assert audit["removedLines"] == [{
-        "paragraphIndex": 6,
-        "supportCount": 1,
-        "reason": "anchor_bounded_source_unique",
-        "sample": "甲站未知插入标记",
-        "content": "甲站未知插入标记",
-    }]
+    assert audit["applied"] is False
+    assert audit["reason"] == "insufficient_sources"
+    assert audit["removedLines"] == []
+
+
+def test_line_consensus_requires_two_peers_to_support_both_anchors():
+    paragraphs = [f"第{i}段正文内容足够长，确保段落对齐稳定。" for i in range(1, 21)]
+    selected = "\n\n".join([*paragraphs[:10], "仅主源存在的额外段", *paragraphs[10:]])
+    peer_a = "\n\n".join(paragraphs)
+    unrelated = "\n\n".join(f"无关段落{i}完全不能形成正文锚点。" for i in range(1, 21))
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer_a},
+            {"source_id": "peer_b", "content": unrelated},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["applied"] is False
+    assert audit["reason"] == "no_removable_segments"
+
+
+def test_line_consensus_preserves_blocks_longer_than_three_paragraphs():
+    paragraphs = [f"第{i}段正文内容足够长，确保段落对齐稳定。" for i in range(1, 21)]
+    extras = [f"额外差异段{i}" for i in range(1, 5)]
+    selected = "\n\n".join([*paragraphs[:10], *extras, *paragraphs[10:]])
+    peer = "\n\n".join(paragraphs)
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer},
+            {"source_id": "peer_b", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["removedCount"] == 0
+    assert audit["reason"] == "no_removable_segments"
 
 
 def test_line_consensus_preserves_span_merged_unknown_content():
@@ -2303,12 +2457,31 @@ def test_line_consensus_preserves_unverified_minority_prose():
 
     assert cleaned == selected
     assert audit["removedCount"] == 0
-    assert audit["suspiciousLines"] == [{
-        "paragraphIndex": 1,
-        "supportCount": 1,
-        "reason": "minority_difference_preserved",
-        "sample": "仅此来源存在的叙事补充。",
-    }]
+    assert audit["reason"] == "no_removable_segments"
+
+
+def test_line_consensus_rejects_cleanup_over_two_percent():
+    paragraphs = [f"第{i}段正文内容足够长，确保段落对齐稳定。" for i in range(1, 21)]
+    extra = "这一整段来源独有内容很长，超过正文自动删除比例限制。" * 3
+    selected = "\n\n".join([*paragraphs[:10], extra, *paragraphs[10:]])
+    peer = "\n\n".join(paragraphs)
+
+    cleaned, audit = purify_by_line_consensus(
+        selected,
+        [
+            {"source_id": "selected", "content": selected},
+            {"source_id": "peer_a", "content": peer},
+            {"source_id": "peer_b", "content": peer},
+        ],
+        selected_source_id="selected",
+        chapter_title="第一章",
+    )
+
+    assert cleaned == selected
+    assert audit["applied"] is False
+    assert audit["reason"] == "removal_ratio_exceeded"
+    assert audit["proposedRemovedCount"] == 1
+    assert audit["proposedRemovedLines"][0]["content"] == extra
 
 
 def test_line_consensus_preserves_all_unverified_content_for_audit():
@@ -2447,7 +2620,7 @@ def test_line_consensus_preserves_unknown_obfuscated_content(watermark):
 
     assert watermark in cleaned
     assert audit["removedCount"] == 0
-    assert audit["suspiciousCount"] == 1
+    assert audit["reason"] == "no_removable_segments"
 
 
 def test_line_consensus_keeps_two_source_difference_without_enough_anchors():
@@ -2464,7 +2637,8 @@ def test_line_consensus_keeps_two_source_difference_without_enough_anchors():
     )
 
     assert cleaned == selected
-    assert audit["applied"] is True
+    assert audit["applied"] is False
+    assert audit["reason"] == "insufficient_sources"
     assert audit["removedCount"] == 0
 
 
