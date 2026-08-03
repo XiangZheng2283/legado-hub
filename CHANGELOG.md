@@ -9,6 +9,10 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-04
+
+书源规则版本：`0.0.27`。
+
 ### 新增
 
 - 订阅源快照：按书源保存原始正文、净化正文、净化审计和抓取进度，支持断点续抓与本地重建
@@ -116,3 +120,4 @@
 
 [0.1.0]: https://github.com/XziXmn/legado-hub/releases/tag/v0.1.0
 [0.2.0]: https://github.com/XziXmn/legado-hub/releases/tag/v0.2.0
+[0.3.0]: https://github.com/XziXmn/legado-hub/releases/tag/v0.3.0
