@@ -31,12 +31,39 @@ _POLL_S = 5
 _STATUS_CACHE_TTL = 60
 _ORDER_CACHE_TTL = 300
 
+# ── 进程级缓存 ────────────────────────────────────────────────────────────────
+# 生产环境的 PluginContext.cache_get/cache_set 是空实现，且调度器每章新建 ctx，
+# 导致每次章节请求都会重新下载和解析整本 EPUB。
+# 这里用进程级字典绕过这一限制：以 rel_path 为键缓存原始字节和解析结果。
+# 键格式：(rel_path,) -> (expires_at: float, value)
+_PROC_CACHE: dict[str, tuple[float, Any]] = {}
+
+
+def _proc_cache_get(key: str) -> Any:
+    entry = _PROC_CACHE.get(key)
+    if entry is None:
+        return None
+    expires_at, value = entry
+    if time.monotonic() > expires_at:
+        _PROC_CACHE.pop(key, None)
+        return None
+    return value
+
+
+def _proc_cache_set(key: str, value: Any, ttl: float) -> None:
+    _PROC_CACHE[key] = (time.monotonic() + ttl, value)
+    # 简单 LRU 截断：超过 64 条时丢弃最旧的一半
+    if len(_PROC_CACHE) > 64:
+        oldest = sorted(_PROC_CACHE.items(), key=lambda kv: kv[1][0])
+        for k, _ in oldest[:32]:
+            _PROC_CACHE.pop(k, None)
+
 
 class Source:
     id = "fanqie_local"
     name = "番茄小说（本地下载器）"
     contract_version = "1.0"
-    last_modified = "2026-08-13"
+    last_modified = "2026-08-14"
 
     # ── 生命周期 ──────────────────────────────────────────────────
 
@@ -213,7 +240,7 @@ class Source:
     async def _chapter_order(self, ctx, book_id: str) -> list[tuple[str, str]]:
         """返回整本成品中的有序章节 ID 和标题。"""
         cache_key = f"fanqie_order:{book_id}"
-        cached = ctx.cache_get(cache_key)
+        cached = ctx.cache_get(cache_key) or _proc_cache_get(cache_key)
         if cached:
             return cached
 
@@ -226,36 +253,45 @@ class Source:
         chapters = await self._get_chapters(ctx, rel_path)
         order = [(str(i + 1), title) for i, (title, _content) in enumerate(chapters)]
         ctx.cache_set(cache_key, order, _ORDER_CACHE_TTL)
+        _proc_cache_set(cache_key, order, _ORDER_CACHE_TTL)
         return order
 
     async def _get_book_bytes(self, ctx, rel_path: str) -> bytes:
         cache_key = f"fanqie_book_bytes:{rel_path}"
-        cached = ctx.cache_get(cache_key)
+        # 先查 ctx（单次请求内有效），再查进程级缓存（跨 context 有效）。
+        cached = ctx.cache_get(cache_key) or _proc_cache_get(cache_key)
         if cached is not None:
             return cached
-        raw = await ctx.access.http.fetch_bytes(
-            f"{TOMATO_BASE}/download/{rel_path}",
-            headers=_headers(),
-            timeout=60,
+
+        # 两个程序共处一机：save_dir 就是本进程可直接访问的真实目录。
+        # 直接读文件，完全不走 HTTP，也不需要回退。
+        status = await _downloader_status(ctx)
+        save_dir = str(status.get("save_dir") or "").strip()
+        local_path = os.path.join(save_dir, rel_path.replace("/", os.sep))
+        raw = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: open(local_path, "rb").read()
         )
+
         ctx.cache_set(cache_key, raw, _ORDER_CACHE_TTL)
+        _proc_cache_set(cache_key, raw, _ORDER_CACHE_TTL)
         return raw
 
     async def _get_chapters(self, ctx, rel_path: str) -> list[tuple[str, str]]:
         cache_key = f"fanqie_chapters:{rel_path}"
-        cached = ctx.cache_get(cache_key)
+        cached = ctx.cache_get(cache_key) or _proc_cache_get(cache_key)
         if cached is not None:
             return cached
         try:
             raw = await self._get_book_bytes(ctx, rel_path)
             if rel_path.lower().endswith(".epub"):
-                chapters = _split_epub(raw)
+                chapters = await _split_epub_async(raw)
             else:
                 chapters = _split_txt(ctx.decode_text(raw))
         except Exception as e:
             ctx.trace("chapter", message=f"fetch book file failed: {e}")
             return []
         ctx.cache_set(cache_key, chapters, _ORDER_CACHE_TTL)
+        _proc_cache_set(cache_key, chapters, _ORDER_CACHE_TTL)
         return chapters
 
     async def _ensure_downloaded(self, ctx, book_id: str) -> str | None:
@@ -416,7 +452,7 @@ async def _preview(ctx, book_id: str) -> dict:
 
 async def _downloader_status(ctx) -> dict:
     cache_key = "fanqie_downloader_status"
-    cached = ctx.cache_get(cache_key)
+    cached = ctx.cache_get(cache_key) or _proc_cache_get(cache_key)
     if cached:
         return cached
     data = await ctx.access.http.fetch_json(
@@ -427,6 +463,7 @@ async def _downloader_status(ctx) -> dict:
     if not str(data.get("save_dir") or "").strip():
         raise RuntimeError("番茄下载器未返回 save_dir")
     ctx.cache_set(cache_key, data, _STATUS_CACHE_TTL)
+    _proc_cache_set(cache_key, data, _STATUS_CACHE_TTL)
     return data
 
 
@@ -584,7 +621,57 @@ def _xhtml_soup(archive: zipfile.ZipFile, path: str) -> BeautifulSoup:
     return BeautifulSoup(archive.read(path), "html.parser")
 
 
+def _parse_xhtml_bytes(xhtml: bytes) -> tuple[str, str] | None:
+    """解析单个 xhtml 文件字节，返回 (title, content) 或 None（跳过段评页等）。
+    纯 CPU 操作，可安全在线程池中并发执行。"""
+    soup = BeautifulSoup(xhtml, "html.parser")
+    heading = soup.find(["h1", "h2", "title"])
+    title = heading.get_text(" ", strip=True) if heading else ""
+    if not title or title.endswith(" - 段评"):
+        return None
+    body = soup.body or soup
+    if heading and heading in body.descendants:
+        heading.extract()
+    for node in body.select("script, style, nav, .back-to-comments, .segment-link"):
+        node.decompose()
+    content = "\n".join(body.stripped_strings).strip()
+    return (title, content)
+
+
+async def _split_epub_async(raw: bytes) -> list[tuple[str, str]]:
+    """解析整本 EPUB，对各章 xhtml 并发跑 BS4（线程池，默认并发数跟随 CPU 核数）。"""
+    loop = asyncio.get_event_loop()
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        spine = _epub_spine(archive)
+        named_chapters = [
+            item for item in spine
+            if re.fullmatch(r"chapter_\d+\.xhtml?", posixpath.basename(item[1]), re.I)
+        ]
+        candidates = named_chapters or [
+            item for item in spine
+            if not posixpath.basename(item[1]).lower().startswith("aux_")
+            and posixpath.basename(item[1]).lower() not in {
+                "table-of-contents.html", "toc.xhtml", "nav.xhtml"
+            }
+        ]
+        # 先把所有候选文件字节一次性读出（zipfile 不线程安全，必须在这里读完）
+        indexed_chunks: list[tuple[int, bytes]] = [
+            (i, archive.read(path)) for i, (path, _href) in enumerate(candidates)
+        ]
+
+    # 并发解析：每个 xhtml 独立提交到默认线程池
+    tasks = [
+        loop.run_in_executor(None, _parse_xhtml_bytes, chunk)
+        for _i, chunk in indexed_chunks
+    ]
+    results = await asyncio.gather(*tasks)
+
+    # 按原始 spine 顺序过滤 None（段评页、空页等）
+    return [r for r in results if r is not None]
+
+
 def _split_epub(raw: bytes) -> list[tuple[str, str]]:
+    """同步入口，供不在协程上下文中的调用方使用（实际上目前只有测试用）。"""
     chapters: list[tuple[str, str]] = []
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         spine = _epub_spine(archive)
@@ -674,7 +761,7 @@ def _extract_epub_reviews(raw: bytes, chapter_title: str, chapter_id: str) -> di
             meta_node = item.select_one("small.seg-meta")
             meta_text = meta_node.get_text(" ", strip=True) if meta_node else ""
             content_node = next(
-                (node for node in item.find_all("p", recursive=False) if not node.select_one("small.seg-meta")),
+                (node for node in item.find_all("p") if not node.select_one("small.seg-meta")),
                 None,
             )
             content = content_node.get_text("\n", strip=True) if content_node else ""
