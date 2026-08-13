@@ -47,37 +47,59 @@ class Source:
                 timeout=15,
             )
         except Exception as e:
-            ctx.trace("search", message=f"search API error: {e}")
-            return []
+            ctx.trace("search", url=f"{TOMATO_BASE}/api/search", message=f"连接下载器失败: {e}")
+            raise
+
+        # 下载器以 no-official-api 模式编译时搜索不可用，error 字段会说明原因
+        if data.get("error"):
+            ctx.trace("search", message=f"下载器搜索不可用: {data['error']}")
+            raise RuntimeError(f"番茄下载器搜索不可用: {data['error']}")
 
         results = []
         for item in data.get("items") or []:
             book_id = str(item.get("book_id") or "").strip()
             if not book_id:
                 continue
+            raw = item.get("raw") if isinstance(item.get("raw"), dict) else {}
+            tags = _pick_tags(raw)
+            category = _pick_string(raw, "category", "category_name", "book_category", "classify")
+            kind_parts = [part for part in [category, *tags] if part]
             results.append({
                 "sourceId": self.id,
                 "name": str(item.get("title") or ""),
                 "author": str(item.get("author") or ""),
                 "bookUrl": _book_url(book_id),
-                "coverUrl": _cover_url(book_id),
-                "intro": "",
-                "lastChapter": "",
+                "coverUrl": _pick_string(
+                    raw,
+                    "detail_page_thumb_url",
+                    "detail_thumb_url",
+                    "thumb_url",
+                    "cover_url",
+                    "audio_thumb_url_hd",
+                    "audio_thumb_uri",
+                ),
+                "intro": _pick_string(
+                    raw,
+                    "abstract",
+                    "book_abstract_v2",
+                    "book_abstract",
+                    "description",
+                    "intro",
+                    "summary",
+                ),
+                "kind": "/".join(dict.fromkeys(kind_parts)),
+                "lastChapter": _pick_string(
+                    raw,
+                    "last_chapter_title",
+                    "latest_catalog_title",
+                    "lastItemTitle",
+                ),
+                "wordCount": _format_word_count(
+                    _pick_value(raw, "word_number", "word_count", "word_cnt", "words")
+                ),
                 "extra": {"book_id": book_id},
             })
-
-        # 对前 5 条精确候选补全详情字段（搜索结果不含简介/最新章节）
-        enriched = []
-        for r in results[:5]:
-            try:
-                d = await self.detail(ctx, r["bookUrl"])
-                for k in ("intro", "lastChapter", "kind", "wordCount"):
-                    if d.get(k) and not r.get(k):
-                        r[k] = d[k]
-            except Exception:
-                pass
-            enriched.append(r)
-        return enriched + results[5:]
+        return results
 
     async def detail(self, ctx, book_url: str) -> dict:
         book_id = _extract_id(book_url)
@@ -304,6 +326,38 @@ def _chapter_url(book_id: str, ch_id: str) -> str:
 
 def _cover_url(book_id: str) -> str:
     return f"{TOMATO_BASE}/api/preview-cover-by-book/{book_id}"
+
+
+def _pick_value(data: dict, *keys: str) -> Any:
+    for key in keys:
+        value = data.get(key)
+        if value is not None and value != "":
+            return value
+    return None
+
+
+def _pick_string(data: dict, *keys: str) -> str:
+    value = _pick_value(data, *keys)
+    return str(value).strip() if value is not None else ""
+
+
+def _pick_tags(data: dict) -> list[str]:
+    value = _pick_value(data, "tags", "book_tags", "tag", "categories", "classify_tags")
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str):
+        return [part.strip() for part in re.split(r"[,，/|]", value) if part.strip()]
+    return []
+
+
+def _format_word_count(value: Any) -> str:
+    if value is None or value == "":
+        return ""
+    try:
+        count = int(float(value))
+    except (TypeError, ValueError):
+        return str(value).strip()
+    return f"{count // 10000}万字" if count >= 10000 else str(count)
 
 
 def _extract_id(url: str) -> str:

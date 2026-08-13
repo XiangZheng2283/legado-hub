@@ -19,7 +19,15 @@ Web API 接入番茄小说内容，绕开对番茄官方服务器的直连请求
    TOMATO_WEB_PASSWORD=你的密码 Tomato-Novel-Downloader.exe --server
    ```
 
-2. 默认监听 `http://127.0.0.1:18423`。若改过端口，同步修改环境变量 `FANQIE_LOCAL_BASE`。
+2. 默认监听 `http://127.0.0.1:18423`。这只允许与下载器处于同一网络命名空间的进程访问。
+   若 LegadoHub 在 Docker 中运行，下载器还必须监听宿主机可达地址：
+
+   ```sh
+   TOMATO_WEB_ADDR=0.0.0.0:18423 Tomato-Novel-Downloader.exe --server
+   ```
+
+   同时将 `FANQIE_LOCAL_BASE` 指向宿主机地址；仅把插件地址改成
+   `host.docker.internal`、但下载器仍监听 `127.0.0.1` 是无法连接的。
 
 ---
 
@@ -45,8 +53,8 @@ environment:
 
 ```
 Reading 搜索/订阅
-  → fanqie_local.search() → 调下载器 /api/search
-  → fanqie_local.detail() → 调下载器 /api/preview/:book_id
+  → fanqie_local.search() → 调下载器 /api/search，并直接解析 items[].raw
+  → fanqie_local.detail() → 用户打开详情时调下载器 /api/preview/:book_id
   → fanqie_local.toc()    → 触发/等待整本 txt 落盘 → 解析章节列表
   → fanqie_local.chapter() → 从落盘 txt 按章节 index 切出内容返回
 ```
