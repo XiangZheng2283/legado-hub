@@ -1,0 +1,40 @@
+contractVersion: "1.0"
+id: fanqie_local
+name: 番茄小说（本地下载器）
+author: Yunwei
+version: 0.1.0
+type: source
+domains:
+  - 127.0.0.1
+baseUrls:
+  - http://127.0.0.1:18423
+capabilities:
+  - search
+  - detail
+  - toc
+  - chapter
+auth:
+  mode: none
+content:
+  access: mixed
+  paid: supported_after_login
+  sourceRole: official
+tags:
+  - official
+  - paid
+  - local-bridge
+  - json-api
+enabled: true
+rateLimit:
+  perHostConcurrency: 1
+  minIntervalMs: 1000
+proxy:
+  mode: never
+  required: false
+browser:
+  mode: none
+accessStrategy:
+  search: api
+  detail: api
+  toc: api
+  chapter: api

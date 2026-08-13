@@ -1,0 +1,27 @@
+keyword: 动物灭绝
+fixtures:
+  search:
+    url: http://127.0.0.1:18423/api/search?q=%E5%8A%A8%E7%89%A9%E7%81%AD%E7%BB%9D
+    file: search.json
+  detail:
+    url: http://127.0.0.1:18423/api/preview/7158058782700866560
+    file: preview.json
+  toc:
+    url: http://127.0.0.1:18423/api/preview/7158058782700866560
+    file: preview.json
+  chapter:
+    url: http://127.0.0.1:18423/__fanqie__/7158058782700866560/1
+    file: chapter.txt
+expect:
+  search:
+    minResults: 1
+    firstName: 动物灭绝
+  detail:
+    name: 动物灭绝：开局东北虎震惊全球
+    author: 鹤唳青空
+    hasTocUrl: true
+  toc:
+    complete: false
+    minChapters: 1
+  chapter:
+    minContentLength: 20

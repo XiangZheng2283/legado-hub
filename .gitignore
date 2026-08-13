@@ -41,7 +41,7 @@ docs/archive/**/data/upstreams/
 bilibili-Design-System/
 untitled/
 plugins/sources/*/__pycache__/
-plugins/sources/official/*
+# plugins/sources/official/*
 !plugins/sources/official/qidian_com_web/
 !plugins/sources/official/qidian_com_web/**
 plugins/sources/official/qidian_com_web/**/__pycache__/
