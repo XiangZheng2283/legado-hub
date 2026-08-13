@@ -299,31 +299,50 @@ class Source:
         触发下载 job，轮询等待 Done，自动回应 book_name/format 选择，
         返回最终成品的 rel_path 或 None。
         """
-        # 先看有没有已完成的 job
+        # 先看有没有已完成的 job，有则直接定位文件
         existing = await _find_done_job(ctx, book_id)
         if existing:
             return await _find_book_file_rel(ctx, book_id)
 
-        # 创建新 job
+        # 查询是否已有正在运行的 job（下载器同时只允许 1 个活跃任务）
         try:
-            resp = await ctx.access.http.fetch_json(
+            data = await ctx.access.http.fetch_json(
                 f"{TOMATO_BASE}/api/jobs",
-                method="POST",
-                json={"book_id": book_id},
-                headers={**_headers(), "Content-Type": "application/json"},
-                timeout=15,
+                params={"all": "true"},
+                headers=_headers(),
+                timeout=10,
             )
         except Exception as e:
-            ctx.trace("chapter", message=f"create job error: {e}")
+            ctx.trace("chapter", message=f"list jobs error: {e}")
             return None
 
-        job_id = resp.get("id")
-        if not job_id:
-            # 已有活跃任务（下载器限制同时只允许 1 个），等它完成
-            job_id = await _wait_for_active_job(ctx, book_id)
-            if not job_id:
-                return None
+        active_job_id: int | None = None
+        for job in data.get("items") or []:
+            if str(job.get("book_id", "")) == book_id and job.get("state") not in ("done", "failed", "canceled"):
+                active_job_id = job.get("id")
+                break
 
+        if active_job_id is None:
+            # 没有活跃任务，创建新 job
+            try:
+                resp = await ctx.access.http.fetch_json(
+                    f"{TOMATO_BASE}/api/jobs",
+                    method="POST",
+                    json={"book_id": book_id},
+                    headers={**_headers(), "Content-Type": "application/json"},
+                    timeout=15,
+                )
+            except Exception as e:
+                ctx.trace("chapter", message=f"create job error: {e}")
+                return None
+            active_job_id = resp.get("id")
+            if not active_job_id:
+                # 创建时发生竞态，再查一次活跃任务
+                active_job_id = await _wait_for_active_job(ctx, book_id)
+                if not active_job_id:
+                    return None
+
+        job_id = active_job_id
         # 轮询等待完成
         deadline = time.monotonic() + DOWNLOAD_TIMEOUT_S
         while time.monotonic() < deadline:
