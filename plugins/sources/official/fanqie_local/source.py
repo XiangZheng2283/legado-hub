@@ -12,10 +12,17 @@ fanqie_local — 番茄小说（本地下载器桥接）
 from __future__ import annotations
 
 import asyncio
+import io
 import os
+import posixpath
 import re
 import time
+import zipfile
+from datetime import datetime, timezone
 from typing import Any
+from xml.etree import ElementTree
+
+from bs4 import BeautifulSoup
 
 TOMATO_BASE = os.environ.get("FANQIE_LOCAL_BASE", "http://127.0.0.1:18423").rstrip("/")
 TOMATO_PASSWD = os.environ.get("FANQIE_LOCAL_PASSWD", "")
@@ -133,11 +140,7 @@ class Source:
         }
 
     async def toc(self, ctx, toc_url: str) -> list[dict]:
-        """
-        目录顺序来自 /download/<book_id>/status.json 中 downloaded 的写入顺序，
-        但 status.json 不经过 library API 暴露。我们改用已落盘的 txt 文件解析章节标题序列；
-        若 txt 尚未下载，则触发下载后再解析。
-        """
+        """仅在下载 job 完成后，从最终 EPUB/TXT 成品解析目录。"""
         book_id = _extract_id(toc_url)
         order = await self._chapter_order(ctx, book_id)
         result = []
@@ -151,9 +154,7 @@ class Source:
         return result
 
     async def chapter(self, ctx, chapter_url: str) -> dict:
-        """
-        等整本 txt 下载完毕后，从文件中按章节 index 截取内容返回。
-        """
+        """从整本成品的解析缓存中返回指定章节。"""
         book_id, ch_id = _parse_chapter_url(chapter_url)
 
         # 读取缓存的章节顺序（已包含 ensure_downloaded 逻辑）
@@ -170,16 +171,11 @@ class Source:
         if ch_index is None:
             return _pending_chapter(chapter_url, "章节未找到，可能尚未下载。")
 
-        # 从全文 txt 缓存里取该章节内容
-        rel_path = await _find_txt_rel(ctx, book_id)
+        rel_path = await _find_book_file_rel(ctx, book_id)
         if not rel_path:
             return _pending_chapter(chapter_url, "下载文件未找到，请稍后重试。")
 
-        full_text = await self._get_full_text(ctx, rel_path)
-        if not full_text:
-            return _pending_chapter(chapter_url, "读取文件失败，请稍后重试。")
-
-        chapters = _split_txt(full_text)
+        chapters = await self._get_chapters(ctx, rel_path)
         if ch_index >= len(chapters):
             return _pending_chapter(chapter_url, "章节索引超出范围，请稍后重试。")
 
@@ -192,63 +188,85 @@ class Source:
             "format": "text",
         }
 
+    async def chapter_reviews(self, ctx, chapter_url: str) -> dict:
+        book_id, ch_id = _parse_chapter_url(chapter_url)
+        order = await self._chapter_order(ctx, book_id)
+        chapter_match = next(
+            ((idx, title) for idx, (candidate, title) in enumerate(order) if candidate == ch_id),
+            None,
+        )
+        if chapter_match is None:
+            return _empty_reviews("章节未找到")
+        _chapter_index, chapter_title = chapter_match
+
+        rel_path = await _find_book_file_rel(ctx, book_id)
+        if not rel_path or not rel_path.lower().endswith(".epub"):
+            return _empty_reviews("成品不是 EPUB，无法读取段评")
+
+        raw = await self._get_book_bytes(ctx, rel_path)
+        if not raw:
+            return _empty_reviews("EPUB 读取失败")
+        return _extract_epub_reviews(raw, chapter_title, ch_id)
+
     # ── 内部辅助 ──────────────────────────────────────────────────
 
     async def _chapter_order(self, ctx, book_id: str) -> list[tuple[str, str]]:
-        """
-        返回 [(chapter_fake_id, title), ...] 的有序列表。
-        chapter_fake_id 是按顺序生成的数字字符串（1-based），因为 txt 本身没有原始 ID。
-        若 txt 不存在则触发下载并等待完成。
-        结果缓存 _ORDER_CACHE_TTL 秒。
-        """
+        """返回整本成品中的有序章节 ID 和标题。"""
         cache_key = f"fanqie_order:{book_id}"
         cached = ctx.cache_get(cache_key)
         if cached:
             return cached
 
-        rel_path = await _find_txt_rel(ctx, book_id)
+        rel_path = await _find_book_file_rel(ctx, book_id)
         if not rel_path:
             rel_path = await self._ensure_downloaded(ctx, book_id)
         if not rel_path:
             return []
 
-        full_text = await self._get_full_text(ctx, rel_path)
-        if not full_text:
-            return []
-
-        chapters = _split_txt(full_text)
+        chapters = await self._get_chapters(ctx, rel_path)
         order = [(str(i + 1), title) for i, (title, _content) in enumerate(chapters)]
         ctx.cache_set(cache_key, order, _ORDER_CACHE_TTL)
         return order
 
-    async def _get_full_text(self, ctx, rel_path: str) -> str:
-        """下载 txt 全文，缓存 _ORDER_CACHE_TTL 秒。"""
-        cache_key = f"fanqie_txt:{rel_path}"
+    async def _get_book_bytes(self, ctx, rel_path: str) -> bytes:
+        cache_key = f"fanqie_book_bytes:{rel_path}"
+        cached = ctx.cache_get(cache_key)
+        if cached is not None:
+            return cached
+        raw = await ctx.access.http.fetch_bytes(
+            f"{TOMATO_BASE}/download/{rel_path}",
+            headers=_headers(),
+            timeout=60,
+        )
+        ctx.cache_set(cache_key, raw, _ORDER_CACHE_TTL)
+        return raw
+
+    async def _get_chapters(self, ctx, rel_path: str) -> list[tuple[str, str]]:
+        cache_key = f"fanqie_chapters:{rel_path}"
         cached = ctx.cache_get(cache_key)
         if cached is not None:
             return cached
         try:
-            raw = await ctx.access.http.fetch_bytes(
-                f"{TOMATO_BASE}/download/{rel_path}",
-                headers=_headers(),
-                timeout=60,
-            )
-            text = ctx.decode_text(raw)
+            raw = await self._get_book_bytes(ctx, rel_path)
+            if rel_path.lower().endswith(".epub"):
+                chapters = _split_epub(raw)
+            else:
+                chapters = _split_txt(ctx.decode_text(raw))
         except Exception as e:
-            ctx.trace("chapter", message=f"fetch txt failed: {e}")
-            return ""
-        ctx.cache_set(cache_key, text, _ORDER_CACHE_TTL)
-        return text
+            ctx.trace("chapter", message=f"fetch book file failed: {e}")
+            return []
+        ctx.cache_set(cache_key, chapters, _ORDER_CACHE_TTL)
+        return chapters
 
     async def _ensure_downloaded(self, ctx, book_id: str) -> str | None:
         """
         触发下载 job，轮询等待 Done，自动回应 book_name/format 选择，
-        返回 txt rel_path 或 None。
+        返回最终成品的 rel_path 或 None。
         """
         # 先看有没有已完成的 job
         existing = await _find_done_job(ctx, book_id)
         if existing:
-            return await _find_txt_rel(ctx, book_id)
+            return await _find_book_file_rel(ctx, book_id)
 
         # 创建新 job
         try:
@@ -290,11 +308,11 @@ class Source:
             job = items[0]
             state = job.get("state", "")
 
-            # 自动回应书名 / 格式选择（保持默认即可）
+            # 保持下载器配置的默认书名和 EPUB 格式；完整 EPUB 才包含段评与媒体。
             if job.get("book_name_options"):
                 await _submit_choice(ctx, job_id, "book_name", None)
             if job.get("format_options"):
-                await _submit_choice(ctx, job_id, "format", None)
+                await _submit_choice(ctx, job_id, "format", "epub")
 
             if state == "done":
                 break
@@ -302,7 +320,7 @@ class Source:
                 ctx.trace("chapter", message=f"job {job_id} ended with state={state}: {job.get('message')}")
                 return None
 
-        return await _find_txt_rel(ctx, book_id)
+        return await _find_book_file_rel(ctx, book_id)
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -396,47 +414,93 @@ async def _preview(ctx, book_id: str) -> dict:
     return data
 
 
-async def _find_txt_rel(ctx, book_id: str) -> str | None:
-    """
-    在 library 里找 book_id 目录下的 txt 文件，返回 rel_path。
-    目录名就是 book_id（safe_fs_name 对纯数字不做修改）。
-    """
-    try:
-        root = await ctx.access.http.fetch_json(
+async def _downloader_status(ctx) -> dict:
+    cache_key = "fanqie_downloader_status"
+    cached = ctx.cache_get(cache_key)
+    if cached:
+        return cached
+    data = await ctx.access.http.fetch_json(
+        f"{TOMATO_BASE}/api/status",
+        headers=_headers(),
+        timeout=10,
+    )
+    if not str(data.get("save_dir") or "").strip():
+        raise RuntimeError("番茄下载器未返回 save_dir")
+    ctx.cache_set(cache_key, data, _STATUS_CACHE_TTL)
+    return data
+
+
+async def _library_snapshot(ctx, path: str = "", *, refresh: bool = False) -> dict:
+    params = {"start": "true" if refresh else "false"}
+    if path:
+        params["path"] = path
+    for attempt in range(10):
+        data = await ctx.access.http.fetch_json(
             f"{TOMATO_BASE}/api/library",
-            params={"start": "false"},
+            params=params,
             headers=_headers(),
             timeout=10,
         )
-    except Exception:
-        return None
+        if not data.get("running"):
+            return data
+        params["start"] = "false"
+        if attempt < 9:
+            await asyncio.sleep(0.2)
+    return data
 
-    target_dir = None
-    for item in root.get("items") or []:
-        if item.get("kind") == "dir" and item.get("name", "") == book_id:
-            target_dir = item.get("rel_path", "")
-            break
-    if target_dir is None:
-        return None
 
+async def _find_book_file_rel(ctx, book_id: str) -> str | None:
+    """按完成 job 的书名定位根目录 EPUB/TXT，兼容旧的 book_id 目录。"""
+    job = await _find_done_job_info(ctx, book_id)
+    if not job:
+        return None
+    title = str(job.get("title") or "").strip()
     try:
-        sub = await ctx.access.http.fetch_json(
-            f"{TOMATO_BASE}/api/library",
-            params={"path": target_dir, "start": "false"},
-            headers=_headers(),
-            timeout=10,
-        )
-    except Exception:
+        await _downloader_status(ctx)
+        root = await _library_snapshot(ctx, refresh=True)
+    except Exception as exc:
+        ctx.trace("toc", message=f"library scan failed: {exc}")
         return None
 
-    for item in sub.get("items") or []:
-        if item.get("kind") == "file" and item.get("ext") == "txt":
-            return item.get("rel_path", "")
+    files = [
+        item for item in root.get("items") or []
+        if item.get("kind") == "file" and item.get("ext") in {"txt", "epub"}
+    ]
+    if title:
+        exact = [item for item in files if _file_stem(item.get("name", "")) == title]
+        if exact:
+            exact.sort(key=lambda item: (item.get("ext") != "epub", -(item.get("modified_ms") or 0)))
+            return str(exact[0].get("rel_path") or "") or None
+
+    target_dir = next(
+        (
+            item.get("rel_path", "")
+            for item in root.get("items") or []
+            if item.get("kind") == "dir" and item.get("name", "") == book_id
+        ),
+        "",
+    )
+    if target_dir:
+        try:
+            sub = await _library_snapshot(ctx, target_dir, refresh=True)
+        except Exception:
+            sub = {}
+        nested = [
+            item for item in sub.get("items") or []
+            if item.get("kind") == "file" and item.get("ext") in {"txt", "epub"}
+        ]
+        if nested:
+            nested.sort(key=lambda item: (item.get("ext") != "epub", -(item.get("modified_ms") or 0)))
+            return str(nested[0].get("rel_path") or "") or None
+
     return None
 
 
-async def _find_done_job(ctx, book_id: str) -> int | None:
-    """返回该 book_id 最近一个 done 状态的 job id，否则 None。"""
+def _file_stem(name: str) -> str:
+    return str(name).rsplit(".", 1)[0]
+
+
+async def _find_done_job_info(ctx, book_id: str) -> dict | None:
     try:
         data = await ctx.access.http.fetch_json(
             f"{TOMATO_BASE}/api/jobs",
@@ -446,10 +510,18 @@ async def _find_done_job(ctx, book_id: str) -> int | None:
         )
     except Exception:
         return None
-    for job in data.get("items") or []:
-        if str(job.get("book_id", "")) == book_id and job.get("state") == "done":
-            return job.get("id")
-    return None
+    matches = [
+        job for job in data.get("items") or []
+        if str(job.get("book_id", "")) == book_id and job.get("state") == "done"
+    ]
+    if not matches:
+        return None
+    return max(matches, key=lambda job: int(job.get("updated_ms") or 0))
+
+
+async def _find_done_job(ctx, book_id: str) -> int | None:
+    job = await _find_done_job_info(ctx, book_id)
+    return job.get("id") if job else None
 
 
 async def _wait_for_active_job(ctx, book_id: str) -> int | None:
@@ -484,6 +556,169 @@ async def _submit_choice(ctx, job_id: int, kind: str, value: str | None) -> None
         )
     except Exception as e:
         ctx.trace("chapter", message=f"submit {kind} choice error: {e}")
+
+
+def _epub_spine(archive: zipfile.ZipFile) -> list[tuple[str, str]]:
+    container = ElementTree.fromstring(archive.read("META-INF/container.xml"))
+    rootfile = container.find(".//{*}rootfile")
+    if rootfile is None or not rootfile.get("full-path"):
+        raise ValueError("EPUB container 未声明 OPF")
+
+    opf_path = posixpath.normpath(rootfile.get("full-path", ""))
+    opf = ElementTree.fromstring(archive.read(opf_path))
+    manifest = {
+        item.get("id", ""): item.get("href", "")
+        for item in opf.findall(".//{*}manifest/{*}item")
+        if item.get("id") and item.get("href")
+    }
+    opf_dir = posixpath.dirname(opf_path)
+    result = []
+    for itemref in opf.findall(".//{*}spine/{*}itemref"):
+        href = manifest.get(itemref.get("idref", ""), "")
+        if href:
+            result.append((posixpath.normpath(posixpath.join(opf_dir, href)), href))
+    return result
+
+
+def _xhtml_soup(archive: zipfile.ZipFile, path: str) -> BeautifulSoup:
+    return BeautifulSoup(archive.read(path), "html.parser")
+
+
+def _split_epub(raw: bytes) -> list[tuple[str, str]]:
+    chapters: list[tuple[str, str]] = []
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        spine = _epub_spine(archive)
+        named_chapters = [item for item in spine if re.fullmatch(r"chapter_\d+\.xhtml?", posixpath.basename(item[1]), re.I)]
+        candidates = named_chapters or [
+            item for item in spine
+            if not posixpath.basename(item[1]).lower().startswith("aux_")
+            and posixpath.basename(item[1]).lower() not in {"table-of-contents.html", "toc.xhtml", "nav.xhtml"}
+        ]
+        for path, _href in candidates:
+            soup = _xhtml_soup(archive, path)
+            heading = soup.find(["h1", "h2", "title"])
+            title = heading.get_text(" ", strip=True) if heading else ""
+            if not title or title.endswith(" - 段评"):
+                continue
+            body = soup.body or soup
+            if heading and heading in body.descendants:
+                heading.extract()
+            for node in body.select("script, style, nav, .back-to-comments, .segment-link"):
+                node.decompose()
+            content = "\n".join(body.stripped_strings).strip()
+            chapters.append((title, content))
+    return chapters
+
+
+def _empty_reviews(error: str = "") -> dict:
+    result = {
+        "paragraphs": {},
+        "chapterEnd": [],
+        "chapterEndHot": [],
+        "authorReviews": [],
+        "hotParagraphReviews": [],
+        "summary": {
+            "totalParagraphs": 0,
+            "totalReviews": 0,
+            "paragraphsWithReviews": [],
+            "paragraphStats": {},
+            "chapterEndCount": 0,
+            "hotParagraphCount": 0,
+        },
+    }
+    if error:
+        result["debug"] = {"error": error}
+    return result
+
+
+def _review_time(value: int) -> str:
+    if value > 1_000_000_000_000:
+        value //= 1000
+    if value <= 0:
+        return ""
+    return datetime.fromtimestamp(value, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _extract_epub_reviews(raw: bytes, chapter_title: str, chapter_id: str) -> dict:
+    target_title = f"{chapter_title} - 段评"
+    page = None
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        for path, _href in _epub_spine(archive):
+            soup = _xhtml_soup(archive, path)
+            heading = soup.find(["h1", "h2"])
+            title = heading.get_text(" ", strip=True) if heading else ""
+            if title == target_title:
+                page = soup
+                break
+    if page is None:
+        return _empty_reviews("EPUB 未包含该章段评；请启用 enable_segment_comments 后重新下载")
+    soup = page
+
+    paragraphs: dict[str, list[dict]] = {}
+    hot: list[dict] = []
+    for heading in soup.select("h3[id^='para-']"):
+        match = re.fullmatch(r"para-(\d+)", str(heading.get("id") or ""))
+        if not match:
+            continue
+        paragraph_id = int(match.group(1))
+        paragraph_text_node = heading.select_one(".para-src")
+        paragraph_text = (
+            paragraph_text_node.get_text(" ", strip=True).strip('"“”')
+            if paragraph_text_node else heading.get_text(" ", strip=True)
+        )
+        review_list = heading.find_next_sibling("ol")
+        if review_list is None:
+            continue
+        reviews = []
+        for review_index, item in enumerate(review_list.select("li.seg-item"), start=1):
+            meta_node = item.select_one("small.seg-meta")
+            meta_text = meta_node.get_text(" ", strip=True) if meta_node else ""
+            content_node = next(
+                (node for node in item.find_all("p", recursive=False) if not node.select_one("small.seg-meta")),
+                None,
+            )
+            content = content_node.get_text("\n", strip=True) if content_node else ""
+            if not content:
+                continue
+            user_match = re.search(r"作者：(.+?)(?:\s*\|\s*时间：|\s*\|\s*赞：|$)", meta_text)
+            time_match = re.search(r"时间：(\d+)", meta_text)
+            like_match = re.search(r"赞：(\d+)", meta_text)
+            review = {
+                "id": f"fanqie-local-{chapter_id}-{paragraph_id}-{review_index}",
+                "content": content,
+                "userName": user_match.group(1).strip() if user_match else "匿名",
+                "likeNum": int(like_match.group(1)) if like_match else 0,
+                "reviewTime": _review_time(int(time_match.group(1))) if time_match else "",
+                "paragraphId": paragraph_id,
+            }
+            reviews.append(review)
+        if reviews:
+            key = str(paragraph_id)
+            paragraphs[key] = reviews
+            hot.append({
+                "paragraphId": paragraph_id,
+                "paragraphText": paragraph_text,
+                "matchedText": paragraph_text,
+                "commentCount": len(reviews),
+                "hotCommentCount": len(reviews),
+                "totalCommentCount": len(reviews),
+                "topReviews": reviews[:3],
+            })
+
+    stats = {key: len(value) for key, value in paragraphs.items()}
+    total = sum(stats.values())
+    result = _empty_reviews()
+    result["paragraphs"] = paragraphs
+    result["hotParagraphReviews"] = hot
+    result["summary"] = {
+        "totalParagraphs": len(paragraphs),
+        "totalReviews": total,
+        "paragraphsWithReviews": sorted(int(key) for key in paragraphs),
+        "paragraphStats": stats,
+        "chapterEndCount": 0,
+        "hotParagraphCount": len(hot),
+    }
+    return result
 
 
 def _split_txt(text: str) -> list[tuple[str, str]]:

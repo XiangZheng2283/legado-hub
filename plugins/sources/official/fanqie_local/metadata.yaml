@@ -13,6 +13,7 @@ capabilities:
   - detail
   - toc
   - chapter
+  - chapter_reviews
 auth:
   mode: none
 content:

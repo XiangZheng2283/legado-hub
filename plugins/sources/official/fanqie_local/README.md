@@ -55,13 +55,34 @@ environment:
 Reading 搜索/订阅
   → fanqie_local.search() → 调下载器 /api/search，并直接解析 items[].raw
   → fanqie_local.detail() → 用户打开详情时调下载器 /api/preview/:book_id
-  → fanqie_local.toc()    → 触发/等待整本 txt 落盘 → 解析章节列表
-  → fanqie_local.chapter() → 从落盘 txt 按章节 index 切出内容返回
+  → fanqie_local.toc()    → 用 /api/status 校验下载器 → 确认 job 已完成 → 扫描 /api/library → 解析成品 EPUB/TXT
+  → fanqie_local.chapter() → 从成品文件按章节 index 返回正文
+  → chapter_reviews()      → 从 EPUB 的“章节名 - 段评”辅助页返回段落短评
 ```
 
-**整本下载完成才转换**：`toc()` 和 `chapter()` 都依赖本地 txt 文件。
-若文件不存在，插件会向下载器发起下载 job 并轮询等待完成（最长 `FANQIE_LOCAL_TIMEOUT` 秒）。
-文件一旦落盘，后续访问直接读本地缓存，不再重下。
+**整本下载完成才转换**：`toc()`、`chapter()` 和 `chapter_reviews()` 只读取状态为
+`done` 的下载 job 对应成品。最终文件通过 `/api/library` 定位、通过 `/download/<rel_path>`
+读取，不直接访问 `/api/status.save_dir` 暴露的主机绝对路径。
+
+插件优先选择 EPUB，因为 Tomato 只在完整 EPUB 中保存段评、头像和评论图片；TXT 仅作为
+既有成品的正文兼容格式。文件下载后会在 Hub 进程内缓存解析结果，不会按章重复下载整本。
+
+---
+
+## 下载器段评配置
+
+`official-api` 构建只表示下载器具备抓取段评的代码能力；还必须在 `config.yml` 中实际开启：
+
+```yaml
+novel_format: epub
+enable_segment_comments: true
+segment_comments_top_n: 10
+download_comment_images: true
+download_comment_avatars: true
+```
+
+配置变更不会给已经生成的 EPUB 补数据。旧 EPUB 没有“章节名 - 段评”页时，需要删除或覆盖
+旧成品并重新下载。Hub 仍会正常导入正文，但短评结果为空，调试信息会明确提示重新生成 EPUB。
 
 ---
 
@@ -90,6 +111,7 @@ Reading 搜索/订阅
 ## 已知限制
 
 - 搜索依赖下载器的 `official-api` feature；若以 `no-official-api` 模式构建，搜索返回空。
-- 章节顺序从 txt 文件解析，依赖番茄下载器输出的格式（`第x章 标题` 或序章/番外等）。
-  若格式变化导致解析失败，全文会作为单章返回。
+- 目录和正文优先按 Tomato 的 `chapter_XXXXX.xhtml` 解析；简介、分卷、可见目录和段评辅助页不会被误识别为章节。
+- 段评来自下载时写入 EPUB 的快照，最多只有 `segment_comments_top_n` 条；它不是实时评论 API。
+- 当前 Hub 短评结构会保留评论文字、作者、时间和点赞数。EPUB 内嵌头像/评论图片尚不作为公开 URL 暴露，避免把 ZIP 相对路径或不受控数据 URL 直接交给客户端。
 - 封面图来自下载器 `/api/preview-cover-by-book/:book_id`，需下载器已缓存封面才可用。
