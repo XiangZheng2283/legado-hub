@@ -125,6 +125,42 @@ def _require_third_party_plugin(
         raise HTTPException(status_code=404, detail=f"{label}不存在")
 
 
+def _require_review_plugin(
+    catalog: Catalog,
+    source_id: str,
+    capability: str,
+    *,
+    label: str,
+    target_url: str,
+) -> None:
+    plugin = catalog.scheduler._plugins.get(source_id)
+    if (
+        not plugin
+        or not plugin.metadata.enabled
+        or capability not in plugin.capabilities
+    ):
+        raise HTTPException(status_code=404, detail=f"{label}不存在")
+    parsed = urlparse(target_url)
+    hostname = str(parsed.hostname or "").lower().rstrip(".")
+    allowed_hosts = {
+        str(domain or "").lower().lstrip(".").rstrip(".")
+        for domain in plugin.metadata.domains
+        if str(domain or "").strip()
+    }
+    for base_url in plugin.metadata.base_urls:
+        base_hostname = str(urlparse(str(base_url or "")).hostname or "").lower().rstrip(".")
+        if base_hostname:
+            allowed_hosts.add(base_hostname)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or not any(hostname == allowed or hostname.endswith(f".{allowed}") for allowed in allowed_hosts)
+    ):
+        raise HTTPException(status_code=404, detail=f"{label}不存在")
+
+
 def _public_text(value: Any, *, max_length: int) -> str:
     return str(value or "").strip()[:max_length]
 
@@ -442,7 +478,7 @@ async def get_chapter_reviews(request: Request, chapter_id: str) -> dict:
             if library_books_service.legado_chapter(chapter_id) is None:
                 raise HTTPException(status_code=404, detail="章节尚未发布")
         else:
-            _require_third_party_plugin(
+            _require_review_plugin(
                 catalog,
                 source_id,
                 "chapter_reviews",
@@ -508,7 +544,7 @@ async def get_chapter_review_view(
                 label="章节",
                 target_url=chapter_url,
             )
-            _require_third_party_plugin(
+            _require_review_plugin(
                 catalog,
                 source_id,
                 "chapter_reviews",

@@ -2274,6 +2274,17 @@ _CHAPTER_COMMENT_SETTING_FIELDS = {
 _READING_ACCESS_SETTING_FIELDS = {
     "publicBaseUrl",
 }
+_IMGBED_SETTING_FIELDS = {
+    "enabled",
+    "baseUrl",
+    "authCode",
+    "apiToken",
+    "clearAuthCode",
+    "clearApiToken",
+    "uploadChannel",
+    "channelName",
+    "uploadFolder",
+}
 _SETTINGS_FIELDS = {
     "sourcePool",
     "searchScoreFilter",
@@ -2282,6 +2293,7 @@ _SETTINGS_FIELDS = {
     "subscription",
     "chapterComment",
     "readingAccess",
+    "imgbed",
 }
 
 
@@ -2374,6 +2386,19 @@ def _reading_access_settings_from_config(cfg: AppConfig) -> dict:
     }
 
 
+def _imgbed_settings_from_config(cfg: AppConfig) -> dict:
+    settings = cfg.imgbed
+    return {
+        "enabled": settings.enabled,
+        "baseUrl": settings.base_url,
+        "uploadChannel": settings.upload_channel,
+        "channelName": settings.channel_name,
+        "uploadFolder": settings.upload_folder,
+        "authCodeConfigured": bool(settings.auth_code),
+        "apiTokenConfigured": bool(settings.api_token),
+    }
+
+
 def _parse_public_base_url_field(value: object, *, field: str) -> str:
     """Accept a single public book-source origin (no multi-line list)."""
     if value is None:
@@ -2411,6 +2436,7 @@ def get_settings():
         "subscription": _subscription_settings_from_config(cfg),
         "chapterComment": _chapter_comment_settings_from_config(cfg),
         "readingAccess": _reading_access_settings_from_config(cfg),
+        "imgbed": _imgbed_settings_from_config(cfg),
     }
     return settings
 
@@ -2468,6 +2494,43 @@ def update_settings(payload: dict):
                             field=f"chapterComment.{field_name}",
                         ),
                     )
+        if "imgbed" in payload:
+            imgbed = payload["imgbed"]
+            if not isinstance(imgbed, dict):
+                raise HTTPException(status_code=422, detail="imgbed 必须是对象")
+            _reject_unknown_fields(imgbed, _IMGBED_SETTING_FIELDS, label="imgbed")
+            for field_name, config_key in (
+                ("enabled", "imgbed.enabled"),
+                ("baseUrl", "imgbed.baseUrl"),
+                ("uploadChannel", "imgbed.uploadChannel"),
+                ("channelName", "imgbed.channelName"),
+                ("uploadFolder", "imgbed.uploadFolder"),
+            ):
+                if field_name in imgbed:
+                    value = imgbed[field_name]
+                    if field_name == "enabled":
+                        cfg.set(config_key, _parse_bool_field(value, field="imgbed.enabled"))
+                    else:
+                        if not isinstance(value, str):
+                            raise HTTPException(status_code=422, detail=f"imgbed.{field_name} 必须是字符串")
+                        text = value.strip()
+                        if field_name == "uploadChannel":
+                            text = text.lower()
+                            if text not in {"telegram", "cfr2", "s3", "discord", "huggingface", "webdav"}:
+                                raise HTTPException(status_code=422, detail="imgbed.uploadChannel 无效")
+                        if field_name == "uploadFolder" and (".." in text.split("/") or text.startswith("/")):
+                            raise HTTPException(status_code=422, detail="imgbed.uploadFolder 无效")
+                        cfg.set(config_key, text)
+            for field_name, config_key, clear_key in (
+                ("authCode", "imgbed.authCode", "clearAuthCode"),
+                ("apiToken", "imgbed.apiToken", "clearApiToken"),
+            ):
+                if imgbed.get(clear_key) is True:
+                    cfg.set(config_key, "")
+                elif field_name in imgbed and imgbed[field_name]:
+                    if not isinstance(imgbed[field_name], str):
+                        raise HTTPException(status_code=422, detail=f"imgbed.{field_name} 必须是字符串")
+                    cfg.set(config_key, imgbed[field_name].strip())
         if "readingAccess" in payload:
             reading_access = payload["readingAccess"]
             if not isinstance(reading_access, dict):
@@ -2494,6 +2557,7 @@ def update_settings(payload: dict):
         "subscription": _subscription_settings_from_config(active_config),
         "chapterComment": _chapter_comment_settings_from_config(active_config),
         "readingAccess": _reading_access_settings_from_config(active_config),
+        "imgbed": _imgbed_settings_from_config(active_config),
     }
 
 

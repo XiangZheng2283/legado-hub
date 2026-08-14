@@ -656,6 +656,30 @@ class PluginScheduler:
         finally:
             await ctx._fetcher.close()
 
+    async def chapter_review_media(self, source_id: str, chapter_url: str, asset_ref: str) -> dict:
+        plugin = self._plugins.get(source_id)
+        method = getattr(plugin.source, "chapter_review_media", None) if plugin else None
+        if (
+            not plugin
+            or not plugin.metadata.enabled
+            or "chapter_reviews" not in plugin.capabilities
+            or "chapter_review_media" not in plugin.capabilities
+            or not callable(method)
+        ):
+            return {"bytes": b"", "mime": "", "debug": {"error": f"plugin has no chapter review media: {source_id}"}}
+        ctx = self._make_ctx(source_id)
+        try:
+            raw = await self._call_plugin(
+                plugin,
+                lambda: method(ctx, chapter_url, asset_ref),
+                timeout=self.timeout_for_plugin(plugin),
+            )
+            return raw if isinstance(raw, dict) else {}
+        except Exception as exc:
+            return {"bytes": b"", "mime": "", "debug": {"error": self._failure_for_exception(plugin, "chapter_review_media", exc)}}
+        finally:
+            await ctx._fetcher.close()
+
     async def _review_extension(
         self,
         source_id: str,

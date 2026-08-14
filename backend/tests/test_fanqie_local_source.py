@@ -116,7 +116,7 @@ def _epub_bytes() -> bytes:
         )
         archive.writestr(
             "OEBPS/chapter_00002.xhtml",
-            '<html><body><h1>第二章 继续</h1><p id="p-0">第二章正文。</p></body></html>',
+            '<html><body><h1>第二章 继续</h1><p id="p-0">第二章正文。<a class="seg-count" href="aux_00003.xhtml#para-0">(1)</a></p></body></html>',
         )
         archive.writestr(
             "OEBPS/aux_00003.xhtml",
@@ -126,22 +126,22 @@ def _epub_bytes() -> bytes:
             '<img class="avatar" src="images/avatar.jpg"/>作者：测试读者 | 时间：1720000000 | 赞：12'
             '</small></p></li></ol></body></html>',
         )
-        archive.writestr("OEBPS/images/avatar.jpg", b"fake-jpeg")
+        archive.writestr("OEBPS/images/avatar.jpg", b"\xff\xd8\xff\xe0fake-jpeg")
     return output.getvalue()
 
 
 class _DownloadedHttp:
-    def __init__(self) -> None:
+    def __init__(self, save_dir: Path) -> None:
         self.root_scans = 0
-        self.downloads: list[str] = []
         self.status_calls = 0
+        self.save_dir = save_dir
 
     async def fetch_json(self, url: str, **kwargs):
         if url.endswith("/api/status"):
             self.status_calls += 1
             return {
                 "version": "2.4.13",
-                "save_dir": "/data/book",
+                "save_dir": str(self.save_dir),
                 "locked": False,
                 "config": {"use_official_api": True},
             }
@@ -173,14 +173,15 @@ class _DownloadedHttp:
         raise AssertionError(url)
 
     async def fetch_bytes(self, url: str, **kwargs):
-        self.downloads.append(url)
-        return _epub_bytes()
+        raise AssertionError("EPUB must be read from status.save_dir, not /download")
 
 
 class _DownloadedContext(_Context):
-    def __init__(self) -> None:
+    def __init__(self, tmp_path: Path) -> None:
         super().__init__()
-        self.access = type("Access", (), {"http": _DownloadedHttp()})()
+        self.save_dir = tmp_path
+        (self.save_dir / "软件测试.epub").write_bytes(_epub_bytes())
+        self.access = type("Access", (), {"http": _DownloadedHttp(self.save_dir)})()
         self.cache: dict[str, object] = {}
 
     def cache_get(self, key: str):
@@ -194,8 +195,8 @@ class _DownloadedContext(_Context):
         return content.decode(charset or "utf-8")
 
 
-def test_toc_reads_completed_epub_after_library_scan_finishes() -> None:
-    ctx = _DownloadedContext()
+def test_toc_reads_completed_epub_after_library_scan_finishes(tmp_path: Path) -> None:
+    ctx = _DownloadedContext(tmp_path)
     source = Source()
     book_url = f"{MODULE.TOMATO_BASE}/__fanqie__/7156171587174009864"
 
@@ -207,11 +208,11 @@ def test_toc_reads_completed_epub_after_library_scan_finishes() -> None:
     assert chapter["content"] == "第二章正文。"
     assert ctx.access.http.root_scans >= 2
     assert ctx.access.http.status_calls == 1
-    assert ctx.access.http.downloads == [f"{MODULE.TOMATO_BASE}/download/软件测试.epub"]
+    assert not hasattr(ctx.access.http, "downloads")
 
 
-def test_chapter_reviews_reads_tomato_segment_comment_page() -> None:
-    ctx = _DownloadedContext()
+def test_chapter_reviews_reads_tomato_segment_comment_page(tmp_path: Path) -> None:
+    ctx = _DownloadedContext(tmp_path)
     source = Source()
     chapter_url = f"{MODULE.TOMATO_BASE}/__fanqie__/7156171587174009864/2"
 
@@ -224,11 +225,16 @@ def test_chapter_reviews_reads_tomato_segment_comment_page() -> None:
         "likeNum": 12,
         "reviewTime": "2024-07-03 09:46:40",
         "paragraphId": 0,
+        "avatarRef": "OEBPS/images/avatar.jpg",
     }
     assert reviews["hotParagraphReviews"] == [{
         "paragraphId": 0,
         "paragraphText": "第二章正文。",
         "matchedText": "第二章正文。",
+        "matchedParagraphIndex": 0,
+        "matchedParagraphCount": 1,
+        "matchStatus": "direct",
+        "matchConfidence": 1.0,
         "commentCount": 1,
         "hotCommentCount": 1,
         "totalCommentCount": 1,
@@ -239,6 +245,8 @@ def test_chapter_reviews_reads_tomato_segment_comment_page() -> None:
         "totalReviews": 1,
         "paragraphsWithReviews": [0],
         "paragraphStats": {"0": 1},
+        "embeddedReviews": 1,
+        "totalCommentCount": 1,
         "chapterEndCount": 0,
         "hotParagraphCount": 1,
     }

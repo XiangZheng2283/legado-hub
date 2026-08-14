@@ -196,6 +196,7 @@ export function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordOk, setPasswordOk] = useState(false)
+  const [imgbedSecrets, setImgbedSecrets] = useState({ authCode: "", apiToken: "" })
 
   const { data: settingsData, error: settingsError, refetch: refetchSettings } = useQuery({ queryKey: ["settings"], queryFn: api.settings })
   const { data: aggData, error: aggError, refetch: refetchAggregateSettings } = useQuery({ queryKey: ["aggregateSettings"], queryFn: api.aggregateSettings })
@@ -225,6 +226,7 @@ export function SettingsPage() {
   const subscription = local.subscription || {}
   const chapterComment = local.chapterComment || {}
   const readingAccess = local.readingAccess || {}
+  const imgbed = local.imgbed || {}
   const agg = aggForm ?? aggData ?? {}
   const wf = parseRecord(agg.contentWorkflow)
   const sourceOptions: PrioritySourceOption[] = (pluginsData?.items || []).map((plugin: any) => ({
@@ -268,6 +270,14 @@ export function SettingsPage() {
       if (editedSettings) {
         const localPayload = { ...local }
         delete localPayload.contentWorkflow
+        const payloadImgbed = localPayload.imgbed ? { ...localPayload.imgbed } : undefined
+        if (payloadImgbed) {
+          delete payloadImgbed.authCodeConfigured
+          delete payloadImgbed.apiTokenConfigured
+          if (imgbedSecrets.authCode) payloadImgbed.authCode = imgbedSecrets.authCode
+          if (imgbedSecrets.apiToken) payloadImgbed.apiToken = imgbedSecrets.apiToken
+          localPayload.imgbed = payloadImgbed
+        }
         await saveSettings.mutateAsync(localPayload)
         invalidations.push(queryClient.invalidateQueries({ queryKey: ["settings"] }))
       }
@@ -278,6 +288,7 @@ export function SettingsPage() {
       await Promise.all(invalidations)
       setEditedSettings(null)
       setAggForm(null)
+      setImgbedSecrets({ authCode: "", apiToken: "" })
       setIsSaved(true)
       setHasChanges(false)
     } catch (error: any) {
@@ -388,6 +399,31 @@ export function SettingsPage() {
             <p className="mt-3 text-xs text-slate-500">
               示例：<code className="text-[11px]">https://book.example.com:2087</code>。留空时使用 LEGADOHUB_PUBLIC_BASE_URL，改完立即生效。
             </p>
+          </SettingsCard>
+          <SettingsCard title="评论图片托管" description="将本地 EPUB 中的评论图片上传到 CloudFlare ImgBed，客户端只接收公开图片地址。">
+            <SettingRow title="启用图片上传" description="关闭后仍显示评论文字，但不上传或展示本地评论图片。">
+              <div className="flex justify-end"><Switch aria-label="启用评论图片上传" checked={imgbed.enabled ?? false} onCheckedChange={(checked) => setLocal({ imgbed: { ...imgbed, enabled: checked } })} /></div>
+            </SettingRow>
+            <SettingRow title="ImgBed 地址" description="填写 ImgBed 站点 origin，例如 https://img.example.com。">
+              <Input className={settingsInputClass} aria-label="ImgBed 地址" value={imgbed.baseUrl ?? ""} onChange={(event) => setLocal({ imgbed: { ...imgbed, baseUrl: event.target.value } })} />
+            </SettingRow>
+            <SettingRow title="上传渠道" description="默认使用 Cloudflare R2（cfr2），也可按 ImgBed 配置切换。">
+              <select aria-label="上传渠道" className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" value={imgbed.uploadChannel ?? "cfr2"} onChange={(event) => setLocal({ imgbed: { ...imgbed, uploadChannel: event.target.value } })}>
+                <option value="cfr2">Cloudflare R2</option><option value="telegram">Telegram</option><option value="s3">S3</option><option value="discord">Discord</option><option value="huggingface">HuggingFace</option><option value="webdav">WebDAV</option>
+              </select>
+            </SettingRow>
+            <SettingRow title="渠道名称" description="多渠道 ImgBed 部署时填写，例如 cfr2。">
+              <Input className={settingsInputClass} aria-label="ImgBed 渠道名称" value={imgbed.channelName ?? ""} onChange={(event) => setLocal({ imgbed: { ...imgbed, channelName: event.target.value } })} />
+            </SettingRow>
+            <SettingRow title="上传目录" description="相对目录，不允许使用 .. 越出目录。">
+              <Input className={settingsInputClass} aria-label="ImgBed 上传目录" value={imgbed.uploadFolder ?? "legadohub/reviews"} onChange={(event) => setLocal({ imgbed: { ...imgbed, uploadFolder: event.target.value } })} />
+            </SettingRow>
+            <SettingRow title="上传认证码" description={imgbed.authCodeConfigured ? "已配置；留空保存时保持原值。" : "可选，填写后替换现有认证码。"}>
+              <Input className={settingsInputClass} type="password" aria-label="ImgBed 上传认证码" value={imgbedSecrets.authCode} onChange={(event) => { setImgbedSecrets({ ...imgbedSecrets, authCode: event.target.value }); setHasChanges(true) }} />
+            </SettingRow>
+            <SettingRow title="API Token" description={imgbed.apiTokenConfigured ? "已配置；留空保存时保持原值。" : "可选，需包含 upload 权限。"}>
+              <Input className={settingsInputClass} type="password" aria-label="ImgBed API Token" value={imgbedSecrets.apiToken} onChange={(event) => { setImgbedSecrets({ ...imgbedSecrets, apiToken: event.target.value }); setHasChanges(true) }} />
+            </SettingRow>
           </SettingsCard>
           <SettingsCard title="章节评论入口" description="控制聚合书源在支持章节评论协议的阅读客户端中显示哪些入口。">
             <SettingRow title="段评入口" description="在有评论的正文段落末尾显示段评数量。">

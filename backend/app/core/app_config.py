@@ -197,6 +197,31 @@ class AggregateConfig:
 
 
 @dataclass
+class ImgBedSettings:
+    enabled: bool = False
+    base_url: str = ""
+    auth_code: str = ""
+    api_token: str = ""
+    upload_channel: str = "cfr2"
+    channel_name: str = ""
+    upload_folder: str = "legadohub/reviews"
+    return_format: str = "full"
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ImgBedSettings":
+        return cls(
+            enabled=bool(data.get("enabled", False)),
+            base_url=str(data.get("baseUrl", "") or "").strip().rstrip("/"),
+            auth_code=str(data.get("authCode", "") or "").strip(),
+            api_token=str(data.get("apiToken", "") or "").strip(),
+            upload_channel=str(data.get("uploadChannel", "cfr2") or "cfr2").strip().lower() or "cfr2",
+            channel_name=str(data.get("channelName", "") or "").strip(),
+            upload_folder=str(data.get("uploadFolder", "legadohub/reviews") or "legadohub/reviews").strip("/") or "legadohub/reviews",
+            return_format="full",
+        )
+
+
+@dataclass
 class AIProviderConfig:
     provider: str = "openai_compatible"
     name: str = ""
@@ -375,6 +400,10 @@ class AppConfig:
     @property
     def reading_access(self) -> ReadingAccessConfig:
         return ReadingAccessConfig.from_dict(self._section("readingAccess"))
+
+    @property
+    def imgbed(self) -> ImgBedSettings:
+        return ImgBedSettings.from_dict(self._section("imgbed"))
 
     @property
     def ai_provider(self) -> AIProviderConfig:

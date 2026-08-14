@@ -778,6 +778,15 @@ class Catalog:
 
         return await chapter_reviews(self.scheduler, chapter_id)
 
+    async def chapter_review_media(self, chapter_id: str, asset_ref: str) -> dict:
+        try:
+            source_id, chapter_url = decode_chapter_id(chapter_id)
+        except Exception:
+            return {"bytes": b"", "mime": "", "debug": {"error": "invalid chapter_id format"}}
+        if source_id == VIRTUAL_SOURCE_ID:
+            return {"bytes": b"", "mime": "", "debug": {"error": "virtual chapter media requires mapped access"}}
+        return await self.scheduler.chapter_review_media(source_id, chapter_url, asset_ref)
+
     async def page_hot_reviews(
         self,
         chapter_id: str,

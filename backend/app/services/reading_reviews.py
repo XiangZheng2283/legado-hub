@@ -85,7 +85,7 @@ def _count_label(value: Any) -> str:
 
 
 def _safe_review_image_url(value: Any) -> str:
-    """Allow only confirmed HTTPS Qidian/Yuewen image CDN hosts."""
+    """Allow confirmed HTTPS review hosts, including configured ImgBed."""
     candidate = str(value or "").strip()
     if candidate.startswith("//"):
         candidate = f"https:{candidate}"
@@ -101,9 +101,14 @@ def _safe_review_image_url(value: Any) -> str:
         return ""
     if port not in (None, 443):
         return ""
-    if not any(host == suffix or host.endswith(f".{suffix}") for suffix in REVIEW_IMAGE_HOST_SUFFIXES):
+    if any(host == suffix or host.endswith(f".{suffix}") for suffix in REVIEW_IMAGE_HOST_SUFFIXES):
+        return candidate
+    try:
+        from app.services.imgbed import is_trusted_imgbed_url
+
+        return candidate if is_trusted_imgbed_url(candidate) else ""
+    except Exception:
         return ""
-    return candidate
 
 
 def _review_avatar(review: dict[str, Any], *, author: bool = False, compact: bool = False) -> str:
@@ -237,15 +242,23 @@ def _review_media(review: dict[str, Any]) -> str:
     """Render a confirmed image/GIF URL without proxying plugin data."""
     image_url = _safe_review_image_url(review.get("imageUrl"))
     preview_url = _safe_review_image_url(review.get("imagePreview"))
+    image_urls = review.get("imageUrls") if isinstance(review.get("imageUrls"), list) else []
+    media_urls = [
+        url
+        for url in (_safe_review_image_url(value) for value in image_urls)
+        if url
+    ]
     media_url = image_url or preview_url
+    if not media_url and media_urls:
+        media_url = media_urls[0]
     if not media_url:
         return ""
-    return (
-        '<div class="comment-media-wrap">'
-        f'<img class="comment-media" src="{html.escape(media_url, quote=True)}" alt="评论图片" '
+    image_tags = "".join(
+        f'<img class="comment-media" src="{html.escape(url, quote=True)}" alt="评论图片" '
         'loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true">'
-        '</div>'
+        for url in ([media_url] + [url for url in media_urls[1:] if url != media_url])
     )
+    return f'<div class="comment-media-wrap">{image_tags}</div>'
 
 
 def _reply_row(reply: dict[str, Any], *, target_name: str) -> str:

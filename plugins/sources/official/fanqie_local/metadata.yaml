@@ -14,6 +14,7 @@ capabilities:
   - toc
   - chapter
   - chapter_reviews
+  - chapter_review_media
 auth:
   mode: none
 content:

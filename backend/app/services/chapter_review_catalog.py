@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from pathlib import PurePosixPath
 from typing import Any
 
 from app.services.aggregate_reviews import (
@@ -12,6 +14,7 @@ from app.services.aggregate_reviews import (
 )
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, unpack_aggregate_chapter_url
 from app.services.library_books import library_books_service
+from app.services.imgbed import get_imgbed_uploader
 from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
 
 QIDIAN_APP_SOURCE_ID = "qidian_com_app"
@@ -92,6 +95,96 @@ async def _review_operation(
     return last_result, candidates[-1], "app_failed_web_fallback" if len(candidates) > 1 else "primary_source"
 
 
+def _review_items(value: Any, seen: set[int], result: list[dict[str, Any]]) -> None:
+    if isinstance(value, dict):
+        marker = id(value)
+        if marker in seen:
+            return
+        seen.add(marker)
+        if "avatarRef" in value or "imageRefs" in value:
+            result.append(value)
+        for nested in value.values():
+            _review_items(nested, seen, result)
+    elif isinstance(value, list):
+        for nested in value:
+            _review_items(nested, seen, result)
+
+
+async def _enrich_review_media(
+    scheduler: Any,
+    payload: dict[str, Any],
+    source_id: str,
+    chapter_url: str,
+) -> dict[str, Any]:
+    """Upload local EPUB media and remove all private refs from the payload."""
+    reviews: list[dict[str, Any]] = []
+    _review_items(payload, set(), reviews)
+    uploader = get_imgbed_uploader()
+    refs = {
+        str(ref).strip()
+        for review in reviews
+        for ref in ([review.get("avatarRef")] if review.get("avatarRef") else [])
+        + (review.get("imageRefs") if isinstance(review.get("imageRefs"), list) else [])
+        if str(ref).strip()
+    }
+    resolved: dict[str, str] = {}
+    media_found = len(refs)
+    media_uploaded = 0
+    media_failed = 0
+    semaphore = asyncio.Semaphore(8)
+
+    async def resolve(ref: str) -> tuple[str, str]:
+        nonlocal media_uploaded, media_failed
+        if not uploader.config.enabled:
+            return ref, ""
+        async with semaphore:
+            result = await scheduler.chapter_review_media(source_id, chapter_url, ref)
+            data = result.get("bytes") if isinstance(result, dict) else b""
+            mime = str(result.get("mime") or "") if isinstance(result, dict) else ""
+            if not isinstance(data, bytes) or not data or not mime:
+                media_failed += 1
+                return ref, ""
+            url = await uploader.upload(
+                data,
+                mime_type=mime,
+                filename=PurePosixPath(ref).name,
+            )
+            if url:
+                media_uploaded += 1
+            else:
+                media_failed += 1
+            return ref, url
+
+    if refs and uploader.config.enabled:
+        for ref, url in await asyncio.gather(*(resolve(ref) for ref in refs)):
+            resolved[ref] = url
+    else:
+        media_failed = media_found
+
+    for review in reviews:
+        avatar_ref = str(review.pop("avatarRef", "") or "").strip()
+        image_refs = review.pop("imageRefs", [])
+        if not isinstance(image_refs, list):
+            image_refs = []
+        if avatar_ref and resolved.get(avatar_ref) and not review.get("avatar"):
+            review["avatar"] = resolved[avatar_ref]
+        image_urls = []
+        for ref in image_refs:
+            url = resolved.get(str(ref).strip())
+            if url and url not in image_urls:
+                image_urls.append(url)
+        if image_urls:
+            review["imageUrls"] = image_urls
+            review.setdefault("imageUrl", image_urls[0])
+
+    debug = payload.setdefault("debug", {})
+    if isinstance(debug, dict) and media_found:
+        debug["mediaFound"] = media_found
+        debug["mediaUploaded"] = media_uploaded
+        debug["mediaFailed"] = media_failed
+    return payload
+
+
 def _mapped_review_target(chapter_id: str) -> tuple[str, str, str, bool]:
     source_id, chapter_url = decode_chapter_id(chapter_id)
     if source_id != VIRTUAL_SOURCE_ID:
@@ -122,7 +215,7 @@ async def chapter_reviews(scheduler: Any, chapter_id: str) -> dict[str, Any]:
             "mappedSourceId": actual_source_id,
             "mappingReason": mapping_reason,
         })
-        return response
+        return await _enrich_review_media(scheduler, response, actual_source_id, chapter_url)
 
     try:
         payload = unpack_aggregate_chapter_url(chapter_url)
@@ -197,7 +290,7 @@ async def chapter_reviews(scheduler: Any, chapter_id: str) -> dict[str, Any]:
         },
     }
     response["summary"].update(summarize_reviews(response))
-    return response
+    return await _enrich_review_media(scheduler, response, mapped_source_id, mapped_chapter_url)
 
 
 async def _paged_review_operation(

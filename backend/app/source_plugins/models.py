@@ -76,7 +76,7 @@ class PluginMetadata:
             errors.append("name is required")
         if self.type != "source":
             errors.append(f"type must be 'source', got {self.type}")
-        valid_caps = {"search", "detail", "toc", "chapter", "chapter_reviews", "explore", "auth"}
+        valid_caps = {"search", "detail", "toc", "chapter", "chapter_reviews", "chapter_review_media", "explore", "auth"}
         for cap in self.capabilities:
             if cap not in valid_caps:
                 errors.append(f"invalid capability: {cap}")

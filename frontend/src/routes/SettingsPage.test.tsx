@@ -67,6 +67,15 @@ describe("SettingsPage subscription policy", () => {
       readingAccess: {
         publicBaseUrl: "",
       },
+      imgbed: {
+        enabled: false,
+        baseUrl: "https://img.example.com",
+        uploadChannel: "cfr2",
+        channelName: "",
+        uploadFolder: "legadohub/reviews",
+        authCodeConfigured: true,
+        apiTokenConfigured: true,
+      },
     })
     ;(api.aggregateSettings as any).mockResolvedValue({ contentWorkflow: {} })
     ;(api.lexiconStatus as any).mockResolvedValue({})
@@ -158,6 +167,25 @@ describe("SettingsPage subscription policy", () => {
     const payload = (api.updateSettings as any).mock.calls[0][0]
     expect(payload.readingAccess).toEqual({
       publicBaseUrl: "https://book.example.com:2087",
+    })
+  })
+
+  it("does not send read-only ImgBed secret flags back when saving settings", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole("tab", { name: "阅读" }))
+    await user.click(screen.getByRole("switch", { name: "启用评论图片上传" }))
+    await user.click(screen.getByRole("button", { name: "保存配置" }))
+
+    await waitFor(() => expect(api.updateSettings).toHaveBeenCalledTimes(1))
+    const payload = (api.updateSettings as any).mock.calls[0][0]
+    expect(payload.imgbed).toEqual({
+      enabled: true,
+      baseUrl: "https://img.example.com",
+      uploadChannel: "cfr2",
+      channelName: "",
+      uploadFolder: "legadohub/reviews",
     })
   })
 

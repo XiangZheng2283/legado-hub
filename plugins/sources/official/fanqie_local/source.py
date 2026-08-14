@@ -18,8 +18,10 @@ import posixpath
 import re
 import time
 import zipfile
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree
 
 from bs4 import BeautifulSoup
@@ -235,6 +237,64 @@ class Source:
             return _empty_reviews("EPUB 读取失败")
         return _extract_epub_reviews(raw, chapter_title, ch_id)
 
+    async def paragraph_say(
+        self,
+        ctx,
+        chapter_url: str,
+        paragraph_id: int,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        reviews = await self.chapter_reviews(ctx, chapter_url)
+        all_reviews = reviews.get("paragraphs", {}).get(str(int(paragraph_id)), [])
+        if not isinstance(all_reviews, list):
+            all_reviews = []
+        page = max(1, int(page))
+        page_size = min(50, max(1, int(page_size)))
+        start = (page - 1) * page_size
+        comments = all_reviews[start : start + page_size]
+        total = len(all_reviews)
+        for item in reviews.get("hotParagraphReviews", []):
+            if isinstance(item, dict) and int(item.get("paragraphId", -1)) == int(paragraph_id):
+                total = max(total, int(item.get("totalCommentCount") or total))
+                break
+        return {
+            "paragraphId": int(paragraph_id),
+            "comments": comments,
+            "totalCount": total,
+            "embeddedCount": len(all_reviews),
+            "page": page,
+            "pageSize": page_size,
+            "hasMore": start + len(comments) < len(all_reviews),
+            "nextPage": page + 1 if start + len(comments) < len(all_reviews) else None,
+        }
+
+    async def chapter_review_media(self, ctx, chapter_url: str, asset_ref: str) -> dict:
+        book_id, _ch_id = _parse_chapter_url(chapter_url)
+        rel_path = await _find_book_file_rel(ctx, book_id)
+        if not rel_path or not rel_path.lower().endswith(".epub"):
+            return {"bytes": b"", "mime": "", "debug": {"error": "EPUB not found"}}
+        raw = await self._get_book_bytes(ctx, rel_path)
+        try:
+            member = _normalize_epub_member(asset_ref)
+        except ValueError:
+            return {"bytes": b"", "mime": "", "debug": {"error": "invalid EPUB image reference"}}
+        if not member.startswith("OEBPS/images/"):
+            return {"bytes": b"", "mime": "", "debug": {"error": "image reference outside EPUB images"}}
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            try:
+                info = archive.getinfo(member)
+            except KeyError:
+                return {"bytes": b"", "mime": "", "debug": {"error": "image not found"}}
+            if info.file_size <= 0 or info.file_size > _MAX_EPUB_IMAGE_BYTES:
+                return {"bytes": b"", "mime": "", "debug": {"error": "image too large"}}
+            data = archive.read(member)
+        mime = _image_mime(data)
+        if mime not in _ALLOWED_IMAGE_MIMES:
+            return {"bytes": b"", "mime": "", "debug": {"error": "unsupported image format"}}
+        return {"bytes": data, "mime": mime}
+
     # ── 内部辅助 ──────────────────────────────────────────────────
 
     async def _chapter_order(self, ctx, book_id: str) -> list[tuple[str, str]]:
@@ -264,12 +324,12 @@ class Source:
             return cached
 
         # 两个程序共处一机：save_dir 就是本进程可直接访问的真实目录。
-        # 直接读文件，完全不走 HTTP，也不需要回退。
+        # 直接读文件，完全不走 HTTP，也不需要回退；禁止 rel_path 越出 save_dir。
         status = await _downloader_status(ctx)
         save_dir = str(status.get("save_dir") or "").strip()
-        local_path = os.path.join(save_dir, rel_path.replace("/", os.sep))
+        local_path = _safe_local_book_path(save_dir, rel_path)
         raw = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: open(local_path, "rb").read()
+            None, local_path.read_bytes
         )
 
         ctx.cache_set(cache_key, raw, _ORDER_CACHE_TTL)
@@ -299,10 +359,10 @@ class Source:
         触发下载 job，轮询等待 Done，自动回应 book_name/format 选择，
         返回最终成品的 rel_path 或 None。
         """
-        # 先看有没有已完成的 job，有则直接定位文件
+        # 先看有没有已完成的 job，有则只定位这个完成任务的文件。
         existing = await _find_done_job(ctx, book_id)
         if existing:
-            return await _find_book_file_rel(ctx, book_id)
+            return await _find_book_file_rel(ctx, book_id, job_id=existing)
 
         # 查询是否已有正在运行的 job（下载器同时只允许 1 个活跃任务）
         try:
@@ -318,7 +378,10 @@ class Source:
 
         active_job_id: int | None = None
         for job in data.get("items") or []:
-            if str(job.get("book_id", "")) == book_id and job.get("state") not in ("done", "failed", "canceled"):
+            if (
+                str(job.get("book_id", "")) == book_id
+                and job.get("state") not in ("done", "failed", "canceled")
+            ):
                 active_job_id = job.get("id")
                 break
 
@@ -343,7 +406,6 @@ class Source:
                     return None
 
         job_id = active_job_id
-        # 轮询等待完成
         deadline = time.monotonic() + DOWNLOAD_TIMEOUT_S
         while time.monotonic() < deadline:
             await asyncio.sleep(_POLL_S)
@@ -359,7 +421,7 @@ class Source:
 
             items = jobs.get("items") or []
             if not items:
-                break
+                continue
             job = items[0]
             state = job.get("state", "")
 
@@ -370,12 +432,13 @@ class Source:
                 await _submit_choice(ctx, job_id, "format", "epub")
 
             if state == "done":
-                break
+                return await _find_book_file_rel(ctx, book_id, job_id=job_id)
             if state in ("failed", "canceled"):
                 ctx.trace("chapter", message=f"job {job_id} ended with state={state}: {job.get('message')}")
                 return None
 
-        return await _find_book_file_rel(ctx, book_id)
+        ctx.trace("chapter", message=f"job {job_id} did not finish before timeout")
+        return None
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -438,6 +501,21 @@ def _extract_id(url: str) -> str:
     return url.rstrip("/").split("/")[-1]
 
 
+def _safe_local_book_path(save_dir: str, rel_path: str) -> Path:
+    root = Path(str(save_dir or "").strip()).expanduser().resolve()
+    if not str(root):
+        raise ValueError("番茄下载器未返回 save_dir")
+    normalized = str(rel_path or "").replace("\\", "/")
+    if not normalized or normalized.startswith("/") or re.match(r"^[A-Za-z]:", normalized):
+        raise ValueError("下载器文件路径无效")
+    candidate = (root / Path(normalized)).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("下载器文件路径越出 save_dir") from exc
+    return candidate
+
+
 def _parse_chapter_url(url: str) -> tuple[str, str]:
     """chapterUrl: .../book_id/ch_id  → (book_id, ch_id)"""
     parts = url.rstrip("/").split("/")
@@ -449,8 +527,9 @@ def _pending_chapter(chapter_url: str, msg: str) -> dict:
         "sourceId": "fanqie_local",
         "chapterUrl": chapter_url,
         "title": "",
-        "content": msg,
+        "content": "",
         "format": "text",
+        "debug": {"error": msg},
     }
 
 
@@ -505,9 +584,14 @@ async def _library_snapshot(ctx, path: str = "", *, refresh: bool = False) -> di
     return data
 
 
-async def _find_book_file_rel(ctx, book_id: str) -> str | None:
-    """按完成 job 的书名定位根目录 EPUB/TXT，兼容旧的 book_id 目录。"""
-    job = await _find_done_job_info(ctx, book_id)
+async def _find_book_file_rel(
+    ctx,
+    book_id: str,
+    *,
+    job_id: int | None = None,
+) -> str | None:
+    """按指定完成 job 的书名定位根目录 EPUB/TXT，兼容旧的 book_id 目录。"""
+    job = await _find_done_job_info(ctx, book_id, job_id=job_id)
     if not job:
         return None
     title = str(job.get("title") or "").strip()
@@ -556,7 +640,12 @@ def _file_stem(name: str) -> str:
     return str(name).rsplit(".", 1)[0]
 
 
-async def _find_done_job_info(ctx, book_id: str) -> dict | None:
+async def _find_done_job_info(
+    ctx,
+    book_id: str,
+    *,
+    job_id: int | None = None,
+) -> dict | None:
     try:
         data = await ctx.access.http.fetch_json(
             f"{TOMATO_BASE}/api/jobs",
@@ -568,7 +657,11 @@ async def _find_done_job_info(ctx, book_id: str) -> dict | None:
         return None
     matches = [
         job for job in data.get("items") or []
-        if str(job.get("book_id", "")) == book_id and job.get("state") == "done"
+        if (
+            str(job.get("book_id", "")) == book_id
+            and job.get("state") == "done"
+            and (job_id is None or str(job.get("id")) == str(job_id))
+        )
     ]
     if not matches:
         return None
@@ -614,105 +707,139 @@ async def _submit_choice(ctx, job_id: int, kind: str, value: str | None) -> None
         ctx.trace("chapter", message=f"submit {kind} choice error: {e}")
 
 
+def _normalize_epub_member(path: str) -> str:
+    value = unquote(str(path or "")).replace("\\\\", "/")
+    if not value or value.startswith("/") or re.match(r"^[A-Za-z]:", value):
+        raise ValueError("EPUB member path is absolute")
+    normalized = posixpath.normpath(value)
+    if normalized in {"", ".", ".."} or normalized.startswith("../"):
+        raise ValueError("EPUB member path escapes archive")
+    return normalized
+
+
+def _resolve_epub_href(base_path: str, href: str) -> tuple[str, str]:
+    parsed = urlsplit(unquote(str(href or "")))
+    if parsed.scheme or parsed.netloc:
+        raise ValueError("EPUB href must be relative")
+    member = _normalize_epub_member(
+        posixpath.join(posixpath.dirname(base_path), parsed.path)
+    )
+    return member, parsed.fragment
+
+
 def _epub_spine(archive: zipfile.ZipFile) -> list[tuple[str, str]]:
     container = ElementTree.fromstring(archive.read("META-INF/container.xml"))
     rootfile = container.find(".//{*}rootfile")
     if rootfile is None or not rootfile.get("full-path"):
         raise ValueError("EPUB container 未声明 OPF")
 
-    opf_path = posixpath.normpath(rootfile.get("full-path", ""))
+    opf_path = _normalize_epub_member(rootfile.get("full-path", ""))
     opf = ElementTree.fromstring(archive.read(opf_path))
     manifest = {
         item.get("id", ""): item.get("href", "")
         for item in opf.findall(".//{*}manifest/{*}item")
         if item.get("id") and item.get("href")
     }
-    opf_dir = posixpath.dirname(opf_path)
     result = []
     for itemref in opf.findall(".//{*}spine/{*}itemref"):
         href = manifest.get(itemref.get("idref", ""), "")
         if href:
-            result.append((posixpath.normpath(posixpath.join(opf_dir, href)), href))
+            member, _fragment = _resolve_epub_href(opf_path, href)
+            result.append((member, href))
     return result
+
+
+def _epub_chapter_candidates(
+    spine: list[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    named = [
+        item for item in spine
+        if re.fullmatch(r"chapter_\d+\.xhtml?", posixpath.basename(item[1]), re.I)
+    ]
+    return named or [
+        item for item in spine
+        if not posixpath.basename(item[1]).lower().startswith("aux_")
+        and posixpath.basename(item[1]).lower()
+        not in {"table-of-contents.html", "toc.xhtml", "nav.xhtml"}
+    ]
 
 
 def _xhtml_soup(archive: zipfile.ZipFile, path: str) -> BeautifulSoup:
     return BeautifulSoup(archive.read(path), "html.parser")
 
 
+def _clean_chapter_document(soup: BeautifulSoup) -> BeautifulSoup:
+    body = soup.body or soup
+    for node in body.select(
+        "h1, h2, script, style, nav, header, footer, "
+        ".back-to-comments, .back-to-chapter, .segment-link, .seg-count"
+    ):
+        node.decompose()
+    return body
+
+
+def _chapter_heading(soup: BeautifulSoup) -> Any:
+    body = soup.body or soup
+    return body.find(["h1", "h2"]) or soup.find("title")
+
+
 def _parse_xhtml_bytes(xhtml: bytes) -> tuple[str, str] | None:
     """解析单个 xhtml 文件字节，返回 (title, content) 或 None（跳过段评页等）。
     纯 CPU 操作，可安全在线程池中并发执行。"""
     soup = BeautifulSoup(xhtml, "html.parser")
-    heading = soup.find(["h1", "h2", "title"])
+    heading = _chapter_heading(soup)
     title = heading.get_text(" ", strip=True) if heading else ""
     if not title or title.endswith(" - 段评"):
         return None
-    body = soup.body or soup
-    if heading and heading in body.descendants:
-        heading.extract()
-    for node in body.select("script, style, nav, .back-to-comments, .segment-link"):
-        node.decompose()
+    body = _clean_chapter_document(soup)
     content = "\n".join(body.stripped_strings).strip()
     return (title, content)
 
 
 async def _split_epub_async(raw: bytes) -> list[tuple[str, str]]:
-    """解析整本 EPUB，对各章 xhtml 并发跑 BS4（线程池，默认并发数跟随 CPU 核数）。"""
+    """解析整本 EPUB，对各章 xhtml 并发跑 BS4（线程池）。"""
     loop = asyncio.get_event_loop()
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-        spine = _epub_spine(archive)
-        named_chapters = [
-            item for item in spine
-            if re.fullmatch(r"chapter_\d+\.xhtml?", posixpath.basename(item[1]), re.I)
-        ]
-        candidates = named_chapters or [
-            item for item in spine
-            if not posixpath.basename(item[1]).lower().startswith("aux_")
-            and posixpath.basename(item[1]).lower() not in {
-                "table-of-contents.html", "toc.xhtml", "nav.xhtml"
-            }
-        ]
-        # 先把所有候选文件字节一次性读出（zipfile 不线程安全，必须在这里读完）
+        candidates = _epub_chapter_candidates(_epub_spine(archive))
         indexed_chunks: list[tuple[int, bytes]] = [
             (i, archive.read(path)) for i, (path, _href) in enumerate(candidates)
         ]
 
-    # 并发解析：每个 xhtml 独立提交到默认线程池
-    tasks = [
-        loop.run_in_executor(None, _parse_xhtml_bytes, chunk)
-        for _i, chunk in indexed_chunks
-    ]
-    results = await asyncio.gather(*tasks)
+    tasks = {
+        asyncio.ensure_future(loop.run_in_executor(None, _parse_xhtml_bytes, chunk)): index
+        for index, chunk in indexed_chunks
+    }
+    results: list[tuple[int, tuple[str, str] | None]] = []
+    pending = set(tasks)
+    while pending:
+        done, pending = await asyncio.wait(
+            pending,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        for task in done:
+            results.append((tasks[task], task.result()))
+    results.sort(key=lambda item: item[0])
+    return [result for _index, result in results if result is not None]
 
-    # 按原始 spine 顺序过滤 None（段评页、空页等）
-    return [r for r in results if r is not None]
+
+def _parse_xhtml_document(soup: BeautifulSoup) -> tuple[str, str] | None:
+    heading = _chapter_heading(soup)
+    title = heading.get_text(" ", strip=True) if heading else ""
+    if not title or title.endswith(" - 段评"):
+        return None
+    body = _clean_chapter_document(soup)
+    return title, "\n".join(body.stripped_strings).strip()
 
 
 def _split_epub(raw: bytes) -> list[tuple[str, str]]:
-    """同步入口，供不在协程上下文中的调用方使用（实际上目前只有测试用）。"""
+    """同步入口，供测试和离线工具使用。"""
     chapters: list[tuple[str, str]] = []
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-        spine = _epub_spine(archive)
-        named_chapters = [item for item in spine if re.fullmatch(r"chapter_\d+\.xhtml?", posixpath.basename(item[1]), re.I)]
-        candidates = named_chapters or [
-            item for item in spine
-            if not posixpath.basename(item[1]).lower().startswith("aux_")
-            and posixpath.basename(item[1]).lower() not in {"table-of-contents.html", "toc.xhtml", "nav.xhtml"}
-        ]
+        candidates = _epub_chapter_candidates(_epub_spine(archive))
         for path, _href in candidates:
-            soup = _xhtml_soup(archive, path)
-            heading = soup.find(["h1", "h2", "title"])
-            title = heading.get_text(" ", strip=True) if heading else ""
-            if not title or title.endswith(" - 段评"):
-                continue
-            body = soup.body or soup
-            if heading and heading in body.descendants:
-                heading.extract()
-            for node in body.select("script, style, nav, .back-to-comments, .segment-link"):
-                node.decompose()
-            content = "\n".join(body.stripped_strings).strip()
-            chapters.append((title, content))
+            parsed = _parse_xhtml_document(_xhtml_soup(archive, path))
+            if parsed is not None:
+                chapters.append(parsed)
     return chapters
 
 
@@ -737,6 +864,42 @@ def _empty_reviews(error: str = "") -> dict:
     return result
 
 
+_MAX_EPUB_IMAGE_BYTES = 10 * 1024 * 1024
+_ALLOWED_IMAGE_MIMES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+
+def _image_mime(data: bytes) -> str:
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return ""
+
+
+def _safe_epub_image_ref(
+    archive: zipfile.ZipFile,
+    base_member: str,
+    src: str,
+) -> str:
+    member, fragment = _resolve_epub_href(base_member, src)
+    if fragment or not member.startswith("OEBPS/images/"):
+        return ""
+    try:
+        info = archive.getinfo(member)
+    except KeyError:
+        return ""
+    if info.file_size <= 0 or info.file_size > _MAX_EPUB_IMAGE_BYTES:
+        return ""
+    data = archive.read(member)
+    if _image_mime(data) not in _ALLOWED_IMAGE_MIMES:
+        return ""
+    return member
+
+
 def _review_time(value: int) -> str:
     if value > 1_000_000_000_000:
         value //= 1000
@@ -745,80 +908,178 @@ def _review_time(value: int) -> str:
     return datetime.fromtimestamp(value, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _extract_epub_reviews(raw: bytes, chapter_title: str, chapter_id: str) -> dict:
-    target_title = f"{chapter_title} - 段评"
-    page = None
-    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-        for path, _href in _epub_spine(archive):
-            soup = _xhtml_soup(archive, path)
-            heading = soup.find(["h1", "h2"])
-            title = heading.get_text(" ", strip=True) if heading else ""
-            if title == target_title:
-                page = soup
-                break
-    if page is None:
-        return _empty_reviews("EPUB 未包含该章段评；请启用 enable_segment_comments 后重新下载")
-    soup = page
+def _parse_comment_count(value: str) -> int:
+    match = re.search(r"[（(]\s*(\d+)\s*[）)]", str(value or ""))
+    return int(match.group(1)) if match else 0
 
-    paragraphs: dict[str, list[dict]] = {}
-    hot: list[dict] = []
-    for heading in soup.select("h3[id^='para-']"):
-        match = re.fullmatch(r"para-(\d+)", str(heading.get("id") or ""))
-        if not match:
+
+def _chapter_link_index(
+    archive: zipfile.ZipFile,
+    chapter_member: str,
+) -> tuple[dict[tuple[str, str], tuple[int, int]], dict[str, str]]:
+    """Return (aux member/fragment -> (正文 p index, total), p id -> text)."""
+    soup = _xhtml_soup(archive, chapter_member)
+    links: dict[tuple[str, str], tuple[int, int]] = {}
+    paragraph_texts: dict[str, str] = {}
+    for index, node in enumerate(soup.select("body p")):
+        paragraph_id = str(node.get("id") or "")
+        if paragraph_id:
+            body_copy = BeautifulSoup(str(node), "html.parser")
+            for badge in body_copy.select(".seg-count"):
+                badge.decompose()
+            paragraph_texts[paragraph_id] = body_copy.get_text(" ", strip=True)
+        anchor = node.select_one("a.seg-count[href]")
+        if anchor is None:
             continue
-        paragraph_id = int(match.group(1))
-        paragraph_text_node = heading.select_one(".para-src")
-        paragraph_text = (
-            paragraph_text_node.get_text(" ", strip=True).strip('"“”')
-            if paragraph_text_node else heading.get_text(" ", strip=True)
-        )
-        review_list = heading.find_next_sibling("ol")
-        if review_list is None:
+        try:
+            aux_member, fragment = _resolve_epub_href(chapter_member, str(anchor.get("href") or ""))
+        except ValueError:
             continue
-        reviews = []
-        for review_index, item in enumerate(review_list.select("li.seg-item"), start=1):
-            meta_node = item.select_one("small.seg-meta")
-            meta_text = meta_node.get_text(" ", strip=True) if meta_node else ""
-            content_node = next(
-                (node for node in item.find_all("p") if not node.select_one("small.seg-meta")),
-                None,
-            )
-            content = content_node.get_text("\n", strip=True) if content_node else ""
-            if not content:
-                continue
-            user_match = re.search(r"作者：(.+?)(?:\s*\|\s*时间：|\s*\|\s*赞：|$)", meta_text)
-            time_match = re.search(r"时间：(\d+)", meta_text)
-            like_match = re.search(r"赞：(\d+)", meta_text)
-            review = {
-                "id": f"fanqie-local-{chapter_id}-{paragraph_id}-{review_index}",
-                "content": content,
-                "userName": user_match.group(1).strip() if user_match else "匿名",
-                "likeNum": int(like_match.group(1)) if like_match else 0,
-                "reviewTime": _review_time(int(time_match.group(1))) if time_match else "",
-                "paragraphId": paragraph_id,
-            }
-            reviews.append(review)
-        if reviews:
-            key = str(paragraph_id)
-            paragraphs[key] = reviews
-            hot.append({
-                "paragraphId": paragraph_id,
-                "paragraphText": paragraph_text,
-                "matchedText": paragraph_text,
-                "commentCount": len(reviews),
-                "hotCommentCount": len(reviews),
-                "totalCommentCount": len(reviews),
-                "topReviews": reviews[:3],
-            })
+        if fragment:
+            links[(aux_member, fragment)] = (index, _parse_comment_count(anchor.get_text(" ", strip=True)))
+    return links, paragraph_texts
+
+
+def _find_review_page_by_title(
+    archive: zipfile.ZipFile,
+    target_title: str,
+) -> tuple[str, BeautifulSoup] | None:
+    for path, _href in _epub_spine(archive):
+        soup = _xhtml_soup(archive, path)
+        heading = soup.find(["h1", "h2"])
+        title = heading.get_text(" ", strip=True) if heading else ""
+        if title == target_title:
+            return path, soup
+    return None
+
+
+def _extract_epub_reviews(raw: bytes, chapter_title: str, chapter_id: str) -> dict:
+    """Extract all embedded comments, using正文 seg-count soft links as authority."""
+    try:
+        chapter_number = max(0, int(chapter_id) - 1)
+    except (TypeError, ValueError):
+        chapter_number = -1
+    page_targets: dict[tuple[str, str], tuple[int, int]] = {}
+    paragraph_texts: dict[str, str] = {}
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        spine = _epub_spine(archive)
+        candidates = _epub_chapter_candidates(spine)
+        if 0 <= chapter_number < len(candidates):
+            chapter_member = candidates[chapter_number][0]
+            try:
+                page_targets, paragraph_texts = _chapter_link_index(archive, chapter_member)
+            except Exception:
+                page_targets = {}
+        if not page_targets:
+            return _empty_reviews("正文未找到该章段评软链接")
+        pages: dict[str, BeautifulSoup] = {}
+        if page_targets:
+            for member, _fragment in page_targets:
+                if member not in pages:
+                    try:
+                        pages[member] = _xhtml_soup(archive, member)
+                    except KeyError:
+                        continue
+
+        paragraphs: dict[str, list[dict]] = {}
+        hot: list[dict] = []
+        total_comment_count = 0
+        for member, soup in pages.items():
+            for heading in soup.select("h3[id^='para-']"):
+                match = re.fullmatch(r"para-(\d+)", str(heading.get("id") or ""))
+                if not match:
+                    continue
+                para_fragment = str(heading.get("id"))
+                target = page_targets.get((member, para_fragment))
+                if page_targets and target is None:
+                    continue
+                paragraph_id = int(match.group(1))
+                paragraph_index = target[0] if target is not None else paragraph_id
+                total_count = target[1] if target is not None else 0
+                paragraph_text_node = heading.select_one(".para-src")
+                paragraph_text = (
+                    paragraph_text_node.get_text(" ", strip=True).strip('"“”')
+                    if paragraph_text_node else heading.get_text(" ", strip=True)
+                )
+                back_link = heading.find_next_sibling("div", class_="back-to-chapter")
+                linked_p = ""
+                if back_link is not None:
+                    back_anchor = back_link.select_one("a[href]")
+                    if back_anchor is not None:
+                        try:
+                            _member, fragment = _resolve_epub_href(member, str(back_anchor.get("href") or ""))
+                            linked_p = fragment
+                        except ValueError:
+                            linked_p = ""
+                if linked_p:
+                    paragraph_text = paragraph_texts.get(linked_p, paragraph_text)
+                review_list = heading.find_next_sibling("ol")
+                if review_list is None:
+                    continue
+                reviews: list[dict] = []
+                for review_index, item in enumerate(review_list.select("li.seg-item"), start=1):
+                    meta_node = item.select_one("small.seg-meta")
+                    meta_text = meta_node.get_text(" ", strip=True) if meta_node else ""
+                    content_node = next(
+                        (node for node in item.find_all("p") if not node.select_one("small.seg-meta")),
+                        None,
+                    )
+                    content = content_node.get_text("\n", strip=True) if content_node else ""
+                    if not content:
+                        continue
+                    user_match = re.search(r"作者：(.+?)(?:\s*\|\s*时间：|\s*\|\s*赞：|$)", meta_text)
+                    time_match = re.search(r"时间：(\d+)", meta_text)
+                    like_match = re.search(r"赞：(\d+)", meta_text)
+                    review = {
+                        "id": f"fanqie-local-{chapter_id}-{paragraph_id}-{review_index}",
+                        "content": content,
+                        "userName": user_match.group(1).strip() if user_match else "匿名",
+                        "likeNum": int(like_match.group(1)) if like_match else 0,
+                        "reviewTime": _review_time(int(time_match.group(1))) if time_match else "",
+                        "paragraphId": paragraph_id,
+                    }
+                    avatar = meta_node.select_one("img.avatar[src]") if meta_node else None
+                    if avatar is not None:
+                        avatar_ref = _safe_epub_image_ref(archive, member, str(avatar.get("src") or ""))
+                        if avatar_ref:
+                            review["avatarRef"] = avatar_ref
+                    image_refs = []
+                    for image in item.select(".seg-images img[src]"):
+                        image_ref = _safe_epub_image_ref(archive, member, str(image.get("src") or ""))
+                        if image_ref and image_ref not in image_refs:
+                            image_refs.append(image_ref)
+                    if image_refs:
+                        review["imageRefs"] = image_refs
+                    reviews.append(review)
+                if not reviews and not total_count:
+                    continue
+                key = str(paragraph_id)
+                paragraphs[key] = reviews
+                total_comment_count += total_count or len(reviews)
+                hot.append({
+                    "paragraphId": paragraph_id,
+                    "paragraphText": paragraph_text,
+                    "matchedText": paragraph_text,
+                    "matchedParagraphIndex": paragraph_index,
+                    "matchedParagraphCount": 1,
+                    "matchStatus": "direct",
+                    "matchConfidence": 1.0,
+                    "commentCount": total_count or len(reviews),
+                    "hotCommentCount": len(reviews),
+                    "totalCommentCount": total_count or len(reviews),
+                    "topReviews": reviews[:3],
+                })
 
     stats = {key: len(value) for key, value in paragraphs.items()}
-    total = sum(stats.values())
+    embedded_total = sum(stats.values())
     result = _empty_reviews()
     result["paragraphs"] = paragraphs
     result["hotParagraphReviews"] = hot
     result["summary"] = {
         "totalParagraphs": len(paragraphs),
-        "totalReviews": total,
+        "totalReviews": embedded_total,
+        "embeddedReviews": embedded_total,
+        "totalCommentCount": total_comment_count or embedded_total,
         "paragraphsWithReviews": sorted(int(key) for key in paragraphs),
         "paragraphStats": stats,
         "chapterEndCount": 0,
