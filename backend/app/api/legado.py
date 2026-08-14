@@ -335,17 +335,22 @@ async def _apply_reading_content_gates(
     source_id: str | None = None,
     catalog: Catalog | None = None,
     apply_purify: bool = True,
+    strip_author_say: bool = True,
 ) -> str:
     """Reading delivery gates: optional ad purify, then 作家说 strip.
 
     Direct source reads use purify → author-say. Already-selected aggregate
     chapters skip phrase-based purify and only apply the author-say boundary.
+    Shared chapters were already cleaned during aggregation; their body path
+    must not re-enter the live review/source bridge.
     """
     cleaned = (
         _purify_chapter_content_for_reading(content, source_id=source_id)
         if apply_purify
         else content
     )
+    if not strip_author_say:
+        return cleaned
     return await _strip_author_say_from_chapter_content(
         chapter_id=chapter_id,
         content=cleaned,
@@ -445,6 +450,7 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
                 source_id=source_id,
                 catalog=catalog,
                 apply_purify=False,
+                strip_author_say=False,
             )
             shared = {**shared, "content": content}
             return _public_chapter_response(shared, chapter_id=chapter_id)

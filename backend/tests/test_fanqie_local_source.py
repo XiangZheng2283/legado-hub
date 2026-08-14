@@ -78,7 +78,7 @@ def test_search_maps_raw_metadata_without_preview_requests() -> None:
             "name": "软件测试",
             "author": "黑马程序员",
             "bookUrl": f"{MODULE.TOMATO_BASE}/__fanqie__/7156171587174009864",
-            "coverUrl": "https://example.test/cover.heic",
+            "coverUrl": "",
             "intro": "软件测试理论与实践相结合。",
             "kind": "教育/教材/计算机",
             "lastChapter": "第9章 测试文档",

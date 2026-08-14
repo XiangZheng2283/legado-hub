@@ -122,7 +122,7 @@ class SharedBookStorage:
             "candidateId": data.get("candidateId", "") or "",
             "name": data.get("name", "") or "",
             "author": data.get("author", "") or "",
-            "coverUrl": data.get("coverUrl", "") or "",
+            "coverUrl": "" if data.get("primarySourceId") == "fanqie_local" else data.get("coverUrl", "") or "",
             "intro": data.get("intro", "") or "",
             "bookStatus": data.get("bookStatus", "") or "",
             "wordCount": data.get("wordCount", "") or "",

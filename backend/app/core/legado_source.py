@@ -820,8 +820,7 @@ def _build_source(
             'try {\n'
             '  chapterPayload = JSON.parse(payload);\n'
             '  if (typeof chapterPayload.content === "string") text = chapterPayload.content;\n'
-            '  else if (typeof chapterPayload.detail === "string") text = chapterPayload.detail;\n'
-            '  else if (chapterPayload.detail && chapterPayload.detail.message) text = chapterPayload.detail.message;\n'
+            '  else if (chapterPayload && (chapterPayload.code || chapterPayload.retryable || chapterPayload.detail)) text = "";\n'
             '} catch (e) {}\n'
             'text = String(text || "").replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n");\n'
             'result = /<(?:p|div)\\b/i.test(text) ? text : text.replace(/\\n\\n+/g, "<br><br>").replace(/\\n/g, "<br>");',

@@ -103,7 +103,7 @@ class Source:
             "kind": " / ".join(part for part in (snapshot["tags"], fields["bookStatus"]) if part),
             "bookStatus": fields["bookStatus"],
             "lastChapter": fields["lastChapter"],
-            "wordCount": f"{len(raw.decode('utf-8-sig', errors='replace'))} 字",
+            "wordCount": f"{len(ctx.decode_text(raw))} 字",
             "updateTime": "",
             "chapterCount": fields["chapterCount"],
             "authRequired": False,
@@ -190,7 +190,7 @@ class Source:
         offset = 0
         line_index = 0
         for line in raw.splitlines(keepends=True):
-            text = line.decode("utf-8-sig" if offset == 0 else "utf-8", errors="replace")
+            text = ctx.decode_text(line)
             title = ctx.clean_text(text)
             if CHAPTER_RE.match(title) or SPECIAL_CHAPTER_RE.match(title):
                 markers.append(
@@ -209,7 +209,7 @@ class Source:
         return markers
 
     def _decoded_lines(self, ctx, raw: bytes) -> list[str]:
-        text = raw.decode("utf-8-sig", errors="replace")
+        text = ctx.decode_text(raw)
         return [cleaned for line in text.splitlines() if (cleaned := ctx.clean_text(line))]
 
     def _intro(self, lines: list[str], end: int) -> str:

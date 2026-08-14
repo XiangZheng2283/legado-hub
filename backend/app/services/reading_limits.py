@@ -61,7 +61,6 @@ class ReadingAccessLimiter:
                     "阅读请求过于频繁，请稍后重试",
                     retry_after_seconds=retry_after,
                 )
-            events.append(now)
             if limit.max_concurrency is not None:
                 active = self._active.get(key, 0)
                 if active >= limit.max_concurrency:
@@ -72,6 +71,7 @@ class ReadingAccessLimiter:
                     )
                 self._active[key] = active + 1
                 concurrency_acquired = True
+            events.append(now)
         try:
             yield
         finally:

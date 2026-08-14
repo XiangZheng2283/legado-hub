@@ -224,6 +224,8 @@ export function LibraryBookDetailPage() {
       ? api.chapter(readingChapter!.readChapterId!)
       : api.subscribe.chapter(readingChapter!.readChapterId!),
     enabled: !!(readingChapter?.readChapterId),
+    retry: false,
+    refetchOnWindowFocus: false,
   })
   const maintenanceBusy = actionMutation.isPending || chapterProcessMutation.isPending || deleteMutation.isPending || subscriptionMutation.isPending || processingSettingsMutation.isPending
 

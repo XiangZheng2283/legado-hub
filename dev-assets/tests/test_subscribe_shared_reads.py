@@ -1106,7 +1106,10 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     monkeypatch.setattr("app.api.subscribe.library_books_service", service)
     monkeypatch.setattr("app.api.legado.library_books_service", service)
 
-    async def empty_reviews(_chapter_id: str, **_kwargs) -> dict:
+    review_calls: list[str] = []
+
+    async def empty_reviews(chapter_id: str, **_kwargs) -> dict:
+        review_calls.append(chapter_id)
         return {
             "authorReviews": [],
             "chapterEnd": [],
@@ -1220,6 +1223,8 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert "function legadoHubSourceBase" in source["jsLib"]
     assert "function legadoHubRewriteApiUrl" in source["jsLib"]
     assert "legadoHubRewriteApiUrl(contentUrl)" in source["ruleContent"]["content"]
+    assert "chapterPayload.detail.message" not in source["ruleContent"]["content"]
+    assert "chapterPayload.retryable" in source["ruleContent"]["content"]
     assert "legadoHubRewriteApiUrl(contentUrl)" in source["ruleToc"]["chapterUrl"]
     chapter_comment = source["ruleContent"]["chapterComment"]
     assert chapter_comment["protocolVersion"] == 2
@@ -1327,6 +1332,7 @@ def test_legado_reads_only_published_shared_content_without_db_side_effects(
     assert free.json()["extra"]["contentAccess"] == "full"
     assert free.json()["isVip"] is False
     assert len(markdown_reads) == 1
+    assert review_calls == []
 
     preview = client.get(chapters[-1]["chapterUrl"].replace("http://testserver", ""))
     assert preview.status_code == 200

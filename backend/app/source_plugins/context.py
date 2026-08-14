@@ -318,13 +318,14 @@ class PluginContext:
 
     def decode_text(self, content_bytes: bytes, charset: str | None = None) -> str:
         if charset:
-            return content_bytes.decode(charset, errors="replace")
-        # Try utf-8 first, then gbk
-        for enc in ("utf-8", "gbk", "gb2312", "big5"):
+            encodings = [charset]
+        else:
+            encodings = ["utf-8-sig", "utf-8", "gb18030", "gbk"]
+        for encoding in encodings:
             try:
-                return content_bytes.decode(enc)
-            except UnicodeDecodeError:
-                pass
+                return content_bytes.decode(encoding)
+            except (LookupError, UnicodeDecodeError):
+                continue
         return content_bytes.decode("utf-8", errors="replace")
 
     def trace(

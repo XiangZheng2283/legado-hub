@@ -119,6 +119,21 @@ async def _enrich_review_media(
     """Upload local EPUB media and remove all private refs from the payload."""
     reviews: list[dict[str, Any]] = []
     _review_items(payload, set(), reviews)
+
+    if source_id == "fanqie_local":
+        for review in reviews:
+            for key in (
+                "avatarRef",
+                "imageRefs",
+                "avatar",
+                "avatarFrame",
+                "imageUrl",
+                "imageUrls",
+                "imagePreview",
+            ):
+                review.pop(key, None)
+        return payload
+
     uploader = get_imgbed_uploader()
     refs = {
         str(ref).strip()

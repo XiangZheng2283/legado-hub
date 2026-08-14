@@ -73,6 +73,15 @@ def _normalize_book_status_text(*values: object) -> str:
     return ""
 
 
+def _safe_cover_url(value: Any, source_id: str = "") -> str:
+    candidate = str(value or "").strip()
+    if str(source_id or "").strip() == "fanqie_local":
+        return ""
+    if "preview-cover-by-book" in candidate.lower():
+        return ""
+    return candidate
+
+
 class LibraryBooksService:
     def __init__(self, db_path=DB_PATH, *, shared_book_storage: SharedBookStorage | None = None):
         self.db_path = db_path
@@ -169,7 +178,7 @@ class LibraryBooksService:
                     "tocUrl": item.get("tocUrl", "") or normalized_toc_url,
                     "score": int(item.get("score", 0) or 0),
                     "lastChapter": item.get("lastChapter", "") or "",
-                    "coverUrl": item.get("coverUrl", "") or "",
+                    "coverUrl": _safe_cover_url(item.get("coverUrl", ""), source_id),
                     "intro": item.get("intro", "") or "",
                     "wordCount": item.get("wordCount", "") or "",
                     "chapterCount": int(item.get("chapterCount", 0) or 0),
@@ -182,7 +191,10 @@ class LibraryBooksService:
             "candidateId": group.get("candidateId", ""),
             "name": group.get("name", "") or (sources[0].get("name", "") if sources else ""),
             "author": group.get("author", "") or (sources[0].get("author", "") if sources else ""),
-            "coverUrl": group.get("coverUrl", "") or (sources[0].get("coverUrl", "") if sources else ""),
+            "coverUrl": _safe_cover_url(
+                group.get("coverUrl", ""),
+                sources[0].get("sourceId", "") if sources else "",
+            ),
             "intro": group.get("intro", "") or (sources[0].get("intro", "") if sources else ""),
             "bookStatus": group.get("bookStatus", "") or (sources[0].get("bookStatus", "") if sources else ""),
             "totalChaptersAtSubscribe": int(group.get("chapterCount", 0) or (sources[0].get("chapterCount", 0) if sources else 0) or 0),
@@ -810,7 +822,7 @@ class LibraryBooksService:
             "canonicalAuthor": row[2] or "",
             "name": row[3] or "",
             "author": row[4] or "",
-            "coverUrl": row[5] or "",
+            "coverUrl": _safe_cover_url(row[5], row[9]),
             "intro": row[6] or "",
             "wordCount": row[7] or "",
             "primaryBookId": row[8] or "",
@@ -1562,7 +1574,7 @@ class LibraryBooksService:
             "bookUrl": f"{base_api}/api/legado/book/{book_id}",
             "name": book.get("name", ""),
             "author": book.get("author", ""),
-            "coverUrl": book.get("coverUrl", ""),
+            "coverUrl": _safe_cover_url(book.get("coverUrl", ""), book.get("primarySourceId", "")),
             "intro": book.get("intro", ""),
             "lastChapter": book.get("lastSourceChapterTitle", "") or book.get("lastLocalChapterTitle", ""),
             "wordCount": book.get("wordCount", ""),
@@ -1686,7 +1698,7 @@ class LibraryBooksService:
                 "bookId": book_id,
                 "name": book.get("name", ""),
                 "author": book.get("author", ""),
-                "coverUrl": book.get("coverUrl", ""),
+                "coverUrl": _safe_cover_url(book.get("coverUrl", ""), book.get("primarySourceId", "")),
                 "intro": book.get("intro", ""),
                 "kind": "共享书库",
                 "lastChapter": book.get("lastSourceChapterTitle", "")

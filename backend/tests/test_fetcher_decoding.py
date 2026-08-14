@@ -5,8 +5,16 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
+from app.source_plugins.context import PluginContext
 from app.source_plugins.fetcher import Fetcher
 from app.source_plugins.scheduler import PluginScheduler
+
+
+def test_plugin_context_decodes_gbk_and_utf8_bom_without_replacement() -> None:
+    context = object.__new__(PluginContext)
+
+    assert context.decode_text("第1章 数字123：天启预报".encode("gb18030")) == "第1章 数字123：天启预报"
+    assert context.decode_text(bytes.fromhex("efbbbf") + "中文正文".encode("utf-8")) == "中文正文"
 
 
 def test_legacy_iso_header_falls_back_to_gbk() -> None:
