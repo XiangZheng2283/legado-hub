@@ -13,6 +13,7 @@ import { LibraryPage } from "@/routes/LibraryPage"
 import { LibraryBookDetailPage } from "@/routes/LibraryBookDetailPage"
 import { LibraryChapterDetailPage } from "@/routes/LibraryChapterDetailPage"
 import { UsersPage } from "@/routes/UsersPage"
+import { MediaUploadQueuePage } from "@/routes/MediaUploadQueuePage"
 
 function ProtectedLayout() {
   const location = useLocation()
@@ -85,6 +86,7 @@ function AuthRouter() {
               <Route path="official-sources" element={<Navigate to="/console/plugins?tab=official" replace />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="users" element={<UsersPage />} />
+              <Route path="media-queue" element={<MediaUploadQueuePage />} />
               <Route path="library/:bookId/chapters/:chapterId" element={<LibraryChapterDetailPage />} />
               <Route path="admin/subscription" element={<SubscriptionDiscoveryPage mode="admin" />} />
               <Route path="admin/library" element={<LibraryPage />} />

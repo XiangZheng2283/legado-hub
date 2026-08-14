@@ -113,5 +113,5 @@ download_comment_avatars: true
 - 搜索依赖下载器的 `official-api` feature；若以 `no-official-api` 模式构建，搜索返回空。
 - 目录和正文优先按 Tomato 的 `chapter_XXXXX.xhtml` 解析；简介、分卷、可见目录和段评辅助页不会被误识别为章节。
 - 段评来自下载时写入 EPUB 的快照，最多只有 `segment_comments_top_n` 条；它不是实时评论 API。
-- 当前 Hub 短评结构会保留评论文字、作者、时间和点赞数。EPUB 内嵌头像/评论图片尚不作为公开 URL 暴露，避免把 ZIP 相对路径或不受控数据 URL 直接交给客户端。
-- 封面图来自下载器 `/api/preview-cover-by-book/:book_id`，需下载器已缓存封面才可用。
+- 评论正文图片与头像只使用下载器已落盘的 `images/<sha1(url)>.<ext>` 文件；下载完成后由 Hub 持久化队列上传到 CloudFlare ImgBed，评论渲染只消费队列中的公开 https URL。队列未完成时不返回任何本地路径或源站 URL，未启用图床时仍正常展示评论文字。
+- 封面 `cover.jpg` 与评论媒体一同进入上传队列；客户端和书籍展示只使用上传成功的图床 https URL。

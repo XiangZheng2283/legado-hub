@@ -262,6 +262,15 @@ function normalizeSearchCards(data: any): any {
 
 export const api = {
   status: (): Promise<any> => fetchJson("/status"),
+  mediaQueue: {
+    list: (params: { status?: string; bookId?: string } = {}): Promise<any> => fetchApiJson(`/admin/media-queue?status=${encodeURIComponent(params.status || "")}&book_id=${encodeURIComponent(params.bookId || "")}`),
+    stats: (): Promise<any> => fetchApiJson("/admin/media-queue/stats"),
+    retry: (id: number): Promise<any> => fetchApiJson(`/admin/media-queue/${id}/retry`, { method: "POST" }),
+    retryFailed: (): Promise<any> => fetchApiJson("/admin/media-queue/retry-failed", { method: "POST" }),
+    remove: (id: number): Promise<any> => fetchApiJson(`/admin/media-queue/${id}`, { method: "DELETE" }),
+    avatars: (bookId: string, chapterId: string, saveDir: string): Promise<any> => fetchApiJson(`/admin/media-queue/book/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}/avatars?save_dir=${encodeURIComponent(saveDir)}`),
+    enqueueAvatars: (bookId: string, saveDir: string, sourceUrls: string[]): Promise<any> => fetchApiJson("/admin/media-queue/avatars", { method: "POST", body: JSON.stringify({ bookId, saveDir, sourceUrls }) }),
+  },
 
   plugins: (): Promise<any> => fetchJson("/plugins"),
   batchEnablePlugins: (pluginIds: string[], enabled: boolean): Promise<any> =>

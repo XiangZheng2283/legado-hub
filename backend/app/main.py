@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app import config
 from app.api import health, legado, console, auth, subscribe
+from app.api.media_queue import router as media_queue_router
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.source_ping_scheduler import SourcePingScheduler
 from app.storage.db import initialize_database
@@ -114,6 +115,10 @@ async def lifespan(app: FastAPI):
     await _probe_saved_plugin_cookies(official_auth_manager)
 
     stop_event = asyncio.Event()
+    from app.services.media_upload_queue import media_upload_queue_service
+    from app.services.download_watcher import DownloadWatcher
+    media_upload_task = asyncio.create_task(media_upload_queue_service.run_forever(stop_event))
+    download_watcher_task = asyncio.create_task(DownloadWatcher(media_upload_queue_service).run_forever(stop_event))
     shared_book_scheduler = SharedBookScheduler()
     aggregate_task = asyncio.create_task(shared_book_scheduler.run_forever(stop_event))
     ping_task = asyncio.create_task(SourcePingScheduler().run_forever(stop_event))
@@ -125,6 +130,8 @@ async def lifespan(app: FastAPI):
         aggregate_task.cancel()
         ping_task.cancel()
         lexicon_task.cancel()
+        media_upload_task.cancel()
+        download_watcher_task.cancel()
         try:
             await aggregate_task
         except asyncio.CancelledError:
@@ -137,6 +144,11 @@ async def lifespan(app: FastAPI):
             await lexicon_task
         except asyncio.CancelledError:
             pass
+        for _task in (media_upload_task, download_watcher_task):
+            try:
+                await _task
+            except asyncio.CancelledError:
+                pass
         try:
             from app.source_plugins.scheduler import shutdown_plugin_scheduler
 
@@ -196,6 +208,7 @@ def create_app(
         app.include_router(subscribe.router)
         app.include_router(legado.router)
         app.include_router(console.console_router)
+        app.include_router(media_queue_router)
 
         # Compat: old book sources baked admin port (8766) into LEGADOHUB_BASE.
         # Access redeem/enter only exist on the reader listener — bounce GET enter.
@@ -218,6 +231,7 @@ def create_app(
         app.include_router(auth.router)
         app.include_router(subscribe.router)
         app.include_router(console.console_router)
+        app.include_router(media_queue_router)
 
     # Serve React console frontend.
     if FRONTEND_DIST.exists():

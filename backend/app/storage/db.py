@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import DATA_DIR, DB_PATH
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
@@ -457,6 +457,35 @@ CREATE TABLE IF NOT EXISTS aggregate_source_snapshot_runs (
 
 CREATE INDEX IF NOT EXISTS idx_aggregate_source_snapshot_runs_book
     ON aggregate_source_snapshot_runs (aggregate_book_id, status);
+
+CREATE TABLE IF NOT EXISTS media_upload_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK(kind IN ('avatar', 'content', 'cover')),
+    source_url TEXT,
+    local_path TEXT NOT NULL,
+    ref TEXT,
+    asset_key TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ('queued', 'uploading', 'done', 'failed', 'rate_limited')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    retry_after_seconds INTEGER,
+    next_retry_at TEXT,
+    uploaded_url TEXT,
+    error TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_media_q_asset_key ON media_upload_queue(asset_key);
+CREATE INDEX IF NOT EXISTS idx_media_q_book ON media_upload_queue(book_id);
+CREATE INDEX IF NOT EXISTS idx_media_q_status ON media_upload_queue(status, next_retry_at);
+CREATE INDEX IF NOT EXISTS idx_media_q_ref ON media_upload_queue(ref);
+
+CREATE TABLE IF NOT EXISTS media_upload_watcher (
+    book_id TEXT PRIMARY KEY,
+    completed_at TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 

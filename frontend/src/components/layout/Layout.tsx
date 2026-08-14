@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useLocation } from "react-router"
 import {
-  AlertCircle, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Users, Library, ShieldAlert, Server,
+  AlertCircle, LayoutDashboard, LogOut, Menu, Search, Settings, BookOpen, UserCog, Users, Library, ShieldAlert, Server, UploadCloud,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -31,6 +31,7 @@ const adminNav: NavItem[] = [
   { name: "搜索工作台", href: "/console/search", icon: ShieldAlert, adminOnly: true },
   { name: "书源管理", href: "/console/plugins", icon: Server, adminOnly: true },
   { name: "用户管理", href: "/console/users", icon: Users, adminOnly: true },
+  { name: "媒体上传队列", href: "/console/media-queue", icon: UploadCloud, adminOnly: true },
   { name: "系统设置", href: "/console/settings", icon: Settings, adminOnly: true },
 ]
 

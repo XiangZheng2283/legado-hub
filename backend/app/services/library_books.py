@@ -816,13 +816,20 @@ class LibraryBooksService:
             return None
         if isinstance(row, sqlite3.Row):
             row = tuple(row)
+        cover_url = _safe_cover_url(row[5], row[9])
+        if not cover_url and str(row[9] or "") == "fanqie_local":
+            try:
+                from app.services.media_upload_queue import media_upload_queue_service
+                cover_url = media_upload_queue_service.find_cover(str(row[8] or ""))
+            except Exception:
+                cover_url = ""
         return {
             "aggregateBookId": row[0],
             "canonicalName": row[1] or "",
             "canonicalAuthor": row[2] or "",
             "name": row[3] or "",
             "author": row[4] or "",
-            "coverUrl": _safe_cover_url(row[5], row[9]),
+            "coverUrl": cover_url,
             "intro": row[6] or "",
             "wordCount": row[7] or "",
             "primaryBookId": row[8] or "",

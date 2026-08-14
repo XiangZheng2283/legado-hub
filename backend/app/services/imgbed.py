@@ -23,6 +23,13 @@ _MAX_RESPONSE_BYTES = 256 * 1024
 _TRUSTED_IMG_BED_HOSTS: set[str] = set()
 
 
+class ImgBedUploadError(RuntimeError):
+    def __init__(self, message: str, *, status_code: int = 0, retry_after: str = ""):
+        super().__init__(message)
+        self.status_code = status_code
+        self.retry_after = retry_after
+
+
 def _host_is_public(host: str) -> bool:
     normalized = str(host or "").lower().rstrip(".")
     if not normalized or normalized in {"localhost", "localhost.localdomain"}:
@@ -225,6 +232,11 @@ class ImgBedUploader:
                     self._cache.popitem(last=False)
             future.set_result(result)
             return result
+        except ImgBedUploadError as exc:
+            if not future.done():
+                future.set_exception(exc)
+                future.exception()
+            raise
         except Exception:
             future.set_result("")
             return ""
@@ -256,6 +268,12 @@ class ImgBedUploader:
                 headers=headers,
                 files=files,
             )
+            if response.status_code == 429:
+                raise ImgBedUploadError(
+                    "ImgBed returned 429",
+                    status_code=429,
+                    retry_after=response.headers.get("Retry-After", ""),
+                )
             response.raise_for_status()
             if len(response.content) > _MAX_RESPONSE_BYTES:
                 return ""
