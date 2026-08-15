@@ -1265,7 +1265,7 @@ async def _legado_search_response(
                 search_service,
                 job.job_id,
                 page1_wait,
-                stop_on_first_result=True,
+                stop_on_first_result=False,
                 known_book_ids=set(),
                 base_api=base_api,
                 allowed_source_ids=allowed_source_ids,
