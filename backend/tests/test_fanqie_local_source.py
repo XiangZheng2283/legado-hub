@@ -172,13 +172,16 @@ def test_chapter_reviews_reads_segment_comments_json(tmp_path: Path) -> None:
 
     reviews = asyncio.run(source.chapter_reviews(ctx, chapter_url))
 
-    # 约定：人物头像视为不存在，不给 avatarRef（头像不加载、当没有）。
+    # 头像按真实格式落 images/avatars（此 fixture 放 images/ 平铺也命中），
+    # 命中即回填 avatarRef；评论图像 images[] 为空则无 imageRefs。
     assert reviews["paragraphs"]["0"][0] == {
         "id": "fanqie-local-2-0-1",
         "content": "写得很好。",
         "userName": "测试读者",
         "likeNum": 12,
         "reviewTime": "2024-07-03 09:46:40",
+        "avatarRef": str(Path(folder) / "images" / f"{sha}.jpg"),
+        "avatarUrl": avatar_url,
         "paragraphId": 0,
     }
     assert reviews["hotParagraphReviews"] == [{

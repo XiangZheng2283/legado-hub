@@ -422,8 +422,19 @@ def _review_card(
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
         paragraph_href = f"{review_view_url}?{query}"
 
-    content_html, _inline_media = _review_content(content, review.get("imageUrls") or [])
-    text_html = f'<p class="comment-text">{content_html}</p>' if content_html else ""
+    # contentHtml 已由富化层组装成自包含成品（头像+正文+内嵌图），不再二次转义/追加；
+    # 无 contentHtml 才走传统 _review_content(+ 尾部媒体块) 路径。
+    _self_contained = bool(review.get("contentHtml"))
+    content_html, _inline_media = (
+        (review["contentHtml"], True)
+        if _self_contained
+        else _review_content(content, review.get("imageUrls") or [])
+    )
+    text_html = (
+        content_html
+        if _self_contained
+        else (f'<p class="comment-text">{content_html}</p>' if content_html else "")
+    )
     paragraph_html = (
         f'<blockquote class="comment-paragraph">{html.escape(paragraph_text.strip())}</blockquote>'
         if paragraph_text.strip()
@@ -440,7 +451,7 @@ def _review_card(
         )
     return (
         f'<article class="{item_classes}"{review_attr}{jump_attr}>'
-        + _review_avatar(review, author=author)
+        + ("" if _self_contained else _review_avatar(review, author=author))
         + '<div class="comment-body">'
         + '<div class="comment-head">'
         + f'<div class="comment-identity"><strong>{html.escape(user_name)}</strong>'
@@ -449,7 +460,7 @@ def _review_card(
         + _review_reply_context(review)
         + paragraph_html
         + text_html
-        + ("" if _inline_media else _review_media(review))
+        + ("" if (_self_contained or _inline_media) else _review_media(review))
         + '<div class="comment-meta">'
         + '<div class="comment-meta-left">'
         + (f'<time>{html.escape(review_time)}</time>' if review_time else "")

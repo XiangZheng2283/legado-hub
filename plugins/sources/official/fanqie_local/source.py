@@ -712,17 +712,32 @@ def _media_sha(url: str) -> str:
 _MEDIA_EXTS = (".jpeg", ".jpg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif")
 
 
+def _media_base_dirs(folder: Path) -> list[Path]:
+    """评论媒体可能的落盘目录：images/ 平铺，以及 images/ 下的直接子目录
+    （如 images/comments、images/avatar —— 下载期 ReviewClient 可能用子目录）。
+    只枚举第一层子目录，绝不递归，避免误扫其它内容。"""
+    images_dir = folder / "images"
+    bases: list[Path] = [images_dir]
+    try:
+        for child in images_dir.iterdir():
+            if child.is_dir():
+                bases.append(child)
+    except OSError:
+        pass
+    return bases
+
+
 def _cached_media_path(folder: Path, url: str) -> Path | None:
     """只读：返回该 URL 已缓存的本地完整路径；未缓存返回 None。绝不触发上游网络。"""
     if not url:
         return None
-    # 下载器 prefetch_comment_media 以 trim 后的 url 命名缓存，须对齐。
+    # 下载器以 trim 后的 url 命名缓存（sha1(trim url)），须对齐。
     digest = _media_sha(url.strip())
-    images_dir = folder / "images"
-    for ext in _MEDIA_EXTS:
-        candidate = images_dir / f"{digest}{ext}"
-        if candidate.is_file():
-            return candidate
+    for base in _media_base_dirs(folder):
+        for ext in _MEDIA_EXTS:
+            candidate = base / f"{digest}{ext}"
+            if candidate.is_file():
+                return candidate
     return None
 
 
@@ -845,24 +860,36 @@ def _build_reviews_from_local(cache: dict, chapter_id: str, folder: Path) -> dic
                 "reviewTime": _review_time(int(created_ts) if isinstance(created_ts, int) else 0),
                 "paragraphId": paragraph_id,
             }
-            # 约定：人物头像视为不存在，不再回填 avatarRef —— 客户端评论只保留
-            # 评论图像（imageRefs），头像当没有（渲染回退到首字符，不加载任何头像图）。
-            # 依据评论区「内容格式」：正文里的 [惊喜] 占位符与源端 images[] 一一对应。
-            # 每个源图片占一个槽位（保序）：已缓存→本地路径（供上传队列映射）；
-            # 未缓存/非 dict→空占位，绝不丢位，保证渲染时 token 与图片按源位置对齐。
+            # 头像：真实格式将 sha1(user.avatar) 落在 images/avatars/<sha1>.<ext>
+            # （_cached_media_path 已含 images/ 平铺 + images/*/ 子目录），命中即回填 avatarRef。
+            avatar_url = str(user.get("avatar") or "").strip()
+            # 原始 CDN URL（客户端直载优先，fallback 用）；本地仅兜底。
+            if avatar_url:
+                review["avatarUrl"] = avatar_url
+            avatar_path = _cached_media_path(folder, avatar_url) if avatar_url else None
+            if avatar_path is not None:
+                review["avatarRef"] = str(avatar_path)
+            # 评论图像：真实格式 images[] 独立数组 + images/<sha1>.<ext> 平铺（已含子目录）。
+            # 每个源图片占一个槽位（保序）：已缓存→本地路径；未缓存→空占位，绝不丢位。
             image_refs: list[str] = []
+            images_orig: list[str] = []
             for img in images_urls:
                 if not isinstance(img, dict):
                     image_refs.append("")
+                    images_orig.append("")
                     continue
                 url = str(img.get("url") or "").strip()
                 if not url:
                     image_refs.append("")
+                    images_orig.append("")
                     continue
+                images_orig.append(url)
                 media_path = _cached_media_path(folder, url)
                 image_refs.append(str(media_path) if media_path is not None else "")
             if image_refs:
                 review["imageRefs"] = image_refs
+            if images_orig:
+                review["imageSrcs"] = images_orig
             reviews.append(review)
 
         if not reviews and not total_count:

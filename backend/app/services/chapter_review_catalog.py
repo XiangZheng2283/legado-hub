@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 from typing import Any
 from pathlib import Path
 
@@ -23,6 +24,12 @@ QIDIAN_SOURCE_IDS = {QIDIAN_APP_SOURCE_ID, QIDIAN_WEB_SOURCE_ID}
 _LOCAL_MEDIA_PREFIX = "/api/legado/media/"
 
 
+def _safe_comment_url(value: Any) -> str:
+    """只放行 http/https 的原始 CDN URL（头像/评论图客户端直载），其余（空白/危险协议）返空串。"""
+    u = str(value or "").strip()
+    return u if u.lower().startswith(("http://", "https://")) else ""
+
+
 def _fanqie_ref_to_media_url(ref: str) -> str:
     """Local fqdown media ref {save_dir}/<book_id>/images/<sha1>.<ext> -> hub route.
 
@@ -31,11 +38,19 @@ def _fanqie_ref_to_media_url(ref: str) -> str:
     """
     path = Path(str(ref).strip())
     filename = path.name
-    # 仅识别 fqdown 本地盘绝对路径 save_dir/<book_id>/images/<sha1>.<ext>;
+    # 仅识别 fqdown 本地盘绝对路径 save_dir/<book_id>/images/<sha1>.<ext>，
+    # 兼容 images/ 平铺与 images/<子目录>/（如 images/comments）两种落盘：
+    # 只要路径里有一段 "images"，其父段是数字 book_id 即命中，用 filename 拼路由。
     # 相对 EPUB 包内路径（如 OEBPS/images/...）不在此列，交给上传队列表决。
-    if not path.is_absolute() or not filename or path.parent.name != "images":
+    if not path.is_absolute() or not filename:
         return ""
-    book_id = path.parent.parent.name or ""
+    parts = path.parts
+    if "images" not in parts:
+        return ""
+    idx = parts.index("images")
+    if idx + 1 >= len(parts):
+        return ""
+    book_id = parts[idx - 1] if idx >= 1 else ""
     if not book_id.isdigit():
         return ""
     return f"{_LOCAL_MEDIA_PREFIX}{book_id}/{filename}"
@@ -160,15 +175,43 @@ async def _enrich_review_media(
         image_refs = review.pop("imageRefs", [])
         if not isinstance(image_refs, list):
             image_refs = []
-        avatar_url = resolved.get(avatar_ref, "")
+        avatar_local = resolved.get(avatar_ref, "")
+        # 原始 CDN URL（客户端直载优先）；无 → 本地本地盘兜底。
+        avatar_orig = _safe_comment_url(review.pop("avatarUrl", ""))
+        avatar_url = avatar_orig or avatar_local
         if avatar_url:
             review["avatar"] = avatar_url
-        # 源端已保序（每个原图一个槽位）：逐槽映射，绝不丢位/去重，
-        # 保证渲染时正文 [惊喜] token 与图片按源位置一 一对应；无上传结果为空串。
-        image_urls = [resolved.get(str(ref).strip(), "") for ref in image_refs]
+        # 源端已保序（每个原图一个槽位）：原 URL 优先、本地兜底，绝不丢位/去重。
+        image_urls_local = [resolved.get(str(ref).strip(), "") for ref in image_refs]
+        image_orig = [_safe_comment_url(u) for u in (review.pop("imageSrcs", []) or [])]
+        image_urls = [
+            (image_orig[i] if i < len(image_orig) and image_orig[i] else image_urls_local[i])
+            for i in range(len(image_urls_local))
+        ]
         if any(image_urls):
             review["imageUrls"] = image_urls
             review["imageUrl"] = next((u for u in image_urls if u), "")
+        # 「正则替换后返回」的成品正文：头像 <img> + 转义正文 + 每图 <img> 内嵌，
+        # 图片 src 优先原 CDN URL、本地媒体 URL 兜底。contentHtml==content 自包含。
+        body_parts: list[str] = []
+        if avatar_url:
+            body_parts.append(
+                f'<img class="comment-inline-avatar" src="{html.escape(avatar_url, quote=True)}" '
+                'alt="头像" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
+            )
+        raw_text = str(review.get("content") or "")
+        if raw_text:
+            body_parts.append(f'<p class="comment-inline-text">{html.escape(raw_text)}</p>')
+        for u in image_urls:
+            if u:
+                body_parts.append(
+                    f'<img class="comment-inline-media" src="{html.escape(u, quote=True)}" '
+                    'alt="评论图片" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
+                )
+        if body_parts and (avatar_url or any(image_urls)):
+            _body = "".join(body_parts)
+            review["contentHtml"] = _body
+            review["content"] = _body
     debug = payload.setdefault("debug", {})
     if isinstance(debug, dict) and refs:
         debug["mediaFound"] = len(refs)

@@ -376,8 +376,19 @@ async def legado_local_comment_media(book_id: str, filename: str):
     if not re.fullmatch(_LOCAL_MEDIA_EXT_RE, filename or ""):
         raise HTTPException(status_code=404, detail="bad_media")
     save_dir = await get_save_dir()
-    target = Path(save_dir) / book_id / "images" / filename
-    if not target.is_file():
+    images_root = Path(save_dir) / book_id / "images"
+    # 兼容两种落盘：images/<file> 平铺，或 images/<子目录>/<file>（如 comments/）。
+    # 只枚举第一层子目录，绝不递归；找不到才 404，<img onerror> 静默隐藏。
+    targets = [images_root / filename]
+    try:
+        targets += [
+            child / filename for child in images_root.iterdir()
+            if child.is_dir() and (child / filename).is_file()
+        ]
+    except OSError:
+        pass
+    target = next((t for t in targets if t.is_file()), None)
+    if target is None:
         raise HTTPException(status_code=404, detail="not_cached")
     # 文件名是 sha1(url) 内容寻址，一个 URL 永远对应同一个字节流 → 不可变。
     # 用长 max-age + immutable + CDN s-maxage，让浏览器与 Cloudflare 边缘按
