@@ -222,8 +222,8 @@ def _review_related_position(review: dict[str, Any]) -> str:
 
 def _review_content(value: Any, image_urls: list[Any] | tuple[Any, ...] | None = None) -> tuple[str, bool]:
     """Escape review text, render Qidian [fn=N] emoticons, and replace
-    Fanqie inline-image placeholders (\[惊喜\] style) positionally with
-    \<img\> when their count matches the review's trusted image URLs.
+    Fanqie inline-image placeholders ([惊喜] style) positionally with
+    <img> when their count matches the review's trusted image URLs.
 
     Returns (html, inline_replaced): inline_replaced is True when the bracket
     placeholders were swapped for \<img\>, in which case the caller should NOT

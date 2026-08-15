@@ -27,7 +27,10 @@ _LOCAL_MEDIA_PREFIX = "/api/legado/media/"
 def _safe_comment_url(value: Any) -> str:
     """只放行 http/https 的原始 CDN URL（头像/评论图客户端直载），其余（空白/危险协议）返空串。"""
     u = str(value or "").strip()
-    return u if u.lower().startswith(("http://", "https://")) else ""
+    low = u.lower()
+    if low.startswith("http://"):
+        return "https://" + u[len("http://"):]  # 升级避免 https 页 mixed-content 拦截
+    return u if low.startswith("https://") else ""
 
 
 def _fanqie_ref_to_media_url(ref: str) -> str:
