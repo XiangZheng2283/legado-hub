@@ -24,6 +24,7 @@ _INLINE_EMOTICON_RE = re.compile(r"\[fn=(\d+)\]")
 # 番茄评论的「文内图」占位符：形如 [惊喜] 的方括号短词（非起点 [fn=N] 表情）。
 _FANQIE_IMG_TOKEN_RE = re.compile(r"\[[^\]]*\]")
 _FN_EMOTICON_RE = re.compile(r"\[fn=\d+\]")
+LOCAL_MEDIA_PREFIX = "/api/legado/media/"
 
 
 class ChapterReviewCache:
@@ -94,6 +95,8 @@ def _safe_review_image_url(value: Any) -> str:
         candidate = f"https:{candidate}"
     if not candidate or len(candidate) > 2048:
         return ""
+    if candidate.startswith(LOCAL_MEDIA_PREFIX):
+        return candidate
     try:
         parsed = urlparse(candidate)
         host = (parsed.hostname or "").lower().rstrip(".")

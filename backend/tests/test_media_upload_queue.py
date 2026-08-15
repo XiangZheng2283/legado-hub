@@ -13,12 +13,13 @@ def test_enqueue_book_deduplicates_and_uploads(tmp_path, monkeypatch):
     monkeypatch.setattr(queue_mod,"get_imgbed_uploader",lambda:Uploader())
     monkeypatch.setattr(queue_mod,"is_trusted_imgbed_url",lambda _url: True)
     service=queue_mod.MediaUploadQueueService(tmp_path/"q.db",concurrency=1)
-    assert len(service.enqueue_book("b",root))==2
-    assert len(service.enqueue_book("b",root))==2
+    # 评论媒质不再自动入队：enqueue_book 只入队封面（评论图走本地映射）。
+    assert len(service.enqueue_book("b",root))==1
+    assert len(service.enqueue_book("b",root))==1
     async def run():
         while await service.run_once(): pass
     asyncio.run(run())
-    assert service.stats()["done"]==2
+    assert service.stats()["done"]==1
 
 def test_rate_limit_uses_retry_after(tmp_path, monkeypatch):
     root=tmp_path/"book"; (root/"images").mkdir(parents=True); path=root/"images"/("b"*40+".png"); path.write_bytes(b"\x89PNG\r\n\x1a\nbody")
@@ -26,7 +27,8 @@ def test_rate_limit_uses_retry_after(tmp_path, monkeypatch):
         async def upload(self,*_args,**_kwargs): raise ImgBedUploadError("429",status_code=429,retry_after="120")
     monkeypatch.setattr(queue_mod,"get_imgbed_uploader",lambda:Uploader())
     monkeypatch.setattr(queue_mod,"is_trusted_imgbed_url",lambda _url: True)
-    service=queue_mod.MediaUploadQueueService(tmp_path/"q.db",concurrency=1); service.enqueue_book("b",root); asyncio.run(service.run_once())
+    service=queue_mod.MediaUploadQueueService(tmp_path/"q.db",concurrency=1)
+    service.enqueue_file("b", path, kind="content", ref="r", save_dir=root); asyncio.run(service.run_once())
     item=service.list()[0]; assert item["status"]=="rate_limited"; assert item["retry_after_seconds"]==120; assert item["next_retry_at"]
 
 def test_stale_uploading_is_reset(tmp_path):

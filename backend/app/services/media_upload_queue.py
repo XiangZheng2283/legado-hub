@@ -114,12 +114,10 @@ class MediaUploadQueueService:
     def enqueue_book(self, book_id: str, save_dir: str | Path) -> list[int]:
         root = Path(save_dir).expanduser().resolve()
         result: list[int] = []
-        images = root / "images"
-        if images.is_dir():
-            for path in sorted(images.iterdir()):
-                if path.is_file() and path.suffix.lower() in {".jpg", ".jpeg", ".png", ".gif", ".webp"}:
-                    item = self.enqueue_file(book_id, path, kind="content", ref=_ref_for(path, "content"), save_dir=root)
-                    if item is not None: result.append(item)
+        # 评论头像 / 评论图像不再于下载完成后自动上传到图床：它们改由 hub 按
+        # fqdown 的 sha1(url) 映射读本地 images/ 缓存（/api/legado/media/...）
+        # 直接返回客户端，不入上传队列、不上传 url。这里只把封面交给 img 上传。
+        # （enqueue_file/enqueue_ref 等方法保留，供显式/其它用途调用。）
         for name in ("cover.jpg", "cover.jpeg", "cover.png", "cover.webp"):
             path = root / name
             if path.is_file():

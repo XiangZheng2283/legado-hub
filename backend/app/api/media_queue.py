@@ -31,9 +31,10 @@ def enqueue_book(book_id:str,payload:dict[str,Any]):
     return {"ids":media_upload_queue_service.enqueue_book(book_id,save_dir)}
 @router.post("/avatars")
 def enqueue_avatars(payload:dict[str,Any]):
-    book_id=str(payload.get("bookId") or "").strip(); save_dir=str(payload.get("saveDir") or "").strip(); urls=payload.get("sourceUrls")
-    if not book_id or not save_dir or not isinstance(urls,list): raise HTTPException(422,"bookId、saveDir、sourceUrls 必填")
-    return {"ids":[i for url in urls if (i:=media_upload_queue_service.enqueue_ref(book_id,save_dir,"avatar",str(url)))]}
+    # 评论头像 / 评论图像改走本地 images/ 映射（/api/legado/media/...）直接返回
+    # 客户端：任何来源（含这里的历史 enqueue_ref）都不再主动上传到图床。
+    # 此端点保留但拒绝执行，保证"队列未上传的不会主动上传 / 不主动触发上传"。
+    raise HTTPException(403, "评论头像/评论图像不再主动上传，改由本地 images/ 映射直接返回客户端")
 @router.get("/book/{book_id}/chapters/{chapter_id}/avatars")
 def avatars(book_id:str,chapter_id:str,save_dir:str):
     root=Path(save_dir).expanduser().resolve(); chapter_name=Path(str(chapter_id)).name; path=root/book_id/"segment_comments"/(chapter_name+".json")

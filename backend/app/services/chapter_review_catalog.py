@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
 
 from app.services.aggregate_reviews import (
     align_hot_paragraph_reviews,
@@ -18,6 +19,26 @@ from app.source_plugins.id_codec import decode_chapter_id, encode_chapter_id
 QIDIAN_APP_SOURCE_ID = "qidian_com_app"
 QIDIAN_WEB_SOURCE_ID = "qidian_com_web"
 QIDIAN_SOURCE_IDS = {QIDIAN_APP_SOURCE_ID, QIDIAN_WEB_SOURCE_ID}
+
+_LOCAL_MEDIA_PREFIX = "/api/legado/media/"
+
+
+def _fanqie_ref_to_media_url(ref: str) -> str:
+    """Local fqdown media ref {save_dir}/<book_id>/images/<sha1>.<ext> -> hub route.
+
+    Returns "" for anything that is not the fanqie_local images/ shape so the
+    caller falls back to the legacy upload-queue mapping for other sources.
+    """
+    path = Path(str(ref).strip())
+    filename = path.name
+    # 仅识别 fqdown 本地盘绝对路径 save_dir/<book_id>/images/<sha1>.<ext>;
+    # 相对 EPUB 包内路径（如 OEBPS/images/...）不在此列，交给上传队列表决。
+    if not path.is_absolute() or not filename or path.parent.name != "images":
+        return ""
+    book_id = path.parent.parent.name or ""
+    if not book_id.isdigit():
+        return ""
+    return f"{_LOCAL_MEDIA_PREFIX}{book_id}/{filename}"
 
 
 def _safe_int(value: Any, default: int = 0) -> int:
@@ -124,7 +145,15 @@ async def _enrich_review_media(
         + (review.get("imageRefs") if isinstance(review.get("imageRefs"), list) else [])
         if str(ref).strip()
     }
-    resolved = {ref: media_upload_queue_service.find_uploaded(ref=ref) for ref in refs}
+    resolved: dict[str, str] = {}
+    local_media = False
+    for ref in refs:
+        local_url = _fanqie_ref_to_media_url(ref)
+        if local_url:
+            resolved[ref] = local_url
+            local_media = True
+        else:
+            resolved[ref] = media_upload_queue_service.find_uploaded(ref=ref)
     media_uploaded = sum(1 for url in resolved.values() if url)
     for review in reviews:
         avatar_ref = str(review.pop("avatarRef", "") or "").strip()
@@ -145,7 +174,7 @@ async def _enrich_review_media(
         debug["mediaFound"] = len(refs)
         debug["mediaUploaded"] = media_uploaded
         debug["mediaFailed"] = len(refs) - media_uploaded
-        debug["mediaSource"] = "media_upload_queue"
+        debug["mediaSource"] = "local_media" if local_media else "media_upload_queue"
     return payload
 
 def _mapped_review_target(chapter_id: str) -> tuple[str, str, str, bool]:

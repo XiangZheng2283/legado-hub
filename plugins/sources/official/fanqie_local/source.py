@@ -133,7 +133,15 @@ class Source:
 
     async def detail(self, ctx, book_url: str) -> dict:
         book_id = _extract_id(book_url)
-        data = await _preview(ctx, book_id)
+        try:
+            data = await _preview(ctx, book_id)
+        except Exception as exc:
+            ctx.trace("detail", message=f"预览失败，交由目录/下载逐步补全（不再 404）: {exc}")
+            try:
+                await _ensure_job_started(ctx, book_id)
+            except Exception:
+                pass
+            data = {}
         tags = data.get("tags") or []
         kind_parts = []
         if data.get("category"):
@@ -147,7 +155,11 @@ class Source:
         elif data.get("finished") is False:
             kind_parts.append("连载")
         wc = data.get("word_count")
-        word_count_str = f"{int(wc) // 10000}万字" if wc and int(wc) >= 10000 else (str(wc) if wc else "")
+        try:
+            wc_int = int(wc)
+        except (TypeError, ValueError):
+            wc_int = 0
+        word_count_str = f"{wc_int // 10000}万字" if wc_int >= 10000 else (str(wc) if wc else "")
         result = {
             "sourceId": self.id,
             "name": str(data.get("book_name") or ""),

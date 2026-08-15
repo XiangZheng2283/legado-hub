@@ -9,10 +9,11 @@ from __future__ import annotations
 import logging
 import re
 from typing import Any
+from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 from app.services.catalog import Catalog
 from app.services.library_books import format_reading_update_time, library_books_service
@@ -22,6 +23,7 @@ from app.source_plugins.id_codec import (
     decode_chapter_id,
     encode_chapter_id,
 )
+from app.services.fanqie_local_trigger import get_save_dir, spawn_fanqie_trigger_for_url
 from app.services.reading_reviews import (
     chapter_review_cache,
     render_chapter_reviews_html,
@@ -358,6 +360,31 @@ async def _apply_reading_content_gates(
     )
 
 
+_LOCAL_MEDIA_EXT_RE = r"[0-9a-fA-F]{40}\.(?:jpeg|jpg|png|gif|webp|avif|heic|heif)"
+
+
+@router.get("/media/{book_id}/{filename}")
+async def legado_local_comment_media(book_id: str, filename: str):
+    """Serve a fanqie_local comment/avatar image straight from fqdown's local
+    images/ cache (save_dir/<book_id>/images/<sha1>.<ext>), resolved only by
+    fqdown's sha1(url) mapping. Read-only: the downloader is never written to
+    and nothing is piped through the img-upload queue. Malformed or not-yet
+    cached -> 404 so the <img onerror> hides gracefully.
+    """
+    if not book_id.isdigit():
+        raise HTTPException(status_code=404, detail="bad_book")
+    if not re.fullmatch(_LOCAL_MEDIA_EXT_RE, filename or ""):
+        raise HTTPException(status_code=404, detail="bad_media")
+    save_dir = await get_save_dir()
+    target = Path(save_dir) / book_id / "images" / filename
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="not_cached")
+    return FileResponse(
+        target,
+        headers={"Cache-Control": "public, max-age=300", "ETag": f'"{filename}"'},
+    )
+
+
 @router.get("/book/{book_id}")
 async def get_book(request: Request, book_id: str) -> dict:
     user = auth_service.require_reading_user(request, touch=False)
@@ -365,6 +392,9 @@ async def get_book(request: Request, book_id: str) -> dict:
     _reject_query_anomalies(request, {"lane"})
     book_id = _validated_external_id(book_id, label="书籍")
     source_id, book_url = _decode_book_identity(book_id)
+    if source_id == "fanqie_local":
+        # 点开阅读 -> 触发下载器整本下载（fire-and-forget，永不阻塞/必不 raise）。
+        spawn_fanqie_trigger_for_url(book_url)
     with reading_access_limiter.guard(user.user_id, "metadata"):
         base_api = get_public_base_url(request)
         if source_id == VIRTUAL_SOURCE_ID:

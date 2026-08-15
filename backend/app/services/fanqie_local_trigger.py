@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 
 import httpx
 
@@ -39,6 +40,38 @@ def _headers() -> dict[str, str]:
     if password:
         headers["x-tomato-password"] = password
     return headers
+
+
+_SD_TTL_SECONDS = 60.0
+_save_dir_cache: dict[str, float | str] | None = None
+
+
+async def get_save_dir() -> str:
+    """Best-effort current save_dir from the downloader's /api/status.
+
+    Read-only and process-cached for a short TTL so the media-read route does
+    not hammer the downloader on every image. Raises RuntimeError only when
+    both the fetch fails and there is no safe cached value to reuse. Never
+    writes anything to the downloader.
+    """
+    global _save_dir_cache
+    now = time.monotonic()
+    if _save_dir_cache and now - float(_save_dir_cache["at"]) < _SD_TTL_SECONDS:
+        return str(_save_dir_cache["save_dir"])
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{_base_url()}/api/status", headers=_headers())
+            resp.raise_for_status()
+            data = resp.json()
+        save_dir = str(data.get("save_dir") or "").strip()
+    except Exception as exc:
+        if _save_dir_cache:
+            return str(_save_dir_cache["save_dir"])
+        raise RuntimeError("无法获取番茄下载器 save_dir") from exc
+    if not save_dir:
+        raise RuntimeError("番茄下载器未返回 save_dir")
+    _save_dir_cache = {"at": now, "save_dir": save_dir}
+    return save_dir
 
 
 def fanqie_book_id_from_url(book_url):
@@ -70,6 +103,9 @@ def find_fanqie_book_id(group):
     return None
 
 
+_FANQIE_JOB_LOCK: "asyncio.Lock | None" = None
+
+
 async def ensure_fanqie_download_job(
     book_id,
     *,
@@ -83,7 +119,28 @@ async def ensure_fanqie_download_job(
                       created, throttled, error}
     Never raises; throttled / error mean "download in progress state is
     unknown - the subscription continues and the existing reader path retries".
+
+    Concurrency-safe and never duplicated in-process: the whole check-then-create
+    critical section runs under a module-level asyncio lock, so concurrent
+    fire-and-forget triggers (reader open, subscribe, lazy chapter) for the same
+    book cannot double-POST /api/jobs. The downloader's own create is idempotent
+    by book_id, and this race-window guard closes the gap.
     """
+    global _FANQIE_JOB_LOCK
+    if _FANQIE_JOB_LOCK is None:
+        _FANQIE_JOB_LOCK = asyncio.Lock()
+    async with _FANQIE_JOB_LOCK:
+        return await _ensure_fanqie_download_job_unlocked(
+            book_id, base_url=base_url, password=password
+        )
+
+
+async def _ensure_fanqie_download_job_unlocked(
+    book_id,
+    *,
+    base_url=None,
+    password=None,
+):
     base = {"started": False, "job_id": None, "disposition": "error"}
     root = (base_url or _base_url()).rstrip("/")
     headers = dict(_headers())
@@ -166,6 +223,33 @@ async def trigger_for_book(book):
     if not book_id:
         return {"skipped": True, "disposition": "skipped"}
     return await ensure_fanqie_download_job(book_id)
+
+
+def spawn_fanqie_trigger_for_url(book_url):
+    """Fire-and-forget the downloader whole-book trigger for a raw fanqie_local
+    book URL (the CLIENT subscription-URL flow: reader opens /api/legado/book/...).
+
+    The reader's open-to-read must kick off the whole-book download job
+    immediately (POST /api/jobs), otherwise nothing starts until a chapter()
+    call lazily triggers it. Never blocks the response and never raises.
+    """
+    book_id = fanqie_book_id_from_url(book_url)
+    if not book_id:
+        return {"disposition": "skipped", "started": False}
+
+    async def _run():
+        try:
+            await ensure_fanqie_download_job(book_id)
+        except Exception:
+            logger.warning("fanqie_local open-trigger failed", exc_info=True)
+
+    try:
+        task = asyncio.create_task(_run())
+        _TASKS.add(task)
+        task.add_done_callback(_TASKS.discard)
+        return {"disposition": "spawned", "started": True}
+    except RuntimeError:
+        return {"disposition": "no_loop", "started": False}
 
 
 def spawn_trigger_for_book(book):
