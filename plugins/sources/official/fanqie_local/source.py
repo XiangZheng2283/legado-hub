@@ -833,7 +833,6 @@ def _build_reviews_from_local(cache: dict, chapter_id: str, folder: Path) -> dic
             if not content:
                 continue
             user = item.get("user") if isinstance(item.get("user"), dict) else {}
-            avatar_url = str(user.get("avatar") or "")
             images_urls = item.get("images")
             if not isinstance(images_urls, list):
                 images_urls = []
@@ -846,10 +845,8 @@ def _build_reviews_from_local(cache: dict, chapter_id: str, folder: Path) -> dic
                 "reviewTime": _review_time(int(created_ts) if isinstance(created_ts, int) else 0),
                 "paragraphId": paragraph_id,
             }
-            if avatar_url:
-                avatar_path = _cached_media_path(folder, avatar_url)
-                if avatar_path is not None:
-                    review["avatarRef"] = str(avatar_path)
+            # 约定：人物头像视为不存在，不再回填 avatarRef —— 客户端评论只保留
+            # 评论图像（imageRefs），头像当没有（渲染回退到首字符，不加载任何头像图）。
             # 依据评论区「内容格式」：正文里的 [惊喜] 占位符与源端 images[] 一一对应。
             # 每个源图片占一个槽位（保序）：已缓存→本地路径（供上传队列映射）；
             # 未缓存/非 dict→空占位，绝不丢位，保证渲染时 token 与图片按源位置对齐。
