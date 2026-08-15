@@ -609,7 +609,8 @@ class SearchCoordinator:
                 source_id = item.get("sourceId", "")
                 plugin = self._plugin_for(source_id)
                 if not include_official_sources and plugin and plugin.metadata.is_official_source():
-                    continue
+                    if not self._always_visible_official(plugin):
+                        continue
                 items.append(self._reading_item(dict(item), base_api=base_api))
             candidate_groups = session.candidate_groups or group_candidates(items, session.keyword)
             injected_items = library_books_service.build_search_injected_items_for_groups(
@@ -821,6 +822,11 @@ class SearchCoordinator:
 
     def _plugin_for(self, source_id: str) -> LoadedPlugin | None:
         return self.scheduler._plugins.get(source_id)
+    def _always_visible_official(self, plugin):
+        """fanqie_local 是本机下载器本地源（廉价、无上游接口），始终对用户订阅搜索可见；其它官方源照旧按 include_official_sources 隐藏。"""
+        if plugin is None:
+            return False
+        return getattr(plugin.metadata, "id", "") == "fanqie_local"
 
     def _create_job(
         self,

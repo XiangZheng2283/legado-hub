@@ -179,9 +179,15 @@ class Source:
         return result
 
     async def toc(self, ctx, toc_url: str) -> list[dict]:
-        """仅在下载 job 完成后，从最终 EPUB/TXT 成品解析目录。"""
+        """按本地增量落盘返回目录，下到哪给到哪。
+
+        首次打开/尚未下载时（journal 为空）幂等触发下载 job（best-effort），
+        目录随下载逐步补全；否则用户点不进章节，懒触发也永远不会发生（死锁）。
+        """
         book_id = _extract_id(toc_url)
         order = await self._chapter_order(ctx, book_id)
+        if not order:
+            await _ensure_job_started(ctx, book_id)
         result = []
         for idx, (ch_id, title) in enumerate(order, start=1):
             result.append({

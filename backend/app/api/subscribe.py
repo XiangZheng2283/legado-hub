@@ -39,6 +39,8 @@ from app.services.search_jobs import SearchJobService
 router = APIRouter(prefix="/api/subscribe")
 public_router = APIRouter(prefix="/api/subscribe")
 logger = logging.getLogger(__name__)
+# fanqie_local 本机下载器本地源_id：用户订阅搜索唯一放行的官方源
+_FANQIE_LOCAL_SOURCE_ID = "fanqie_local"
 _shared_book_creation_lock = threading.Lock()
 _MAX_SUBSCRIPTION_SEARCH_PAGE = 1000
 _MAX_LIBRARY_CHAPTER_PAGE = 100_000
@@ -213,11 +215,20 @@ def _get_legado_search_service() -> SearchJobService:
 def _third_party_search_source_ids(search_service: SearchJobService) -> list[str]:
     scheduler = search_service.scheduler
     plugins = scheduler._search_priority_plugins(scheduler._enabled_plugins())
-    return [
+    ids = [
         plugin.metadata.id
         for plugin in plugins
         if "search" in plugin.capabilities and not plugin.metadata.is_official_source()
     ]
+    # fanqie_local 是本机下载器本地源：廉价、无上游，始终参与用户订阅搜索
+    for plugin in plugins:
+        if (
+            plugin.metadata.id == _FANQIE_LOCAL_SOURCE_ID
+            and "search" in plugin.capabilities
+            and plugin.metadata.id not in ids
+        ):
+            ids.insert(0, plugin.metadata.id)
+    return ids
 
 
 def _remember_legado_search_owner(job_id: str, user_id: str) -> None:

@@ -111,6 +111,22 @@ def test_toc_reads_incremental_journal(tmp_path: Path) -> None:
     assert ctx.http.job_url_calls == 0
 
 
+def test_toc_empty_triggers_job(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    book = "777"
+    folder = tmp_path / book
+    folder.mkdir(parents=True, exist_ok=True)  # 空目录：尚未下载/journal 为空
+    ctx = _JobContext(tmp_path, [])
+    src = Source()
+    toc_url = f"{MODULE.TOMATO_BASE}/__fanqie__/{book}"
+
+    got = asyncio.run(src.toc(ctx, toc_url))
+
+    assert got == []
+    # 空目录必须触发下载 job，否则目录永远空、用户点不进章节（死锁）
+    assert ctx.http.posts == [book]
+
+
 def test_chapter_reviews_reads_segment_comments_json(tmp_path: Path) -> None:
     MODULE._PROC_CACHE.clear()
     import hashlib as _hashlib
