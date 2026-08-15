@@ -2931,6 +2931,19 @@ class AggregateProcessor:
                 return {"chapterId": chapter_id, "success": True,
                         "contentLength": len(purified_preview), "fallback": True}
 
+            # 官方源"下载中/可重试"（fanqie_local 等把 debug.retryable=True）：
+            # 不断言为空，改走 stage1 长时重试；与「empty supplement」（真空了）区分。
+            if result.get("debug", {}).get("retryable"):
+                self._log_chapter_step(
+                    aggregate_book_id=aggregate_book_id,
+                    chapter_index=chapter_index,
+                    title=title,
+                    event="officer_downloading_deferred",
+                    stage="stage1",
+                    payload={"step": "官方源下载中，转可重试"},
+                )
+                raise ValueError("official source downloading, content empty deferred (retry later)")
+
             # ── Path 3: empty → try candidates ──────────────────────────
             current_stage = "stage2"
             self._log_chapter_step(

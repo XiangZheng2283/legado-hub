@@ -12,7 +12,9 @@ fanqie_local — 番茄小说（本地下载器桥接）
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import io
+import json
 import os
 import posixpath
 import re
@@ -146,7 +148,7 @@ class Source:
             kind_parts.append("连载")
         wc = data.get("word_count")
         word_count_str = f"{int(wc) // 10000}万字" if wc and int(wc) >= 10000 else (str(wc) if wc else "")
-        return {
+        result = {
             "sourceId": self.id,
             "name": str(data.get("book_name") or ""),
             "author": str(data.get("author") or ""),
@@ -159,6 +161,22 @@ class Source:
             "tocUrl": book_url,
             "extra": {"book_id": book_id},
         }
+        # 补充本地落盘信息（勿阻塞；订阅侧据此拿简介 / 封面本地路径）
+        try:
+            status = await _downloader_status(ctx)
+            folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
+            info = _safe_json_load(folder / "status.json")
+            extra = dict(result.get("extra") or {})
+            if not result.get("intro") and info and info.get("description"):
+                result["intro"] = str(info["description"])
+            cover = _local_cover_path(folder)
+            if cover is not None:
+                extra["cover_local_path"] = str(cover)
+            extra["download_count"] = len(_journal_entries(folder))
+            result["extra"] = extra
+        except Exception:
+            pass
+        return result
 
     async def toc(self, ctx, toc_url: str) -> list[dict]:
         """仅在下载 job 完成后，从最终 EPUB/TXT 成品解析目录。"""
@@ -175,59 +193,63 @@ class Source:
         return result
 
     async def chapter(self, ctx, chapter_url: str) -> dict:
-        """从整本成品的解析缓存中返回指定章节。"""
+        """按本地增量落盘返回指定章节正文（纯文本），下到哪返回哪。"""
         book_id, ch_id = _parse_chapter_url(chapter_url)
+        try:
+            ch_index = int(ch_id) - 1
+        except (TypeError, ValueError):
+            return _pending_chapter(chapter_url, "章节编号无效。")
+        if ch_index < 0:
+            return _pending_chapter(chapter_url, "章节编号无效。")
 
-        # 读取缓存的章节顺序（已包含 ensure_downloaded 逻辑）
-        order = await self._chapter_order(ctx, book_id)
-        if not order:
-            return _pending_chapter(chapter_url, "下载未完成，请稍后重试。")
+        try:
+            status = await _downloader_status(ctx)
+            folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
+            entries = _chapter_entries(folder)
+        except Exception:
+            return _pending_chapter(chapter_url, "下载器状态不可用，请稍后重试。", retryable=True)
 
-        # 根据 ch_id 找到对应的序号
-        ch_index = None
-        for idx, (cid, _title) in enumerate(order):
-            if cid == ch_id:
-                ch_index = idx
-                break
-        if ch_index is None:
-            return _pending_chapter(chapter_url, "章节未找到，可能尚未下载。")
+        # 命中即返回：常见路径不打 /api/jobs。
+        if ch_index < len(entries):
+            _x, _fid, title, content = entries[ch_index]
+            if content:
+                return {
+                    "sourceId": self.id,
+                    "chapterUrl": chapter_url,
+                    "title": title,
+                    "content": _clean_text(content),
+                    "format": "text",
+                }
 
-        rel_path = await _find_book_file_rel(ctx, book_id)
-        if not rel_path:
-            return _pending_chapter(chapter_url, "下载文件未找到，请稍后重试。")
-
-        chapters = await self._get_chapters(ctx, rel_path)
-        if ch_index >= len(chapters):
-            return _pending_chapter(chapter_url, "章节索引超出范围，请稍后重试。")
-
-        _title, content = chapters[ch_index]
-        return {
-            "sourceId": self.id,
-            "chapterUrl": chapter_url,
-            "title": _title,
-            "content": content,
-            "format": "text",
-        }
+        # 未命中：确保有下载 job 在跑（幂等、不等待、容忍 429 降级），随后可重试。
+        await _ensure_job_started(ctx, book_id)
+        return _pending_chapter(chapter_url, "章节下载中，请稍后重试。", retryable=True)
 
     async def chapter_reviews(self, ctx, chapter_url: str) -> dict:
         book_id, ch_id = _parse_chapter_url(chapter_url)
-        order = await self._chapter_order(ctx, book_id)
-        chapter_match = next(
-            ((idx, title) for idx, (candidate, title) in enumerate(order) if candidate == ch_id),
-            None,
-        )
-        if chapter_match is None:
-            return _empty_reviews("章节未找到")
-        _chapter_index, chapter_title = chapter_match
+        try:
+            ch_index = int(ch_id) - 1
+        except (TypeError, ValueError):
+            return _empty_reviews("章节编号无效。")
+        if ch_index < 0:
+            return _empty_reviews("章节编号无效。")
 
-        rel_path = await _find_book_file_rel(ctx, book_id)
-        if not rel_path or not rel_path.lower().endswith(".epub"):
-            return _empty_reviews("成品不是 EPUB，无法读取段评")
+        try:
+            status = await _downloader_status(ctx)
+            folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
+            entries = _chapter_entries(folder)
+        except Exception:
+            return _empty_reviews("下载器状态不可用。")
 
-        raw = await self._get_book_bytes(ctx, rel_path)
-        if not raw:
-            return _empty_reviews("EPUB 读取失败")
-        return _extract_epub_reviews(raw, chapter_title, ch_id)
+        if ch_index >= len(entries):
+            return _empty_reviews("章节下载中，请稍后重试。")
+        _x, fnqie_id, _title, _content = entries[ch_index]
+
+        cache_path = folder / "segment_comments" / f"{fnqie_id}.json"
+        cache = _safe_json_load(cache_path)
+        if cache is None or not cache.get("paras"):
+            return _empty_reviews("段评下载中，请稍后重试。")
+        return _build_reviews_from_local(cache, ch_id, folder)
 
     async def paragraph_say(
         self,
@@ -264,6 +286,25 @@ class Source:
 
     async def chapter_review_media(self, ctx, chapter_url: str, asset_ref: str) -> dict:
         book_id, _ch_id = _parse_chapter_url(chapter_url)
+        # 新式：asset_ref 是本地 images/ 缓存的绝对路径（只读，不经上游）
+        try:
+            status = await _downloader_status(ctx)
+            folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
+            images_dir = (folder / "images").resolve()
+            try:
+                ref_path = Path(asset_ref).expanduser().resolve()
+                ref_path.relative_to(images_dir)
+            except ValueError:
+                ref_path = None
+            if ref_path is not None and ref_path.is_file():
+                data = await asyncio.get_event_loop().run_in_executor(None, ref_path.read_bytes)
+                mime = _image_mime(data)
+                if mime in _ALLOWED_IMAGE_MIMES and 0 < len(data) <= _MAX_EPUB_IMAGE_BYTES:
+                    return {"bytes": data, "mime": mime}
+                return {"bytes": b"", "mime": "", "debug": {"error": "local image invalid"}}
+        except Exception:
+            pass
+        # 旧式：EPUB 内嵌资源
         rel_path = await _find_book_file_rel(ctx, book_id)
         if not rel_path or not rel_path.lower().endswith(".epub"):
             return {"bytes": b"", "mime": "", "debug": {"error": "EPUB not found"}}
@@ -290,22 +331,20 @@ class Source:
     # ── 内部辅助 ──────────────────────────────────────────────────
 
     async def _chapter_order(self, ctx, book_id: str) -> list[tuple[str, str]]:
-        """返回整本成品中的有序章节 ID 和标题。"""
+        """按本地增量落盘返回有序 [(hub 章号, 标题)]，不依赖最终成品。"""
         cache_key = f"fanqie_order:{book_id}"
-        cached = ctx.cache_get(cache_key) or _proc_cache_get(cache_key)
+        # 只做请求内缓存（避免跨请求 5 分钟陈旧）：读小文件本就廉价。
+        cached = ctx.cache_get(cache_key)
         if cached:
             return cached
-
-        rel_path = await _find_book_file_rel(ctx, book_id)
-        if not rel_path:
-            rel_path = await self._ensure_downloaded(ctx, book_id)
-        if not rel_path:
+        try:
+            status = await _downloader_status(ctx)
+            folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
+            entries = _chapter_entries(folder)
+        except Exception:
             return []
-
-        chapters = await self._get_chapters(ctx, rel_path)
-        order = [(str(i + 1), title) for i, (title, _content) in enumerate(chapters)]
+        order = [(str(i + 1), title) for i, (_x, _f, title, _c) in enumerate(entries)]
         ctx.cache_set(cache_key, order, _ORDER_CACHE_TTL)
-        _proc_cache_set(cache_key, order, _ORDER_CACHE_TTL)
         return order
 
     async def _get_book_bytes(self, ctx, rel_path: str) -> bytes:
@@ -507,6 +546,302 @@ def _safe_local_book_path(save_dir: str, rel_path: str) -> Path:
         raise ValueError("下载器文件路径越出 save_dir") from exc
     return candidate
 
+# ────────────────────────────────────────────────────────────────
+# 本地落盘增量读取（hub 侧，不依赖最终成品，也不修改下载器）
+#
+# 下载器按 book_id 在 save_dir/<book_id> 下增量写这些文件：
+#   status.json                书籍元数据（普通写、非原子 → 容错重试读）
+#   downloaded_chapters.jsonl  增量正文（append，容忍最后一行半截）
+#   segment_comments/<id>.json 每章段评（原子写，读安全）
+#   images/<sha1(url)><ext>    评论 / 头像媒体（只读缓存，绝不抓上游）
+#   cover.png / cover.jpg ...  封面
+# 本层只读这些，不需要整本成品，也不给下载器增加任何共享状态。
+# ────────────────────────────────────────────────────────────────
+
+
+def _local_book_dir(save_dir: str, book_id: str) -> Path:
+    root = Path(str(save_dir or "").strip()).expanduser().resolve()
+    if not root.is_dir():
+        raise RuntimeError(f"番茄下载器未返回有效 save_dir: {root}")
+    folder = (root / book_id).resolve()
+    try:
+        folder.relative_to(root)
+    except ValueError:
+        raise ValueError(f"book_id 越出 save_dir: {book_id}") from None
+    return folder
+
+
+def _safe_json_load(path: Path, *, retries: int = 3, delay: float = 0.25) -> dict | None:
+    """下载器 status.json 用普通写、可能读到半截 JSON；短重试等写方完成。"""
+    for _ in range(retries):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return None
+        try:
+            data = json.loads(text)
+            return data if isinstance(data, dict) else None
+        except ValueError:
+            time.sleep(delay)
+    return None
+
+
+def _journal_entries(folder: Path) -> list[tuple[int, str, str, str]]:
+    """downloaded_chapters.jsonl → [(order, fnqie_id, title, content)]。
+    容忍最后一行未写完（被截断的 JSON 行直接跳过）。"""
+    entries: list[tuple[int, str, str, str]] = []
+    try:
+        lines = (folder / "downloaded_chapters.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return entries
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        fid = str(rec.get("id") or "")
+        if not fid:
+            continue
+        entries.append((len(entries), fid, str(rec.get("title") or ""), str(rec.get("content") or "")))
+    return entries
+
+
+def _status_fallback_entries(info: dict | None) -> list[tuple[int, str, str, str]]:
+    """早期版本只有 status.json 的 downloaded map：fnqie_id → [title, content]（无增量文件）。"""
+    fallback: list[tuple[int, str, str, str]] = []
+    downloaded = (info or {}).get("downloaded") or {}
+    if not isinstance(downloaded, dict):
+        return fallback
+    for key, value in downloaded.items():
+        title = ""
+        content = ""
+        if isinstance(value, list) and value:
+            title = str(value[0] or "")
+            if len(value) > 1 and isinstance(value[1], str):
+                content = value[1]
+        elif isinstance(value, str):
+            content = value
+        fallback.append((len(fallback), str(key), title, content))
+    return fallback
+
+
+def _chapter_entries(folder: Path) -> list[tuple[int, str, str, str]]:
+    """合并 journal 与 status 回退，返回有序 [(order, fnqie_id, title, content)]。"""
+    entries = _journal_entries(folder)
+    if entries:
+        return entries
+    return _status_fallback_entries(_safe_json_load(folder / "status.json"))
+
+
+def _clean_text(html: str) -> str:
+    """XHTML → 纯文本：段落/换行转行，剥标签，解码实体，坍缩空行。"""
+    s = re.sub(
+        r"<[^>]+>", "",
+        html.replace("</p>", "\n").replace("</div>", "\n")
+            .replace("<br>", "\n").replace("<br/>", "\n").replace("<br />", "\n"),
+    )
+    s = (s.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">")
+          .replace("&quot;", "\"").replace("&#39;", "'").replace("&amp;", "&"))
+    return "\n".join(line for line in (part.strip() for part in s.splitlines()) if line)
+
+
+def _media_sha(url: str) -> str:
+    """下载器按 sha1(url) 命名媒体缓存，须与该实现一致（images/<digest><ext>）。"""
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()
+
+
+_MEDIA_EXTS = (".jpeg", ".jpg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif")
+
+
+def _cached_media_path(folder: Path, url: str) -> Path | None:
+    """只读：返回该 URL 已缓存的本地完整路径；未缓存返回 None。绝不触发上游网络。"""
+    if not url:
+        return None
+    # 下载器 prefetch_comment_media 以 trim 后的 url 命名缓存，须对齐。
+    digest = _media_sha(url.strip())
+    images_dir = folder / "images"
+    for ext in _MEDIA_EXTS:
+        candidate = images_dir / f"{digest}{ext}"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _local_cover_path(folder: Path) -> Path | None:
+    for name in ("cover.png", "cover.jpg", "cover.jpeg", "cover.webp", "cover.gif"):
+        candidate = folder / name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+async def _ensure_job_started(ctx, book_id: str) -> dict:
+    """确保该 book 有一个下载 job：幂等（已有 job 任意态即复用，不重复创建）、不等待完成。
+
+    返回 {"started": bool, "job_id": int | None, "disposition": str}
+      disposition ∈ existing_running | existing_done | existing_failed | created | throttled | error
+    - throttled：下载器单活跃任务（429）或创建被拒 → 暂时不可用，稍后重试。
+    """
+    base = {"started": False, "job_id": None, "disposition": "error"}
+
+    # 1) 查已存在 job（幂等判断）
+    try:
+        data = await ctx.access.http.fetch_json(
+            f"{TOMATO_BASE}/api/jobs", params={"all": "true"}, headers=_headers(), timeout=10,
+        )
+    except Exception as exc:
+        ctx.trace("job", message=f"list jobs error: {exc}")
+        return base
+    for job in data.get("items") or []:
+        if str(job.get("book_id", "")) == book_id:
+            state = str(job.get("state") or "")
+            jid = job.get("id")
+            if state in ("queued", "running"):
+                return {"started": True, "job_id": jid, "disposition": "existing_running"}
+            if state == "done":
+                return {"started": True, "job_id": jid, "disposition": "existing_done"}
+            # failed / canceled：不自动重建，避免反复 POST 打下载器。
+            return {"started": False, "job_id": jid, "disposition": "existing_failed"}
+
+    # 2) 创建新 job；下载器单活跃任务，超限会 429（或网络错）→ 视为暂时不可用。
+    try:
+        resp = await ctx.access.http.fetch_json(
+            f"{TOMATO_BASE}/api/jobs", method="POST", json={"book_id": book_id},
+            headers={**_headers(), "Content-Type": "application/json"}, timeout=15,
+        )
+    except Exception as exc:
+        ctx.trace("job", message=f"create job refused: {exc}")
+        return base | {"disposition": "throttled"}
+
+    jid = resp.get("id")
+    if jid:
+        return {"started": True, "job_id": jid, "disposition": "created"}
+
+    # 3) 竞态：创建返回空（被抢先），再查一次活跃任务
+    try:
+        data = await ctx.access.http.fetch_json(
+            f"{TOMATO_BASE}/api/jobs", params={"all": "true"}, headers=_headers(), timeout=10,
+        )
+    except Exception:
+        return base | {"disposition": "throttled"}
+    for job in data.get("items") or []:
+        if str(job.get("book_id", "")) == book_id:
+            state = str(job.get("state") or "")
+            if state in ("queued", "running"):
+                return {"started": True, "job_id": job.get("id"), "disposition": "existing_running"}
+            if state == "done":
+                return {"started": True, "job_id": job.get("id"), "disposition": "existing_done"}
+    return base | {"disposition": "throttled"}
+
+
+def _build_reviews_from_local(cache: dict, chapter_id: str, folder: Path) -> dict:
+    """segment_comments/<fnqie_id>.json → 与 _extract_epub_reviews 同构的输出契约。"""
+    paras_raw = cache.get("paras") or {}
+    paragraphs: dict[str, list[dict]] = {}
+    hot: list[dict] = []
+    total_comment_count = 0
+
+    for para_key, para in paras_raw.items():
+        if not isinstance(para, dict):
+            continue
+        try:
+            paragraph_id = int(para_key)
+        except (TypeError, ValueError):
+            continue
+        try:
+            total_count = int(para.get("count") or 0)
+        except (TypeError, ValueError):
+            total_count = 0
+        detail = para.get("detail")
+        detail = detail if isinstance(detail, dict) else {}
+        snippet = ""
+        meta = detail.get("meta")
+        if isinstance(meta, dict):
+            snippet = str(meta.get("para_content") or "").strip()
+        reviews_raw = detail.get("reviews")
+        if not isinstance(reviews_raw, list):
+            # 只有计数、无详情：登记空段（下游据此可知该段有评但未拉取）
+            if not total_count:
+                continue
+            paragraphs[str(paragraph_id)] = []
+            continue
+
+        reviews: list[dict] = []
+        for review_index, item in enumerate(reviews_raw, start=1):
+            if not isinstance(item, dict):
+                continue
+            content = str(item.get("text") or "").strip()
+            if not content:
+                continue
+            user = item.get("user") if isinstance(item.get("user"), dict) else {}
+            avatar_url = str(user.get("avatar") or "")
+            images_urls = item.get("images")
+            if not isinstance(images_urls, list):
+                images_urls = []
+            created_ts = item.get("created_ts")
+            review: dict[str, Any] = {
+                "id": f"fanqie-local-{chapter_id}-{paragraph_id}-{review_index}",
+                "content": content,
+                "userName": str(user.get("name") or "匿名").strip() or "匿名",
+                "likeNum": int(item.get("digg_count") or 0),
+                "reviewTime": _review_time(int(created_ts) if isinstance(created_ts, int) else 0),
+                "paragraphId": paragraph_id,
+            }
+            if avatar_url:
+                avatar_path = _cached_media_path(folder, avatar_url)
+                if avatar_path is not None:
+                    review["avatarRef"] = str(avatar_path)
+            image_refs: list[str] = []
+            for img in images_urls:
+                if not isinstance(img, dict):
+                    continue
+                url = str(img.get("url") or "")
+                media_path = _cached_media_path(folder, url)
+                if media_path is not None and str(media_path) not in image_refs:
+                    image_refs.append(str(media_path))
+            if image_refs:
+                review["imageRefs"] = image_refs
+            reviews.append(review)
+
+        if not reviews and not total_count:
+            continue
+        paragraphs[str(paragraph_id)] = reviews
+        total_comment_count += total_count or len(reviews)
+        hot.append({
+            "paragraphId": paragraph_id,
+            "paragraphText": snippet,
+            "matchedText": snippet,
+            "matchedParagraphIndex": paragraph_id,
+            "matchedParagraphCount": 1,
+            "matchStatus": "direct",
+            "matchConfidence": 1.0,
+            "commentCount": total_count or len(reviews),
+            "hotCommentCount": len(reviews),
+            "totalCommentCount": total_count or len(reviews),
+            "topReviews": reviews[:3],
+        })
+
+    stats = {key: len(value) for key, value in paragraphs.items()}
+    embedded_total = sum(stats.values())
+    result = _empty_reviews()
+    result["paragraphs"] = paragraphs
+    result["hotParagraphReviews"] = hot
+    result["summary"] = {
+        "totalParagraphs": len(paragraphs),
+        "totalReviews": embedded_total,
+        "embeddedReviews": embedded_total,
+        "totalCommentCount": total_comment_count or embedded_total,
+        "paragraphsWithReviews": sorted(int(key) for key in paragraphs),
+        "paragraphStats": stats,
+        "chapterEndCount": 0,
+        "hotParagraphCount": len(hot),
+    }
+    return result
+
+
 
 def _parse_chapter_url(url: str) -> tuple[str, str]:
     """chapterUrl: .../book_id/ch_id  → (book_id, ch_id)"""
@@ -514,14 +849,18 @@ def _parse_chapter_url(url: str) -> tuple[str, str]:
     return parts[-2], parts[-1]
 
 
-def _pending_chapter(chapter_url: str, msg: str) -> dict:
+def _pending_chapter(chapter_url: str, msg: str, *, retryable: bool = False) -> dict:
+    debug: dict[str, Any] = {"error": msg}
+    if retryable:
+        # 聚合器据此把"官方源下载中"判为可重试（LONG_RETRY_SCAN），而非死空。
+        debug["retryable"] = True
     return {
         "sourceId": "fanqie_local",
         "chapterUrl": chapter_url,
         "title": "",
         "content": "",
         "format": "text",
-        "debug": {"error": msg},
+        "debug": debug,
     }
 
 

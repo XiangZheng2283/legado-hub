@@ -19,7 +19,7 @@ class Client:
 def test_xz_image_headers_and_public_url(monkeypatch):
     import app.services.imgbed as mod
     monkeypatch.setattr(mod.httpx,"AsyncClient",Client)
-    uploader=ImgBedUploader(ImgBedConfig(enabled_setting=True,base_url="https://img.xzaiweb.me",api_token="token",upload_channel="cfr2",channel_name="R2_env",upload_folder="imgbed"))
+    uploader=ImgBedUploader(ImgBedConfig(enabled_setting=True,base_url="https://img.xzaiweb.me",auth_code="stale-code",api_token="token",upload_channel="cfr2",channel_name="R2_env",upload_folder="imgbed"))
     result=asyncio.run(uploader.upload(b"\xff\xd8\xfffake",mime_type="image/jpeg",filename="a.jpg"))
     assert result == "https://img.xzaiweb.me/file/test.jpg"
     url,kwargs=Client.last_kwargs
@@ -28,4 +28,5 @@ def test_xz_image_headers_and_public_url(monkeypatch):
     assert kwargs["headers"]["uploadFolder"] == "/imgbed"
     assert kwargs["headers"]["returnFormat"] == "full"
     assert kwargs["headers"]["Authorization"] == "Bearer token"
+    assert "authCode" not in kwargs["headers"]
     assert kwargs["params"] == {}

@@ -254,8 +254,8 @@ class ImgBedUploader:
         }
         if self.config.channel_name:
             headers["channelName"] = self.config.channel_name
-        if self.config.auth_code:
-            headers["authCode"] = self.config.auth_code
+        # XZ Image authentication is API-token-only for this endpoint.
+        # Do not send the legacy authCode field; a stale value can trigger 401.
         if self.config.api_token:
             headers["Authorization"] = f"Bearer {self.config.api_token}"
         files = {"file": (_safe_filename(filename, mime), data, mime)}

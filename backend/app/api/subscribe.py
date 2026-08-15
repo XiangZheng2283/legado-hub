@@ -20,6 +20,7 @@ from fastapi import APIRouter, HTTPException, Request
 from app.core.legado_source import generate_legado_source
 from app.services.aggregate_processor import AggregateProcessor
 from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID, unpack_aggregate_chapter_url
+from app.services.fanqie_local_trigger import spawn_trigger_for_book
 from app.services.library_books import library_books_service
 from app.services.shared_book_job_types import SharedBookJobType
 from app.services.shared_book_scheduler import SharedBookScheduler
@@ -783,6 +784,9 @@ async def subscribe_candidate(request: Request, job_id: str, candidate_id: str, 
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     book = created["book"]
     safe_book = _safe_user_book(book)
+    # fanqie_local: make sure the downloader starts producing so incremental
+    # files are generated end-to-end. Best-effort, never blocks the response.
+    spawn_trigger_for_book(book)
     provisioning = library_books_service.provisioning_summary(
         book["aggregateBookId"],
         start_chapter_index=subscription["startChapterIndex"],

@@ -36,6 +36,7 @@ from app.services.aggregate_settings import AI_RUNTIME_ENABLED, AggregateSetting
 from app.services.audit import audit_service
 from app.services.lexicon_updater import LexiconUpdater
 from app.services.library_books import library_books_service
+from app.services.fanqie_local_trigger import spawn_trigger_for_book
 from app.services.shared_book_lock import SharedBookLockService
 from app.services.shared_book_scheduler import SharedBookScheduler
 from app.services.shared_book_storage import TRACE_BEGIN
@@ -1910,6 +1911,9 @@ async def subscribe_from_search_job(request: Request, job_id: str, payload: dict
         group,
         actor_user_id=admin.user_id,
     )
+    # fanqie_local: start the downloader job so incremental files are produced.
+    # Best-effort and non-blocking; throttled/error never fail the request.
+    spawn_trigger_for_book(created.get("book") or {})
     if created.get("created"):
         processor = AggregateProcessor()
         book_id = created["book"]["aggregateBookId"]

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import importlib.util
-import io
-import zipfile
 from pathlib import Path
 
 
@@ -88,136 +86,77 @@ def test_search_maps_raw_metadata_without_preview_requests() -> None:
     ]
 
 
-def _epub_bytes() -> bytes:
-    output = io.BytesIO()
-    with zipfile.ZipFile(output, "w") as archive:
-        archive.writestr(
-            "META-INF/container.xml",
-            '<?xml version="1.0"?><container xmlns="urn:oasis:names:tc:opendocument:xmlns:container">'
-            '<rootfiles><rootfile full-path="OEBPS/content.opf"/></rootfiles></container>',
-        )
-        archive.writestr(
-            "OEBPS/content.opf",
-            '<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf">'
-            '<manifest><item id="intro" href="aux_00000.xhtml" media-type="application/xhtml+xml"/>'
-            '<item id="toc" href="table-of-contents.html" media-type="application/xhtml+xml"/>'
-            '<item id="c1" href="chapter_00001.xhtml" media-type="application/xhtml+xml"/>'
-            '<item id="c2" href="chapter_00002.xhtml" media-type="application/xhtml+xml"/>'
-            '<item id="r2" href="aux_00003.xhtml" media-type="application/xhtml+xml"/>'
-            '<item id="avatar" href="images/avatar.jpg" media-type="image/jpeg"/></manifest>'
-            '<spine><itemref idref="intro"/><itemref idref="toc"/><itemref idref="c1"/>'
-            '<itemref idref="c2"/><itemref idref="r2"/></spine></package>',
-        )
-        archive.writestr("OEBPS/aux_00000.xhtml", "<html><body><h1>简介</h1><p>书籍介绍。</p></body></html>")
-        archive.writestr("OEBPS/table-of-contents.html", "<html><body><h1>目录</h1></body></html>")
-        archive.writestr(
-            "OEBPS/chapter_00001.xhtml",
-            '<html><body><h1>第一章 开始</h1><p id="p-0">第一章正文。</p></body></html>',
-        )
-        archive.writestr(
-            "OEBPS/chapter_00002.xhtml",
-            '<html><body><h1>第二章 继续</h1><p id="p-0">第二章正文。<a class="seg-count" href="aux_00003.xhtml#para-0">(1)</a></p></body></html>',
-        )
-        archive.writestr(
-            "OEBPS/aux_00003.xhtml",
-            '<html><body><h2>第二章 继续 - 段评</h2><h3 id="para-0">'
-            '<span class="para-src">&quot;第二章正文。&quot;</span></h3><ol>'
-            '<li class="seg-item"><p>写得很好。</p><p><small class="seg-meta">'
-            '<img class="avatar" src="images/avatar.jpg"/>作者：测试读者 | 时间：1720000000 | 赞：12'
-            '</small></p></li></ol></body></html>',
-        )
-        archive.writestr("OEBPS/images/avatar.jpg", b"\xff\xd8\xff\xe0fake-jpeg")
-    return output.getvalue()
 
 
-class _DownloadedHttp:
-    def __init__(self, save_dir: Path) -> None:
-        self.root_scans = 0
-        self.status_calls = 0
-        self.save_dir = save_dir
-
-    async def fetch_json(self, url: str, **kwargs):
-        if url.endswith("/api/status"):
-            self.status_calls += 1
-            return {
-                "version": "2.4.13",
-                "save_dir": str(self.save_dir),
-                "locked": False,
-                "config": {"use_official_api": True},
-            }
-        if url.endswith("/api/jobs"):
-            return {
-                "items": [{
-                    "id": 7,
-                    "book_id": "7156171587174009864",
-                    "title": "软件测试",
-                    "state": "done",
-                    "updated_ms": 2000,
-                }]
-            }
-        if url.endswith("/api/library"):
-            self.root_scans += 1
-            if self.root_scans == 1:
-                return {"items": [], "running": True, "error": None}
-            return {
-                "items": [{
-                    "kind": "file",
-                    "name": "软件测试.epub",
-                    "rel_path": "软件测试.epub",
-                    "ext": "epub",
-                    "modified_ms": 2000,
-                }],
-                "running": False,
-                "error": None,
-            }
-        raise AssertionError(url)
-
-    async def fetch_bytes(self, url: str, **kwargs):
-        raise AssertionError("EPUB must be read from status.save_dir, not /download")
-
-
-class _DownloadedContext(_Context):
-    def __init__(self, tmp_path: Path) -> None:
-        super().__init__()
-        self.save_dir = tmp_path
-        (self.save_dir / "软件测试.epub").write_bytes(_epub_bytes())
-        self.access = type("Access", (), {"http": _DownloadedHttp(self.save_dir)})()
-        self.cache: dict[str, object] = {}
-
-    def cache_get(self, key: str):
-        return self.cache.get(key)
-
-    def cache_set(self, key: str, value, ttl_seconds: int = 300) -> None:
-        self.cache[key] = value
-
-    @staticmethod
-    def decode_text(content: bytes, charset: str | None = None) -> str:
-        return content.decode(charset or "utf-8")
-
-
-def test_toc_reads_completed_epub_after_library_scan_finishes(tmp_path: Path) -> None:
-    ctx = _DownloadedContext(tmp_path)
+def test_toc_reads_incremental_journal(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    book = "7156171587174009864"
+    folder = tmp_path / book
+    _write_journal(folder, [
+        {"id": "fnq-100", "title": "第一章 开始", "content": "<p>第一章正文。</p>"},
+        {"id": "fnq-200", "title": "第二章 继续", "content": "<p>第二章正文。</p>"},
+    ])
+    ctx = _JobContext(tmp_path, [])
     source = Source()
-    book_url = f"{MODULE.TOMATO_BASE}/__fanqie__/7156171587174009864"
+    book_url = f"{MODULE.TOMATO_BASE}/__fanqie__/{book}"
 
     chapters = asyncio.run(source.toc(ctx, book_url))
-    chapter = asyncio.run(source.chapter(ctx, chapters[1]["chapterUrl"]))
+    chapter_url = chapters[1]["chapterUrl"]
+    chapter = asyncio.run(source.chapter(ctx, chapter_url))
 
     assert [item["title"] for item in chapters] == ["第一章 开始", "第二章 继续"]
     assert chapter["title"] == "第二章 继续"
     assert chapter["content"] == "第二章正文。"
-    assert ctx.access.http.root_scans >= 2
-    assert ctx.access.http.status_calls == 1
-    assert not hasattr(ctx.access.http, "downloads")
+    # 命中即不打 /api/jobs：下载完的书每次读都在增量落盘上直取
+    assert ctx.http.job_url_calls == 0
 
 
-def test_chapter_reviews_reads_tomato_segment_comment_page(tmp_path: Path) -> None:
-    ctx = _DownloadedContext(tmp_path)
+def test_chapter_reviews_reads_segment_comments_json(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    import hashlib as _hashlib
+    book = "7156171587174009864"
+    folder = tmp_path / book
+    _write_journal(folder, [
+        {"id": "fnq-100", "title": "第一章 开始", "content": "<p>第一章正文。</p>"},
+        {"id": "fnq-200", "title": "第二章 继续", "content": "<p>第二章正文。</p>"},
+    ])
+    avatar_url = "https://example.test/avatar.jpg"
+    sha = _hashlib.sha1(avatar_url.encode("utf-8")).hexdigest()
+    (folder / "images").mkdir()
+    (folder / "images" / f"{sha}.jpg").write_bytes(b"\xff\xd8\xef\xbf\xbd")
+    seg = {
+        "chapter_id": "fnq-200",
+        "book_id": book,
+        "item_version": 1,
+        "top_n": 0,
+        "paras": {
+            "0": {
+                "count": 1,
+                "detail": {
+                    "meta": {"para_content": "第二章正文。"},
+                    "reviews": [{
+                        "user": {"name": "测试读者", "avatar": avatar_url},
+                        "text": "写得很好。",
+                        "created_ts": 1720000000,
+                        "digg_count": 12,
+                        "images": [],
+                    }],
+                },
+            }
+        },
+    }
+    (folder / "segment_comments").mkdir()
+    (folder / "segment_comments" / "fnq-200.json").write_text(
+        _json.dumps(seg, ensure_ascii=False), encoding="utf-8"
+    )
+
+    ctx = _JobContext(tmp_path, [])
     source = Source()
-    chapter_url = f"{MODULE.TOMATO_BASE}/__fanqie__/7156171587174009864/2"
+    chapter_url = f"{MODULE.TOMATO_BASE}/__fanqie__/{book}/2"
 
     reviews = asyncio.run(source.chapter_reviews(ctx, chapter_url))
 
+    expected_avatar = str((folder / "images" / f"{sha}.jpg"))
     assert reviews["paragraphs"]["0"][0] == {
         "id": "fanqie-local-2-0-1",
         "content": "写得很好。",
@@ -225,7 +164,7 @@ def test_chapter_reviews_reads_tomato_segment_comment_page(tmp_path: Path) -> No
         "likeNum": 12,
         "reviewTime": "2024-07-03 09:46:40",
         "paragraphId": 0,
-        "avatarRef": "OEBPS/images/avatar.jpg",
+        "avatarRef": str(Path(expected_avatar).resolve()),
     }
     assert reviews["hotParagraphReviews"] == [{
         "paragraphId": 0,
@@ -250,3 +189,115 @@ def test_chapter_reviews_reads_tomato_segment_comment_page(tmp_path: Path) -> No
         "chapterEndCount": 0,
         "hotParagraphCount": 1,
     }
+# ── P2：job 触发幂等 / 429 降级 / 先读后触发 ─────────────────────────────
+import json as _json
+
+
+class _JobHttp:
+    """可控的 /api/status + /api/jobs mock，用于 P2 幂等 / 429 / 先读后触发。"""
+
+    def __init__(self, save_dir: Path, jobs=None, create_error=None) -> None:
+        self.save_dir = save_dir
+        self.jobs = list(jobs or [])
+        self.create_error = create_error
+        self.posts: list[str] = []
+        self.job_url_calls = 0
+
+    async def fetch_json(self, url: str, **kwargs):
+        if url.endswith("/api/status"):
+            return {
+                "version": "2.4.13",
+                "save_dir": str(self.save_dir),
+                "locked": False,
+                "config": {"use_official_api": True},
+            }
+        if url.endswith("/api/jobs"):
+            self.job_url_calls += 1
+            if str(kwargs.get("method", "GET")).upper() == "POST":
+                if self.create_error is not None:
+                    raise self.create_error
+                book_id = str((kwargs.get("json") or {}).get("book_id"))
+                self.posts.append(book_id)
+                jid = 9000 + len(self.posts)
+                self.jobs.append({"id": jid, "book_id": book_id, "state": "queued", "title": "", "updated_ms": 0})
+                return {"id": jid}
+            return {"items": self.jobs}
+        raise AssertionError(url)
+
+
+class _JobContext(_Context):
+    def __init__(self, save_dir: Path, jobs=None, create_error=None) -> None:
+        super().__init__()
+        self.save_dir = save_dir
+        self.http = _JobHttp(save_dir, jobs=jobs, create_error=create_error)
+        self.access = type("Access", (), {"http": self.http})()
+
+    def cache_get(self, key: str):
+        return None
+
+
+def _write_journal(folder: Path, rows) -> None:
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "downloaded_chapters.jsonl").write_text(
+        "\n".join(_json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8"
+    )
+
+
+def test_ensure_job_started_reuses_running_without_post(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    book = "111"
+    ctx = _JobContext(tmp_path, [{"id": 5, "book_id": book, "state": "running", "title": "x"}])
+    out = asyncio.run(MODULE._ensure_job_started(ctx, book))
+    assert out["disposition"] == "existing_running" and out["started"] is True and out["job_id"] == 5
+    assert ctx.http.posts == []
+
+
+def test_ensure_job_started_creates_when_absent(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    ctx = _JobContext(tmp_path, [])
+    out = asyncio.run(MODULE._ensure_job_started(ctx, "222"))
+    assert out["disposition"] == "created" and out["started"] is True
+    assert ctx.http.posts == ["222"]
+
+
+def test_ensure_job_started_throttled_on_429(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    ctx = _JobContext(tmp_path, [], create_error=RuntimeError("429 Too Many Requests"))
+    out = asyncio.run(MODULE._ensure_job_started(ctx, "333"))
+    assert out["disposition"] == "throttled" and out["started"] is False
+    assert ctx.http.posts == []
+
+
+def test_ensure_job_started_failed_not_recreated(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    book = "444"
+    ctx = _JobContext(tmp_path, [{"id": 9, "book_id": book, "state": "failed", "title": "x"}])
+    out = asyncio.run(MODULE._ensure_job_started(ctx, book))
+    assert out["disposition"] == "existing_failed" and out["started"] is False
+    assert ctx.http.posts == []
+
+
+def test_chapter_hit_does_not_call_jobs(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    book = "555"
+    folder = tmp_path / book
+    _write_journal(folder, [{"id": "c1", "title": "第一章", "content": "<p>正文一</p>"}])
+    ctx = _JobContext(tmp_path, [])
+    src = Source()
+    result = asyncio.run(src.chapter(ctx, f"{MODULE.TOMATO_BASE}/__fanqie__/{book}/1"))
+    assert result["content"] == "正文一"
+    assert ctx.http.job_url_calls == 0  # 命中不打 /api/jobs
+
+
+def test_chapter_missing_triggers_job_and_retryable(tmp_path: Path) -> None:
+    MODULE._PROC_CACHE.clear()
+    book = "666"
+    folder = tmp_path / book
+    _write_journal(folder, [{"id": "c1", "title": "第一章", "content": "<p>正文一</p>"}])
+    ctx = _JobContext(tmp_path, [])
+    src = Source()
+    # 请求第 5 章（未下）→ 触发 job + retryable pending
+    result = asyncio.run(src.chapter(ctx, f"{MODULE.TOMATO_BASE}/__fanqie__/{book}/5"))
+    assert result["content"] == "" and result["debug"].get("retryable") is True
+    assert ctx.http.posts == [book]
+
