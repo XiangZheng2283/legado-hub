@@ -173,18 +173,56 @@ class Source:
             "tocUrl": book_url,
             "extra": {"book_id": book_id},
         }
-        # 补充本地落盘信息（勿阻塞；订阅侧据此拿简介 / 封面本地路径）
+        # 补充本地落盘信息（勿阻塞）：预览失败/下载中也据此回填书名、作者、
+        # 简介、最新章节、分类、字数、封面，客户端订阅 api 无需等下载完成即可开书。
         try:
             status = await _downloader_status(ctx)
             folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
-            info = _safe_json_load(folder / "status.json")
+            info = _safe_json_load(folder / "status.json") or {}
             extra = dict(result.get("extra") or {})
-            if not result.get("intro") and info and info.get("description"):
+            if not result.get("name") and info.get("book_name"):
+                result["name"] = str(info["book_name"])
+            if not result.get("author") and info.get("author"):
+                result["author"] = str(info["author"])
+            if not result.get("intro") and info.get("description"):
                 result["intro"] = str(info["description"])
+            journal: list = []
+            try:
+                journal = _journal_entries(folder)
+            except Exception:
+                journal = []
+            extra["download_count"] = len(journal)
+            if not result.get("lastChapter"):
+                if journal and journal[-1] and journal[-1][2]:
+                    result["lastChapter"] = str(journal[-1][2])
+            if not result.get("kind"):
+                parts_list: list[str] = []
+                if info.get("category"):
+                    parts_list.append(str(info["category"]))
+                tags = info.get("tags")
+                if isinstance(tags, list):
+                    for t in tags:
+                        s = str(t).strip()
+                        if s and s not in parts_list:
+                            parts_list.append(s)
+                if info.get("finished") is True:
+                    parts_list.append("完结")
+                elif info.get("finished") is False:
+                    parts_list.append("连载")
+                if parts_list:
+                    result["kind"] = "/".join(parts_list)
+            if not result.get("wordCount"):
+                try:
+                    wc_int = int(info.get("word_count"))
+                except (TypeError, ValueError):
+                    wc_int = 0
+                if wc_int >= 10000:
+                    result["wordCount"] = f"{wc_int // 10000}万字"
+                elif wc_int:
+                    result["wordCount"] = str(wc_int)
             cover = _local_cover_path(folder)
             if cover is not None:
                 extra["cover_local_path"] = str(cover)
-            extra["download_count"] = len(_journal_entries(folder))
             result["extra"] = extra
         except Exception:
             pass
