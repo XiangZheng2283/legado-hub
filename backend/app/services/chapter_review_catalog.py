@@ -134,14 +134,12 @@ async def _enrich_review_media(
         avatar_url = resolved.get(avatar_ref, "")
         if avatar_url:
             review["avatar"] = avatar_url
-        image_urls = []
-        for ref in image_refs:
-            url = resolved.get(str(ref).strip(), "")
-            if url and url not in image_urls:
-                image_urls.append(url)
-        if image_urls:
+        # 源端已保序（每个原图一个槽位）：逐槽映射，绝不丢位/去重，
+        # 保证渲染时正文 [惊喜] token 与图片按源位置一 一对应；无上传结果为空串。
+        image_urls = [resolved.get(str(ref).strip(), "") for ref in image_refs]
+        if any(image_urls):
             review["imageUrls"] = image_urls
-            review["imageUrl"] = image_urls[0]
+            review["imageUrl"] = next((u for u in image_urls if u), "")
     debug = payload.setdefault("debug", {})
     if isinstance(debug, dict) and refs:
         debug["mediaFound"] = len(refs)

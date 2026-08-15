@@ -4500,6 +4500,9 @@ class AggregateProcessor:
                     "content": content,
                     "debug": {"aggregate": True, "status": status},
                 }
+        self._trigger_fanqie_download_on_aggregate_read(
+            payload.get("aggregateBookId", "")
+        )
         return {
             "implemented": True,
             "chapterId": aggregate_chapter_id,
@@ -4518,6 +4521,38 @@ class AggregateProcessor:
             return content
         cleaned = TRACE_BLOCK_RE.sub("", str(content))
         return cleaned.rstrip()
+
+    _FANQIE_LOCAL_SOURCE = "fanqie_local"
+
+    def _trigger_fanqie_download_on_aggregate_read(self, aggregate_book_id: str) -> None:
+        """Best-effort: 在线读一本以 fanqie_local 为 primary 的聚合章未就绪时，
+        幂等触发下载器整本 job，让 whole-book 下载随阅读立即开始。失败不抛。"""
+        if not aggregate_book_id:
+            return
+        import asyncio as _asyncio
+        try:
+            with self._conn() as conn:
+                row = conn.execute(
+                    "SELECT primary_book_id, primary_source_id FROM aggregate_book_tasks WHERE aggregate_book_id = ?",
+                    (aggregate_book_id,),
+                ).fetchone()
+            if not row or str(row[1] or "") != self._FANQIE_LOCAL_SOURCE:
+                return
+            fanqie_book_id = str(row[0] or "").strip()
+            if not fanqie_book_id:
+                return
+            from app.services.fanqie_local_trigger import ensure_fanqie_download_job
+
+            async def _fire(coro):
+                try:
+                    await coro
+                except Exception:
+                    logger.debug("fanqie download trigger failed", exc_info=True)
+
+            loop = _asyncio.get_running_loop()
+            loop.create_task(_fire(ensure_fanqie_download_job(fanqie_book_id)))
+        except Exception:
+            logger.debug("fanqie download trigger skipped", exc_info=True)
 
     def _looks_like_garbled_text(self, content: str) -> bool:
         return looks_like_garbled_text(content)

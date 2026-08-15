@@ -21,6 +21,9 @@ REVIEW_IMAGE_HOST_SUFFIXES = (
     "yuewen.com",
 )
 _INLINE_EMOTICON_RE = re.compile(r"\[fn=(\d+)\]")
+# 番茄评论的「文内图」占位符：形如 [惊喜] 的方括号短词（非起点 [fn=N] 表情）。
+_FANQIE_IMG_TOKEN_RE = re.compile(r"\[[^\]]*\]")
+_FN_EMOTICON_RE = re.compile(r"\[fn=\d+\]")
 
 
 class ChapterReviewCache:
@@ -214,9 +217,39 @@ def _review_related_position(review: dict[str, Any]) -> str:
     return position_image or f'<span class="related-position">{html.escape(position)}</span>'
 
 
-def _review_content(value: Any) -> str:
-    """Escape review text and render Qidian's confirmed 1-64 icon set."""
+def _review_content(value: Any, image_urls: list[Any] | tuple[Any, ...] | None = None) -> tuple[str, bool]:
+    """Escape review text, render Qidian [fn=N] emoticons, and replace
+    Fanqie inline-image placeholders (\[惊喜\] style) positionally with
+    \<img\> when their count matches the review's trusted image URLs.
+
+    Returns (html, inline_replaced): inline_replaced is True when the bracket
+    placeholders were swapped for \<img\>, in which case the caller should NOT
+    also append the trailing media block (avoid double images).
+    """
     escaped = html.escape(str(value or ""))
+    # 依据评论区「内容格式」：正文 [惊喜] token 与源端 images[] 一一对应。
+    # 只要该评论声明了源图片（image_urls 非空），就按槽位逐个替换：
+    #   已上传且 https 可信  -> <img>；空槽（未上传/非可信）-> 该 token 置空。
+    # 绝不依赖「客户端收到的 imageUrls 数量」——那会因部分图缺失而错位。
+    tokens = [t for t in _FANQIE_IMG_TOKEN_RE.finditer(escaped) if not _FN_EMOTICON_RE.fullmatch(t.group(0))]
+    inline_replaced = False
+    if image_urls and tokens:
+        remaining: list[str] = [_safe_review_image_url(u) for u in image_urls]
+
+        def render_inline(match: re.Match[str]) -> str:
+            token = match.group(0)
+            if _FN_EMOTICON_RE.fullmatch(token):
+                return token
+            url = remaining.pop(0) if remaining else ""
+            if not url:
+                return ""
+            return (
+                f'<img class="comment-media comment-inline-media" src="{html.escape(url, quote=True)}" '
+                'alt="评论图片" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
+            )
+
+        escaped = _FANQIE_IMG_TOKEN_RE.sub(render_inline, escaped)
+        inline_replaced = True
 
     def render_emoticon(match: re.Match[str]) -> str:
         icon_id = int(match.group(1))
@@ -232,10 +265,8 @@ def _review_content(value: Any) -> str:
             f'title="起点表情 {icon_id}">表情</span>'
         )
 
-    return _INLINE_EMOTICON_RE.sub(
-        render_emoticon,
-        escaped,
-    )
+    escaped = _INLINE_EMOTICON_RE.sub(render_emoticon, escaped)
+    return escaped, inline_replaced
 
 
 def _review_media(review: dict[str, Any]) -> str:
@@ -266,7 +297,7 @@ def _reply_row(reply: dict[str, Any], *, target_name: str) -> str:
     reply_name = str(reply.get("userName") or "书友")
     reply_target = str(reply.get("replyToUserName") or target_name)
     target_position = _review_related_position(reply)
-    content = _review_content(reply.get("content"))
+    content, _inline_media = _review_content(reply.get("content"), reply.get("imageUrls") or [])
     text = f'<p>{content}</p>' if content else ""
     reply_id = _review_id(reply) or hashlib.sha256(
         "\x1f".join(
@@ -299,7 +330,7 @@ def _reply_row(reply: dict[str, Any], *, target_name: str) -> str:
         )
         + '</div>'
         + text
-        + _review_media(reply)
+        + ("" if _inline_media else _review_media(reply))
         + '<div class="reply-meta">'
         + (f'<time>{html.escape(reply_time)}</time>' if reply_time else "")
         + '<span class="meta-reply-btn">回复</span>'
@@ -388,7 +419,7 @@ def _review_card(
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
         paragraph_href = f"{review_view_url}?{query}"
 
-    content_html = _review_content(content)
+    content_html, _inline_media = _review_content(content, review.get("imageUrls") or [])
     text_html = f'<p class="comment-text">{content_html}</p>' if content_html else ""
     paragraph_html = (
         f'<blockquote class="comment-paragraph">{html.escape(paragraph_text.strip())}</blockquote>'
@@ -415,7 +446,7 @@ def _review_card(
         + _review_reply_context(review)
         + paragraph_html
         + text_html
-        + _review_media(review)
+        + ("" if _inline_media else _review_media(review))
         + '<div class="comment-meta">'
         + '<div class="comment-meta-left">'
         + (f'<time>{html.escape(review_time)}</time>' if review_time else "")

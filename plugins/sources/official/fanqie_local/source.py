@@ -800,14 +800,20 @@ def _build_reviews_from_local(cache: dict, chapter_id: str, folder: Path) -> dic
                 avatar_path = _cached_media_path(folder, avatar_url)
                 if avatar_path is not None:
                     review["avatarRef"] = str(avatar_path)
+            # 依据评论区「内容格式」：正文里的 [惊喜] 占位符与源端 images[] 一一对应。
+            # 每个源图片占一个槽位（保序）：已缓存→本地路径（供上传队列映射）；
+            # 未缓存/非 dict→空占位，绝不丢位，保证渲染时 token 与图片按源位置对齐。
             image_refs: list[str] = []
             for img in images_urls:
                 if not isinstance(img, dict):
+                    image_refs.append("")
                     continue
-                url = str(img.get("url") or "")
+                url = str(img.get("url") or "").strip()
+                if not url:
+                    image_refs.append("")
+                    continue
                 media_path = _cached_media_path(folder, url)
-                if media_path is not None and str(media_path) not in image_refs:
-                    image_refs.append(str(media_path))
+                image_refs.append(str(media_path) if media_path is not None else "")
             if image_refs:
                 review["imageRefs"] = image_refs
             reviews.append(review)
