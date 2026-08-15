@@ -24,6 +24,15 @@ QIDIAN_SOURCE_IDS = {QIDIAN_APP_SOURCE_ID, QIDIAN_WEB_SOURCE_ID}
 _LOCAL_MEDIA_PREFIX = "/api/legado/media/"
 
 
+def _comment_src_attr(url: str) -> str:
+    """Attribute-safe media URL for contentHtml/src.
+
+    只转义引号、保留 & 原样：Legado 客户端把 content/contentHtml 当字面文本读取
+    src，若把 '&' 转成 '&amp;' 会使签名查询串失效（403/无法加载）。
+    """
+    return str(url or "").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def _safe_comment_url(value: Any) -> str:
     """只放行 http/https 的原始 CDN URL（头像/评论图客户端直载），其余（空白/危险协议）返空串。"""
     u = str(value or "").strip()
@@ -199,7 +208,7 @@ async def _enrich_review_media(
         body_parts: list[str] = []
         if avatar_url:
             body_parts.append(
-                f'<img class="comment-inline-avatar" src="{html.escape(avatar_url, quote=True)}" '
+                f'<img class="comment-inline-avatar" src="{_comment_src_attr(avatar_url)}" '
                 'alt="头像" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
             )
         raw_text = str(review.get("content") or "")
@@ -208,7 +217,7 @@ async def _enrich_review_media(
         for u in image_urls:
             if u:
                 body_parts.append(
-                    f'<img class="comment-inline-media" src="{html.escape(u, quote=True)}" '
+                    f'<img class="comment-inline-media" src="{_comment_src_attr(u)}" '
                     'alt="评论图片" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
                 )
         if body_parts and (avatar_url or any(image_urls)):
