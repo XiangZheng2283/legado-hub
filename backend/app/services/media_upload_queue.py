@@ -71,6 +71,20 @@ class MediaUploadQueueService:
         self._running = 0
         initialize_database(self.db_path)
         self.reset_stale_uploading()
+        self.prune_comment_media()
+
+    def prune_comment_media(self) -> int:
+        """评论头像/评论图像已改为经 images/ 本地映射返回，不再走上传队列。
+
+        清掉历史遗留的 content/avatar 项（即便已 done 也不再需要），并配合
+        _claim 只认 kind='cover'，确保评论媒体在任何情况下都不会被上传。
+        """
+        with self._connect() as conn:
+            cur = conn.execute(
+                "DELETE FROM media_upload_queue WHERE kind IN ('content','avatar')"
+            )
+            conn.commit()
+            return cur.rowcount
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path, timeout=10)
@@ -192,7 +206,7 @@ class MediaUploadQueueService:
     def _claim(self) -> dict[str, Any] | None:
         now=_iso(_now())
         with self._connect() as conn:
-            row=conn.execute("SELECT * FROM media_upload_queue WHERE status='queued' OR (status='rate_limited' AND (next_retry_at IS NULL OR next_retry_at<=?)) ORDER BY id LIMIT 1",(now,)).fetchone()
+            row=conn.execute("SELECT * FROM media_upload_queue WHERE kind='cover' AND (status='queued' OR (status='rate_limited' AND (next_retry_at IS NULL OR next_retry_at<=?))) ORDER BY id LIMIT 1",(now,)).fetchone()
             if not row: return None
             cur=conn.execute("UPDATE media_upload_queue SET status='uploading',attempts=attempts+1,updated_at=datetime('now') WHERE id=? AND status IN ('queued','rate_limited')",(row["id"],)); conn.commit()
             return dict(row) if cur.rowcount else None

@@ -379,9 +379,16 @@ async def legado_local_comment_media(book_id: str, filename: str):
     target = Path(save_dir) / book_id / "images" / filename
     if not target.is_file():
         raise HTTPException(status_code=404, detail="not_cached")
+    # 文件名是 sha1(url) 内容寻址，一个 URL 永远对应同一个字节流 → 不可变。
+    # 用长 max-age + immutable + CDN s-maxage，让浏览器与 Cloudflare 边缘按
+    # URL 末尾的静态扩展名（.png/.jpeg/.gif/.webp/...）持久缓存，避免反复回源。
     return FileResponse(
         target,
-        headers={"Cache-Control": "public, max-age=300", "ETag": f'"{filename}"'},
+        headers={
+            "Cache-Control": "public, max-age=31536000, immutable, s-maxage=31536000",
+            "CDN-Cache-Control": "public, max-age=31536000, immutable",
+            "ETag": f'"{filename}"',
+        },
     )
 
 
