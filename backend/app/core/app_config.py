@@ -79,6 +79,8 @@ class SearchConfig:
     source_soft_timeout_seconds: float = 6.0
     source_hard_timeout_seconds: float = 25.0
     aggregate_overall_timeout_seconds: float = 180.0
+    aggregate_poll_seconds: int = 15
+    aggregate_scheduler_concurrency: int = 4
     # Official source
     official_source_in_normal_search: bool = False
     official_source_bonus: int = 50
@@ -103,6 +105,8 @@ class SearchConfig:
             source_soft_timeout_seconds=float(data.get("sourceSoftTimeoutSeconds", 6.0)),
             source_hard_timeout_seconds=float(data.get("sourceHardTimeoutSeconds", 25.0)),
             aggregate_overall_timeout_seconds=float(data.get("aggregateOverallTimeoutSeconds", 180.0)),
+            aggregate_poll_seconds=max(5, int(data.get("aggregatePollSeconds", 15))),
+            aggregate_scheduler_concurrency=max(1, int(data.get("aggregateSchedulerConcurrency", 4))),
             official_source_in_normal_search=bool(data.get("officialSourceInNormalSearch", False)),
             official_source_bonus=int(data.get("officialSourceBonus", 50)),
         )

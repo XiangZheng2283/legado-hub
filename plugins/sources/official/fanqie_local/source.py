@@ -647,12 +647,15 @@ def _journal_entries(folder: Path) -> list[tuple[int, str, str, str]]:
     容忍最后一行未写完（被截断的 JSON 行直接跳过）。"""
     entries: list[tuple[int, str, str, str]] = []
     try:
-        lines = (folder / "downloaded_chapters.jsonl").read_text(encoding="utf-8").splitlines()
+        raw = (folder / "downloaded_chapters.jsonl").read_bytes()
     except OSError:
         return entries
-    for line in lines:
+    # 下载器按行追加，最后一行可能是半个 UTF-8 字符；逐行解码，半截行（含替换符
+    # U+FFFD）直接跳过，避免整文件 read_text 抛 UnicodeDecodeError 造成"空章节"，
+    # 也避免把损坏行以 errors=replace 解进条目产生乱码。
+    for line in raw.decode("utf-8", errors="replace").splitlines():
         line = line.strip()
-        if not line:
+        if not line or "\ufffd" in line:
             continue
         try:
             rec = json.loads(line)

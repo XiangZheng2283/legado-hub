@@ -66,6 +66,18 @@ class SharedBookScheduler:
             value = 180.0
         return max(30.0, value)
 
+    def _poll_seconds(self) -> int:
+        try:
+            return max(5, int(AppConfig.get().search.aggregate_poll_seconds))
+        except Exception:
+            return 15
+
+    def _scheduler_max_concurrency(self) -> int:
+        try:
+            return max(1, int(AppConfig.get().search.aggregate_scheduler_concurrency))
+        except Exception:
+            return 4
+
     async def startup_recovery_scan(self) -> dict[str, Any]:
         """Run one startup recovery pass before the periodic loop begins."""
         if self._startup_recovery_done and self._startup_recovery_result is not None:
@@ -320,48 +332,65 @@ class SharedBookScheduler:
         processed_items: list[dict[str, Any]] = []
         failed_books = 0
         requeued_books = 0
-        for index, (book_id, trigger, payload) in enumerate(scheduled):
-            if trigger == SharedBookJobType.BOOK_BOOTSTRAP.value and self._should_defer_bootstrap(book_id):
-                self._requeue_manual_entry(book_id, trigger, payload)
-                deferred_bootstrap += 1
-                continue
-            try:
-                processed = await self._process_book(
-                    book_id,
-                    trigger=trigger,
-                    payload=payload,
-                )
-            except asyncio.CancelledError:
-                for pending_book_id, pending_trigger, pending_payload in scheduled[index:]:
-                    if (pending_book_id, pending_trigger) in manual_entry_keys:
-                        self._requeue_manual_entry(
-                            pending_book_id,
-                            pending_trigger,
-                            pending_payload,
-                        )
-                raise
-            except Exception as exc:
-                logger.warning(
-                    "Shared-book scheduled item failed: bookId=%s trigger=%s",
-                    book_id,
-                    trigger,
-                    exc_info=True,
-                )
-                if (book_id, trigger) in manual_entry_keys:
-                    self._requeue_manual_entry(book_id, trigger, payload)
-                    requeued_books += 1
-                failed_books += 1
-                processed_items.append(
-                    {
+
+        max_concurrency = max(1, int(self._scheduler_max_concurrency()))
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def _run_one(book_id: str, trigger: str, payload: dict[str, Any] | None) -> dict[str, Any]:
+            async with semaphore:
+                try:
+                    return await self._process_book(book_id, trigger=trigger, payload=payload)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    logger.warning(
+                        "Shared-book scheduled item failed: bookId=%s trigger=%s",
+                        book_id,
+                        trigger,
+                        exc_info=True,
+                    )
+                    return {
                         "bookId": book_id,
                         "trigger": trigger,
                         "success": False,
                         "skipped": False,
                         "error": str(exc),
                     }
-                )
-                continue
 
+        meta: dict[int, tuple[str, str, dict[str, Any] | None]] = {}
+        tasks: list[tuple[int, asyncio.Future[dict[str, Any]]]] = []
+        for index, (book_id, trigger, payload) in enumerate(scheduled):
+            meta[index] = (book_id, trigger, payload)
+            if trigger == SharedBookJobType.BOOK_BOOTSTRAP.value and self._should_defer_bootstrap(book_id):
+                self._requeue_manual_entry(book_id, trigger, payload)
+                deferred_bootstrap += 1
+                continue
+            tasks.append((index, _run_one(book_id, trigger, payload)))
+
+        outcomes: list[dict[str, Any] | None] = [None] * len(scheduled)
+        if tasks:
+            try:
+                gathered = await asyncio.gather(*(task for _index, task in tasks))
+            except asyncio.CancelledError:
+                for _index, _task in tasks:
+                    pending_book_id, pending_trigger, pending_payload = meta[_index]
+                    if (pending_book_id, pending_trigger) in manual_entry_keys:
+                        self._requeue_manual_entry(pending_book_id, pending_trigger, pending_payload)
+                raise
+            for (index, _task), outcome in zip(tasks, gathered):
+                outcomes[index] = outcome
+
+        for index, processed in enumerate(outcomes):
+            if processed is None:
+                continue
+            book_id, trigger, payload = meta[index]
+            if processed.get("error"):
+                if (book_id, trigger) in manual_entry_keys:
+                    self._requeue_manual_entry(book_id, trigger, payload)
+                    requeued_books += 1
+                failed_books += 1
+                processed_items.append(processed)
+                continue
             processed_items.append(processed)
             succeeded = bool(processed.get("success", False))
             if (book_id, trigger) in manual_entry_keys and not succeeded:
@@ -429,8 +458,10 @@ class SharedBookScheduler:
             "items": results,
         }
 
-    async def run_forever(self, stop_event: asyncio.Event, poll_seconds: int = 60) -> None:
+    async def run_forever(self, stop_event: asyncio.Event, poll_seconds: int | None = None) -> None:
         """Run startup recovery once, then continue periodic checks."""
+        if poll_seconds is None:
+            poll_seconds = self._poll_seconds()
         logger.info("Shared-book scheduler started, pollSeconds=%d", poll_seconds)
         try:
             await self.startup_recovery_scan()
