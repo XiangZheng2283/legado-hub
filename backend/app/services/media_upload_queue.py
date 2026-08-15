@@ -209,8 +209,11 @@ class MediaUploadQueueService:
             if not url or not is_trusted_imgbed_url(url): raise ValueError("ImgBed returned no trusted https URL")
             with self._connect() as conn: conn.execute("UPDATE media_upload_queue SET status='done',uploaded_url=?,error=NULL,next_retry_at=NULL,updated_at=datetime('now') WHERE id=?",(url,item_id)); conn.commit()
         except ImgBedUploadError as exc:
-            delay=_retry_seconds(exc.retry_after, 60)
-            with self._connect() as conn: conn.execute("UPDATE media_upload_queue SET status='rate_limited',retry_after_seconds=?,next_retry_at=?,error=?,updated_at=datetime('now') WHERE id=?",(delay,_iso(_now()+timedelta(seconds=delay)),"429 rate limited",item_id)); conn.commit()
+            if exc.status_code == 429:
+                delay=_retry_seconds(exc.retry_after, 60)
+                with self._connect() as conn: conn.execute("UPDATE media_upload_queue SET status='rate_limited',retry_after_seconds=?,next_retry_at=?,error=?,updated_at=datetime('now') WHERE id=?",(delay,_iso(_now()+timedelta(seconds=delay)),"429 rate limited",item_id)); conn.commit()
+            else:
+                with self._connect() as conn: conn.execute("UPDATE media_upload_queue SET status='failed',error=?,updated_at=datetime('now') WHERE id=?",(str(exc)[:500],item_id)); conn.commit()
         except Exception as exc:
             with self._connect() as conn: conn.execute("UPDATE media_upload_queue SET status='failed',error=?,updated_at=datetime('now') WHERE id=?",(str(exc)[:500],item_id)); conn.commit()
 

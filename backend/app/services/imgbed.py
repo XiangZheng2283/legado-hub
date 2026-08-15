@@ -244,17 +244,18 @@ class ImgBedUploader:
             self._inflight.pop(asset_key, None)
 
     async def _upload_once(self, data: bytes, mime: str, filename: str) -> str:
-        query = {
-            "uploadChannel": self.config.upload_channel,
+        # XZ Image expects the deployment settings in request headers.
+        # Do not rely on the generic ImgBed query-string contract here.
+        query: dict[str, str] = {}
+        headers = {
+            "Accept": "application/json",
             "returnFormat": self.config.return_format,
-            "uploadFolder": self.config.upload_folder,
-            "uploadNameType": "origin",
+            "uploadFolder": "/" + self.config.upload_folder.strip("/"),
         }
         if self.config.channel_name:
-            query["channelName"] = self.config.channel_name
+            headers["channelName"] = self.config.channel_name
         if self.config.auth_code:
-            query["authCode"] = self.config.auth_code
-        headers = {"Accept": "application/json"}
+            headers["authCode"] = self.config.auth_code
         if self.config.api_token:
             headers["Authorization"] = f"Bearer {self.config.api_token}"
         files = {"file": (_safe_filename(filename, mime), data, mime)}
@@ -274,10 +275,20 @@ class ImgBedUploader:
                     status_code=429,
                     retry_after=response.headers.get("Retry-After", ""),
                 )
-            response.raise_for_status()
+            if response.is_error:
+                raise ImgBedUploadError(
+                    f"ImgBed upload failed with HTTP {response.status_code}",
+                    status_code=response.status_code,
+                )
             if len(response.content) > _MAX_RESPONSE_BYTES:
-                return ""
-            payload = response.json()
+                raise ImgBedUploadError("ImgBed response is too large", status_code=response.status_code)
+            try:
+                payload = response.json()
+            except ValueError as exc:
+                raise ImgBedUploadError(
+                    f"ImgBed returned non-JSON response (HTTP {response.status_code})",
+                    status_code=response.status_code,
+                ) from exc
         for candidate in _response_url_candidates(payload):
             if candidate.startswith("//"):
                 candidate = "https:" + candidate
@@ -297,7 +308,10 @@ class ImgBedUploader:
             ):
                 _remember_trusted_url(candidate)
                 return candidate
-        return ""
+        raise ImgBedUploadError(
+            "ImgBed response did not contain a usable src/publicUrl",
+            status_code=response.status_code,
+        )
 
 
 _UPLOADER: ImgBedUploader | None = None
