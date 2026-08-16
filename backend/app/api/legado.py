@@ -17,13 +17,18 @@ from fastapi.responses import FileResponse, HTMLResponse
 
 from app.services.catalog import Catalog
 from app.services.library_books import format_reading_update_time, library_books_service
-from app.services.aggregate_virtual_source import VIRTUAL_SOURCE_ID
+from app.services.aggregate_virtual_source import (
+    VIRTUAL_SOURCE_ID,
+    unpack_aggregate_book_url,
+    unpack_aggregate_chapter_url,
+)
 from app.source_plugins.id_codec import (
     decode_book_id,
     decode_chapter_id,
     encode_chapter_id,
 )
 from app.services.fanqie_local_trigger import get_save_dir, spawn_fanqie_trigger_for_url
+from app.services.chapter_review_catalog import _enrich_review_media
 from app.services.reading_reviews import (
     chapter_review_cache,
     render_chapter_reviews_html,
@@ -88,6 +93,82 @@ def _decode_chapter_identity(chapter_id: str) -> tuple[str, str]:
         return decode_chapter_id(chapter_id)
     except Exception as exc:
         raise HTTPException(status_code=404, detail="章节不存在") from exc
+
+
+def _kick_fanqie_for_aggregate(aggregate_book_id: str) -> None:
+    """Fire-and-forget start the fanqie_local downloader for an aggregate book.
+
+    Reading (detail / toc / chapter body) before the fanqie output exists must
+    kick the whole-book job so the incremental files (cover /
+    downloaded_chapters.jsonl / segment_comments / images) start producing.
+    Otherwise the reader 404s on "尚未发布" forever because nothing told the
+    downloader to fetch. Never blocks the response and never raises.
+    """
+    if not aggregate_book_id:
+        return
+    try:
+        book = library_books_service.get_book(aggregate_book_id)
+    except Exception:
+        return
+    if not book or str(book.get("primarySourceId") or "") != "fanqie_local":
+        return
+    primary_url = str(book.get("primaryBookUrl") or "")
+    if primary_url:
+        spawn_fanqie_trigger_for_url(primary_url)
+
+
+def _kick_fanqie_on_missing_chapter(chapter_id: str, chapter_url: str) -> None:
+    """Resolve the aggregate book behind a not-yet-published chapter and kick
+    the fanqie download (see _kick_fanqie_for_aggregate). Never raises."""
+    try:
+        payload = unpack_aggregate_chapter_url(chapter_url)
+        aggregate_book_id = str(payload.get("aggregateBookId") or "")
+    except Exception:
+        return
+    _kick_fanqie_for_aggregate(aggregate_book_id)
+
+
+def _aggregate_to_fanqie_chapter(chapter_url: str) -> str | None:
+    """Map a virtual/aggregate chapter_url back to its source fanqie chapter_id.
+
+    The aggregate chapter payload carries ``sourceChapterId`` (==
+    ``encode_chapter_id("fanqie_local", <fanqie chapter url>)``). When the
+    primary source is fanqie_local, delegating to that id lets the reader edge-
+    serve straight from the downloader's OS files (downloaded_chapters.jsonl /
+    segment_comments) without waiting for the shared-library pipeline — exactly
+    the "边下载边返回" contract. Returns None for non-fanqie chapters.
+    """
+    try:
+        payload = unpack_aggregate_chapter_url(chapter_url)
+        source_chapter_id = str(payload.get("sourceChapterId") or "")
+        if not source_chapter_id:
+            return None
+        source_id, _ = decode_chapter_id(source_chapter_id)
+    except Exception:
+        return None
+    return source_chapter_id if source_id == "fanqie_local" else None
+
+
+def _pending_chapter_response(
+    result: dict,
+    *,
+    chapter_id: str,
+    message: str,
+) -> dict:
+    """HTTP-200 placeholder for a not-yet-downloaded fanqie chapter (edge read).
+
+    Returns 200 with empty content + ``debug.retryable`` so the Reading client
+    keeps re-requesting while the download streams in; mirrors the fanqie_local
+    plugin's own ``_pending_chapter`` contract.
+    """
+    base = _public_chapter_response(result, chapter_id=chapter_id)
+    base["content"] = ""
+    base["debug"] = {
+        "retryable": True,
+        **(result.get("debug") if isinstance(result.get("debug"), dict) else {}),
+        "msg": message,
+    }
+    return base
 
 
 def _require_third_party_plugin(
@@ -418,6 +499,13 @@ async def get_book(request: Request, book_id: str) -> dict:
         if source_id == VIRTUAL_SOURCE_ID:
             shared = library_books_service.legado_book_detail(book_id, base_api=base_api)
             if shared is None:
+                # 未发布就点开详情：先踢 fanqie 整本下载，让增量产出（fire-and-forget）。
+                try:
+                    _kick_fanqie_for_aggregate(
+                        unpack_aggregate_book_url(book_url).get("aggregateBookId", "")
+                    )
+                except Exception:
+                    pass
                 raise HTTPException(status_code=404, detail="书籍尚未发布")
             return _public_book_response(
                 dict(shared.get("data") or {}),
@@ -456,6 +544,13 @@ async def get_toc(request: Request, book_id: str) -> dict:
         if source_id == VIRTUAL_SOURCE_ID:
             shared = library_books_service.legado_toc(book_id, base_api=base_api)
             if shared is None:
+                # 目录未就绪先踢 fanqie 下载（fire-and-forget）。
+                try:
+                    _kick_fanqie_for_aggregate(
+                        unpack_aggregate_book_url(book_url).get("aggregateBookId", "")
+                    )
+                except Exception:
+                    pass
                 raise HTTPException(status_code=404, detail="书籍尚未发布")
             return _public_toc_response(
                 shared,
@@ -491,6 +586,21 @@ async def get_chapter(request: Request, chapter_id: str) -> dict:
         if source_id == VIRTUAL_SOURCE_ID:
             shared = library_books_service.legado_chapter(chapter_id)
             if shared is None:
+                # fanqie_local-primary 聚合章：直接委托 fanqie 插件的边下边读
+                # （读 downloaded_chapters.jsonl / segment_comments，命中即返回，
+                # 未命中触发整本下载并回 retryable 占位，客户端刷新即补）。
+                fanqie_chapter_id = _aggregate_to_fanqie_chapter(chapter_url)
+                if fanqie_chapter_id:
+                    edge = await catalog.chapter(fanqie_chapter_id)
+                    if str(edge.get("content") or "").strip():
+                        return _public_chapter_response(edge, chapter_id=chapter_id)
+                    _kick_fanqie_on_missing_chapter(chapter_id, chapter_url)
+                    return _pending_chapter_response(
+                        edge,
+                        chapter_id=chapter_id,
+                        message="章节下载中，请稍后重试。",
+                    )
+                _kick_fanqie_on_missing_chapter(chapter_id, chapter_url)
                 raise HTTPException(status_code=404, detail="章节尚未发布")
             content = await _apply_reading_content_gates(
                 chapter_id=chapter_id,
@@ -530,6 +640,12 @@ async def get_chapter_reviews(request: Request, chapter_id: str) -> dict:
         catalog = Catalog(base_api=get_public_base_url(request))
         if source_id == VIRTUAL_SOURCE_ID:
             if library_books_service.legado_chapter(chapter_id) is None:
+                # fanqie_local 主源聚合章：先确保整本下载在跑，再委托插件的
+                # 边下边读直接返回 segment_comments/<id>.json（下到哪返回到哪）。
+                fanqie_chapter_id = _aggregate_to_fanqie_chapter(chapter_url)
+                if fanqie_chapter_id:
+                    _kick_fanqie_on_missing_chapter(chapter_id, chapter_url)
+                    return await catalog.chapter_reviews(fanqie_chapter_id)
                 raise HTTPException(status_code=404, detail="章节尚未发布")
         else:
             _require_review_plugin(
@@ -619,6 +735,9 @@ async def get_chapter_review_view(
                 page_size=page_size,
                 cursor_id=cursor_id,
             )
+            reply_detail = await _enrich_review_media(
+                catalog, reply_detail, source_id, chapter_url
+            )
             tab = "paragraph"
         elif paragraphIds:
             try:
@@ -641,6 +760,9 @@ async def get_chapter_review_view(
                 page=parsed_page,
                 page_size=page_size,
             )
+            page_hot_detail = await _enrich_review_media(
+                catalog, page_hot_detail, source_id, chapter_url
+            )
             tab = "paragraph"
         elif parsed_paragraph_id is not None:
             paragraph_detail = await catalog.paragraph_reviews(
@@ -649,12 +771,18 @@ async def get_chapter_review_view(
                 page=parsed_page,
                 page_size=page_size,
             )
+            paragraph_detail = await _enrich_review_media(
+                catalog, paragraph_detail, source_id, chapter_url
+            )
             tab = "paragraph"
         elif tab == "chapter" and parsed_page > 1:
             chapter_detail = await catalog.chapter_say(
                 chapter_id,
                 page=parsed_page,
                 page_size=page_size,
+            )
+            chapter_detail = await _enrich_review_media(
+                catalog, chapter_detail, source_id, chapter_url
             )
         base_api = get_public_base_url(request)
         review_view_url = f"{base_api}/api/legado/chapter/{chapter_id}/reviews/view"

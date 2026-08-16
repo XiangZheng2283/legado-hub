@@ -103,7 +103,28 @@ def find_fanqie_book_id(group):
     return None
 
 
-_FANQIE_JOB_LOCK: "asyncio.Lock | None" = None
+_FANQIE_JOB_LOCKS: dict[str, "asyncio.Lock"] = {}
+_FANQIE_JOB_LOCK_KEYS: "asyncio.Lock" = None
+
+
+async def _per_book_lock(book_id: str) -> "asyncio.Lock":
+    """Return the lock guarding one book's check-then-create critical section.
+
+    Concurrency is serialized only per book_id: triggers for *different* books
+    run in parallel and never block each other, while the same book's concurrent
+    fire-and-forget triggers (reader open, subscribe, lazy chapter) still cannot
+    double-POST /api/jobs. This makes multi-book download starts scale with the
+    number of books being read instead of funneling everything through one lock.
+    """
+    global _FANQIE_JOB_LOCK_KEYS
+    if _FANQIE_JOB_LOCK_KEYS is None:
+        _FANQIE_JOB_LOCK_KEYS = asyncio.Lock()
+    async with _FANQIE_JOB_LOCK_KEYS:
+        lock = _FANQIE_JOB_LOCKS.get(book_id)
+        if lock is None:
+            lock = asyncio.Lock()
+            _FANQIE_JOB_LOCKS[book_id] = lock
+        return lock
 
 
 async def ensure_fanqie_download_job(
@@ -121,15 +142,17 @@ async def ensure_fanqie_download_job(
     unknown - the subscription continues and the existing reader path retries".
 
     Concurrency-safe and never duplicated in-process: the whole check-then-create
-    critical section runs under a module-level asyncio lock, so concurrent
+    critical section runs under a per-book asyncio lock, so concurrent
     fire-and-forget triggers (reader open, subscribe, lazy chapter) for the same
     book cannot double-POST /api/jobs. The downloader's own create is idempotent
-    by book_id, and this race-window guard closes the gap.
+    by book_id, and this race-window guard closes the gap. Different books are
+    never blocked by each other.
     """
-    global _FANQIE_JOB_LOCK
-    if _FANQIE_JOB_LOCK is None:
-        _FANQIE_JOB_LOCK = asyncio.Lock()
-    async with _FANQIE_JOB_LOCK:
+    book_id = str(book_id or "").strip()
+    if not book_id:
+        return {"started": False, "job_id": None, "disposition": "error"}
+    lock = await _per_book_lock(book_id)
+    async with lock:
         return await _ensure_fanqie_download_job_unlocked(
             book_id, base_url=base_url, password=password
         )

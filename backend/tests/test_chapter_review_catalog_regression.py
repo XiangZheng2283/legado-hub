@@ -31,3 +31,42 @@ def test_fanqie_review_media_drops_pending_refs_without_fallback(monkeypatch) ->
     assert "avatarRef" not in review and "imageRefs" not in review
     assert "avatar" not in review and "imageUrls" not in review and "imageUrl" not in review
     assert result["debug"]["mediaFailed"] == 2
+
+def test_fanqie_detail_payload_comments_are_enriched_for_reviews_view(monkeypatch) -> None:
+    """/reviews/view drill-down payloads (paragraph/page/chapter_say/replies) must
+    carry resolved image URLs, matching the summary /reviews media contract."""
+    urls = {
+        "OEBPS/images/avatar.jpg": "https://imgbed.example/avatar.jpg",
+        "OEBPS/images/comment.png": "https://imgbed.example/comment.png",
+    }
+
+    class Queue:
+        def find_uploaded(self, *, ref="", **_kwargs):
+            return urls.get(ref, "")
+
+    monkeypatch.setattr("app.services.chapter_review_catalog.media_upload_queue_service", Queue())
+    payload = {
+        "implemented": True,
+        "chapterId": "x",
+        "comments": [
+            {
+                "id": "r1",
+                "userName": "书友",
+                "content": "文字",
+                "avatarRef": "OEBPS/images/avatar.jpg",
+                "imageRefs": ["OEBPS/images/comment.png"],
+            }
+        ],
+        "totalCount": 1,
+        "hasMore": False,
+    }
+    result = asyncio.run(_enrich_review_media(None, payload, "fanqie_local", "fanqie://book/1/1"))
+    review = result["comments"][0]
+    assert "avatarRef" not in review and "imageRefs" not in review
+    assert review["avatar"] == urls["OEBPS/images/avatar.jpg"]
+    assert review["imageUrls"] == [urls["OEBPS/images/comment.png"]]
+    # Self-contained contentHtml (avatar + text + inline image) so _review_card
+    # renders the image without a second pass.
+    assert '<img class="comment-inline-avatar"' in review["contentHtml"]
+    assert '<img class="comment-inline-media"' in review["contentHtml"]
+    assert "imgbed.example/comment.png" in review["contentHtml"]

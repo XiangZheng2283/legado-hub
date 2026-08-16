@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import os
 import threading
 import time
 from collections import deque
@@ -17,11 +18,23 @@ class ReadingActionLimit:
     max_concurrency: int | None = None
 
 
+# The client prefetches current/next/prev chapters and their comments in
+# parallel, so a fixed concurrency of 4/2 trips 429 under normal reading.
+# Scale the read-path concurrency slot with the host CPU (e.g. 4 cores -> 16
+# parallel blocks) to keep multi-book + multi-chapter prefetch from being
+# rejected as "当前阅读请求较多".
+def _cpu_concurrency_slots(multiplier: int = 4, *, floor: int = 8, cap: int = 64) -> int:
+    cores = max(1, os.cpu_count() or 1)
+    return max(floor, min(cap, cores * multiplier))
+
+
+_READ_CONCURRENCY = _cpu_concurrency_slots()
+
 DEFAULT_READING_LIMITS = {
     "search": ReadingActionLimit(20),
     "metadata": ReadingActionLimit(120),
-    "chapter": ReadingActionLimit(120, max_concurrency=4),
-    "reviews": ReadingActionLimit(30, max_concurrency=2),
+    "chapter": ReadingActionLimit(120, max_concurrency=_READ_CONCURRENCY),
+    "reviews": ReadingActionLimit(30, max_concurrency=min(_READ_CONCURRENCY, 16)),
 }
 
 
