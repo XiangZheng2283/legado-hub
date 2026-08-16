@@ -133,101 +133,98 @@ class Source:
         return results
 
     async def detail(self, ctx, book_url: str) -> dict:
+        """按 bookid 目录纯本地读取，毫秒级、绝不因 preview/jobs 超时 404。
+
+        需求：解析只看 fqdown 的 save_dir/<bookid>/ 目录（status.json +
+        downloaded_chapters.jsonl + cover），与“是否下载完成”无关；epub/jobs
+        只是完成度辅助判定，不参与阅读解析。preview 仅用缓存覆盖，绝不阻塞。
+        """
         book_id = _extract_id(book_url)
+        # preview 仅当已缓存（下载/后台预热过）时补充书名简介等，不发起网络。
+        cached: dict = {}
         try:
-            data = await _preview(ctx, book_id)
-        except Exception as exc:
-            ctx.trace("detail", message=f"预览失败，交由目录/下载逐步补全（不再 404）: {exc}")
-            try:
-                await _ensure_job_started(ctx, book_id)
-            except Exception:
-                pass
-            data = {}
-        tags = data.get("tags") or []
-        kind_parts = []
-        if data.get("category"):
-            kind_parts.append(str(data["category"]))
-        for t in tags:
-            s = str(t).strip()
-            if s and s not in kind_parts:
-                kind_parts.append(s)
-        if data.get("finished") is True:
-            kind_parts.append("完结")
-        elif data.get("finished") is False:
-            kind_parts.append("连载")
-        wc = data.get("word_count")
-        try:
-            wc_int = int(wc)
-        except (TypeError, ValueError):
-            wc_int = 0
-        word_count_str = f"{wc_int // 10000}万字" if wc_int >= 10000 else (str(wc) if wc else "")
-        result = {
-            "sourceId": self.id,
-            "name": str(data.get("book_name") or ""),
-            "author": str(data.get("author") or ""),
-            "bookUrl": book_url,
-            "coverUrl": "",
-            "intro": str(data.get("description") or ""),
-            "kind": "/".join(kind_parts),
-            "lastChapter": str(data.get("last_chapter_title") or ""),
-            "wordCount": word_count_str,
-            "tocUrl": book_url,
-            "extra": {"book_id": book_id},
-        }
-        # 补充本地落盘信息（勿阻塞）：预览失败/下载中也据此回填书名、作者、
-        # 简介、最新章节、分类、字数、封面，客户端订阅 api 无需等下载完成即可开书。
+            cached = ctx.cache_get(f"fanqie_preview:{book_id}") or {}
+        except Exception:
+            cached = {}
+        if not isinstance(cached, dict):
+            cached = {}
+
+        # 本地 bookid 目录 = 唯一数据源（勿阻塞；读不动就返回占位而非 404）。
+        info: dict = {}
+        folder: Any = None
+        journal: list = []
         try:
             status = await _downloader_status(ctx)
             folder = _local_book_dir(str(status.get("save_dir") or ""), book_id)
             info = _safe_json_load(folder / "status.json") or {}
-            extra = dict(result.get("extra") or {})
-            if not result.get("name") and info.get("book_name"):
-                result["name"] = str(info["book_name"])
-            if not result.get("author") and info.get("author"):
-                result["author"] = str(info["author"])
-            if not result.get("intro") and info.get("description"):
-                result["intro"] = str(info["description"])
-            journal: list = []
-            try:
-                journal = _journal_entries(folder)
-            except Exception:
-                journal = []
+            journal = _journal_entries(folder)
+        except Exception:
+            pass
+
+        # 合并字段：cached preview / status.json / journal 谁有谁补。
+        def pick(*keys: str) -> str:
+            for key in keys:
+                v = cached.get(key)
+                if v:
+                    return str(v)
+                v = info.get(key)
+                if v:
+                    return str(v)
+            return ""
+
+        name = pick("book_name", "book_name")
+        author = pick("author", "author")
+        intro = pick("description", "description")
+        category = pick("category", "category")
+        last_chapter_title = pick("last_chapter_title", "last_chapter_title")
+        if not last_chapter_title and journal:
+            last_chapter_title = str(journal[-1][2] or "")
+
+        kind_parts: list[str] = []
+        if category:
+            kind_parts.append(category)
+        for src in (cached, info):
+            for t in (src.get("tags") or []):
+                s = str(t).strip()
+                if s and s not in kind_parts:
+                    kind_parts.append(s)
+        finished = cached.get("finished", info.get("finished"))
+        if finished is True:
+            kind_parts.append("完结")
+        elif finished is False:
+            kind_parts.append("连载")
+
+        wc = cached.get("word_count", info.get("word_count"))
+        try:
+            wc_int = int(wc)
+        except (TypeError, ValueError):
+            wc_int = 0
+        word_count_str = (
+            f"{wc_int // 10000}万字"
+            if wc_int >= 10000
+            else (str(wc) if wc else "")
+        )
+
+        extra: dict[str, Any] = {"book_id": book_id}
+        if folder is not None:
             extra["download_count"] = len(journal)
-            if not result.get("lastChapter"):
-                if journal and journal[-1] and journal[-1][2]:
-                    result["lastChapter"] = str(journal[-1][2])
-            if not result.get("kind"):
-                parts_list: list[str] = []
-                if info.get("category"):
-                    parts_list.append(str(info["category"]))
-                tags = info.get("tags")
-                if isinstance(tags, list):
-                    for t in tags:
-                        s = str(t).strip()
-                        if s and s not in parts_list:
-                            parts_list.append(s)
-                if info.get("finished") is True:
-                    parts_list.append("完结")
-                elif info.get("finished") is False:
-                    parts_list.append("连载")
-                if parts_list:
-                    result["kind"] = "/".join(parts_list)
-            if not result.get("wordCount"):
-                try:
-                    wc_int = int(info.get("word_count"))
-                except (TypeError, ValueError):
-                    wc_int = 0
-                if wc_int >= 10000:
-                    result["wordCount"] = f"{wc_int // 10000}万字"
-                elif wc_int:
-                    result["wordCount"] = str(wc_int)
             cover = _local_cover_path(folder)
             if cover is not None:
                 extra["cover_local_path"] = str(cover)
-            result["extra"] = extra
-        except Exception:
-            pass
-        return result
+
+        return {
+            "sourceId": self.id,
+            "name": name,
+            "author": author,
+            "bookUrl": book_url,
+            "coverUrl": "",
+            "intro": intro,
+            "kind": "/".join(kind_parts),
+            "lastChapter": last_chapter_title,
+            "wordCount": word_count_str,
+            "tocUrl": book_url,
+            "extra": extra,
+        }
 
     async def toc(self, ctx, toc_url: str) -> list[dict]:
         """按本地增量落盘返回目录，下到哪给到哪。

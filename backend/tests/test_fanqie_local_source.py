@@ -319,3 +319,43 @@ def test_chapter_missing_triggers_job_and_retryable(tmp_path: Path) -> None:
     assert result["content"] == "" and result["debug"].get("retryable") is True
     assert ctx.http.posts == [book]
 
+
+
+def test_detail_reads_local_bookid_dir_without_preview_or_jobs(tmp_path: Path) -> None:
+    """需求：解析只看 bookid 目录（status.json + journal + cover），
+    与下载完成度无关；不碰 preview / jobs，绝不 404。"""
+    MODULE._PROC_CACHE.clear()
+    MODULE._JOURNAL_CACHE.clear()
+    book = "885201234567"
+    folder = tmp_path / book
+    folder.mkdir(parents=True)
+    (folder / "status.json").write_text(
+        _json.dumps({
+            "book_name": "本地书名",
+            "author": "作者",
+            "description": "简介",
+            "word_count": 123456,
+            "finished": False,
+        }, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    _write_journal(folder, [
+        {"id": "c1", "title": "第1章", "content": "<p>x</p>"},
+        {"id": "c2", "title": "第2章", "content": "<p>y</p>"},
+    ])
+    (folder / "cover.jpg").write_bytes(b"\xff\xd8\xff\xe0")
+
+    ctx = _JobContext(tmp_path, [])
+    out = asyncio.run(Source().detail(ctx, f"{MODULE.TOMATO_BASE}/__fanqie__/{book}"))
+
+    assert out["name"] == "本地书名"
+    assert out["author"] == "作者"
+    assert out["intro"] == "简介"
+    assert out["lastChapter"] == "第2章"
+    assert out["wordCount"] == "12万字"
+    assert out["kind"].endswith("连载")
+    assert out["extra"]["download_count"] == 2
+    assert "cover_local_path" in out["extra"]
+    # 全程只读 status（本地），不创建/查询 jobs，更不调 preview → 不超时、不 404
+    assert ctx.http.posts == []
+    assert ctx.http.job_url_calls == 0

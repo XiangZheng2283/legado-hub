@@ -1,0 +1,6 @@
+[submodule "docs/fq/Tomato-Novel-Downloader"]
+	path = docs/fq/Tomato-Novel-Downloader
+	url = https://github.com/XiangZheng2283/Tomato-Novel-Downloader.git
+[submodule "docs/apk/legado-X"]
+	path = docs/apk/legado-X
+	url = https://github.com/XiangZheng2283/legado-X.git
