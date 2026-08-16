@@ -702,10 +702,21 @@ async def get_chapter_review_view(
 
     with reading_access_limiter.guard(user.user_id, "reviews"):
         catalog = Catalog(base_api=get_public_base_url(request))
+        # 评论钻取目标：虚拟 fanqie 章尚未发布时，转回直连 fanqie 源，
+        # 由插件从下载器本地落盘边下边读（封面/章节/段评），不再 404。
+        data_chapter_id = chapter_id
+        data_chapter_url = chapter_url
+        data_source_id = source_id
         if source_id == VIRTUAL_SOURCE_ID:
             chapter = library_books_service.legado_chapter(chapter_id)
             if chapter is None:
-                raise HTTPException(status_code=404, detail="章节尚未发布")
+                fanqie_chapter_id = _aggregate_to_fanqie_chapter(chapter_url)
+                if not fanqie_chapter_id:
+                    raise HTTPException(status_code=404, detail="章节尚未发布")
+                _kick_fanqie_on_missing_chapter(chapter_id, chapter_url)
+                data_chapter_id = fanqie_chapter_id
+                _s, data_chapter_url = decode_chapter_id(fanqie_chapter_id)
+                data_source_id = "fanqie_local"
         else:
             _require_third_party_plugin(
                 catalog,
@@ -722,21 +733,22 @@ async def get_chapter_review_view(
                 target_url=chapter_url,
             )
             chapter = await catalog.chapter(chapter_id)
-        reviews = await _chapter_reviews(chapter_id, catalog=catalog)
+        reviews = await _chapter_reviews(data_chapter_id, catalog=catalog)
+        chapter_title = str(chapter.get("title") or "本章评论") if chapter else "本章评论"
         paragraph_detail = None
         page_hot_detail = None
         chapter_detail = None
         reply_detail = None
         if parsed_root_review_id is not None:
             reply_detail = await catalog.review_replies(
-                chapter_id,
+                data_chapter_id,
                 parsed_root_review_id,
                 page=parsed_page,
                 page_size=page_size,
                 cursor_id=cursor_id,
             )
             reply_detail = await _enrich_review_media(
-                catalog, reply_detail, source_id, chapter_url
+                catalog, reply_detail, data_source_id, data_chapter_url
             )
             tab = "paragraph"
         elif paragraphIds:
@@ -755,40 +767,40 @@ async def get_chapter_review_view(
             ):
                 raise HTTPException(status_code=422, detail="paragraphIds 数量或取值无效")
             page_hot_detail = await catalog.page_hot_reviews(
-                chapter_id,
+                data_chapter_id,
                 parsed_ids,
                 page=parsed_page,
                 page_size=page_size,
             )
             page_hot_detail = await _enrich_review_media(
-                catalog, page_hot_detail, source_id, chapter_url
+                catalog, page_hot_detail, data_source_id, data_chapter_url
             )
             tab = "paragraph"
         elif parsed_paragraph_id is not None:
             paragraph_detail = await catalog.paragraph_reviews(
-                chapter_id,
+                data_chapter_id,
                 parsed_paragraph_id,
                 page=parsed_page,
                 page_size=page_size,
             )
             paragraph_detail = await _enrich_review_media(
-                catalog, paragraph_detail, source_id, chapter_url
+                catalog, paragraph_detail, data_source_id, data_chapter_url
             )
             tab = "paragraph"
         elif tab == "chapter" and parsed_page > 1:
             chapter_detail = await catalog.chapter_say(
-                chapter_id,
+                data_chapter_id,
                 page=parsed_page,
                 page_size=page_size,
             )
             chapter_detail = await _enrich_review_media(
-                catalog, chapter_detail, source_id, chapter_url
+                catalog, chapter_detail, data_source_id, data_chapter_url
             )
         base_api = get_public_base_url(request)
         review_view_url = f"{base_api}/api/legado/chapter/{chapter_id}/reviews/view"
         return HTMLResponse(
             render_chapter_reviews_html(
-                chapter_title=str(chapter.get("title") or "本章评论"),
+                chapter_title=chapter_title,
                 reviews=reviews,
                 review_view_url=review_view_url,
                 active_tab=tab,

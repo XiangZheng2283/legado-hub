@@ -1066,7 +1066,9 @@ def _plugin_health(plugin_id: str) -> dict:
 @console_route("get", "/plugins")
 def list_plugins():
     plugins = _plugin_scheduler._plugins
+    load_errors = getattr(getattr(_plugin_scheduler, "loader", None), "errors", None)
     return {
+        "loadErrors": list(load_errors or []),
         "items": [
             {
                 "pluginId": p.metadata.id,

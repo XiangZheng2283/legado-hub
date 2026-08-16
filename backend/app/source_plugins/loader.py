@@ -19,9 +19,18 @@ class PluginLoader:
     def __init__(self, plugins_dir: Path | None = None):
         self.plugins_dir = plugins_dir or PLUGINS_DIR
         self._plugins: dict[str, LoadedPlugin] = {}
+        self.errors: list[str] = []
 
     def load_all(self) -> dict[str, LoadedPlugin]:
+        """Discover/validate all source plugins.
+
+        A single broken plugin (bad metadata, syntax error, missing capability,
+        duplicate id) must NOT take down the whole source fleet (that would also
+        drop official/local-bridge sources like fanqie_local → phantom 404s).
+        Per-plugin failures are collected in ``self.errors`` and the rest load.
+        """
         self._plugins = {}
+        self.errors = []
         if not self.plugins_dir.exists():
             return self._plugins
 
@@ -34,16 +43,19 @@ class PluginLoader:
                 continue
             try:
                 plugin = self._load_one(plugin_dir.name, metadata_path, source_path)
-            except PluginValidationError:
-                raise
+            except PluginValidationError as exc:
+                self.errors.append(f"{plugin_dir.name}: {exc}")
+                continue
             except Exception as exc:
-                raise PluginValidationError(
-                    f"Failed to load plugin from {plugin_dir}: {exc}"
-                ) from exc
-            if plugin.metadata.id in self._plugins:
-                raise PluginValidationError(
-                    f"Duplicate plugin ID: {plugin.metadata.id}"
+                self.errors.append(
+                    f"{plugin_dir.name}: failed to load plugin: {exc}"
                 )
+                continue
+            if plugin.metadata.id in self._plugins:
+                self.errors.append(
+                    f"{plugin_dir.name}: duplicate plugin ID {plugin.metadata.id} ignored"
+                )
+                continue
             self._plugins[plugin.metadata.id] = plugin
         return self._plugins
 
