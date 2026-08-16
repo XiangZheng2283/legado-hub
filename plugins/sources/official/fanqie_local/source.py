@@ -18,6 +18,7 @@ import json
 import os
 import posixpath
 import re
+import threading
 import time
 import zipfile
 from pathlib import Path
@@ -642,30 +643,99 @@ def _safe_json_load(path: Path, *, retries: int = 3, delay: float = 0.25) -> dic
     return None
 
 
+_JOURNAL_CACHE: dict[str, "_BookJournalCache"] = {}
+_JOURNAL_CACHE_GUARD = threading.Lock()
+
+
+class _BookJournalCache:
+    """按(书目录)的 downloaded_chapters.jsonl 增量缓存。
+
+    fqdown 是**追加写**（append），hub 完全不需要整体落库。首次建好索引后，
+    每次只读“上次读到 offset 之后追加的那一小段”并续上，改了 mtime/size 才刷，
+    整份 JSONL 只在首见/截断时解析一遍 → 读取 O(1)，不随章节数膨胀（就绪的
+    大书也不再卡）。读写都加同一把 per-book 锁，和下载器追加并发安全。
+    """
+
+    __slots__ = ("path", "lock", "offset", "entries", "mtime_ns", "size")
+
+    def __init__(self, path: Path):
+        self.path = path
+        self.lock = threading.Lock()
+        self.offset = 0
+        self.entries: list[tuple[int, str, str, str]] = []
+        self.mtime_ns = 0
+        self.size = 0
+
+    def refresh(self) -> list[tuple[int, str, str, str]]:
+        with self.lock:
+            try:
+                st = self.path.stat()
+            except OSError:
+                self.entries = []
+                self.offset = self.size = self.mtime_ns = 0
+                return self.entries
+            if st.st_mtime_ns == self.mtime_ns and st.st_size == self.size:
+                return self.entries
+            if st.st_size < self.offset or (
+                st.st_size == self.offset and self.offset > 0
+            ):
+                # 被重写/截断（含同尺寸覆盖）或更小：丢弃旧索引全量重建。
+                self.offset = 0
+                self.entries = []
+            try:
+                if self.offset == 0:
+                    data = self.path.read_bytes()
+                else:
+                    with self.path.open("rb") as f:
+                        f.seek(self.offset)
+                        data = f.read()
+            except OSError:
+                return self.entries
+            # 只消费到最后一个 \n 之前的“完整行”，末尾半行（可能半个 UTF-8 字符）
+            # 留到下次追加后再续读，避免把写了一半的行解进条目。
+            nl = data.rfind(b"\n")
+            if nl == -1:
+                self.mtime_ns = st.st_mtime_ns
+                self.size = st.st_size
+                return self.entries
+            complete = data[: nl + 1]
+            if self.offset == 0:
+                self.entries = []
+            for line in complete.decode("utf-8", errors="replace").splitlines():
+                line = line.strip()
+                if not line or "\ufffd" in line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except ValueError:
+                    continue
+                fid = str(rec.get("id") or "")
+                if not fid:
+                    continue
+                self.entries.append(
+                    (len(self.entries), fid, str(rec.get("title") or ""), str(rec.get("content") or ""))
+                )
+            self.offset += nl + 1
+            self.mtime_ns = st.st_mtime_ns
+            self.size = st.st_size
+            return self.entries
+
+
+def _cached_entries(folder: Path) -> list[tuple[int, str, str, str]]:
+    """读 downloaded_chapters.jsonl 增量索引（共享内存式缓存 + 锁）。"""
+    cache_key = str(folder.resolve())
+    with _JOURNAL_CACHE_GUARD:
+        cache = _JOURNAL_CACHE.get(cache_key)
+        if cache is None:
+            cache = _JOURNAL_CACHE.setdefault(
+                cache_key, _BookJournalCache(folder / "downloaded_chapters.jsonl")
+            )
+    return cache.refresh()
+
+
 def _journal_entries(folder: Path) -> list[tuple[int, str, str, str]]:
-    """downloaded_chapters.jsonl → [(order, fnqie_id, title, content)]。
-    容忍最后一行未写完（被截断的 JSON 行直接跳过）。"""
-    entries: list[tuple[int, str, str, str]] = []
-    try:
-        raw = (folder / "downloaded_chapters.jsonl").read_bytes()
-    except OSError:
-        return entries
-    # 下载器按行追加，最后一行可能是半个 UTF-8 字符；逐行解码，半截行（含替换符
-    # U+FFFD）直接跳过，避免整文件 read_text 抛 UnicodeDecodeError 造成"空章节"，
-    # 也避免把损坏行以 errors=replace 解进条目产生乱码。
-    for line in raw.decode("utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if not line or "\ufffd" in line:
-            continue
-        try:
-            rec = json.loads(line)
-        except ValueError:
-            continue
-        fid = str(rec.get("id") or "")
-        if not fid:
-            continue
-        entries.append((len(entries), fid, str(rec.get("title") or ""), str(rec.get("content") or "")))
-    return entries
+    """downloaded_chapters.jsonl → [(order, fnqie_id, title, content)]（走增量缓存）。"""
+    return _cached_entries(folder)
 
 
 def _status_fallback_entries(info: dict | None) -> list[tuple[int, str, str, str]]:
