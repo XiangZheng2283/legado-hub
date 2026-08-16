@@ -226,7 +226,7 @@ def _review_content(value: Any, image_urls: list[Any] | tuple[Any, ...] | None =
     <img> when their count matches the review's trusted image URLs.
 
     Returns (html, inline_replaced): inline_replaced is True when the bracket
-    placeholders were swapped for \<img\>, in which case the caller should NOT
+    placeholders were swapped for <img>, in which case the caller should NOT
     also append the trailing media block (avoid double images).
     """
     escaped = html.escape(str(value or ""))
@@ -422,19 +422,12 @@ def _review_card(
         query = urlencode({"tab": "paragraph", "paragraphId": paragraph_id})
         paragraph_href = f"{review_view_url}?{query}"
 
-    # contentHtml 已由富化层组装成自包含成品（头像+正文+内嵌图），不再二次转义/追加；
-    # 无 contentHtml 才走传统 _review_content(+ 尾部媒体块) 路径。
-    _self_contained = bool(review.get("contentHtml"))
-    content_html, _inline_media = (
-        (review["contentHtml"], True)
-        if _self_contained
-        else _review_content(content, review.get("imageUrls") or [])
-    )
-    text_html = (
-        content_html
-        if _self_contained
-        else (f'<p class="comment-text">{content_html}</p>' if content_html else "")
-    )
+    # 固定版式：头像框 + 用户名头 + 正文文本 + 独立媒体框（.comment-media-wrap）。
+    # 图片一律走 _review_media 的框体渲染，绝不内嵌进正文行（客户端 WebView 直接
+    # 渲染本 HTML，内嵌 <img> 会脱离框、挤乱换行）。富化层只提供结构化
+    # avatar/imageUrls/imageUrl 字段，由这里统一排布。
+    content_html, _ = _review_content(content)
+    text_html = f'<p class="comment-text">{content_html}</p>' if content_html else ""
     paragraph_html = (
         f'<blockquote class="comment-paragraph">{html.escape(paragraph_text.strip())}</blockquote>'
         if paragraph_text.strip()
@@ -451,7 +444,7 @@ def _review_card(
         )
     return (
         f'<article class="{item_classes}"{review_attr}{jump_attr}>'
-        + ("" if _self_contained else _review_avatar(review, author=author))
+        + _review_avatar(review, author=author)
         + '<div class="comment-body">'
         + '<div class="comment-head">'
         + f'<div class="comment-identity"><strong>{html.escape(user_name)}</strong>'
@@ -460,7 +453,7 @@ def _review_card(
         + _review_reply_context(review)
         + paragraph_html
         + text_html
-        + ("" if (_self_contained or _inline_media) else _review_media(review))
+        + _review_media(review)
         + '<div class="comment-meta">'
         + '<div class="comment-meta-left">'
         + (f'<time>{html.escape(review_time)}</time>' if review_time else "")

@@ -203,27 +203,9 @@ async def _enrich_review_media(
         if any(image_urls):
             review["imageUrls"] = image_urls
             review["imageUrl"] = next((u for u in image_urls if u), "")
-        # 「正则替换后返回」的成品正文：头像 <img> + 转义正文 + 每图 <img> 内嵌，
-        # 图片 src 优先原 CDN URL、本地媒体 URL 兜底。contentHtml==content 自包含。
-        body_parts: list[str] = []
-        if avatar_url:
-            body_parts.append(
-                f'<img class="comment-inline-avatar" src="{_comment_src_attr(avatar_url)}" '
-                'alt="头像" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
-            )
-        raw_text = str(review.get("content") or "")
-        if raw_text:
-            body_parts.append(f'<p class="comment-inline-text">{html.escape(raw_text)}</p>')
-        for u in image_urls:
-            if u:
-                body_parts.append(
-                    f'<img class="comment-inline-media" src="{_comment_src_attr(u)}" '
-                    'alt="评论图片" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
-                )
-        if body_parts and (avatar_url or any(image_urls)):
-            _body = "".join(body_parts)
-            review["contentHtml"] = _body
-            review["content"] = _body
+        # 只提供结构化字段（avatar / imageUrls / imageUrl），正文保持纯文本 content。
+        # 版式统一交给 _review_card：头像框 + 用户名 + 正文 + 独立媒体框，
+        # 不再拼自包含 contentHtml（内嵌 <img> 会脱离媒体框、挤乱换行）。
     debug = payload.setdefault("debug", {})
     if isinstance(debug, dict) and refs:
         debug["mediaFound"] = len(refs)
