@@ -19,12 +19,14 @@ from app.services.catalog import Catalog
 from app.services.library_books import format_reading_update_time, library_books_service
 from app.services.aggregate_virtual_source import (
     VIRTUAL_SOURCE_ID,
+    make_aggregate_chapter_url,
     unpack_aggregate_book_url,
     unpack_aggregate_chapter_url,
 )
 from app.source_plugins.id_codec import (
     decode_book_id,
     decode_chapter_id,
+    encode_book_id,
     encode_chapter_id,
 )
 from app.services.fanqie_local_trigger import get_save_dir, spawn_fanqie_trigger_for_url
@@ -117,6 +119,25 @@ def _kick_fanqie_for_aggregate(aggregate_book_id: str) -> None:
         spawn_fanqie_trigger_for_url(primary_url)
 
 
+def _kick_fanqie_for_aggregate_and(aggregate_book_id: str, fanqie_book_id: str) -> None:
+    """Kick the fanqie download when the aggregate book isn't shared yet.
+
+    Tries the shared-book primary source first, then falls back to spawning the
+    trigger straight from the resolved fanqie book id (covers the case where no
+    shared library row exists yet). Never raises.
+    """
+    try:
+        _kick_fanqie_for_aggregate(aggregate_book_id)
+    except Exception:
+        pass
+    try:
+        _source, url = decode_book_id(fanqie_book_id)
+        if url:
+            spawn_fanqie_trigger_for_url(url)
+    except Exception:
+        pass
+
+
 def _kick_fanqie_on_missing_chapter(chapter_id: str, chapter_url: str) -> None:
     """Resolve the aggregate book behind a not-yet-published chapter and kick
     the fanqie download (see _kick_fanqie_for_aggregate). Never raises."""
@@ -147,6 +168,88 @@ def _aggregate_to_fanqie_chapter(chapter_url: str) -> str | None:
     except Exception:
         return None
     return source_chapter_id if source_id == "fanqie_local" else None
+
+
+def _aggregate_to_fanqie_book(book_url: str) -> tuple[str, str] | None:
+    """Map a virtual/aggregate book_url back to its source fanqie book.
+
+    Returns ``(fanqie_book_id, aggregate_book_id)`` when the aggregate payload
+    carries a ``fanqie_local`` source, else None. Lets the virtual toc edge-
+    serve the parsed-so-far chapters straight from the downloader's files.
+    """
+    try:
+        payload = unpack_aggregate_book_url(book_url)
+    except Exception:
+        return None
+    aggregate_book_id = (
+        str(payload.get("aggregateBookId") or payload.get("candidateId") or "")
+    )
+    sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+    for s in sources:
+        if not isinstance(s, dict) or str(s.get("sourceId") or "") != "fanqie_local":
+            continue
+        raw = str(s.get("bookUrl") or "")
+        if raw:
+            try:
+                return encode_book_id("fanqie_local", raw), aggregate_book_id
+            except Exception:
+                return None
+        bid = str(s.get("bookId") or "")
+        if bid:
+            return bid, aggregate_book_id
+    return None
+
+
+def _fanqie_toc_to_shared(
+    fanqie_toc: dict,
+    *,
+    aggregate_book_id: str,
+    book_id: str,
+) -> dict:
+    """Rebuild a fanqie plugin toc into the virtual aggregate toc shape.
+
+    Each fanqie chapter URL is mapped back to a ``legadohub_ai_aggregate``
+    chapter id (embedding the fanqie ``sourceChapterId``), so the Reading client
+    keeps navigating inside the aggregate subscription while every chapter read
+    edge-serves straight from the downloader's incremental files.
+    """
+    chapters: list[dict] = []
+    for position, raw in enumerate(fanqie_toc.get("chapters", []) or [], start=1):
+        if not isinstance(raw, dict):
+            continue
+        raw_chapter_url = str(raw.get("rawChapterUrl") or raw.get("chapterUrl") or "")
+        title = str(raw.get("title") or "")
+        try:
+            index = int(raw.get("index", position) or position)
+        except (TypeError, ValueError):
+            index = position
+        if not raw_chapter_url:
+            continue
+        source_chapter_id = encode_chapter_id("fanqie_local", raw_chapter_url)
+        read_chapter_id = encode_chapter_id(
+            VIRTUAL_SOURCE_ID,
+            make_aggregate_chapter_url(
+                aggregate_book_id=aggregate_book_id,
+                source_chapter_id=source_chapter_id,
+                title=title,
+                index=index,
+            ),
+        )
+        chapters.append(
+            {
+                "sourceId": VIRTUAL_SOURCE_ID,
+                "chapterId": read_chapter_id,
+                "index": index,
+                "title": title,
+                "updateTime": "",
+            }
+        )
+    return {
+        "implemented": True,
+        "bookId": book_id,
+        "chapters": chapters,
+        "debug": {"aggregate": True, "edgeFanqie": True, "published": False},
+    }
 
 
 def _pending_chapter_response(
@@ -499,13 +602,23 @@ async def get_book(request: Request, book_id: str) -> dict:
         if source_id == VIRTUAL_SOURCE_ID:
             shared = library_books_service.legado_book_detail(book_id, base_api=base_api)
             if shared is None:
-                # 未发布就点开详情：先踢 fanqie 整本下载，让增量产出（fire-and-forget）。
-                try:
-                    _kick_fanqie_for_aggregate(
-                        unpack_aggregate_book_url(book_url).get("aggregateBookId", "")
-                    )
-                except Exception:
-                    pass
+                # 未发布就点开详情：先踢 fanqie 整本下载（边下边出封面/元数据），
+                # 再直接委托 fanqie 插件的本地落盘回填书名/作者/简介/封面，
+                # 绝不因共享库未落盘就 404。
+                catalog = Catalog(base_api=base_api)
+                resolved = _aggregate_to_fanqie_book(book_url)
+                if resolved:
+                    fanqie_book_id, aggregate_book_id = resolved
+                    _kick_fanqie_for_aggregate_and(aggregate_book_id, fanqie_book_id)
+                    edge = await catalog.book_detail(fanqie_book_id)
+                    edge_data = edge.get("data") if isinstance(edge, dict) else None
+                    if isinstance(edge_data, dict):
+                        return _public_book_response(
+                            edge_data,
+                            source_id=source_id,
+                            book_id=book_id,
+                            base_api=base_api,
+                        )
                 raise HTTPException(status_code=404, detail="书籍尚未发布")
             return _public_book_response(
                 dict(shared.get("data") or {}),
@@ -524,7 +637,21 @@ async def get_book(request: Request, book_id: str) -> dict:
         result = await catalog.book_detail(book_id)
         data = result.get("data") if isinstance(result, dict) else None
         if not isinstance(data, dict):
-            raise HTTPException(status_code=404, detail="书籍读取失败")
+            if source_id == "fanqie_local":
+                # 下载器预览超时/还没产出：触发已在上方发出，只回可刷新占位，
+                # 绝不 404（否则客户端放弃这本书）。后续刷新读到本地增量即补全。
+                data = {
+                    "name": "",
+                    "author": "",
+                    "coverUrl": "",
+                    "intro": "书籍下载/解析中，请稍后刷新。",
+                    "kind": "",
+                    "lastChapter": "",
+                    "wordCount": "",
+                    "status": "下载中",
+                }
+            else:
+                raise HTTPException(status_code=404, detail="书籍读取失败")
         return _public_book_response(
             data,
             source_id=source_id,
@@ -544,13 +671,27 @@ async def get_toc(request: Request, book_id: str) -> dict:
         if source_id == VIRTUAL_SOURCE_ID:
             shared = library_books_service.legado_toc(book_id, base_api=base_api)
             if shared is None:
-                # 目录未就绪先踢 fanqie 下载（fire-and-forget）。
-                try:
-                    _kick_fanqie_for_aggregate(
-                        unpack_aggregate_book_url(book_url).get("aggregateBookId", "")
-                    )
-                except Exception:
-                    pass
+                # 目录未就绪：先踢 fanqie 下载，再直接委托 fanqie 插件的
+                # 边下边读（downloaded_chapters.jsonl 解析到哪给到哪），
+                # 把章节 URL 映射回聚合订阅，绝不因共享目录未落库就 404。
+                catalog = Catalog(base_api=base_api)
+                resolved = _aggregate_to_fanqie_book(book_url)
+                if resolved:
+                    fanqie_book_id, aggregate_book_id = resolved
+                    _kick_fanqie_for_aggregate_and(aggregate_book_id, fanqie_book_id)
+                    edge = await catalog.toc(fanqie_book_id)
+                    if edge.get("chapters"):
+                        shared = _fanqie_toc_to_shared(
+                            edge,
+                            aggregate_book_id=aggregate_book_id,
+                            book_id=book_id,
+                        )
+                        return _public_toc_response(
+                            shared,
+                            source_id=source_id,
+                            book_id=book_id,
+                            base_api=base_api,
+                        )
                 raise HTTPException(status_code=404, detail="书籍尚未发布")
             return _public_toc_response(
                 shared,

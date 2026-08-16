@@ -959,10 +959,13 @@ async def _preview(ctx, book_id: str) -> dict:
     cached = ctx.cache_get(cache_key)
     if cached:
         return cached
+    # 必须远低于 scheduler 的 detail 硬超时（默认 20s）：预览卡住会把整回调
+    # 取消、book detail 返回 data=None → 404。收紧为短超时，失败即落到本地
+    # status.json 快速回填（边下边读），不阻塞读路径。
     data = await ctx.access.http.fetch_json(
         f"{TOMATO_BASE}/api/preview/{book_id}",
         headers=_headers(),
-        timeout=20,
+        timeout=8,
     )
     ctx.cache_set(cache_key, data, _STATUS_CACHE_TTL)
     return data
@@ -976,7 +979,7 @@ async def _downloader_status(ctx) -> dict:
     data = await ctx.access.http.fetch_json(
         f"{TOMATO_BASE}/api/status",
         headers=_headers(),
-        timeout=10,
+        timeout=8,
     )
     if not str(data.get("save_dir") or "").strip():
         raise RuntimeError("番茄下载器未返回 save_dir")
