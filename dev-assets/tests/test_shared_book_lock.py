@@ -152,3 +152,36 @@ def test_shared_book_lock_renew_failure_forces_caller_visible_stop_state(tmp_pat
     assert first_lease.can_write is False
     with pytest.raises(SharedBookLockError, match="stop work and exit"):
         first_lease.assert_writable()
+
+
+
+def test_shared_book_lock_corrupt_payload_recovers_immediately(tmp_path: Path):
+    clock = FakeClock(100.0)
+    service = _make_service(tmp_path, clock, random_factory=lambda: "recovered")
+    runtime_dir = service.storage.lock_runtime_dir("book-1")
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = runtime_dir / "shared_book.lock.json"
+    lock_path.write_text("{broken", encoding="utf-8")
+
+    lease = service.acquire(aggregate_book_id="book-1")
+
+    assert lease is not None
+    assert lease.worker_id.endswith("-recovered")
+    assert list(runtime_dir.glob("shared_book.lock.json.corrupt-*"))
+
+
+def test_shared_book_lock_dead_local_owner_recovers_before_ttl(tmp_path: Path, monkeypatch):
+    clock = FakeClock(100.0)
+    owner = _make_service(tmp_path, clock, random_factory=lambda: "dead", pid=4321)
+    recovery = _make_service(tmp_path, clock, random_factory=lambda: "new", pid=5678)
+    first = owner.acquire(aggregate_book_id="book-1")
+    assert first is not None
+
+    def dead_process(_pid: int, _signal: int) -> None:
+        raise ProcessLookupError
+
+    monkeypatch.setattr("app.services.shared_book_lock.os.kill", dead_process)
+    second = recovery.acquire(aggregate_book_id="book-1")
+
+    assert second is not None
+    assert second.worker_id.endswith("-new")

@@ -323,7 +323,7 @@
 }
 ```
 
-- 虚拟源只返回**已有共享内容**的章节（`hasContent` 且非空 `readChapterId`）。
+- 虚拟源共享目录与 `fanqie_local` 增量目录采用**合并语义**：已聚合发布的共享章节优先；主源为 `fanqie_local` 时，Hub 同时触发 `127.0.0.1:18423` 的整本任务，并读取 `downloaded_chapters.jsonl`，用已下载但尚未聚合发布的章节补齐目录。因此一本书即使已经“部分发布”，目录仍会随下载增长，而不会冻结在首次发布的章节子集。
 - 第三方源由 `Catalog.toc` 生成，chapter_id 重编码并做白名单校验。
 
 **客户端触发链路**：打开目录/首次阅读 → `WebBook.getChapterListAwait` → `AnalyzeUrl(book.tocUrl)` → GET 目录 → `ruleToc.chapterList="$.chapters"`；`chapterUrl` 规则包成 `data:contentUrl;base64,<b64>,{"type":"legadoHub"}`。
@@ -356,7 +356,8 @@
 }
 ```
 
-- 虚拟源：`library_books_service.legado_chapter` 读共享 UTF-8 正文；未发布 → `404 {"detail":"章节尚未发布"}`。已聚合清洗正文不再实操净化/作家说剥离（`apply_purify=False, strip_author_say=False`）。
+- 虚拟源：优先由 `library_books_service.legado_chapter` 读共享 UTF-8 正文；若共享章尚未发布但目录项来自 `fanqie_local` 增量落盘，则根据聚合章中的 `sourceChapterId` 动态委托本地插件，直接读取 `downloaded_chapters.jsonl`。详情、目录和正文三个入口都会幂等触发 `127.0.0.1:18423/api/jobs`，避免客户端命中本地缓存后绕过某个入口而没有启动下载。已聚合清洗正文不再实操净化/作家说剥离（`apply_purify=False, strip_author_say=False`）。
+- 增量章尚未落盘时返回 HTTP 200、空 `content` 与 `debug.retryable=true`；Reading 本身不会按该字段自动轮询，用户刷新/客户端后续预取会再次请求。因此“边下边看”的准确含义是：**已落盘章节立即可读、目录持续增长**，不是在一个 HTTP 响应中流式推送未完成正文。
 - 第三方源：`Catalog.chapter` + 实时净化（`purify_for_reading`）→ 作家说剥离。
 
 **客户端触发链路**（核心 `data:contentUrl` 机制）：

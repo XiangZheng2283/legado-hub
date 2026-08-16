@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import socket
 import time
@@ -91,7 +92,12 @@ class SharedBookLockService:
         with self._guard_lock(runtime_dir):
             now = self.time_provider()
             current = self._read_lock_payload(lock_path)
-            if current is not None and not self._is_expired(current, now=now):
+            if (
+                current is not None
+                and str(current.get("aggregateBookId") or "") == aggregate_book_id
+                and not self._is_expired(current, now=now)
+                and not self._owner_process_is_dead(current)
+            ):
                 return None
 
             payload = self._build_lock_payload(
@@ -203,18 +209,66 @@ class SharedBookLockService:
         }
 
     def _is_expired(self, payload: dict[str, object], *, now: float) -> bool:
-        expires_at = float(payload.get("expiresAt", 0) or 0)
-        return expires_at <= now
+        try:
+            expires_at = float(payload.get("expiresAt", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            return True
+        return not math.isfinite(expires_at) or expires_at <= now
+
+    def _owner_process_is_dead(self, payload: dict[str, object]) -> bool:
+        """Best-effort early recovery for a dead owner on this host.
+
+        Lease expiry remains the cross-host authority.  For the supported local
+        deployment, however, there is no reason to retain a dead process' lease
+        for the full TTL. Permission/OS lookup ambiguity is treated as alive so
+        this optimization can never steal from a possibly running writer.
+        """
+        if str(payload.get("hostname") or "") != self.hostname:
+            return False
+        try:
+            owner_pid = int(payload.get("pid", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            return True
+        if owner_pid <= 0:
+            return True
+        if owner_pid == self.pid:
+            try:
+                owner_start = int(payload.get("processStartTs", 0) or 0)
+            except (TypeError, ValueError, OverflowError):
+                return True
+            return owner_start != self.process_start_ts
+        try:
+            os.kill(owner_pid, 0)
+        except ProcessLookupError:
+            return True
+        except (PermissionError, OSError):
+            return False
+        return False
 
     def _read_lock_payload(self, path: Path) -> dict[str, object] | None:
         try:
             raw = path.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            if not isinstance(data, dict):
+                raise ValueError("lock payload is not an object")
+            return data
         except FileNotFoundError:
             return None
-        data = json.loads(raw)
-        if not isinstance(data, dict):
-            raise ValueError(f"invalid lock payload at {path}")
-        return data
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+            # A torn/manual/corrupt lease must not permanently brick every
+            # acquire/renew call. Preserve it for diagnostics when possible and
+            # let the caller treat the ownership record as absent.
+            corrupt_path = path.with_name(
+                f"{path.name}.corrupt-{int(time.time() * 1000)}-{uuid.uuid4().hex[:8]}"
+            )
+            try:
+                os.replace(path, corrupt_path)
+            except OSError:
+                try:
+                    path.unlink()
+                except OSError:
+                    pass
+            return None
 
     def _atomic_write_json(self, path: Path, payload: dict[str, object]) -> None:
         target = Path(path)
